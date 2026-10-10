@@ -16,14 +16,11 @@ const opportunityMinimalContract = z.object({
 });
 
 const opportunityListContract = z.object({
-  success: z.literal(true),
-  data: z.object({
-    data: z.array(opportunityMinimalContract),
-    pagination: z.object({
-      hasMore: z.boolean(),
-      nextCursor: z.string().nullable(),
-      limit: z.number(),
-    }),
+  data: z.array(opportunityMinimalContract),
+  pagination: z.object({
+    hasMore: z.boolean(),
+    nextCursor: z.string().nullable(),
+    limit: z.number(),
   }),
 });
 

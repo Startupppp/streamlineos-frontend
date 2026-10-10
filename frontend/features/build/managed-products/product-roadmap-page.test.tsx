@@ -1,4 +1,5 @@
 import "./product-scope-pages.test-harness";
+import { fireEvent } from "@testing-library/react";
 import { ProductRoadmapPage } from "./product-roadmap-page";
 import {
   mockUseSearchParams,
@@ -72,11 +73,12 @@ describe("ProductRoadmapPage — usePageState integration (BSN-01-027)", () => {
     expect(callParams).toMatchObject({ managedProductId: 7 });
   });
 
-  it("does not pass horizon to useRoadmapItems because there is no DB column backing it (BSN-RM-001)", () => {
+  it("passes horizon=now to useRoadmapItems when URL has horizon=now so the server filters by horizon", () => {
     mockUseSearchParams.mockReturnValue(new URLSearchParams("horizon=now"));
     render(<ProductRoadmapPage managedProductId={7} />);
-    const [callParams] = useRoadmapItems.mock.calls[0] as [Record<string, unknown>];
-    expect(callParams).not.toHaveProperty("horizon");
+    expect(useRoadmapItems).toHaveBeenCalledWith(
+      expect.objectContaining({ horizon: "now" }),
+    );
   });
 });
 
@@ -127,5 +129,69 @@ describe("ProductRoadmapPage — status URL param (BSN-RM-STATUS)", () => {
     render(<ProductRoadmapPage managedProductId={7} />);
     const [callParams] = useRoadmapItems.mock.calls[0] as [Record<string, unknown>];
     expect(callParams).not.toHaveProperty("status");
+  });
+});
+
+describe("ProductRoadmapPage — confidenceMin URL param (BSN-RM-CONF)", () => {
+  it("passes confidenceMin=50 to useRoadmapItems when URL has confidenceMin=50", () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("confidenceMin=50"));
+    render(<ProductRoadmapPage managedProductId={7} />);
+    expect(useRoadmapItems).toHaveBeenCalledWith(
+      expect.objectContaining({ confidenceMin: 50 }),
+    );
+  });
+
+  it("omits confidenceMin from useRoadmapItems when confidenceMin is not set in URL", () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams());
+    render(<ProductRoadmapPage managedProductId={7} />);
+    const [callParams] = useRoadmapItems.mock.calls[0] as [Record<string, unknown>];
+    expect(callParams).not.toHaveProperty("confidenceMin");
+  });
+});
+
+describe("ProductRoadmapPage — view toggle (BSN-RM-VIEW)", () => {
+  it("renders the board view by default with a Timeline button to switch", () => {
+    render(<ProductRoadmapPage managedProductId={7} />);
+    expect(screen.getByRole("button", { name: /timeline/i })).toBeInTheDocument();
+    expect(screen.getByTestId("roadmap-board-columns")).toBeInTheDocument();
+  });
+
+  it("renders the roadmap-board-columns component when in board mode", () => {
+    render(<ProductRoadmapPage managedProductId={7} />);
+    expect(screen.getByTestId("roadmap-board-columns")).toBeInTheDocument();
+    expect(screen.queryByTestId("roadmap-timeline-view")).not.toBeInTheDocument();
+  });
+});
+
+describe("ProductRoadmapPage — public preview (BSN-RM-PREV)", () => {
+  it("shows a Preview button to users who can manage roadmap items", () => {
+    useCan.mockImplementation((permission: string) => permission === "build:roadmap:manage");
+    render(<ProductRoadmapPage managedProductId={7} />);
+    expect(screen.getByRole("button", { name: /preview/i })).toBeInTheDocument();
+  });
+
+  it("does not show the preview sheet before Preview is clicked", () => {
+    render(<ProductRoadmapPage managedProductId={7} />);
+    expect(screen.queryByTestId("roadmap-preview-sheet")).not.toBeInTheDocument();
+  });
+
+  it("shows the preview sheet when Preview is clicked", () => {
+    useCan.mockImplementation((permission: string) => permission === "build:roadmap:manage");
+    render(<ProductRoadmapPage managedProductId={7} />);
+    fireEvent.click(screen.getByRole("button", { name: /preview/i }));
+    expect(screen.getByTestId("roadmap-preview-sheet")).toBeInTheDocument();
+  });
+
+  it("hides the Preview button from users who cannot manage roadmap items", () => {
+    useCan.mockReturnValue(false);
+    render(<ProductRoadmapPage managedProductId={7} />);
+    expect(screen.queryByRole("button", { name: /preview/i })).not.toBeInTheDocument();
+  });
+});
+
+describe("ProductRoadmapPage — filters bar (BSN-RM-FILT)", () => {
+  it("renders the filters bar component", () => {
+    render(<ProductRoadmapPage managedProductId={7} />);
+    expect(screen.getByTestId("roadmap-filters-bar")).toBeInTheDocument();
   });
 });

@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import type { UseQueryOptions } from "@tanstack/react-query";
+import type { DiscoveryListOpportunitiesResponse } from "@/contracts/build-contracts.generated";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
@@ -56,7 +56,7 @@ export interface OpportunitiesParams {
 export function useOpportunities(
   managedProductId: number,
   params?: OpportunitiesParams,
-  options?: Pick<UseQueryOptions, "enabled">,
+  options?: { enabled?: boolean },
 ) {
   const canView = useCan("build:managed-products:view");
   const qp: Record<string, string> = {};
@@ -73,7 +73,7 @@ export function useOpportunities(
   if (params?.search) qp["search"] = params.search;
   if (params?.sort) qp["sort"] = params.sort;
   const hasFilters = Object.keys(qp).length > 0;
-  return useQuery({
+  return useQuery<DiscoveryListOpportunitiesResponse>({
     queryKey: buildWorkQueryKeys.projects.managedProducts.opportunities(
       managedProductId,
       hasFilters ? qp : undefined,

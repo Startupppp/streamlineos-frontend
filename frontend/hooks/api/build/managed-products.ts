@@ -219,3 +219,30 @@ export {
   useRestoreManagedProduct,
 } from "./managed-product-mutations";
 
+const managedProductFacetsContract = lazyContract(() =>
+  import("@/contracts/build-contracts.generated").then(
+    (m) => m.managedProductsGetManagedProductFacetsResponseSchema,
+  ),
+);
+
+export interface ManagedProductFacets {
+  segments: string[];
+  tags: string[];
+}
+
+export function useManagedProductFacets() {
+  const canView = useCan("build:managed-products:view");
+  return useQuery<ManagedProductFacets | null>({
+    queryKey: buildWorkQueryKeys.projects.managedProducts.facets,
+    queryFn: async ({ signal }) =>
+      apiClient.get<ManagedProductFacets>(
+        "/build/managed-products/facets",
+        undefined,
+        signal,
+        managedProductFacetsContract,
+      ),
+    staleTime: 5 * 60_000,
+    enabled: canView,
+  });
+}
+

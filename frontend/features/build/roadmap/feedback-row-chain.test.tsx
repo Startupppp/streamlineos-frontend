@@ -118,6 +118,7 @@ jest.mock("@/lib/text-overflow", () => ({
 }));
 
 jest.mock("./roadmap-constants", () => ({
+  ...jest.requireActual("./roadmap-constants"),
   FEEDBACK_STATUS_OPTIONS: [
     { value: "open", label: "Open" },
     { value: "planned", label: "Planned" },

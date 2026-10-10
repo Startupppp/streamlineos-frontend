@@ -57,6 +57,13 @@ const HEALTH_OPTIONS = [
 
 const ALL_SENTINEL = "all";
 
+const CONTRIB_OPTIONS = [
+  { value: "none", label: "No tickets" },
+  { value: "low", label: "Low (1–30%)" },
+  { value: "medium", label: "Medium (31–70%)" },
+  { value: "high", label: "High (71–100%)" },
+];
+
 function ContributionCell({ row }: { row: LinkedProjectRow }) {
   const { percent, totalTickets } = row.contribution;
   if (totalTickets === 0) {
@@ -127,6 +134,33 @@ function NextMilestoneCell({ row }: { row: LinkedProjectRow }) {
   );
 }
 
+function NextReleaseCell({ row }: { row: LinkedProjectRow }) {
+  if (!row.nextRelease) return <span className="text-xs text-muted-foreground">—</span>;
+  const { name, version, releaseDate } = row.nextRelease;
+  return (
+    <div className="flex flex-col gap-0.5">
+      <span className="max-w-[140px] truncate text-xs font-medium">{name}</span>
+      <span className="font-mono tabular-nums text-xs text-muted-foreground">
+        {version}
+        {releaseDate ? ` · ${format(new Date(releaseDate), "MMM d")}` : ""}
+      </span>
+    </div>
+  );
+}
+
+function LinkedGoalsCell({ row }: { row: LinkedProjectRow }) {
+  if (!row.linkedGoals.length) return <span className="text-xs text-muted-foreground">—</span>;
+  const first = row.linkedGoals[0];
+  return (
+    <div className="flex flex-col gap-0.5">
+      <span className="max-w-[160px] truncate text-xs font-medium">{first.title}</span>
+      {row.linkedGoals.length > 1 ? (
+        <span className="text-xs text-muted-foreground">+{row.linkedGoals.length - 1} more</span>
+      ) : null}
+    </div>
+  );
+}
+
 interface ProductProjectsPageProps {
   managedProductId: number;
 }
@@ -141,9 +175,13 @@ export function ProductProjectsPage({ managedProductId }: ProductProjectsPagePro
     resolution,
     isFiltered,
     isFilteredEmpty,
-    isLoading,
     statusValue,
     healthValue,
+    teamValue,
+    clientValue,
+    contribValue,
+    teamOptions,
+    clientOptions,
     searchValue,
     searchInputRef,
     linkDialogOpen,
@@ -153,6 +191,9 @@ export function ProductProjectsPage({ managedProductId }: ProductProjectsPagePro
     headerActions,
     handleStatusChange,
     handleHealthChange,
+    handleTeamChange,
+    handleClientChange,
+    handleContribChange,
     handleSearchChange,
     handleClearFilters,
     handleNextPage,
@@ -186,9 +227,24 @@ export function ProductProjectsPage({ managedProductId }: ProductProjectsPagePro
         cell: (row) => <StatusBadge status={row.status} />,
       },
       {
+        key: "health",
+        header: "Health",
+        cell: (row) => <HealthBadge health={row.health} />,
+      },
+      {
         key: "nextMilestone",
         header: "Next milestone",
         cell: (row) => <NextMilestoneCell row={row} />,
+      },
+      {
+        key: "nextRelease",
+        header: "Next release",
+        cell: (row) => <NextReleaseCell row={row} />,
+      },
+      {
+        key: "linkedGoals",
+        header: "Linked goals",
+        cell: (row) => <LinkedGoalsCell row={row} />,
       },
       {
         key: "contribution",
@@ -323,6 +379,45 @@ export function ProductProjectsPage({ managedProductId }: ProductProjectsPagePro
                   value={healthValue || ALL_SENTINEL}
                   onValueChange={(v) => handleHealthChange(v === ALL_SENTINEL ? "" : v)}
                   options={[{ value: ALL_SENTINEL, label: "Any health" }, ...HEALTH_OPTIONS]}
+                />
+              ),
+            },
+            {
+              id: "team",
+              label: "Team",
+              active: Boolean(teamValue),
+              control: (
+                <BuildFilterSelect
+                  label="Team"
+                  value={teamValue || ALL_SENTINEL}
+                  onValueChange={(v) => handleTeamChange(v === ALL_SENTINEL ? "" : v)}
+                  options={[{ value: ALL_SENTINEL, label: "All teams" }, ...teamOptions]}
+                />
+              ),
+            },
+            {
+              id: "customer",
+              label: "Customer",
+              active: Boolean(clientValue),
+              control: (
+                <BuildFilterSelect
+                  label="Customer"
+                  value={clientValue || ALL_SENTINEL}
+                  onValueChange={(v) => handleClientChange(v === ALL_SENTINEL ? "" : v)}
+                  options={[{ value: ALL_SENTINEL, label: "All customers" }, ...clientOptions]}
+                />
+              ),
+            },
+            {
+              id: "contribution",
+              label: "Contribution",
+              active: Boolean(contribValue),
+              control: (
+                <BuildFilterSelect
+                  label="Contribution"
+                  value={contribValue || ALL_SENTINEL}
+                  onValueChange={(v) => handleContribChange(v === ALL_SENTINEL ? "" : v)}
+                  options={[{ value: ALL_SENTINEL, label: "Any contribution" }, ...CONTRIB_OPTIONS]}
                 />
               ),
             },

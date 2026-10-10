@@ -50,6 +50,7 @@ export const roadmapItemSchema = z
       (value) => value === "" || (/^[1-9]\d*$/.test(value) && Number.isSafeInteger(Number(value))),
       "Choose a valid delivery project",
     ),
+    epicTicketId: z.string(),
     goalId: z.string(),
     releaseId: z.string(),
     teamId: z.string(),

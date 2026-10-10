@@ -127,3 +127,25 @@ describe("RoadmapItemCard — outcome delivery link (BT-1ea82c1d75fa)", () => {
     expect(screen.queryByTestId("roadmap-item-outcome")).not.toBeInTheDocument();
   });
 });
+
+describe("RoadmapItemCard — epic link (BSN-RM-EPIC)", () => {
+  it("shows an Epic link when both epicTicketId and projectId are set", () => {
+    const item = { ...ITEM, projectId: 10, epicTicketId: 99 } as unknown as ScorableRoadmapItem;
+    render(<RoadmapItemCard item={item} onEdit={jest.fn()} onDelete={jest.fn()} />);
+    const link = screen.getByRole("link", { name: "View epic ticket" });
+    expect(link).toBeInTheDocument();
+    expect(link).toHaveAttribute("href", "/build/10/issues?ticket=99");
+  });
+
+  it("does not show the Epic link when epicTicketId is null", () => {
+    const item = { ...ITEM, projectId: 10, epicTicketId: null } as unknown as ScorableRoadmapItem;
+    render(<RoadmapItemCard item={item} onEdit={jest.fn()} onDelete={jest.fn()} />);
+    expect(screen.queryByRole("link", { name: "View epic ticket" })).not.toBeInTheDocument();
+  });
+
+  it("does not show the Epic link when projectId is null even if epicTicketId is set", () => {
+    const item = { ...ITEM, projectId: null, epicTicketId: 99 } as unknown as ScorableRoadmapItem;
+    render(<RoadmapItemCard item={item} onEdit={jest.fn()} onDelete={jest.fn()} />);
+    expect(screen.queryByRole("link", { name: "View epic ticket" })).not.toBeInTheDocument();
+  });
+});

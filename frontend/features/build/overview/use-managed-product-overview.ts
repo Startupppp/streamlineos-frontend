@@ -5,14 +5,19 @@ import { usePageState } from "@/hooks/api/use-page-state";
 import { BUILD_FILTER_ALL, useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import { useManagedProductSummary } from "@/hooks/api/build/managed-product-summary";
+import { useProjectTeams } from "@/hooks/api/build/teams";
 import { getUserDisplayName } from "@/lib/person-display";
 import { formatRelativeTime } from "@/lib/date-utils";
-import type { SummaryPeriod } from "@/hooks/api/build/managed-product-summary";
+import type { SummaryPeriod, InitiativeStatus } from "@/hooks/api/build/managed-product-summary";
 
 const PERIOD_VALUES = ["30d", "90d", "365d", "all"] as const;
+const INITIATIVE_STATUS_VALUES = ["planned", "in_progress", "completed", "cancelled"] as const;
 
 const OVERVIEW_FILTER_DEFINITIONS = [
   { param: "period", options: PERIOD_VALUES },
+  { param: "teamId" },
+  { param: "segment" },
+  { param: "initiativeStatus", options: INITIATIVE_STATUS_VALUES },
 ] as const;
 
 export const PERIOD_OPTIONS = [
@@ -22,19 +27,62 @@ export const PERIOD_OPTIONS = [
   { value: "365d", label: "Last 365 days" },
 ];
 
+export const INITIATIVE_STATUS_OPTIONS = [
+  { value: BUILD_FILTER_ALL, label: "All statuses" },
+  { value: "planned", label: "Planned" },
+  { value: "in_progress", label: "In progress" },
+  { value: "completed", label: "Completed" },
+  { value: "cancelled", label: "Cancelled" },
+];
+
 const EDIT_ACTION_BASE = { id: "edit", label: "Edit product", icon: Pencil, primary: true as const };
 
 export function useManagedProductOverview(managedProductId: number) {
   const [editOpen, setEditOpen] = useState(false);
   const listFilters = useBuildListFilters({ filters: OVERVIEW_FILTER_DEFINITIONS });
   const rawPeriod = listFilters.value("period");
+  const rawTeamId = listFilters.value("teamId");
+  const rawSegment = listFilters.value("segment");
+  const rawInitiativeStatus = listFilters.value("initiativeStatus");
+
   const period: SummaryPeriod | undefined = PERIOD_VALUES.find((v) => v === rawPeriod);
+  const initiativeStatus: InitiativeStatus | undefined = INITIATIVE_STATUS_VALUES.find(
+    (v) => v === rawInitiativeStatus,
+  );
+  const teamIdNum =
+    rawTeamId && rawTeamId !== BUILD_FILTER_ALL ? Number(rawTeamId) : undefined;
+  const segment =
+    rawSegment && rawSegment !== BUILD_FILTER_ALL ? rawSegment : undefined;
+
   const isOnline = useOnlineStatus();
   const canEdit = useCan("build:managed-products:update") && isOnline;
 
-  const summaryQuery = useManagedProductSummary(managedProductId, period);
+  const { data: teamsRes } = useProjectTeams({ pageSize: 100 });
+  const teams = useMemo(() => teamsRes?.data ?? [], [teamsRes]);
+  const teamOptions = useMemo(
+    () => [
+      { value: BUILD_FILTER_ALL, label: "All teams" },
+      ...teams.map((t) => ({ value: String(t.id), label: t.name })),
+    ],
+    [teams],
+  );
+
+  const summaryQuery = useManagedProductSummary(managedProductId, {
+    period,
+    teamId: teamIdNum,
+    segment,
+    initiativeStatus,
+  });
 
   const product = summaryQuery.data?.product ?? null;
+
+  const segmentOptions = useMemo(
+    () => [
+      { value: BUILD_FILTER_ALL, label: "All segments" },
+      ...(product?.segments ?? []).map((s) => ({ value: s, label: s })),
+    ],
+    [product],
+  );
 
   const resolution = usePageState({
     permission: "build:managed-products:view",
@@ -50,6 +98,21 @@ export function useManagedProductOverview(managedProductId: number) {
 
   const handlePeriodChange = useCallback(
     (value: string) => listFilters.setValue("period", value),
+    [listFilters],
+  );
+
+  const handleTeamChange = useCallback(
+    (value: string) => listFilters.setValue("teamId", value),
+    [listFilters],
+  );
+
+  const handleInitiativeStatusChange = useCallback(
+    (value: string) => listFilters.setValue("initiativeStatus", value),
+    [listFilters],
+  );
+
+  const handleSegmentChange = useCallback(
+    (value: string) => listFilters.setValue("segment", value),
     [listFilters],
   );
 
@@ -75,6 +138,8 @@ export function useManagedProductOverview(managedProductId: number) {
   return {
     listFilters,
     rawPeriod,
+    rawTeamId,
+    rawSegment,
     product,
     editOpen,
     setEditOpen,
@@ -83,7 +148,12 @@ export function useManagedProductOverview(managedProductId: number) {
     summaryData: summaryQuery.data ?? null,
     summaryDataUpdatedAt: summaryQuery.dataUpdatedAt,
     overviewSubtitle,
+    teamOptions,
+    segmentOptions,
     handleRetry,
     handlePeriodChange,
+    handleTeamChange,
+    handleInitiativeStatusChange,
+    handleSegmentChange,
   };
 }

@@ -7,6 +7,7 @@ import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { patchManagedProductLinkCache } from "./project-managed-product-cache";
 import type { ProjectListItem } from "@/types/projects";
+import type { LinkedProjectsPage } from "./managed-product-projects";
 
 const linkedProjectContract = z.object({
   id: z.number().int(),
@@ -54,7 +55,7 @@ export function useLinkProjectManagedProduct() {
           variables.managedProductId,
         ),
         exact: false,
-        refetchType: "active",
+        refetchType: "none",
       });
     },
   });
@@ -90,13 +91,20 @@ export function useUnlinkProjectManagedProduct() {
         { id: variables.projectId } as ProjectListItem,
         variables.managedProductId,
       );
-      const linkedProjectsKey = buildWorkQueryKeys.projects.managedProducts.linkedProjects(
+      const linkedProjectsKeyPrefix = buildWorkQueryKeys.projects.managedProducts.linkedProjects(
         variables.managedProductId,
       );
+      for (const [key, cached] of queryClient.getQueriesData<LinkedProjectsPage>({ queryKey: linkedProjectsKeyPrefix })) {
+        if (!cached) continue;
+        queryClient.setQueryData<LinkedProjectsPage>(key, {
+          ...cached,
+          data: cached.data.filter((row) => row.id !== variables.projectId),
+        });
+      }
       queryClient.invalidateQueries({
-        queryKey: linkedProjectsKey,
+        queryKey: linkedProjectsKeyPrefix,
         exact: false,
-        refetchType: "active",
+        refetchType: "none",
       });
       queryClient.invalidateQueries({
         queryKey: buildWorkQueryKeys.projects.managedProducts.insights(

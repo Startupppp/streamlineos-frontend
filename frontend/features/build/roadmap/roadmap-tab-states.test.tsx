@@ -95,6 +95,7 @@ jest.mock("@/components/pm-chrome", () => ({
 }));
 
 jest.mock("./roadmap-constants", () => ({
+  ...jest.requireActual("./roadmap-constants"),
   ROADMAP_HORIZON_COLUMNS: [
     { horizon: "now", label: "Now" },
     { horizon: "next", label: "Next" },
@@ -291,9 +292,9 @@ describe("RoadmapTab — the list read carries only keys roadmapListQuerySchema 
   });
 
   it("passes horizon through to the query so a deep-linked horizon reaches the backend", () => {
-    render(<RoadmapTab search="" horizon="Q3 2026" />);
+    render(<RoadmapTab search="" horizon="next" />);
     expect(mockUseRoadmapItems).toHaveBeenCalledWith(
-      expect.objectContaining({ horizon: "Q3 2026" }),
+      expect.objectContaining({ horizon: "next" }),
     );
   });
 });

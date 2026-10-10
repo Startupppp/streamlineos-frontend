@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const OPENAPI_HASH =
-  "sha256:562d04fb8b149ccd8c4d6362428c5eafae9a6c1cda6993dfad1c371a2c8f6067" as const;
+  "sha256:778163694c0b93a3b3e6e07a55543055367d0826c9ebb5b3079c1845339ce8a4" as const;
 
 export const agentTokensListResponseSchema = z.array(
   z.object({
@@ -509,7 +509,7 @@ export type ApprovalsInboxGetInboxResponse = z.infer<
   typeof approvalsInboxGetInboxResponseSchema
 >;
 
-export const projectsRoadmapListChangelogResponseSchema = z.object({
+export const projectsFeedbackChangelogListChangelogResponseSchema = z.object({
   data: z.array(
     z.object({
       id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
@@ -537,11 +537,11 @@ export const projectsRoadmapListChangelogResponseSchema = z.object({
     nextCursor: z.string().nullable(),
   }),
 });
-export type ProjectsRoadmapListChangelogResponse = z.infer<
-  typeof projectsRoadmapListChangelogResponseSchema
+export type ProjectsFeedbackChangelogListChangelogResponse = z.infer<
+  typeof projectsFeedbackChangelogListChangelogResponseSchema
 >;
 
-export const projectsRoadmapCreateChangelogResponseSchema = z.object({
+export const projectsFeedbackChangelogCreateChangelogResponseSchema = z.object({
   id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
   title: z.string(),
@@ -560,23 +560,29 @@ export const projectsRoadmapCreateChangelogResponseSchema = z.object({
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
 });
-export type ProjectsRoadmapCreateChangelogResponse = z.infer<
-  typeof projectsRoadmapCreateChangelogResponseSchema
+export type ProjectsFeedbackChangelogCreateChangelogResponse = z.infer<
+  typeof projectsFeedbackChangelogCreateChangelogResponseSchema
 >;
 
-export const projectsRoadmapCreateChangelogBodySchema = z.strictObject({
-  title: z.string(),
-  content: z.string().optional(),
-  version: z.string().optional(),
-  type: z.enum(["feature", "improvement", "fix"]).optional(),
-  isPublished: z.boolean().optional(),
-  linkedRoadmapItemId: z.number().int().gt(0).lte(9007199254740991).optional(),
-});
-export type ProjectsRoadmapCreateChangelogBody = z.input<
-  typeof projectsRoadmapCreateChangelogBodySchema
+export const projectsFeedbackChangelogCreateChangelogBodySchema =
+  z.strictObject({
+    title: z.string(),
+    content: z.string().optional(),
+    version: z.string().optional(),
+    type: z.enum(["feature", "improvement", "fix"]).optional(),
+    isPublished: z.boolean().optional(),
+    linkedRoadmapItemId: z
+      .number()
+      .int()
+      .gt(0)
+      .lte(9007199254740991)
+      .optional(),
+  });
+export type ProjectsFeedbackChangelogCreateChangelogBody = z.input<
+  typeof projectsFeedbackChangelogCreateChangelogBodySchema
 >;
 
-export const projectsRoadmapUpdateChangelogResponseSchema = z.object({
+export const projectsFeedbackChangelogUpdateChangelogResponseSchema = z.object({
   id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
   title: z.string(),
@@ -595,26 +601,27 @@ export const projectsRoadmapUpdateChangelogResponseSchema = z.object({
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
 });
-export type ProjectsRoadmapUpdateChangelogResponse = z.infer<
-  typeof projectsRoadmapUpdateChangelogResponseSchema
+export type ProjectsFeedbackChangelogUpdateChangelogResponse = z.infer<
+  typeof projectsFeedbackChangelogUpdateChangelogResponseSchema
 >;
 
-export const projectsRoadmapUpdateChangelogBodySchema = z.strictObject({
-  title: z.string().optional(),
-  content: z.string().optional(),
-  version: z.string().nullable().optional(),
-  type: z.enum(["feature", "improvement", "fix"]).optional(),
-  isPublished: z.boolean().optional(),
-  linkedRoadmapItemId: z
-    .number()
-    .int()
-    .gt(0)
-    .lte(9007199254740991)
-    .nullable()
-    .optional(),
-});
-export type ProjectsRoadmapUpdateChangelogBody = z.input<
-  typeof projectsRoadmapUpdateChangelogBodySchema
+export const projectsFeedbackChangelogUpdateChangelogBodySchema =
+  z.strictObject({
+    title: z.string().optional(),
+    content: z.string().optional(),
+    version: z.string().nullable().optional(),
+    type: z.enum(["feature", "improvement", "fix"]).optional(),
+    isPublished: z.boolean().optional(),
+    linkedRoadmapItemId: z
+      .number()
+      .int()
+      .gt(0)
+      .lte(9007199254740991)
+      .nullable()
+      .optional(),
+  });
+export type ProjectsFeedbackChangelogUpdateChangelogBody = z.input<
+  typeof projectsFeedbackChangelogUpdateChangelogBodySchema
 >;
 
 export const dashboardLayoutGetLayoutResponseSchema = z.object({
@@ -870,7 +877,7 @@ export type CommentDraftsDeleteOneResponse = z.infer<
   typeof commentDraftsDeleteOneResponseSchema
 >;
 
-export const projectsRoadmapListFeedbackResponseSchema = z.object({
+export const projectsFeedbackChangelogListFeedbackResponseSchema = z.object({
   data: z.array(
     z.object({
       id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
@@ -927,11 +934,11 @@ export const projectsRoadmapListFeedbackResponseSchema = z.object({
     nextCursor: z.string().nullable(),
   }),
 });
-export type ProjectsRoadmapListFeedbackResponse = z.infer<
-  typeof projectsRoadmapListFeedbackResponseSchema
+export type ProjectsFeedbackChangelogListFeedbackResponse = z.infer<
+  typeof projectsFeedbackChangelogListFeedbackResponseSchema
 >;
 
-export const projectsRoadmapUpdateFeedbackResponseSchema = z.object({
+export const projectsFeedbackChangelogUpdateFeedbackResponseSchema = z.object({
   id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
   title: z.string(),
@@ -973,37 +980,39 @@ export const projectsRoadmapUpdateFeedbackResponseSchema = z.object({
   updatedAt: z.iso.datetime({ offset: true }),
   deletedAt: z.iso.datetime({ offset: true }).nullable(),
 });
-export type ProjectsRoadmapUpdateFeedbackResponse = z.infer<
-  typeof projectsRoadmapUpdateFeedbackResponseSchema
+export type ProjectsFeedbackChangelogUpdateFeedbackResponse = z.infer<
+  typeof projectsFeedbackChangelogUpdateFeedbackResponseSchema
 >;
 
-export const projectsRoadmapUpdateFeedbackBodySchema = z.strictObject({
-  title: z.string().optional(),
-  description: z.string().nullable().optional(),
-  status: z
-    .enum(["open", "planned", "in_progress", "completed", "declined"])
-    .optional(),
-  category: z.string().nullable().optional(),
-  crmOrganizationId: z
-    .number()
-    .int()
-    .gt(0)
-    .lte(9007199254740991)
-    .nullable()
-    .optional(),
-  linkedRoadmapItemId: z
-    .number()
-    .int()
-    .gt(0)
-    .lte(9007199254740991)
-    .nullable()
-    .optional(),
-});
-export type ProjectsRoadmapUpdateFeedbackBody = z.input<
-  typeof projectsRoadmapUpdateFeedbackBodySchema
+export const projectsFeedbackChangelogUpdateFeedbackBodySchema = z.strictObject(
+  {
+    title: z.string().optional(),
+    description: z.string().nullable().optional(),
+    status: z
+      .enum(["open", "planned", "in_progress", "completed", "declined"])
+      .optional(),
+    category: z.string().nullable().optional(),
+    crmOrganizationId: z
+      .number()
+      .int()
+      .gt(0)
+      .lte(9007199254740991)
+      .nullable()
+      .optional(),
+    linkedRoadmapItemId: z
+      .number()
+      .int()
+      .gt(0)
+      .lte(9007199254740991)
+      .nullable()
+      .optional(),
+  },
+);
+export type ProjectsFeedbackChangelogUpdateFeedbackBody = z.input<
+  typeof projectsFeedbackChangelogUpdateFeedbackBodySchema
 >;
 
-export const projectsRoadmapMergeFeedbackResponseSchema = z.object({
+export const projectsFeedbackChangelogMergeFeedbackResponseSchema = z.object({
   id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
   title: z.string(),
@@ -1045,15 +1054,15 @@ export const projectsRoadmapMergeFeedbackResponseSchema = z.object({
   updatedAt: z.iso.datetime({ offset: true }),
   deletedAt: z.iso.datetime({ offset: true }).nullable(),
 });
-export type ProjectsRoadmapMergeFeedbackResponse = z.infer<
-  typeof projectsRoadmapMergeFeedbackResponseSchema
+export type ProjectsFeedbackChangelogMergeFeedbackResponse = z.infer<
+  typeof projectsFeedbackChangelogMergeFeedbackResponseSchema
 >;
 
-export const projectsRoadmapMergeFeedbackBodySchema = z.strictObject({
+export const projectsFeedbackChangelogMergeFeedbackBodySchema = z.strictObject({
   targetPostId: z.number().int().gt(0).lte(9007199254740991),
 });
-export type ProjectsRoadmapMergeFeedbackBody = z.input<
-  typeof projectsRoadmapMergeFeedbackBodySchema
+export type ProjectsFeedbackChangelogMergeFeedbackBody = z.input<
+  typeof projectsFeedbackChangelogMergeFeedbackBodySchema
 >;
 
 export const projectsListLabelsResponseSchema = z.array(
@@ -1144,15 +1153,22 @@ export const managedProductsListManagedProductsResponseSchema = z.object({
       differentiators: z.string().nullable(),
       currentPhase: z.string().nullable(),
       targetLaunchDate: z.iso.datetime({ offset: true }).nullable(),
-      successMetrics: z.unknown(),
+      successMetrics: z
+        .array(
+          z.object({
+            label: z.string(),
+            target: z.string().optional(),
+          }),
+        )
+        .nullable(),
       ownerMembershipId: z
         .number()
         .int()
         .gte(-9007199254740991)
         .lte(9007199254740991)
         .nullable(),
-      lifecycle: z.string(),
-      health: z.string(),
+      lifecycle: z.enum(["discovery", "build", "growth", "mature", "sunset"]),
+      health: z.enum(["on_track", "at_risk", "off_track", "unknown"]),
       teamId: z
         .number()
         .int()
@@ -1223,15 +1239,22 @@ export const managedProductsCreateManagedProductResponseSchema = z.object({
   differentiators: z.string().nullable(),
   currentPhase: z.string().nullable(),
   targetLaunchDate: z.iso.datetime({ offset: true }).nullable(),
-  successMetrics: z.unknown(),
+  successMetrics: z
+    .array(
+      z.object({
+        label: z.string(),
+        target: z.string().optional(),
+      }),
+    )
+    .nullable(),
   ownerMembershipId: z
     .number()
     .int()
     .gte(-9007199254740991)
     .lte(9007199254740991)
     .nullable(),
-  lifecycle: z.string(),
-  health: z.string(),
+  lifecycle: z.enum(["discovery", "build", "growth", "mature", "sunset"]),
+  health: z.enum(["on_track", "at_risk", "off_track", "unknown"]),
   teamId: z
     .number()
     .int()
@@ -1322,6 +1345,14 @@ export type ManagedProductsBulkUpdateManagedProductsBody = z.input<
   typeof managedProductsBulkUpdateManagedProductsBodySchema
 >;
 
+export const managedProductsGetManagedProductFacetsResponseSchema = z.object({
+  segments: z.array(z.string()),
+  tags: z.array(z.string()),
+});
+export type ManagedProductsGetManagedProductFacetsResponse = z.infer<
+  typeof managedProductsGetManagedProductFacetsResponseSchema
+>;
+
 export const managedProductsGetManagedProductResponseSchema = z.object({
   id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
@@ -1336,15 +1367,22 @@ export const managedProductsGetManagedProductResponseSchema = z.object({
   differentiators: z.string().nullable(),
   currentPhase: z.string().nullable(),
   targetLaunchDate: z.iso.datetime({ offset: true }).nullable(),
-  successMetrics: z.unknown(),
+  successMetrics: z
+    .array(
+      z.object({
+        label: z.string(),
+        target: z.string().optional(),
+      }),
+    )
+    .nullable(),
   ownerMembershipId: z
     .number()
     .int()
     .gte(-9007199254740991)
     .lte(9007199254740991)
     .nullable(),
-  lifecycle: z.string(),
-  health: z.string(),
+  lifecycle: z.enum(["discovery", "build", "growth", "mature", "sunset"]),
+  health: z.enum(["on_track", "at_risk", "off_track", "unknown"]),
   teamId: z
     .number()
     .int()
@@ -1387,15 +1425,22 @@ export const managedProductsUpdateManagedProductResponseSchema = z.object({
   differentiators: z.string().nullable(),
   currentPhase: z.string().nullable(),
   targetLaunchDate: z.iso.datetime({ offset: true }).nullable(),
-  successMetrics: z.unknown(),
+  successMetrics: z
+    .array(
+      z.object({
+        label: z.string(),
+        target: z.string().optional(),
+      }),
+    )
+    .nullable(),
   ownerMembershipId: z
     .number()
     .int()
     .gte(-9007199254740991)
     .lte(9007199254740991)
     .nullable(),
-  lifecycle: z.string(),
-  health: z.string(),
+  lifecycle: z.enum(["discovery", "build", "growth", "mature", "sunset"]),
+  health: z.enum(["on_track", "at_risk", "off_track", "unknown"]),
   teamId: z
     .number()
     .int()
@@ -1472,15 +1517,22 @@ export const managedProductsArchiveManagedProductResponseSchema = z.object({
   differentiators: z.string().nullable(),
   currentPhase: z.string().nullable(),
   targetLaunchDate: z.iso.datetime({ offset: true }).nullable(),
-  successMetrics: z.unknown(),
+  successMetrics: z
+    .array(
+      z.object({
+        label: z.string(),
+        target: z.string().optional(),
+      }),
+    )
+    .nullable(),
   ownerMembershipId: z
     .number()
     .int()
     .gte(-9007199254740991)
     .lte(9007199254740991)
     .nullable(),
-  lifecycle: z.string(),
-  health: z.string(),
+  lifecycle: z.enum(["discovery", "build", "growth", "mature", "sunset"]),
+  health: z.enum(["on_track", "at_risk", "off_track", "unknown"]),
   teamId: z
     .number()
     .int()
@@ -2201,6 +2253,11 @@ export const discoveryAcceptOpportunityBodySchema = z.strictObject({
   projectId: z.number().int().gt(0).lte(9007199254740991).optional(),
   goalId: z.number().int().gt(0).lte(9007199254740991).optional(),
   releaseId: z.number().int().gt(0).lte(9007199254740991).optional(),
+  epicTicketId: z.number().int().gt(0).lte(9007199254740991).optional(),
+  isPublic: z.boolean().optional(),
+  dependsOnIds: z
+    .array(z.number().int().gt(0).lte(9007199254740991))
+    .optional(),
   note: z.string().optional(),
   expectedVersion: z.number().int().gte(1).lte(9007199254740991),
 });
@@ -2597,6 +2654,18 @@ export const discoveryGetTraceResponseSchema = z.object({
         .enum(["met", "partially_met", "not_met", "inconclusive"])
         .nullable(),
       scheduledFor: z.string().nullable(),
+    }),
+  ),
+  dependencies: z.array(
+    z.object({
+      dependsOnId: z
+        .number()
+        .int()
+        .gte(-9007199254740991)
+        .lte(9007199254740991),
+      title: z.string(),
+      horizon: z.enum(["now", "next", "later"]),
+      status: z.string(),
     }),
   ),
 });
@@ -3013,15 +3082,22 @@ export const managedProductsRestoreManagedProductResponseSchema = z.object({
   differentiators: z.string().nullable(),
   currentPhase: z.string().nullable(),
   targetLaunchDate: z.iso.datetime({ offset: true }).nullable(),
-  successMetrics: z.unknown(),
+  successMetrics: z
+    .array(
+      z.object({
+        label: z.string(),
+        target: z.string().optional(),
+      }),
+    )
+    .nullable(),
   ownerMembershipId: z
     .number()
     .int()
     .gte(-9007199254740991)
     .lte(9007199254740991)
     .nullable(),
-  lifecycle: z.string(),
-  health: z.string(),
+  lifecycle: z.enum(["discovery", "build", "growth", "mature", "sunset"]),
+  health: z.enum(["on_track", "at_risk", "off_track", "unknown"]),
   teamId: z
     .number()
     .int()
@@ -3073,15 +3149,22 @@ export const managedProductRelationsGetManagedProductSummaryResponseSchema =
       differentiators: z.string().nullable(),
       currentPhase: z.string().nullable(),
       targetLaunchDate: z.iso.datetime({ offset: true }).nullable(),
-      successMetrics: z.unknown(),
+      successMetrics: z
+        .array(
+          z.object({
+            label: z.string(),
+            target: z.string().optional(),
+          }),
+        )
+        .nullable(),
       ownerMembershipId: z
         .number()
         .int()
         .gte(-9007199254740991)
         .lte(9007199254740991)
         .nullable(),
-      lifecycle: z.string(),
-      health: z.string(),
+      lifecycle: z.enum(["discovery", "build", "growth", "mature", "sunset"]),
+      health: z.enum(["on_track", "at_risk", "off_track", "unknown"]),
       teamId: z
         .number()
         .int()
@@ -3227,6 +3310,31 @@ export const managedProductRelationsGetManagedProductSummaryResponseSchema =
           scoreLabel: z.string(),
         }),
       ),
+      goals: z.array(
+        z.object({
+          id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+          title: z.string(),
+          status: z.string(),
+          progress: z
+            .number()
+            .int()
+            .gte(-9007199254740991)
+            .lte(9007199254740991),
+        }),
+      ),
+      decisions: z.array(
+        z.object({
+          id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+          title: z.string(),
+          decidedAt: z.string().nullable(),
+          note: z.string().nullable(),
+        }),
+      ),
+      changelogPublished: z
+        .number()
+        .int()
+        .gte(-9007199254740991)
+        .lte(9007199254740991),
     }),
     generatedAt: z.string(),
   });
@@ -14497,27 +14605,27 @@ export const BUILD_CONTRACT_OPERATIONS = [
     response: "approvalsInboxGetInboxResponseSchema",
   },
   {
-    operationId: "ProjectsRoadmapController_listChangelog",
+    operationId: "ProjectsFeedbackChangelogController_listChangelog",
     method: "GET",
     path: "/build/changelog",
-    response: "projectsRoadmapListChangelogResponseSchema",
+    response: "projectsFeedbackChangelogListChangelogResponseSchema",
   },
   {
-    operationId: "ProjectsRoadmapController_createChangelog",
+    operationId: "ProjectsFeedbackChangelogController_createChangelog",
     method: "POST",
     path: "/build/changelog",
-    response: "projectsRoadmapCreateChangelogResponseSchema",
-    body: "projectsRoadmapCreateChangelogBodySchema",
+    response: "projectsFeedbackChangelogCreateChangelogResponseSchema",
+    body: "projectsFeedbackChangelogCreateChangelogBodySchema",
   },
   {
-    operationId: "ProjectsRoadmapController_updateChangelog",
+    operationId: "ProjectsFeedbackChangelogController_updateChangelog",
     method: "PATCH",
     path: "/build/changelog/{entryId}",
-    response: "projectsRoadmapUpdateChangelogResponseSchema",
-    body: "projectsRoadmapUpdateChangelogBodySchema",
+    response: "projectsFeedbackChangelogUpdateChangelogResponseSchema",
+    body: "projectsFeedbackChangelogUpdateChangelogBodySchema",
   },
   {
-    operationId: "ProjectsRoadmapController_deleteChangelog",
+    operationId: "ProjectsFeedbackChangelogController_deleteChangelog",
     method: "DELETE",
     path: "/build/changelog/{entryId}",
   },
@@ -14572,29 +14680,29 @@ export const BUILD_CONTRACT_OPERATIONS = [
     response: "commentDraftsDeleteOneResponseSchema",
   },
   {
-    operationId: "ProjectsRoadmapController_listFeedback",
+    operationId: "ProjectsFeedbackChangelogController_listFeedback",
     method: "GET",
     path: "/build/feedback",
-    response: "projectsRoadmapListFeedbackResponseSchema",
+    response: "projectsFeedbackChangelogListFeedbackResponseSchema",
   },
   {
-    operationId: "ProjectsRoadmapController_updateFeedback",
+    operationId: "ProjectsFeedbackChangelogController_updateFeedback",
     method: "PATCH",
     path: "/build/feedback/{postId}",
-    response: "projectsRoadmapUpdateFeedbackResponseSchema",
-    body: "projectsRoadmapUpdateFeedbackBodySchema",
+    response: "projectsFeedbackChangelogUpdateFeedbackResponseSchema",
+    body: "projectsFeedbackChangelogUpdateFeedbackBodySchema",
   },
   {
-    operationId: "ProjectsRoadmapController_deleteFeedback",
+    operationId: "ProjectsFeedbackChangelogController_deleteFeedback",
     method: "DELETE",
     path: "/build/feedback/{postId}",
   },
   {
-    operationId: "ProjectsRoadmapController_mergeFeedback",
+    operationId: "ProjectsFeedbackChangelogController_mergeFeedback",
     method: "POST",
     path: "/build/feedback/{postId}/merge",
-    response: "projectsRoadmapMergeFeedbackResponseSchema",
-    body: "projectsRoadmapMergeFeedbackBodySchema",
+    response: "projectsFeedbackChangelogMergeFeedbackResponseSchema",
+    body: "projectsFeedbackChangelogMergeFeedbackBodySchema",
   },
   {
     operationId: "ProjectsController_listLabels",
@@ -14653,6 +14761,12 @@ export const BUILD_CONTRACT_OPERATIONS = [
     path: "/build/managed-products/bulk",
     response: "managedProductsBulkUpdateManagedProductsResponseSchema",
     body: "managedProductsBulkUpdateManagedProductsBodySchema",
+  },
+  {
+    operationId: "ManagedProductsController_getManagedProductFacets",
+    method: "GET",
+    path: "/build/managed-products/facets",
+    response: "managedProductsGetManagedProductFacetsResponseSchema",
   },
   {
     operationId: "ManagedProductsController_getManagedProduct",
@@ -15029,6 +15143,11 @@ export const BUILD_CONTRACT_OPERATIONS = [
     method: "POST",
     path: "/build/roadmap-publication",
     response: "projectsRoadmapPublishRoadmapResponseSchema",
+  },
+  {
+    operationId: "ProjectsRoadmapController_unpublishRoadmap",
+    method: "DELETE",
+    path: "/build/roadmap-publication",
   },
   {
     operationId: "ProjectsRoadmapController_updateRoadmap",

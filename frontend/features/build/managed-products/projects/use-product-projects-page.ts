@@ -6,12 +6,12 @@ import { Link2 } from "lucide-react";
 import { toast } from "sonner";
 import { useManagedProductProjects, type LinkedProjectRow } from "@/hooks/api/build/managed-product-projects";
 import { useUnlinkProjectManagedProduct } from "@/hooks/api/build/use-link-project-managed-product";
+import { useProjectTeams } from "@/hooks/api/build/teams";
+import { useCrmOrganizationsForPicker } from "@/hooks/api/crm/organizations";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
-import { useQueryClient } from "@tanstack/react-query";
 
 export { type LinkedProjectRow };
 
@@ -20,9 +20,19 @@ const CURSOR_PARAM = "cursor";
 const STATUS_PARAM = "pp_status";
 const HEALTH_PARAM = "pp_health";
 const OWNER_PARAM = "pp_owner";
+const TEAM_PARAM = "pp_team";
+const CLIENT_PARAM = "pp_client";
+const CONTRIB_PARAM = "pp_contrib";
 const DATE_FROM_PARAM = "pp_dateFrom";
 const DATE_TO_PARAM = "pp_dateTo";
 const SEARCH_PARAM = "pp_search";
+
+const CONTRIB_BUCKETS: Record<string, { min: number; max: number }> = {
+  none: { min: 0, max: 0 },
+  low: { min: 1, max: 30 },
+  medium: { min: 31, max: 70 },
+  high: { min: 71, max: 100 },
+};
 
 const LINK_PROJECT_ACTION = {
   id: "link-project",
@@ -36,7 +46,6 @@ interface UseProductProjectsPageProps {
 }
 
 export function useProductProjectsPage({ managedProductId }: UseProductProjectsPageProps) {
-  const queryClient = useQueryClient();
   const canManage = useCan("build:managed-products:update");
   const router = useRouter();
   const pathname = usePathname();
@@ -50,6 +59,9 @@ export function useProductProjectsPage({ managedProductId }: UseProductProjectsP
   const statusValue = searchParams.get(STATUS_PARAM) ?? "";
   const healthValue = searchParams.get(HEALTH_PARAM) ?? "";
   const ownerValue = searchParams.get(OWNER_PARAM) ?? "";
+  const teamValue = searchParams.get(TEAM_PARAM) ?? "";
+  const clientValue = searchParams.get(CLIENT_PARAM) ?? "";
+  const contribValue = searchParams.get(CONTRIB_PARAM) ?? "";
   const dateFromValue = searchParams.get(DATE_FROM_PARAM) ?? "";
   const dateToValue = searchParams.get(DATE_TO_PARAM) ?? "";
   const searchValue = searchParams.get(SEARCH_PARAM) ?? "";
@@ -57,9 +69,23 @@ export function useProductProjectsPage({ managedProductId }: UseProductProjectsP
 
   const debouncedSearch = useDebouncedValue(searchValue, 300);
 
-  const isFiltered = Boolean(
-    statusValue || healthValue || ownerValue || dateFromValue || dateToValue || searchValue,
+  const { data: teamsData } = useProjectTeams({ pageSize: 100 });
+  const teamOptions = useMemo(
+    () => (teamsData?.data ?? []).map((t) => ({ value: String(t.id), label: t.name })),
+    [teamsData],
   );
+
+  const { data: crmOrgsData } = useCrmOrganizationsForPicker();
+  const clientOptions = useMemo(
+    () => (crmOrgsData?.organizations ?? []).map((o) => ({ value: String(o.id), label: o.name })),
+    [crmOrgsData],
+  );
+
+  const isFiltered = Boolean(
+    statusValue || healthValue || ownerValue || teamValue || clientValue || contribValue || dateFromValue || dateToValue || searchValue,
+  );
+
+  const contribRange = contribValue ? CONTRIB_BUCKETS[contribValue] : null;
 
   const params = useMemo(
     () => ({
@@ -67,12 +93,16 @@ export function useProductProjectsPage({ managedProductId }: UseProductProjectsP
       limit: PAGE_SIZE,
       cursor: cursorValue,
       ...(statusValue ? { status: statusValue } : {}),
+      ...(healthValue ? { health: healthValue } : {}),
       ...(ownerValue ? { ownerId: Number(ownerValue) } : {}),
+      ...(teamValue ? { teamId: Number(teamValue) } : {}),
+      ...(clientValue ? { clientId: Number(clientValue) } : {}),
+      ...(contribRange ? { minContribution: contribRange.min, maxContribution: contribRange.max } : {}),
       ...(dateFromValue ? { dateFrom: dateFromValue } : {}),
       ...(dateToValue ? { dateTo: dateToValue } : {}),
       ...(debouncedSearch.trim() ? { search: debouncedSearch.trim() } : {}),
     }),
-    [managedProductId, cursorValue, statusValue, ownerValue, dateFromValue, dateToValue, debouncedSearch],
+    [managedProductId, cursorValue, statusValue, healthValue, ownerValue, teamValue, clientValue, contribRange, dateFromValue, dateToValue, debouncedSearch],
   );
 
   const { data, isLoading, isError, error, refetch } = useManagedProductProjects(params);
@@ -92,52 +122,70 @@ export function useProductProjectsPage({ managedProductId }: UseProductProjectsP
 
   const isFilteredEmpty = !isLoading && rows.length === 0 && isFiltered;
 
-  function writeParams(updates: Record<string, string | null>, resetCursor = false) {
-    const next = new URLSearchParams(searchParams.toString());
-    for (const [key, value] of Object.entries(updates)) {
-      if (value === null || value === "") next.delete(key);
-      else next.set(key, value);
-    }
-    if (resetCursor) next.delete(CURSOR_PARAM);
-    const query = next.toString();
-    startTransition(() => {
-      router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
-    });
-  }
+  const writeParams = useCallback(
+    (updates: Record<string, string | null>, resetCursor = false) => {
+      const next = new URLSearchParams(searchParams.toString());
+      for (const [key, value] of Object.entries(updates)) {
+        if (value === null || value === "") next.delete(key);
+        else next.set(key, value);
+      }
+      if (resetCursor) next.delete(CURSOR_PARAM);
+      const query = next.toString();
+      startTransition(() => {
+        router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+      });
+    },
+    [searchParams, pathname, router],
+  );
 
   const handleStatusChange = useCallback(
     (value: string) => writeParams({ [STATUS_PARAM]: value || null }, true),
-    [searchParams, pathname, router],
+    [writeParams],
   );
 
   const handleHealthChange = useCallback(
     (value: string) => writeParams({ [HEALTH_PARAM]: value || null }, true),
-    [searchParams, pathname, router],
+    [writeParams],
   );
 
   const handleOwnerChange = useCallback(
     (value: string) => writeParams({ [OWNER_PARAM]: value || null }, true),
-    [searchParams, pathname, router],
+    [writeParams],
+  );
+
+  const handleTeamChange = useCallback(
+    (value: string) => writeParams({ [TEAM_PARAM]: value || null }, true),
+    [writeParams],
+  );
+
+  const handleClientChange = useCallback(
+    (value: string) => writeParams({ [CLIENT_PARAM]: value || null }, true),
+    [writeParams],
+  );
+
+  const handleContribChange = useCallback(
+    (value: string) => writeParams({ [CONTRIB_PARAM]: value || null }, true),
+    [writeParams],
   );
 
   const handleDateFromChange = useCallback(
     (value: string) => writeParams({ [DATE_FROM_PARAM]: value || null }, true),
-    [searchParams, pathname, router],
+    [writeParams],
   );
 
   const handleDateToChange = useCallback(
     (value: string) => writeParams({ [DATE_TO_PARAM]: value || null }, true),
-    [searchParams, pathname, router],
+    [writeParams],
   );
 
   const handleSearchChange = useCallback(
     (value: string) => writeParams({ [SEARCH_PARAM]: value || null }, true),
-    [searchParams, pathname, router],
+    [writeParams],
   );
 
   const handleClearFilters = useCallback(() => {
     const next = new URLSearchParams(searchParams.toString());
-    for (const p of [STATUS_PARAM, HEALTH_PARAM, OWNER_PARAM, DATE_FROM_PARAM, DATE_TO_PARAM, SEARCH_PARAM, CURSOR_PARAM]) {
+    for (const p of [STATUS_PARAM, HEALTH_PARAM, OWNER_PARAM, TEAM_PARAM, CLIENT_PARAM, CONTRIB_PARAM, DATE_FROM_PARAM, DATE_TO_PARAM, SEARCH_PARAM, CURSOR_PARAM]) {
       next.delete(p);
     }
     const query = next.toString();
@@ -148,11 +196,11 @@ export function useProductProjectsPage({ managedProductId }: UseProductProjectsP
 
   const handleNextPage = useCallback(() => {
     if (nextCursor) writeParams({ [CURSOR_PARAM]: nextCursor });
-  }, [nextCursor, searchParams, pathname, router]);
+  }, [nextCursor, writeParams]);
 
   const handlePreviousPage = useCallback(() => {
     writeParams({ [CURSOR_PARAM]: null });
-  }, [searchParams, pathname, router]);
+  }, [writeParams]);
 
   const unlinkMutation = useUnlinkProjectManagedProduct();
 
@@ -171,16 +219,11 @@ export function useProductProjectsPage({ managedProductId }: UseProductProjectsP
         onSuccess: () => {
           toast.success("Project unlinked from product");
           setUnlinkProjectId(null);
-          queryClient.invalidateQueries({
-            queryKey: buildWorkQueryKeys.projects.managedProducts.linkedProjects(managedProductId),
-            exact: false,
-            refetchType: "active",
-          });
         },
         onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
-  }, [unlinkProjectId, unlinkMutation, managedProductId, queryClient]);
+  }, [unlinkProjectId, unlinkMutation, managedProductId]);
 
   const handleUnlinkDialogOpenChange = useCallback((open: boolean) => {
     if (!open) setUnlinkProjectId(null);
@@ -209,6 +252,11 @@ export function useProductProjectsPage({ managedProductId }: UseProductProjectsP
     statusValue,
     healthValue,
     ownerValue,
+    teamValue,
+    clientValue,
+    contribValue,
+    teamOptions,
+    clientOptions,
     dateFromValue,
     dateToValue,
     searchValue,
@@ -221,6 +269,9 @@ export function useProductProjectsPage({ managedProductId }: UseProductProjectsP
     handleStatusChange,
     handleHealthChange,
     handleOwnerChange,
+    handleTeamChange,
+    handleClientChange,
+    handleContribChange,
     handleDateFromChange,
     handleDateToChange,
     handleSearchChange,

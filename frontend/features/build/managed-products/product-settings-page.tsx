@@ -76,7 +76,7 @@ function ProductSettingsForm({ managedProductId }: ProductSettingsPageProps) {
           segments: product.segments,
           tags: product.tags,
           northStarMetric: product.northStarMetric ?? undefined,
-          successMetrics: product.successMetrics,
+          successMetrics: product.successMetrics ?? [],
           vision: product.vision ?? undefined,
           missionStatement: product.missionStatement ?? undefined,
           targetCustomer: product.targetCustomer ?? undefined,

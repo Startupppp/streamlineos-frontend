@@ -7,120 +7,38 @@ import {
   AlertCircle,
   CalendarDays,
   CheckCircle2,
-  ClipboardCheck,
+  ChevronUp,
   Link2 as LinkIcon,
   ListChecks,
   Map,
-  Pencil,
   Target,
-  Trash2,
-  Unlink,
   Users,
 } from "lucide-react";
-import { EllipsisIcon } from "@animateicons/react/lucide";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { PM_PANEL } from "@/components/pm-chrome";
 import { TEXT_TWO_LINES } from "@/lib/text-overflow";
 import { cn } from "@/lib/utils";
 import { listItem, listItemReduced, pmSnappy } from "@/lib/motion-presets";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import type { GoalLevel, GoalListItem } from "@/hooks/api/goals";
 import { LEVEL_LABEL, STATUS_CONFIG } from "./constants";
+import { GoalCardActions } from "./goal-card-actions";
 
 export const GOAL_LEVEL_ORDER: GoalLevel[] = ["company", "team", "individual"];
 
-interface GoalCardActionsProps {
-  goal: GoalListItem;
-  onEdit?: (goal: GoalListItem) => void;
-  onDelete?: (goal: GoalListItem) => void;
-  onUnlink?: (goal: GoalListItem) => void;
-  onCheckIn?: (goal: GoalListItem) => void;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}
-
-function GoalCardActions({
-  goal,
-  onEdit,
-  onDelete,
-  onUnlink,
-  onCheckIn,
-  open,
-  onOpenChange,
-}: GoalCardActionsProps) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  const handleEdit = useCallback(() => onEdit?.(goal), [goal, onEdit]);
-  const handleDelete = useCallback(() => onDelete?.(goal), [goal, onDelete]);
-  const handleUnlink = useCallback(() => onUnlink?.(goal), [goal, onUnlink]);
-  const handleCheckIn = useCallback(() => onCheckIn?.(goal), [goal, onCheckIn]);
-
-  const hasProductActions = Boolean(onUnlink || onCheckIn);
-
-  return (
-    <DropdownMenu open={open} onOpenChange={onOpenChange}>
-      <DropdownMenuTrigger asChild>
-        <button
-          type="button"
-          aria-label="Goal actions"
-          className="flex h-8 w-8 items-center justify-center rounded text-muted-foreground opacity-100 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:h-6 sm:w-6 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100"
-          {...hoverHandlers}
-        >
-          <EllipsisIcon ref={iconRef} size={14} />
-        </button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        {onEdit ? (
-          <DropdownMenuItem onClick={handleEdit}>
-            <Pencil className="h-4 w-4" />
-            Edit
-          </DropdownMenuItem>
-        ) : null}
-        {onCheckIn && goal.keyResultCount > 0 ? (
-          <DropdownMenuItem onClick={handleCheckIn}>
-            <ClipboardCheck className="h-4 w-4" />
-            Check in
-          </DropdownMenuItem>
-        ) : null}
-        {hasProductActions && (onEdit || onDelete) ? (
-          <DropdownMenuSeparator />
-        ) : null}
-        {onUnlink ? (
-          <DropdownMenuItem variant="destructive" onClick={handleUnlink}>
-            <Unlink className="h-4 w-4 text-destructive" />
-            Unlink from product
-          </DropdownMenuItem>
-        ) : null}
-        {onDelete ? (
-          <DropdownMenuItem variant="destructive" onClick={handleDelete}>
-            <Trash2 className="h-4 w-4 text-destructive" />
-            Delete
-          </DropdownMenuItem>
-        ) : null}
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-}
 
 const FRESHNESS_CONFIG = {
   fresh: {
     label: "Fresh",
     icon: CheckCircle2,
-    className: "text-emerald-600 dark:text-emerald-400",
+    className: "text-status-success-ink-strong",
   },
   stale: {
     label: "Stale check-in",
     icon: AlertCircle,
-    className: "text-amber-600 dark:text-amber-400",
+    className: "text-status-warning-ink-strong",
   },
   none: null,
 } as const;
@@ -266,8 +184,25 @@ export function GoalCard({ goal, onEdit, onDelete, onUnlink, onCheckIn }: GoalCa
             </div>
           ) : null}
 
+          {goal.parentGoalId !== null ? (
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <ChevronUp className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+              <Link
+                href={`/build/goals/${goal.parentGoalId}`}
+                className="hover:text-foreground hover:underline"
+                onClick={(e) => e.stopPropagation()}
+              >
+                Parent goal
+              </Link>
+            </div>
+          ) : null}
+
           {goal.outcomeReviews != null ? (
-            <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <Link
+              href={`/build/goals/${goal.id}`}
+              className="flex items-center justify-between text-xs text-muted-foreground hover:text-foreground"
+              onClick={(e) => e.stopPropagation()}
+            >
               <span className="flex items-center gap-1">
                 <CheckCircle2 className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
                 Outcome reviews
@@ -278,7 +213,7 @@ export function GoalCard({ goal, onEdit, onDelete, onUnlink, onCheckIn }: GoalCa
                   ? ` · ${goal.outcomeReviews.latestResult}`
                   : ""}
               </span>
-            </div>
+            </Link>
           ) : null}
 
           {goal.target !== null ? (

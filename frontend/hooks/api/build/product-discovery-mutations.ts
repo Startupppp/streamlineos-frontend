@@ -150,6 +150,9 @@ export interface AcceptOpportunityInput {
   projectId?: number;
   goalId?: number;
   releaseId?: number;
+  epicTicketId?: number;
+  isPublic?: boolean;
+  dependsOnIds?: number[];
   note?: string;
   expectedVersion: number;
 }

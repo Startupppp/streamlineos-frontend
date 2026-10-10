@@ -64,7 +64,14 @@ function makeProduct(overrides: Partial<ManagedProduct> = {}): ManagedProduct {
     differentiators: null,
     currentPhase: null,
     targetLaunchDate: null,
-    successMetrics: null,
+    successMetrics: [],
+    lifecycle: "build",
+    health: "unknown",
+    teamId: null,
+    segments: [],
+    tags: [],
+    northStarMetric: null,
+    lastReviewedAt: null,
     ownerMembershipId: null,
     version: 1,
     deletedAt: null,
@@ -209,8 +216,8 @@ describe("useUpdateManagedProduct — optimistic cache patch", () => {
   });
 });
 
-describe("useDeleteManagedProduct — invalidation after delete", () => {
-  it("invalidates the managed-products list so the deleted row is absent on the next render", async () => {
+describe("useDeleteManagedProduct — cache patch after delete", () => {
+  it("removes the deleted row from the cached list so it is absent on the next render without a refetch", async () => {
     const client = createAppQueryClient("authenticated:org-1:u-1");
     const listKey = buildWorkQueryKeys.projects.managedProducts.list();
     client.setQueryData(listKey, makePage());
@@ -224,13 +231,13 @@ describe("useDeleteManagedProduct — invalidation after delete", () => {
     });
 
     await waitFor(() => {
-      expect(client.getQueryState(listKey)?.isInvalidated).toBe(true);
+      expect(client.getQueryData<ManagedProductsPage>(listKey)?.data.map((p) => p.id)).toEqual([]);
     });
   });
 });
 
-describe("useCreateManagedProduct — invalidation after create", () => {
-  it("invalidates the managed-products list so the new product appears on the next fetch", async () => {
+describe("useCreateManagedProduct — cache patch after create", () => {
+  it("prepends the created product from the response so it appears without a refetch", async () => {
     const client = createAppQueryClient("authenticated:org-1:u-1");
     const listKey = buildWorkQueryKeys.projects.managedProducts.list();
     client.setQueryData(listKey, makePage());
@@ -244,7 +251,7 @@ describe("useCreateManagedProduct — invalidation after create", () => {
     });
 
     await waitFor(() => {
-      expect(client.getQueryState(listKey)?.isInvalidated).toBe(true);
+      expect(client.getQueryData<ManagedProductsPage>(listKey)?.data.map((p) => p.id)).toEqual([99, 1]);
     });
   });
 });

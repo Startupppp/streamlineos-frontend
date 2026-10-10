@@ -1,6 +1,7 @@
 "use client";
 
 import type { Control } from "react-hook-form";
+import { useWatch } from "react-hook-form";
 import {
   FormField,
   FormItem,
@@ -28,6 +29,7 @@ import type { ScorableRoadmapItem } from "./roadmap-item-card";
 import { useGoals } from "@/hooks/api/goals";
 import { useManagedProductReleases } from "@/hooks/api/build/managed-product-releases";
 import { useProjectTeams } from "@/hooks/api/build/teams";
+import { useEpics } from "@/hooks/api/build/epics";
 
 const BUILD_FILTER_NONE = "";
 
@@ -49,9 +51,13 @@ export function RoadmapItemFormFields({
     enabled: managedProductId !== undefined && managedProductId > 0,
   });
   const { data: teamsPage } = useProjectTeams();
+  const watchedProjectId = useWatch({ control, name: "projectId" });
+  const epicProjectId = watchedProjectId ? Number(watchedProjectId) : 0;
+  const { data: epics } = useEpics(epicProjectId);
 
   const releaseOptions = releasesPage?.data ?? [];
   const teamOptions = teamsPage?.data ?? [];
+  const epicOptions = epics ?? [];
 
   const decisionSnapshot = item?.decisionSnapshot;
 
@@ -302,6 +308,33 @@ export function RoadmapItemFormFields({
         managedProductId={managedProductId}
         linkedProjectId={item?.projectId ?? null}
       />
+      {epicProjectId > 0 && epicOptions.length > 0 ? (
+        <FormField
+          control={control}
+          name="epicTicketId"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Epic</FormLabel>
+              <Select value={field.value || BUILD_FILTER_NONE} onValueChange={field.onChange}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="No epic" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value={BUILD_FILTER_NONE}>No epic</SelectItem>
+                  {epicOptions.map((e) => (
+                    <SelectItem key={e.id} value={String(e.id)}>
+                      {e.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage className="text-xs" />
+            </FormItem>
+          )}
+        />
+      ) : null}
       <RoadmapRiceFormFields
         control={control}
         prioritization={item?.prioritization}

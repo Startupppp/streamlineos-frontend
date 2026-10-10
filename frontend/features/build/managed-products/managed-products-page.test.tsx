@@ -47,9 +47,16 @@ jest.mock("@/components/shared/page-state", () => ({
 
 jest.mock("@/hooks/api/build/managed-products", () => ({
   useManagedProducts: jest.fn(),
+  useManagedProductFacets: jest.fn(() => ({ data: { segments: [], tags: [] } })),
   useCreateManagedProduct: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   useUpdateManagedProduct: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   useDeleteManagedProduct: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+  useArchiveManagedProduct: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+  useRestoreManagedProduct: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+}));
+
+jest.mock("@/hooks/api/build/projects", () => ({
+  useProjects: jest.fn(() => ({ data: { data: [] } })),
 }));
 
 jest.mock("@/hooks/api/organization", () => ({
@@ -57,6 +64,10 @@ jest.mock("@/hooks/api/organization", () => ({
 }));
 jest.mock("@/hooks/api/build/build-members", () => ({
   useBuildMembers: jest.fn(() => ({ data: { data: [] } })),
+}));
+
+jest.mock("@/hooks/api/build/teams", () => ({
+  useProjectTeams: jest.fn(() => ({ data: undefined })),
 }));
 
 jest.mock("@/hooks/common/use-query-param-open", () => ({
@@ -441,5 +452,51 @@ describe("ManagedProductsPage — delete product (BT-6733af0a3e35 item 1)", () =
     });
     render(<ManagedProductsPage />);
     expect(mockDeleteMutate).not.toHaveBeenCalled();
+  });
+});
+
+describe("ManagedProductsPage — owner filter (BSN-MP-OWNER)", () => {
+  it("passes ownerId to useManagedProducts when the owner filter is active", () => {
+    mockUseBuildListFilters.mockReturnValue({
+      value: (param: string) => (param === "ownerId" ? "user-123" : "all"),
+      isActive: (param: string) => param === "ownerId",
+      setValue: jest.fn(),
+      clearAll: jest.fn(),
+      search: "",
+      debouncedSearch: "",
+      setSearch: jest.fn(),
+      resetKey: "ownerId=user-123",
+      isPending: false,
+      isFiltered: true,
+      activeCount: 1,
+      cursor: null,
+      setCursor: jest.fn(),
+    });
+    render(<ManagedProductsPage />);
+    expect(useManagedProducts).toHaveBeenCalledWith(
+      expect.objectContaining({ ownerId: "user-123" }),
+    );
+  });
+
+  it("passes archived=true to useManagedProducts when the archived filter is set", () => {
+    mockUseBuildListFilters.mockReturnValue({
+      value: (param: string) => (param === "archived" ? "true" : "all"),
+      isActive: (param: string) => param === "archived",
+      setValue: jest.fn(),
+      clearAll: jest.fn(),
+      search: "",
+      debouncedSearch: "",
+      setSearch: jest.fn(),
+      resetKey: "archived=true",
+      isPending: false,
+      isFiltered: true,
+      activeCount: 1,
+      cursor: null,
+      setCursor: jest.fn(),
+    });
+    render(<ManagedProductsPage />);
+    expect(useManagedProducts).toHaveBeenCalledWith(
+      expect.objectContaining({ archived: true }),
+    );
   });
 });

@@ -15,6 +15,10 @@ jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn(() => true),
 }));
 
+jest.mock("@/hooks/api/build/teams", () => ({
+  useProjectTeams: jest.fn(() => ({ data: undefined })),
+}));
+
 jest.mock("@/hooks/api/organization", () => ({
   useOrgMembers: jest.fn(() => ({ data: { data: [] } })),
 }));
@@ -54,9 +58,16 @@ jest.mock("@/components/shared/page-state", () => ({
 
 jest.mock("@/hooks/api/build/managed-products", () => ({
   useManagedProducts: jest.fn(),
+  useManagedProductFacets: jest.fn(() => ({ data: { segments: [], tags: [] } })),
   useCreateManagedProduct: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   useUpdateManagedProduct: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   useDeleteManagedProduct: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+  useArchiveManagedProduct: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+  useRestoreManagedProduct: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+}));
+
+jest.mock("@/hooks/api/build/projects", () => ({
+  useProjects: jest.fn(() => ({ data: { data: [] } })),
 }));
 
 jest.mock("@/hooks/common/use-query-param-open", () => ({

@@ -241,7 +241,7 @@ export function GoalDetailPage({ goalId }: { goalId: number }) {
       {checkInTarget && canManage ? (
         <CheckInDialog
           goalId={goalId}
-          keyResult={checkInTarget}
+          keyResults={[checkInTarget]}
           onClose={handleCloseCheckIn}
         />
       ) : null}

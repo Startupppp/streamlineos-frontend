@@ -18,6 +18,7 @@ jest.mock("@/hooks/api/build/projects", () => ({ useProjects: jest.fn(() => ({ d
 jest.mock("@/hooks/api/goals", () => ({ useGoals: jest.fn(() => ({ data: [] })) }));
 jest.mock("@/hooks/api/build/managed-product-releases", () => ({ useManagedProductReleases: jest.fn(() => ({ data: null })) }));
 jest.mock("@/hooks/api/build/teams", () => ({ useProjectTeams: jest.fn(() => ({ data: null })) }));
+jest.mock("@/hooks/api/build/epics", () => ({ useEpics: jest.fn(() => ({ data: [] })) }));
 
 jest.mock("@/components/ui/combobox", () => ({
   Combobox: () => <select aria-label="Delivery project" />,

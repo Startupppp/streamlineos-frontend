@@ -36,13 +36,13 @@ export const SENTIMENT_OPTIONS = [
 export const captureSubmissionSchema = z.object({
   message: z.string().min(1, "Message is required").max(5000, "Message too long"),
   sourceChannel: z.enum(["email", "support", "sales", "interview", "survey", "public_portal", "manual", "import"], {
-    required_error: "Source channel is required",
+    error: "Source channel is required",
   }),
   type: z.enum(["bug", "idea", "feature", "question", "praise", "other"], {
-    required_error: "Type is required",
+    error: "Type is required",
   }),
   consentStatus: z.enum(["granted", "denied", "unknown"], {
-    required_error: "Consent status is required",
+    error: "Consent status is required",
   }),
   reporterName: z.string().max(100).optional(),
   reporterEmail: z.string().email("Invalid email").max(200).optional().or(z.literal("")),

@@ -5,7 +5,7 @@ import {
 } from "./managed-product-schema";
 
 describe("createManagedProductSchema", () => {
-  const BASE = { name: "Alpha", key: "ALPHA-001", description: "", ownerId: "" };
+  const BASE = { name: "Alpha", key: "ALPHA-001", description: "", ownerId: "", segments: [], tags: [], successMetrics: [] };
 
   it("accepts a valid managed product", () => {
     expect(createManagedProductSchema.safeParse(BASE).success).toBe(true);
@@ -22,6 +22,9 @@ describe("createManagedProductSchema", () => {
       key: "CNTHUB",
       description: "Product planning",
       ownerId: "user-1",
+      segments: [],
+      tags: [],
+      successMetrics: [],
     });
 
     const request = toCreateManagedProductInput(values);

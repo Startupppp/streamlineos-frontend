@@ -13,6 +13,7 @@ const linkedProjectRowContract = z.object({
   name: z.string(),
   key: z.string(),
   status: z.string(),
+  health: z.enum(["on_track", "at_risk", "off_track"]).nullable().catch(null),
   ownerId: z.string().nullable(),
   ownerMembershipId: z.number().int().nullable(),
   managerMembershipId: z.number().int().nullable(),
@@ -25,6 +26,24 @@ const linkedProjectRowContract = z.object({
       targetDate: z.string(),
     })
     .nullable(),
+  nextRelease: z
+    .object({
+      id: z.number().int(),
+      name: z.string(),
+      version: z.string(),
+      releaseDate: z.string().nullable(),
+    })
+    .nullable()
+    .catch(null),
+  linkedGoals: z
+    .array(
+      z.object({
+        id: z.number().int(),
+        title: z.string(),
+        status: z.string(),
+      }),
+    )
+    .catch([]),
   contribution: z.object({
     totalTickets: z.number().int(),
     doneTickets: z.number().int(),
@@ -57,8 +76,13 @@ export interface ManagedProductProjectsParams {
   cursor?: string;
   limit?: number;
   status?: string;
+  health?: string;
   ownerId?: number;
   managerId?: number;
+  teamId?: number;
+  clientId?: number;
+  minContribution?: number;
+  maxContribution?: number;
   dateFrom?: string;
   dateTo?: string;
   search?: string;

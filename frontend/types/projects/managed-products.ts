@@ -41,10 +41,10 @@ export interface ManagedProduct {
   differentiators: string | null;
   currentPhase: string | null;
   targetLaunchDate: string | null;
-  successMetrics: ManagedProductSuccessMetric[];
+  successMetrics: ManagedProductSuccessMetric[] | null;
   ownerMembershipId: number | null;
-  lifecycle: ManagedProductLifecycle | null;
-  health: ManagedProductHealth | null;
+  lifecycle: ManagedProductLifecycle;
+  health: ManagedProductHealth;
   teamId: number | null;
   segments: string[];
   tags: string[];

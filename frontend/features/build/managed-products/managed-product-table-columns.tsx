@@ -15,7 +15,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
-import { BuildMobileCard } from "@/features/build/shared/build-mobile-card";
 import type { NamedUser } from "@/lib/person-display";
 import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { cn } from "@/lib/utils";
@@ -36,7 +35,7 @@ export const MANAGED_PRODUCT_TABLE_HEADERS = [
 
 type ManagedProductOwnerLookup = (ownerId: string | null) => NamedUser | null;
 
-interface ManagedProductRowHandlers {
+export interface ManagedProductRowHandlers {
   canUpdate: boolean;
   canDelete: boolean;
   ownerOf: ManagedProductOwnerLookup;
@@ -236,9 +235,9 @@ export function buildManagedProductColumns({
             className={cn(
               "font-mono tabular-nums text-sm",
               row.feedbackTrend.last30d > row.feedbackTrend.previous30d
-                ? "text-emerald-600 dark:text-emerald-400"
+                ? "text-status-success-ink-strong"
                 : row.feedbackTrend.last30d < row.feedbackTrend.previous30d
-                  ? "text-red-600 dark:text-red-400"
+                  ? "text-status-danger-ink-strong"
                   : "text-muted-foreground",
             )}
           >
@@ -277,43 +276,4 @@ export function buildManagedProductColumns({
         ) : null,
     },
   ];
-}
-
-export function ManagedProductMobileCard({
-  product,
-  canUpdate,
-  canDelete,
-  ownerOf,
-  onEdit,
-  onDelete,
-  onArchive,
-  onRestore,
-}: { product: ManagedProduct } & ManagedProductRowHandlers) {
-  return (
-    <BuildMobileCard
-      title={product.name}
-      status={<ManagedProductStatusBadge status={product.health ?? product.status} />}
-      person={{ user: ownerOf(product.ownerId), role: "Owner" }}
-      meta={[
-        { label: "Key", value: product.key },
-        { label: "Lifecycle", value: product.lifecycle ?? "" },
-        ...(product.linkedProjectCount !== undefined
-          ? [{ label: "Projects", value: String(product.linkedProjectCount) }]
-          : []),
-      ]}
-      actions={
-        canUpdate || canDelete ? (
-          <ProductRowActions
-            product={product}
-            canUpdate={canUpdate}
-            canDelete={canDelete}
-            onEdit={onEdit}
-            onDelete={onDelete}
-            onArchive={onArchive}
-            onRestore={onRestore}
-          />
-        ) : null
-      }
-    />
-  );
 }

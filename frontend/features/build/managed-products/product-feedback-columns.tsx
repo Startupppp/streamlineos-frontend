@@ -4,8 +4,6 @@ import { ArrowRightCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { DataTableColumn } from "@/components/ui/data-table";
-import { resolveImageUrl } from "@/lib/utils";
-import { BuildMobileCard } from "@/features/build/shared/build-mobile-card";
 import { BUILD_FILTER_ALL } from "@/features/build/shared/use-build-list-filters";
 import type { PaginatedFeedbucketSubmissions } from "@/types/feedbucket";
 import {
@@ -111,6 +109,8 @@ export const FILTER_DEFINITIONS = [
   { param: "sentiment" },
   { param: "consentStatus" },
   { param: "linkedToOpportunity", options: ["true", "false"] as const },
+  { param: "segment" },
+  { param: "crmOrganizationId" },
   { param: "submission" },
 ] as const;
 
@@ -284,34 +284,3 @@ export function buildFeedbackColumnsWithActions(opts: {
   ];
 }
 
-export function ProductFeedbackMobileCard({ row }: { row: SubmissionRow }) {
-  return (
-    <BuildMobileCard
-      title={row.message}
-      status={
-        <Badge variant={STATUS_VARIANTS[row.status]} className="text-xs">
-          {STATUS_LABELS[row.status]}
-        </Badge>
-      }
-      person={
-        row.reporterName !== null || row.reporterEmail !== null
-          ? {
-              user: { name: row.reporterName, email: row.reporterEmail },
-              role: "From",
-            }
-          : undefined
-      }
-      meta={[
-        {
-          label: "Type",
-          value: (
-            <Badge variant={TYPE_VARIANTS[row.type]} className="text-xs">
-              {TYPE_LABELS[row.type]}
-            </Badge>
-          ),
-        },
-        { label: "Age", value: formatSubmissionAge(row.createdAt) },
-      ]}
-    />
-  );
-}

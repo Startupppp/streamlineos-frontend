@@ -33,6 +33,20 @@ export const ROADMAP_STATUS_OPTIONS: { value: RoadmapStatus; label: string }[] =
   { value: "cancelled", label: "Cancelled" },
 ];
 
+export const ROADMAP_STATUS_BADGE_VARIANT: Record<string, "default" | "secondary" | "outline" | "destructive"> = {
+  planned: "outline",
+  in_progress: "default",
+  completed: "secondary",
+  cancelled: "destructive",
+};
+
+export const ROADMAP_STATUS_LABEL: Record<string, string> = {
+  planned: "Planned",
+  in_progress: "In Progress",
+  completed: "Completed",
+  cancelled: "Cancelled",
+};
+
 export const FEEDBACK_STATUS_OPTIONS: { value: FeedbackStatus; label: string }[] = [
   { value: "open", label: "Open" },
   { value: "planned", label: "Planned" },

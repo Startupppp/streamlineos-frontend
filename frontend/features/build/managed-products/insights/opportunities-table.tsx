@@ -1,32 +1,15 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
 import { ArrowUpDown, GitCompare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BuildListSurface } from "@/features/build/shared/build-list-surface";
-import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
 import type { DataTableColumn } from "@/components/ui/data-table.types";
 import type { DiscoveryListOpportunitiesResponse } from "@/contracts/build-contracts.generated";
 import { COMPARE_MAX } from "./compare-drawer";
 
 type OpportunityRow = DiscoveryListOpportunitiesResponse["data"][number];
 type OpportunitiesListPagination = DiscoveryListOpportunitiesResponse["pagination"];
-
-const STATE_OPTIONS = [
-  { label: "All states", value: "all" },
-  { label: "Identified", value: "identified" },
-  { label: "Validating", value: "validating" },
-  { label: "Accepted", value: "accepted" },
-  { label: "Declined", value: "declined" },
-  { label: "Delivered", value: "delivered" },
-  { label: "Measured", value: "measured" },
-];
-
-const SORT_OPTIONS = [
-  { label: "By score", value: "score" },
-  { label: "By updated", value: "updated" },
-  { label: "By evidence", value: "evidence" },
-];
 
 function ScoreBadge({ row }: { row: OpportunityRow }) {
   if (row.scoreStatus === "unscored") {
@@ -52,10 +35,7 @@ interface OpportunitiesTableProps {
   isError: boolean;
   error?: unknown;
   isFiltered: boolean;
-  stateFilter: string;
-  sortFilter: string;
-  onStateChange: (value: string) => void;
-  onSortChange: (value: string) => void;
+  filtersSlot?: React.ReactNode;
   onNext: () => void;
   onPrevious: () => void;
   hasPrevious: boolean;
@@ -74,10 +54,7 @@ export function OpportunitiesTable({
   isError,
   error,
   isFiltered,
-  stateFilter,
-  sortFilter,
-  onStateChange,
-  onSortChange,
+  filtersSlot,
   onNext,
   onPrevious,
   hasPrevious,
@@ -169,18 +146,7 @@ export function OpportunitiesTable({
 
   const toolbar = (
     <div className="flex flex-wrap items-center gap-2">
-      <BuildFilterSelect
-        label="State"
-        value={stateFilter}
-        onValueChange={onStateChange}
-        options={STATE_OPTIONS}
-      />
-      <BuildFilterSelect
-        label="Sort"
-        value={sortFilter}
-        onValueChange={onSortChange}
-        options={SORT_OPTIONS}
-      />
+      {filtersSlot}
       {selected.size >= 2 && (
         <Button
           type="button"

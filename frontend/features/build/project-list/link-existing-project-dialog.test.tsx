@@ -45,6 +45,13 @@ jest.mock("@/components/ui/dialog", () => ({
   DialogTitle: ({ children }: { children: React.ReactNode }) => <h2>{children}</h2>,
   DialogDescription: ({ children }: { children: React.ReactNode }) => <p>{children}</p>,
 }));
+jest.mock("@/components/ui/alert", () => ({
+  Alert: ({ children }: { children: React.ReactNode }) => <div role="alert">{children}</div>,
+  AlertDescription: ({ children }: { children: React.ReactNode }) => <span>{children}</span>,
+}));
+jest.mock("lucide-react", () => ({
+  AlertTriangle: () => <svg aria-hidden="true" />,
+}));
 
 import { LinkExistingProjectDialog } from "./link-existing-project-dialog";
 
@@ -64,14 +71,20 @@ beforeEach(() => {
   });
 });
 
-it("searches existing projects and links only an unassigned project", () => {
+it("shows all projects including those linked to other products", () => {
+  render(<LinkExistingProjectDialog managedProductId={39} open onOpenChange={jest.fn()} />);
+  expect(screen.getByRole("button", { name: /FREE Unlinked project/ })).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: /Other product project/ })).toBeInTheDocument();
+});
+
+it("links an unassigned project with 'Link project' button", () => {
   const onOpenChange = jest.fn();
   render(<LinkExistingProjectDialog managedProductId={39} open onOpenChange={onOpenChange} />);
-  expect(screen.getByRole("button", { name: /FREE Unlinked project/ })).toBeInTheDocument();
-  expect(screen.queryByRole("button", { name: /Other product project/ })).not.toBeInTheDocument();
   fireEvent.change(screen.getByRole("textbox", { name: "Search by project name or key" }), { target: { value: "FREE" } });
   expect(mockUseProjects).toHaveBeenLastCalledWith({ limit: 50, search: "FREE" }, { enabled: true });
   fireEvent.click(screen.getByRole("button", { name: /FREE Unlinked project/ }));
+  expect(screen.getByRole("button", { name: "Link project" })).toBeInTheDocument();
+  expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole("button", { name: "Link project" }));
   expect(mockMutate).toHaveBeenCalledWith(
     { project: expect.objectContaining({ id: 11 }), managedProductId: 39 },
@@ -79,6 +92,22 @@ it("searches existing projects and links only an unassigned project", () => {
   );
   act(() => mockMutate.mock.calls[0][1].onSuccess());
   expect(mockToastSuccess).toHaveBeenCalledWith("Unlinked project linked to this product");
+  expect(onOpenChange).toHaveBeenCalledWith(false);
+});
+
+it("shows move warning and 'Move project' button when selecting a project from another product", () => {
+  const onOpenChange = jest.fn();
+  render(<LinkExistingProjectDialog managedProductId={39} open onOpenChange={onOpenChange} />);
+  fireEvent.click(screen.getByRole("button", { name: /TAKEN.*linked to another product.*Other product project/ }));
+  expect(screen.getByRole("alert")).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Move project" })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Move project" }));
+  expect(mockMutate).toHaveBeenCalledWith(
+    { project: expect.objectContaining({ id: 12 }), managedProductId: 39 },
+    expect.objectContaining({ onSuccess: expect.any(Function) }),
+  );
+  act(() => mockMutate.mock.calls[0][1].onSuccess());
+  expect(mockToastSuccess).toHaveBeenCalledWith("Other product project moved to this product");
   expect(onOpenChange).toHaveBeenCalledWith(false);
 });
 

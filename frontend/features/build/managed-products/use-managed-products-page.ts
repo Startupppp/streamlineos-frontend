@@ -4,11 +4,13 @@ import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
 import { toast } from "sonner";
 import {
   useManagedProducts,
+  useManagedProductFacets,
   useCreateManagedProduct,
   useDeleteManagedProduct,
   useArchiveManagedProduct,
   useRestoreManagedProduct,
 } from "@/hooks/api/build/managed-products";
+import { useProjects } from "@/hooks/api/build/projects";
 import { useCan } from "@/hooks/api/access";
 import { useBuildMembers } from "@/hooks/api/build/build-members";
 import { useProjectTeams } from "@/hooks/api/build/teams";
@@ -56,6 +58,11 @@ export const HEALTH_FILTER_OPTIONS = [
   { value: "at_risk", label: "At risk" },
   { value: "off_track", label: "Off track" },
   { value: "unknown", label: "Unknown" },
+];
+
+export const ARCHIVED_FILTER_OPTIONS = [
+  { value: BUILD_FILTER_ALL, label: "Active only" },
+  { value: "true", label: "Archived only" },
 ];
 
 const FILTER_DEFINITIONS = [
@@ -153,6 +160,44 @@ export function useManagedProductsPage() {
     [teams],
   );
 
+  const ownerOptions = useMemo(
+    () => [
+      { value: BUILD_FILTER_ALL, label: "All owners" },
+      ...members.map((m) => ({ value: m.id, label: m.name ?? m.email })),
+    ],
+    [members],
+  );
+
+  const { data: facetsData } = useManagedProductFacets();
+  const { data: projectsListData } = useProjects({ limit: 100 });
+
+  const segmentOptions = useMemo(
+    () => [
+      { value: BUILD_FILTER_ALL, label: "All segments" },
+      ...(facetsData?.segments ?? []).map((s) => ({ value: s, label: s })),
+    ],
+    [facetsData],
+  );
+
+  const tagOptions = useMemo(
+    () => [
+      { value: BUILD_FILTER_ALL, label: "All tags" },
+      ...(facetsData?.tags ?? []).map((t) => ({ value: t, label: t })),
+    ],
+    [facetsData],
+  );
+
+  const linkedProjectOptions = useMemo(
+    () => [
+      { value: BUILD_FILTER_ALL, label: "All projects" },
+      ...(projectsListData?.data ?? []).map((p) => ({
+        value: String(p.id),
+        label: p.name,
+      })),
+    ],
+    [projectsListData],
+  );
+
   const createProduct = useCreateManagedProduct();
   const deleteProduct = useDeleteManagedProduct();
   const archiveProduct = useArchiveManagedProduct();
@@ -244,6 +289,31 @@ export function useManagedProductsPage() {
 
   const handleTeamChange = useCallback(
     (value: string) => listFilters.setValue("teamId", value),
+    [listFilters],
+  );
+
+  const handleOwnerChange = useCallback(
+    (value: string) => listFilters.setValue("ownerId", value),
+    [listFilters],
+  );
+
+  const handleSegmentChange = useCallback(
+    (value: string) => listFilters.setValue("segment", value),
+    [listFilters],
+  );
+
+  const handleTagChange = useCallback(
+    (value: string) => listFilters.setValue("tag", value),
+    [listFilters],
+  );
+
+  const handleLinkedProjectChange = useCallback(
+    (value: string) => listFilters.setValue("linkedProjectId", value),
+    [listFilters],
+  );
+
+  const handleArchivedChange = useCallback(
+    (value: string) => listFilters.setValue("archived", value),
     [listFilters],
   );
 
@@ -368,7 +438,16 @@ export function useManagedProductsPage() {
     lifecycleValue,
     healthValue,
     teamIdValue,
+    ownerIdValue,
+    segmentValue,
+    tagValue,
+    linkedProjectIdValue,
+    archivedValue,
     teamOptions,
+    ownerOptions,
+    segmentOptions,
+    tagOptions,
+    linkedProjectOptions,
     displayed,
     data,
     isLoading,
@@ -386,6 +465,11 @@ export function useManagedProductsPage() {
     handleLifecycleChange,
     handleHealthChange,
     handleTeamChange,
+    handleOwnerChange,
+    handleSegmentChange,
+    handleTagChange,
+    handleLinkedProjectChange,
+    handleArchivedChange,
     handleOpenCreate,
     handleSheetOpenChange,
     handleDeleteDialogChange,

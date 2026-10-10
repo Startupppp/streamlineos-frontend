@@ -13,7 +13,18 @@ function invalidationsIn(hookName: string): string {
     const start = src.indexOf(`export function ${hookName}(`);
     if (start === -1) continue;
     const next = src.indexOf("\nexport function ", start + 1);
-    return src.slice(start, next === -1 ? undefined : next);
+    const hookBody = src.slice(start, next === -1 ? undefined : next);
+    const helperPattern = /\b([a-z][a-zA-Z0-9]+)\(qc,/g;
+    let expanded = hookBody;
+    let m: RegExpExecArray | null;
+    while ((m = helperPattern.exec(hookBody)) !== null) {
+      const helperName = m[1];
+      const hIdx = src.lastIndexOf(`\nfunction ${helperName}(`, start);
+      if (hIdx === -1) continue;
+      const hEnd = src.indexOf("\nfunction ", hIdx + 1);
+      expanded += src.slice(hIdx, hEnd === -1 ? start : Math.min(hEnd, start));
+    }
+    return expanded;
   }
   throw new Error(`Hook ${hookName} not found in any source file`);
 }

@@ -8,7 +8,8 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyInboxIllustration } from "@/components/illustrations";
 import { CONTENT_FILL_PANEL } from "@/components/pm-chrome";
-import { useFeedbucketSubmissions } from "@/hooks/api/feedbucket";
+import { useFeedbucketSubmissions, useFeedbucketSubmissionFacets } from "@/hooks/api/feedbucket";
+import { useCrmOrganizationsForPicker } from "@/hooks/api/crm/organizations";
 import { useCan } from "@/hooks/api/access";
 import { SubmissionBulkToolbar } from "@/components/shared/submission-bulk-toolbar";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
@@ -30,8 +31,8 @@ import {
   SENTIMENT_FILTER_OPTIONS,
   CONSENT_FILTER_OPTIONS,
   LINKED_OPP_FILTER_OPTIONS,
-  ProductFeedbackMobileCard,
 } from "./product-feedback-columns";
+import { ProductFeedbackMobileCard } from "./feedback/product-feedback-mobile-card";
 import { useRouteFeedbucketToIntake } from "@/hooks/api/build/intake-mutations";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -45,9 +46,7 @@ import {
 import { CaptureSubmissionSheet } from "./feedback/capture-submission-sheet";
 import { FeedbackPane } from "./feedback/feedback-pane";
 
-interface ProductFeedbackPageProps {
-  managedProductId: number;
-}
+interface ProductFeedbackPageProps { managedProductId: number; }
 
 export function ProductFeedbackPage({ managedProductId }: ProductFeedbackPageProps) {
   const router = useRouter();
@@ -66,49 +65,62 @@ export function ProductFeedbackPage({ managedProductId }: ProductFeedbackPagePro
     listFilters, searchInputRef, page, selected, setSelected, queryParams, bulkFilters,
     typeValue, statusValue, linkedValue, duplicateValue, sourceChannelValue,
     themeValue, sentimentValue, consentStatusValue, linkedToOpportunityValue,
+    segmentValue, crmOrgIdValue,
     typedFrom, typedTo, typedAssigneeId, paneSubmissionId, isFiltered,
     handleTypeChange, handleStatusChange, handleLinkedChange, handleAssigneeChange,
     handleDuplicateChange, handleSourceChannelChange, handleThemeChange,
     handleSentimentChange, handleConsentStatusChange, handleLinkedToOpportunityChange,
+    handleSegmentChange, handleCrmOrgChange,
     handleDateRangeChange, handlePageChange, handleClearSelection,
   } = filterState;
 
   const { data, isLoading, isError, error, refetch } = useFeedbucketSubmissions(queryParams);
+  const { data: facetsData } = useFeedbucketSubmissionFacets({ managedProductId });
+  const { data: crmOrgsData } = useCrmOrganizationsForPicker();
 
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
-
   const rows = useMemo(() => data?.data ?? [], [data]);
-
   const selectedIds = useMemo(
     () => [...selected].map(Number).filter((id) => Number.isFinite(id)),
     [selected],
   );
   const selectionEnabled = canUpdateSubmission || canDeleteSubmission;
 
-  const handleOpenFocused = useCallback(
-    (index: number) => {
-      const row = rows[index];
-      if (!row) return;
-      const href = resolveProductFeedbackSubmissionHref(row, managedProductId, canOpenSubmissionDetail);
-      if (href === null) return;
-      requestLeave(() => router.push(href));
-    },
-    [rows, managedProductId, canOpenSubmissionDetail, requestLeave, router],
-  );
+  const themeOptions = useMemo(() => [
+    { value: "all", label: "All themes" },
+    { value: "untagged", label: "Untagged" },
+    ...(facetsData?.themes ?? [])
+      .filter((t): t is { value: string; count: number } => t.value !== null)
+      .map((t) => ({ value: t.value, label: t.value })),
+  ], [facetsData?.themes]);
+
+  const segmentOptions = useMemo(() => [
+    { value: "all", label: "All segments" },
+    ...(facetsData?.segments ?? [])
+      .filter((s): s is { value: string; count: number } => s.value !== null)
+      .map((s) => ({ value: s.value, label: s.value })),
+  ], [facetsData?.segments]);
+
+  const customerOptions = useMemo(() => [
+    { value: "all", label: "All customers" },
+    ...(crmOrgsData?.organizations ?? []).map((o) => ({ value: String(o.id), label: o.name })),
+  ], [crmOrgsData?.organizations]);
+
+  const handleOpenFocused = useCallback((index: number) => {
+    const row = rows[index];
+    if (!row) return;
+    const href = resolveProductFeedbackSubmissionHref(row, managedProductId, canOpenSubmissionDetail);
+    if (href === null) return;
+    requestLeave(() => router.push(href));
+  }, [rows, managedProductId, canOpenSubmissionDetail, requestLeave, router]);
 
   const handleRouteToIntake = useCallback((row: SubmissionRow) => {
     const projectId = row.widget?.projectId;
     if (!projectId) return;
-    routeToIntake.mutate(
-      { submissionId: row.id, projectId },
-      {
-        onSuccess: (result) => {
-          if (result.created) toast.success("Routed to Intake");
-          else toast.success("Already in Intake");
-        },
-        onError: (err) => { toast.error(getErrorMessage(err)); },
-      },
-    );
+    routeToIntake.mutate({ submissionId: row.id, projectId }, {
+      onSuccess: (result) => { if (result.created) toast.success("Routed to Intake"); else toast.success("Already in Intake"); },
+      onError: (err) => { toast.error(getErrorMessage(err)); },
+    });
   }, [routeToIntake]);
 
   const feedbackColumns = useMemo(
@@ -116,14 +128,7 @@ export function ProductFeedbackPage({ managedProductId }: ProductFeedbackPagePro
     [canRouteToIntake, handleRouteToIntake],
   );
 
-  useBuildListKeyboard({
-    itemCount: rows.length,
-    onOpen: handleOpenFocused,
-    onEdit: handleOpenFocused,
-    onClearSelection: handleClearSelection,
-    searchInputRef,
-    enabled: true,
-  });
+  useBuildListKeyboard({ itemCount: rows.length, onOpen: handleOpenFocused, onEdit: handleOpenFocused, onClearSelection: handleClearSelection, searchInputRef, enabled: true });
 
   const resolveSubmissionHref = useCallback(
     (row: SubmissionRow) => resolveProductFeedbackSubmissionHref(row, managedProductId, canOpenSubmissionDetail),
@@ -146,28 +151,16 @@ export function ProductFeedbackPage({ managedProductId }: ProductFeedbackPagePro
   const getSubmissionRowKey = useCallback((row: SubmissionRow) => row.id, []);
 
   const handleOpenCapture = useCallback(() => setCaptureOpen(true), []);
-
   const handleCloseFeedbackPane = useCallback((open: boolean) => {
     if (!open) router.replace(`?`, { scroll: false });
   }, [router]);
 
   const filteredEmptyState = useMemo(() => (
-    <EmptyState
-      illustration={<EmptyInboxIllustration className="h-24 w-24" />}
-      title="No feedback matches your filters"
-      description="Try adjusting or clearing your filters."
-      action={{ label: "Clear filters", onClick: listFilters.clearAll }}
-      className={CONTENT_FILL_PANEL}
-    />
+    <EmptyState illustration={<EmptyInboxIllustration className="h-24 w-24" />} title="No feedback matches your filters" description="Try adjusting or clearing your filters." action={{ label: "Clear filters", onClick: listFilters.clearAll }} className={CONTENT_FILL_PANEL} />
   ), [listFilters.clearAll]);
 
   const emptyState = useMemo(() => (
-    <EmptyState
-      illustration={<EmptyInboxIllustration className="h-24 w-24" />}
-      title="No feedback submissions"
-      description="Submissions from widgets linked to this product will appear here."
-      className={CONTENT_FILL_PANEL}
-    />
+    <EmptyState illustration={<EmptyInboxIllustration className="h-24 w-24" />} title="No feedback submissions" description="Submissions from widgets linked to this product will appear here." className={CONTENT_FILL_PANEL} />
   ), []);
 
   return (
@@ -176,22 +169,10 @@ export function ProductFeedbackPage({ managedProductId }: ProductFeedbackPagePro
         title="Feedback"
         subtitle="Submissions collected from widgets linked to this product"
         contentClassName={MANAGED_PRODUCT_DETAIL_CONTENT_CLASS}
-        actions={
-          canCapture ? (
-            <Button type="button" onClick={handleOpenCapture}>
-              Capture feedback
-            </Button>
-          ) : undefined
-        }
+        actions={canCapture ? <Button type="button" onClick={handleOpenCapture}>Capture feedback</Button> : undefined}
         filters={
           <BuildListToolbar
-            search={{
-              value: listFilters.search,
-              onValueChange: listFilters.setSearch,
-              placeholder: "Search feedback…",
-              label: "Search feedback",
-              inputRef: searchInputRef,
-            }}
+            search={{ value: listFilters.search, onValueChange: listFilters.setSearch, placeholder: "Search feedback…", label: "Search feedback", inputRef: searchInputRef }}
             filters={[
               { id: "type", label: "Type", active: listFilters.isActive("type"),
                 control: <BuildFilterSelect label="Type" value={typeValue} onValueChange={handleTypeChange} options={TYPE_FILTER_OPTIONS} /> },
@@ -200,7 +181,11 @@ export function ProductFeedbackPage({ managedProductId }: ProductFeedbackPagePro
               { id: "sourceChannel", label: "Channel", active: listFilters.isActive("sourceChannel"),
                 control: <BuildFilterSelect label="Channel" value={sourceChannelValue} onValueChange={handleSourceChannelChange} options={SOURCE_CHANNEL_FILTER_OPTIONS} /> },
               { id: "theme", label: "Theme", active: listFilters.isActive("theme"),
-                control: <BuildFilterSelect label="Theme" value={themeValue} onValueChange={handleThemeChange} options={[{ value: "all", label: "All themes" }, { value: "untagged", label: "Untagged" }]} /> },
+                control: <BuildFilterSelect label="Theme" value={themeValue} onValueChange={handleThemeChange} options={themeOptions} /> },
+              { id: "segment", label: "Segment", active: listFilters.isActive("segment"),
+                control: <BuildFilterSelect label="Segment" value={segmentValue} onValueChange={handleSegmentChange} options={segmentOptions} /> },
+              { id: "customer", label: "Customer", active: listFilters.isActive("crmOrganizationId"),
+                control: <BuildFilterSelect label="Customer" value={crmOrgIdValue} onValueChange={handleCrmOrgChange} options={customerOptions} /> },
               { id: "sentiment", label: "Sentiment", active: listFilters.isActive("sentiment"),
                 control: <BuildFilterSelect label="Sentiment" value={sentimentValue} onValueChange={handleSentimentChange} options={SENTIMENT_FILTER_OPTIONS} /> },
               { id: "consentStatus", label: "Consent", active: listFilters.isActive("consentStatus"),
@@ -235,41 +220,22 @@ export function ProductFeedbackPage({ managedProductId }: ProductFeedbackPagePro
               getRowKey={getSubmissionRowKey}
               onRowClick={canOpenSubmissionDetail ? handleRowClick : undefined}
               mobileCard={renderMobileCard}
-              pagination={{
-                mode: "server",
-                page,
-                pageSize: PAGE_SIZE,
-                total: data?.total ?? 0,
-                onPageChange: handlePageChange,
-              }}
+              pagination={{ mode: "server", page, pageSize: PAGE_SIZE, total: data?.total ?? 0, onPageChange: handlePageChange }}
               tableClassName="flex flex-1 min-h-0 h-full border-0 rounded-none"
               loading={<DataTableSkeleton rows={10} headers={FEEDBACK_SKELETON_HEADERS} mobileCards />}
               empty={isFiltered ? filteredEmptyState : emptyState}
               rowClassName={resolveRowClassName}
-              selection={
-                selectionEnabled
-                  ? { selected, onChange: setSelected, getRowLabel: getSubmissionRowLabel }
-                  : undefined
-              }
+              selection={selectionEnabled ? { selected, onChange: setSelected, getRowLabel: getSubmissionRowLabel } : undefined}
               onRetry={handleRetry}
             />
           </ManagedProductDetailPrimarySection>
         </ManagedProductDetailShell>
       </PageWrapper>
       {canCapture && (
-        <CaptureSubmissionSheet
-          managedProductId={managedProductId}
-          open={captureOpen}
-          onOpenChange={setCaptureOpen}
-        />
+        <CaptureSubmissionSheet managedProductId={managedProductId} open={captureOpen} onOpenChange={setCaptureOpen} />
       )}
       {paneSubmissionId !== null && (
-        <FeedbackPane
-          submissionId={paneSubmissionId}
-          managedProductId={managedProductId}
-          open={paneSubmissionId !== null}
-          onOpenChange={handleCloseFeedbackPane}
-        />
+        <FeedbackPane submissionId={paneSubmissionId} managedProductId={managedProductId} open={paneSubmissionId !== null} onOpenChange={handleCloseFeedbackPane} />
       )}
     </>
   );

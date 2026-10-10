@@ -39,6 +39,10 @@ jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn(() => true),
 }));
 
+jest.mock("@/hooks/api/build/teams", () => ({
+  useProjectTeams: jest.fn(() => ({ data: undefined })),
+}));
+
 jest.mock("@/features/build/managed-products/managed-product-form-sheet", () => ({
   ManagedProductFormSheet: () => null,
 }));

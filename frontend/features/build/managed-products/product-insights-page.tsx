@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
 import {
   BarChart2,
   CheckCircle2,
@@ -72,7 +72,7 @@ export function ProductInsightsPage({ managedProductId }: ProductInsightsPagePro
     isLoading,
     isError,
     error,
-    isEmpty: !data,
+    isEmpty: data === null,
   });
 
   const openSubmissions = data?.submissionsByStatus.open ?? 0;

@@ -251,8 +251,9 @@ export const feedbucketUnmarkDuplicateContract = z.object({
 });
 
 export const feedbucketCaptureSubmissionContract = z.object({
-  success: z.literal(true),
-  data: z.object({ submissionId: z.number(), widgetId: z.number(), widgetCreated: z.boolean() }),
+  submissionId: z.number(),
+  widgetId: z.number(),
+  widgetCreated: z.boolean(),
 });
 
 const feedbucketFacetCountContract = z.object({
@@ -261,12 +262,9 @@ const feedbucketFacetCountContract = z.object({
 });
 
 export const feedbucketSubmissionFacetsContract = z.object({
-  success: z.literal(true),
-  data: z.object({
-    themes: z.array(feedbucketFacetCountContract),
-    segments: z.array(feedbucketFacetCountContract),
-    sourceChannels: z.array(feedbucketFacetCountContract).optional(),
-  }),
+  themes: z.array(feedbucketFacetCountContract),
+  segments: z.array(feedbucketFacetCountContract),
+  sourceChannels: z.array(feedbucketFacetCountContract).optional(),
 });
 
 export type FeedbucketSubmissionRow = z.infer<typeof feedbucketSubmissionRowContract>;

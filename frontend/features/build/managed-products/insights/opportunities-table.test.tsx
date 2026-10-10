@@ -36,19 +36,6 @@ jest.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(),
 }));
 
-jest.mock("@/features/build/shared/build-filter-select", () => ({
-  BuildFilterSelect: ({ label, value, onValueChange, options }: {
-    label: string;
-    value: string;
-    onValueChange: (v: string) => void;
-    options: Array<{ label: string; value: string }>;
-  }) => (
-    <select aria-label={label} value={value} onChange={(e) => onValueChange(e.target.value)}>
-      {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-    </select>
-  ),
-}));
-
 const BASE_PAGINATION = {
   hasMore: false,
   nextCursor: null,
@@ -62,10 +49,6 @@ const BASE_PROPS = {
   isLoading: false,
   isError: false,
   isFiltered: false,
-  stateFilter: "all",
-  sortFilter: "score",
-  onStateChange: jest.fn(),
-  onSortChange: jest.fn(),
   onNext: jest.fn(),
   onPrevious: jest.fn(),
   hasPrevious: false,
@@ -85,7 +68,7 @@ describe("OpportunitiesTable — empty vs filteredEmpty (BSN-FILTERED-EMPTY)", (
   });
 
   it("shows the filtered empty state instead of the generic empty state when a filter is active and the list is empty so the user knows results exist but are hidden", () => {
-    render(<OpportunitiesTable {...BASE_PROPS} isFiltered stateFilter="accepted" />);
+    render(<OpportunitiesTable {...BASE_PROPS} isFiltered />);
 
     expect(screen.getByTestId("opportunities-filtered-empty")).toBeInTheDocument();
     expect(screen.queryByTestId("opportunities-empty")).not.toBeInTheDocument();

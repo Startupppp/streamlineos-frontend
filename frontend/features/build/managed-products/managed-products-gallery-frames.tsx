@@ -13,10 +13,8 @@ import type { ManagedProduct } from "@/types/projects";
 import { BuildListSurface } from "@/features/build/shared/build-list-surface";
 import { GalleryCase as SharedGalleryCase } from "@/features/build/shared/build-list-gallery-cases";
 import { MANAGED_PRODUCT_GALLERY_ROWS, GALLERY_STUB_ACCESS } from "@/features/build/shared/build-list-fixtures";
-import {
-  buildManagedProductColumns,
-  ManagedProductMobileCard,
-} from "./managed-product-table-columns";
+import { buildManagedProductColumns } from "./managed-product-table-columns";
+import { ManagedProductMobileCard } from "./managed-product-mobile-card";
 import { ProductInsightsPage } from "./product-insights-page";
 import { createAppQueryClient } from "@/components/providers/query-provider";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";

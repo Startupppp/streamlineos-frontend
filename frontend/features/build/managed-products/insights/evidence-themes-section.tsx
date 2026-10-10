@@ -24,9 +24,9 @@ function SentimentBar({ breakdown }: { breakdown: ThemeRow["sentimentBreakdown"]
   const mixW = (breakdown.mixed / total) * 100;
   return (
     <div className="flex h-2 w-20 overflow-hidden rounded-full bg-muted" title={`+${breakdown.positive} ~${breakdown.neutral} -${breakdown.negative}`}>
-      <div className="bg-emerald-500 dark:bg-emerald-400" style={{ width: `${posW}%` }} />
-      <div className="bg-amber-400 dark:bg-amber-300" style={{ width: `${mixW}%` }} />
-      <div className="bg-red-500 dark:bg-red-400" style={{ width: `${negW}%` }} />
+      <div className="bg-status-success-fill" style={{ width: `${posW}%` }} />
+      <div className="bg-status-warning-fill" style={{ width: `${mixW}%` }} />
+      <div className="bg-status-danger-fill" style={{ width: `${negW}%` }} />
     </div>
   );
 }
@@ -39,7 +39,7 @@ function SparklineBar({ trend }: { trend: ThemeRow["trend"] }) {
       {vals.slice(-8).map((v, i) => (
         <div
           key={i}
-          className="w-1.5 rounded-sm bg-blue-400 dark:bg-blue-500"
+          className="w-1.5 rounded-sm bg-status-info-fill"
           style={{ height: `${Math.max(4, (v / max) * 24)}px` }}
         />
       ))}
@@ -124,11 +124,11 @@ export function EvidenceThemesSection({
       {suggestedThemes.length > 0 && (
         <div className="rounded-xl border border-border bg-muted/30 p-4 space-y-3">
           <div className="flex items-center gap-1.5">
-            <Lightbulb className="size-4 text-amber-500" aria-hidden />
+            <Lightbulb className="size-4 text-status-warning-ink" aria-hidden />
             <span className="text-sm font-semibold text-foreground" data-testid="ai-suggestions-label">
               AI suggestions
             </span>
-            <span className="ml-1 rounded bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">
+            <span className="ml-1 rounded bg-status-warning-surface px-1.5 py-0.5 text-xs font-medium text-status-warning-ink-strong">
               Suggestions
             </span>
           </div>
@@ -150,7 +150,7 @@ export function EvidenceThemesSection({
                       <Link
                         key={submissionId}
                         href={`/build/managed-products/${managedProductId}/feedback?submission=${submissionId}`}
-                        className="text-xs text-blue-600 hover:underline dark:text-blue-400"
+                        className="text-xs text-status-info-ink-strong hover:underline"
                         data-testid="ai-suggestion-citation"
                       >
                         #{submissionId}

@@ -6,20 +6,6 @@ import {
   editManagedProductSchema,
 } from "./managed-product-schema";
 
-const mockUseManagedProduct = jest.fn();
-const mockUseUpdateManagedProduct = jest.fn();
-const mockUseArchiveManagedProduct = jest.fn();
-const mockUseRestoreManagedProduct = jest.fn();
-const mockUsePageState = jest.fn();
-const mockUseCan = jest.fn(() => true);
-const mockUseManagedProductMembers = jest.fn();
-const mockUseAddManagedProductMember = jest.fn();
-const mockUseRemoveManagedProductMember = jest.fn();
-const mockUseManagedProductReleases = jest.fn();
-const mockUseCreateManagedProductRelease = jest.fn();
-const mockUseUpdateManagedProductRelease = jest.fn();
-const mockUseBuildMembers = jest.fn();
-
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ replace: jest.fn(), push: jest.fn() }),
   usePathname: () => "/build/managed-products/7/settings",
@@ -27,11 +13,11 @@ jest.mock("next/navigation", () => ({
 }));
 
 jest.mock("@/hooks/api/access", () => ({
-  useCan: mockUseCan,
+  useCan: jest.fn(() => true),
 }));
 
 jest.mock("@/hooks/api/use-page-state", () => ({
-  usePageState: mockUsePageState,
+  usePageState: jest.fn(),
 }));
 
 jest.mock("@/components/shared/page-state", () => ({
@@ -52,30 +38,62 @@ jest.mock("@/components/shared/page-state", () => ({
 }));
 
 jest.mock("@/hooks/api/build/managed-products", () => ({
-  useManagedProduct: mockUseManagedProduct,
+  useManagedProduct: jest.fn(),
 }));
 
 jest.mock("@/hooks/api/build/managed-product-mutations", () => ({
-  useUpdateManagedProduct: mockUseUpdateManagedProduct,
-  useArchiveManagedProduct: mockUseArchiveManagedProduct,
-  useRestoreManagedProduct: mockUseRestoreManagedProduct,
+  useUpdateManagedProduct: jest.fn(),
+  useArchiveManagedProduct: jest.fn(),
+  useRestoreManagedProduct: jest.fn(),
 }));
 
 jest.mock("@/hooks/api/build/managed-product-members", () => ({
-  useManagedProductMembers: mockUseManagedProductMembers,
-  useAddManagedProductMember: mockUseAddManagedProductMember,
-  useRemoveManagedProductMember: mockUseRemoveManagedProductMember,
+  useManagedProductMembers: jest.fn(),
+  useAddManagedProductMember: jest.fn(),
+  useRemoveManagedProductMember: jest.fn(),
 }));
 
 jest.mock("@/hooks/api/build/managed-product-releases", () => ({
-  useManagedProductReleases: mockUseManagedProductReleases,
-  useCreateManagedProductRelease: mockUseCreateManagedProductRelease,
-  useUpdateManagedProductRelease: mockUseUpdateManagedProductRelease,
+  useManagedProductReleases: jest.fn(),
+  useCreateManagedProductRelease: jest.fn(),
+  useUpdateManagedProductRelease: jest.fn(),
 }));
 
 jest.mock("@/hooks/api/build/build-members", () => ({
-  useBuildMembers: mockUseBuildMembers,
+  useBuildMembers: jest.fn(),
 }));
+
+const { useCan: mockUseCan } = jest.requireMock("@/hooks/api/access") as { useCan: jest.Mock };
+const { usePageState: mockUsePageState } = jest.requireMock("@/hooks/api/use-page-state") as { usePageState: jest.Mock };
+const { useManagedProduct: mockUseManagedProduct } = jest.requireMock("@/hooks/api/build/managed-products") as { useManagedProduct: jest.Mock };
+const {
+  useUpdateManagedProduct: mockUseUpdateManagedProduct,
+  useArchiveManagedProduct: mockUseArchiveManagedProduct,
+  useRestoreManagedProduct: mockUseRestoreManagedProduct,
+} = jest.requireMock("@/hooks/api/build/managed-product-mutations") as {
+  useUpdateManagedProduct: jest.Mock;
+  useArchiveManagedProduct: jest.Mock;
+  useRestoreManagedProduct: jest.Mock;
+};
+const {
+  useManagedProductMembers: mockUseManagedProductMembers,
+  useAddManagedProductMember: mockUseAddManagedProductMember,
+  useRemoveManagedProductMember: mockUseRemoveManagedProductMember,
+} = jest.requireMock("@/hooks/api/build/managed-product-members") as {
+  useManagedProductMembers: jest.Mock;
+  useAddManagedProductMember: jest.Mock;
+  useRemoveManagedProductMember: jest.Mock;
+};
+const {
+  useManagedProductReleases: mockUseManagedProductReleases,
+  useCreateManagedProductRelease: mockUseCreateManagedProductRelease,
+  useUpdateManagedProductRelease: mockUseUpdateManagedProductRelease,
+} = jest.requireMock("@/hooks/api/build/managed-product-releases") as {
+  useManagedProductReleases: jest.Mock;
+  useCreateManagedProductRelease: jest.Mock;
+  useUpdateManagedProductRelease: jest.Mock;
+};
+const { useBuildMembers: mockUseBuildMembers } = jest.requireMock("@/hooks/api/build/build-members") as { useBuildMembers: jest.Mock };
 
 jest.mock("@/components/shared/dirty-state-context", () => ({
   DirtyStateProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
@@ -295,7 +313,7 @@ describe("ProductSettingsPage — archive confirm", () => {
   it("opens archive confirm dialog when Archive button is clicked", () => {
     render(<ProductSettingsPage managedProductId={7} />);
     fireEvent.click(screen.getByRole("button", { name: "Archive" }));
-    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    expect(screen.getByRole("alertdialog")).toBeInTheDocument();
   });
 });
 
@@ -350,6 +368,8 @@ describe("managed-product schemas — validation limits", () => {
       key: "K",
       description: "",
       ownerId: "",
+      segments: [],
+      successMetrics: [],
       tags: Array.from({ length: 20 }, (_, i) => `tag${i}`),
     });
     expect(result.success).toBe(true);

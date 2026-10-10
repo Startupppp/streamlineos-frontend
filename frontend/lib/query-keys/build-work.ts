@@ -304,10 +304,10 @@ export const buildWorkQueryKeys = {
         filters === undefined
           ? ([...base, "projects", "managed-products", "insights", managedProductId] as const)
           : ([...base, "projects", "managed-products", "insights", managedProductId, filters] as const),
-      summary: (managedProductId: number, period?: string) =>
-        period === undefined
+      summary: (managedProductId: number, filters?: Record<string, string | number | undefined>) =>
+        filters === undefined
           ? ([...base, "projects", "managed-products", "summary", managedProductId] as const)
-          : ([...base, "projects", "managed-products", "summary", managedProductId, { period }] as const),
+          : ([...base, "projects", "managed-products", "summary", managedProductId, filters] as const),
       opportunities: (managedProductId: number, filters?: QueryKeyParams) =>
         filters === undefined
           ? ([...base, "projects", "managed-products", managedProductId, "opportunities"] as const)
@@ -334,6 +334,7 @@ export const buildWorkQueryKeys = {
         [...base, "projects", "managed-products", "releases", managedProductId] as const,
       members: (managedProductId: number) =>
         [...base, "projects", "managed-products", "members", managedProductId] as const,
+      facets: [...base, "projects", "managed-products", "facets"] as const,
     },
     workflow: {
       transitions: (projectId: number) =>

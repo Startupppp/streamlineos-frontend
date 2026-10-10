@@ -3,7 +3,7 @@
 import { memo, useCallback, useState, type MouseEvent } from "react";
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
-import { ArrowBigUp, Pencil, ArrowRight, Globe } from "lucide-react";
+import { ArrowBigUp, Pencil, ArrowRight, Globe, ArrowUp, ArrowDown, EyeOff } from "lucide-react";
 import { Trash2Icon } from "@animateicons/react/lucide";
 import { Button } from "@/components/ui/button";
 import {
@@ -33,7 +33,7 @@ import { getUserDisplayName } from "@/lib/person-display";
 import { useCan } from "@/hooks/api/access";
 import { RoadmapPriorityScore } from "./roadmap-priority-score";
 import type { RoadmapHorizon, RoadmapStatus } from "@/types/projects";
-import { ROADMAP_HORIZON_LABEL } from "./roadmap-constants";
+import { ROADMAP_HORIZON_LABEL, ROADMAP_STATUS_BADGE_VARIANT, ROADMAP_STATUS_LABEL } from "./roadmap-constants";
 
 export type ScorableRoadmapItem = {
   id: number;
@@ -72,25 +72,14 @@ export type ScorableRoadmapItem = {
   version: number;
 };
 
-const STATUS_BADGE_VARIANT: Record<string, "default" | "secondary" | "outline" | "destructive"> = {
-  planned: "outline",
-  in_progress: "default",
-  completed: "secondary",
-  cancelled: "destructive",
-};
-
-const STATUS_LABEL: Record<string, string> = {
-  planned: "Planned",
-  in_progress: "In Progress",
-  completed: "Completed",
-  cancelled: "Cancelled",
-};
-
 interface RoadmapItemCardProps {
   item: ScorableRoadmapItem;
   onEdit: (item: ScorableRoadmapItem) => void;
   onDelete: (item: ScorableRoadmapItem) => void;
   onMove?: (item: ScorableRoadmapItem, horizon: RoadmapHorizon) => void;
+  onMoveUp?: (item: ScorableRoadmapItem) => void;
+  onMoveDown?: (item: ScorableRoadmapItem) => void;
+  onPublishToggle?: (item: ScorableRoadmapItem) => void;
 }
 
 export const RoadmapItemCard = memo(function RoadmapItemCard({
@@ -98,18 +87,19 @@ export const RoadmapItemCard = memo(function RoadmapItemCard({
   onEdit,
   onDelete,
   onMove,
+  onMoveUp,
+  onMoveDown,
+  onPublishToggle,
 }: RoadmapItemCardProps) {
   const shouldReduceMotion = useReducedMotion();
   const canManage = useCan("build:roadmap:manage");
   const [menuOpen, setMenuOpen] = useState(false);
 
-  function handleEdit() {
-    onEdit(item);
-  }
-
-  function handleDelete() {
-    onDelete(item);
-  }
+  const handleEdit = useCallback(() => { onEdit(item); }, [item, onEdit]);
+  const handleDelete = useCallback(() => { onDelete(item); }, [item, onDelete]);
+  const handleMoveUp = useCallback(() => { onMoveUp?.(item); }, [item, onMoveUp]);
+  const handleMoveDown = useCallback(() => { onMoveDown?.(item); }, [item, onMoveDown]);
+  const handlePublishToggle = useCallback(() => { onPublishToggle?.(item); }, [item, onPublishToggle]);
 
   const handleContextMenu = useCallback((event: MouseEvent<HTMLDivElement>) => {
     if (!canManage) return;
@@ -160,6 +150,18 @@ export const RoadmapItemCard = memo(function RoadmapItemCard({
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onSelect={handleEdit}>Edit</DropdownMenuItem>
+                {onMoveUp ? (
+                  <DropdownMenuItem onSelect={handleMoveUp}>
+                    <ArrowUp className="h-3.5 w-3.5" />
+                    Move up
+                  </DropdownMenuItem>
+                ) : null}
+                {onMoveDown ? (
+                  <DropdownMenuItem onSelect={handleMoveDown}>
+                    <ArrowDown className="h-3.5 w-3.5" />
+                    Move down
+                  </DropdownMenuItem>
+                ) : null}
                 {onMove ? (
                   <>
                     <DropdownMenuSeparator />
@@ -181,9 +183,18 @@ export const RoadmapItemCard = memo(function RoadmapItemCard({
                         Move to Later
                       </DropdownMenuItem>
                     ) : null}
-                    <DropdownMenuSeparator />
                   </>
                 ) : null}
+                {onPublishToggle ? (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onSelect={handlePublishToggle}>
+                      <EyeOff className="h-3.5 w-3.5" />
+                      {item.isPublic ? "Unpublish" : "Publish"}
+                    </DropdownMenuItem>
+                  </>
+                ) : null}
+                <DropdownMenuSeparator />
                 <DropdownMenuItem variant="destructive" onSelect={handleDelete}>Delete</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -227,8 +238,8 @@ export const RoadmapItemCard = memo(function RoadmapItemCard({
           </Link>
         ) : null}
         <div className="flex min-w-0 flex-wrap items-center gap-1.5 border-t border-border/70 pt-2.5">
-          <Badge variant={STATUS_BADGE_VARIANT[String(item.status)] ?? "outline"} className="text-micro">
-            {STATUS_LABEL[String(item.status)] ?? String(item.status)}
+          <Badge variant={ROADMAP_STATUS_BADGE_VARIANT[String(item.status)] ?? "outline"} className="text-micro">
+            {ROADMAP_STATUS_LABEL[String(item.status)] ?? String(item.status)}
           </Badge>
           <RoadmapPriorityScore
             prioritization={item.prioritization}
@@ -268,6 +279,9 @@ export const RoadmapItemCard = memo(function RoadmapItemCard({
             <ArrowBigUp className="h-3.5 w-3.5" />
             {item.votes}
           </span>
+          {item.epicTicketId != null && item.projectId != null ? (
+            <Link href={`/build/${item.projectId}/issues?ticket=${item.epicTicketId}`} aria-label="View epic ticket" className="text-dense text-primary underline-offset-2 hover:underline">Epic</Link>
+          ) : null}
           {item.projectId !== null ? (
             <Link
               href={`/build/${item.projectId}`}

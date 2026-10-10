@@ -2,6 +2,7 @@
 
 import { useCallback } from "react";
 import { useForm } from "react-hook-form";
+import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
@@ -85,6 +86,8 @@ export function ProductReleaseFormSheet({
       : { name: "", version: "", description: "", releaseDate: "", status: "draft" },
     values: editTarget ? toFormValues(editTarget) : undefined,
   });
+
+  useRegisterDirtyState(form.formState.isDirty && open);
 
   function handleOpenChange(next: boolean) {
     if (!next && isPending) return;

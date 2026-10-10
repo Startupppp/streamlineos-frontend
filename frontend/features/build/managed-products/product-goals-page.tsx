@@ -83,7 +83,7 @@ export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
     createActions,
   } = useProductGoalsPage({ managedProductId });
 
-  const firstKeyResult = checkInGoalDetail?.keyResults[0] ?? null;
+  const checkInKeyResults = checkInGoalDetail?.keyResults ?? [];
 
   return (
     <PageWrapper
@@ -224,10 +224,10 @@ export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
         onConfirm={handleUnlinkConfirm}
       />
 
-      {checkInGoalId !== null && firstKeyResult !== null ? (
+      {checkInGoalId !== null && checkInKeyResults.length > 0 ? (
         <CheckInDialog
           goalId={checkInGoalId}
-          keyResult={firstKeyResult}
+          keyResults={checkInKeyResults}
           onClose={handleCheckInClose}
         />
       ) : null}

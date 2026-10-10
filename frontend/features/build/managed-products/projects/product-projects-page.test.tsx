@@ -21,6 +21,12 @@ const mockRouterPush = jest.fn();
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn(() => true),
+  usePermissionGate: jest.fn(() => ({ allowed: true, denied: false, pending: false })),
+  useModuleEnabled: jest.fn(() => false),
+}));
+
+jest.mock("@/hooks/api/build/teams", () => ({
+  useProjectTeams: jest.fn(() => ({ data: null })),
 }));
 
 jest.mock("@/hooks/api/use-page-state", () => ({
@@ -46,6 +52,7 @@ jest.mock("@/hooks/api/build/use-link-project-managed-product", () => ({
 
 jest.mock("@tanstack/react-query", () => ({
   useQueryClient: jest.fn(() => ({ invalidateQueries: jest.fn() })),
+  useQuery: jest.fn(() => ({ data: null })),
 }));
 
 jest.mock("@/hooks/common/use-debounce", () => ({
@@ -233,7 +240,7 @@ jest.mock("@/components/illustrations", () => ({
   EmptyProjectsIllustration: () => null,
 }));
 
-jest.mock("next/dynamic", () => (fn: () => Promise<unknown>) => {
+jest.mock("next/dynamic", () => (_fn: () => Promise<unknown>) => {
   const Component = () => <div data-testid="link-existing-project-dialog" />;
   Component.displayName = "DynamicLinkExistingProjectDialog";
   return Component;
@@ -267,6 +274,7 @@ function makeRow(overrides: Partial<{
     nextMilestone: null,
     contribution: { totalTickets: 10, doneTickets: 5, percent: 50 },
     linkedRoadmapItemCount: 0,
+    linkedGoals: [],
     createdAt: "2026-01-01T00:00:00.000Z",
     updatedAt: "2026-01-01T00:00:00.000Z",
     ...overrides,
@@ -376,7 +384,7 @@ describe("ProductProjectsPage — contribution cell (BSN-PROJ-CONTRIBUTION)", ()
       },
     });
     render(<ProductProjectsPage managedProductId={5} />);
-    expect(screen.getByText("No tickets")).toBeInTheDocument();
+    expect(screen.getByText("No tickets", { selector: "span" })).toBeInTheDocument();
   });
 
   it("renders a percentage when totalTickets is non-zero", () => {

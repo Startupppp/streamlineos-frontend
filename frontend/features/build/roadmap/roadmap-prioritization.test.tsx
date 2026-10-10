@@ -140,6 +140,7 @@ describe("roadmapItemSchema — RICE entry bounds", () => {
     targetStart: "",
     targetEnd: "",
     projectId: "",
+    epicTicketId: "",
     goalId: "",
     releaseId: "",
     teamId: "",

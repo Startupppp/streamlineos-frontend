@@ -77,6 +77,10 @@ const FULL_TRACE: DiscoveryGetTraceResponse = {
   outcomeReviews: [
     { id: 10, title: "NPS impact", state: "completed", result: "met", kind: "outcome_review", scheduledFor: null },
   ],
+  dependencies: [
+    { dependsOnId: 20, title: "Auth refactor", horizon: "now", status: "in_progress" },
+    { dependsOnId: 21, title: "DB migration", horizon: "next", status: "planned" },
+  ],
 };
 
 const MINIMAL_TRACE: DiscoveryGetTraceResponse = {
@@ -88,6 +92,7 @@ const MINIMAL_TRACE: DiscoveryGetTraceResponse = {
   delivery: { project: null, tickets: null },
   release: null,
   outcomeReviews: [],
+  dependencies: [],
 };
 
 describe("OpportunityTrace — step rendering (BSN-TRACE-STEPS)", () => {
@@ -103,6 +108,7 @@ describe("OpportunityTrace — step rendering (BSN-TRACE-STEPS)", () => {
     expect(screen.getByTestId("trace-step-delivery")).toBeInTheDocument();
     expect(screen.getByTestId("trace-step-release")).toBeInTheDocument();
     expect(screen.getByTestId("trace-step-outcome-reviews")).toBeInTheDocument();
+    expect(screen.getByTestId("trace-step-dependencies")).toBeInTheDocument();
   });
 
   it("renders a link to the product roadmap page from the roadmap item so the user can navigate to the roadmap", () => {
@@ -132,5 +138,23 @@ describe("OpportunityTrace — step rendering (BSN-TRACE-STEPS)", () => {
     expect(screen.queryByTestId("trace-step-delivery")).not.toBeInTheDocument();
     expect(screen.queryByTestId("trace-step-release")).not.toBeInTheDocument();
     expect(screen.queryByTestId("trace-step-outcome-reviews")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("trace-step-dependencies")).not.toBeInTheDocument();
+  });
+});
+
+describe("OpportunityTrace — dependencies (BSN-TRACE-DEPS)", () => {
+  it("renders the dependencies step when the trace has dependency items so blockers are visible in the lifecycle", () => {
+    render(<OpportunityTrace managedProductId={1} trace={FULL_TRACE} />);
+
+    const depsStep = screen.getByTestId("trace-step-dependencies");
+    expect(depsStep).toBeInTheDocument();
+    expect(depsStep).toHaveTextContent("Auth refactor");
+    expect(depsStep).toHaveTextContent("DB migration");
+  });
+
+  it("does not render the dependencies step when the dependencies array is empty so the trace stays uncluttered", () => {
+    render(<OpportunityTrace managedProductId={1} trace={MINIMAL_TRACE} />);
+
+    expect(screen.queryByTestId("trace-step-dependencies")).not.toBeInTheDocument();
   });
 });

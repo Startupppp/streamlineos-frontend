@@ -3,10 +3,10 @@ import {
   projectsRoadmapGetRoadmapSignalsResponseSchema,
   projectsRoadmapCreateRoadmapResponseSchema,
   projectsRoadmapListRoadmapResponseSchema,
-  projectsRoadmapUpdateFeedbackResponseSchema,
-  projectsRoadmapListFeedbackResponseSchema,
-  projectsRoadmapCreateChangelogResponseSchema,
-  projectsRoadmapListChangelogResponseSchema,
+  projectsFeedbackChangelogUpdateFeedbackResponseSchema,
+  projectsFeedbackChangelogListFeedbackResponseSchema,
+  projectsFeedbackChangelogCreateChangelogResponseSchema,
+  projectsFeedbackChangelogListChangelogResponseSchema,
   projectsTemplatesListTemplatesResponseSchema,
   projectsTemplatesCreateTemplateResponseSchema,
   projectsTemplatesApplyTemplateResponseSchema,
@@ -50,11 +50,11 @@ export type RoadmapDelivery = z.infer<typeof roadmapDeliveryContract>;
 export const roadmapItemContract = projectsRoadmapCreateRoadmapResponseSchema;
 export const roadmapPageContract = projectsRoadmapListRoadmapResponseSchema;
 
-export const feedbackPostContract = projectsRoadmapUpdateFeedbackResponseSchema;
-export const feedbackPageContract = projectsRoadmapListFeedbackResponseSchema;
+export const feedbackPostContract = projectsFeedbackChangelogUpdateFeedbackResponseSchema;
+export const feedbackPageContract = projectsFeedbackChangelogListFeedbackResponseSchema;
 
-export const changelogEntryContract = projectsRoadmapCreateChangelogResponseSchema;
-export const changelogPageContract = projectsRoadmapListChangelogResponseSchema;
+export const changelogEntryContract = projectsFeedbackChangelogCreateChangelogResponseSchema;
+export const changelogPageContract = projectsFeedbackChangelogListChangelogResponseSchema;
 
 export const templateRowContract = projectsTemplatesCreateTemplateResponseSchema;
 export const templateListContract = projectsTemplatesListTemplatesResponseSchema;

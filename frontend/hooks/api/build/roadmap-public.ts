@@ -20,6 +20,9 @@ const publicFeedbackResultContract = lazyContract(() =>
 const roadmapPublicationLazy = lazyContract(() =>
   import("@/hooks/api/build/roadmap-schema").then((m) => m.roadmapPublicationContract),
 );
+const noContentLazy = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
 
 interface RoadmapPublication {
   token: string | null;
@@ -147,5 +150,21 @@ export function usePublishRoadmap() {
         knowledgeAndSurveysQueryKeys.roadmap.publication,
         publication,
       ),
+  });
+}
+
+export function useUnpublishRoadmap() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("build:roadmap:manage", {
+    mutationKey: ["projects", "roadmap", "publication", "unpublish"],
+    mutationFn: () =>
+      apiClient.delete<void>(
+        "/build/roadmap-publication",
+        undefined,
+        undefined,
+        noContentLazy,
+      ),
+    onSuccess: () =>
+      qc.setQueryData(knowledgeAndSurveysQueryKeys.roadmap.publication, null),
   });
 }

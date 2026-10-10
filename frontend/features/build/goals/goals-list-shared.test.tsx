@@ -287,3 +287,33 @@ describe("GoalCard — check in from card (BSN-GOALS-CHECKIN-CARD)", () => {
     expect(onCheckIn).toHaveBeenCalledWith(goal);
   });
 });
+
+describe("GoalCard — parent goal and measurement source (Task 8)", () => {
+  it("shows a parent goal link when parentGoalId is set", () => {
+    render(<GoalCard goal={baseGoal({ id: 5, parentGoalId: 2 })} />);
+    const link = screen.getByRole("link", { name: "Parent goal" });
+    expect(link).toBeInTheDocument();
+    expect(link).toHaveAttribute("href", "/build/goals/2");
+  });
+
+  it("does not show parent goal link when parentGoalId is null (FE-122 negative pair)", () => {
+    render(<GoalCard goal={baseGoal({ parentGoalId: null })} />);
+    expect(screen.queryByRole("link", { name: "Parent goal" })).not.toBeInTheDocument();
+  });
+
+  it("renders outcome reviews as a drill-down link to the goal detail page", () => {
+    const goal = baseGoal({
+      id: 7,
+      outcomeReviews: { completed: 2, scheduled: 4, latestResult: "on_track" },
+    });
+    render(<GoalCard goal={goal} />);
+    const link = screen.getByRole("link", { name: /Outcome reviews/ });
+    expect(link).toBeInTheDocument();
+    expect(link).toHaveAttribute("href", "/build/goals/7");
+  });
+
+  it("does not render the outcome reviews link when outcomeReviews is null (FE-122 negative pair)", () => {
+    render(<GoalCard goal={baseGoal({ id: 7, outcomeReviews: null })} />);
+    expect(screen.queryByText(/Outcome reviews/)).not.toBeInTheDocument();
+  });
+});

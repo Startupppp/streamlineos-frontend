@@ -12,17 +12,17 @@ import { BuildHeaderActions } from "@/features/build/shared/build-header-actions
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
 import { BuildListSurface } from "@/features/build/shared/build-list-surface";
-import {
-  MANAGED_PRODUCT_TABLE_HEADERS,
-  ManagedProductMobileCard,
-} from "./managed-product-table-columns";
+import { MANAGED_PRODUCT_TABLE_HEADERS } from "./managed-product-table-columns";
+import { ManagedProductMobileCard } from "./managed-product-mobile-card";
 import { ManagedProductBulkToolbar } from "./managed-product-bulk-toolbar";
+import { ManagedProductFilterChips } from "./managed-product-filter-chips";
 import {
   useManagedProductsPage,
   STATUS_OPTIONS,
   SORT_OPTIONS,
   LIFECYCLE_FILTER_OPTIONS,
   HEALTH_FILTER_OPTIONS,
+  ARCHIVED_FILTER_OPTIONS,
   PAGE_SIZE,
 } from "./use-managed-products-page";
 
@@ -46,7 +46,16 @@ export function ManagedProductsPage() {
     lifecycleValue,
     healthValue,
     teamIdValue,
+    ownerIdValue,
+    segmentValue,
+    tagValue,
+    linkedProjectIdValue,
+    archivedValue,
     teamOptions,
+    ownerOptions,
+    segmentOptions,
+    tagOptions,
+    linkedProjectOptions,
     displayed,
     data,
     isLoading,
@@ -64,6 +73,11 @@ export function ManagedProductsPage() {
     handleLifecycleChange,
     handleHealthChange,
     handleTeamChange,
+    handleOwnerChange,
+    handleArchivedChange,
+    handleSegmentChange,
+    handleTagChange,
+    handleLinkedProjectChange,
     handleOpenCreate,
     handleSheetOpenChange,
     handleDeleteDialogChange,
@@ -97,83 +111,174 @@ export function ManagedProductsPage() {
       title="Managed Products"
       subtitle="Track products and link projects to them"
       filters={
-        <BuildListToolbar
-          search={{
-            value: listFilters.search,
-            onValueChange: listFilters.setSearch,
-            placeholder: "Search products…",
-            label: "Search products",
-            inputRef: searchInputRef,
-          }}
-          filters={[
-            {
-              id: "status",
-              label: "Status",
-              active: listFilters.isActive("status"),
-              control: (
-                <BuildFilterSelect
-                  label="Status"
-                  value={statusValue}
-                  onValueChange={handleStatusChange}
-                  options={STATUS_OPTIONS}
-                />
-              ),
-            },
-            {
-              id: "lifecycle",
-              label: "Lifecycle",
-              active: listFilters.isActive("lifecycle"),
-              control: (
-                <BuildFilterSelect
-                  label="Lifecycle"
-                  value={lifecycleValue}
-                  onValueChange={handleLifecycleChange}
-                  options={LIFECYCLE_FILTER_OPTIONS}
-                />
-              ),
-            },
-            {
-              id: "health",
-              label: "Health",
-              active: listFilters.isActive("health"),
-              control: (
-                <BuildFilterSelect
-                  label="Health"
-                  value={healthValue}
-                  onValueChange={handleHealthChange}
-                  options={HEALTH_FILTER_OPTIONS}
-                />
-              ),
-            },
-            {
-              id: "teamId",
-              label: "Team",
-              active: listFilters.isActive("teamId"),
-              control: (
-                <BuildFilterSelect
-                  label="Team"
-                  value={teamIdValue}
-                  onValueChange={handleTeamChange}
-                  options={teamOptions}
-                />
-              ),
-            },
-            {
-              id: "sort",
-              label: "Sort",
-              active: listFilters.isActive("sort"),
-              control: (
-                <BuildFilterSelect
-                  label="Sort"
-                  value={sortValue}
-                  onValueChange={handleSortChange}
-                  options={SORT_OPTIONS}
-                />
-              ),
-            },
-          ]}
-          onClearAll={listFilters.clearAll}
-        />
+        <>
+          <BuildListToolbar
+            search={{
+              value: listFilters.search,
+              onValueChange: listFilters.setSearch,
+              placeholder: "Search products…",
+              label: "Search products",
+              inputRef: searchInputRef,
+            }}
+            filters={[
+              {
+                id: "status",
+                label: "Status",
+                active: listFilters.isActive("status"),
+                control: (
+                  <BuildFilterSelect
+                    label="Status"
+                    value={statusValue}
+                    onValueChange={handleStatusChange}
+                    options={STATUS_OPTIONS}
+                  />
+                ),
+              },
+              {
+                id: "lifecycle",
+                label: "Lifecycle",
+                active: listFilters.isActive("lifecycle"),
+                control: (
+                  <BuildFilterSelect
+                    label="Lifecycle"
+                    value={lifecycleValue}
+                    onValueChange={handleLifecycleChange}
+                    options={LIFECYCLE_FILTER_OPTIONS}
+                  />
+                ),
+              },
+              {
+                id: "health",
+                label: "Health",
+                active: listFilters.isActive("health"),
+                control: (
+                  <BuildFilterSelect
+                    label="Health"
+                    value={healthValue}
+                    onValueChange={handleHealthChange}
+                    options={HEALTH_FILTER_OPTIONS}
+                  />
+                ),
+              },
+              {
+                id: "teamId",
+                label: "Team",
+                active: listFilters.isActive("teamId"),
+                control: (
+                  <BuildFilterSelect
+                    label="Team"
+                    value={teamIdValue}
+                    onValueChange={handleTeamChange}
+                    options={teamOptions}
+                  />
+                ),
+              },
+              {
+                id: "ownerId",
+                label: "Owner",
+                active: listFilters.isActive("ownerId"),
+                control: (
+                  <BuildFilterSelect
+                    label="Owner"
+                    value={ownerIdValue}
+                    onValueChange={handleOwnerChange}
+                    options={ownerOptions}
+                  />
+                ),
+              },
+              {
+                id: "segment",
+                label: "Segment",
+                active: listFilters.isActive("segment"),
+                control: (
+                  <BuildFilterSelect
+                    label="Segment"
+                    value={segmentValue}
+                    onValueChange={handleSegmentChange}
+                    options={segmentOptions}
+                  />
+                ),
+              },
+              {
+                id: "tag",
+                label: "Tag",
+                active: listFilters.isActive("tag"),
+                control: (
+                  <BuildFilterSelect
+                    label="Tag"
+                    value={tagValue}
+                    onValueChange={handleTagChange}
+                    options={tagOptions}
+                  />
+                ),
+              },
+              {
+                id: "linkedProjectId",
+                label: "Project",
+                active: listFilters.isActive("linkedProjectId"),
+                control: (
+                  <BuildFilterSelect
+                    label="Project"
+                    value={linkedProjectIdValue}
+                    onValueChange={handleLinkedProjectChange}
+                    options={linkedProjectOptions}
+                  />
+                ),
+              },
+              {
+                id: "archived",
+                label: "Archived",
+                active: listFilters.isActive("archived"),
+                control: (
+                  <BuildFilterSelect
+                    label="Archived"
+                    value={archivedValue}
+                    onValueChange={handleArchivedChange}
+                    options={ARCHIVED_FILTER_OPTIONS}
+                  />
+                ),
+              },
+              {
+                id: "sort",
+                label: "Sort",
+                active: listFilters.isActive("sort"),
+                control: (
+                  <BuildFilterSelect
+                    label="Sort"
+                    value={sortValue}
+                    onValueChange={handleSortChange}
+                    options={SORT_OPTIONS}
+                  />
+                ),
+              },
+            ]}
+            onClearAll={listFilters.clearAll}
+          />
+          <ManagedProductFilterChips
+            listFilters={listFilters}
+            statusValue={statusValue}
+            lifecycleValue={lifecycleValue}
+            healthValue={healthValue}
+            teamIdValue={teamIdValue}
+            ownerIdValue={ownerIdValue}
+            segmentValue={segmentValue}
+            tagValue={tagValue}
+            linkedProjectIdValue={linkedProjectIdValue}
+            archivedValue={archivedValue}
+            ownerOptions={ownerOptions}
+            teamOptions={teamOptions}
+            linkedProjectOptions={linkedProjectOptions}
+            onClearStatus={handleStatusChange}
+            onClearLifecycle={handleLifecycleChange}
+            onClearHealth={handleHealthChange}
+            onClearTeam={handleTeamChange}
+            onClearOwner={handleOwnerChange}
+            onClearSegment={handleSegmentChange}
+            onClearTag={handleTagChange}
+            onClearLinkedProject={handleLinkedProjectChange}
+            onClearArchived={handleArchivedChange}
+          />
+        </>
       }
       actions={
         <BuildHeaderActions

@@ -14,17 +14,32 @@ const managedProductSummaryContract = lazyContract(() =>
 );
 
 export type SummaryPeriod = "30d" | "90d" | "365d" | "all";
+export type InitiativeStatus = "planned" | "in_progress" | "completed" | "cancelled";
+
+export interface SummaryFilters {
+  period?: SummaryPeriod;
+  teamId?: number;
+  segment?: string;
+  initiativeStatus?: InitiativeStatus;
+}
+
 export type ManagedProductSummary = ManagedProductRelationsGetManagedProductSummaryResponse;
 
-export function useManagedProductSummary(managedProductId: number, period?: SummaryPeriod) {
+export function useManagedProductSummary(managedProductId: number, filters?: SummaryFilters) {
   const canView = useCan("build:managed-products:view");
   const queryParams: Record<string, string> = {};
-  if (period !== undefined) queryParams["period"] = period;
+  if (filters?.period !== undefined) queryParams["period"] = filters.period;
+  if (filters?.teamId !== undefined) queryParams["teamId"] = String(filters.teamId);
+  if (filters?.segment !== undefined) queryParams["segment"] = filters.segment;
+  if (filters?.initiativeStatus !== undefined) queryParams["initiativeStatus"] = filters.initiativeStatus;
   const hasParams = Object.keys(queryParams).length > 0;
+  const filtersKey: Record<string, string | number | undefined> | undefined = hasParams
+    ? queryParams
+    : undefined;
   return useQuery<ManagedProductSummary | null>({
     queryKey: buildWorkQueryKeys.projects.managedProducts.summary(
       managedProductId,
-      period,
+      filtersKey,
     ),
     queryFn: async ({ signal }) => {
       return apiClient.get<ManagedProductSummary>(

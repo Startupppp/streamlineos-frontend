@@ -33,7 +33,7 @@ export function OpportunityPane({
 }: OpportunityPaneProps) {
   const canWrite = useCan("build:managed-products:update");
   const [acceptOpen, setAcceptOpen] = useState(false);
-  const [declineOpen, setDeclineOpen] = useState(false);
+  const [_declineOpen, setDeclineOpen] = useState(false);
   const [overrideOpen, setOverrideOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"details" | "trace">("details");
 
@@ -175,7 +175,7 @@ export function OpportunityPane({
                       : (opportunity.latestScore?.effectiveScore ?? "—")}
                   </p>
                   {opportunity.latestScore?.isOverride && (
-                    <p className="text-xs text-amber-600 dark:text-amber-400">
+                    <p className="text-xs text-status-warning-ink-strong">
                       Overridden — {opportunity.latestScore.overrideReason}
                     </p>
                   )}
@@ -240,6 +240,7 @@ export function OpportunityPane({
             onOpenChange={setAcceptOpen}
             opportunityTitle={opportunity.title}
             expectedVersion={opportunity.version}
+            managedProductId={managedProductId}
             isSubmitting={acceptMutation.isPending}
             onAccept={handleAccept}
           />

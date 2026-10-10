@@ -18,9 +18,11 @@ import { ManagedProductOverviewStrategyCard } from "./managed-product-overview-s
 import { ManagedProductOverviewEvidenceCard } from "./managed-product-overview-evidence-card";
 import { ManagedProductOverviewDeliveryCard } from "./managed-product-overview-delivery-card";
 import { ManagedProductOverviewOutcomesCard } from "./managed-product-overview-outcomes-card";
+import { ManagedProductOverviewPreviewsCard } from "./managed-product-overview-previews-card";
 import {
   useManagedProductOverview,
   PERIOD_OPTIONS,
+  INITIATIVE_STATUS_OPTIONS,
 } from "./use-managed-product-overview";
 
 interface ManagedProductOverviewPageProps {
@@ -31,6 +33,8 @@ export function ManagedProductOverviewPage({ managedProductId }: ManagedProductO
   const {
     listFilters,
     rawPeriod,
+    rawTeamId,
+    rawSegment,
     product,
     editOpen,
     setEditOpen,
@@ -39,8 +43,13 @@ export function ManagedProductOverviewPage({ managedProductId }: ManagedProductO
     editActions,
     summaryData,
     summaryDataUpdatedAt,
+    teamOptions,
+    segmentOptions,
     handleRetry,
     handlePeriodChange,
+    handleTeamChange,
+    handleInitiativeStatusChange,
+    handleSegmentChange,
   } = useManagedProductOverview(managedProductId);
 
   return (
@@ -63,6 +72,45 @@ export function ManagedProductOverviewPage({ managedProductId }: ManagedProductO
                   value={rawPeriod ?? "all"}
                   onValueChange={handlePeriodChange}
                   options={PERIOD_OPTIONS}
+                />
+              ),
+            },
+            {
+              id: "teamId",
+              label: "Team",
+              active: listFilters.isActive("teamId"),
+              control: (
+                <BuildFilterSelect
+                  label="Team"
+                  value={rawTeamId ?? "all"}
+                  onValueChange={handleTeamChange}
+                  options={teamOptions}
+                />
+              ),
+            },
+            {
+              id: "initiativeStatus",
+              label: "Status",
+              active: listFilters.isActive("initiativeStatus"),
+              control: (
+                <BuildFilterSelect
+                  label="Status"
+                  value={listFilters.value("initiativeStatus") ?? "all"}
+                  onValueChange={handleInitiativeStatusChange}
+                  options={INITIATIVE_STATUS_OPTIONS}
+                />
+              ),
+            },
+            {
+              id: "segment",
+              label: "Segment",
+              active: listFilters.isActive("segment"),
+              control: (
+                <BuildFilterSelect
+                  label="Segment"
+                  value={rawSegment ?? "all"}
+                  onValueChange={handleSegmentChange}
+                  options={segmentOptions}
                 />
               ),
             },
@@ -109,6 +157,10 @@ export function ManagedProductOverviewPage({ managedProductId }: ManagedProductO
                   <ManagedProductOverviewOutcomesCard
                     managedProductId={managedProductId}
                     outcomes={summaryData.outcomes}
+                  />
+                  <ManagedProductOverviewPreviewsCard
+                    managedProductId={managedProductId}
+                    previews={summaryData.previews}
                   />
                 </>
               ) : (

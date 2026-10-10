@@ -73,9 +73,9 @@ jest.mock("@/components/shared", () => ({
     onOpenChange,
     title,
     children,
-    onSubmit,
+    _onSubmit,
     defaultValues,
-    resolver,
+    _resolver,
   }: {
     open: boolean;
     onOpenChange: (v: boolean) => void;
@@ -84,9 +84,9 @@ jest.mock("@/components/shared", () => ({
       control: unknown;
       handleSubmit: (fn: (v: Record<string, string>) => void) => (e: React.FormEvent) => void;
     }) => React.ReactNode;
-    onSubmit: (v: Record<string, string>) => void;
+    _onSubmit: (v: Record<string, string>) => void;
     defaultValues: Record<string, string>;
-    resolver: unknown;
+    _resolver: unknown;
   }) => {
     if (!open) return null;
     const mockForm = {

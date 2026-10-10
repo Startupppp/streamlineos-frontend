@@ -68,7 +68,6 @@ export function ProductSettingsMembersSection({
             variant="outline"
             size="sm"
             onClick={() => setAddOpen(true)}
-            aria-label="Add product member"
           >
             <UserPlus aria-hidden="true" />
             Add member

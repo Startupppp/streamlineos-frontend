@@ -125493,7 +125493,7 @@
     },
     "/build/changelog": {
       "get": {
-        "operationId": "ProjectsRoadmapController_listChangelog",
+        "operationId": "ProjectsFeedbackChangelogController_listChangelog",
         "parameters": [
           {
             "name": "type",
@@ -125704,14 +125704,14 @@
           }
         },
         "tags": [
-          "ProjectsRoadmap"
+          "ProjectsFeedbackChangelog"
         ],
         "x-exposure": "permissioned",
         "x-permission": "build:roadmap:view",
         "description": "Exposure: permission — build:roadmap:view"
       },
       "post": {
-        "operationId": "ProjectsRoadmapController_createChangelog",
+        "operationId": "ProjectsFeedbackChangelogController_createChangelog",
         "parameters": [],
         "responses": {
           "201": {
@@ -125855,7 +125855,7 @@
           }
         },
         "tags": [
-          "ProjectsRoadmap"
+          "ProjectsFeedbackChangelog"
         ],
         "x-exposure": "permissioned",
         "x-permission": "build:roadmap:manage",
@@ -125912,7 +125912,7 @@
     },
     "/build/changelog/{entryId}": {
       "patch": {
-        "operationId": "ProjectsRoadmapController_updateChangelog",
+        "operationId": "ProjectsFeedbackChangelogController_updateChangelog",
         "parameters": [
           {
             "name": "entryId",
@@ -126070,7 +126070,7 @@
           }
         },
         "tags": [
-          "ProjectsRoadmap"
+          "ProjectsFeedbackChangelog"
         ],
         "x-exposure": "permissioned",
         "x-permission": "build:roadmap:manage",
@@ -126133,7 +126133,7 @@
         }
       },
       "delete": {
-        "operationId": "ProjectsRoadmapController_deleteChangelog",
+        "operationId": "ProjectsFeedbackChangelogController_deleteChangelog",
         "parameters": [
           {
             "name": "entryId",
@@ -126177,7 +126177,7 @@
           }
         },
         "tags": [
-          "ProjectsRoadmap"
+          "ProjectsFeedbackChangelog"
         ],
         "x-exposure": "permissioned",
         "x-permission": "build:roadmap:manage",
@@ -127950,7 +127950,7 @@
     },
     "/build/feedback": {
       "get": {
-        "operationId": "ProjectsRoadmapController_listFeedback",
+        "operationId": "ProjectsFeedbackChangelogController_listFeedback",
         "parameters": [
           {
             "name": "status",
@@ -128298,14 +128298,14 @@
           }
         },
         "tags": [
-          "ProjectsRoadmap"
+          "ProjectsFeedbackChangelog"
         ],
         "x-exposure": "permissioned",
         "x-permission": "build:roadmap:view",
         "description": "Exposure: permission — build:roadmap:view"
       },
       "post": {
-        "operationId": "ProjectsRoadmapController_createFeedback",
+        "operationId": "ProjectsFeedbackChangelogController_createFeedback",
         "parameters": [],
         "responses": {
           "201": {
@@ -128560,7 +128560,7 @@
           }
         },
         "tags": [
-          "ProjectsRoadmap"
+          "ProjectsFeedbackChangelog"
         ],
         "x-exposure": "permissioned",
         "x-permission": "build:roadmap:manage",
@@ -128628,7 +128628,7 @@
     },
     "/build/feedback/{postId}": {
       "patch": {
-        "operationId": "ProjectsRoadmapController_updateFeedback",
+        "operationId": "ProjectsFeedbackChangelogController_updateFeedback",
         "parameters": [
           {
             "name": "postId",
@@ -128897,7 +128897,7 @@
           }
         },
         "tags": [
-          "ProjectsRoadmap"
+          "ProjectsFeedbackChangelog"
         ],
         "x-exposure": "permissioned",
         "x-permission": "build:roadmap:manage",
@@ -128978,7 +128978,7 @@
         }
       },
       "delete": {
-        "operationId": "ProjectsRoadmapController_deleteFeedback",
+        "operationId": "ProjectsFeedbackChangelogController_deleteFeedback",
         "parameters": [
           {
             "name": "postId",
@@ -129022,7 +129022,7 @@
           }
         },
         "tags": [
-          "ProjectsRoadmap"
+          "ProjectsFeedbackChangelog"
         ],
         "x-exposure": "permissioned",
         "x-permission": "build:roadmap:manage",
@@ -129031,7 +129031,7 @@
     },
     "/build/feedback/{postId}/merge": {
       "post": {
-        "operationId": "ProjectsRoadmapController_mergeFeedback",
+        "operationId": "ProjectsFeedbackChangelogController_mergeFeedback",
         "parameters": [
           {
             "name": "postId",
@@ -129300,7 +129300,7 @@
           }
         },
         "tags": [
-          "ProjectsRoadmap"
+          "ProjectsFeedbackChangelog"
         ],
         "x-exposure": "permissioned",
         "x-permission": "build:roadmap:manage",
@@ -129330,7 +129330,7 @@
     },
     "/build/feedback/{postId}/restore": {
       "post": {
-        "operationId": "ProjectsRoadmapController_restoreFeedback",
+        "operationId": "ProjectsFeedbackChangelogController_restoreFeedback",
         "parameters": [
           {
             "name": "postId",
@@ -129389,7 +129389,7 @@
           }
         },
         "tags": [
-          "ProjectsRoadmap"
+          "ProjectsFeedbackChangelog"
         ],
         "x-exposure": "permissioned",
         "x-permission": "build:roadmap:restore",
@@ -130546,7 +130546,30 @@
                                   }
                                 ]
                               },
-                              "successMetrics": {},
+                              "successMetrics": {
+                                "anyOf": [
+                                  {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "object",
+                                      "properties": {
+                                        "label": {
+                                          "type": "string"
+                                        },
+                                        "target": {
+                                          "type": "string"
+                                        }
+                                      },
+                                      "required": [
+                                        "label"
+                                      ]
+                                    }
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
                               "ownerMembershipId": {
                                 "anyOf": [
                                   {
@@ -130560,10 +130583,23 @@
                                 ]
                               },
                               "lifecycle": {
-                                "type": "string"
+                                "type": "string",
+                                "enum": [
+                                  "discovery",
+                                  "build",
+                                  "growth",
+                                  "mature",
+                                  "sunset"
+                                ]
                               },
                               "health": {
-                                "type": "string"
+                                "type": "string",
+                                "enum": [
+                                  "on_track",
+                                  "at_risk",
+                                  "off_track",
+                                  "unknown"
+                                ]
                               },
                               "teamId": {
                                 "anyOf": [
@@ -130980,7 +131016,30 @@
                             }
                           ]
                         },
-                        "successMetrics": {},
+                        "successMetrics": {
+                          "anyOf": [
+                            {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "label": {
+                                    "type": "string"
+                                  },
+                                  "target": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "label"
+                                ]
+                              }
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "ownerMembershipId": {
                           "anyOf": [
                             {
@@ -130994,10 +131053,23 @@
                           ]
                         },
                         "lifecycle": {
-                          "type": "string"
+                          "type": "string",
+                          "enum": [
+                            "discovery",
+                            "build",
+                            "growth",
+                            "mature",
+                            "sunset"
+                          ]
                         },
                         "health": {
-                          "type": "string"
+                          "type": "string",
+                          "enum": [
+                            "on_track",
+                            "at_risk",
+                            "off_track",
+                            "unknown"
+                          ]
                         },
                         "teamId": {
                           "anyOf": [
@@ -131463,7 +131535,30 @@
                             }
                           ]
                         },
-                        "successMetrics": {},
+                        "successMetrics": {
+                          "anyOf": [
+                            {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "label": {
+                                    "type": "string"
+                                  },
+                                  "target": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "label"
+                                ]
+                              }
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "ownerMembershipId": {
                           "anyOf": [
                             {
@@ -131477,10 +131572,23 @@
                           ]
                         },
                         "lifecycle": {
-                          "type": "string"
+                          "type": "string",
+                          "enum": [
+                            "discovery",
+                            "build",
+                            "growth",
+                            "mature",
+                            "sunset"
+                          ]
                         },
                         "health": {
-                          "type": "string"
+                          "type": "string",
+                          "enum": [
+                            "on_track",
+                            "at_risk",
+                            "off_track",
+                            "unknown"
+                          ]
                         },
                         "teamId": {
                           "anyOf": [
@@ -131809,7 +131917,30 @@
                             }
                           ]
                         },
-                        "successMetrics": {},
+                        "successMetrics": {
+                          "anyOf": [
+                            {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "label": {
+                                    "type": "string"
+                                  },
+                                  "target": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "label"
+                                ]
+                              }
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "ownerMembershipId": {
                           "anyOf": [
                             {
@@ -131823,10 +131954,23 @@
                           ]
                         },
                         "lifecycle": {
-                          "type": "string"
+                          "type": "string",
+                          "enum": [
+                            "discovery",
+                            "build",
+                            "growth",
+                            "mature",
+                            "sunset"
+                          ]
                         },
                         "health": {
-                          "type": "string"
+                          "type": "string",
+                          "enum": [
+                            "on_track",
+                            "at_risk",
+                            "off_track",
+                            "unknown"
+                          ]
                         },
                         "teamId": {
                           "anyOf": [
@@ -132423,7 +132567,30 @@
                             }
                           ]
                         },
-                        "successMetrics": {},
+                        "successMetrics": {
+                          "anyOf": [
+                            {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "label": {
+                                    "type": "string"
+                                  },
+                                  "target": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "label"
+                                ]
+                              }
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "ownerMembershipId": {
                           "anyOf": [
                             {
@@ -132437,10 +132604,23 @@
                           ]
                         },
                         "lifecycle": {
-                          "type": "string"
+                          "type": "string",
+                          "enum": [
+                            "discovery",
+                            "build",
+                            "growth",
+                            "mature",
+                            "sunset"
+                          ]
                         },
                         "health": {
-                          "type": "string"
+                          "type": "string",
+                          "enum": [
+                            "on_track",
+                            "at_risk",
+                            "off_track",
+                            "unknown"
+                          ]
                         },
                         "teamId": {
                           "anyOf": [
@@ -136724,6 +136904,23 @@
                     "exclusiveMinimum": 0,
                     "maximum": 9007199254740991
                   },
+                  "epicTicketId": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "isPublic": {
+                    "type": "boolean"
+                  },
+                  "dependsOnIds": {
+                    "maxItems": 20,
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "exclusiveMinimum": 0,
+                      "maximum": 9007199254740991
+                    }
+                  },
                   "note": {
                     "type": "string",
                     "maxLength": 2000
@@ -139101,6 +139298,39 @@
                               "scheduledFor"
                             ]
                           }
+                        },
+                        "dependencies": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "dependsOnId": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "title": {
+                                "type": "string"
+                              },
+                              "horizon": {
+                                "type": "string",
+                                "enum": [
+                                  "now",
+                                  "next",
+                                  "later"
+                                ]
+                              },
+                              "status": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "dependsOnId",
+                              "title",
+                              "horizon",
+                              "status"
+                            ]
+                          }
                         }
                       },
                       "required": [
@@ -139111,7 +139341,8 @@
                         "roadmapItem",
                         "delivery",
                         "release",
-                        "outcomeReviews"
+                        "outcomeReviews",
+                        "dependencies"
                       ]
                     }
                   },
@@ -140868,6 +141099,19 @@
             }
           },
           {
+            "name": "health",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "on_track",
+                "at_risk",
+                "off_track"
+              ]
+            }
+          },
+          {
             "name": "ownerId",
             "in": "query",
             "required": false,
@@ -140885,6 +141129,46 @@
               "type": "integer",
               "exclusiveMinimum": 0,
               "maximum": 9007199254740991
+            }
+          },
+          {
+            "name": "teamId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          {
+            "name": "clientId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          {
+            "name": "minContribution",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "maxContribution",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100
             }
           },
           {
@@ -141938,7 +142222,30 @@
                             }
                           ]
                         },
-                        "successMetrics": {},
+                        "successMetrics": {
+                          "anyOf": [
+                            {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "label": {
+                                    "type": "string"
+                                  },
+                                  "target": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "label"
+                                ]
+                              }
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "ownerMembershipId": {
                           "anyOf": [
                             {
@@ -141952,10 +142259,23 @@
                           ]
                         },
                         "lifecycle": {
-                          "type": "string"
+                          "type": "string",
+                          "enum": [
+                            "discovery",
+                            "build",
+                            "growth",
+                            "mature",
+                            "sunset"
+                          ]
                         },
                         "health": {
-                          "type": "string"
+                          "type": "string",
+                          "enum": [
+                            "on_track",
+                            "at_risk",
+                            "off_track",
+                            "unknown"
+                          ]
                         },
                         "teamId": {
                           "anyOf": [
@@ -142205,6 +142525,39 @@
                 "all"
               ]
             }
+          },
+          {
+            "name": "teamId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          {
+            "name": "segment",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 40
+            }
+          },
+          {
+            "name": "initiativeStatus",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "planned",
+                "in_progress",
+                "completed",
+                "cancelled"
+              ]
+            }
           }
         ],
         "responses": {
@@ -142329,7 +142682,30 @@
                                 }
                               ]
                             },
-                            "successMetrics": {},
+                            "successMetrics": {
+                              "anyOf": [
+                                {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "label": {
+                                        "type": "string"
+                                      },
+                                      "target": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "required": [
+                                      "label"
+                                    ]
+                                  }
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
                             "ownerMembershipId": {
                               "anyOf": [
                                 {
@@ -142343,10 +142719,23 @@
                               ]
                             },
                             "lifecycle": {
-                              "type": "string"
+                              "type": "string",
+                              "enum": [
+                                "discovery",
+                                "build",
+                                "growth",
+                                "mature",
+                                "sunset"
+                              ]
                             },
                             "health": {
-                              "type": "string"
+                              "type": "string",
+                              "enum": [
+                                "on_track",
+                                "at_risk",
+                                "off_track",
+                                "unknown"
+                              ]
                             },
                             "teamId": {
                               "anyOf": [
@@ -142893,13 +143282,93 @@
                                   "scoreLabel"
                                 ]
                               }
+                            },
+                            "goals": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "title": {
+                                    "type": "string"
+                                  },
+                                  "status": {
+                                    "type": "string"
+                                  },
+                                  "progress": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "title",
+                                  "status",
+                                  "progress"
+                                ]
+                              }
+                            },
+                            "decisions": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "title": {
+                                    "type": "string"
+                                  },
+                                  "decidedAt": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "note": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "title",
+                                  "decidedAt",
+                                  "note"
+                                ]
+                              }
+                            },
+                            "changelogPublished": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
                             }
                           },
                           "required": [
                             "themes",
                             "roadmap",
                             "releases",
-                            "opportunities"
+                            "opportunities",
+                            "goals",
+                            "decisions",
+                            "changelogPublished"
                           ]
                         },
                         "generatedAt": {
@@ -143109,6 +143578,79 @@
             }
           }
         }
+      }
+    },
+    "/build/managed-products/facets": {
+      "get": {
+        "operationId": "ManagedProductsController_getManagedProductFacets",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "segments": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "tags": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      },
+                      "required": [
+                        "segments",
+                        "tags"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "tags": [
+          "ManagedProducts"
+        ],
+        "x-exposure": "permissioned",
+        "x-permission": "build:managed-products:view",
+        "description": "Exposure: permission — build:managed-products:view"
       }
     },
     "/build/members": {

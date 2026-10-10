@@ -55,6 +55,7 @@ jest.mock("@/components/pm-chrome", () => ({
 }));
 
 jest.mock("./roadmap-constants", () => ({
+  ...jest.requireActual("./roadmap-constants"),
   ROADMAP_HORIZON_COLUMNS: [
     { horizon: "now", label: "Now" },
     { horizon: "next", label: "Next" },

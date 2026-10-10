@@ -58,6 +58,7 @@ jest.mock("@/components/shared/page-state", () => ({
 
 jest.mock("@/hooks/api/feedbucket", () => ({
   useFeedbucketSubmissions: jest.fn(),
+  useFeedbucketSubmissionFacets: jest.fn(),
 }));
 
 jest.mock("@/hooks/api/build/intake-mutations", () => ({
@@ -70,6 +71,7 @@ jest.mock("@/hooks/api/build/intake-mutations", () => ({
 jest.mock("@/hooks/api/build/managed-products", () => ({
   useManagedProductInsights: jest.fn(),
   useManagedProducts: jest.fn(),
+  useManagedProductFacets: jest.fn(() => ({ data: { segments: [], tags: [] } })),
   useCreateManagedProduct: jest.fn(() => ({
     mutate: jest.fn(),
     isPending: false,
@@ -86,6 +88,26 @@ jest.mock("@/hooks/api/build/managed-products", () => ({
     mutate: jest.fn(),
     isPending: false,
   })),
+  useArchiveManagedProduct: jest.fn(() => ({
+    mutate: jest.fn(),
+    isPending: false,
+  })),
+  useRestoreManagedProduct: jest.fn(() => ({
+    mutate: jest.fn(),
+    isPending: false,
+  })),
+}));
+
+jest.mock("@/hooks/api/build/teams", () => ({
+  useProjectTeams: jest.fn(() => ({ data: null })),
+}));
+
+jest.mock("@/features/build/managed-products/feedback/capture-submission-sheet", () => ({
+  CaptureSubmissionSheet: () => null,
+}));
+
+jest.mock("@/hooks/api/build/projects", () => ({
+  useProjects: jest.fn(() => ({ data: null })),
 }));
 
 jest.mock("@/hooks/api/organization", () => ({
@@ -115,6 +137,8 @@ jest.mock("@/hooks/api/build/roadmap", () => ({
     refetch: jest.fn(),
   })),
   useDeleteRoadmapItem: jest.fn(() => ({ mutate: jest.fn() })),
+  usePositionRoadmapItem: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+  usePublishRoadmapItem: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
 }));
 
 jest.mock("@/components/ui/page-wrapper", () => ({
@@ -310,6 +334,7 @@ jest.mock("@/features/build/goals/constants", () => ({
 
 jest.mock("@/features/build/roadmap/roadmap-constants", () => ({
   ROADMAP_COLUMNS: [],
+  ROADMAP_HORIZON_COLUMNS: [],
 }));
 
 jest.mock("@/features/build/roadmap/roadmap-item-card", () => ({
@@ -319,6 +344,34 @@ jest.mock("@/features/build/roadmap/roadmap-item-card", () => ({
 jest.mock("@/features/build/roadmap/roadmap-item-sheet", () => ({
   RoadmapItemSheet: () => null,
 }));
+
+jest.mock(
+  "@/features/build/managed-products/roadmap/roadmap-board-columns",
+  () => ({
+    RoadmapBoardColumns: () => <div data-testid="roadmap-board-columns" />,
+  }),
+);
+
+jest.mock(
+  "@/features/build/managed-products/roadmap/roadmap-timeline-view",
+  () => ({
+    RoadmapTimelineView: () => <div data-testid="roadmap-timeline-view" />,
+  }),
+);
+
+jest.mock(
+  "@/features/build/managed-products/roadmap/roadmap-filters-bar",
+  () => ({
+    RoadmapFiltersBar: () => <div data-testid="roadmap-filters-bar" />,
+  }),
+);
+
+jest.mock(
+  "@/features/build/managed-products/roadmap/roadmap-preview-sheet",
+  () => ({
+    RoadmapPreviewSheet: () => <div data-testid="roadmap-preview-sheet" />,
+  }),
+);
 
 jest.mock("@/components/ui/confirm-dialog", () => ({
   ConfirmDialog: () => null,
@@ -362,6 +415,22 @@ jest.mock("@animateicons/react/lucide", () => ({
   EllipsisIcon: () => <span data-testid="ellipsis-icon" />,
 }));
 
+jest.mock(
+  "@/features/build/managed-products/insights/product-discovery-section",
+  () => ({
+    ProductDiscoverySection: () => null,
+  }),
+);
+
+jest.mock("@/hooks/api/crm/organizations", () => ({
+  useCrmOrganizationsForPicker: jest.fn(() => ({
+    data: undefined,
+    isLoading: false,
+    isError: false,
+    error: null,
+  })),
+}));
+
 export const {
   useGoals,
   useGoalsPage,
@@ -380,7 +449,8 @@ export const { useCan }: { useCan: jest.Mock } =
   jest.requireMock("@/hooks/api/access");
 export const {
   useFeedbucketSubmissions,
-}: { useFeedbucketSubmissions: jest.Mock } = jest.requireMock(
+  useFeedbucketSubmissionFacets,
+}: { useFeedbucketSubmissions: jest.Mock; useFeedbucketSubmissionFacets: jest.Mock } = jest.requireMock(
   "@/hooks/api/feedbucket",
 );
 export const {
@@ -414,4 +484,6 @@ beforeEach(() => {
   usePageState.mockReturnValue({ kind: "ready" });
   const { useGoals: mockUseGoals } = jest.requireMock("@/hooks/api/goals") as { useGoals: jest.Mock };
   mockUseGoals.mockReturnValue({ data: { data: [], pagination: { hasMore: false, nextCursor: null, limit: 50 } }, isLoading: false, isError: false, error: null, refetch: jest.fn() });
+  const { useFeedbucketSubmissionFacets: mockFacets } = jest.requireMock("@/hooks/api/feedbucket") as { useFeedbucketSubmissionFacets: jest.Mock };
+  mockFacets.mockReturnValue({ data: undefined, isLoading: false, isError: false, error: null });
 });

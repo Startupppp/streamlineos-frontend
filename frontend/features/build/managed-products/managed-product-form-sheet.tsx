@@ -62,7 +62,7 @@ function toEditForm(p: ManagedProduct): EditManagedProductFormValues {
     segments: p.segments,
     tags: p.tags,
     northStarMetric: p.northStarMetric ?? undefined,
-    successMetrics: p.successMetrics,
+    successMetrics: p.successMetrics ?? [],
     vision: p.vision ?? undefined,
     missionStatement: p.missionStatement ?? undefined,
     targetCustomer: p.targetCustomer ?? undefined,

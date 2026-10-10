@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
+import { AlertTriangle } from "lucide-react";
 import { useProjects } from "@/hooks/api/build/projects";
 import { useLinkProjectManagedProduct } from "@/hooks/api/build/use-link-project-managed-product";
 import type { ProjectListItem } from "@/types/projects";
@@ -10,6 +11,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { Button } from "@/components/ui/button";
 import { Combobox } from "@/components/ui/combobox";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Dialog,
   DialogBody,
@@ -39,23 +41,29 @@ export function LinkExistingProjectDialog({
     { enabled: open },
   );
   const mutation = useLinkProjectManagedProduct();
-  const candidates = useMemo(
-    () =>
-      (data?.data ?? []).filter((project) => project.managedProductId === null),
-    [data],
-  );
+
+  const allProjects = useMemo(() => data?.data ?? [], [data]);
+
   const options = useMemo(
     () =>
-      (selected && !candidates.some((project) => project.id === selected.id)
-        ? [selected, ...candidates]
-        : candidates
-      ).map((project) => ({
-        value: String(project.id),
-        label: project.name,
-        sublabel: project.key,
+      (selected && !allProjects.some((p) => p.id === selected.id)
+        ? [selected, ...allProjects]
+        : allProjects
+      ).map((p) => ({
+        value: String(p.id),
+        label: p.name,
+        sublabel:
+          p.managedProductId !== null && p.managedProductId !== managedProductId
+            ? `${p.key} · linked to another product`
+            : p.key,
       })),
-    [candidates, selected],
+    [allProjects, selected, managedProductId],
   );
+
+  const isMove =
+    selected !== null &&
+    selected.managedProductId !== null &&
+    selected.managedProductId !== managedProductId;
 
   const handleLink = () => {
     if (!selected || mutation.isPending) return;
@@ -63,7 +71,11 @@ export function LinkExistingProjectDialog({
       { project: selected, managedProductId },
       {
         onSuccess: () => {
-          toast.success(`${selected.name} linked to this product`);
+          toast.success(
+            isMove
+              ? `${selected.name} moved to this product`
+              : `${selected.name} linked to this product`,
+          );
           setSelected(null);
           setSearch("");
           onOpenChange(false);
@@ -76,7 +88,7 @@ export function LinkExistingProjectDialog({
   const handleProjectChange = (value: string) => {
     const numId = Number(value);
     setSelected(
-      candidates.find((project) => project.id === numId) ??
+      allProjects.find((p) => p.id === numId) ??
         (selected?.id === numId ? selected : null),
     );
   };
@@ -102,11 +114,11 @@ export function LinkExistingProjectDialog({
         <DialogHeader>
           <DialogTitle>Link existing project</DialogTitle>
           <DialogDescription>
-            Choose an unlinked project you manage. Projects assigned to another
-            product are not moved automatically.
+            Choose a project to link to this product. Projects already linked to
+            another product will be moved here.
           </DialogDescription>
         </DialogHeader>
-        <DialogBody>
+        <DialogBody className="flex flex-col gap-3">
           <Combobox
             aria-label="Select an existing project"
             options={options}
@@ -120,7 +132,7 @@ export function LinkExistingProjectDialog({
                 ? "Loading projects…"
                 : isError
                   ? "Could not load projects."
-                  : "No unlinked projects found."
+                  : "No projects found."
             }
             footer={
               isError ? (
@@ -142,6 +154,15 @@ export function LinkExistingProjectDialog({
               ) : undefined
             }
           />
+          {isMove ? (
+            <Alert variant="default">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                This project is currently linked to another product. Confirming
+                will move it here and unlink it from that product.
+              </AlertDescription>
+            </Alert>
+          ) : null}
         </DialogBody>
         <DialogFooter>
           <Button type="button" variant="outline" onClick={handleCancel}>
@@ -153,7 +174,7 @@ export function LinkExistingProjectDialog({
             isPending={mutation.isPending}
             onClick={handleLink}
           >
-            Link project
+            {isMove ? "Move project" : "Link project"}
           </LoadingButton>
         </DialogFooter>
       </DialogContent>

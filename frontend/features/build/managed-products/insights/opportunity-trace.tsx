@@ -5,6 +5,7 @@ import {
   CheckCircle2,
   FileText,
   GitBranch,
+  GitMerge,
   Package,
   Star,
   TrendingUp,
@@ -77,7 +78,7 @@ export function OpportunityTrace({ managedProductId, trace }: OpportunityTracePr
             <p className="text-sm text-foreground font-mono tabular-nums">
               {trace.scores.latest.effectiveScore ?? "Unscored"}
               {trace.scores.latest.isOverride && (
-                <span className="ml-2 text-xs text-amber-600 dark:text-amber-400">(override)</span>
+                <span className="ml-2 text-xs text-status-warning-ink-strong">(override)</span>
               )}
             </p>
           ) : (
@@ -91,9 +92,9 @@ export function OpportunityTrace({ managedProductId, trace }: OpportunityTracePr
         icon={
           trace.decision ? (
             trace.opportunity.state === "declined" ? (
-              <XCircle className="size-3.5 text-red-500" aria-hidden />
+              <XCircle className="size-3.5 text-status-danger-ink" aria-hidden />
             ) : (
-              <CheckCircle2 className="size-3.5 text-emerald-500" aria-hidden />
+              <CheckCircle2 className="size-3.5 text-status-success-ink" aria-hidden />
             )
           ) : (
             <GitBranch className="size-3.5" aria-hidden />
@@ -127,7 +128,7 @@ export function OpportunityTrace({ managedProductId, trace }: OpportunityTracePr
           content={
             <Link
               href={`/build/managed-products/${managedProductId}/roadmap`}
-              className="text-sm font-medium text-blue-600 hover:underline dark:text-blue-400"
+              className="text-sm font-medium text-status-info-ink-strong hover:underline"
               data-testid="trace-roadmap-link"
             >
               {trace.roadmapItem.title}
@@ -145,7 +146,7 @@ export function OpportunityTrace({ managedProductId, trace }: OpportunityTracePr
             <div className="text-sm text-foreground space-y-0.5">
               <Link
                 href={`/build/${trace.delivery.project.id}`}
-                className="font-medium text-blue-600 hover:underline dark:text-blue-400"
+                className="font-medium text-status-info-ink-strong hover:underline"
                 data-testid="trace-project-link"
               >
                 {trace.delivery.project.name}
@@ -191,6 +192,25 @@ export function OpportunityTrace({ managedProductId, trace }: OpportunityTracePr
                   {r.result && (
                     <span className="ml-2 text-xs text-muted-foreground">— {r.result.replace(/_/g, " ")}</span>
                   )}
+                </li>
+              ))}
+            </ul>
+          }
+        />
+      )}
+
+      {trace.dependencies.length > 0 && (
+        <TraceStep
+          testId="trace-step-dependencies"
+          icon={<GitMerge className="size-3.5" aria-hidden />}
+          label="Dependencies"
+          content={
+            <ul className="space-y-1">
+              {trace.dependencies.map((d) => (
+                <li key={d.dependsOnId} className="text-sm text-foreground">
+                  <span className="font-medium">{d.title}</span>
+                  <span className="ml-2 text-xs text-muted-foreground capitalize">{d.status.replace(/_/g, " ")}</span>
+                  <span className="ml-2 text-xs text-muted-foreground capitalize">{d.horizon}</span>
                 </li>
               ))}
             </ul>

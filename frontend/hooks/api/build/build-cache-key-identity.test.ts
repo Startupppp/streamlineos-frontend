@@ -182,6 +182,8 @@ describe("BSN-04-033 — post-commit patch scope for rename mutations", () => {
     expect(invalidateSpy).toHaveBeenCalledTimes(1);
     expect(invalidateSpy).toHaveBeenCalledWith({
       queryKey: buildWorkQueryKeys.projects.scopeDirectory.all,
+      exact: true,
+      refetchType: "none",
     });
   });
 

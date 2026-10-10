@@ -49,6 +49,9 @@ jest.mock("@/hooks/api/goals", () => ({
   useGoalStats: jest.fn(() => ({ data: undefined })),
   useGoal: jest.fn(() => ({ data: undefined })),
   useDeleteGoal: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+  useUnlinkGoalProduct: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+  useGoals: jest.fn(() => ({ data: [] })),
+  useLinkGoalProduct: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
 }));
 
 jest.mock("@/hooks/common/use-query-param-open", () => ({

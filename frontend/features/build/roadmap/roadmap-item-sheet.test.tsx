@@ -5,6 +5,7 @@ import userEvent from "@testing-library/user-event";
 import { RoadmapItemSheet } from "./roadmap-item-sheet";
 import { useCreateRoadmapItem, useUpdateRoadmapItem } from "@/hooks/api/build/roadmap";
 import { useProjects } from "@/hooks/api/build/projects";
+import { ApiError } from "@/lib/api-envelope";
 
 jest.mock("@/hooks/api/build/roadmap", () => ({
   useCreateRoadmapItem: jest.fn(),
@@ -104,6 +105,10 @@ jest.mock("@/hooks/api/build/teams", () => ({
   useProjectTeams: jest.fn(() => ({ data: null })),
 }));
 
+jest.mock("@/hooks/api/build/epics", () => ({
+  useEpics: jest.fn(() => ({ data: [] })),
+}));
+
 jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn(), warning: jest.fn() } }));
 
 jest.mock("@/lib/get-error-message", () => ({
@@ -184,11 +189,7 @@ describe("RoadmapItemSheet — 409 conflict surfaces a field-level diff", () => 
     const saveButton = screen.getByText("Save Changes");
     await userEvent.click(saveButton);
 
-    capturedOnError?.({
-      status: 409,
-      code: "PROJECTS_TICKET_CONFLICT",
-      details: { currentVersion: 4 },
-    });
+    capturedOnError?.(new ApiError("Conflict", 409, "PROJECTS_TICKET_CONFLICT", { currentVersion: 4 }));
 
     await waitFor(() => {
       expect(screen.getByTestId("conflict-dialog")).toBeInTheDocument();
@@ -213,11 +214,7 @@ describe("RoadmapItemSheet — 409 conflict surfaces a field-level diff", () => 
     const saveButton = screen.getByText("Save Changes");
     await userEvent.click(saveButton);
 
-    capturedOnError?.({
-      status: 409,
-      code: "PROJECTS_TICKET_CONFLICT",
-      details: { currentVersion: 4 },
-    });
+    capturedOnError?.(new ApiError("Conflict", 409, "PROJECTS_TICKET_CONFLICT", { currentVersion: 4 }));
 
     await waitFor(() => {
       expect(screen.getByTestId("conflict-field-title")).toBeInTheDocument();

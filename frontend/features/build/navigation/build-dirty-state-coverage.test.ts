@@ -79,6 +79,7 @@ const TRANSIENT_ACTION_NO_DRAFT: readonly string[] = [
   "sidebar/delete-project-dialog.tsx",
   "settings/agent-token-create-dialog.tsx",
   "templates/apply-template-dialog.tsx",
+  "managed-products/add-product-member-dialog.tsx",
 ];
 
 const PUBLIC_ROUTE_NO_SCOPE_SWITCHER: readonly string[] = [
@@ -188,6 +189,12 @@ describe("BSN-04-A03 every Build RHF form owner registers with the shared dirty-
   it("apply-template-dialog is excluded because it is a template selection with no authored draft text that a scope switch would discard", () => {
     expect(TRANSIENT_ACTION_NO_DRAFT).toContain(
       "templates/apply-template-dialog.tsx",
+    );
+  });
+
+  it("add-product-member-dialog is excluded because it accepts a member selection and role only, submitted immediately with no authored draft content that a scope switch would discard", () => {
+    expect(TRANSIENT_ACTION_NO_DRAFT).toContain(
+      "managed-products/add-product-member-dialog.tsx",
     );
   });
 });

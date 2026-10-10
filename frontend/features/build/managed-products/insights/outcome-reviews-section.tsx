@@ -35,7 +35,7 @@ const RESULT_OPTIONS = [
 const completeSchema = z.object({
   actual: z.string().optional(),
   result: z.enum(["met", "partially_met", "not_met", "inconclusive"], {
-    required_error: "Result is required to complete a review",
+    error: "Result is required to complete a review",
   }),
   notes: z.string().optional(),
   version: z.number().int(),

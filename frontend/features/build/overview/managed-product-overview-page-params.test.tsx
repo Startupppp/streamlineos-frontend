@@ -39,6 +39,10 @@ jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn(() => true),
 }));
 
+jest.mock("@/hooks/api/build/teams", () => ({
+  useProjectTeams: jest.fn(() => ({ data: undefined })),
+}));
+
 jest.mock("@/features/build/managed-products/managed-product-form-sheet", () => ({
   ManagedProductFormSheet: () => null,
 }));
@@ -68,7 +72,10 @@ describe("ManagedProductOverviewPage — period URL param forwarded to summary h
       "@/hooks/api/build/managed-product-summary",
     );
     render(<ManagedProductOverviewPage managedProductId={42} />);
-    expect(useManagedProductSummary).toHaveBeenCalledWith(42, "30d");
+    expect(useManagedProductSummary).toHaveBeenCalledWith(
+      42,
+      expect.objectContaining({ period: "30d" }),
+    );
   });
 
   it("passes period=90d to useManagedProductSummary when the URL param is 90d", () => {
@@ -77,7 +84,10 @@ describe("ManagedProductOverviewPage — period URL param forwarded to summary h
       "@/hooks/api/build/managed-product-summary",
     );
     render(<ManagedProductOverviewPage managedProductId={42} />);
-    expect(useManagedProductSummary).toHaveBeenCalledWith(42, "90d");
+    expect(useManagedProductSummary).toHaveBeenCalledWith(
+      42,
+      expect.objectContaining({ period: "90d" }),
+    );
   });
 
   it("passes period=365d to useManagedProductSummary when the URL param is 365d", () => {
@@ -86,7 +96,10 @@ describe("ManagedProductOverviewPage — period URL param forwarded to summary h
       "@/hooks/api/build/managed-product-summary",
     );
     render(<ManagedProductOverviewPage managedProductId={42} />);
-    expect(useManagedProductSummary).toHaveBeenCalledWith(42, "365d");
+    expect(useManagedProductSummary).toHaveBeenCalledWith(
+      42,
+      expect.objectContaining({ period: "365d" }),
+    );
   });
 
   it("passes period=all to useManagedProductSummary when the URL param is all", () => {
@@ -95,7 +108,10 @@ describe("ManagedProductOverviewPage — period URL param forwarded to summary h
       "@/hooks/api/build/managed-product-summary",
     );
     render(<ManagedProductOverviewPage managedProductId={42} />);
-    expect(useManagedProductSummary).toHaveBeenCalledWith(42, "all");
+    expect(useManagedProductSummary).toHaveBeenCalledWith(
+      42,
+      expect.objectContaining({ period: "all" }),
+    );
   });
 
   it("passes undefined period when the URL param is absent so the backend uses its default", () => {
@@ -104,7 +120,10 @@ describe("ManagedProductOverviewPage — period URL param forwarded to summary h
       "@/hooks/api/build/managed-product-summary",
     );
     render(<ManagedProductOverviewPage managedProductId={42} />);
-    expect(useManagedProductSummary).toHaveBeenCalledWith(42, undefined);
+    expect(useManagedProductSummary).toHaveBeenCalledWith(
+      42,
+      expect.objectContaining({ period: undefined }),
+    );
   });
 
   it("ignores an unrecognised period value so the backend cannot receive an invalid enum", () => {
@@ -113,7 +132,10 @@ describe("ManagedProductOverviewPage — period URL param forwarded to summary h
       "@/hooks/api/build/managed-product-summary",
     );
     render(<ManagedProductOverviewPage managedProductId={42} />);
-    expect(useManagedProductSummary).toHaveBeenCalledWith(42, undefined);
+    expect(useManagedProductSummary).toHaveBeenCalledWith(
+      42,
+      expect.objectContaining({ period: undefined }),
+    );
   });
 
   it("renders the Period filter control so the URL param is reachable without editing the URL", () => {
