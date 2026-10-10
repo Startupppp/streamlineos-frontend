@@ -2,16 +2,8 @@ import { render, screen } from "@testing-library/react";
 import { MailHeader } from "./mail-header";
 import type { MailAccount } from "@/types/mail";
 
-jest.mock("@/hooks/api/mail", () => ({
-  useMailMessages: () => ({
-    data: {
-      pages: [
-        {
-          messages: [{ id: "unread", isRead: false }, { id: "read", isRead: true }],
-        },
-      ],
-    },
-  }),
+jest.mock("@/hooks/api/inbox", () => ({
+  useUnifiedInboxCount: () => ({ data: undefined }),
 }));
 
 const accounts: MailAccount[] = [

@@ -25,6 +25,10 @@ let listState = {
 
 jest.mock("@/hooks/api/access", () => ({ useCan: () => true }));
 
+jest.mock("@/hooks/api/inbox", () => ({
+  useUnifiedInboxCount: () => ({ data: undefined }),
+}));
+
 jest.mock("@/hooks/api/mail", () => ({
   useMailMessages: () => ({
     data: { pages: listState.pages },

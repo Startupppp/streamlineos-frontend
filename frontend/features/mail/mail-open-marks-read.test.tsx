@@ -45,6 +45,10 @@ jest.mock("@/hooks/api/integrations", () => ({
   useSetPrimaryIntegration: () => ({ mutateAsync: jest.fn() }),
 }));
 
+jest.mock("@/hooks/api/inbox", () => ({
+  useUnifiedInboxCount: () => ({ data: undefined }),
+}));
+
 jest.mock("@/hooks/api/mail", () => ({
   useMailAccounts: () => ({
     data: [

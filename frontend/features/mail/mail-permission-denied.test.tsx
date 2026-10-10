@@ -25,6 +25,10 @@ jest.mock("@/hooks/api/integrations", () => ({
   useSetPrimaryIntegration: () => ({ mutateAsync: jest.fn() }),
 }));
 
+jest.mock("@/hooks/api/inbox", () => ({
+  useUnifiedInboxCount: () => ({ data: undefined }),
+}));
+
 jest.mock("@/hooks/api/mail", () => ({
   useMailAccounts: () => ({ data: undefined, isLoading: false, isError: accountsFailed, error: accountsFailed ? new Error("Offline") : null, refetch: refetchAccounts }),
   useMailAction: () => ({ mutate: jest.fn(), isPending: false }),

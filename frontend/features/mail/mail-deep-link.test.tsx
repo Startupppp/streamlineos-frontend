@@ -100,6 +100,10 @@ const ACCOUNT_NEEDS_REAUTH: MailAccount = {
 
 let mockAccounts: MailAccount[] = [ACCOUNT_ACTIVE];
 
+jest.mock("@/hooks/api/inbox", () => ({
+  useUnifiedInboxCount: () => ({ data: undefined }),
+}));
+
 jest.mock("@/hooks/api/mail", () => ({
   useMailAccounts: () => ({ data: mockAccounts, isLoading: false }),
   useMailAction: () => ({ mutate: mailActionMutate, isPending: false }),

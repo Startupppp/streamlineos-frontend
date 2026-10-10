@@ -1,6 +1,13 @@
 "use client";
 
-import { Settings, PenSquare, Mail, UsersRound, ChevronDown, Clock3 } from "lucide-react";
+import {
+  Settings,
+  PenSquare,
+  Mail,
+  UsersRound,
+  ChevronDown,
+  Clock3,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -18,7 +25,7 @@ import { MailDailyBrief } from "./mail-daily-brief";
 import { MAIL_COMPOSE_FAB_CLASS } from "./mail-presentation";
 import type { MailInboxSummaryState } from "./use-mail-inbox-summary";
 import type { MailAccount } from "@/types/mail";
-import { useMailMessages } from "@/hooks/api/mail";
+import { useUnifiedInboxCount } from "@/hooks/api/inbox";
 
 const SENTINEL = "__all__";
 
@@ -54,13 +61,15 @@ export function MailHeader({
   onOpenRecent,
 }: MailHeaderProps) {
   const hasAccounts = accounts.length > 0;
-  const { data: messages } = useMailMessages(hasAccounts ? { limit: 1 } : undefined);
-  const unreadCount = messages?.unreadCount ?? 0;
+  const { data: inboxCount } = useUnifiedInboxCount({ enabled: hasAccounts });
+  const unreadCount = hasAccounts ? (inboxCount?.mail ?? 0) : 0;
   const accountLabel =
     selectedAccountId === "all"
       ? "All accounts"
-      : (accounts.find((account) => account.id === selectedAccountId)?.accountEmail ??
-        accounts.find((account) => account.id === selectedAccountId)?.accountLabel ??
+      : (accounts.find((account) => account.id === selectedAccountId)
+          ?.accountEmail ??
+        accounts.find((account) => account.id === selectedAccountId)
+          ?.accountLabel ??
         "Account");
 
   return (
@@ -81,7 +90,10 @@ export function MailHeader({
                 Mail
               </h1>
               {unreadCount > 0 && (
-                <Badge variant="default" className="rounded-full px-2 py-0.5 text-xs font-medium">
+                <Badge
+                  variant="default"
+                  className="rounded-full px-2 py-0.5 text-xs font-medium"
+                >
                   {unreadCount}
                 </Badge>
               )}
@@ -93,7 +105,18 @@ export function MailHeader({
         </div>
 
         <div className="ml-auto flex min-w-0 shrink-0 items-center gap-1">
-          {hasAccounts && onOpenRecent ? <Button type="button" variant="ghost" size="icon" className="size-9 lg:hidden" onClick={onOpenRecent} aria-label="Open recent mail"><Clock3 className="size-4" aria-hidden="true" /></Button> : null}
+          {hasAccounts && onOpenRecent ? (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="size-9 lg:hidden"
+              onClick={onOpenRecent}
+              aria-label="Open recent mail"
+            >
+              <Clock3 className="size-4" aria-hidden="true" />
+            </Button>
+          ) : null}
           {hasAccounts ? (
             <MailDailyBrief
               state={summaryState}
@@ -115,21 +138,37 @@ export function MailHeader({
                   aria-label={`Switch mail account. Current: ${accountLabel}`}
                 >
                   <UsersRound className="size-4 shrink-0" aria-hidden="true" />
-                  <span className="hidden min-w-0 truncate md:block">{accountLabel}</span>
-                  <ChevronDown className="hidden size-3.5 shrink-0 opacity-60 md:block" aria-hidden="true" />
+                  <span className="hidden min-w-0 truncate md:block">
+                    {accountLabel}
+                  </span>
+                  <ChevronDown
+                    className="hidden size-3.5 shrink-0 opacity-60 md:block"
+                    aria-hidden="true"
+                  />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-64">
                 <DropdownMenuLabel>Mail account</DropdownMenuLabel>
                 <DropdownMenuRadioGroup
-                  value={selectedAccountId === "all" ? SENTINEL : String(selectedAccountId)}
+                  value={
+                    selectedAccountId === "all"
+                      ? SENTINEL
+                      : String(selectedAccountId)
+                  }
                   onValueChange={onAccountChange}
                 >
-                  <DropdownMenuRadioItem value={SENTINEL}>All accounts</DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value={SENTINEL}>
+                    All accounts
+                  </DropdownMenuRadioItem>
                   {accounts.map((account) => (
-                    <DropdownMenuRadioItem key={account.id} value={String(account.id)}>
+                    <DropdownMenuRadioItem
+                      key={account.id}
+                      value={String(account.id)}
+                    >
                       <span className="truncate">
-                        {account.accountEmail ?? account.accountLabel ?? `Account ${account.id}`}
+                        {account.accountEmail ??
+                          account.accountLabel ??
+                          `Account ${account.id}`}
                       </span>
                     </DropdownMenuRadioItem>
                   ))}
