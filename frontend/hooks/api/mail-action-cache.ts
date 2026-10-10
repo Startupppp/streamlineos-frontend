@@ -20,7 +20,7 @@ interface MailCacheSnapshot {
   data: unknown;
 }
 
-export interface MailActionCacheContext {
+interface MailActionCacheContext {
   snapshots: MailCacheSnapshot[];
 }
 
