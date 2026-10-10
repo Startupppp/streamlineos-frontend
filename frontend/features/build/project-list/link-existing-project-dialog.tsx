@@ -66,7 +66,7 @@ export function LinkExistingProjectDialog({
         <DialogHeader>
           <DialogTitle>Link existing project</DialogTitle>
           <DialogDescription>
-            Choose an unlinked project. Projects already assigned to another product are not moved automatically.
+            Choose an unlinked project you manage. Projects assigned to another product are not moved automatically.
           </DialogDescription>
         </DialogHeader>
         <DialogBody className="space-y-3">

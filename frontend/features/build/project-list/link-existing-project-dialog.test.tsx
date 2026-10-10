@@ -1,8 +1,14 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import React from "react";
 
 const mockUseProjects = jest.fn();
 const mockMutate = jest.fn();
+const mockToastSuccess = jest.fn();
+const mockToastError = jest.fn();
+
+jest.mock("sonner", () => ({
+  toast: { success: (...args: unknown[]) => mockToastSuccess(...args), error: (...args: unknown[]) => mockToastError(...args) },
+}));
 
 jest.mock("@/hooks/api/build/projects", () => ({
   useProjects: (...args: unknown[]) => mockUseProjects(...args),
@@ -42,7 +48,8 @@ beforeEach(() => {
 });
 
 it("searches existing projects and links only an unassigned project", () => {
-  render(<LinkExistingProjectDialog managedProductId={39} open onOpenChange={jest.fn()} />);
+  const onOpenChange = jest.fn();
+  render(<LinkExistingProjectDialog managedProductId={39} open onOpenChange={onOpenChange} />);
   expect(screen.getByText("Unlinked project")).toBeInTheDocument();
   expect(screen.queryByText("Other product project")).not.toBeInTheDocument();
   fireEvent.change(screen.getByRole("textbox", { name: "Search existing projects" }), { target: { value: "FREE" } });
@@ -53,4 +60,25 @@ it("searches existing projects and links only an unassigned project", () => {
     { projectId: 11, managedProductId: 39 },
     expect.objectContaining({ onSuccess: expect.any(Function), onError: expect.any(Function) }),
   );
+  act(() => mockMutate.mock.calls[0][1].onSuccess());
+  expect(mockToastSuccess).toHaveBeenCalledWith("Unlinked project linked to this product");
+  expect(onOpenChange).toHaveBeenCalledWith(false);
+});
+
+it("keeps the dialog open when the link request fails", () => {
+  const onOpenChange = jest.fn();
+  render(<LinkExistingProjectDialog managedProductId={39} open onOpenChange={onOpenChange} />);
+  fireEvent.click(screen.getByRole("button", { name: /FREE Unlinked project/ }));
+  fireEvent.click(screen.getByRole("button", { name: "Link project" }));
+  act(() => mockMutate.mock.calls[0][1].onError(new Error("Project access denied")));
+  expect(mockToastError).toHaveBeenCalledWith("Project access denied");
+  expect(onOpenChange).not.toHaveBeenCalled();
+});
+
+it("shows a retry path when candidate projects cannot load", () => {
+  const refetch = jest.fn();
+  mockUseProjects.mockReturnValue({ data: undefined, isLoading: false, isError: true, refetch });
+  render(<LinkExistingProjectDialog managedProductId={39} open onOpenChange={jest.fn()} />);
+  fireEvent.click(screen.getByRole("button", { name: "Retry" }));
+  expect(refetch).toHaveBeenCalledTimes(1);
 });

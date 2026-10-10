@@ -305,7 +305,11 @@ export function ProjectsPage({ managedProductId }: ProjectsPageProps) {
                   illustrationPreset="search"
                   title="No linked projects yet"
                   description="Link an existing project to include its work in this product."
-                  action={canLinkProjects ? { label: "Link existing project", onClick: () => setLinkDialogOpen(true) } : undefined}
+                  action={
+                    canLinkProjects
+                      ? { label: "Link existing project", onClick: () => setLinkDialogOpen(true) }
+                      : undefined
+                  }
                 />
               ) : (
                 <ProjectsEmptyState onCreate={canCreate ? handleOpenCreate : undefined} />

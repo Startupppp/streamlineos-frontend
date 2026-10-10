@@ -16,7 +16,7 @@ const linkedProjectContract = z.object({
 
 interface LinkProjectInput {
   projectId: number;
-  managedProductId: number | null;
+  managedProductId: number;
 }
 
 export function useLinkProjectManagedProduct() {
@@ -34,21 +34,24 @@ export function useLinkProjectManagedProduct() {
         undefined,
         linkedProjectContract,
       ),
-    onSuccess: (project) => {
-      void queryClient.invalidateQueries({
-        queryKey: buildWorkQueryKeys.projects.list(),
-      });
-      void queryClient.invalidateQueries({
-        queryKey: buildWorkQueryKeys.projects.detail(project.id),
-      });
-      if (project.managedProductId !== null) {
-        void queryClient.invalidateQueries({
-          queryKey: buildWorkQueryKeys.projects.managedProducts.detail(project.managedProductId),
-        });
-        void queryClient.invalidateQueries({
-          queryKey: buildWorkQueryKeys.projects.managedProducts.insights(project.managedProductId),
-        });
-      }
+    onSuccess: async (project, variables) => {
+      const refreshes = [
+        queryClient.invalidateQueries({
+          queryKey: buildWorkQueryKeys.projects.list(),
+        }),
+        queryClient.invalidateQueries({
+          queryKey: buildWorkQueryKeys.projects.detail(project.id),
+        }),
+      ];
+      refreshes.push(
+        queryClient.invalidateQueries({
+          queryKey: buildWorkQueryKeys.projects.managedProducts.detail(variables.managedProductId),
+        }),
+        queryClient.invalidateQueries({
+          queryKey: buildWorkQueryKeys.projects.managedProducts.insights(variables.managedProductId),
+        }),
+      );
+      await Promise.all(refreshes);
     },
   });
 }
