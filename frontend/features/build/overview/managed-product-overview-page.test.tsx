@@ -131,6 +131,67 @@ describe("ManagedProductOverviewPage", () => {
     expect(screen.getByText(/no roadmap items for this product yet/i)).toBeInTheDocument();
   });
 
+  it("summarizes customer and delivery signals while keeping Insights as the deep dive", () => {
+    usePageState.mockReturnValue({ kind: "ready" });
+    const { useManagedProduct, useManagedProductInsights } = jest.requireMock("@/hooks/api/build/managed-products");
+    (useManagedProduct as jest.Mock).mockReturnValue({
+      data: { id: 42, name: "Payments Platform", key: "PAY", description: null, vision: null },
+      isLoading: false, isError: false, refetch: jest.fn(),
+    });
+    (useManagedProductInsights as jest.Mock).mockReturnValue({
+      data: {
+        linkedProjectCount: 1,
+        feedbackByStatus: {},
+        submissionsByStatus: { open: 3 },
+        roadmapItemsByStatus: { planned: 2, in_progress: 1, completed: 4 },
+      },
+      isLoading: false, isError: false, refetch: jest.fn(),
+    });
+
+    render(<ManagedProductOverviewPage managedProductId={42} />);
+
+    expect(screen.getByRole("link", { name: /explore insights/i })).toHaveAttribute("href", "/build/managed-products/42/insights");
+    expect(screen.getByText("Needs triage").parentElement).toHaveTextContent("3");
+    expect(screen.getByText("Planned or underway").parentElement).toHaveTextContent("3");
+    expect(screen.getByText("Delivered").parentElement).toHaveTextContent("4");
+  });
+
+  it("keeps the product overview usable when the independent insights aggregate fails", () => {
+    usePageState.mockReturnValue({ kind: "ready" });
+    const { useManagedProduct, useManagedProductInsights } = jest.requireMock("@/hooks/api/build/managed-products");
+    (useManagedProduct as jest.Mock).mockReturnValue({
+      data: { id: 42, name: "Payments Platform", key: "PAY", description: null, vision: null },
+      isLoading: false, isError: false, error: null, refetch: jest.fn(),
+    });
+    (useManagedProductInsights as jest.Mock).mockReturnValue({
+      data: undefined, isLoading: false, isError: true, error: new Error("network"), refetch: jest.fn(),
+    });
+
+    render(<ManagedProductOverviewPage managedProductId={42} />);
+
+    expect(screen.getByText("Payments Platform")).toBeInTheDocument();
+    expect(screen.getByText("Product signals are unavailable.")).toBeInTheDocument();
+    expect(screen.queryByText("Needs triage")).not.toBeInTheDocument();
+    expect(usePageState).toHaveBeenCalledWith(expect.objectContaining({ isError: false }));
+  });
+
+  it("does not show misleading zero-valued product signals while Insights is loading", () => {
+    usePageState.mockReturnValue({ kind: "ready" });
+    const { useManagedProduct, useManagedProductInsights } = jest.requireMock("@/hooks/api/build/managed-products");
+    (useManagedProduct as jest.Mock).mockReturnValue({
+      data: { id: 42, name: "Payments Platform", key: "PAY", description: null, vision: null },
+      isLoading: false, isError: false, refetch: jest.fn(),
+    });
+    (useManagedProductInsights as jest.Mock).mockReturnValue({
+      data: undefined, isLoading: true, isError: false, refetch: jest.fn(),
+    });
+
+    render(<ManagedProductOverviewPage managedProductId={42} />);
+
+    expect(screen.getByRole("status", { name: "Loading product signals" })).toBeInTheDocument();
+    expect(screen.queryByText("Needs triage")).not.toBeInTheDocument();
+  });
+
   it("renders linked project names when projects exist", () => {
     usePageState.mockReturnValue({ kind: "ready" });
 

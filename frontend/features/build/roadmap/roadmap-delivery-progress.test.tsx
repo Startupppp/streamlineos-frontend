@@ -53,7 +53,7 @@ const SIGNALS_READY = {
 };
 
 const SIGNALS_LOADING = { data: undefined, isLoading: true, isError: false };
-const SIGNALS_ERROR = { data: undefined, isLoading: false, isError: true };
+const SIGNALS_ERROR = { data: undefined, isLoading: false, isError: true, refetch: jest.fn() };
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -88,16 +88,30 @@ describe("RoadmapDeliveryProgress — sub-panel hidden on denial (not a full-pag
     expect(screen.queryByTestId("progress-bar")).not.toBeInTheDocument();
   });
 
-  it("returns nothing when the signals query errors — positive control: no error banner inside the card", () => {
+  it("shows a retryable error when the signals query fails", () => {
     mockUseRoadmapItemSignals.mockReturnValue(SIGNALS_ERROR);
-    const { container } = render(<RoadmapDeliveryProgress roadmapItemId={1} />);
-    expect(container.firstChild).toBeNull();
+    render(<RoadmapDeliveryProgress roadmapItemId={1} />);
+    expect(screen.getByText("Delivery progress could not be loaded.")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Retry" })).toBeInTheDocument();
   });
 
   it("renders the progress bar when data is present — positive control: progress panel visible", () => {
     render(<RoadmapDeliveryProgress roadmapItemId={1} />);
     expect(screen.getByTestId("progress-bar")).toBeInTheDocument();
     expect(screen.getByTestId("progress-bar")).toHaveAttribute("data-value", "60");
+  });
+
+  it("distinguishes an unlinked item from a linked project with no countable tickets", () => {
+    mockUseRoadmapItemSignals.mockReturnValue({
+      ...SIGNALS_READY,
+      data: {
+        ...SIGNALS_READY.data,
+        delivery: { source: "project", progressPercent: null, completedTicketCount: 0, countedTicketCount: 0 },
+      },
+    });
+    render(<RoadmapDeliveryProgress roadmapItemId={1} />);
+    expect(screen.getByText("Delivery work is linked, but there are no countable tickets yet.")).toBeInTheDocument();
+    expect(screen.queryByText(/No delivery work is linked yet/)).not.toBeInTheDocument();
   });
 
   it("shows the delivery source label from the signals data — positive control: Epic label present", () => {
@@ -140,7 +154,7 @@ describe("RoadmapDeliveryProgress — null delivery progress", () => {
       ...SIGNALS_READY,
       data: {
         ...SIGNALS_READY.data,
-        delivery: { ...SIGNALS_READY.data.delivery, progressPercent: null },
+        delivery: { ...SIGNALS_READY.data.delivery, source: "none", progressPercent: null },
       },
     });
     render(<RoadmapDeliveryProgress roadmapItemId={1} />);

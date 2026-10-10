@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback } from "react";
 import Link from "next/link";
 import { ManagedProductFormSheet } from "@/features/build/managed-products/managed-product-form-sheet";
 import { BuildHeaderActions } from "@/features/build/shared/build-header-actions";
@@ -9,6 +10,7 @@ import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/st
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Briefcase, Map, MessageSquare, Target } from "lucide-react";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
@@ -62,6 +64,17 @@ export function ManagedProductOverviewPage({ managedProductId }: ManagedProductO
     hasMoreRoadmap,
     goalsLabel,
     feedbackTotal,
+    insightsIsError,
+    projectsIsError,
+    roadmapIsError,
+    goalsIsError,
+    retryInsights,
+    retryProjects,
+    retryRoadmap,
+    retryGoals,
+    openFeedbackCount,
+    activeRoadmapCount,
+    deliveredRoadmapCount,
     productDataUpdatedAt,
     insightsIsLoading,
     goalsIsLoading,
@@ -72,6 +85,10 @@ export function ManagedProductOverviewPage({ managedProductId }: ManagedProductO
     handleSortChange,
     handleOwnerChange,
   } = useManagedProductOverview(managedProductId);
+  const handleRetrySignals = useCallback(() => { void retryInsights(); }, [retryInsights]);
+  const handleRetryProjects = useCallback(() => { void retryProjects(); }, [retryProjects]);
+  const handleRetryRoadmap = useCallback(() => { void retryRoadmap(); }, [retryRoadmap]);
+  const handleRetryGoals = useCallback(() => { void retryGoals(); }, [retryGoals]);
 
   return (
     <PageWrapper
@@ -180,13 +197,60 @@ export function ManagedProductOverviewPage({ managedProductId }: ManagedProductO
             />
             <StatCard
               label="Feedback"
-              value={String(feedbackTotal)}
+              value={insightsIsError ? "—" : String(feedbackTotal)}
               icon={MessageSquare}
               tone="amber"
               isLoading={insightsIsLoading}
               href={`/build/managed-products/${managedProductId}/feedback`}
             />
           </StatCardGrid>
+
+          {goalsIsError ? (
+            <div role="status" className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border bg-card p-3 text-sm text-muted-foreground">
+              Goal summary is unavailable. <Button type="button" variant="outline" size="sm" onClick={handleRetryGoals}>Retry goals</Button>
+            </div>
+          ) : null}
+
+          <Card>
+            <CardHeader className="pb-2">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <h2 className="text-sm font-semibold text-foreground">Product pulse</h2>
+                  <p className="text-xs text-muted-foreground">A quick read of customer signals and delivery. Insights has the source-level detail.</p>
+                </div>
+                <Link href={`/build/managed-products/${managedProductId}/insights`} className="text-sm font-medium text-primary underline-offset-2 hover:underline">Explore insights</Link>
+              </div>
+            </CardHeader>
+            <CardContent className="grid gap-2 sm:grid-cols-3">
+              {insightsIsError ? (
+                <div role="status" className="col-span-full flex flex-wrap items-center justify-between gap-2 text-sm text-muted-foreground">
+                  Product signals are unavailable. <Button type="button" variant="outline" size="sm" onClick={handleRetrySignals}>Retry signals</Button>
+                </div>
+              ) : insightsIsLoading ? (
+                <div role="status" aria-label="Loading product signals" className="col-span-full grid gap-2 sm:grid-cols-3">
+                  {[0, 1, 2].map((index) => <Skeleton key={index} className="h-20 rounded-md" />)}
+                </div>
+              ) : (
+              <>
+              <Link href={`/build/managed-products/${managedProductId}/feedback`} className="rounded-md border border-border bg-muted/30 p-3 hover:border-primary/40">
+                <span className="block text-xs text-muted-foreground">Needs triage</span>
+                <span className="font-mono text-lg font-semibold tabular-nums text-foreground">{openFeedbackCount}</span>
+                <span className="block text-xs text-muted-foreground">open submissions</span>
+              </Link>
+              <Link href={`/build/managed-products/${managedProductId}/roadmap`} className="rounded-md border border-border bg-muted/30 p-3 hover:border-primary/40">
+                <span className="block text-xs text-muted-foreground">Planned or underway</span>
+                <span className="font-mono text-lg font-semibold tabular-nums text-foreground">{activeRoadmapCount}</span>
+                <span className="block text-xs text-muted-foreground">roadmap items</span>
+              </Link>
+              <Link href={`/build/managed-products/${managedProductId}/insights`} className="rounded-md border border-border bg-muted/30 p-3 hover:border-primary/40">
+                <span className="block text-xs text-muted-foreground">Delivered</span>
+                <span className="font-mono text-lg font-semibold tabular-nums text-foreground">{deliveredRoadmapCount}</span>
+                <span className="block text-xs text-muted-foreground">completed items</span>
+              </Link>
+              </>
+              )}
+            </CardContent>
+          </Card>
 
           <Card>
             <CardHeader className="pb-2">
@@ -196,7 +260,9 @@ export function ManagedProductOverviewPage({ managedProductId }: ManagedProductO
               </div>
             </CardHeader>
             <CardContent className="space-y-2">
-              {roadmapItems.length === 0 ? (
+              {roadmapIsError ? (
+                <div role="status" className="flex flex-wrap items-center justify-between gap-2 text-sm text-muted-foreground">Roadmap preview is unavailable. <Button type="button" variant="outline" size="sm" onClick={handleRetryRoadmap}>Retry roadmap</Button></div>
+              ) : roadmapItems.length === 0 ? (
                 <p className="text-sm text-muted-foreground">
                   No roadmap items for this product yet.
                 </p>
@@ -224,13 +290,15 @@ export function ManagedProductOverviewPage({ managedProductId }: ManagedProductO
             </CardContent>
           </Card>
 
-          {linkedProjects.length > 0 && (
+          {(linkedProjects.length > 0 || projectsIsError) && (
             <Card>
               <CardHeader className="pb-2">
                 <h2 className="text-sm font-medium">Linked projects</h2>
               </CardHeader>
               <CardContent className="space-y-2">
-                {linkedProjects.map((proj, index) => (
+                {projectsIsError ? (
+                  <div role="status" className="flex flex-wrap items-center justify-between gap-2 text-sm text-muted-foreground">Linked projects are unavailable. <Button type="button" variant="outline" size="sm" onClick={handleRetryProjects}>Retry projects</Button></div>
+                ) : linkedProjects.map((proj, index) => (
                   <LinkedProjectRow
                     key={proj.id}
                     project={proj}

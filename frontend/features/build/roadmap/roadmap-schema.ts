@@ -42,6 +42,10 @@ export const roadmapItemSchema = z.object({
   status: z.enum(["planned", "in_progress", "completed", "cancelled"]),
   category: z.string(),
   targetQuarter: z.string(),
+  projectId: z.string().refine(
+    (value) => value === "" || (/^[1-9]\d*$/.test(value) && Number.isSafeInteger(Number(value))),
+    "Choose a valid delivery project",
+  ),
   isPublic: z.boolean(),
   reach: riceField(RICE_REACH_MIN, RICE_REACH_MAX, "Reach"),
   impact: riceField(RICE_IMPACT_MIN, RICE_IMPACT_MAX, "Impact"),

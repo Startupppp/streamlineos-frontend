@@ -22,6 +22,7 @@ import { getUserDisplayName } from "@/lib/person-display";
 import { ROADMAP_STATUS_OPTIONS } from "./roadmap-constants";
 import { RoadmapDeliveryProgress } from "./roadmap-delivery-progress";
 import { RoadmapRiceFormFields } from "./roadmap-rice-form-fields";
+import { RoadmapDeliveryProjectField } from "./roadmap-delivery-project-field";
 import type { RoadmapItemFormValues } from "./roadmap-schema";
 import type { ScorableRoadmapItem } from "./roadmap-item-card";
 
@@ -29,9 +30,15 @@ interface RoadmapItemFormFieldsProps {
   control: Control<RoadmapItemFormValues>;
   isEdit: boolean;
   item?: ScorableRoadmapItem;
+  managedProductId?: number;
 }
 
-export function RoadmapItemFormFields({ control, isEdit, item }: RoadmapItemFormFieldsProps) {
+export function RoadmapItemFormFields({
+  control,
+  isEdit,
+  item,
+  managedProductId,
+}: RoadmapItemFormFieldsProps) {
   return (
     <>
       <FormField
@@ -39,7 +46,9 @@ export function RoadmapItemFormFields({ control, isEdit, item }: RoadmapItemForm
         name="title"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Title <span className="text-destructive">*</span></FormLabel>
+            <FormLabel>
+              Title <span className="text-destructive">*</span>
+            </FormLabel>
             <FormControl>
               <Input {...field} placeholder="e.g. Dark mode support" />
             </FormControl>
@@ -67,7 +76,11 @@ export function RoadmapItemFormFields({ control, isEdit, item }: RoadmapItemForm
           <FormItem>
             <FormLabel>Outcome</FormLabel>
             <FormControl>
-              <Textarea {...field} rows={2} placeholder="What success looks like when this ships" />
+              <Textarea
+                {...field}
+                rows={2}
+                placeholder="What success looks like when this ships"
+              />
             </FormControl>
             <FormMessage className="text-xs" />
           </FormItem>
@@ -76,7 +89,9 @@ export function RoadmapItemFormFields({ control, isEdit, item }: RoadmapItemForm
       {isEdit && item?.owner ? (
         <div className="rounded-lg border border-border bg-muted/30 px-3 py-2.5">
           <p className="text-xs text-muted-foreground">Owner</p>
-          <p className="text-sm font-medium text-foreground">{getUserDisplayName(item.owner)}</p>
+          <p className="text-sm font-medium text-foreground">
+            {getUserDisplayName(item.owner)}
+          </p>
         </div>
       ) : null}
       <div className="grid grid-cols-2 gap-3">
@@ -88,11 +103,15 @@ export function RoadmapItemFormFields({ control, isEdit, item }: RoadmapItemForm
               <FormLabel>Status</FormLabel>
               <Select value={field.value} onValueChange={field.onChange}>
                 <FormControl>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
                 </FormControl>
                 <SelectContent>
                   {ROADMAP_STATUS_OPTIONS.map((o) => (
-                    <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                    <SelectItem key={o.value} value={o.value}>
+                      {o.label}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -127,12 +146,19 @@ export function RoadmapItemFormFields({ control, isEdit, item }: RoadmapItemForm
           </FormItem>
         )}
       />
+      <RoadmapDeliveryProjectField
+        control={control}
+        managedProductId={managedProductId}
+        linkedProjectId={item?.projectId ?? null}
+      />
       <RoadmapRiceFormFields
         control={control}
         prioritization={item?.prioritization}
         tierWeighting={item?.tierWeighting}
       />
-      {isEdit && item ? <RoadmapDeliveryProgress roadmapItemId={item.id} /> : null}
+      {isEdit && item ? (
+        <RoadmapDeliveryProgress roadmapItemId={item.id} />
+      ) : null}
       <FormField
         control={control}
         name="isPublic"
@@ -141,7 +167,9 @@ export function RoadmapItemFormFields({ control, isEdit, item }: RoadmapItemForm
             <div className="flex items-center justify-between rounded-lg border border-border bg-muted/30 px-3 py-2.5">
               <div>
                 <p className="text-sm font-medium text-foreground">Public</p>
-                <p className="text-xs text-muted-foreground">Show this item on the public board</p>
+                <p className="text-xs text-muted-foreground">
+                  Show this item on the public board
+                </p>
               </div>
               <FormControl>
                 <Switch

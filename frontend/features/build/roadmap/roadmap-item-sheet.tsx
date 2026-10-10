@@ -51,6 +51,7 @@ function buildRoadmapConflictDiffs(
     { key: "status", label: "Status", server: baseline.status, pending: values.status },
     { key: "category", label: "Category", server: baseline.category ?? null, pending: values.category.trim() || null },
     { key: "targetQuarter", label: "Target quarter", server: baseline.targetQuarter ?? null, pending: values.targetQuarter.trim() || null },
+    { key: "projectId", label: "Delivery project", server: baseline.projectId, pending: values.projectId ? Number(values.projectId) : null },
     { key: "isPublic", label: "Public", server: baseline.isPublic, pending: values.isPublic },
     { key: "reach", label: "Reach", server: baseline.reach, pending: riceValues.reach },
     { key: "impact", label: "Impact", server: baseline.impact, pending: riceValues.impact },
@@ -94,6 +95,7 @@ export function RoadmapItemSheet({ item, managedProductId, onClose }: RoadmapIte
       status: (["planned", "in_progress", "completed", "cancelled"] as const).find((v) => v === item?.status) ?? "planned",
       category: item?.category ?? "",
       targetQuarter: item?.targetQuarter ?? "",
+      projectId: item?.projectId === null || item?.projectId === undefined ? "" : String(item.projectId),
       isPublic: item?.isPublic ?? true,
       reach: riceDefault(item?.reach),
       impact: riceDefault(item?.impact),
@@ -117,6 +119,7 @@ export function RoadmapItemSheet({ item, managedProductId, onClose }: RoadmapIte
       status: values.status,
       category: values.category.trim() || undefined,
       targetQuarter: values.targetQuarter.trim() || undefined,
+      projectId: values.projectId ? Number(values.projectId) : null,
       isPublic: values.isPublic,
     };
     if (isEdit) {
@@ -130,6 +133,8 @@ export function RoadmapItemSheet({ item, managedProductId, onClose }: RoadmapIte
           status: payload.status,
           category: payload.category ?? null,
           targetQuarter: payload.targetQuarter ?? null,
+          projectId: payload.projectId,
+          epicTicketId: payload.projectId === item.projectId ? item.epicTicketId : null,
           isPublic: payload.isPublic,
           ...rice,
         },
@@ -160,6 +165,7 @@ export function RoadmapItemSheet({ item, managedProductId, onClose }: RoadmapIte
           status: payload.status,
           category: payload.category,
           targetQuarter: payload.targetQuarter,
+          projectId: payload.projectId ?? undefined,
           isPublic: payload.isPublic,
           reach: rice.reach ?? undefined,
           impact: rice.impact ?? undefined,
@@ -189,7 +195,7 @@ export function RoadmapItemSheet({ item, managedProductId, onClose }: RoadmapIte
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSave)} className="flex flex-col flex-1 min-h-0">
             <SheetBody className="px-6 py-5 space-y-4">
-              <RoadmapItemFormFields control={form.control} isEdit={isEdit} item={item} />
+              <RoadmapItemFormFields control={form.control} isEdit={isEdit} item={item} managedProductId={managedProductId} />
             </SheetBody>
             <SheetFooter className="shrink-0 px-6 py-4 border-t flex-row gap-2 justify-end">
               <Button type="button" variant="outline" className="flex-1" onClick={onClose}>Cancel</Button>

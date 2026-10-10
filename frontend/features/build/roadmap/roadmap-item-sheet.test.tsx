@@ -4,14 +4,36 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { RoadmapItemSheet } from "./roadmap-item-sheet";
 import { useCreateRoadmapItem, useUpdateRoadmapItem } from "@/hooks/api/build/roadmap";
+import { useProjects } from "@/hooks/api/build/projects";
 
 jest.mock("@/hooks/api/build/roadmap", () => ({
   useCreateRoadmapItem: jest.fn(),
   useUpdateRoadmapItem: jest.fn(),
 }));
 
+jest.mock("@/hooks/api/build/projects", () => ({ useProjects: jest.fn() }));
+
+jest.mock("@/components/ui/combobox", () => ({
+  Combobox: ({ value, onChange, options, ...props }: {
+    value: string;
+    onChange: (value: string) => void;
+    options: Array<{ value: string; label: string }>;
+    "aria-label": string;
+  }) => (
+    <select aria-label={props["aria-label"]} value={value} onChange={(event) => onChange(event.target.value)}>
+      <option value="">No project</option>
+      {options.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+    </select>
+  ),
+}));
+
 jest.mock("@/components/shared/dirty-state-context", () => ({
   useRegisterDirtyState: jest.fn(),
+  useNavigationLeave: () => (action: () => void) => action(),
+}));
+
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({ push: jest.fn() }),
 }));
 
 jest.mock("@tanstack/react-query", () => ({
@@ -79,6 +101,7 @@ jest.mock("@/lib/api-client", () => ({
 
 const mockUseUpdateRoadmapItem = useUpdateRoadmapItem as jest.Mock;
 const mockUseCreateRoadmapItem = useCreateRoadmapItem as jest.Mock;
+const mockUseProjects = useProjects as jest.Mock;
 
 const BASELINE_ITEM = {
   id: 1,
@@ -109,6 +132,12 @@ const BASELINE_ITEM = {
 describe("RoadmapItemSheet — 409 conflict surfaces a field-level diff", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockUseProjects.mockReturnValue({
+      data: { data: [{ id: 12, name: "Delivery", key: "DEL", managedProductId: 39 }], hasMore: false },
+      isLoading: false,
+      isError: false,
+      refetch: jest.fn(),
+    });
     mockUseCreateRoadmapItem.mockReturnValue({ mutate: jest.fn(), isPending: false });
   });
 
@@ -199,6 +228,38 @@ describe("RoadmapItemSheet — 409 conflict surfaces a field-level diff", () => 
 });
 
 describe("RoadmapItemSheet — product association", () => {
+  it("links an existing product project so delivery progress can be computed", async () => {
+    const mutate = jest.fn();
+    mockUseCreateRoadmapItem.mockReturnValue({ mutate, isPending: false });
+    mockUseUpdateRoadmapItem.mockReturnValue({ mutate: jest.fn(), isPending: false });
+
+    render(<RoadmapItemSheet managedProductId={39} onClose={jest.fn()} />);
+    expect(mockUseProjects).toHaveBeenCalledWith(expect.objectContaining({ managedProductId: 39, limit: 50 }));
+    await userEvent.type(screen.getByPlaceholderText("e.g. Dark mode support"), "Product initiative");
+    await userEvent.selectOptions(screen.getByLabelText("Delivery project"), "12");
+    await userEvent.click(screen.getByText("Create Item"));
+
+    await waitFor(() => expect(mutate).toHaveBeenCalledWith(
+      expect.objectContaining({ projectId: 12 }),
+      expect.any(Object),
+    ));
+  });
+
+  it("clears both project and epic delivery links when the user unlinks the project", async () => {
+    const mutate = jest.fn();
+    mockUseCreateRoadmapItem.mockReturnValue({ mutate: jest.fn(), isPending: false });
+    mockUseUpdateRoadmapItem.mockReturnValue({ mutate, isPending: false });
+
+    render(<RoadmapItemSheet item={{ ...BASELINE_ITEM, projectId: 12, epicTicketId: 99 }} managedProductId={39} onClose={jest.fn()} />);
+    await userEvent.selectOptions(screen.getByLabelText("Delivery project"), "");
+    await userEvent.click(screen.getByText("Save Changes"));
+
+    await waitFor(() => expect(mutate).toHaveBeenCalledWith(
+      expect.objectContaining({ projectId: null, epicTicketId: null }),
+      expect.any(Object),
+    ));
+  });
+
   it("submits the product ID so a new item appears in the product-scoped list", async () => {
     const mutate = jest.fn();
     mockUseCreateRoadmapItem.mockReturnValue({ mutate, isPending: false });

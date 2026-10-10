@@ -33,7 +33,7 @@ jest.mock("@/components/ui/sheet", () => ({
 }));
 
 jest.mock("@/components/ui/form", () => ({
-  Form: ({ children, ...methods }: { children: React.ReactNode }) => <FormProvider {...methods}>{children}</FormProvider>,
+  Form: ({ children, ...methods }: React.ComponentProps<typeof FormProvider>) => <FormProvider {...methods}>{children}</FormProvider>,
   FormField: ({ render: renderFn }: { render: (opts: unknown) => React.ReactNode }) =>
     renderFn({ field: { value: "", onChange: jest.fn(), onBlur: jest.fn(), ref: jest.fn(), name: "test" } }),
   FormItem: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,

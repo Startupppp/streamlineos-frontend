@@ -84,19 +84,11 @@ export function useManagedProductOverview(managedProductId: number) {
   const roadmapQuery = useRoadmapItems({ managedProductId, limit: 5 });
   const goalsQuery = useGoalsPage({ managedProductId });
 
-  const isLoading =
-    productQuery.isLoading || projectsQuery.isLoading || insightsQuery.isLoading;
-
-  const isError =
-    productQuery.isError || projectsQuery.isError || insightsQuery.isError;
-
-  const error = productQuery.error ?? projectsQuery.error ?? insightsQuery.error;
-
   const resolution = usePageState({
     permission: "build:managed-products:view",
-    isLoading,
-    isError,
-    error,
+    isLoading: productQuery.isLoading,
+    isError: productQuery.isError,
+    error: productQuery.error,
     isEmpty: !productQuery.data,
   });
 
@@ -104,7 +96,7 @@ export function useManagedProductOverview(managedProductId: number) {
   const projectsPage = projectsQuery.data;
 
   const hasMoreProjects = projectsPage?.hasMore ?? false;
-  const linkedProjectsLabel = String(insightsQuery.data?.linkedProjectCount ?? 0);
+  const linkedProjectsLabel = insightsQuery.isError ? "—" : String(insightsQuery.data?.linkedProjectCount ?? 0);
 
   function handleRetry() {
     void productQuery.refetch();
@@ -117,11 +109,16 @@ export function useManagedProductOverview(managedProductId: number) {
   const linkedProjects = useMemo(() => projectsPage?.data ?? [], [projectsPage]);
   const roadmapItems = roadmapQuery.data?.data ?? [];
   const hasMoreRoadmap = roadmapQuery.data?.pagination?.hasMore ?? false;
-  const goalsLabel = String(goalsQuery.data?.total ?? 0);
+  const goalsLabel = goalsQuery.isError ? "—" : String(goalsQuery.data?.total ?? 0);
 
   const feedbackTotal = Object.values(
     insightsQuery.data?.feedbackByStatus ?? {},
   ).reduce((a: number, b: number) => a + b, 0);
+  const openFeedbackCount = insightsQuery.data?.submissionsByStatus?.open ?? 0;
+  const activeRoadmapCount =
+    (insightsQuery.data?.roadmapItemsByStatus?.planned ?? 0) +
+    (insightsQuery.data?.roadmapItemsByStatus?.in_progress ?? 0);
+  const deliveredRoadmapCount = insightsQuery.data?.roadmapItemsByStatus?.completed ?? 0;
 
   const handleOpenFocused = useCallback(
     (index: number) => {
@@ -210,6 +207,17 @@ export function useManagedProductOverview(managedProductId: number) {
     hasMoreRoadmap,
     goalsLabel,
     feedbackTotal,
+    insightsIsError: insightsQuery.isError,
+    projectsIsError: projectsQuery.isError,
+    roadmapIsError: roadmapQuery.isError,
+    goalsIsError: goalsQuery.isError,
+    retryInsights: insightsQuery.refetch,
+    retryProjects: projectsQuery.refetch,
+    retryRoadmap: roadmapQuery.refetch,
+    retryGoals: goalsQuery.refetch,
+    openFeedbackCount,
+    activeRoadmapCount,
+    deliveredRoadmapCount,
     productDataUpdatedAt: productQuery.dataUpdatedAt,
     insightsIsLoading: insightsQuery.isLoading,
     goalsIsLoading: goalsQuery.isLoading,
