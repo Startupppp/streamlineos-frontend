@@ -71,6 +71,7 @@ export function useMailMessages(params: MailMessagesParams, options?: { enabled?
   if (params.accountId !== undefined) queryParams.accountId = params.accountId;
   if (params.q) queryParams.q = params.q;
   if (params.limit) queryParams.limit = params.limit;
+  if (params.accountIds?.length) queryParams.accountIds = [...params.accountIds].sort().join(",");
 
   return useInfiniteQuery({
     queryKey: directoryAndOwnershipQueryKeys.mail.messages(queryParams),

@@ -48,10 +48,20 @@ export interface MailMessageDetail extends MailMessageSummary {
 export interface MailListResponse {
   messages: MailMessageSummary[];
   nextCursor: string | null;
-  accountErrors: { accountId: number; accountEmail: string | null; message: string }[];
+  accountErrors: {
+    accountId: number;
+    accountEmail: string | null;
+    message: string;
+  }[];
 }
 
-export type MailAction = "markRead" | "markUnread" | "star" | "unstar" | "archive" | "trash";
+export type MailAction =
+  | "markRead"
+  | "markUnread"
+  | "star"
+  | "unstar"
+  | "archive"
+  | "trash";
 
 export interface MailActionBody {
   accountId: number;
@@ -82,4 +92,5 @@ export interface MailMessagesParams {
   accountId?: number | "all";
   q?: string;
   limit?: number;
+  accountIds?: number[];
 }

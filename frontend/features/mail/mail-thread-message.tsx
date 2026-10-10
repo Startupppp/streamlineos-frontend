@@ -108,14 +108,17 @@ interface MailThreadMessageProps {
 function MailBodySkeleton() {
   return (
     <div
-      className="mt-1 flex flex-col gap-2 rounded-lg border border-border/50 px-4 py-3"
+      className="mt-1 overflow-hidden rounded-lg border border-border/50 bg-white px-4 py-4 text-foreground shadow-sm sm:px-5"
       aria-hidden
       data-testid="mail-body-skeleton"
     >
-      <Skeleton className="h-4 w-full rounded" />
-      <Skeleton className="h-4 w-5/6 rounded" />
-      <Skeleton className="h-4 w-4/5 rounded" />
-      <Skeleton className="h-4 w-2/3 rounded" />
+      <div className="flex flex-col gap-2">
+        <Skeleton className="h-4 w-full rounded" />
+        <Skeleton className="h-4 w-11/12 rounded" />
+        <Skeleton className="h-4 w-4/5 rounded" />
+        <Skeleton className="mt-3 h-28 w-full rounded-md" />
+        <Skeleton className="h-4 w-3/4 rounded" />
+      </div>
     </div>
   );
 }

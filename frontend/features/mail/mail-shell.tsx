@@ -24,6 +24,7 @@ import { MailHeader, MAIL_ACCOUNT_SENTINEL } from "./mail-header";
 import { seedMailDetailFromSummary } from "./mail-thread-seed";
 import { useMailInboxSummarySheet } from "./use-mail-inbox-summary";
 import {
+  MailContentSkeleton,
   MailReadingPaneSkeleton,
   MailSheetSkeleton,
 } from "./mail-shell-skeletons";
@@ -376,7 +377,7 @@ export function MailShell() {
 
       <PageState
         resolution={pageState}
-        loading={<MailReadingPaneSkeleton />}
+        loading={<MailContentSkeleton />}
         empty={
           <MailEmptyPane
             variant="connect"

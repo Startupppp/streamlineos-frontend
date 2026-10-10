@@ -3,7 +3,6 @@
 import { useState, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared";
 import type { AiAction } from "@/components/ai";
@@ -19,6 +18,7 @@ import {
 } from "@/hooks/api/mail";
 import { MailThreadMessage } from "./mail-thread-message";
 import { MailReadingToolbar } from "./mail-reading-toolbar";
+import { MailReadingPaneSkeleton } from "./mail-shell-skeletons";
 import {
   buildMailReadingAiActions,
   type MailReplyParams,
@@ -198,25 +198,7 @@ export function MailReadingPane({
   const handleRetry = useCallback(() => { void retry(); }, [retry]);
 
   if (isLoading) {
-    return (
-      <div className="flex flex-col h-full min-h-0 p-4 gap-3">
-        <div className="flex items-start justify-between gap-2">
-          <Skeleton className="h-5 w-2/3 rounded" />
-          <Skeleton className="h-8 w-28 rounded" />
-        </div>
-        <div className="flex items-center gap-2">
-          <Skeleton className="h-4 w-24 rounded" />
-          <Skeleton className="h-4 w-32 rounded" />
-        </div>
-        <div className="flex flex-col gap-2 mt-2">
-          <Skeleton className="h-4 w-full rounded" />
-          <Skeleton className="h-4 w-5/6 rounded" />
-          <Skeleton className="h-4 w-4/5 rounded" />
-          <Skeleton className="h-4 w-full rounded" />
-          <Skeleton className="h-4 w-3/4 rounded" />
-        </div>
-      </div>
-    );
+    return <MailReadingPaneSkeleton />;
   }
 
   if (isError) {

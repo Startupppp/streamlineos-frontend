@@ -1,8 +1,7 @@
 "use client";
 
-import { useCallback, useState, useMemo } from "react";
+import { useCallback, useState, useMemo, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
-import { Skeleton } from "@/components/ui/skeleton";
 import { SearchInput } from "@/components/ui/search-input";
 import {
   Select,
@@ -29,9 +28,11 @@ import {
 } from "@/hooks/api/mail";
 import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { PageState } from "@/components/shared/page-state";
 import { toast } from "sonner";
 import { groupMailMessages } from "./mail-group-messages";
 import { MailVirtualList } from "./mail-virtual-list";
+import { MailListPaneSkeleton } from "./mail-shell-skeletons";
 import {
   MailThreadBriefSheet,
   type MailThreadBriefState,
@@ -124,8 +125,11 @@ export function MailListPane({
   const {
     data,
     isLoading,
+    isFetched,
+    isFetching,
     isError,
     error,
+    refetch,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
@@ -133,10 +137,22 @@ export function MailListPane({
     {
       folder: activeFolder,
       accountId: selectedAccountId,
+      accountIds: accounts.map((account) => account.id),
       q: debouncedSearch || undefined,
     },
     { enabled: accounts.length > 0 },
   );
+
+  const accountsReadyRef = useRef(false);
+  useEffect(() => {
+    if (accounts.length === 0) {
+      accountsReadyRef.current = false;
+      return;
+    }
+    if (accountsReadyRef.current) return;
+    accountsReadyRef.current = true;
+    if (typeof refetch === "function") void refetch();
+  }, [accounts.length, refetch]);
 
   const pages = useMemo(() => data?.pages ?? [], [data]);
   const visibleMessages = useMemo(() => {
@@ -235,6 +251,18 @@ export function MailListPane({
     if (!hasNextPage || !isOnline || isFetchingNextPage) return;
     await fetchNextPage();
   }, [fetchNextPage, hasNextPage, isFetchingNextPage, isOnline]);
+
+  const initialLoading =
+    isLoading || isFetched === false || (isFetching && pages.length === 0);
+  const listPageState = isError && isOnline
+    ? { kind: "error" as const, error }
+    : isError && !isOnline
+      ? { kind: "ready" as const }
+    : initialLoading
+      ? { kind: "loading" as const }
+      : visibleMessages.length === 0 && !hasNextPage
+        ? { kind: "empty" as const }
+        : { kind: "ready" as const };
 
   if (accounts.length === 0) {
     return (
@@ -340,20 +368,27 @@ export function MailListPane({
         </div>
       )}
 
-      {isLoading ? (
-        <div className="flex-1 min-h-0 overflow-y-auto">
-          {[...Array(8)].map((_, i) => (
-            <div key={i} className="px-3 py-2.5 border-b border-border/20">
-              <div className="flex items-start justify-between gap-2 mb-1">
-                <Skeleton className="h-3.5 w-28 rounded" />
-                <Skeleton className="h-3 w-10 rounded shrink-0" />
-              </div>
-              <Skeleton className="h-3.5 w-full rounded mb-1" />
-              <Skeleton className="h-3 w-4/5 rounded" />
-            </div>
-          ))}
-        </div>
-      ) : isError && !isOnline ? (
+      <PageState
+        resolution={listPageState}
+        loading={<MailListPaneSkeleton />}
+        empty={
+          <div className="flex h-full min-h-0 flex-col items-center justify-center px-4 py-10 text-center">
+            <p className="text-label font-medium text-foreground/80">
+              {view !== "all"
+                ? "No matching loaded messages"
+                : debouncedSearch
+                  ? "No messages found"
+                  : `No messages in ${activeFolder}`}
+            </p>
+            {debouncedSearch ? (
+              <p className="mt-1 text-dense text-muted-foreground">
+                Try from:, a name, or fewer words.
+              </p>
+            ) : null}
+          </div>
+        }
+      >
+      {isError && !isOnline ? (
         <div className="flex-1 min-h-0 flex flex-col items-center justify-center gap-2 py-8 px-4 text-center">
           <WifiOff className="h-6 w-6 text-muted-foreground" aria-hidden />
           <p className="text-label font-medium text-foreground/80">
@@ -368,21 +403,6 @@ export function MailListPane({
           <p className="text-sm text-muted-foreground">
             {getErrorMessage(error)}
           </p>
-        </div>
-      ) : visibleMessages.length === 0 && !hasNextPage ? (
-        <div className="flex-1 min-h-0 flex flex-col items-center justify-center px-4 py-10 text-center">
-          <p className="text-label font-medium text-foreground/80">
-            {view !== "all"
-              ? "No matching loaded messages"
-              : debouncedSearch
-                ? "No messages found"
-                : `No messages in ${activeFolder}`}
-          </p>
-          {debouncedSearch ? (
-            <p className="mt-1 text-dense text-muted-foreground">
-              Try from:, a name, or fewer words.
-            </p>
-          ) : null}
         </div>
       ) : (
         <div className="flex-1 min-h-0 max-md:pb-14">
@@ -400,6 +420,7 @@ export function MailListPane({
           />
         </div>
       )}
+      </PageState>
       <MailThreadBriefSheet
         open={threadBriefOpen}
         onOpenChange={setThreadBriefOpen}
