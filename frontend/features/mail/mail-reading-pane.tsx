@@ -205,8 +205,8 @@ export function MailReadingPane({
             <Button
               type="button"
               variant="ghost"
-              size="icon"
-              className="-ml-1 size-9 shrink-0 lg:hidden"
+              size="sm"
+              className="-ml-1 h-9 shrink-0 px-2 lg:px-2.5"
               onClick={onBack}
               aria-label="Back to messages"
             >
