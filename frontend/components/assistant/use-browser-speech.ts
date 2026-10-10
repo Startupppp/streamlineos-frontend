@@ -81,7 +81,6 @@ export function useSpeechInput({ beforeStart, scopeKey }: UseSpeechInputOptions 
   const [state, setState] = useState<SpeechInputState>("idle");
   const [interimTranscript, setInterimTranscript] = useState("");
   const [message, setMessage] = useState<string | null>(null);
-  const [renderScope, setRenderScope] = useState(scopeKey);
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -96,13 +95,6 @@ export function useSpeechInput({ beforeStart, scopeKey }: UseSpeechInputOptions 
     streamRef.current = null;
     recorderRef.current = null;
   }, []);
-
-  if (renderScope !== scopeKey) {
-    setRenderScope(scopeKey);
-    setInterimTranscript("");
-    setMessage(null);
-    setState("idle");
-  }
 
   const reset = useCallback(() => {
     if (recognitionRef.current || recorderRef.current || uploadRef.current) return;
@@ -280,6 +272,9 @@ export function useSpeechInput({ beforeStart, scopeKey }: UseSpeechInputOptions 
   }, [beforeStart, releaseMedia]);
 
   useEffect(() => {
+    setInterimTranscript("");
+    setMessage(null);
+    setState("idle");
     function handleVisibilityChange() {
       if (document.visibilityState === "hidden") cancel();
     }
@@ -324,13 +319,7 @@ export function speechTextFromMarkdown(value: string): string {
 export function useSpeechPlayback(scopeKey?: string) {
   const supported = useSyncExternalStore(subscribeBrowserCapability, speechOutputSupported, () => false);
   const [activeKey, setActiveKey] = useState<string | null>(null);
-  const [renderScope, setRenderScope] = useState(scopeKey);
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
-
-  if (renderScope !== scopeKey) {
-    setRenderScope(scopeKey);
-    setActiveKey(null);
-  }
 
   const stop = useCallback(() => {
     if (typeof window !== "undefined") window.speechSynthesis?.cancel();
@@ -356,6 +345,7 @@ export function useSpeechPlayback(scopeKey?: string) {
   }, []);
 
   useEffect(() => {
+    setActiveKey(null);
     function handleVisibilityChange() {
       if (document.visibilityState === "hidden") stop();
     }

@@ -103,7 +103,7 @@ describe("every URL resolveImageUrl emits is loadable under the configured img-s
 });
 
 describe("mail remote-image delivery", () => {
-  it.each(POLICIES)("%s permits HTTPS newsletter images after the reader opts in", (_name, csp) => {
+  it.each(POLICIES)("%s permits HTTPS newsletter images", (_name, csp) => {
     expect(imgSrcPermits(csp, "https://cdn.example-mail.com/newsletter/hero.png", PAGE_ORIGIN)).toBe(true);
   });
 

@@ -21,7 +21,7 @@ import {
   revalidateAllWorkCollections,
   restoreAllWorkCollections,
   type AllWorkSnapshots,
-} from "@/hooks/api/build/ticket-cache";
+} from "@/hooks/api/build/all-work-cache";
 
 const bulkUpdateResultLazy = lazyContract(() =>
   import("@/hooks/api/build/build-tickets-subresource-schema").then(

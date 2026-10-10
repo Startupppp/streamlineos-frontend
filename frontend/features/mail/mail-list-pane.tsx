@@ -4,8 +4,14 @@ import { useCallback, useState, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TablePagination } from "@/components/ui/table-pagination";
-import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
-import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
+import { SearchInput } from "@/components/ui/search-input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Inbox,
   Send,
@@ -267,27 +273,31 @@ export function MailListPane({
   return (
     <div className="flex flex-col h-full min-h-0">
       <div className="shrink-0 border-b border-border/40">
-        <BuildListToolbar
-          className="flex-row flex-nowrap overflow-x-hidden border-b-0 px-2 py-1.5 [&>[data-slot=search-input]]:min-w-0 [&>[data-slot=search-input]]:basis-auto [&>[data-slot=search-input]]:md:max-w-none [&>[data-slot=build-toolbar-actions]]:shrink-0"
-          search={{
-            value: search,
-            onValueChange: handleSearchChange,
-            placeholder: "Search mail…",
-            label: "Search mail",
-            inputClassName: "focus-visible:ring-1 focus-visible:ring-offset-0",
-          }}
-          trailing={(
-            <div className="w-36 min-w-28 sm:w-40">
-              <BuildFilterSelect
-                label="Filter loaded mail"
-                value={view}
-                onValueChange={handleViewChange}
-                options={MAIL_VIEW_OPTIONS}
-                className="w-full min-w-0 max-w-40"
-              />
-            </div>
-          )}
-        />
+        <div
+          data-slot="mail-toolbar"
+          className="flex flex-row flex-nowrap items-center gap-2 overflow-x-hidden px-2 py-1.5"
+        >
+          <SearchInput
+            value={search}
+            onValueChange={handleSearchChange}
+            onClear={() => handleSearchChange("")}
+            placeholder="Search mail…"
+            aria-label="Search mail"
+            className="min-w-0 flex-1 focus-visible:ring-1 focus-visible:ring-offset-0"
+          />
+          <div className="w-36 min-w-28 shrink-0 sm:w-40">
+            <Select value={view} onValueChange={handleViewChange}>
+              <SelectTrigger aria-label="Filter loaded mail" className="h-9 w-full text-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {MAIL_VIEW_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
         <nav
           className="flex gap-1 overflow-x-auto px-2 pb-1.5 scrollbar-hide"
           aria-label="Mail folders"

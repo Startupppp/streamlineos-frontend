@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import type { InfiniteData } from "@tanstack/react-query";
 import { apiClient, isImpersonating } from "@/lib/api-client";
 import { ApiError, getApiErrorCode, lazyContract } from "@/lib/api-envelope";
 import type { ExpectedRequestIdentity } from "@/lib/api-request-identity";
@@ -17,9 +16,6 @@ import {
   applyCommentDraftReceipt, beginCommentDraftDeletion, restoreCommentDraftDeletion,
   type CommentDraft,
 } from "./comment-draft-command-cache";
-import type { CommentDraftsListMineResponse } from "@/contracts/build-contracts.generated";
-
-type DraftPages = InfiniteData<CommentDraftsListMineResponse>;
 
 export interface StagedCommentDraft {
   scope: string;
@@ -31,7 +27,7 @@ interface DraftCommand extends StagedCommentDraft {
   signal: AbortSignal;
 }
 interface CommandContext {
-  previous: DraftPages | undefined;
+  previous: Awaited<ReturnType<typeof beginCommentDraftDeletion>>;
 }
 interface Recovery {
   ownerKey: string | null;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type KeyboardEvent } from "react";
+import { useState, type FocusEvent, type KeyboardEvent } from "react";
 import { RotateCcw } from "lucide-react";
 import { FilterTriggerButton } from "@/components/list-view/filter-trigger-button";
 import { Button } from "@/components/ui/button";
@@ -54,6 +54,10 @@ export function RoadmapFilters({
     setOpen(false);
   }
 
+  function handleHorizonBlur(event: FocusEvent<HTMLInputElement>) {
+    onHorizonCommit(event.currentTarget.value);
+  }
+
   function handleHorizonKeyDown(event: KeyboardEvent<HTMLInputElement>) {
     if (event.key !== "Enter") return;
     event.preventDefault();
@@ -78,13 +82,20 @@ export function RoadmapFilters({
       >
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h2 className="text-sm font-semibold text-foreground">Roadmap filters</h2>
+            <h2 className="text-sm font-semibold text-foreground">
+              Roadmap filters
+            </h2>
             <p className="mt-0.5 text-xs text-muted-foreground">
               Narrow the board without losing your place.
             </p>
           </div>
           {activeFilterCount > 0 ? (
-            <Button type="button" variant="ghost" size="sm" onClick={handleClear}>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={handleClear}
+            >
               <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
               Clear filters
             </Button>
@@ -123,14 +134,17 @@ export function RoadmapFilters({
             />
           </div>
           <div className="grid gap-1.5">
-            <Label htmlFor="roadmap-horizon" className="text-xs text-muted-foreground">
+            <Label
+              htmlFor="roadmap-horizon"
+              className="text-xs text-muted-foreground"
+            >
               Horizon
             </Label>
             <Input
               key={horizonValue}
               id="roadmap-horizon"
               defaultValue={horizonValue}
-              onBlur={(event) => onHorizonCommit(event.currentTarget.value)}
+              onBlur={handleHorizonBlur}
               onKeyDown={handleHorizonKeyDown}
               placeholder="e.g. Q3 2026"
               aria-label="Filter by horizon"

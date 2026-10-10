@@ -140,6 +140,7 @@ export function CommandCenterPage() {
   const isReady = pageState.kind === "ready";
 
   const layout = useDashboardLayoutEditor();
+  const { saveLayout } = layout;
   const isEditing = editing && layout.canCustomize;
   const placedTypes = useMemo(
     () => new Set(layout.widgets.map((slot) => slot.type)),
@@ -148,8 +149,8 @@ export function CommandCenterPage() {
   const handleStartCustomizing = useCallback(() => setEditing(true), []);
   const handleFinishedSaving = useCallback(() => setEditing(false), []);
   const handleDoneCustomizing = useCallback(
-    () => layout.saveLayout(handleFinishedSaving),
-    [handleFinishedSaving, layout],
+    () => saveLayout(handleFinishedSaving),
+    [handleFinishedSaving, saveLayout],
   );
   const customizeAction = useMemo(
     () =>

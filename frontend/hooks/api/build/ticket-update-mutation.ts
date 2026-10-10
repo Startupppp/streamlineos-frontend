@@ -13,17 +13,19 @@ import { lazyContract } from "@/lib/api-envelope";
 import { ticketUpdateRequestContract } from "./build-tickets-subresource-schema";
 import {
   patchTicketCollections,
-  patchAllWorkCollections,
-  revalidateAllWorkCollections,
   restoreTicketCollections,
-  restoreAllWorkCollections,
-  rollbackTicketFields,
   ticketRollback,
   type TicketSnapshots,
-  type AllWorkSnapshots,
   resolveTicketVersions,
   resolveTicketStatus,
 } from "./ticket-cache";
+import {
+  patchAllWorkCollections,
+  revalidateAllWorkCollections,
+  restoreAllWorkCollections,
+  type AllWorkSnapshots,
+} from "./all-work-cache";
+import { rollbackOptimisticFields } from "./optimistic-cache-rollback";
 import { invalidateTicketUpdateViews } from "./ticket-cache-invalidation";
 import { enqueueTicketWrite } from "./ticket-write-queue";
 import {
@@ -32,10 +34,6 @@ import {
 } from "./ticket-status-queue";
 import { reconcileStatusTransition } from "./ticket-status-cache";
 import {
-  applyAllWorkTicketPatch,
-  applyTicketPatch,
-} from "./ticket-optimistic-patch";
-export {
   applyAllWorkTicketPatch,
   applyTicketPatch,
 } from "./ticket-optimistic-patch";
@@ -244,7 +242,7 @@ export function useUpdateTicket(
         );
         queryClient.setQueryData<Ticket | null>(context.ticketKey, (current) =>
           current && context.previousTicket && context.optimisticTicket
-            ? rollbackTicketFields(
+            ? rollbackOptimisticFields(
                 current,
                 context.previousTicket,
                 context.optimisticTicket,

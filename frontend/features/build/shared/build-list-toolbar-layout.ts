@@ -62,16 +62,6 @@ export function isToolbarMobileSearchExpanded({
   return isMobile && focused;
 }
 
-function mobileColumnsFor({
-  hasSearch: _hasSearch,
-  inlineFieldCount: _inlineFieldCount,
-}: {
-  hasSearch: boolean;
-  inlineFieldCount: number;
-}): string {
-  return "";
-}
-
 export function buildToolbarLayout({
   search,
   filters,
@@ -113,10 +103,7 @@ export function buildToolbarLayout({
     collapsedActiveCount,
     activeCount,
     anyActive: activeCount > 0 || Boolean(search?.value),
-    mobileColumns: mobileColumnsFor({
-      hasSearch,
-      inlineFieldCount,
-    }),
+    mobileColumns: "",
   };
 }
 
@@ -153,8 +140,7 @@ export function toolbarDrawerVisibility(
   fieldFilterCount: number,
 ): string {
   if (index <= 0) return "md:hidden";
-  if (index === 1 && fieldFilterCount === 2)
-    return "md:hidden";
+  if (index === 1 && fieldFilterCount === 2) return "md:hidden";
   if (index === 2 && fieldFilterCount === 3) return "lg:hidden";
   if (index === 3 && fieldFilterCount === 4) return "xl:hidden";
   if (index === 4 && fieldFilterCount === 5) return "2xl:hidden";

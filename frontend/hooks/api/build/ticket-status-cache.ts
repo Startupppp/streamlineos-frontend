@@ -1,10 +1,8 @@
 import type { QueryClient } from "@tanstack/react-query";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import type { ProjectWithDetails, Ticket } from "@/types/projects";
-import {
-  patchAllWorkCollections,
-  patchTicketCollections,
-} from "./ticket-cache";
+import { patchTicketCollections } from "./ticket-cache";
+import { patchAllWorkCollections } from "./all-work-cache";
 import {
   settleStatusTransition,
   type StatusTransition,

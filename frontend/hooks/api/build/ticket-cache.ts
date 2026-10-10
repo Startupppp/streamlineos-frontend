@@ -7,13 +7,6 @@ import type {
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { allWorkTickets, isAllWorkCollection } from "./all-work-cache";
 import { rollbackOptimisticFields } from "./optimistic-cache-rollback";
-export {
-  patchAllWorkCollections,
-  restoreAllWorkCollections,
-  revalidateAllWorkCollections,
-} from "./all-work-cache";
-export type { AllWorkSnapshots } from "./all-work-cache";
-export { rollbackOptimisticFields as rollbackTicketFields } from "./optimistic-cache-rollback";
 
 type TicketCollection =
   | CursorPageResponse<Ticket>

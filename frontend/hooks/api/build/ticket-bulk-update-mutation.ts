@@ -13,20 +13,25 @@ import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { lazyContract } from "@/lib/api-envelope";
 import {
   patchTicketCollections,
+  restoreTicketCollections,
+  resolveTicketVersions,
+  type TicketSnapshots,
+} from "./ticket-cache";
+import {
   patchAllWorkCollections,
   revalidateAllWorkCollections,
-  restoreTicketCollections,
   restoreAllWorkCollections,
-  resolveTicketVersions,
-  rollbackTicketFields,
-  type TicketSnapshots,
   type AllWorkSnapshots,
-} from "./ticket-cache";
+} from "./all-work-cache";
+import { rollbackOptimisticFields } from "./optimistic-cache-rollback";
 import {
   invalidateBuildViews,
   invalidateTicketUpdateViews,
 } from "./ticket-cache-invalidation";
-import { applyAllWorkTicketPatch, applyTicketPatch } from "./ticket-update-mutation";
+import {
+  applyAllWorkTicketPatch,
+  applyTicketPatch,
+} from "./ticket-optimistic-patch";
 
 const bulkUpdateResultLazy = lazyContract(() =>
   import("@/hooks/api/build/build-tickets-subresource-schema").then(
@@ -193,7 +198,10 @@ export function useBulkUpdateTickets(projectId: number) {
       const previousTickets = new Map<number, Ticket | null | undefined>();
       const optimisticTickets = new Map<number, Ticket | null | undefined>();
       for (const ticketId of variables.ticketIds) {
-        const queryKey = buildWorkQueryKeys.projects.ticket(projectId, ticketId);
+        const queryKey = buildWorkQueryKeys.projects.ticket(
+          projectId,
+          ticketId,
+        );
         const previous = queryClient.getQueryData<Ticket | null>(queryKey);
         previousTickets.set(ticketId, previous);
         if (previous) queryClient.setQueryData(queryKey, patch(previous));
@@ -241,7 +249,7 @@ export function useBulkUpdateTickets(projectId: number) {
                 const previous = previousById.get(ticket.id);
                 const optimistic = optimisticById.get(ticket.id);
                 return previous && optimistic
-                  ? rollbackTicketFields(ticket, previous, optimistic)
+                  ? rollbackOptimisticFields(ticket, previous, optimistic)
                   : ticket;
               }),
             };
@@ -256,7 +264,7 @@ export function useBulkUpdateTickets(projectId: number) {
           buildWorkQueryKeys.projects.ticket(projectId, ticketId),
           (current) =>
             current
-              ? rollbackTicketFields(current, previous, optimistic)
+              ? rollbackOptimisticFields(current, previous, optimistic)
               : current,
         );
       }
@@ -282,10 +290,12 @@ export function useBulkUpdateTickets(projectId: number) {
           : ticket,
       );
       const detailKey = buildWorkQueryKeys.projects.detail(projectId);
-      queryClient.setQueryData<ProjectWithDetails | null>(detailKey, (current) =>
-        current?.tickets
-          ? { ...current, tickets: current.tickets.map(applyVersion) }
-          : current,
+      queryClient.setQueryData<ProjectWithDetails | null>(
+        detailKey,
+        (current) =>
+          current?.tickets
+            ? { ...current, tickets: current.tickets.map(applyVersion) }
+            : current,
       );
       for (const ticketId of data.ticketIds) {
         queryClient.setQueryData<Ticket | null>(
@@ -293,7 +303,10 @@ export function useBulkUpdateTickets(projectId: number) {
           (current) => (current ? applyVersion(current) : current),
         );
       }
-      revalidateAllWorkCollections(queryClient, context?.allWorkSnapshots ?? []);
+      revalidateAllWorkCollections(
+        queryClient,
+        context?.allWorkSnapshots ?? [],
+      );
     },
     onSettled: (data, _error, variables) => {
       const ticketIds = data?.ticketIds ?? variables.ticketIds;
@@ -302,7 +315,12 @@ export function useBulkUpdateTickets(projectId: number) {
         return;
       }
       for (const ticketId of ticketIds) {
-        invalidateTicketUpdateViews(queryClient, projectId, ticketId, variables);
+        invalidateTicketUpdateViews(
+          queryClient,
+          projectId,
+          ticketId,
+          variables,
+        );
       }
     },
   });

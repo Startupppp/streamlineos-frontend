@@ -52,7 +52,11 @@ export function useRoadmapListPage(listFilters: BuildListFiltersState) {
     () => new Set((buildMembersPage?.data ?? []).map((member) => member.id)),
     [buildMembersPage],
   );
-  const { data: membersPage } = useOrgMembersByIds([...buildMemberIds]);
+  const buildMemberIdsList = useMemo(
+    () => [...buildMemberIds],
+    [buildMemberIds],
+  );
+  const { data: membersPage } = useOrgMembersByIds(buildMemberIdsList);
   const ownerOptions = useMemo(
     () => [
       { value: BUILD_FILTER_ALL, label: "Any owner" },

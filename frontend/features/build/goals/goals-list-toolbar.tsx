@@ -1,6 +1,6 @@
 "use client";
 
-import type { RefObject } from "react";
+import { useCallback, useMemo, type RefObject } from "react";
 import { DatePicker } from "@/components/ui/date-picker";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import {
@@ -96,27 +96,45 @@ export function GoalsListToolbar({
   ownerOptions,
   searchInputRef,
 }: GoalsListToolbarProps) {
-  const handleLevelChange = (value: string) =>
-    listFilters.setValue("level", value);
-  const handleStatusChange = (value: string) =>
-    listFilters.setValue("status", value);
-  const handleOwnerChange = (value: string) =>
-    listFilters.setValue("ownerId", value);
-  const handleScopeChange = (value: string) =>
-    listFilters.setValue("scope", value);
-  const handleHealthChange = (value: string) =>
-    listFilters.setValue("health", value);
-  const handleMetricTypeChange = (value: string) =>
-    listFilters.setValue("metricType", value);
-  const handleDueChange = (value: string) =>
-    listFilters.setValue("due", value || BUILD_FILTER_ALL);
+  const handleLevelChange = useCallback(
+    (value: string) => listFilters.setValue("level", value),
+    [listFilters],
+  );
+  const handleStatusChange = useCallback(
+    (value: string) => listFilters.setValue("status", value),
+    [listFilters],
+  );
+  const handleOwnerChange = useCallback(
+    (value: string) => listFilters.setValue("ownerId", value),
+    [listFilters],
+  );
+  const handleScopeChange = useCallback(
+    (value: string) => listFilters.setValue("scope", value),
+    [listFilters],
+  );
+  const handleHealthChange = useCallback(
+    (value: string) => listFilters.setValue("health", value),
+    [listFilters],
+  );
+  const handleMetricTypeChange = useCallback(
+    (value: string) => listFilters.setValue("metricType", value),
+    [listFilters],
+  );
+  const handleDueChange = useCallback(
+    (value: string) => listFilters.setValue("due", value || BUILD_FILTER_ALL),
+    [listFilters],
+  );
 
   const dueValue = listFilters.value("due");
 
   const ownerValue = listFilters.value("ownerId");
-  const resolvedOwnerOptions: readonly BuildFilterOption[] = ownerOptions
-    ? [{ value: BUILD_FILTER_ALL, label: "All owners" }, ...ownerOptions]
-    : [{ value: BUILD_FILTER_ALL, label: "All owners" }];
+  const resolvedOwnerOptions = useMemo<readonly BuildFilterOption[]>(
+    () =>
+      ownerOptions
+        ? [{ value: BUILD_FILTER_ALL, label: "All owners" }, ...ownerOptions]
+        : [{ value: BUILD_FILTER_ALL, label: "All owners" }],
+    [ownerOptions],
+  );
 
   const filters = [
     {

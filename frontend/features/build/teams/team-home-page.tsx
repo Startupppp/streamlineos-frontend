@@ -13,7 +13,10 @@ import {
 } from "@/hooks/api/build/teams";
 import { useBuildCursorPager } from "@/features/build/shared/use-build-cursor-pager";
 import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
-import { useBuildListFilters, BUILD_FILTER_ALL } from "@/features/build/shared/use-build-list-filters";
+import {
+  useBuildListFilters,
+  BUILD_FILTER_ALL,
+} from "@/features/build/shared/use-build-list-filters";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
@@ -26,19 +29,21 @@ import { TeamFormSheet } from "./team-form-sheet";
 import { TeamProjectsSection } from "./team-projects-section";
 import type { UpdateTeamInput } from "@/types/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
-import {
-  PmPageShell,
-  PmSection,
-} from "@/components/pm-chrome";
-import {
-  TeamDetailSkeleton,
-} from "./team-member-controls";
+import { PmPageShell, PmSection } from "@/components/pm-chrome";
+import { TeamDetailSkeleton } from "./team-member-controls";
 import { TeamMembersSection } from "./team-members-section";
-import { TeamActionsMenu, TeamHeaderMeta, TeamHeaderTitle } from "./team-header";
+import {
+  TeamActionsMenu,
+  TeamHeaderMeta,
+  TeamHeaderTitle,
+} from "./team-header";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FolderKanban, Users } from "lucide-react";
 
-const FILTER_DEFINITIONS = [{ param: "leadId" }, { param: "memberId" }] as const;
+const FILTER_DEFINITIONS = [
+  { param: "leadId" },
+  { param: "memberId" },
+] as const;
 
 interface Props {
   teamId: number;
@@ -54,7 +59,10 @@ export function TeamHomePage({ teamId }: Props) {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [shortcutHelpOpen, setShortcutHelpOpen] = useState(false);
 
-  const listFilters = useBuildListFilters({ filters: FILTER_DEFINITIONS, withSearch: true });
+  const listFilters = useBuildListFilters({
+    filters: FILTER_DEFINITIONS,
+    withSearch: true,
+  });
   const memberPager = useBuildCursorPager(listFilters.resetKey);
 
   const debouncedSearch = listFilters.debouncedSearch;
@@ -67,7 +75,10 @@ export function TeamHomePage({ teamId }: Props) {
     leadId: leadIdFilter !== BUILD_FILTER_ALL ? leadIdFilter : undefined,
     memberId: memberIdFilter !== BUILD_FILTER_ALL ? memberIdFilter : undefined,
   });
-  const pageMembers = useMemo(() => membersResult.data?.data ?? [], [membersResult.data]);
+  const pageMembers = useMemo(
+    () => membersResult.data?.data ?? [],
+    [membersResult.data],
+  );
 
   const updateTeam = useUpdateProjectTeam();
   const deleteTeam = useDeleteProjectTeam();
@@ -126,6 +137,10 @@ export function TeamHomePage({ teamId }: Props) {
       },
     );
   }
+
+  const handleOpenEdit = useCallback(() => setEditOpen(true), []);
+
+  const handleOpenDelete = useCallback(() => setDeleteOpen(true), []);
 
   function handleRetry() {
     void refetch();
@@ -191,8 +206,8 @@ export function TeamHomePage({ teamId }: Props) {
         canManage ? (
           <TeamActionsMenu
             className="hidden sm:inline-flex"
-            onEdit={() => setEditOpen(true)}
-            onDelete={() => setDeleteOpen(true)}
+            onEdit={handleOpenEdit}
+            onDelete={handleOpenDelete}
           />
         ) : undefined
       }
@@ -203,7 +218,10 @@ export function TeamHomePage({ teamId }: Props) {
           className="min-h-0 min-w-0 w-full flex-1 gap-3"
         >
           <div className="flex min-w-0 shrink-0 items-center gap-2">
-            <TabsList aria-label="Team workspace" className="flex-1 sm:flex-none">
+            <TabsList
+              aria-label="Team workspace"
+              className="flex-1 sm:flex-none"
+            >
               <TabsTrigger value="members">
                 <Users aria-hidden="true" />
                 Members
@@ -216,8 +234,8 @@ export function TeamHomePage({ teamId }: Props) {
             {canManage ? (
               <TeamActionsMenu
                 className="size-9 px-0 sm:hidden"
-                onEdit={() => setEditOpen(true)}
-                onDelete={() => setDeleteOpen(true)}
+                onEdit={handleOpenEdit}
+                onDelete={handleOpenDelete}
               />
             ) : null}
           </div>
@@ -273,7 +291,10 @@ export function TeamHomePage({ teamId }: Props) {
         isPending={deleteTeam.isPending}
         onConfirm={handleDeleteConfirm}
       />
-      <ShortcutHelpDialog open={shortcutHelpOpen} onOpenChange={setShortcutHelpOpen} />
+      <ShortcutHelpDialog
+        open={shortcutHelpOpen}
+        onOpenChange={setShortcutHelpOpen}
+      />
     </PageWrapper>
   );
 }

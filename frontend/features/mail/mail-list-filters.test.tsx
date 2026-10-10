@@ -66,7 +66,7 @@ it("renders the mobile search and view filter directly without a generic Filters
   const { container } = render(<MailListPane accounts={[{ id: 7, provider: "gmail", accountEmail: "me@example.com", accountLabel: null, status: "active", isPrimary: true }]} selectedMessageId={null} selectedAccountId="all" onSelectMessage={jest.fn()} onOpenAccountsSheet={jest.fn()} />);
 
   expect(container.querySelector('[data-slot="mail-mobile-filters"]')).toBeNull();
-  expect(container.querySelector('[data-slot="build-list-toolbar"]')).toHaveClass("flex-row");
+  expect(container.querySelector('[data-slot="mail-toolbar"]')).toHaveClass("flex-row");
   expect(screen.getAllByRole("combobox", { name: "Filter loaded mail" })).toHaveLength(1);
   expect(screen.queryByRole("button", { name: "Filters" })).toBeNull();
 });

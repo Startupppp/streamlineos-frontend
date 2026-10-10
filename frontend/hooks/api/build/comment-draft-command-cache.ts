@@ -1,4 +1,4 @@
-import type { InfiniteData, QueryClient } from "@tanstack/react-query";
+import type { InfiniteData, QueryClient, QueryKey } from "@tanstack/react-query";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import type {
   CommentDraftsListMineResponse,
@@ -27,54 +27,56 @@ function mapPages(
   };
 }
 
+type DraftPageSnapshot = { key: QueryKey; data: DraftPages };
+
 export async function beginCommentDraftDeletion(
   client: QueryClient,
   ticketId: number,
   canApply: () => boolean,
-) {
+): Promise<DraftPageSnapshot[] | undefined> {
   const listKey = buildWorkQueryKeys.projects.commentDrafts.mine();
   if (!canApply()) return undefined;
-  await client.cancelQueries({ queryKey: listKey, exact: true });
+  await client.cancelQueries({ queryKey: listKey });
   if (!canApply()) return undefined;
-  const previous = client.getQueryData<DraftPages>(listKey);
-  if (previous && "pages" in previous && Array.isArray(previous.pages)) {
+  const entries = client.getQueriesData<DraftPages>({ queryKey: listKey });
+  const snapshots: DraftPageSnapshot[] = [];
+  for (const [key, data] of entries) {
+    if (!data || !("pages" in data) || !Array.isArray(data.pages)) continue;
+    snapshots.push({ key, data });
     client.setQueryData<DraftPages>(
-      listKey,
-      mapPages(previous, (items) =>
-        items.filter((d) => d.ticketId !== ticketId),
-      ),
+      key,
+      mapPages(data, (items) => items.filter((d) => d.ticketId !== ticketId)),
     );
   }
-  return previous;
+  return snapshots.length ? snapshots : undefined;
 }
 
 export function restoreCommentDraftDeletion(
   client: QueryClient,
   ticketId: number,
-  previous: DraftPages,
+  snapshots: DraftPageSnapshot[],
 ) {
-  if (!previous || !("pages" in previous) || !Array.isArray(previous.pages))
-    return;
-  const listKey = buildWorkQueryKeys.projects.commentDrafts.mine();
-  const current = client.getQueryData<DraftPages>(listKey);
-  const restoredItem = previous.pages
-    .flatMap((p) => p.data)
-    .find((d) => d.ticketId === ticketId);
-  if (!restoredItem) return;
-  if (!current || !("pages" in current) || !Array.isArray(current.pages)) {
-    client.setQueryData<DraftPages>(listKey, () => previous);
-    return;
+  for (const { key, data: previous } of snapshots) {
+    const restoredItem = previous.pages
+      .flatMap((p) => p.data)
+      .find((d) => d.ticketId === ticketId);
+    if (!restoredItem) continue;
+    const current = client.getQueryData<DraftPages>(key);
+    if (!current || !("pages" in current) || !Array.isArray(current.pages)) {
+      client.setQueryData<DraftPages>(key, () => previous);
+      continue;
+    }
+    const alreadyPresent = current.pages
+      .flatMap((p) => p.data)
+      .some((d) => d.ticketId === ticketId);
+    if (alreadyPresent) continue;
+    client.setQueryData<DraftPages>(key, {
+      ...current,
+      pages: current.pages.map((page, i) =>
+        i === 0 ? { ...page, data: [restoredItem, ...page.data] } : page,
+      ),
+    });
   }
-  const alreadyPresent = current.pages
-    .flatMap((p) => p.data)
-    .some((d) => d.ticketId === ticketId);
-  if (alreadyPresent) return;
-  client.setQueryData<DraftPages>(listKey, {
-    ...current,
-    pages: current.pages.map((page, i) =>
-      i === 0 ? { ...page, data: [restoredItem, ...page.data] } : page,
-    ),
-  });
 }
 
 export function applyCommentDraftReceipt(

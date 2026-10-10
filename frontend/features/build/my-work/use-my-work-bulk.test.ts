@@ -21,7 +21,7 @@ jest.mock("@tanstack/react-query", () => ({
   useMutation: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
 }));
 
-jest.mock("@/hooks/api/build/ticket-cache", () => ({
+jest.mock("@/hooks/api/build/all-work-cache", () => ({
   patchAllWorkCollections: (...args: unknown[]) => mockPatchAllWorkCollections(...args),
   restoreAllWorkCollections: (...args: unknown[]) => mockRestoreAllWorkCollections(...args),
   revalidateAllWorkCollections: (...args: unknown[]) => mockRevalidateAllWorkCollections(...args),

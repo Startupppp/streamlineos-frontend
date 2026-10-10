@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef } from "react";
+import { useCallback, useMemo, useRef } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
@@ -11,7 +11,14 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { TablePagination } from "@/components/ui/table-pagination";
 import { BuildPaginatedContent } from "@/features/build/shared/build-paginated-content";
 import { useBuildCursorPager } from "@/features/build/shared/use-build-cursor-pager";
-import { Diamond, CheckCircle2, Clock, AlertCircle, X, WifiOff } from "lucide-react";
+import {
+  Diamond,
+  CheckCircle2,
+  Clock,
+  AlertCircle,
+  X,
+  WifiOff,
+} from "lucide-react";
 import { PlusIcon } from "@animateicons/react/lucide";
 import {
   BUILD_FILTER_ALL,
@@ -38,14 +45,23 @@ import {
   CONTENT_FILL_PANEL,
   PM_TOOLBAR,
 } from "@/components/pm-chrome";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { MilestonesPageSkeleton } from "./milestones-page-skeleton";
 import { MilestonesFilterToolbar } from "./milestones-filter-toolbar";
 import { useMilestonesPageActions } from "./use-milestones-page-actions";
 
 const MILESTONE_FILTER_DEFINITIONS = [
-  { param: "status", options: [BUILD_FILTER_ALL, "PENDING", "ACHIEVED", "MISSED"] },
+  {
+    param: "status",
+    options: [BUILD_FILTER_ALL, "PENDING", "ACHIEVED", "MISSED"],
+  },
   { param: "ownerId" },
   { param: "from" },
   { param: "to" },
@@ -69,10 +85,14 @@ interface ProjectMilestonesPageProps {
   projectId: string;
 }
 
-export function ProjectMilestonesPage({ projectId: projectIdStr }: ProjectMilestonesPageProps) {
+export function ProjectMilestonesPage({
+  projectId: projectIdStr,
+}: ProjectMilestonesPageProps) {
   const projectId = Number(projectIdStr);
   const canManage = useCan("build:workspace:manage");
-  const listFilters = useBuildListFilters({ filters: MILESTONE_FILTER_DEFINITIONS });
+  const listFilters = useBuildListFilters({
+    filters: MILESTONE_FILTER_DEFINITIONS,
+  });
   const pager = useBuildCursorPager(listFilters.resetKey);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const isOnline = useOnlineStatus();
@@ -81,7 +101,11 @@ export function ProjectMilestonesPage({ projectId: projectIdStr }: ProjectMilest
     () => new Set((buildMembersPage?.data ?? []).map((member) => member.id)),
     [buildMembersPage],
   );
-  const { data: membersPage } = useOrgMembersByIds([...buildMemberIds]);
+  const buildMemberIdsList = useMemo(
+    () => [...buildMemberIds],
+    [buildMemberIds],
+  );
+  const { data: membersPage } = useOrgMembersByIds(buildMemberIdsList);
   const members = useMemo(
     () =>
       (membersPage?.data ?? []).filter((member) =>
@@ -92,7 +116,10 @@ export function ProjectMilestonesPage({ projectId: projectIdStr }: ProjectMilest
   const ownerOptions = useMemo(
     () => [
       { value: BUILD_FILTER_ALL, label: "Any owner" },
-      ...members.map((m) => ({ value: String(m.membershipId), label: getUserDisplayName(m) })),
+      ...members.map((m) => ({
+        value: String(m.membershipId),
+        label: getUserDisplayName(m),
+      })),
     ],
     [members],
   );
@@ -100,7 +127,9 @@ export function ProjectMilestonesPage({ projectId: projectIdStr }: ProjectMilest
   const statusFilterValue = listFilters.value("status");
   const serverStatus =
     statusFilterValue !== BUILD_FILTER_ALL &&
-    (statusFilterValue === "PENDING" || statusFilterValue === "ACHIEVED" || statusFilterValue === "MISSED")
+    (statusFilterValue === "PENDING" ||
+      statusFilterValue === "ACHIEVED" ||
+      statusFilterValue === "MISSED")
       ? statusFilterValue
       : undefined;
   const fromValue = readDateFilter(listFilters.value("from"));
@@ -108,15 +137,23 @@ export function ProjectMilestonesPage({ projectId: projectIdStr }: ProjectMilest
   const ownerIdValue = listFilters.value("ownerId");
   const ownerId = /^\d+$/.test(ownerIdValue) ? Number(ownerIdValue) : undefined;
 
-  const { data, isLoading, isError, error, refetch } = useProjectMilestones(projectId, {
-    cursor: pager.cursor,
-    status: serverStatus,
-    q: listFilters.debouncedSearch || undefined,
-    from: fromValue,
-    to: toValue,
-    ownerId,
+  const { data, isLoading, isError, error, refetch } = useProjectMilestones(
+    projectId,
+    {
+      cursor: pager.cursor,
+      status: serverStatus,
+      q: listFilters.debouncedSearch || undefined,
+      from: fromValue,
+      to: toValue,
+      ownerId,
+    },
+  );
+  const pageState = usePageState({
+    permission: "build:view",
+    isLoading,
+    isError,
+    error,
   });
-  const pageState = usePageState({ permission: "build:view", isLoading, isError, error });
 
   const milestones: ProjectMilestone[] = data?.data ?? [];
   const pagination = data?.pagination;
@@ -128,7 +165,15 @@ export function ProjectMilestonesPage({ projectId: projectIdStr }: ProjectMilest
     return d !== null && isPast(d) && !isToday(d) && m.status === "PENDING";
   }).length;
 
-  const actions = useMilestonesPageActions({ projectId, milestones, searchInputRef });
+  const actions = useMilestonesPageActions({
+    projectId,
+    milestones,
+    searchInputRef,
+  });
+
+  const handleMilestonesNext = useCallback(() => {
+    pager.goNext(pagination?.nextCursor);
+  }, [pager, pagination?.nextCursor]);
 
   if (isLoading) return <MilestonesPageSkeleton />;
 
@@ -138,9 +183,17 @@ export function ProjectMilestonesPage({ projectId: projectIdStr }: ProjectMilest
     pageState.kind !== "loading"
   )
     return (
-      <PageWrapper title="Milestones" subtitle="Key checkpoints and target dates for this project">
+      <PageWrapper
+        title="Milestones"
+        subtitle="Key checkpoints and target dates for this project"
+      >
         <PmPageShell>
-          <PageState resolution={pageState} loading={null} onRetry={() => void refetch()} className="flex-1">
+          <PageState
+            resolution={pageState}
+            loading={null}
+            onRetry={() => void refetch()}
+            className="flex-1"
+          >
             {null}
           </PageState>
         </PmPageShell>
@@ -151,7 +204,11 @@ export function ProjectMilestonesPage({ projectId: projectIdStr }: ProjectMilest
     <PageWrapper
       title="Milestones"
       subtitle="Key checkpoints and target dates for this project"
-      actions={canManage ? <NewMilestoneButton onClick={actions.handleOpenCreate} /> : undefined}
+      actions={
+        canManage ? (
+          <NewMilestoneButton onClick={actions.handleOpenCreate} />
+        ) : undefined
+      }
       filters={
         <MilestonesFilterToolbar
           listFilters={listFilters}
@@ -167,7 +224,10 @@ export function ProjectMilestonesPage({ projectId: projectIdStr }: ProjectMilest
       <PmPageShell>
         {!isOnline ? (
           <div className="flex shrink-0 items-center gap-2 border-b border-border/60 bg-muted/40 px-4 py-2">
-            <WifiOff className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+            <WifiOff
+              className="h-4 w-4 shrink-0 text-muted-foreground"
+              aria-hidden
+            />
             <p className="text-xs text-muted-foreground">
               You&apos;re offline — results may not be up to date.
             </p>
@@ -175,17 +235,48 @@ export function ProjectMilestonesPage({ projectId: projectIdStr }: ProjectMilest
         ) : null}
         <PmSection index={0} className="shrink-0">
           <StatCardGrid cols={4}>
-            <StatCard label="This page" value={milestones.length} icon={Diamond} tone="default" index={0} />
-            <StatCard label="Achieved" value={achieved} icon={CheckCircle2} tone="emerald" index={1} />
-            <StatCard label="Pending" value={pending} icon={Clock} tone="amber" index={2} />
-            <StatCard label="Overdue" value={overdue} icon={AlertCircle} tone="red" index={3} />
+            <StatCard
+              label="This page"
+              value={milestones.length}
+              icon={Diamond}
+              tone="default"
+              index={0}
+            />
+            <StatCard
+              label="Achieved"
+              value={achieved}
+              icon={CheckCircle2}
+              tone="emerald"
+              index={1}
+            />
+            <StatCard
+              label="Pending"
+              value={pending}
+              icon={Clock}
+              tone="amber"
+              index={2}
+            />
+            <StatCard
+              label="Overdue"
+              value={overdue}
+              icon={AlertCircle}
+              tone="red"
+              index={3}
+            />
           </StatCardGrid>
         </PmSection>
 
         <PmSection index={1} className="flex min-h-0 flex-1 flex-col">
           {actions.selectedMilestoneIds.size > 0 && (
-            <div className={cn(PM_TOOLBAR, "mb-2 rounded-lg border border-border/80 bg-card px-3 py-2")}>
-              <span className="text-sm font-normal">{actions.selectedMilestoneIds.size} selected</span>
+            <div
+              className={cn(
+                PM_TOOLBAR,
+                "mb-2 rounded-lg border border-border/80 bg-card px-3 py-2",
+              )}
+            >
+              <span className="text-sm font-normal">
+                {actions.selectedMilestoneIds.size} selected
+              </span>
               <div className="flex items-center gap-2">
                 <Select onValueChange={actions.handleBulkStatusChange}>
                   <SelectTrigger className="w-[160px]">
@@ -197,7 +288,12 @@ export function ProjectMilestonesPage({ projectId: projectIdStr }: ProjectMilest
                     <SelectItem value="MISSED">Missed</SelectItem>
                   </SelectContent>
                 </Select>
-                <Button variant="ghost" size="sm" aria-label="Clear selection" onClick={actions.handleClearSelection}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  aria-label="Clear selection"
+                  onClick={actions.handleClearSelection}
+                >
                   <X className="h-4 w-4" />
                 </Button>
               </div>
@@ -205,27 +301,34 @@ export function ProjectMilestonesPage({ projectId: projectIdStr }: ProjectMilest
           )}
           <BuildPaginatedContent
             ariaLabel="Project milestones"
-            footer={milestones.length > 0 || pager.hasPrevious ? (
-              <TablePagination
-                mode="cursor"
-                rowCount={milestones.length}
-                pageNumber={pager.pageNumber}
-                hasMore={pagination?.hasMore ?? false}
-                hasPrevious={pager.hasPrevious}
-                onNext={() => pager.goNext(pagination?.nextCursor)}
-                onPrevious={pager.goPrevious}
-              />
-            ) : null}
+            footer={
+              milestones.length > 0 || pager.hasPrevious ? (
+                <TablePagination
+                  mode="cursor"
+                  rowCount={milestones.length}
+                  pageNumber={pager.pageNumber}
+                  hasMore={pagination?.hasMore ?? false}
+                  hasPrevious={pager.hasPrevious}
+                  onNext={handleMilestonesNext}
+                  onPrevious={pager.goPrevious}
+                />
+              ) : null
+            }
           >
             <div>
               {milestones.length > 0 ? (
-                <PmStaggerList className="space-y-2.5" aria-label="Project milestones">
+                <PmStaggerList
+                  className="space-y-2.5"
+                  aria-label="Project milestones"
+                >
                   {milestones.map((m) => (
                     <MilestoneCard
                       key={m.id}
                       milestone={m}
                       onEdit={actions.handleEditTarget}
-                      onDelete={canManage ? actions.handleDeleteTarget : undefined}
+                      onDelete={
+                        canManage ? actions.handleDeleteTarget : undefined
+                      }
                       selected={actions.selectedMilestoneIds.has(m.id)}
                       onSelect={actions.handleMilestoneSelect}
                     />
@@ -236,13 +339,20 @@ export function ProjectMilestonesPage({ projectId: projectIdStr }: ProjectMilest
                   className={CONTENT_FILL_PANEL}
                   illustrationPreset="projects"
                   title="No milestones yet"
-                  description={listFilters.isFiltered ? undefined : "Add milestones to track key checkpoints and target dates."}
+                  description={
+                    listFilters.isFiltered
+                      ? undefined
+                      : "Add milestones to track key checkpoints and target dates."
+                  }
                   filtersActive={listFilters.isFiltered}
                   onClearFilters={listFilters.clearAll}
                   action={
                     listFilters.isFiltered || !canManage
                       ? undefined
-                      : { label: "Add Milestone", onClick: actions.handleOpenCreate }
+                      : {
+                          label: "Add Milestone",
+                          onClick: actions.handleOpenCreate,
+                        }
                   }
                 />
               )}
@@ -251,7 +361,10 @@ export function ProjectMilestonesPage({ projectId: projectIdStr }: ProjectMilest
         </PmSection>
 
         {actions.createOpen ? (
-          <MilestoneUpsertSheet projectId={projectId} onClose={actions.handleCloseCreate} />
+          <MilestoneUpsertSheet
+            projectId={projectId}
+            onClose={actions.handleCloseCreate}
+          />
         ) : null}
         {actions.editTarget ? (
           <MilestoneUpsertSheet
