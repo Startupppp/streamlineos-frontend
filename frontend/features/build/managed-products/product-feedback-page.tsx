@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
 import { DataTableSkeleton } from "@/components/ui/data-table";
 import { BuildListSurface } from "@/features/build/shared/build-list-surface";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -15,28 +14,14 @@ import {
 import { useCrmOrganizationsForPicker } from "@/hooks/api/crm/organizations";
 import { useCan } from "@/hooks/api/access";
 import { SubmissionBulkToolbar } from "@/components/shared/submission-bulk-toolbar";
-import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
-import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
 import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
-import { useNavigationLeave } from "@/components/shared/dirty-state-context";
-import { DateRangePicker } from "@/components/ui/date-range-picker";
-import { UserCombobox } from "@/components/ui/user-combobox";
 import { Button } from "@/components/ui/button";
 import {
   type SubmissionRow,
   FEEDBACK_SKELETON_HEADERS,
-  TYPE_FILTER_OPTIONS,
-  STATUS_FILTER_OPTIONS,
-  LINKED_FILTER_OPTIONS,
-  DUPLICATE_FILTER_OPTIONS,
-  SOURCE_CHANNEL_FILTER_OPTIONS,
-  SENTIMENT_FILTER_OPTIONS,
-  CONSENT_FILTER_OPTIONS,
-  LINKED_OPP_FILTER_OPTIONS,
 } from "./product-feedback-columns";
 import { ProductFeedbackMobileCard } from "./feedback/product-feedback-mobile-card";
 import { useManagedProduct } from "@/hooks/api/build/managed-products";
-import { resolveProductFeedbackSubmissionHref } from "./product-feedback-model";
 import {
   useProductFeedbackFilters,
   PAGE_SIZE,
@@ -48,10 +33,9 @@ import {
   ManagedProductNotFound,
 } from "./managed-product-detail-layout";
 import { buildCraftedFeedbackColumns } from "./feedback/feedback-inbox-columns";
-import { CaptureSubmissionSheet } from "./feedback/capture-submission-sheet";
-import { FeedbackPane } from "./feedback/feedback-pane";
-import { FeedbucketCollectDialog } from "./feedback/feedbucket-collect-dialog";
-import { RouteToIntakeDialog, useRouteToIntake } from "./feedback/route-to-intake-dialog";
+import { useRouteToIntake } from "./feedback/route-to-intake-dialog";
+import { ProductFeedbackFilters } from "./product-feedback-filters";
+import { ProductFeedbackDialogs } from "./product-feedback-dialogs";
 
 function resolveRowClassName(): string {
   return "cursor-pointer";
@@ -64,16 +48,13 @@ interface ProductFeedbackPageProps {
 export function ProductFeedbackPage({
   managedProductId,
 }: ProductFeedbackPageProps) {
-  const router = useRouter();
   const productQuery = useManagedProduct(managedProductId);
-  const requestLeave = useNavigationLeave();
   const canOpenSubmissionDetail = useCan("feedbucket:widgets:view");
   const canUpdateSubmission = useCan("feedbucket:submissions:update");
   const canDeleteSubmission = useCan("feedbucket:submissions:delete");
   const canRouteToIntake = useCan("feedbucket:submissions:manage");
   const canCapture = useCan("feedbucket:submissions:manage");
   const intakeRouting = useRouteToIntake();
-  const { handleRouteToIntake } = intakeRouting;
 
   const [captureOpen, setCaptureOpen] = useState(false);
   const [feedbucketOpen, setFeedbucketOpen] = useState(false);
@@ -87,50 +68,18 @@ export function ProductFeedbackPage({
     setSelected,
     queryParams,
     bulkFilters,
-    typeValue,
-    statusValue,
-    linkedValue,
-    duplicateValue,
-    linkedToOpportunityValue,
-    typedFrom,
-    typedTo,
-    typedAssigneeId,
-    paneSubmissionId,
     dateRangeReversed,
     isFiltered,
-    appliedSegment,
-    appliedTheme,
-    appliedCrmOrgId,
-    appliedSourceChannel,
-    appliedSentiment,
-    appliedConsentStatus,
-    handleTypeChange,
-    handleStatusChange,
-    handleLinkedChange,
-    handleAssigneeChange,
-    handleDuplicateChange,
-    handleSourceChannelChange,
-    handleThemeChange,
-    handleSentimentChange,
-    handleConsentStatusChange,
-    handleLinkedToOpportunityChange,
-    handleSegmentChange,
-    handleCrmOrgChange,
-    handleDateRangeChange,
     handlePageChange,
     handleClearSelection,
   } = filterState;
 
   const { data, isLoading, isError, error, refetch } =
     useFeedbucketSubmissions(queryParams);
-  const { data: facetsData } = useFeedbucketSubmissionFacets({
-    managedProductId,
-  });
+  const { data: facetsData } = useFeedbucketSubmissionFacets({ managedProductId });
   const { data: crmOrgsData } = useCrmOrganizationsForPicker();
 
-  const handleRetry = useCallback(() => {
-    void refetch();
-  }, [refetch]);
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
   const rows = useMemo(() => data?.data ?? [], [data]);
   const visibleRows = useMemo(
     () => (dateRangeReversed ? [] : rows),
@@ -142,61 +91,10 @@ export function ProductFeedbackPage({
   );
   const selectionEnabled = canUpdateSubmission || canDeleteSubmission;
 
-  const themeOptions = useMemo(
-    () => {
-      const options = [
-        { value: "all", label: "All themes" },
-        { value: "untagged", label: "Untagged" },
-        ...(facetsData?.themes ?? [])
-          .filter((t): t is { value: string; count: number } => t.value !== null)
-          .map((t) => ({ value: t.value, label: t.value })),
-      ];
-      if (appliedTheme && !options.some((option) => option.value === appliedTheme)) {
-        options.push({ value: appliedTheme, label: appliedTheme });
-      }
-      return options;
-    },
-    [appliedTheme, facetsData?.themes],
-  );
-
-  const segmentOptions = useMemo(
-    () => {
-      const options = [
-        { value: "all", label: "All segments" },
-        ...(facetsData?.segments ?? [])
-          .filter((s): s is { value: string; count: number } => s.value !== null)
-          .map((s) => ({ value: s.value, label: s.value })),
-      ];
-      if (appliedSegment && !options.some((option) => option.value === appliedSegment)) {
-        options.push({ value: appliedSegment, label: appliedSegment });
-      }
-      return options;
-    },
-    [appliedSegment, facetsData?.segments],
-  );
-
-  const customerOptions = useMemo(
-    () => {
-      const options = [
-        { value: "all", label: "All customers" },
-        ...(crmOrgsData?.organizations ?? []).map((o) => ({
-          value: String(o.id),
-          label: o.name,
-        })),
-      ];
-      if (appliedCrmOrgId && !options.some((option) => option.value === appliedCrmOrgId)) {
-        options.push({ value: appliedCrmOrgId, label: `Customer ${appliedCrmOrgId}` });
-      }
-      return options;
-    },
-    [appliedCrmOrgId, crmOrgsData?.organizations],
-  );
-
   const openSubmissionPane = useCallback(
     (row: SubmissionRow) => listFilters.setValue("submission", String(row.id)),
     [listFilters],
   );
-
   const handleOpenFocused = useCallback(
     (index: number) => {
       const row = visibleRows[index];
@@ -204,14 +102,13 @@ export function ProductFeedbackPage({
     },
     [visibleRows, openSubmissionPane],
   );
-
   const feedbackColumns = useMemo(
     () =>
       buildCraftedFeedbackColumns({
         canRouteToIntake,
-        onRouteToIntake: handleRouteToIntake,
+        onRouteToIntake: intakeRouting.handleRouteToIntake,
       }),
-    [canRouteToIntake, handleRouteToIntake],
+    [canRouteToIntake, intakeRouting.handleRouteToIntake],
   );
 
   useBuildListKeyboard({
@@ -223,21 +120,6 @@ export function ProductFeedbackPage({
     enabled: true,
   });
 
-  const paneRow = useMemo(
-    () => rows.find((row) => row.id === paneSubmissionId) ?? null,
-    [rows, paneSubmissionId],
-  );
-  const paneDetailHref = useMemo(
-    () =>
-      paneRow
-        ? resolveProductFeedbackSubmissionHref(paneRow, managedProductId, canOpenSubmissionDetail)
-        : null,
-    [paneRow, managedProductId, canOpenSubmissionDetail],
-  );
-  const handleOpenPaneDetail = useCallback(() => {
-    if (paneDetailHref !== null) requestLeave(() => router.push(paneDetailHref));
-  }, [paneDetailHref, requestLeave, router]);
-
   const renderMobileCard = useCallback(
     (row: SubmissionRow) => <ProductFeedbackMobileCard row={row} />,
     [],
@@ -247,39 +129,28 @@ export function ProductFeedbackPage({
     [],
   );
   const getSubmissionRowKey = useCallback((row: SubmissionRow) => row.id, []);
-
   const handleOpenCapture = useCallback(() => setCaptureOpen(true), []);
   const handleOpenFeedbucket = useCallback(() => setFeedbucketOpen(true), []);
-  const handleCloseFeedbackPane = useCallback(
-    (open: boolean) => {
-      if (!open) listFilters.setValue("submission", "all");
-    },
-    [listFilters],
-  );
 
-  const filteredEmptyState = useMemo(
-    () => (
-      <EmptyState
-        illustration={<EmptyInboxIllustration className="h-24 w-24" />}
-        title={dateRangeReversed ? "End date is before the start date" : "No feedback matches your filters"}
-        description={dateRangeReversed ? "Choose a start date on or before the end date." : "Try adjusting or clearing your filters."}
-        action={{ label: "Clear filters", onClick: listFilters.clearAll }}
-        className={CONTENT_FILL_PANEL}
-      />
-    ),
-    [dateRangeReversed, listFilters.clearAll],
-  );
-
-  const emptyState = useMemo(
-    () => (
-      <EmptyState
-        illustration={<EmptyInboxIllustration className="h-24 w-24" />}
-        title="No feedback submissions"
-        description="Submissions from widgets linked to this product will appear here."
-        className={CONTENT_FILL_PANEL}
-      />
-    ),
-    [],
+  const feedbackEmptyState = useMemo(
+    () =>
+      isFiltered ? (
+        <EmptyState
+          illustration={<EmptyInboxIllustration className="h-24 w-24" />}
+          title={dateRangeReversed ? "End date is before the start date" : "No feedback matches your filters"}
+          description={dateRangeReversed ? "Choose a start date on or before the end date." : "Try adjusting or clearing your filters."}
+          action={{ label: "Clear filters", onClick: listFilters.clearAll }}
+          className={CONTENT_FILL_PANEL}
+        />
+      ) : (
+        <EmptyState
+          illustration={<EmptyInboxIllustration className="h-24 w-24" />}
+          title="No feedback submissions"
+          description="Submissions from widgets linked to this product will appear here."
+          className={CONTENT_FILL_PANEL}
+        />
+      ),
+    [isFiltered, dateRangeReversed, listFilters.clearAll],
   );
 
   if (productQuery.isSuccess && productQuery.data === null) return <ManagedProductNotFound />;
@@ -293,11 +164,7 @@ export function ProductFeedbackPage({
         actions={
           canCapture ? (
             <div className="flex gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleOpenFeedbucket}
-              >
+              <Button type="button" variant="outline" onClick={handleOpenFeedbucket}>
                 Collect via Feedbucket
               </Button>
               <Button type="button" onClick={handleOpenCapture}>
@@ -307,185 +174,10 @@ export function ProductFeedbackPage({
           ) : undefined
         }
         filters={
-          <BuildListToolbar
-            search={{
-              value: listFilters.search,
-              onValueChange: listFilters.setSearch,
-              placeholder: "Search feedback…",
-              label: "Search feedback",
-              inputRef: searchInputRef,
-            }}
-            filters={[
-              {
-                id: "type",
-                label: "Type",
-                active: listFilters.isActive("type"),
-                control: (
-                  <BuildFilterSelect
-                    label="Type"
-                    value={typeValue}
-                    onValueChange={handleTypeChange}
-                    options={TYPE_FILTER_OPTIONS}
-                  />
-                ),
-              },
-              {
-                id: "status",
-                label: "Status",
-                active: listFilters.isActive("status"),
-                control: (
-                  <BuildFilterSelect
-                    label="Status"
-                    value={statusValue}
-                    onValueChange={handleStatusChange}
-                    options={STATUS_FILTER_OPTIONS}
-                  />
-                ),
-              },
-              {
-                id: "sourceChannel",
-                label: "Channel",
-                active: appliedSourceChannel !== undefined,
-                control: (
-                  <BuildFilterSelect
-                    label="Channel"
-                    value={appliedSourceChannel ?? "all"}
-                    onValueChange={handleSourceChannelChange}
-                    options={SOURCE_CHANNEL_FILTER_OPTIONS}
-                  />
-                ),
-              },
-              {
-                id: "theme",
-                label: "Theme",
-                active: appliedTheme !== undefined,
-                control: (
-                  <BuildFilterSelect
-                    label="Theme"
-                    value={appliedTheme ?? "all"}
-                    onValueChange={handleThemeChange}
-                    options={themeOptions}
-                  />
-                ),
-              },
-              {
-                id: "segment",
-                label: "Segment",
-                active: appliedSegment !== undefined,
-                control: (
-                  <BuildFilterSelect
-                    label="Segment"
-                    value={appliedSegment ?? "all"}
-                    onValueChange={handleSegmentChange}
-                    options={segmentOptions}
-                  />
-                ),
-              },
-              {
-                id: "customer",
-                label: "Customer",
-                active: appliedCrmOrgId !== undefined,
-                control: (
-                  <BuildFilterSelect
-                    label="Customer"
-                    value={appliedCrmOrgId ?? "all"}
-                    onValueChange={handleCrmOrgChange}
-                    options={customerOptions}
-                  />
-                ),
-              },
-              {
-                id: "sentiment",
-                label: "Sentiment",
-                active: appliedSentiment !== undefined,
-                control: (
-                  <BuildFilterSelect
-                    label="Sentiment"
-                    value={appliedSentiment ?? "all"}
-                    onValueChange={handleSentimentChange}
-                    options={SENTIMENT_FILTER_OPTIONS}
-                  />
-                ),
-              },
-              {
-                id: "consentStatus",
-                label: "Consent",
-                active: appliedConsentStatus !== undefined,
-                control: (
-                  <BuildFilterSelect
-                    label="Consent"
-                    value={appliedConsentStatus ?? "all"}
-                    onValueChange={handleConsentStatusChange}
-                    options={CONSENT_FILTER_OPTIONS}
-                  />
-                ),
-              },
-              {
-                id: "linked",
-                label: "Linked",
-                active: listFilters.isActive("linked"),
-                control: (
-                  <BuildFilterSelect
-                    label="Linked"
-                    value={linkedValue}
-                    onValueChange={handleLinkedChange}
-                    options={LINKED_FILTER_OPTIONS}
-                  />
-                ),
-              },
-              {
-                id: "linkedToOpportunity",
-                label: "Opportunity",
-                active: listFilters.isActive("linkedToOpportunity"),
-                control: (
-                  <BuildFilterSelect
-                    label="Opportunity"
-                    value={linkedToOpportunityValue}
-                    onValueChange={handleLinkedToOpportunityChange}
-                    options={LINKED_OPP_FILTER_OPTIONS}
-                  />
-                ),
-              },
-              {
-                id: "duplicate",
-                label: "Duplicates",
-                active: listFilters.isActive("duplicate"),
-                control: (
-                  <BuildFilterSelect
-                    label="Duplicates"
-                    value={duplicateValue}
-                    onValueChange={handleDuplicateChange}
-                    options={DUPLICATE_FILTER_OPTIONS}
-                  />
-                ),
-              },
-              {
-                id: "assignee",
-                label: "Assignee",
-                active: typedAssigneeId !== undefined,
-                control: (
-                  <UserCombobox
-                    value={typedAssigneeId ?? ""}
-                    onChange={handleAssigneeChange}
-                    placeholder="Select member…"
-                  />
-                ),
-              },
-              {
-                id: "date-range",
-                label: "Date range",
-                active: Boolean(typedFrom || typedTo),
-                control: (
-                  <DateRangePicker
-                    from={typedFrom}
-                    to={typedTo}
-                    onChange={handleDateRangeChange}
-                    placeholder="Filter by submission date…"
-                  />
-                ),
-              },
-            ]}
-            onClearAll={listFilters.clearAll}
+          <ProductFeedbackFilters
+            filterState={filterState}
+            facetsData={facetsData}
+            crmOrgsData={crmOrgsData}
           />
         }
       >
@@ -523,7 +215,7 @@ export function ProductFeedbackPage({
                   mobileCards
                 />
               }
-              empty={isFiltered ? filteredEmptyState : emptyState}
+              empty={feedbackEmptyState}
               rowClassName={resolveRowClassName}
               selection={
                 selectionEnabled
@@ -539,37 +231,18 @@ export function ProductFeedbackPage({
           </ManagedProductDetailPrimarySection>
         </ManagedProductDetailShell>
       </PageWrapper>
-      {canCapture && (
-        <CaptureSubmissionSheet
-          managedProductId={managedProductId}
-          open={captureOpen}
-          onOpenChange={setCaptureOpen}
-        />
-      )}
-      {canCapture && feedbucketOpen ? (
-        <FeedbucketCollectDialog
-          managedProductId={managedProductId}
-          open
-          onOpenChange={setFeedbucketOpen}
-        />
-      ) : null}
-      {paneSubmissionId !== null && (
-        <FeedbackPane
-          submissionId={paneSubmissionId}
-          managedProductId={managedProductId}
-          open={paneSubmissionId !== null}
-          onOpenChange={handleCloseFeedbackPane}
-          onOpenDetail={paneDetailHref === null ? undefined : handleOpenPaneDetail}
-        />
-      )}
-      {intakeRouting.target ? (
-        <RouteToIntakeDialog
-          managedProductId={managedProductId}
-          submission={intakeRouting.target}
-          mutation={intakeRouting.mutation}
-          onOpenChange={intakeRouting.handleTargetOpenChange}
-        />
-      ) : null}
+      <ProductFeedbackDialogs
+        managedProductId={managedProductId}
+        filterState={filterState}
+        rows={rows}
+        canCapture={canCapture}
+        canOpenSubmissionDetail={canOpenSubmissionDetail}
+        captureOpen={captureOpen}
+        feedbucketOpen={feedbucketOpen}
+        onCaptureOpenChange={setCaptureOpen}
+        onFeedbucketOpenChange={setFeedbucketOpen}
+        intakeRouting={intakeRouting}
+      />
     </>
   );
 }

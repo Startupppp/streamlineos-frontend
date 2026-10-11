@@ -8,11 +8,11 @@ import { useCan } from "@/hooks/api/access";
 import type {
   ProjectForm,
   FormSubmission,
+  FormSubmissionPage,
   CreateFormInput,
   UpdateFormInput,
   SubmitFormInput,
   SubmitFormResponse,
-  UpdateSubmissionInput,
   FormType,
 } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -28,9 +28,6 @@ const submissionListContract = lazyContract(() =>
 );
 const submissionCreateResultContract = lazyContract(() =>
   import("@/hooks/api/build/forms-schema").then((m) => m.submissionCreateResultContract),
-);
-const submissionRowContract = lazyContract(() =>
-  import("@/hooks/api/build/forms-schema").then((m) => m.submissionRowContract),
 );
 const noContentContract = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
@@ -139,7 +136,7 @@ export function useFormSubmissions(
       Object.keys(params).length > 0 ? params : undefined,
     ),
     queryFn: ({ signal }) =>
-      apiClient.get<{ data: FormSubmission[]; pagination: { limit: number; hasMore: boolean; nextCursor: string | null } }>(
+      apiClient.get<FormSubmissionPage>(
         `/build/${projectId}/forms/${formId}/submissions`,
         Object.keys(params).length > 0 ? params : undefined,
         signal,
@@ -169,21 +166,3 @@ export function useSubmitForm(projectId: number, formId: number) {
   });
 }
 
-export function useUpdateSubmission(projectId: number, formId: number) {
-  const qc = useQueryClient();
-  return useAuthorizedMutation("build:forms:manage", {
-    mutationKey: ["projects", projectId, "forms", formId, "submission", "update"],
-    mutationFn: ({ submissionId, ...data }: UpdateSubmissionInput & { submissionId: number }) =>
-      apiClient.patch<FormSubmission>(
-        `/build/${projectId}/forms/${formId}/submissions/${submissionId}`,
-        data,
-        undefined,
-        submissionRowContract,
-      ),
-    onSuccess: () => {
-      qc.invalidateQueries({
-        queryKey: buildWorkQueryKeys.projects.forms.submissions(projectId, formId),
-      });
-    },
-  });
-}

@@ -24,6 +24,10 @@ const OPPORTUNITY_CONFIDENCE_VALUES = ["all", "low", "medium", "high"] as const;
 const OPPORTUNITY_EVIDENCE_AGE_VALUES = ["all", "7", "30", "90"] as const;
 const OPPORTUNITY_SCORE_MIN_VALUES = ["all", "10", "25", "50", "100"] as const;
 
+function isThemePeriod(v: string): v is "30d" | "90d" | "365d" {
+  return v === "30d" || v === "90d" || v === "365d";
+}
+
 const OPPORTUNITY_FILTER_DEFS = [
   { param: "oppState", options: OPPORTUNITY_STATE_VALUES },
   { param: "oppSort", options: OPPORTUNITY_SORT_VALUES },
@@ -107,8 +111,8 @@ export function useOpportunityDiscoveryFilters(managedProductId: number) {
 
   const themeParams = useMemo(
     () =>
-      themePeriod === "30d" || themePeriod === "90d" || themePeriod === "365d"
-        ? { period: themePeriod as "30d" | "90d" | "365d" }
+      themePeriod && isThemePeriod(themePeriod)
+        ? { period: themePeriod }
         : themePeriod === "all"
           ? { period: "all" as const }
           : undefined,

@@ -15,8 +15,7 @@ import { useProjectTeams } from "@/hooks/api/build/teams";
 import { useEpics } from "@/hooks/api/build/epics";
 import { RoadmapDeliveryProjectField } from "./roadmap-delivery-project-field";
 import type { RoadmapItemFormValues } from "./roadmap-schema";
-
-const BUILD_FILTER_NONE = "__none__";
+import { BUILD_FILTER_NONE } from "./roadmap-constants";
 
 interface RoadmapDeliveryFieldsProps {
   control: Control<RoadmapItemFormValues>;

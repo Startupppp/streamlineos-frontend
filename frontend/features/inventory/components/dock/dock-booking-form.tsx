@@ -25,7 +25,7 @@ import {
 import { LoadingButton } from "@/components/ui/loading-button";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useBookAppointment, type DockDoor } from "@/hooks/api/inventory/stock-types-dock";
-import { dockBookingSchema, type DockBookingValues } from "./dock-booking-schema";
+import { dockBookingSchema, type DockBookingValues } from "@/features/inventory/lib/dock-booking-schema";
 
 const DEFAULT_VALUES: DockBookingValues = {
   doorId: "",

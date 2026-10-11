@@ -29,12 +29,13 @@ import {
   useBuildListFilters,
 } from "@/features/build/shared/use-build-list-filters";
 import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
+import { BuildPaginatedContent } from "@/features/build/shared/build-paginated-content";
 import { useBuildCursorPager } from "@/features/build/shared/use-build-cursor-pager";
 import { toast } from "sonner";
 import { IntakeDecisionDialog } from "@/features/build/intake/components/intake-decision-dialog";
 import { IntakeItemCard } from "@/features/build/intake/intake-item-card";
 import { IntakeTriageMode } from "@/features/build/intake/intake-triage-mode";
-import { IntakeCreateSheet } from "@/features/build/intake/intake-create-sheet";
+import { IntakeCreateSheet } from "@/features/build/intake/components/intake-create-sheet";
 import { PmPageShell, PmSection, PmStaggerList } from "@/components/pm-chrome";
 import type {
   IntakeSource,
@@ -383,46 +384,50 @@ export function IntakePage({
                       />
                     </div>
                   ) : (
-                    <PmSection index={1} className="min-h-0 flex-1">
-                      <PmStaggerList className="space-y-2.5 pb-2">
-                        {items.map((item) => {
-                          const isHighlighted = item.id === highlightId;
-                          return (
-                            <div
-                              key={item.id}
-                              ref={isHighlighted ? highlightRef : undefined}
-                              className={
-                                isHighlighted
-                                  ? "ring-2 ring-primary ring-offset-2 rounded-xl"
-                                  : undefined
-                              }
-                              data-highlighted={
-                                isHighlighted ? "true" : undefined
-                              }
-                            >
-                              <IntakeItemCard
-                                item={item}
-                                canManage={canManage}
-                                onAccept={onAccept}
-                                onDecline={onDecline}
-                                onDuplicate={onDuplicate}
-                              />
-                            </div>
-                          );
-                        })}
-                      </PmStaggerList>
-                      {items.length > 0 || pager.hasPrevious ? (
-                        <TablePagination
-                          mode="cursor"
-                          rowCount={items.length}
-                          pageNumber={pager.pageNumber}
-                          hasMore={Boolean(intakeData?.pagination?.hasMore)}
-                          hasPrevious={pager.hasPrevious}
-                          onNext={handleNextPage}
-                          onPrevious={pager.goPrevious}
-                          hideOnSinglePage
-                        />
-                      ) : null}
+                    <PmSection index={1} className="flex min-h-0 flex-1 flex-col">
+                      <BuildPaginatedContent
+                        ariaLabel="Intake items"
+                        footer={
+                          <TablePagination
+                            mode="cursor"
+                            rowCount={items.length}
+                            pageNumber={pager.pageNumber}
+                            hasMore={Boolean(intakeData?.pagination?.hasMore)}
+                            hasPrevious={pager.hasPrevious}
+                            onNext={handleNextPage}
+                            onPrevious={pager.goPrevious}
+                            hideOnSinglePage
+                          />
+                        }
+                      >
+                        <PmStaggerList className="space-y-2.5 pb-2">
+                          {items.map((item) => {
+                            const isHighlighted = item.id === highlightId;
+                            return (
+                              <div
+                                key={item.id}
+                                ref={isHighlighted ? highlightRef : undefined}
+                                className={
+                                  isHighlighted
+                                    ? "ring-2 ring-primary ring-offset-2 rounded-xl"
+                                    : undefined
+                                }
+                                data-highlighted={
+                                  isHighlighted ? "true" : undefined
+                                }
+                              >
+                                <IntakeItemCard
+                                  item={item}
+                                  canManage={canManage}
+                                  onAccept={onAccept}
+                                  onDecline={onDecline}
+                                  onDuplicate={onDuplicate}
+                                />
+                              </div>
+                            );
+                          })}
+                        </PmStaggerList>
+                      </BuildPaginatedContent>
                     </PmSection>
                   )}
                 </TabsContent>

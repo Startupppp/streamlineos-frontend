@@ -37968,7 +37968,7 @@
                   "points": {
                     "type": "integer",
                     "minimum": 0,
-                    "maximum": 9007199254740991
+                    "maximum": 100
                   },
                   "link": {
                     "type": "string"
@@ -84031,6 +84031,20 @@
             }
           },
           {
+            "name": "intakeStatus",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "pending",
+                "accepted",
+                "declined",
+                "duplicate"
+              ]
+            }
+          },
+          {
             "name": "cursor",
             "in": "query",
             "required": false,
@@ -84140,6 +84154,63 @@
                               "createdAt": {
                                 "type": "string",
                                 "format": "date-time"
+                              },
+                              "intake": {
+                                "anyOf": [
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "id": {
+                                        "type": "integer",
+                                        "minimum": -9007199254740991,
+                                        "maximum": 9007199254740991
+                                      },
+                                      "status": {
+                                        "type": "string",
+                                        "enum": [
+                                          "pending",
+                                          "accepted",
+                                          "declined",
+                                          "duplicate"
+                                        ]
+                                      },
+                                      "linkedTicket": {
+                                        "anyOf": [
+                                          {
+                                            "type": "object",
+                                            "properties": {
+                                              "id": {
+                                                "type": "integer",
+                                                "minimum": -9007199254740991,
+                                                "maximum": 9007199254740991
+                                              },
+                                              "ticketNumber": {
+                                                "type": "integer",
+                                                "minimum": -9007199254740991,
+                                                "maximum": 9007199254740991
+                                              }
+                                            },
+                                            "required": [
+                                              "id",
+                                              "ticketNumber"
+                                            ]
+                                          },
+                                          {
+                                            "type": "null"
+                                          }
+                                        ]
+                                      }
+                                    },
+                                    "required": [
+                                      "id",
+                                      "status",
+                                      "linkedTicket"
+                                    ]
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
                               }
                             },
                             "required": [
@@ -84152,7 +84223,8 @@
                               "submittedByName",
                               "submittedById",
                               "convertedTicketId",
-                              "createdAt"
+                              "createdAt",
+                              "intake"
                             ]
                           }
                         },
@@ -84430,208 +84502,6 @@
                 },
                 "required": [
                   "values"
-                ],
-                "additionalProperties": false
-              }
-            }
-          }
-        }
-      }
-    },
-    "/build/{projectId}/forms/{formId}/submissions/{submissionId}": {
-      "patch": {
-        "operationId": "SubmissionsController_updateSubmission",
-        "parameters": [
-          {
-            "name": "projectId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "integer",
-              "exclusiveMinimum": 0,
-              "maximum": 9007199254740991
-            }
-          },
-          {
-            "name": "formId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "integer",
-              "exclusiveMinimum": 0,
-              "maximum": 9007199254740991
-            }
-          },
-          {
-            "name": "submissionId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "integer",
-              "exclusiveMinimum": 0,
-              "maximum": 9007199254740991
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": {
-                      "type": "boolean",
-                      "enum": [
-                        true
-                      ]
-                    },
-                    "data": {
-                      "type": "object",
-                      "properties": {
-                        "id": {
-                          "type": "integer",
-                          "minimum": -9007199254740991,
-                          "maximum": 9007199254740991
-                        },
-                        "orgId": {
-                          "type": "string"
-                        },
-                        "formId": {
-                          "type": "integer",
-                          "minimum": -9007199254740991,
-                          "maximum": 9007199254740991
-                        },
-                        "projectId": {
-                          "type": "integer",
-                          "minimum": -9007199254740991,
-                          "maximum": 9007199254740991
-                        },
-                        "values": {
-                          "type": "object",
-                          "propertyNames": {
-                            "type": "string"
-                          },
-                          "additionalProperties": {}
-                        },
-                        "status": {
-                          "type": "string",
-                          "enum": [
-                            "submitted",
-                            "processed",
-                            "rejected"
-                          ]
-                        },
-                        "submittedByName": {
-                          "anyOf": [
-                            {
-                              "type": "string"
-                            },
-                            {
-                              "type": "null"
-                            }
-                          ]
-                        },
-                        "submittedById": {
-                          "anyOf": [
-                            {
-                              "type": "string"
-                            },
-                            {
-                              "type": "null"
-                            }
-                          ]
-                        },
-                        "convertedTicketId": {
-                          "anyOf": [
-                            {
-                              "type": "integer",
-                              "minimum": -9007199254740991,
-                              "maximum": 9007199254740991
-                            },
-                            {
-                              "type": "null"
-                            }
-                          ]
-                        },
-                        "createdAt": {
-                          "type": "string",
-                          "format": "date-time"
-                        }
-                      },
-                      "required": [
-                        "id",
-                        "orgId",
-                        "formId",
-                        "projectId",
-                        "values",
-                        "status",
-                        "submittedByName",
-                        "submittedById",
-                        "convertedTicketId",
-                        "createdAt"
-                      ]
-                    }
-                  },
-                  "required": [
-                    "success",
-                    "data"
-                  ],
-                  "additionalProperties": false
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "#/components/responses/BadRequest"
-          },
-          "401": {
-            "$ref": "#/components/responses/Unauthorized"
-          },
-          "403": {
-            "$ref": "#/components/responses/Forbidden"
-          },
-          "404": {
-            "$ref": "#/components/responses/NotFound"
-          },
-          "409": {
-            "$ref": "#/components/responses/Conflict"
-          },
-          "422": {
-            "$ref": "#/components/responses/UnprocessableEntity"
-          },
-          "429": {
-            "$ref": "#/components/responses/TooManyRequests"
-          },
-          "503": {
-            "$ref": "#/components/responses/ServiceUnavailable"
-          }
-        },
-        "tags": [
-          "Submissions"
-        ],
-        "x-exposure": "permissioned",
-        "x-permission": "build:forms:manage",
-        "description": "Exposure: permission — build:forms:manage",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "status": {
-                    "type": "string",
-                    "enum": [
-                      "submitted",
-                      "processed",
-                      "rejected"
-                    ]
-                  }
-                },
-                "required": [
-                  "status"
                 ],
                 "additionalProperties": false
               }
@@ -88824,7 +88694,9 @@
               "enum": [
                 "manual",
                 "web_form",
-                "email"
+                "email",
+                "feedbucket",
+                "portal_client"
               ]
             }
           },
@@ -88997,6 +88869,30 @@
                                   "ticketNumber"
                                 ]
                               },
+                              "formSubmissionId": {
+                                "anyOf": [
+                                  {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "feedbucketSubmissionId": {
+                                "anyOf": [
+                                  {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
                               "declineReason": {
                                 "anyOf": [
                                   {
@@ -89029,6 +88925,8 @@
                               "priority",
                               "requestType",
                               "linkedWorkItemId",
+                              "formSubmissionId",
+                              "feedbucketSubmissionId",
                               "declineReason",
                               "createdAt",
                               "updatedAt"
@@ -89062,11 +88960,43 @@
                             "hasMore",
                             "nextCursor"
                           ]
+                        },
+                        "statusCounts": {
+                          "type": "object",
+                          "properties": {
+                            "pending": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 9007199254740991
+                            },
+                            "accepted": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 9007199254740991
+                            },
+                            "declined": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 9007199254740991
+                            },
+                            "duplicate": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 9007199254740991
+                            }
+                          },
+                          "required": [
+                            "pending",
+                            "accepted",
+                            "declined",
+                            "duplicate"
+                          ]
                         }
                       },
                       "required": [
                         "data",
-                        "pagination"
+                        "pagination",
+                        "statusCounts"
                       ]
                     }
                   },
@@ -89263,6 +89193,30 @@
                             "ticketNumber"
                           ]
                         },
+                        "formSubmissionId": {
+                          "anyOf": [
+                            {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "feedbucketSubmissionId": {
+                          "anyOf": [
+                            {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "declineReason": {
                           "anyOf": [
                             {
@@ -89295,6 +89249,8 @@
                         "priority",
                         "requestType",
                         "linkedWorkItemId",
+                        "formSubmissionId",
+                        "feedbucketSubmissionId",
                         "declineReason",
                         "createdAt",
                         "updatedAt"
@@ -89574,6 +89530,30 @@
                             "ticketNumber"
                           ]
                         },
+                        "formSubmissionId": {
+                          "anyOf": [
+                            {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "feedbucketSubmissionId": {
+                          "anyOf": [
+                            {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "declineReason": {
                           "anyOf": [
                             {
@@ -89606,6 +89586,8 @@
                         "priority",
                         "requestType",
                         "linkedWorkItemId",
+                        "formSubmissionId",
+                        "feedbucketSubmissionId",
                         "declineReason",
                         "createdAt",
                         "updatedAt"
@@ -106855,7 +106837,7 @@
                   "points": {
                     "type": "integer",
                     "minimum": 0,
-                    "maximum": 9007199254740991
+                    "maximum": 100
                   },
                   "link": {
                     "type": "string"
@@ -108317,7 +108299,7 @@
                       {
                         "type": "integer",
                         "minimum": 0,
-                        "maximum": 9007199254740991
+                        "maximum": 100
                       },
                       {
                         "type": "null"
@@ -133941,6 +133923,7 @@
             "in": "query",
             "required": false,
             "schema": {
+              "maxItems": 6,
               "type": "array",
               "items": {
                 "type": "string",
@@ -133960,9 +133943,12 @@
             "in": "query",
             "required": false,
             "schema": {
+              "maxItems": 50,
               "type": "array",
               "items": {
-                "type": "string"
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
               }
             }
           },
@@ -133971,9 +133957,12 @@
             "in": "query",
             "required": false,
             "schema": {
+              "maxItems": 50,
               "type": "array",
               "items": {
-                "type": "string"
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
               }
             }
           },
@@ -133982,6 +133971,7 @@
             "in": "query",
             "required": false,
             "schema": {
+              "maxItems": 50,
               "type": "array",
               "items": {
                 "type": "integer",
@@ -134023,6 +134013,7 @@
             "in": "query",
             "required": false,
             "schema": {
+              "maxItems": 3,
               "type": "array",
               "items": {
                 "type": "string",
@@ -140441,7 +140432,13 @@
                                 ]
                               },
                               "status": {
-                                "type": "string"
+                                "type": "string",
+                                "enum": [
+                                  "planned",
+                                  "in_progress",
+                                  "completed",
+                                  "cancelled"
+                                ]
                               }
                             },
                             "required": [
@@ -797725,9 +797722,26 @@
         "x-exposure": "permissioned",
         "x-permission": "feedbucket:submissions:manage",
         "description": "Exposure: permission — feedbucket:submissions:manage",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "projectId": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
         "x-idempotency-command": "feedbucket.submissions.route-to-intake",
-        "x-idempotent": true,
-        "x-bodyless": true
+        "x-idempotent": true
       }
     },
     "/feedbucket/submissions/{submissionId}/unmark-duplicate": {
@@ -799475,6 +799489,18 @@
                       }
                     ]
                   },
+                  "managedProductId": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "exclusiveMinimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
                   "defaultProjectId": {
                     "anyOf": [
                       {
@@ -800218,6 +800244,18 @@
                     "maxLength": 100
                   },
                   "projectId": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "exclusiveMinimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "managedProductId": {
                     "anyOf": [
                       {
                         "type": "integer",

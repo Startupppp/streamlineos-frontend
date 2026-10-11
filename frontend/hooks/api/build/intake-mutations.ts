@@ -31,10 +31,6 @@ export function useRouteFeedbucketToIntake() {
         routeIntakeContract,
       ),
     onSuccess: (result: { intakeId: number; created: boolean }, variables: RouteFeedbucketToIntakeInput) => {
-      queryClient.setQueryData(
-        buildWorkQueryKeys.projects.intakeByFeedbucket(variables.projectId, variables.submissionId),
-        { intakeId: result.intakeId },
-      );
       if (result.created) {
         void queryClient.invalidateQueries({
           queryKey: buildWorkQueryKeys.projects.intake(variables.projectId),

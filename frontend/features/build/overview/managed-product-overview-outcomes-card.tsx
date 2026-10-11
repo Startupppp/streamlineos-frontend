@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import Link from "next/link";
 import type { ManagedProductSummary } from "@/hooks/api/build/managed-product-summary";
 import { statusToneClasses } from "@/lib/design-tokens";
@@ -25,6 +26,14 @@ export function ManagedProductOverviewOutcomesCard({
   const { goalsLinked, outcomeReviews, latestReviewAt } = outcomes;
   const hasReviews = outcomeReviews.completed > 0;
   const partial = Math.max(0, outcomeReviews.completed - outcomeReviews.met - outcomeReviews.notMet);
+  const reviewSegments = useMemo(
+    () => [
+      { id: "met", label: "Met", value: outcomeReviews.met, fillClassName: statusToneClasses("success").fill },
+      { id: "partial", label: "Partial", value: partial, fillClassName: statusToneClasses("warning").fill },
+      { id: "missed", label: "Missed", value: outcomeReviews.notMet, fillClassName: statusToneClasses("danger").fill },
+    ],
+    [outcomeReviews.met, partial, outcomeReviews.notMet],
+  );
 
   return (
     <OverviewPanel
@@ -35,11 +44,7 @@ export function ManagedProductOverviewOutcomesCard({
       {hasReviews ? (
         <OverviewSegmentedBar
           label="Outcome review results"
-          segments={[
-            { id: "met", label: "Met", value: outcomeReviews.met, fillClassName: statusToneClasses("success").fill },
-            { id: "partial", label: "Partial", value: partial, fillClassName: statusToneClasses("warning").fill },
-            { id: "missed", label: "Missed", value: outcomeReviews.notMet, fillClassName: statusToneClasses("danger").fill },
-          ]}
+          segments={reviewSegments}
         />
       ) : null}
       <dl className="grid grid-cols-1 sm:grid-cols-2 sm:gap-x-8">

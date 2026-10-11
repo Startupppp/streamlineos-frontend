@@ -7,7 +7,7 @@ import {
   useCreateOutcomeReview,
   useDeleteOutcomeReview,
   useUpdateOutcomeReview,
-} from "@/hooks/api/build/product-discovery-mutations";
+} from "@/hooks/api/build/outcome-review-mutations";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import { EvidenceThemesSection } from "./evidence-themes-section";
@@ -18,7 +18,7 @@ import { CompareDrawer, COMPARE_MAX } from "./compare-drawer";
 import { OutcomeReviewsSection } from "./outcome-reviews-section";
 import { OpportunityCreateButton } from "./opportunity-create-sheet";
 import { useOpportunityDiscoveryFilters } from "./use-opportunity-discovery-filters";
-import type { CreateOutcomeReviewInput, UpdateOutcomeReviewInput } from "@/hooks/api/build/product-discovery-mutations";
+import type { CreateOutcomeReviewInput, UpdateOutcomeReviewInput } from "@/hooks/api/build/outcome-review-mutations";
 
 interface ProductDiscoverySectionProps {
   managedProductId: number;

@@ -235,28 +235,33 @@ export function DocumentFormFields({
       <FormField
         control={form.control}
         name="expiryDate"
-        render={({ field }) => (
-          <FormItem className="flex flex-col">
-            <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
-              Expiry Date
-            </FormLabel>
-            <FormControl>
-              <DatePicker
-                value={field.value ? format(field.value, "yyyy-MM-dd") : ""}
-                onChange={(value) => field.onChange(parseDateOnly(value))}
-                placeholder="No expiry date"
-                dateFormat="PPP"
-                clearable
-                disablePast
-                ariaLabel="Expiry Date"
-              />
-            </FormControl>
-            <FormDescription className="text-dense">
-              Set an expiry date for contracts or certificates
-            </FormDescription>
-            <FormMessage />
-          </FormItem>
-        )}
+        render={({ field }) => {
+          function handleExpiryChange(value: string) {
+            field.onChange(parseDateOnly(value));
+          }
+          return (
+            <FormItem className="flex flex-col">
+              <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
+                Expiry Date
+              </FormLabel>
+              <FormControl>
+                <DatePicker
+                  value={field.value ? format(field.value, "yyyy-MM-dd") : ""}
+                  onChange={handleExpiryChange}
+                  placeholder="No expiry date"
+                  dateFormat="PPP"
+                  clearable
+                  disablePast
+                  ariaLabel="Expiry Date"
+                />
+              </FormControl>
+              <FormDescription className="text-dense">
+                Set an expiry date for contracts or certificates
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          );
+        }}
       />
 
       <div className="space-y-2">

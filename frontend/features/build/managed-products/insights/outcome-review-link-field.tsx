@@ -33,30 +33,35 @@ export function OutcomeReviewLinkField({ control, name, label, options }: Outcom
     <FormField
       control={control}
       name={name}
-      render={({ field }) => (
-        <FormItem>
-          <FormLabel>{label}</FormLabel>
-          <Select
-            value={field.value ? String(field.value) : NOT_LINKED}
-            onValueChange={(v) => field.onChange(v === NOT_LINKED ? undefined : Number(v))}
-          >
-            <FormControl>
-              <SelectTrigger className={FIELD_CONTROL_CLASS} data-testid={`${name === "goalId" ? "goal" : "opportunity"}-select`}>
-                <SelectValue placeholder="Not linked" />
-              </SelectTrigger>
-            </FormControl>
-            <SelectContent>
-              <SelectItem value={NOT_LINKED}>Not linked</SelectItem>
-              {options.map((o) => (
-                <SelectItem key={o.id} value={String(o.id)}>
-                  {o.title}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <FormMessage />
-        </FormItem>
-      )}
+      render={({ field }) => {
+        function handleValueChange(v: string) {
+          field.onChange(v === NOT_LINKED ? undefined : Number(v));
+        }
+        return (
+          <FormItem>
+            <FormLabel>{label}</FormLabel>
+            <Select
+              value={field.value ? String(field.value) : NOT_LINKED}
+              onValueChange={handleValueChange}
+            >
+              <FormControl>
+                <SelectTrigger className={FIELD_CONTROL_CLASS} data-testid={`${name === "goalId" ? "goal" : "opportunity"}-select`}>
+                  <SelectValue placeholder="Not linked" />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                <SelectItem value={NOT_LINKED}>Not linked</SelectItem>
+                {options.map((o) => (
+                  <SelectItem key={o.id} value={String(o.id)}>
+                    {o.title}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <FormMessage />
+          </FormItem>
+        );
+      }}
     />
   );
 }

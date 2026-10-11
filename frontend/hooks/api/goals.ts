@@ -341,11 +341,14 @@ export function useRemoveGoalLink(goalId: number) {
   });
 }
 
+function isGoalsParams(v: unknown): v is GoalsParams {
+  return typeof v === "object" && v !== null && !Array.isArray(v);
+}
+
 function isGoalsListPage(v: unknown): v is GoalsListPage {
-  return (
-    typeof v === "object" && v !== null && "items" in v && "total" in v &&
-    Array.isArray((v as GoalsListPage).items)
-  );
+  if (typeof v !== "object" || v === null) return false;
+  if (!("items" in v) || !("total" in v)) return false;
+  return Array.isArray(v.items);
 }
 
 function patchGoalListCacheForProduct(
@@ -361,8 +364,8 @@ function patchGoalListCacheForProduct(
     .find((item) => item.id === goalId);
   for (const [key, cached] of cachedLists) {
     if (!isGoalsListPage(cached)) continue;
-    const keyArr = key as unknown[];
-    const params = (keyArr[listPrefix.length] ?? {}) as GoalsParams;
+    const raw = key[listPrefix.length] ?? {};
+    const params: GoalsParams = isGoalsParams(raw) ? raw : {};
     const isProductScoped =
       typeof params === "object" && "managedProductId" in params &&
       params.managedProductId === managedProductId;

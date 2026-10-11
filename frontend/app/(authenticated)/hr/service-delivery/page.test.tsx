@@ -30,6 +30,9 @@ jest.mock("@/hooks/api/hr/service-delivery", () => ({
 
 jest.mock("@/components/shared/page-state-views", () => ({
   DeniedView: () => <p>Access denied</p>,
+}));
+
+jest.mock("@/components/shared/page-state-limit-views", () => ({
   FeatureLockedView: () => null,
   QuotaExceededView: () => null,
 }));

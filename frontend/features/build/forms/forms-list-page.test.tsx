@@ -14,7 +14,6 @@ jest.mock("@/hooks/api/build/forms", () => ({
   useForms: jest.fn(),
   useCreateForm: jest.fn(),
   useFormSubmissions: jest.fn(),
-  useUpdateSubmission: jest.fn(),
 }));
 
 jest.mock("@/hooks/api/access", () => ({

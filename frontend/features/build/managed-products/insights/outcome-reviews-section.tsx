@@ -29,7 +29,7 @@ import type { DiscoveryReviewsListOutcomeReviewsResponse } from "@/contracts/bui
 import type {
   CreateOutcomeReviewInput,
   UpdateOutcomeReviewInput,
-} from "@/hooks/api/build/product-discovery-mutations";
+} from "@/hooks/api/build/outcome-review-mutations";
 import { OutcomeReviewScheduleSheet } from "./outcome-review-schedule-sheet";
 
 type OutcomeReviewRow =

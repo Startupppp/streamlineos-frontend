@@ -13,10 +13,10 @@ import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 
 const feedbucketWidgetListC = lazyContract(() =>
-  import("@/hooks/api/feedbucket/feedbucket-schema").then((m) => m.feedbucketWidgetListContract),
+  import("@/hooks/api/feedbucket/feedbucket-widget-schema").then((m) => m.feedbucketWidgetListContract),
 );
 const feedbucketWidgetWithProjectC = lazyContract(() =>
-  import("@/hooks/api/feedbucket/feedbucket-schema").then((m) => m.feedbucketWidgetWithProjectContract),
+  import("@/hooks/api/feedbucket/feedbucket-widget-schema").then((m) => m.feedbucketWidgetWithProjectContract),
 );
 const feedbucketRotateKeyC = lazyContract(() =>
   import("@/hooks/api/feedbucket/feedbucket-schema").then((m) => m.feedbucketRotateKeyContract),

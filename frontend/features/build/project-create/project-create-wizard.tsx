@@ -11,7 +11,6 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
   useProjectCreate,
@@ -23,7 +22,6 @@ import {
   useProjectProvisioning,
   type ProjectCreateScope,
 } from "./use-project-provisioning";
-import { LoadingButton } from "@/components/ui/loading-button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { StepBasics } from "./steps/step-basics";
 import type { BasicsHandle } from "./steps/step-basics";
@@ -33,6 +31,7 @@ import { StepToggles } from "./steps/step-toggles";
 import { StepWorkflow } from "./steps/step-workflow";
 import { StepTeam } from "./steps/step-team";
 import { StepReview } from "./steps/step-review";
+import { ProjectCreateWizardFooter } from "./project-create-wizard-footer";
 
 interface ProjectCreateWizardProps {
   open: boolean;
@@ -211,89 +210,15 @@ export function ProjectCreateWizard({
           </AnimatePresence>
         </SheetBody>
 
-        <div className="shrink-0 border-t px-6 py-4 flex gap-2 bg-background">
-          {step === 1 && (
-            <>
-              <Button
-                type="button"
-                variant="outline"
-                className="flex-1"
-                onClick={requestClose}
-              >
-                Cancel
-              </Button>
-              <Button
-                type="button"
-                className="flex-1"
-                onClick={handleNextFromBasics}
-              >
-                Next →
-              </Button>
-            </>
-          )}
-          {step === 2 && (
-            <>
-              <Button
-                type="button"
-                variant="outline"
-                className="flex-1"
-                onClick={goBack}
-              >
-                ← Back
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                className="text-muted-foreground"
-                onClick={goNext}
-              >
-                Skip
-              </Button>
-              <Button type="button" className="flex-1" onClick={goNext}>
-                Next →
-              </Button>
-            </>
-          )}
-          {step > 2 && step < 7 && (
-            <>
-              <Button
-                type="button"
-                variant="outline"
-                className="flex-1"
-                onClick={goBack}
-              >
-                ← Back
-              </Button>
-              <Button type="button" className="flex-1" onClick={goNext}>
-                Next →
-              </Button>
-            </>
-          )}
-          {step === 7 && (
-            <>
-              <Button
-                type="button"
-                variant="outline"
-                className="flex-1"
-                disabled={isProvisioning}
-                onClick={goBack}
-              >
-                ← Back
-              </Button>
-              <motion.div className="flex-1" whileTap={{ scale: 0.97 }}>
-                <LoadingButton
-                  type="button"
-                  className="w-full"
-                  isPending={isProvisioning}
-                  loadingText="Creating…"
-                  onClick={handleCreate}
-                >
-                  Create Project
-                </LoadingButton>
-              </motion.div>
-            </>
-          )}
-        </div>
+        <ProjectCreateWizardFooter
+          step={step}
+          isProvisioning={isProvisioning}
+          onCancel={requestClose}
+          onNextFromBasics={handleNextFromBasics}
+          onBack={goBack}
+          onNext={goNext}
+          onCreate={handleCreate}
+        />
       </SheetContent>
     </Sheet>
       <ConfirmDialog

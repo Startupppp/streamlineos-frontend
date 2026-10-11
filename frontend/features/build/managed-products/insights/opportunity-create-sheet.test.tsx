@@ -5,7 +5,7 @@ const createMutate = jest.fn();
 const mockUseCan = jest.fn(() => true);
 
 jest.mock("@/hooks/api/access", () => ({ useCan: () => mockUseCan() }));
-jest.mock("@/hooks/api/build/product-discovery-mutations", () => ({
+jest.mock("@/hooks/api/build/opportunity-mutations", () => ({
   useCreateOpportunity: jest.fn(() => ({ mutate: createMutate, isPending: false })),
 }));
 

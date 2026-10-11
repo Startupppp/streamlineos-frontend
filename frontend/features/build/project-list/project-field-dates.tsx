@@ -63,6 +63,16 @@ export const InlineProjectDates = memo(function InlineProjectDates({
     updateProject.mutate({ projectId, endDate: null });
   }
 
+  function handleStartDateChange(value: string) {
+    if (!value) handleClearStart();
+    else updateProject.mutate({ projectId, startDate: value });
+  }
+
+  function handleEndDateChange(value: string) {
+    if (!value) handleClearEnd();
+    else updateProject.mutate({ projectId, endDate: value });
+  }
+
   const triggerLabel = dateMeta?.label ?? "Set dates";
 
   return (
@@ -87,10 +97,7 @@ export const InlineProjectDates = memo(function InlineProjectDates({
           <DatePicker
             ariaLabel="Project start date"
             value={startParsed ? format(startParsed, "yyyy-MM-dd") : ""}
-            onChange={(value) => {
-              if (!value) handleClearStart();
-              else updateProject.mutate({ projectId, startDate: value });
-            }}
+            onChange={handleStartDateChange}
             placeholder="Start"
             dateFormat="dd MMM yyyy"
             clearable
@@ -100,10 +107,7 @@ export const InlineProjectDates = memo(function InlineProjectDates({
           <DatePicker
             ariaLabel="Project end date"
             value={endParsed ? format(endParsed, "yyyy-MM-dd") : ""}
-            onChange={(value) => {
-              if (!value) handleClearEnd();
-              else updateProject.mutate({ projectId, endDate: value });
-            }}
+            onChange={handleEndDateChange}
             placeholder="End"
             dateFormat="dd MMM yyyy"
             clearable

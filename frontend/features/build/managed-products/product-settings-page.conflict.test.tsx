@@ -56,7 +56,7 @@ const BASE_PRODUCT = {
   successMetrics: [],
 };
 
-function serve(product: typeof BASE_PRODUCT) {
+function serve(product: Omit<typeof BASE_PRODUCT, "missionStatement"> & { missionStatement: string | null }) {
   mockUseManagedProduct.mockReturnValue({
     data: product,
     isLoading: false,

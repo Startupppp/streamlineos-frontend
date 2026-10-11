@@ -3,8 +3,8 @@ import {
   feedbucketMarkDuplicateContract,
   feedbucketSubmissionDetailContract,
   feedbucketUnmarkDuplicateContract,
-  feedbucketWidgetListContract,
 } from "./feedbucket-schema";
+import { feedbucketWidgetListContract } from "./feedbucket-widget-schema";
 
 const deployedWidgetRow = {
   id: 1,

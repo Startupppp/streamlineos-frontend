@@ -77,7 +77,7 @@ it("refreshes displayed quality counts and filtered run pages after authorized e
   const otherKey = buildWorkQueryKeys.projects.qa.runs(2);
   view.client.setQueryData(filteredKey, { data: [run], hasMore: false, nextCursor: null });
   view.client.setQueryData(otherKey, { data: [], hasMore: false, nextCursor: null });
-  mockGet.mockResolvedValue({ data: [{ ...run, passCount: 9, failCount: 1 }], hasMore: false, nextCursor: null });
+  view.client.setQueryData(buildWorkQueryKeys.projects.qa.run(1, 42), { ...run, results: [{ id: 7, status: "failed" }] });
   function wrapper({ children }: { children: React.ReactNode }) {
     return <QueryClientProvider client={view.client}>{children}</QueryClientProvider>;
   }

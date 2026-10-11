@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { InventoryEmptyState } from "./inventory-empty-state";
+import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { EmptyOrdersIllustration } from "@/components/illustrations";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";

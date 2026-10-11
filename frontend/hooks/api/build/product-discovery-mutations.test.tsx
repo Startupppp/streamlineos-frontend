@@ -3,11 +3,11 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createElement } from "react";
 import type { ReactNode } from "react";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
+import { useUpdateOpportunity } from "./opportunity-mutations";
 import {
   useOverrideOpportunityScore,
   useScoreOpportunity,
-  useUpdateOpportunity,
-} from "./product-discovery-mutations";
+} from "./opportunity-score-mutations";
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn().mockReturnValue(true),

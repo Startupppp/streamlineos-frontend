@@ -47,24 +47,29 @@ export function OpportunityOverrideDialog({
           <FormField
             control={form.control}
             name="overrideScore"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Override score</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    min={0}
-                    step={0.01}
-                    className={FIELD_CONTROL_CLASS}
-                    placeholder="e.g. 4.5"
-                    value={field.value ?? ""}
-                    onChange={(e) => field.onChange(Number(e.target.value))}
-                    data-testid="override-score-input"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            render={({ field }) => {
+              function handleChange(e: { target: { value: string } }) {
+                field.onChange(Number(e.target.value));
+              }
+              return (
+                <FormItem>
+                  <FormLabel>Override score</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      min={0}
+                      step={0.01}
+                      className={FIELD_CONTROL_CLASS}
+                      placeholder="e.g. 4.5"
+                      value={field.value ?? ""}
+                      onChange={handleChange}
+                      data-testid="override-score-input"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              );
+            }}
           />
           <FormField
             control={form.control}

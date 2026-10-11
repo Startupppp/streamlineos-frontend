@@ -98,73 +98,88 @@ function OpportunityRiceFormFields() {
       <FormField
         control={form.control}
         name="impact"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Impact</FormLabel>
-            <Select
-              value={String(field.value ?? "")}
-              onValueChange={(v) => field.onChange(Number(v))}
-            >
-              <SelectTrigger className={FIELD_CONTROL_CLASS}>
-                <SelectValue placeholder="Select impact" />
-              </SelectTrigger>
-              <SelectContent>
-                {IMPACT_OPTIONS.map((o) => (
-                  <SelectItem key={o.value} value={o.value}>
-                    {o.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <FormMessage />
-          </FormItem>
-        )}
+        render={({ field }) => {
+          function handleImpactChange(v: string) {
+            field.onChange(Number(v));
+          }
+          return (
+            <FormItem>
+              <FormLabel>Impact</FormLabel>
+              <Select
+                value={String(field.value ?? "")}
+                onValueChange={handleImpactChange}
+              >
+                <SelectTrigger className={FIELD_CONTROL_CLASS}>
+                  <SelectValue placeholder="Select impact" />
+                </SelectTrigger>
+                <SelectContent>
+                  {IMPACT_OPTIONS.map((o) => (
+                    <SelectItem key={o.value} value={o.value}>
+                      {o.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          );
+        }}
       />
 
       <FormField
         control={form.control}
         name="confidence"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Confidence (0–1)</FormLabel>
-            <FormControl>
-              <Input
-                {...field}
-                type="number"
-                min={0}
-                max={1}
-                step={0.1}
-                className={FIELD_CONTROL_CLASS}
-                placeholder="e.g. 0.8"
-                onChange={(e) => field.onChange(Number(e.target.value))}
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
+        render={({ field }) => {
+          function handleConfidenceChange(e: { target: { value: string } }) {
+            field.onChange(Number(e.target.value));
+          }
+          return (
+            <FormItem>
+              <FormLabel>Confidence (0–1)</FormLabel>
+              <FormControl>
+                <Input
+                  {...field}
+                  type="number"
+                  min={0}
+                  max={1}
+                  step={0.1}
+                  className={FIELD_CONTROL_CLASS}
+                  placeholder="e.g. 0.8"
+                  onChange={handleConfidenceChange}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          );
+        }}
       />
 
       <div className="grid grid-cols-2 gap-4">
         <FormField
           control={form.control}
           name="effort"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Effort</FormLabel>
-              <FormControl>
-                <Input
-                  {...field}
-                  type="number"
-                  min={0.1}
-                  step={0.5}
-                  className={FIELD_CONTROL_CLASS}
-                  placeholder="e.g. 10"
-                  onChange={(e) => field.onChange(Number(e.target.value))}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+          render={({ field }) => {
+            function handleEffortChange(e: { target: { value: string } }) {
+              field.onChange(Number(e.target.value));
+            }
+            return (
+              <FormItem>
+                <FormLabel>Effort</FormLabel>
+                <FormControl>
+                  <Input
+                    {...field}
+                    type="number"
+                    min={0.1}
+                    step={0.5}
+                    className={FIELD_CONTROL_CLASS}
+                    placeholder="e.g. 10"
+                    onChange={handleEffortChange}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            );
+          }}
         />
         <FormField
           control={form.control}
@@ -215,6 +230,10 @@ interface OpportunityScoreDialogProps {
   onScore: (values: RiceFormValues) => void;
 }
 
+function renderRiceFields() {
+  return <OpportunityRiceFormFields />;
+}
+
 export function OpportunityScoreDialog({
   open,
   onOpenChange,
@@ -232,9 +251,6 @@ export function OpportunityScoreDialog({
     effortUnit: "person_weeks",
     expectedScoreVersion,
   };
-  function renderRiceFields() {
-    return <OpportunityRiceFormFields />;
-  }
   return (
     <EntityFormDialog
       open={open}

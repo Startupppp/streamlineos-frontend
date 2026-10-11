@@ -27,7 +27,7 @@ jest.mock("@/hooks/api/build/projects", () => ({ useProject: () => ({ data: { id
 jest.mock("next-auth/react", () => ({ useSession: () => mockSession() }));
 jest.mock("@/hooks/api/entitlements", () => ({ useEntitlements: () => ({ data: undefined }) }));
 jest.mock("@/hooks/api/access", () => ({ useCan: (...args: unknown[]) => mockCan(...args), useAccess: () => mockAccess() }));
-jest.mock("@/features/build/shared/use-build-list-filters", () => ({ useBuildListFilters: () => mockFilters() }));
+jest.mock("@/features/build/shared/use-build-list-filters", () => ({ ...jest.requireActual<typeof import("@/features/build/shared/use-build-list-filters")>("@/features/build/shared/use-build-list-filters"), useBuildListFilters: () => mockFilters() }));
 jest.mock("@/components/shared/dirty-state-context", () => {
   const actual = jest.requireActual<typeof import("@/components/shared/dirty-state-context")>("@/components/shared/dirty-state-context");
   return { ...actual, useNavigationLeave() { const leave = actual.useNavigationLeave(); return mockRealDirtyBoundary ? leave : mockLeave; } };
@@ -41,7 +41,7 @@ const request = { id: 42, title: "Actual request", status: "pending" };
 type Callbacks = { onSuccess: (result: IntakeRequest) => void; onError: (error: Error) => void };
 const callbacks: Callbacks[] = [];
 function ack(status: IntakeRequest["status"], overrides: Partial<IntakeRequest> = {}): IntakeRequest {
-  return { id: 42, projectId: 1, orgId: "org-1", title: request.title, description: null, source: "manual", status, submitterEmail: null, submitterName: null, priority: null, requestType: null, linkedWorkItemId: 91, declineReason: null, createdAt: "2026-10-04T00:00:00Z", updatedAt: "2026-10-04T00:00:00Z", ...overrides };
+  return { id: 42, projectId: 1, orgId: "org-1", title: request.title, description: null, source: "manual", status, submitterEmail: null, submitterName: null, priority: null, requestType: null, linkedWorkItemId: 91, formSubmissionId: null, feedbucketSubmissionId: null, declineReason: null, createdAt: "2026-10-04T00:00:00Z", updatedAt: "2026-10-04T00:00:00Z", ...overrides };
 }
 const query = (overrides: Record<string, unknown> = {}) => ({ data: undefined, isLoading: false, isError: false, error: undefined, refetch: jest.fn(), ...overrides });
 function OtherWork() { useRegisterDirtyState(mockOtherDirty); return <output data-testid="dirty-work">{useHasUnsavedWork() ? "dirty" : "clean"}</output>; }
@@ -451,7 +451,7 @@ it("shows the not-in-this-view banner for a gone highlight token that never reso
 });
 
 it("shows the not-in-this-view banner on an empty tab when highlight is requested", () => {
-  mockFilters.mockReturnValue({ value: () => "declined", setValue: jest.fn() });
+  mockFilters.mockReturnValue({ value: (key: string) => (key === "tab" ? "declined" : "all"), setValue: jest.fn() });
   mockRequests.mockReturnValue(query({ data: { data: [] } }));
   render(<IntakePage projectId={1} highlightId={999} highlightRequested />);
   expect(screen.getByTestId("intake-item-not-found")).toBeInTheDocument();

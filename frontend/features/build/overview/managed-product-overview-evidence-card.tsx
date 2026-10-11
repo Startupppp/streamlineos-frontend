@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import Link from "next/link";
 import type { ManagedProductSummary } from "@/hooks/api/build/managed-product-summary";
 import { statusToneClasses } from "@/lib/design-tokens";
@@ -44,12 +45,15 @@ export function ManagedProductOverviewEvidenceCard({
 }: EvidenceCardProps) {
   const base = `/build/managed-products/${managedProductId}`;
   const themedPct = percentOf(evidence.themedCount, evidence.feedbackCount);
-  const stateSegments = Object.entries(evidence.opportunitiesByState).map(([state, count]) => ({
-    id: state,
-    label: readableState(state),
-    value: count,
-    fillClassName: STATE_FILL[state] ?? "bg-primary",
-  }));
+  const stateSegments = useMemo(
+    () => Object.entries(evidence.opportunitiesByState).map(([state, count]) => ({
+      id: state,
+      label: readableState(state),
+      value: count,
+      fillClassName: STATE_FILL[state] ?? "bg-primary",
+    })),
+    [evidence.opportunitiesByState],
+  );
   const topThemeCount = previews.themes.reduce((max, theme) => Math.max(max, theme.count), 0);
 
   return (

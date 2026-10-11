@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
 import { isApiError, lazyContract } from "@/lib/api-envelope";
@@ -12,7 +12,6 @@ import type {
   TestRun,
   TestRunListItem,
   TestRunDetail,
-  TestRunResult,
   TestRunResultRow,
   Bug,
   CreateTestCaseInput,
@@ -23,7 +22,11 @@ import type {
 } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type { IdCursorPage } from "@/hooks/api/cursor-page-schema";
-
+import {
+  patchRunResult,
+  markRunListsStale,
+  patchRunListsFromResult,
+} from "@/hooks/api/build/qa-run-result-cache";
 
 const testSuiteListContract = lazyContract(() =>
   import("@/hooks/api/build/qa-schema").then((m) => m.testSuiteListContract),
@@ -60,7 +63,6 @@ type TestCaseFilters = {
   automationStatus?: string;
   cursor?: number;
 };
-
 interface TestRunFilters {
   q?: string;
   status?: string;
@@ -111,7 +113,7 @@ export function useCreateTestCase() {
     mutationFn: ({ projectId, ...data }: CreateTestCaseInput & { projectId: number }) =>
       apiClient.post<TestCase>(`/build/${projectId}/test-cases`, data, undefined, testCaseRowContract),
     onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.qa.casesAll(vars.projectId) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.qa.cases(vars.projectId) });
     },
   });
 }
@@ -127,7 +129,7 @@ export function useUpdateTestCase() {
     }: UpdateTestCaseInput & { projectId: number; id: number }) =>
       apiClient.patch<TestCase>(`/build/${projectId}/test-cases/${id}`, data, undefined, testCaseRowContract),
     onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.qa.casesAll(vars.projectId) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.qa.cases(vars.projectId) });
     },
   });
 }
@@ -139,7 +141,7 @@ export function useDeleteTestCase() {
     mutationFn: ({ projectId, id }: { projectId: number; id: number }) =>
       apiClient.delete<void>(`/build/${projectId}/test-cases/${id}`, undefined, undefined, noContentContract),
     onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.qa.casesAll(vars.projectId) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.qa.cases(vars.projectId) });
     },
   });
 }
@@ -232,75 +234,6 @@ export function useDeleteTestRun() {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.qa.runs(vars.projectId) });
     },
   });
-}
-
-function patchRunResult(
-  qc: QueryClient,
-  projectId: number,
-  runId: number,
-  resultId: number,
-  patch: Partial<TestRunResult>,
-) {
-  qc.setQueryData<TestRunDetail | null>(
-    buildWorkQueryKeys.projects.qa.run(projectId, runId),
-    (run) => {
-      if (!run) return run;
-      const results = run.results.map((result) =>
-        result.id === resultId ? { ...result, ...patch } : result,
-      );
-      const starts = run.status === "not_started" && patch.status !== undefined && patch.status !== "not_run";
-      return { ...run, results, status: starts ? "in_progress" : run.status };
-    },
-  );
-}
-
-function markRunListsStale(qc: QueryClient, projectId: number) {
-  for (const [key] of qc.getQueriesData({ queryKey: buildWorkQueryKeys.projects.qa.runs(projectId) })) {
-    if (typeof key.at(-1) === "number") continue;
-    void qc.invalidateQueries({ queryKey: key, exact: true, refetchType: "none" });
-  }
-}
-
-const RESULT_COUNT_FIELD: Record<
-  TestRunResult["status"],
-  keyof Pick<TestRunListItem, "passCount" | "failCount" | "blockedCount" | "notRunCount" | "skippedCount">
-> = {
-  passed: "passCount",
-  failed: "failCount",
-  blocked: "blockedCount",
-  not_run: "notRunCount",
-  skipped: "skippedCount",
-};
-
-function patchRunListsFromResult(
-  qc: QueryClient,
-  projectId: number,
-  runId: number,
-  previousStatus: TestRunResult["status"] | undefined,
-  nextStatus: TestRunResult["status"],
-) {
-  const previousField = previousStatus ? RESULT_COUNT_FIELD[previousStatus] : undefined;
-  const nextField = RESULT_COUNT_FIELD[nextStatus];
-  for (const [key, page] of qc.getQueriesData<IdCursorPage<TestRunListItem>>({
-    queryKey: buildWorkQueryKeys.projects.qa.runs(projectId),
-  })) {
-    if (typeof key.at(-1) === "number" || !page) continue;
-    qc.setQueryData<IdCursorPage<TestRunListItem>>(key, {
-      ...page,
-      data: page.data.map((run) => {
-        if (run.id !== runId) return run;
-        const counts = { ...run };
-        if (previousField && previousField !== nextField) {
-          counts[previousField] = Math.max(0, run[previousField] - 1);
-          counts[nextField] = run[nextField] + 1;
-        }
-        if (nextStatus !== "not_run" && run.status === "not_started") {
-          counts.status = "in_progress";
-        }
-        return counts;
-      }),
-    });
-  }
 }
 
 export function useUpdateTestResult() {

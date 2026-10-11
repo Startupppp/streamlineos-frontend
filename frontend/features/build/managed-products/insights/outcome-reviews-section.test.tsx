@@ -1,7 +1,7 @@
 import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
 import { OutcomeReviewsSection } from "./outcome-reviews-section";
 import type { DiscoveryReviewsListOutcomeReviewsResponse } from "@/contracts/build-contracts.generated";
-import type { CreateOutcomeReviewInput } from "@/hooks/api/build/product-discovery-mutations";
+import type { CreateOutcomeReviewInput } from "@/hooks/api/build/outcome-review-mutations";
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn(() => true),

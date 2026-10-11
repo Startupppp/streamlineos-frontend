@@ -24,7 +24,7 @@ import {
   scheduleOutcomeReviewSchema,
   type ScheduleOutcomeReviewValues,
 } from "./outcome-review-form-schema";
-import type { CreateOutcomeReviewInput } from "@/hooks/api/build/product-discovery-mutations";
+import type { CreateOutcomeReviewInput } from "@/hooks/api/build/outcome-review-mutations";
 import { useOpportunities } from "@/hooks/api/build/product-discovery";
 import { useGoals } from "@/hooks/api/goals";
 import { OutcomeReviewLinkField } from "./outcome-review-link-field";

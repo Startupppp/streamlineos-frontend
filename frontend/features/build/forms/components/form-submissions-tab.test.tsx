@@ -5,7 +5,6 @@ import { ApiError } from "@/lib/api-envelope";
 
 jest.mock("@/hooks/api/build/forms", () => ({
   useFormSubmissions: jest.fn(),
-  useUpdateSubmission: jest.fn(),
   useCreateForm: jest.fn(),
   useForms: jest.fn(),
 }));
@@ -87,11 +86,10 @@ jest.mock("@/features/build/shared/build-mobile-card", () => ({
   BuildMobileCard: () => null,
 }));
 
-import { useFormSubmissions, useUpdateSubmission } from "@/hooks/api/build/forms";
+import { useFormSubmissions } from "@/hooks/api/build/forms";
 import { useCan, useAccess } from "@/hooks/api/access";
 
 const mockUseFormSubmissions = useFormSubmissions as jest.Mock;
-const mockUseUpdateSubmission = useUpdateSubmission as jest.Mock;
 const mockUseCan = useCan as jest.Mock;
 const mockUseAccess = useAccess as jest.Mock;
 
@@ -137,7 +135,6 @@ beforeEach(() => {
   mockUseCan.mockReturnValue(true);
   mockUseAccess.mockReturnValue(ACCESS_GRANTED);
   mockUseFormSubmissions.mockReturnValue(baseQueryResult({ data: submissionPages([]) }));
-  mockUseUpdateSubmission.mockReturnValue({ mutate: jest.fn(), isPending: false });
 });
 
 it("shows a loading skeleton while the access snapshot is in flight, not an error state", () => {

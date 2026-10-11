@@ -39,7 +39,7 @@ interface ReportsOverviewTabProps {
 
 const VOLUME_RANGES = ["12w", "90d", "30d", "7d"] as const;
 type VolumeRange = (typeof VOLUME_RANGES)[number];
-const DEFAULT_VOLUME_RANGE: VolumeRange = "12w";
+const DEFAULT_VOLUME_RANGE = "12w" satisfies VolumeRange;
 const VOLUME_RANGE_OPTIONS = [
   { value: "12w", label: "Last 12 weeks" },
   { value: "90d", label: "Last 90 days" },

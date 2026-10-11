@@ -2,6 +2,7 @@
 
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { PmStaggerList } from "@/components/pm-chrome";
 import { RoadmapItemCard, type ScorableRoadmapItem } from "@/features/build/roadmap/roadmap-item-card";
 import { cn } from "@/lib/utils";
@@ -84,17 +85,12 @@ export function RoadmapHorizonColumn({
       </header>
       <div className="min-h-0 flex-1 overflow-y-auto p-2">
         {items.length === 0 ? (
-          <div className="flex h-full flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-muted/40 px-3 py-6 text-center">
-            <p className="text-sm font-medium text-foreground">No items yet</p>
-            <p className="max-w-xs text-dense text-pretty text-muted-foreground">
-              {ROADMAP_HORIZON_EMPTY[horizon]}
-            </p>
-            {canManage && onCreate ? (
-              <Button type="button" variant="ghost" size="sm" onClick={onCreate}>
-                + Add item
-              </Button>
-            ) : null}
-          </div>
+          <EmptyState
+            title="No items yet"
+            description={ROADMAP_HORIZON_EMPTY[horizon]}
+            compact
+            action={canManage && onCreate ? { label: "+ Add item", onClick: onCreate } : undefined}
+          />
         ) : (
           <PmStaggerList className="flex flex-col gap-2">
             {items.map((item) => (

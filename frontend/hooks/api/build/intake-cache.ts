@@ -12,7 +12,7 @@ export interface IntakePage {
 function keyParam(queryKey: QueryKey, name: "status" | "source" | "cursor" | "intakeStatus"): string | undefined {
   const params = queryKey.at(-1);
   if (typeof params !== "object" || params === null || !(name in params)) return undefined;
-  const value: unknown = params[name];
+  const value: unknown = Reflect.get(params, name);
   return typeof value === "string" ? value : undefined;
 }
 

@@ -1,6 +1,8 @@
 import type { RoadmapStatus, RoadmapHorizon, FeedbackStatus, ChangelogType } from "@/types/projects";
 import type { CrmAccountTier } from "@/types/crm";
 
+export const BUILD_FILTER_NONE = "__none__";
+
 export const ROADMAP_COLUMNS: { status: RoadmapStatus; label: string }[] = [
   { status: "planned", label: "Planned" },
   { status: "in_progress", label: "In Progress" },

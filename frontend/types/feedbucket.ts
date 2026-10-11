@@ -1,7 +1,7 @@
 import type { z } from "zod";
 import type { feedbucketSubmissionListContract } from "@/hooks/api/feedbucket/feedbucket-schema";
 import type { feedbucketSubmissionDetailContract } from "@/hooks/api/feedbucket/feedbucket-schema";
-import type { feedbucketWidgetRowContract } from "@/hooks/api/feedbucket/feedbucket-schema";
+import type { feedbucketWidgetRowContract } from "@/hooks/api/feedbucket/feedbucket-widget-schema";
 import type { feedbucketBulkSubmissionsContract } from "@/hooks/api/feedbucket/feedbucket-schema";
 import type { AiUsageMeta } from "@/components/ai/ai-usage-chip";
 

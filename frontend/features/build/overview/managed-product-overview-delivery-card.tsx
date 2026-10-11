@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import Link from "next/link";
 import { Rocket } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -85,17 +86,20 @@ export function ManagedProductOverviewDeliveryCard({
     (item) => item.horizon === "now" || item.horizon === "next",
   );
   const ticketPct = percentOf(delivery.ticketTotals.done, delivery.ticketTotals.total) ?? 0;
-  const segments = [
-    { id: "now", label: "Now", value: delivery.roadmapByHorizon.now, fillClassName: "bg-primary" },
-    { id: "next", label: "Next", value: delivery.roadmapByHorizon.next, fillClassName: statusToneClasses("info").fill },
-    { id: "later", label: "Later", value: delivery.roadmapByHorizon.later, fillClassName: "bg-muted-foreground/40" },
-    {
-      id: "completed",
-      label: "Completed",
-      value: delivery.roadmapCompleted,
-      fillClassName: statusToneClasses("success").fill,
-    },
-  ];
+  const segments = useMemo(
+    () => [
+      { id: "now", label: "Now", value: delivery.roadmapByHorizon.now, fillClassName: "bg-primary" },
+      { id: "next", label: "Next", value: delivery.roadmapByHorizon.next, fillClassName: statusToneClasses("info").fill },
+      { id: "later", label: "Later", value: delivery.roadmapByHorizon.later, fillClassName: "bg-muted-foreground/40" },
+      {
+        id: "completed",
+        label: "Completed",
+        value: delivery.roadmapCompleted,
+        fillClassName: statusToneClasses("success").fill,
+      },
+    ],
+    [delivery.roadmapByHorizon.now, delivery.roadmapByHorizon.next, delivery.roadmapByHorizon.later, delivery.roadmapCompleted],
+  );
 
   return (
     <OverviewPanel

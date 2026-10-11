@@ -492,8 +492,8 @@ beforeEach(() => {
   jest.clearAllMocks();
   useCan.mockReturnValue(true);
   usePageState.mockReturnValue({ kind: "ready" });
-  const { useGoals: mockUseGoals } = jest.requireMock("@/hooks/api/goals") as { useGoals: jest.Mock };
+  const { useGoals: mockUseGoals }: { useGoals: jest.Mock } = jest.requireMock("@/hooks/api/goals");
   mockUseGoals.mockReturnValue({ data: { data: [], pagination: { hasMore: false, nextCursor: null, limit: 50 } }, isLoading: false, isError: false, error: null, refetch: jest.fn() });
-  const { useFeedbucketSubmissionFacets: mockFacets } = jest.requireMock("@/hooks/api/feedbucket") as { useFeedbucketSubmissionFacets: jest.Mock };
+  const { useFeedbucketSubmissionFacets: mockFacets }: { useFeedbucketSubmissionFacets: jest.Mock } = jest.requireMock("@/hooks/api/feedbucket");
   mockFacets.mockReturnValue({ data: undefined, isLoading: false, isError: false, error: null });
 });

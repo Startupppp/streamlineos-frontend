@@ -14,6 +14,7 @@ jest.mock("@/lib/api-client", () => ({
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: () => true,
+  useCanState: () => "granted",
 }));
 
 jest.mock("@/lib/api-envelope", () => ({

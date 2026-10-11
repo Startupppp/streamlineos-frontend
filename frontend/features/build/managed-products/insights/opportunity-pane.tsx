@@ -8,19 +8,18 @@ import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useOpportunity, useOpportunityTrace } from "@/hooks/api/build/product-discovery";
 import {
+  type AcceptOpportunityInput,
   useAcceptOpportunity,
   useDeclineOpportunity,
-  useOverrideOpportunityScore,
-  useScoreOpportunity,
   useUpdateOpportunity,
-} from "@/hooks/api/build/product-discovery-mutations";
+} from "@/hooks/api/build/opportunity-mutations";
+import { useOverrideOpportunityScore, useScoreOpportunity } from "@/hooks/api/build/opportunity-score-mutations";
 import { OpportunityTrace } from "./opportunity-trace";
 import { OpportunityAcceptDialog } from "./opportunity-accept-dialog";
 import { OpportunityDeclineDialog, OpportunityOverrideDialog } from "./opportunity-override-dialog";
 import { OpportunityScoreDialog } from "./opportunity-rice-form";
 import { OpportunityPaneActions } from "./opportunity-pane-actions";
 import { formatStoredRiceScore } from "./rice-formula";
-import type { AcceptOpportunityInput } from "@/hooks/api/build/product-discovery-mutations";
 import type { DeclineFormValues, OverrideFormValues, RiceFormValues } from "./opportunity-rice-schema";
 
 interface OpportunityPaneProps {

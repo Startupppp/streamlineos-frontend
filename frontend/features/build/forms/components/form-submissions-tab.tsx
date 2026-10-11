@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { toast } from "sonner";
 import { TriangleAlert } from "lucide-react";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { BuildMobileCard } from "@/features/build/shared/build-mobile-card";
@@ -15,9 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { EmptyState } from "@/components/ui/empty-state";
-import { useCan } from "@/hooks/api/access";
-import { useFormSubmissions, useUpdateSubmission } from "@/hooks/api/build/forms";
-import { getErrorMessage } from "@/lib/get-error-message";
+import { useFormSubmissions } from "@/hooks/api/build/forms";
 import { BuildListSurface } from "@/features/build/shared/build-list-surface";
 import type {
   FormSubmission,
@@ -62,7 +59,6 @@ export function FormSubmissionsTab({
   formId,
   hasActions = true,
 }: FormSubmissionsTabProps) {
-  const canManage = useCan("build:forms:manage");
   const [viewTarget, setViewTarget] = useState<FormSubmission | null>(null);
   const pager = useBuildCursorPager(
     `${projectId}:${formId}`,
@@ -79,20 +75,6 @@ export function FormSubmissionsTab({
     cursor: pager.cursor,
     limit: PAGE_SIZE,
   });
-  const updateSubmission = useUpdateSubmission(projectId, formId);
-
-  const handleStatusUpdate = useCallback(
-    (submission: FormSubmission, status: FormSubmissionStatus) => {
-      updateSubmission.mutate(
-        { submissionId: submission.id, status },
-        {
-          onSuccess: () => toast.success("Status updated"),
-          onError: (e) => toast.error(getErrorMessage(e)),
-        },
-      );
-    },
-    [updateSubmission],
-  );
 
   const handleViewOpen = useCallback((row: FormSubmission) => {
     setViewTarget(row);
@@ -159,9 +141,7 @@ export function FormSubmissionsTab({
       cell: (row) => (
         <SubmissionActionsCell
           row={row}
-          canManage={canManage}
           onView={handleViewOpen}
-          onStatusUpdate={handleStatusUpdate}
         />
       ),
     },
@@ -186,14 +166,12 @@ export function FormSubmissionsTab({
         actions={
           <SubmissionActionsCell
             row={row}
-            canManage={canManage}
             onView={handleViewOpen}
-            onStatusUpdate={handleStatusUpdate}
           />
         }
       />
     ),
-    [canManage, handleViewOpen, handleStatusUpdate],
+    [handleViewOpen],
   );
 
   return (

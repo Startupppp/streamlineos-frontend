@@ -6,7 +6,6 @@ import type {
   TestRunResult,
   TestResultStatus,
   TestCasePriority,
-  ManagedProduct,
 } from "@/types/projects";
 import type { IncidentsCreateIncidentResponse } from "@/contracts/build-contracts.generated";
 import type { OrgMember } from "@/hooks/api/organization";
@@ -257,48 +256,4 @@ export const GOVERNANCE_QA_RUN_RESULTS: TestRunResult[] = Array.from({ length: 5
   },
 }));
 
-const MP_NAMES = [
-  "Payments Platform",
-  "Identity Service",
-  "Notification Hub",
-  "Analytics Engine",
-  "Search Service",
-  "Cache Layer",
-  "Auth Gateway",
-  "Data Pipeline",
-  "Event Bus",
-  "Config Store",
-  "Audit Trail",
-  "Content Delivery",
-  "API Gateway",
-  "SDK Tooling",
-] as const;
-
-export const MANAGED_PRODUCT_GALLERY_ROWS: ManagedProduct[] = Array.from({ length: 14 }, (_, i) => ({
-  id: i + 1,
-  orgId: "org-1",
-  name: MP_NAMES[i % 14] ?? "Product",
-  key: `MP-${100 + i}`,
-  description: i % 3 === 0 ? `Core service #${i + 1} for the platform` : null,
-  status: i % 3 === 2 ? "archived" : "active",
-  ownerId: i % 2 === 0 ? "user-1" : null,
-  ownerMembershipId: i % 2 === 0 ? 1 : null,
-  vision: null,
-  missionStatement: null,
-  targetCustomer: null,
-  differentiators: null,
-  currentPhase: null,
-  targetLaunchDate: null,
-  successMetrics: [],
-  lifecycle: "build",
-  health: "unknown",
-  teamId: null,
-  segments: [],
-  tags: [],
-  northStarMetric: null,
-  lastReviewedAt: null,
-  version: 1,
-  deletedAt: null,
-  createdAt: "2024-01-01T00:00:00Z",
-  updatedAt: "2024-11-01T00:00:00Z",
-}));
+export { MANAGED_PRODUCT_GALLERY_ROWS } from "./build-list-fixtures-managed-products";

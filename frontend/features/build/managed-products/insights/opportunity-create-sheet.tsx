@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { EntityFormSheet } from "@/components/shared/entity-form-sheet";
 import { FIELD_CONTROL_CLASS } from "@/components/ui/field-control";
 import { useCan } from "@/hooks/api/access";
-import { useCreateOpportunity } from "@/hooks/api/build/product-discovery-mutations";
+import { useCreateOpportunity } from "@/hooks/api/build/opportunity-mutations";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   createOpportunityFormSchema,
@@ -21,12 +21,14 @@ import {
 
 type OptionalField = Exclude<keyof CreateOpportunityFormValues, "title">;
 
-const TEXT_FIELDS: ReadonlyArray<{
+interface TextFieldConfig {
   name: OptionalField;
   label: string;
   placeholder: string;
   multiline?: boolean;
-}> = [
+}
+
+const TEXT_FIELDS: ReadonlyArray<TextFieldConfig> = [
   { name: "problem", label: "Problem", placeholder: "What customer problem does this solve?", multiline: true },
   { name: "hypothesis", label: "Hypothesis", placeholder: "If we do X, then Y will happen because Z", multiline: true },
   { name: "affectedSegment", label: "Affected segment", placeholder: "e.g. Enterprise admins" },
@@ -39,6 +41,31 @@ const TEXT_FIELDS: ReadonlyArray<{
 ];
 
 const DEFAULT_VALUES: CreateOpportunityFormValues = { title: "" };
+
+interface OptionalTextFieldProps {
+  form: UseFormReturn<CreateOpportunityFormValues>;
+  config: TextFieldConfig;
+}
+
+function OptionalTextField({ form, config }: OptionalTextFieldProps) {
+  const renderField = useCallback(
+    ({ field }: { field: ControllerRenderProps<CreateOpportunityFormValues, OptionalField> }) =>
+      renderOptionalField(field, config),
+    [config],
+  );
+  return <FormField control={form.control} name={config.name} render={renderField} />;
+}
+
+function renderFields(form: UseFormReturn<CreateOpportunityFormValues>) {
+  return (
+    <div className="space-y-4">
+      <FormField control={form.control} name="title" render={renderTitleField} />
+      {TEXT_FIELDS.map((config) => (
+        <OptionalTextField key={config.name} form={form} config={config} />
+      ))}
+    </div>
+  );
+}
 
 interface OpportunityCreateSheetProps {
   managedProductId: number;
@@ -78,22 +105,6 @@ export function OpportunityCreateSheet({
     },
     [createMutation, onOpenChange],
   );
-
-  function renderFields(form: UseFormReturn<CreateOpportunityFormValues>) {
-    return (
-      <div className="space-y-4">
-        <FormField control={form.control} name="title" render={renderTitleField} />
-        {TEXT_FIELDS.map((config) => (
-          <FormField
-            key={config.name}
-            control={form.control}
-            name={config.name}
-            render={({ field }) => renderOptionalField(field, config)}
-          />
-        ))}
-      </div>
-    );
-  }
 
   return (
     <EntityFormSheet<CreateOpportunityFormValues>

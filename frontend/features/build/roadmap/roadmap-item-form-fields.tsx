@@ -16,15 +16,13 @@ import {
 } from "@/components/ui/select";
 import { getUserDisplayName } from "@/lib/person-display";
 import { formatShortDate } from "@/lib/date-utils";
-import { ROADMAP_STATUS_OPTIONS, ROADMAP_HORIZON_OPTIONS } from "./roadmap-constants";
+import { ROADMAP_STATUS_OPTIONS, ROADMAP_HORIZON_OPTIONS, BUILD_FILTER_NONE } from "./roadmap-constants";
 import { RoadmapDeliveryProgress } from "./roadmap-delivery-progress";
 import { RoadmapRiceFormFields } from "./roadmap-rice-form-fields";
 import { RoadmapDeliveryFields } from "./roadmap-delivery-fields";
 import type { RoadmapItemFormValues } from "./roadmap-schema";
 import type { ScorableRoadmapItem } from "./roadmap-item-card";
 import { useGoals } from "@/hooks/api/goals";
-
-const BUILD_FILTER_NONE = "__none__";
 
 function parseTargetDate(value: string | undefined): Date | undefined {
   if (!value) return undefined;

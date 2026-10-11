@@ -9,12 +9,8 @@ import { cn } from "@/lib/utils";
 import { isTransientNetworkError } from "@/lib/query-error-policy";
 import { signInPathForMissingSession } from "@/lib/auth-session-cookies";
 import { ErrorState } from "./error-state";
-import {
-  DeniedView,
-  FeatureLockedView,
-  NotFoundView,
-  QuotaExceededView,
-} from "./page-state-views";
+import { DeniedView, NotFoundView } from "./page-state-views";
+import { FeatureLockedView, QuotaExceededView } from "./page-state-limit-views";
 import type { GateStateProps } from "./page-state-shared";
 
 const PAGE_STATE_CONTAINER = "flex min-h-0 min-w-0 w-full flex-1 flex-col";

@@ -50,8 +50,7 @@ export const buildWorkQueryKeys = {
       [...base, "projects", "cycles", projectId] as const,
     modules: (projectId: number) =>
       [...base, "projects", "modules", projectId] as const,
-    views: (projectId: number) =>
-      ([...base, "projects", "views", projectId] as const),
+    views: (projectId: number) => [...base, "projects", "views", projectId] as const,
     customFields: (projectId: number) =>
       [...base, "projects", projectId, "custom-fields"] as const,
     ticketCustomFieldValues: (projectId: number, ticketId: number) =>
@@ -80,8 +79,6 @@ export const buildWorkQueryKeys = {
     qa: {
       suites: (projectId: number) =>
         [...base, "projects", projectId, "qa", "suites"] as const,
-      casesAll: (projectId: number) =>
-        [...base, "projects", projectId, "qa", "cases"] as const,
       cases: (projectId: number, params?: QueryKeyParams) =>
         params === undefined
           ? ([...base, "projects", projectId, "qa", "cases"] as const)
@@ -395,9 +392,7 @@ export const buildWorkQueryKeys = {
         : ([...base, "projects", projectId, "workload-capacity", start, end] as const),
     commentDrafts: {
       all: (): readonly (string | number)[] => [...base, "projects", "comment-drafts"],
-      mine: (cursor?: string) => cursor
-        ? [...base, "projects", "comment-drafts", "mine", cursor] as const
-        : [...base, "projects", "comment-drafts", "mine"] as const,
+      mine: (cursor?: string) => cursor ? [...base, "projects", "comment-drafts", "mine", cursor] as const : [...base, "projects", "comment-drafts", "mine"] as const,
       byTicket: (ticketId: number): readonly (string | number)[] => [...base, "projects", "comment-drafts", "ticket", ticketId],
     },
     commentPermalinkWithComment: (

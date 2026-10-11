@@ -33,12 +33,15 @@ jest.mock("@/hooks/api/build/product-discovery", () => ({
   useOpportunityTrace: jest.fn(() => ({ data: undefined })),
 }));
 
-jest.mock("@/hooks/api/build/product-discovery-mutations", () => ({
+jest.mock("@/hooks/api/build/opportunity-mutations", () => ({
   useAcceptOpportunity: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   useDeclineOpportunity: jest.fn(() => ({ mutate: declineMutate, isPending: false })),
+  useUpdateOpportunity: jest.fn(() => ({ mutate: updateMutate, isPending: false })),
+}));
+
+jest.mock("@/hooks/api/build/opportunity-score-mutations", () => ({
   useOverrideOpportunityScore: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   useScoreOpportunity: jest.fn(() => ({ mutate: scoreMutate, isPending: false })),
-  useUpdateOpportunity: jest.fn(() => ({ mutate: updateMutate, isPending: false })),
 }));
 
 jest.mock("./opportunity-accept-dialog", () => ({ OpportunityAcceptDialog: () => null }));
