@@ -1,6 +1,8 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { ChevronLeftIcon, ChevronRightIcon } from "@animateicons/react/lucide";
 import {
   Select,
   SelectContent,
@@ -8,13 +10,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { GanttNavIconButton } from "./gantt-nav-icon-button";
 import { PM_TOOLBAR } from "@/components/pm-chrome";
 import { cn } from "@/lib/utils";
 
 const MONTHS = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
 ];
 
 interface GanttToolbarProps {
@@ -67,11 +78,30 @@ export function GanttToolbar({
         </Select>
       </div>
       <div className="flex shrink-0 items-center gap-1">
-        <GanttNavIconButton onClick={onPrevWeek} ariaLabel="Previous week" direction="left" />
-        <Button variant="outline" size="sm" className="px-2.5 text-xs" onClick={onResetWeek}>
+        <AnimatedIconButton
+          variant="outline"
+          size="icon"
+          className="shrink-0"
+          onClick={onPrevWeek}
+          aria-label="Previous week"
+          icon={ChevronLeftIcon}
+        />
+        <Button
+          variant="outline"
+          size="sm"
+          className="px-2.5 text-xs"
+          onClick={onResetWeek}
+        >
           Today
         </Button>
-        <GanttNavIconButton onClick={onNextWeek} ariaLabel="Next week" direction="right" />
+        <AnimatedIconButton
+          variant="outline"
+          size="icon"
+          className="shrink-0"
+          onClick={onNextWeek}
+          aria-label="Next week"
+          icon={ChevronRightIcon}
+        />
       </div>
     </div>
   );

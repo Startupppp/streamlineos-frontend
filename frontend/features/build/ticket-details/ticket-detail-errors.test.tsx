@@ -124,7 +124,6 @@ jest.mock("./ticket-detail-right-panel", () => ({
 jest.mock("./ticket-detail-actions", () => ({
   TicketDetailActions: () => { mockTicketActionsCalled = true; return null; },
   TicketDetailDeleteDialog: () => null,
-  TicketDetailDeleteMenuItem: () => null,
 }));
 jest.mock("./ticket-parent-control", () => ({ TicketParentControl: () => null }));
 

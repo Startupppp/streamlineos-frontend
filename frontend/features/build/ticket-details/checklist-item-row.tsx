@@ -13,21 +13,6 @@ import {
 } from "@/hooks/api/build/checklists";
 import type { ChecklistItem } from "@/types/projects";
 
-function DeleteItemButton({ onClick }: { onClick: () => void }) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="opacity-0 group-hover:opacity-100 h-5 w-5 flex items-center justify-center rounded text-status-danger-ink hover:text-status-danger-ink hover:bg-status-danger-surface transition-all"
-      aria-label="Delete item"
-      {...hoverHandlers}
-    >
-      <Trash2Icon ref={iconRef} size={12} />
-    </button>
-  );
-}
-
 export const ChecklistItemRow = memo(function ChecklistItemRow({
   item,
   checklistId,
@@ -44,6 +29,7 @@ export const ChecklistItemRow = memo(function ChecklistItemRow({
   const [editing, setEditing] = useState(false);
   const [text, setText] = useState(item.text);
   const inputRef = useRef<HTMLInputElement>(null);
+  const { iconRef: deleteIconRef, hoverHandlers: deleteHoverHandlers } = useAnimatedIcon();
 
   const updateItem = useUpdateChecklistItem(projectId, ticketId);
   const deleteItem = useDeleteChecklistItem(projectId, ticketId);
@@ -161,7 +147,17 @@ export const ChecklistItemRow = memo(function ChecklistItemRow({
         </span>
       )}
 
-      {canUpdate ? <DeleteItemButton onClick={handleDelete} /> : null}
+      {canUpdate ? (
+        <button
+          type="button"
+          onClick={handleDelete}
+          className="opacity-0 group-hover:opacity-100 h-5 w-5 flex items-center justify-center rounded text-status-danger-ink hover:text-status-danger-ink hover:bg-status-danger-surface transition-all"
+          aria-label="Delete item"
+          {...deleteHoverHandlers}
+        >
+          <Trash2Icon ref={deleteIconRef} size={12} />
+        </button>
+      ) : null}
     </motion.div>
   );
 });

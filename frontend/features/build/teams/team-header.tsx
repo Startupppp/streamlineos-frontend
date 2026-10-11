@@ -1,7 +1,9 @@
 "use client";
 
 import { FolderKanban, LockKeyhole, Users } from "lucide-react";
+import { EllipsisIcon } from "@animateicons/react/lucide";
 import { Badge } from "@/components/ui/badge";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { ProjectTeamDetail } from "@/types/projects";
-import { TeamActionsButton } from "./team-member-controls";
+import { cn } from "@/lib/utils";
 
 export function TeamActionsMenu({
   onEdit,
@@ -23,7 +25,16 @@ export function TeamActionsMenu({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <TeamActionsButton className={className} />
+        <AnimatedIconButton
+          type="button"
+          variant="outline"
+          size="sm"
+          className={cn("gap-1.5", className)}
+          aria-label="Team actions"
+          icon={EllipsisIcon}
+        >
+          <span className="hidden sm:inline">Actions</span>
+        </AnimatedIconButton>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem onClick={onEdit}>Edit Team</DropdownMenuItem>

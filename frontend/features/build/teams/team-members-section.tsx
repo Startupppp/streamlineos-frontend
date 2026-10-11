@@ -2,10 +2,13 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
+import { PlusIcon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { useAddProjectTeamMember } from "@/hooks/api/build/teams";
 import type { TeamMemberPage } from "@/hooks/api/build/teams-schema";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Badge } from "@/components/ui/badge";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { TablePagination } from "@/components/ui/table-pagination";
 import {
   Select,
@@ -28,7 +31,6 @@ import { cn } from "@/lib/utils";
 import { resolveImageUrl } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
-  AddMemberButton,
   RemoveMemberButton,
   MemberRoleSelect,
 } from "./team-member-controls";
@@ -96,6 +98,7 @@ export function TeamMembersSection({
   const [addMemberId, setAddMemberId] = useState<string | undefined>(undefined);
   const [addMemberRole, setAddMemberRole] = useState<"member" | "lead">("member");
   const addMember = useAddProjectTeamMember(teamId);
+  const { iconRef: addIconRef, hoverHandlers: addHoverHandlers } = useAnimatedIcon();
 
   function handleAddMemberRoleChange(value: string): void {
     const role = TEAM_MEMBER_ROLES.find((candidate) => candidate === value);
@@ -164,11 +167,17 @@ export function TeamMembersSection({
                   <SelectItem value="lead">Lead</SelectItem>
                 </SelectContent>
               </Select>
-              <AddMemberButton
+              <LoadingButton
+                size="sm"
+                className="h-9 gap-1 text-xs"
+                onClick={handleAddMember}
                 disabled={!addMemberId}
                 isPending={addMember.isPending}
-                onClick={handleAddMember}
-              />
+                loadingText="Adding…"
+                {...addHoverHandlers}
+              >
+                <PlusIcon ref={addIconRef} size={12} /> Add
+              </LoadingButton>
             </div> : null}
         </div>
       </PmPanel>

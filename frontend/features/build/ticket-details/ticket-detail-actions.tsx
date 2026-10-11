@@ -6,7 +6,6 @@ import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import {
   Popover,
   PopoverContent,
@@ -18,28 +17,11 @@ interface TicketDetailActionsProps {
   isDeleting: boolean;
 }
 
-interface TicketDetailDeleteMenuItemProps {
-  onRequestDelete: () => void;
-}
-
 interface TicketDetailDeleteDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onDelete: () => void;
   isDeleting: boolean;
-}
-
-export function TicketDetailDeleteMenuItem({ onRequestDelete }: TicketDetailDeleteMenuItemProps) {
-  function handleSelect() {
-    onRequestDelete();
-  }
-
-  return (
-    <DropdownMenuItem variant="destructive" onSelect={handleSelect} className="gap-2">
-      <Trash2Icon size={14} />
-      Delete
-    </DropdownMenuItem>
-  );
 }
 
 export function TicketDetailDeleteDialog({

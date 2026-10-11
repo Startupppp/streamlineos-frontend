@@ -2,8 +2,7 @@
 
 import { PlusIcon } from "@animateicons/react/lucide";
 import { WifiOff } from "lucide-react";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
-import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyProjectsIllustration } from "@/components/illustrations";
 import { PageState } from "@/components/shared/page-state";
@@ -26,20 +25,6 @@ import {
 } from "@/components/pm-chrome";
 import { useBuildTemplatesPage } from "./use-build-templates-page";
 import { TEMPLATE_CATEGORY_OPTIONS } from "./template-categories";
-
-function NewTemplateButton({ onClick }: { onClick: () => void }) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <Button
-      size="sm"
-      className="min-h-11 sm:min-h-8"
-      onClick={onClick}
-      {...hoverHandlers}
-    >
-      <PlusIcon ref={iconRef} size={14} className="mr-1" /> New Template
-    </Button>
-  );
-}
 
 export function BuildTemplatesPage() {
   const {
@@ -115,7 +100,11 @@ export function BuildTemplatesPage() {
       <PageWrapper
         title="Templates"
         subtitle="Reusable project structures to bootstrap new work"
-        actions={canManage ? <NewTemplateButton onClick={handleOpenCreate} /> : undefined}
+        actions={canManage ? (
+          <AnimatedIconButton type="button" size="sm" className="min-h-11 sm:min-h-8" icon={PlusIcon} iconClassName="mr-1" onClick={handleOpenCreate}>
+            New Template
+          </AnimatedIconButton>
+        ) : undefined}
         filters={
           <BuildListToolbar
             search={{

@@ -29,7 +29,8 @@ import { useBuildCursorPager } from "@/features/build/shared/use-build-cursor-pa
 import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
 import { ShortcutHelpDialog } from "@/components/shared/shortcut-help-dialog";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
-import { AddWebhookButton } from "./add-webhook-button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { PlusIcon } from "@animateicons/react/lucide";
 import { useWebhookPageUrlState } from "./use-webhook-page-url-state";
 import { WebhookEmptyState } from "./webhook-empty-state";
 import { WebhookListContent } from "./webhook-list-content";
@@ -166,7 +167,11 @@ export function ProjectWebhooksPage({ projectId: projectIdStr }: ProjectWebhooks
     <PageWrapper
       title="Webhooks"
       subtitle="Receive HTTP POST notifications when project events occur"
-      actions={canManage && isOnline ? <AddWebhookButton onClick={handleShowForm} /> : undefined}
+      actions={canManage && isOnline ? (
+          <AnimatedIconButton type="button" size="sm" icon={PlusIcon} iconClassName="mr-1" onClick={handleShowForm}>
+            Add Webhook
+          </AnimatedIconButton>
+        ) : undefined}
     >
       <PmPageShell>
         <PmSection index={0} className="flex min-h-0 flex-1 flex-col">

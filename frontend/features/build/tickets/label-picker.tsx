@@ -44,6 +44,10 @@ export function TicketLabelChip({
   label: { id: number; name: string; color: string | null };
   onRemove?: (id: number) => void;
 }) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  function handleRemove() {
+    onRemove?.(label.id);
+  }
   return (
     <Badge
       variant="secondary"
@@ -56,36 +60,17 @@ export function TicketLabelChip({
       />
       <span className="max-w-36 truncate">{label.name}</span>
       {onRemove ? (
-        <RemoveLabelButton
-          labelId={label.id}
-          labelName={label.name}
-          onRemove={onRemove}
-        />
+        <button
+          type="button"
+          onClick={handleRemove}
+          aria-label={`Remove ${label.name} label`}
+          className="hover:bg-destructive/20 rounded-full p-0.5 transition-colors"
+          {...hoverHandlers}
+        >
+          <XIcon ref={iconRef} size={10} />
+        </button>
       ) : null}
     </Badge>
-  );
-}
-
-function RemoveLabelButton({
-  labelId,
-  labelName,
-  onRemove,
-}: {
-  labelId: number;
-  labelName: string;
-  onRemove: (id: number) => void;
-}) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <button
-      type="button"
-      onClick={() => onRemove(labelId)}
-      aria-label={`Remove ${labelName} label`}
-      className="hover:bg-destructive/20 rounded-full p-0.5 transition-colors"
-      {...hoverHandlers}
-    >
-      <XIcon ref={iconRef} size={10} />
-    </button>
   );
 }
 

@@ -1,10 +1,9 @@
 "use client";
 
-import { forwardRef, useCallback } from "react";
-import { PlusIcon, XIcon, EllipsisIcon } from "@animateicons/react/lucide";
+import { useCallback } from "react";
+import { XIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { Button } from "@/components/ui/button";
-import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
@@ -18,53 +17,6 @@ import { getUserDisplayName } from "@/lib/person-display";
 import { cn } from "@/lib/utils";
 import type { ProjectTeamMember } from "@/types/projects";
 
-export const TeamActionsButton = forwardRef<
-  HTMLButtonElement,
-  React.ComponentProps<typeof Button>
->(function TeamActionsButton({ className, ...props }, ref) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <Button
-      ref={ref}
-      type="button"
-      variant="outline"
-      size="sm"
-      className={cn("gap-1.5", className)}
-      aria-label="Team actions"
-      {...props}
-      {...hoverHandlers}
-    >
-      <EllipsisIcon ref={iconRef} size={14} />
-      <span className="hidden sm:inline">Actions</span>
-    </Button>
-  );
-});
-
-export function AddMemberButton({
-  isPending,
-  onClick,
-  disabled,
-}: {
-  isPending: boolean;
-  onClick: () => void;
-  disabled: boolean;
-}) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <LoadingButton
-      size="sm"
-      className="h-9 gap-1 text-xs"
-      onClick={onClick}
-      disabled={disabled}
-      isPending={isPending}
-      loadingText="Adding…"
-      {...hoverHandlers}
-    >
-      <PlusIcon ref={iconRef} size={12} /> Add
-    </LoadingButton>
-  );
-}
-
 export function RemoveMemberButton({
   member,
   isPending,
@@ -75,10 +27,12 @@ export function RemoveMemberButton({
   onRemove: (userId: string) => void;
 }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
+
   const handleClick = useCallback(
     () => onRemove(member.userId),
     [member.userId, onRemove],
   );
+
   return (
     <Button
       variant="ghost"

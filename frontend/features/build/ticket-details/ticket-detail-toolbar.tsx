@@ -2,14 +2,14 @@
 
 import { useState } from "react";
 import { PanelRightOpen } from "lucide-react";
-import { EllipsisIcon, ShareIcon } from "@animateicons/react/lucide";
+import { EllipsisIcon, ShareIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { TicketDetailActions, TicketDetailDeleteDialog, TicketDetailDeleteMenuItem } from "./ticket-detail-actions";
+import { TicketDetailActions, TicketDetailDeleteDialog } from "./ticket-detail-actions";
 
 interface TicketDetailToolbarProps {
   isMobile: boolean;
@@ -75,7 +75,10 @@ export function TicketDetailToolbar({
                   <ShareIcon size={14} />
                   Share
                 </DropdownMenuItem>
-                <TicketDetailDeleteMenuItem onRequestDelete={handleOpenOverflowDelete} />
+                <DropdownMenuItem variant="destructive" onSelect={handleOpenOverflowDelete} className="gap-2">
+                  <Trash2Icon size={14} />
+                  Delete
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
             <TicketDetailDeleteDialog
