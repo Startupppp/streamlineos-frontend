@@ -4,7 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
-import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
+import { addRoadmapItemToCache } from "@/hooks/api/build/roadmap";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type {
   DiscoveryListOpportunitiesResponse,
@@ -164,8 +164,9 @@ export function useAcceptOpportunity(managedProductId: number) {
       qc.invalidateQueries({
         queryKey: buildWorkQueryKeys.projects.managedProducts.opportunityTrace(managedProductId, vars.opportunityId),
         exact: true,
+        refetchType: "none",
       });
-      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.items(), refetchType: "none" });
+      addRoadmapItemToCache(qc, result.roadmapItem);
     },
   });
 }

@@ -234,7 +234,7 @@ function patchRoadmapItemInCache(
   );
 }
 
-function addRoadmapItemToCache(
+export function addRoadmapItemToCache(
   qc: ReturnType<typeof useQueryClient>,
   created: ScoredRoadmapItem,
 ) {

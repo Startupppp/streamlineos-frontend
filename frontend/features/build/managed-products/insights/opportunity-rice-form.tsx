@@ -2,6 +2,8 @@
 
 import { useId } from "react";
 import { useFormContext } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { EntityFormDialog } from "@/components/shared/entity-form-dialog";
 import { FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import {
@@ -13,7 +15,7 @@ import {
 } from "@/components/ui/select";
 import { FIELD_CONTROL_CLASS } from "@/components/ui/field-control";
 import { computeRiceScore, formatRiceScore } from "./rice-formula";
-import type { RiceFormValues } from "./opportunity-rice-schema";
+import { riceFormSchema, type RiceFormValues } from "./opportunity-rice-schema";
 
 const REACH_PERIOD_OPTIONS = [
   { label: "Per month", value: "month" },
@@ -35,37 +37,17 @@ const EFFORT_UNIT_OPTIONS = [
   { label: "Person-months", value: "person_months" },
 ];
 
-export function OpportunityRiceFormFields() {
+function OpportunityRiceFormFields() {
   const form = useFormContext<RiceFormValues>();
   const watchedValues = form.watch();
   const previewId = useId();
 
-  const reach = watchedValues.reach ?? "";
-  const impact = Number(watchedValues.impact ?? 0);
-  const confidence = watchedValues.confidence ?? 0;
-  const effort = Number(watchedValues.effort ?? 0);
-  const reachPeriod = (watchedValues.reachPeriod ?? "month") as "month" | "quarter" | "year";
-  const effortUnit = (watchedValues.effortUnit ?? "person_days") as
-    "person_days" | "person_weeks" | "person_months";
-
-  const hasAllFields =
-    reach.trim() !== "" &&
-    !Number.isNaN(impact) &&
-    impact > 0 &&
-    !Number.isNaN(confidence) &&
-    !Number.isNaN(effort) &&
-    effort > 0;
-
-  const preview = hasAllFields
-    ? computeRiceScore({
-        reach,
-        reachPeriod,
-        impact,
-        confidence,
-        effort,
-        effortUnit,
-      })
-    : null;
+  const preview = computeRiceScore({
+    reach: watchedValues.reach ?? "",
+    impact: Number(watchedValues.impact ?? 0),
+    confidence: Number(watchedValues.confidence ?? 0),
+    effort: Number(watchedValues.effort ?? 0),
+  });
 
   return (
     <div className="space-y-4">
@@ -212,9 +194,52 @@ export function OpportunityRiceFormFields() {
           className="font-mono text-sm font-semibold tabular-nums"
           data-testid="rice-score-value"
         >
-          {hasAllFields ? formatRiceScore(preview) : "Unscored"}
+          {formatRiceScore(preview)}
         </span>
       </div>
     </div>
+  );
+}
+
+interface OpportunityScoreDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  expectedScoreVersion: number;
+  isSubmitting: boolean;
+  onScore: (values: RiceFormValues) => void;
+}
+
+export function OpportunityScoreDialog({
+  open,
+  onOpenChange,
+  expectedScoreVersion,
+  isSubmitting,
+  onScore,
+}: OpportunityScoreDialogProps) {
+  const defaultValues: RiceFormValues = {
+    reach: "",
+    reachPeriod: "quarter",
+    reachUnit: "",
+    impact: 1,
+    confidence: 0.8,
+    effort: 1,
+    effortUnit: "person_weeks",
+    expectedScoreVersion,
+  };
+  return (
+    <EntityFormDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Score opportunity"
+      description="Each score is saved as a new version, so earlier scores stay in the history."
+      resolver={zodResolver(riceFormSchema)}
+      defaultValues={defaultValues}
+      onSubmit={onScore}
+      isSubmitting={isSubmitting}
+      submitLabel="Save score"
+      resetOnOpen
+    >
+      {() => <OpportunityRiceFormFields />}
+    </EntityFormDialog>
   );
 }
