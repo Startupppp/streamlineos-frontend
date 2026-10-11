@@ -418,6 +418,7 @@ export function RunExecutionPage({ projectId, runId }: RunExecutionPageProps) {
                 illustrationPreset="ticket"
                 title="No results match the current filters"
                 description="Try clearing the filters."
+                onClearFilters={listFilters.clearAll}
               />
             }
           />

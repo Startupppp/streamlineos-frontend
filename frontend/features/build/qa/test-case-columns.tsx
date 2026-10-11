@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, type MouseEvent } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -180,10 +180,15 @@ export function TestCaseMobileCard({
   onEdit: (tc: TestCase) => void;
   onDelete: (tc: TestCase) => void;
 }) {
+  const handleOpen = useCallback(() => onEdit(testCase), [onEdit, testCase]);
+  const handleActionsClick = useCallback((event: MouseEvent) => {
+    event.stopPropagation();
+  }, []);
   return (
     <BuildMobileCard
       title={testCase.title}
       status={<PriorityBadge priority={testCase.priority} />}
+      onClick={handleOpen}
       meta={[
         {
           label: "Automation",
@@ -206,11 +211,13 @@ export function TestCaseMobileCard({
       ]}
       actions={
         canManage ? (
-          <TestCaseRowActions
-            testCase={testCase}
-            onEdit={onEdit}
-            onDelete={onDelete}
-          />
+          <div onClick={handleActionsClick}>
+            <TestCaseRowActions
+              testCase={testCase}
+              onEdit={onEdit}
+              onDelete={onDelete}
+            />
+          </div>
         ) : null
       }
     />

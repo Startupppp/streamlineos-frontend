@@ -34,6 +34,14 @@ const REQUEST_TYPE_LABEL: Record<string, string> = {
   other: "Other",
 };
 
+const SOURCE_LABEL: Record<string, string> = {
+  manual: "Manual",
+  web_form: "Form",
+  email: "Email",
+  feedbucket: "Feedbucket",
+  portal_client: "Portal",
+};
+
 interface IntakeItem {
   id: number;
   title: string;
@@ -45,6 +53,7 @@ interface IntakeItem {
   priority?: string | null;
   requestType?: string | null;
   declineReason?: string | null;
+  source?: string | null;
 }
 
 interface IntakeItemCardProps {
@@ -82,6 +91,11 @@ export const IntakeItemCard = memo(function IntakeItemCard({ item, canManage, on
           {item.priority && (
             <PriorityBadge priority={item.priority} showLabel size="sm" />
           )}
+          {item.source ? (
+            <Badge variant="outline" className="text-xs font-normal px-1.5 py-0.5 rounded-md">
+              {SOURCE_LABEL[item.source] ?? item.source}
+            </Badge>
+          ) : null}
         </div>
         {item.description != null ? (
           <p className={cn(TEXT_TWO_LINES, "text-sm text-muted-foreground")}>

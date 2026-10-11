@@ -102,8 +102,9 @@ it("hides every actual row decision without workspace manage", () => {
 });
 it("uses the URL backed intake tab to filter rows", () => {
   mockFilters.mockReturnValue({ value: () => "accepted", setValue: jest.fn() });
-  mockRequests.mockReturnValue(query({ data: { data: [request, { id: 2, title: "Accepted item", status: "accepted" }] } }));
+  mockRequests.mockReturnValue(query({ data: { data: [{ id: 2, title: "Accepted item", status: "accepted" }] } }));
   render(<IntakePage projectId={1} />);
+  expect(mockRequests).toHaveBeenCalledWith(1, expect.objectContaining({ status: "accepted" }));
   expect(screen.getByText("Accepted item")).toBeInTheDocument();
   expect(screen.queryByText(request.title)).not.toBeInTheDocument();
 });
@@ -451,7 +452,7 @@ it("shows the not-in-this-view banner for a gone highlight token that never reso
 
 it("shows the not-in-this-view banner on an empty tab when highlight is requested", () => {
   mockFilters.mockReturnValue({ value: () => "declined", setValue: jest.fn() });
-  mockRequests.mockReturnValue(query({ data: { data: [{ id: 1, title: "Pending only", status: "pending" }] } }));
+  mockRequests.mockReturnValue(query({ data: { data: [] } }));
   render(<IntakePage projectId={1} highlightId={999} highlightRequested />);
   expect(screen.getByTestId("intake-item-not-found")).toBeInTheDocument();
   expect(screen.getByText("No declined items")).toBeInTheDocument();
@@ -459,7 +460,7 @@ it("shows the not-in-this-view banner on an empty tab when highlight is requeste
 
 it("fills the empty Declined panel with CONTENT_FILL_PANEL classes", () => {
   mockFilters.mockReturnValue({ value: () => "declined", setValue: jest.fn() });
-  mockRequests.mockReturnValue(query({ data: { data: [{ id: 1, title: "Pending only", status: "pending" }] } }));
+  mockRequests.mockReturnValue(query({ data: { data: [] } }));
   render(<IntakePage projectId={1} />);
   const panel = screen.getByTestId("intake-empty-panel");
   expect(panel.className).toMatch(/flex-1/);
@@ -480,12 +481,15 @@ it("keeps returnTo on the View ticket toast href after accept", async () => {
   expect(returnTo).toBe("/build/1/intake?tab=pending");
 });
 
-it("switches the active tab to 'all' when the highlighted item is on a different tab", () => {
+it("widens a default-tab highlight to All without writing the URL", () => {
   const mockSetValue = jest.fn();
   mockFilters.mockReturnValue({ value: () => "pending", setValue: mockSetValue });
   mockRequests.mockReturnValue(query({ data: { data: [{ id: 77, title: "Accepted item", status: "accepted" }] } }));
   render(<IntakePage projectId={1} highlightId={77} />);
-  expect(mockSetValue).toHaveBeenCalledWith("tab", "all");
+  expect(mockRequests).toHaveBeenCalledWith(1, expect.objectContaining({ status: undefined }));
+  expect(mockSetValue).not.toHaveBeenCalled();
+  expect(screen.getByRole("tab", { name: /^All$/ })).toHaveAttribute("data-state", "active");
+  expect(screen.getByText("Accepted item")).toBeInTheDocument();
 });
 
 it("offers View ticket immediately from the accepted summary while the fallback remains pending and disabled", async () => {

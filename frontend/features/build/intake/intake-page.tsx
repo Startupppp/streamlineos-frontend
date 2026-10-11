@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import {
   useIntakeRequests,
   useCreateIntakeRequest,
@@ -218,7 +218,7 @@ export function IntakePage({
   function handleNextPage(): void {
     pager.goNext(intakeData?.pagination.nextCursor);
   }
-  const items = intakeData?.data ?? [];
+  const items = useMemo(() => intakeData?.data ?? [], [intakeData]);
   const statusCounts = intakeData?.statusCounts ?? EMPTY_STATUS_COUNTS;
 
   const highlightedItem =
@@ -239,7 +239,10 @@ export function IntakePage({
     }
   }, [highlightFound]);
 
-  const pendingItems = items.filter((i) => i.status === "pending");
+  const pendingItems = useMemo(
+    () => items.filter((i) => i.status === "pending"),
+    [items],
+  );
   const pendingCount = statusCounts.pending;
   const sourceFiltered = sourceValue !== BUILD_FILTER_ALL || bugReportsView;
 

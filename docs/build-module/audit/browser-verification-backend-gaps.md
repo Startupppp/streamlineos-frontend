@@ -140,10 +140,29 @@ None yet.
 
 - Production writes were approved on product 39 and records created there, so classify, merge, unmark, and opportunity link were executed and are in the Verification log. Route to Intake and the Feedbucket badge now wait only on the deploys in BVG-FB-003 and BVG-FB-004.
 
+### BVG-BLOCK-005
+
+- Screen: `http://localhost:1000/build/managed-products/39` and every other product route
+- Checklist source: `docs/build-module/audit/managed-product-pending-work.md` — remaining browser verification
+- Reason: every Cursor IDE browser tab redirected to `/signin?session=expired`. Credentials are not invented. Browser clicks on Overview, Roadmap, Feedback, Goals, Projects, and Denial cannot continue until the user signs in again.
+
 ## Assumptions
 
 - Product 39 "Build QA Sandbox" and records created inside it are disposable test data. Every write in this log was made there.
 - Linking a submission as evidence has no unlink control. The backend has a delete evidence route, but the submission detail does not return evidence ids, so evidence links 1 and 2 on submission 95 stay in place as fixtures.
+
+## Command Center / reports / filters
+
+Frontend-only findings from the 2026-10-11 Command Center, reports, and filters pass. None of these are backend defects. Evidence and the file list live in [command-center-reports-filters-verification.md](./command-center-reports-filters-verification.md).
+
+- CCF-001: Overdue card now opens `/build/my-work?tab=overdue`.
+- CCF-002: `/build/risks` "View all" was Access Denied (FE-55). Rows link to `/build/${projectId}/risks`.
+- CCF-003: Blockers now matches My Work Blocked (`scope=mine&blockedOnly=true`) and links there.
+- CCF-004 / CCF-005: All Work search no longer overlaps Filters at 1280; the mobile Team/Product trigger shows the applied value.
+- CCF-006: Saved views now persist product, team, grouping, sort, and calendar/timeline.
+- CCF-007 / CCF-008: Overview Open uses `healthBreakdown.openTickets`; Workload uses `EmptyState`.
+
+Post-fix browser reload is blocked on a fresh sign-in.
 
 ## Verification log
 

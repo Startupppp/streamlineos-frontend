@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type MouseEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Trash2Icon } from "@animateicons/react/lucide";
@@ -30,6 +30,7 @@ import {
   useBuildListFilters,
 } from "@/features/build/shared/use-build-list-filters";
 import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
+import { deriveRunDisplayStatus } from "./runs/run-effective-status";
 import { TestRunSheet } from "./test-run-sheet";
 
 const RUN_PAGE_SIZE = 50;
@@ -81,6 +82,16 @@ function runStatusStyle(status: string): string {
   return RUN_STATUS_STYLES[status] ?? "text-muted-foreground border-border";
 }
 
+function runListDisplayStatus(run: TestRunListItem): TestRunListItem["status"] {
+  const total =
+    (run.passCount ?? 0) +
+    (run.failCount ?? 0) +
+    (run.blockedCount ?? 0) +
+    (run.notRunCount ?? 0) +
+    (run.skippedCount ?? 0);
+  return deriveRunDisplayStatus(run.status, { total, notRun: run.notRunCount ?? 0 });
+}
+
 function RunStatusBadge({ status }: { status: string }) {
   return (
     <Badge
@@ -127,7 +138,13 @@ function RunDeleteButton({
   onDelete: (r: TestRunListItem) => void;
 }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
-  const handleDelete = useCallback(() => onDelete(run), [run, onDelete]);
+  const handleDelete = useCallback(
+    (event: MouseEvent<HTMLButtonElement>) => {
+      event.stopPropagation();
+      onDelete(run);
+    },
+    [run, onDelete],
+  );
   return (
     <Button
       variant="ghost"
@@ -139,6 +156,37 @@ function RunDeleteButton({
     >
       <Trash2Icon ref={iconRef} size={14} />
     </Button>
+  );
+}
+
+function RunMobileCard({
+  run,
+  canManage,
+  onOpen,
+  onDelete,
+}: {
+  run: TestRunListItem;
+  canManage: boolean;
+  onOpen: (run: TestRunListItem) => void;
+  onDelete: (run: TestRunListItem) => void;
+}) {
+  const handleOpen = useCallback(() => onOpen(run), [onOpen, run]);
+  return (
+    <BuildMobileCard
+      eyebrow={`Run #${run.runNumber}`}
+      title={run.name}
+      status={<RunStatusBadge status={runListDisplayStatus(run)} />}
+      meta={[
+        { label: "Environment", value: run.environment ?? "—" },
+        { label: "Progress", value: <RunProgress run={run} /> },
+      ]}
+      actions={
+        canManage ? (
+          <RunDeleteButton run={run} onDelete={onDelete} />
+        ) : null
+      }
+      onClick={handleOpen}
+    />
   );
 }
 
@@ -281,7 +329,7 @@ export function TestRunsTab({ projectId, createNonce = 0 }: TestRunsTabProps) {
       {
         key: "status",
         header: "Status",
-        cell: (row) => <RunStatusBadge status={row.status} />,
+        cell: (row) => <RunStatusBadge status={runListDisplayStatus(row)} />,
         className: "w-[110px]",
       },
       {
@@ -315,23 +363,23 @@ export function TestRunsTab({ projectId, createNonce = 0 }: TestRunsTabProps) {
     [canManage, projectId, handleDeleteRow],
   );
 
+  const handleOpenRun = useCallback(
+    (run: TestRunListItem) => {
+      router.push(`/build/${projectId}/qa/runs/${run.id}`);
+    },
+    [projectId, router],
+  );
+
   const renderMobileCard = useCallback(
     (row: TestRunListItem) => (
-      <BuildMobileCard
-        title={row.name}
-        status={<RunStatusBadge status={row.status} />}
-        meta={[
-          { label: "Environment", value: row.environment ?? "—" },
-          { label: "Progress", value: <RunProgress run={row} /> },
-        ]}
-        actions={
-          canManage ? (
-            <RunDeleteButton run={row} onDelete={handleDeleteRow} />
-          ) : null
-        }
+      <RunMobileCard
+        run={row}
+        canManage={canManage}
+        onOpen={handleOpenRun}
+        onDelete={handleDeleteRow}
       />
     ),
-    [canManage, handleDeleteRow],
+    [canManage, handleDeleteRow, handleOpenRun],
   );
 
   return (

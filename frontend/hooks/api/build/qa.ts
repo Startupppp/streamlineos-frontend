@@ -261,6 +261,48 @@ function markRunListsStale(qc: QueryClient, projectId: number) {
   }
 }
 
+const RESULT_COUNT_FIELD: Record<
+  TestRunResult["status"],
+  keyof Pick<TestRunListItem, "passCount" | "failCount" | "blockedCount" | "notRunCount" | "skippedCount">
+> = {
+  passed: "passCount",
+  failed: "failCount",
+  blocked: "blockedCount",
+  not_run: "notRunCount",
+  skipped: "skippedCount",
+};
+
+function patchRunListsFromResult(
+  qc: QueryClient,
+  projectId: number,
+  runId: number,
+  previousStatus: TestRunResult["status"] | undefined,
+  nextStatus: TestRunResult["status"],
+) {
+  const previousField = previousStatus ? RESULT_COUNT_FIELD[previousStatus] : undefined;
+  const nextField = RESULT_COUNT_FIELD[nextStatus];
+  for (const [key, page] of qc.getQueriesData<IdCursorPage<TestRunListItem>>({
+    queryKey: buildWorkQueryKeys.projects.qa.runs(projectId),
+  })) {
+    if (typeof key.at(-1) === "number" || !page) continue;
+    qc.setQueryData<IdCursorPage<TestRunListItem>>(key, {
+      ...page,
+      data: page.data.map((run) => {
+        if (run.id !== runId) return run;
+        const counts = { ...run };
+        if (previousField && previousField !== nextField) {
+          counts[previousField] = Math.max(0, run[previousField] - 1);
+          counts[nextField] = run[nextField] + 1;
+        }
+        if (nextStatus !== "not_run" && run.status === "not_started") {
+          counts.status = "in_progress";
+        }
+        return counts;
+      }),
+    });
+  }
+}
+
 export function useUpdateTestResult() {
   const qc = useQueryClient();
   return useAuthorizedMutation("build:qa:execute", {
@@ -278,6 +320,10 @@ export function useUpdateTestResult() {
         testRunResultRowContract,
       ),
     onSuccess: (updated, vars) => {
+      const previous = qc.getQueryData<TestRunDetail | null>(
+        buildWorkQueryKeys.projects.qa.run(vars.projectId, vars.runId),
+      );
+      const previousStatus = previous?.results.find((result) => result.id === vars.resultId)?.status;
       patchRunResult(qc, vars.projectId, vars.runId, vars.resultId, {
         status: updated.status,
         notes: updated.notes,
@@ -285,6 +331,7 @@ export function useUpdateTestResult() {
         executedAt: updated.executedAt,
         linkedWorkItemId: updated.linkedWorkItemId,
       });
+      patchRunListsFromResult(qc, vars.projectId, vars.runId, previousStatus, updated.status);
       markRunListsStale(qc, vars.projectId);
     },
   });

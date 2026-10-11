@@ -65,8 +65,20 @@ jest.mock("@/components/shared/error-state", () => ({
 }));
 
 jest.mock("@/components/ui/empty-state", () => ({
-  EmptyState: ({ title, action }: { title: string; action?: { label: string; href: string } }) =>
-    <div data-testid="empty-state">{title}{action ? <a href={action.href}>{action.label}</a> : null}</div>,
+  EmptyState: ({
+    title,
+    action,
+    onClearFilters,
+  }: {
+    title: string;
+    action?: { label: string; href: string };
+    onClearFilters?: () => void;
+  }) =>
+    <div data-testid="empty-state">
+      {title}
+      {action ? <a href={action.href}>{action.label}</a> : null}
+      {onClearFilters ? <button type="button" onClick={onClearFilters}>Clear filters</button> : null}
+    </div>,
 }));
 
 jest.mock("@/components/pm-chrome", () => ({
@@ -248,11 +260,13 @@ it("renders DataTable rows when the run has results and no filter is active", ()
 });
 
 it("shows empty state when status URL param filters out all results", () => {
+  const clearAll = jest.fn();
   mockUseBuildListFilters.mockReturnValue(
     makeFilters({
       value: (param: string) => (param === "status" ? "blocked" : "all"),
       isActive: (param: string) => param === "status",
       isFiltered: true,
+      clearAll,
     }),
   );
   mockUseTestRunDetail.mockReturnValue(baseQuery({
@@ -261,6 +275,8 @@ it("shows empty state when status URL param filters out all results", () => {
   render(<RunExecutionPage projectId={1} runId={1} />);
   expect(screen.getByTestId("empty-state")).toBeInTheDocument();
   expect(screen.queryByTestId("data-table")).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Clear filters" }));
+  expect(clearAll).toHaveBeenCalledTimes(1);
 });
 
 it("shows only matching results when the search query URL param filters by title", () => {

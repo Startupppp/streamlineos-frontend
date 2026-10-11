@@ -69,22 +69,33 @@ jest.mock("@/components/ui/data-table", () => ({
     data,
     columns,
     getRowKey,
+    mobileCard,
   }: {
     data: T[];
     columns: MockDataTableColumn<T>[];
     getRowKey: (row: T, index: number) => string | number;
+    mobileCard?: (row: T, index: number) => ReactNode;
   }) => (
-    <table data-testid="data-table">
-      <tbody>
-        {data.map((row, index) => (
-          <tr key={getRowKey(row, index)}>
-            {columns.map((col) => (
-              <td key={col.key}>{col.cell(row)}</td>
-            ))}
-          </tr>
-        ))}
-      </tbody>
-    </table>
+    <>
+      <table data-testid="data-table">
+        <tbody>
+          {data.map((row, index) => (
+            <tr key={getRowKey(row, index)}>
+              {columns.map((col) => (
+                <td key={col.key}>{col.cell(row)}</td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {mobileCard
+        ? data.map((row, index) => (
+            <div key={`mobile-${getRowKey(row, index)}`} data-testid="mobile-card">
+              {mobileCard(row, index)}
+            </div>
+          ))
+        : null}
+    </>
   ),
   DataTableSkeleton: () => <div data-testid="data-table-skeleton" />,
 }));
@@ -237,6 +248,63 @@ it("falls back to a readable label instead of rendering blank text for a run sta
   render(<TestRunsTab projectId={1} />);
   expect(screen.getByText("in review")).toBeInTheDocument();
   expect(screen.queryByText("undefined")).not.toBeInTheDocument();
+});
+
+it("shows In Progress when stored status is not_started but results have already been executed", () => {
+  const run = {
+    id: 4,
+    runNumber: 1,
+    name: "QA verify regression run",
+    status: "not_started" as const,
+    environment: "Staging",
+    passCount: 1,
+    failCount: 0,
+    blockedCount: 0,
+    notRunCount: 2,
+    skippedCount: 0,
+  };
+  mockUseTestRuns.mockReturnValue(baseQuery({ data: { data: [run], hasMore: false, nextCursor: null } }));
+  render(<TestRunsTab projectId={6} />);
+  expect(screen.getAllByText("In Progress").length).toBeGreaterThan(0);
+  expect(screen.queryByText("Not Started")).not.toBeInTheDocument();
+});
+
+it("opens the run from the mobile card so a populated execution is reachable without the desktop table links", () => {
+  const run = {
+    id: 4,
+    runNumber: 1,
+    name: "QA verify regression run",
+    status: "not_started" as const,
+    environment: "Staging",
+    passCount: 1,
+    failCount: 0,
+    blockedCount: 0,
+    notRunCount: 2,
+    skippedCount: 0,
+  };
+  mockUseTestRuns.mockReturnValue(baseQuery({ data: { data: [run], hasMore: false, nextCursor: null } }));
+  render(<TestRunsTab projectId={6} />);
+  fireEvent.click(screen.getByRole("button", { name: /QA verify regression run/i }));
+  expect(mockRouterPush).toHaveBeenCalledWith("/build/6/qa/runs/4");
+});
+
+it("does not open the run when the mobile delete control is pressed", () => {
+  const run = {
+    id: 4,
+    runNumber: 1,
+    name: "QA verify regression run",
+    status: "in_progress" as const,
+    environment: "Staging",
+    passCount: 1,
+    failCount: 0,
+    blockedCount: 0,
+    notRunCount: 2,
+    skippedCount: 0,
+  };
+  mockUseTestRuns.mockReturnValue(baseQuery({ data: { data: [run], hasMore: false, nextCursor: null } }));
+  render(<TestRunsTab projectId={6} />);
+  fireEvent.click(screen.getByRole("button", { name: "Delete QA verify regression run" }));
+  expect(mockRouterPush).not.toHaveBeenCalled();
 });
 
 it("pressing j then Enter navigates to the first run's detail page so keyboard users can drill in without a mouse", () => {
