@@ -20,6 +20,31 @@ interface OpportunityTraceProps {
   trace: DiscoveryGetTraceResponse;
 }
 
+function EvidenceSourceLink({
+  managedProductId,
+  item,
+}: {
+  managedProductId: number;
+  item: DiscoveryGetTraceResponse["evidence"][number];
+}) {
+  if (item.sourceKind === "feedbucket_submission") {
+    return (
+      <Link
+        href={`/build/managed-products/${managedProductId}/feedback?submission=${item.sourceId}`}
+        className="text-sm font-medium text-status-info-ink-strong hover:underline"
+        data-testid={`trace-evidence-link-${item.sourceId}`}
+      >
+        Submission #{item.sourceId}
+      </Link>
+    );
+  }
+  return (
+    <span className="text-sm text-foreground">
+      {item.sourceKind.replaceAll("_", " ")} #{item.sourceId}
+    </span>
+  );
+}
+
 function TraceStep({
   icon,
   label,
@@ -60,12 +85,23 @@ export function OpportunityTrace({
         icon={<FileText className="size-3.5" aria-hidden />}
         label="Evidence"
         content={
-          <p className="text-sm text-foreground">
-            <span className="font-mono tabular-nums font-semibold">
-              {trace.evidence.length}
-            </span>{" "}
-            piece{trace.evidence.length !== 1 ? "s" : ""} of evidence
-          </p>
+          <div className="space-y-1">
+            <p className="text-sm text-foreground">
+              <span className="font-mono tabular-nums font-semibold">
+                {trace.evidence.length}
+              </span>{" "}
+              piece{trace.evidence.length !== 1 ? "s" : ""} of evidence
+            </p>
+            {trace.evidence.length > 0 ? (
+              <ul className="space-y-1">
+                {trace.evidence.map((item) => (
+                  <li key={item.id}>
+                    <EvidenceSourceLink managedProductId={managedProductId} item={item} />
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </div>
         }
       />
 

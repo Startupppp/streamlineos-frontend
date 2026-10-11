@@ -120,6 +120,17 @@ describe("OpportunityTrace — step rendering (BSN-TRACE-STEPS)", () => {
     expect(decision).toHaveTextContent("Q3 priority");
   });
 
+  it("links each feedbucket evidence row to the persisted submission", () => {
+    render(<OpportunityTrace managedProductId={39} trace={FULL_TRACE} />);
+
+    const link = screen.getByTestId("trace-evidence-link-101");
+    expect(link).toHaveAttribute(
+      "href",
+      "/build/managed-products/39/feedback?submission=101",
+    );
+    expect(screen.getByTestId("trace-evidence-link-102")).toBeInTheDocument();
+  });
+
   it("renders a link to the product roadmap page from the roadmap item so the user can navigate to the roadmap", () => {
     render(<OpportunityTrace managedProductId={99} trace={FULL_TRACE} />);
 

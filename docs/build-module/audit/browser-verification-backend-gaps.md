@@ -133,8 +133,7 @@ None yet.
 
 - Screen: `http://localhost:1000/build/managed-products/39/projects`
 - Checklist source: `docs/build-module/audit/managed-product-pending-work.md` — Linked Projects customer filter
-- Reason: the organization has no CRM clients (`/crm/clients` shows "No clients yet"). New Client submits `POST /clients` with `{ "name": "QA BV Client" }` and returns 400 `VALIDATION_FAILED`: `fk_client_party_map_legacy` references a record that does not exist. Migration `1093_party_map_drop_legacy_fks` drops that constraint because the write path no longer inserts a legacy `clients` row. Production still enforces it, so the list stays empty and the customer filter cannot be set to a real client.
-- Proven so far: the Customer list loads from `GET /clients/list` (200) and offers only "All customers"
+- Reason: resolved. `1093_party_map_drop_legacy_fks` was already in the migration ledger while `fk_client_party_map_legacy` was still on `client_party_map`. `1982_party_map_drop_legacy_fks_again` dropped that constraint and the lead and contact twins. New Client then created QA BV Client (id 6). It is the client on Build QA Sandbox, and the Linked Projects customer filter at `?pp_client=6` lists that project only.
 
 ### BVG-BLOCK-002 update
 
@@ -144,7 +143,7 @@ None yet.
 
 - Screen: `http://localhost:1000/build/managed-products/39` and every other product route
 - Checklist source: `docs/build-module/audit/managed-product-pending-work.md` — remaining browser verification
-- Reason: an earlier pass lost the session and stopped. The later pass was signed in. Denial and the customer filter remain open for the reasons in BVG-BLOCK-001 and BVG-BLOCK-004.
+- Reason: an earlier pass lost the session and stopped. The later pass was signed in. The customer filter is proven. Denial remains open for the reason in BVG-BLOCK-001.
 
 ## Assumptions
 
@@ -175,7 +174,7 @@ Post-fix browser reload is blocked on a fresh sign-in.
 - 2026-10-11 evening, signed in again. Overview for product 39 shows owner adityachalla01, Build lifecycle, Record opportunity (sheet opens, Cancel does not create), Needs attention, and the signal-to-outcome track.
 - Feedback inbox shows three rows with channel and status badges. Route to Intake lists Build QA Sandbox (BQS) and StreamlineOS (STRE); Route stays disabled until a project is chosen. After choosing BQS and clicking Route the dialog closed; a success toast was not still on screen, so the write is not counted as proven.
 - Collect via Feedbucket offers Create product widget. The widget was not created.
-- Linked Projects filters include Team, Owner, Customer, Contribution, and dates. Customer offers only All customers (BVG-BLOCK-004).
+- Linked Projects filters include Team, Owner, Customer, Contribution, and dates. The customer filter later listed QA BV Client; see the verification log.
 - Goals shows QA BV Goal and testing, both owned by adityachalla01, with pagination.
 - 2026-10-11 after the backend deploy. Insights at `?view=discovery&opportunity=1` loads opportunities and opens QA BV Opportunity A with RICE 450.00 and the override reason.
 - Owner: Edit product, choose Unassigned, save. Overview reads "Owner Unassigned" and "No product owner". Set the owner back to adityachalla01, save, reload. Overview reads "Owner adityachalla01".
@@ -189,6 +188,7 @@ Post-fix browser reload is blocked on a fresh sign-in.
 - Cache: overview showed New feedback 5 and Total feedback 5. Capture "QA BV cache count two: overview should follow this capture" returned `POST /feedbucket/submissions/capture` 201 and no summary GET. Opening Overview then showed New feedback 6, Total feedback 6, and 4 unthemed items, with no GET of the summary.
 - Directory create, second product: New product "QA BV Outside Sandbox", key QBOS. Toast "Managed product created". After reload the directory still lists it.
 - Missing-product facets: `GET /feedbucket/submissions/facets?managedProductId=999999999` still returns 200 on the deployed API. Local `FeedbucketFacetsService.facets` now rejects a missing product the same way the submissions list does. That change is not deployed, so the box stays with the submissions list only.
+- Customer filter: `1982_party_map_drop_legacy_fks_again` applied. New Client "QA BV Client" succeeded (client id 6). Project 6 settings saved that client, toast "Project settings updated". Linked Projects Customer set to QA BV Client. The URL is `?pp_client=6`, the combobox reads QA BV Client, and the list shows Build QA Sandbox only. Leaving for Overview and using Back restores that URL and the same customer. The signed-in account's organization switcher lists only Streamline OS.
 
 ## Delivery checklist
 
@@ -199,4 +199,4 @@ Post-fix browser reload is blocked on a fresh sign-in.
 - [x] BVG-FB-003: deploy, then route submission 94 to Build QA Sandbox and confirm it appears in that project's Intake.
 - [x] BVG-INS-001: deploy, then open product 39 Insights and the `opportunity=1` deep link.
 - [x] BVG-FB-004: deploy, then Create product widget from Collect via Feedbucket, submit through its snippet, and confirm the row shows the Feedbucket badge.
-- [ ] BVG-BLOCK-004: win a CRM lead into a client, link it to a product project, and filter Linked Projects by that customer.
+- [x] BVG-BLOCK-004: create a CRM client, link it to a product project, and filter Linked Projects by that customer. QA BV Client on Build QA Sandbox, `?pp_client=6`.
