@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +13,8 @@ import {
   CalendarDays,
   Users,
   FolderKanban,
+  Gauge,
+  GitBranch,
   History,
   Link2,
   ListChecks,
@@ -47,6 +50,7 @@ import { GoalDetailActions } from "./goal-detail-actions";
 import {
   GoalKeyResultsSection,
   GoalLinkedItemsSection,
+  GoalOutcomesSection,
   GoalUpdatesTimeline,
 } from "./goal-detail-sections";
 
@@ -55,6 +59,7 @@ export function GoalDetailPage({ goalId }: { goalId: number }) {
   const canManage = useCan("build:goals:manage");
 
   const { data: goal, isLoading, isError, error, refetch } = useGoal(goalId);
+  const { data: parentGoal } = useGoal(goal?.parentGoalId ?? 0);
   const deleteGoal = useDeleteGoal();
   const removeLink = useRemoveGoalLink(goalId);
 
@@ -197,6 +202,15 @@ export function GoalDetailPage({ goalId }: { goalId: number }) {
                   <TruncatedText text={detail.project.name} />
                 </span>
               ) : null}
+              {detail.parentGoalId !== null ? (
+                <Link
+                  href={`/build/goals/${detail.parentGoalId}`}
+                  className="flex min-w-0 items-center gap-1.5 hover:text-foreground hover:underline"
+                >
+                  <GitBranch className="h-3.5 w-3.5 shrink-0" />
+                  <TruncatedText text={`Parent: ${parentGoal?.title ?? `Goal #${detail.parentGoalId}`}`} />
+                </Link>
+              ) : null}
             </div>
           </PmPanel>
         </PmSection>
@@ -214,6 +228,12 @@ export function GoalDetailPage({ goalId }: { goalId: number }) {
             <TabsTrigger value="updates">
               <History aria-hidden="true" /> Updates
               <span className="tabular-nums">{detail.updates.length}</span>
+            </TabsTrigger>
+            <TabsTrigger value="outcomes">
+              <Gauge aria-hidden="true" /> Outcomes
+              <span className="tabular-nums">
+                {detail.measurementSources.length + detail.linkedRoadmapItems.length}
+              </span>
             </TabsTrigger>
           </TabsList>
           <TabsContent value="key-results" className="mt-0 overflow-y-auto">
@@ -233,6 +253,12 @@ export function GoalDetailPage({ goalId }: { goalId: number }) {
           </TabsContent>
           <TabsContent value="updates" className="mt-0 overflow-y-auto">
             <GoalUpdatesTimeline updates={detail.updates} />
+          </TabsContent>
+          <TabsContent value="outcomes" className="mt-0 overflow-y-auto">
+            <GoalOutcomesSection
+              measurementSources={detail.measurementSources}
+              roadmapItems={detail.linkedRoadmapItems}
+            />
           </TabsContent>
         </Tabs>
       </PmPageShell>

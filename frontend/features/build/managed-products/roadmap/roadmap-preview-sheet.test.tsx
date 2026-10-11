@@ -27,6 +27,11 @@ jest.mock("@/components/ui/badge", () => ({
   Badge: ({ children }: { children: React.ReactNode }) => <span>{children}</span>,
 }));
 
+let mockPublication: { path: string } | null = null;
+jest.mock("@/hooks/api/build/roadmap-public", () => ({
+  useRoadmapPublication: () => ({ data: mockPublication }),
+}));
+
 import { RoadmapPreviewSheet } from "./roadmap-preview-sheet";
 
 function makeItem(id: number, horizon: RoadmapHorizon, isPublic: boolean): ScorableRoadmapItem {
@@ -46,6 +51,21 @@ const onClose = jest.fn();
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockPublication = null;
+});
+
+describe("RoadmapPreviewSheet — public page link", () => {
+  it("links to the published board filtered to this product", () => {
+    mockPublication = { path: "/roadmap/org-1" };
+    render(<RoadmapPreviewSheet items={[]} managedProductId={39} onClose={onClose} />);
+    expect(screen.getByRole("link", { name: /Open public page/ })).toHaveAttribute("href", "/roadmap/org-1?product=39");
+  });
+
+  it("says the board is unpublished instead of linking when there is no publication", () => {
+    render(<RoadmapPreviewSheet items={[]} managedProductId={39} onClose={onClose} />);
+    expect(screen.queryByRole("link", { name: /Open public page/ })).not.toBeInTheDocument();
+    expect(screen.getByText("The public board is not published yet.")).toBeInTheDocument();
+  });
 });
 
 describe("RoadmapPreviewSheet — renders public items only (BSN-RM-PREVIEW)", () => {
@@ -55,7 +75,7 @@ describe("RoadmapPreviewSheet — renders public items only (BSN-RM-PREVIEW)", (
       makeItem(2, "next", false),
       makeItem(3, "later", true),
     ];
-    render(<RoadmapPreviewSheet items={items} onClose={onClose} />);
+    render(<RoadmapPreviewSheet items={items} managedProductId={39} onClose={onClose} />);
     expect(screen.getByText("Item 1")).toBeInTheDocument();
     expect(screen.queryByText("Item 2")).not.toBeInTheDocument();
     expect(screen.getByText("Item 3")).toBeInTheDocument();
@@ -63,20 +83,20 @@ describe("RoadmapPreviewSheet — renders public items only (BSN-RM-PREVIEW)", (
 
   it("shows a message when no items are public", () => {
     const items = [makeItem(1, "now", false)];
-    render(<RoadmapPreviewSheet items={items} onClose={onClose} />);
+    render(<RoadmapPreviewSheet items={items} managedProductId={39} onClose={onClose} />);
     expect(screen.getByText(/Nothing to preview/i)).toBeInTheDocument();
     expect(screen.queryByText("Item 1")).not.toBeInTheDocument();
   });
 
   it("shows the correct public item count in the description", () => {
     const items = [makeItem(1, "now", true), makeItem(2, "next", true)];
-    render(<RoadmapPreviewSheet items={items} onClose={onClose} />);
+    render(<RoadmapPreviewSheet items={items} managedProductId={39} onClose={onClose} />);
     expect(screen.getByText(/2 items visible to the public/i)).toBeInTheDocument();
   });
 
   it("shows a singular count when exactly one item is public", () => {
     const items = [makeItem(1, "now", true)];
-    render(<RoadmapPreviewSheet items={items} onClose={onClose} />);
+    render(<RoadmapPreviewSheet items={items} managedProductId={39} onClose={onClose} />);
     expect(screen.getByText(/1 item visible to the public/i)).toBeInTheDocument();
   });
 
@@ -85,14 +105,14 @@ describe("RoadmapPreviewSheet — renders public items only (BSN-RM-PREVIEW)", (
       makeItem(1, "now", true),
       makeItem(2, "later", true),
     ];
-    render(<RoadmapPreviewSheet items={items} onClose={onClose} />);
+    render(<RoadmapPreviewSheet items={items} managedProductId={39} onClose={onClose} />);
     expect(screen.getByText("Now")).toBeInTheDocument();
     expect(screen.getByText("Next")).toBeInTheDocument();
     expect(screen.getByText("Later")).toBeInTheDocument();
   });
 
   it("shows the Public Roadmap Preview title", () => {
-    render(<RoadmapPreviewSheet items={[]} onClose={onClose} />);
+    render(<RoadmapPreviewSheet items={[]} managedProductId={39} onClose={onClose} />);
     expect(screen.getByText("Public Roadmap Preview")).toBeInTheDocument();
   });
 });

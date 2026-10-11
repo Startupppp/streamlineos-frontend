@@ -2,7 +2,9 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { usePositionRoadmapItem, usePublishRoadmapItem } from "@/hooks/api/build/roadmap";
 import { useCan } from "@/hooks/api/access";
@@ -122,17 +124,31 @@ export function RoadmapBoardColumns({
                 <span className={cn("h-2 w-2 shrink-0 rounded-full", toneClasses.fill)} aria-hidden />
                 <span className="text-sm font-semibold text-foreground">{col.label}</span>
               </div>
-              <span
-                className={cn(
-                  "min-w-5 rounded-full border px-1.5 py-0.5 text-center tabular-nums text-micro font-semibold",
-                  toneClasses.surface,
-                  toneClasses.ink,
-                  toneClasses.rule,
-                )}
-                aria-label={`${items.length} items`}
-              >
-                {items.length}
-              </span>
+              <div className="flex items-center gap-1">
+                <span
+                  className={cn(
+                    "min-w-5 rounded-full border px-1.5 py-0.5 text-center tabular-nums text-micro font-semibold",
+                    toneClasses.surface,
+                    toneClasses.ink,
+                    toneClasses.rule,
+                  )}
+                  aria-label={`${items.length} items`}
+                >
+                  {items.length}
+                </span>
+                {canManage && onCreateInHorizon && items.length > 0 ? (
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="ghost"
+                    className="h-6 w-6"
+                    aria-label={`Add item to ${col.label}`}
+                    onClick={horizonCreateHandlers[col.horizon]}
+                  >
+                    <Plus className="h-3.5 w-3.5" aria-hidden />
+                  </Button>
+                ) : null}
+              </div>
             </div>
             <div className="min-h-0 flex-1 overflow-y-auto p-2">
               {items.length === 0 ? (

@@ -41,10 +41,17 @@ jest.mock("@/hooks/api/build/product-discovery", () => ({
   useOpportunities: jest.fn(),
 }));
 
+const mockUseGoals = jest.fn();
+jest.mock("@/hooks/api/goals", () => ({
+  useGoals: (...args: unknown[]) => mockUseGoals(...args),
+}));
+
 import { OutcomeReviewScheduleSheet } from "./outcome-review-schedule-sheet";
 import { useOpportunities } from "@/hooks/api/build/product-discovery";
 
 const mockUseOpportunities = useOpportunities as jest.MockedFunction<typeof useOpportunities>;
+
+beforeEach(() => mockUseGoals.mockReturnValue({ data: [] }));
 
 function withOpportunities(rows: Array<{ id: number; title: string }>) {
   mockUseOpportunities.mockReturnValue({
@@ -53,7 +60,6 @@ function withOpportunities(rows: Array<{ id: number; title: string }>) {
 }
 
 describe("OutcomeReviewScheduleSheet — opportunity link", () => {
-  beforeEach(() => jest.clearAllMocks());
 
   it("links the review to the chosen opportunity so it appears in that opportunity's trace", async () => {
     withOpportunities([
@@ -101,5 +107,34 @@ describe("OutcomeReviewScheduleSheet — opportunity link", () => {
     );
 
     expect(screen.queryByTestId("opportunity-select")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("goal-select")).not.toBeInTheDocument();
+  });
+});
+
+describe("OutcomeReviewScheduleSheet — goal link", () => {
+  it("links the review to one of the product's goals so the goal lists it as an outcome", async () => {
+    withOpportunities([]);
+    mockUseGoals.mockReturnValue({ data: [{ id: 38, title: "QA BV Goal" }] });
+    const onSubmit = jest.fn();
+    const user = userEvent.setup();
+
+    render(
+      <OutcomeReviewScheduleSheet
+        managedProductId={39}
+        open
+        onOpenChange={jest.fn()}
+        onSubmit={onSubmit}
+        isSubmitting={false}
+      />,
+    );
+
+    expect(mockUseGoals).toHaveBeenCalledWith({ managedProductId: 39, limit: 100 }, { enabled: true });
+    await user.type(screen.getByLabelText("Title (required)"), "Goal review");
+    await user.click(screen.getByRole("option", { name: "QA BV Goal" }));
+    await user.click(screen.getByRole("button", { name: "Schedule" }));
+
+    await waitFor(() =>
+      expect(onSubmit).toHaveBeenCalledWith({ kind: "outcome_review", title: "Goal review", goalId: 38 }),
+    );
   });
 });

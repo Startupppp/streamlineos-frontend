@@ -12,6 +12,7 @@ jest.mock("@/hooks/api/build/roadmap-public", () => ({
 jest.mock("next/navigation", () => ({
   useParams: () => ({ orgId: "rm_9fK2xQ7vBnL4tR8sW1yZ3aC6" }),
   useRouter: () => ({ replace: mockReplace }),
+  useSearchParams: () => new URLSearchParams(),
 }));
 
 import {

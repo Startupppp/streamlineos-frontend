@@ -1,6 +1,9 @@
 "use client";
 
 import { useMemo } from "react";
+import Link from "next/link";
+import { ExternalLink } from "lucide-react";
+import { useRoadmapPublication } from "@/hooks/api/build/roadmap-public";
 import {
   Sheet,
   SheetContent,
@@ -26,6 +29,7 @@ const HORIZON_TONES: Record<RoadmapHorizon, StatusTone> = {
 
 interface RoadmapPreviewSheetProps {
   items: ScorableRoadmapItem[];
+  managedProductId: number;
   onClose: () => void;
 }
 
@@ -57,7 +61,9 @@ function PreviewItem({ item }: { item: ScorableRoadmapItem }) {
   );
 }
 
-export function RoadmapPreviewSheet({ items, onClose }: RoadmapPreviewSheetProps) {
+export function RoadmapPreviewSheet({ items, managedProductId, onClose }: RoadmapPreviewSheetProps) {
+  const { data: publication } = useRoadmapPublication();
+  const publicPath = publication?.path ? `${publication.path}?product=${String(managedProductId)}` : null;
   const publicItems = useMemo(
     () => items.filter((item) => item.isPublic),
     [items],
@@ -82,6 +88,19 @@ export function RoadmapPreviewSheet({ items, onClose }: RoadmapPreviewSheetProps
         <SheetHeader className="gap-1 border-b px-6 py-4 text-left">
           <SheetTitle>Public Roadmap Preview</SheetTitle>
           <SheetDescription>{countLabel}</SheetDescription>
+          {publicPath ? (
+            <Link
+              href={publicPath}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex w-fit items-center gap-1 text-sm font-medium text-primary underline-offset-2 hover:underline"
+            >
+              <ExternalLink className="h-3.5 w-3.5" aria-hidden />
+              Open public page
+            </Link>
+          ) : (
+            <p className="text-sm text-muted-foreground">The public board is not published yet.</p>
+          )}
         </SheetHeader>
         <SheetBody className="px-6 py-5">
           {publicItems.length === 0 ? (

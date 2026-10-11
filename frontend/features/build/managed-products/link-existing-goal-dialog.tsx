@@ -33,18 +33,19 @@ export function LinkExistingGoalDialog({
   const [search, setSearch] = useState("");
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const debouncedSearch = useDebouncedValue(search.trim(), 300);
-  const { data, isLoading, isError, refetch } = useGoals(
-    { search: debouncedSearch || undefined, limit: 50 },
-  );
+  const goalsQuery = useGoals({ search: debouncedSearch || undefined, limit: 50 });
+  const productGoalsQuery = useGoals({ managedProductId, limit: 100 }, { enabled: open });
+  const isLoading = goalsQuery.isLoading || productGoalsQuery.isLoading;
+  const isError = goalsQuery.isError || productGoalsQuery.isError;
+  const data = goalsQuery.data;
+  const productGoals = productGoalsQuery.data;
   const mutation = useLinkGoalProduct();
 
-  const candidates = useMemo(
-    () =>
-      (data ?? []).filter(
-        (g) => g.productLinkage === null || g.productLinkage === undefined,
-      ),
-    [data],
-  );
+  const candidates = useMemo(() => {
+    if (!data || !productGoals) return [];
+    const linkedIds = new Set(productGoals.map((g) => g.id));
+    return data.filter((g) => !linkedIds.has(g.id));
+  }, [data, productGoals]);
 
   const options = useMemo(
     () =>
@@ -78,11 +79,11 @@ export function LinkExistingGoalDialog({
 
   const handleSearchChange = (value: string) => {
     setSearch(value);
-    setSelectedId(null);
   };
 
   const handleRetry = () => {
-    void refetch();
+    if (goalsQuery.isError) void goalsQuery.refetch();
+    if (productGoalsQuery.isError) void productGoalsQuery.refetch();
   };
 
   const handleCancel = () => {

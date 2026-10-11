@@ -66,7 +66,7 @@ describe("ProductInsightsPage — page states (BSN-INS-STATE)", () => {
     render(<ProductInsightsPage managedProductId={7} />);
     expect(screen.getByTestId("page-state-loading")).toBeInTheDocument();
     expect(screen.getByTestId("product-insights-skeleton")).toBeInTheDocument();
-    expect(within(screen.getByRole("tablist", { name: "Insights sections" })).getByRole("tab", { name: "Overview" })).toHaveAttribute("data-state", "active");
+    expect(within(screen.getByRole("tablist", { name: "Insights views" })).getByRole("tab", { name: "Overview" })).toHaveAttribute("data-state", "active");
     expect(screen.getByRole("heading", { name: "Where to focus" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Product context" })).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Delivery coverage" })).not.toBeInTheDocument();
@@ -247,7 +247,8 @@ describe("ProductInsightsPage — feedback submission drill-down links (BT-6733a
   it("puts the range selector in the page header and keeps the insights body scrollable", () => {
     render(<ProductInsightsPage managedProductId={7} />);
     expect(screen.getByTestId("page-wrapper-actions").querySelector('[aria-label="Range"]')).toBeInTheDocument();
-    expect(screen.getByRole("tablist", { name: "Insights sections" })).toBeInTheDocument();
+    expect(screen.getByRole("tablist", { name: "Insights views" })).toBeInTheDocument();
+    expect(screen.queryByRole("tab", { name: "Delivery" })).not.toBeInTheDocument();
     expect(screen.getByTestId("pm-page-shell")).toHaveClass("overflow-visible");
   });
 
@@ -295,30 +296,31 @@ describe("ProductInsightsPage — section tabs", () => {
     });
   });
 
-  it("opens on Overview and hides the other sections", () => {
+  it("opens on Overview with the summary sections and no second tab row", () => {
     mockUseSearchParams.mockReturnValue(new URLSearchParams());
     render(<ProductInsightsPage managedProductId={7} />);
-    const sections = screen.getByRole("tablist", { name: "Insights sections" });
-    expect(within(sections).getByRole("tab", { name: "Overview" })).toHaveAttribute("data-state", "active");
-    expect(within(sections).getByRole("tab", { name: "Delivery" })).toBeInTheDocument();
-    expect(within(sections).getByRole("tab", { name: "Feedback" })).toBeInTheDocument();
-    expect(within(sections).getByRole("tab", { name: "Discovery" })).toBeInTheDocument();
-    expect(within(screen.getByRole("tablist", { name: "Insights views" })).getByRole("tab", { name: "Overview" })).toHaveAttribute("data-state", "active");
+    const views = screen.getByRole("tablist", { name: "Insights views" });
+    expect(within(views).getByRole("tab", { name: "Overview" })).toHaveAttribute("data-state", "active");
+    expect(within(views).getByRole("tab", { name: "Discovery" })).toBeInTheDocument();
+    expect(screen.queryByRole("tab", { name: "Delivery" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("tab", { name: "Feedback" })).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Where to focus" })).toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: "Delivery coverage" })).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Delivery coverage" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Customer response" })).toBeInTheDocument();
     expect(screen.queryByTestId("product-discovery-section")).not.toBeInTheDocument();
+    expect(screen.getByTestId("page-wrapper-actions").querySelector('[aria-label="Range"]')).toBeInTheDocument();
   });
 
-  it("shows delivery counts when tab=delivery and ignores an unknown tab", () => {
+  it("keeps an old section link on Overview and ignores an unknown tab", () => {
     mockUseSearchParams.mockReturnValue(new URLSearchParams("tab=delivery"));
     const { unmount } = render(<ProductInsightsPage managedProductId={7} />);
-    expect(screen.getByRole("tab", { name: "Delivery" })).toHaveAttribute("data-state", "active");
     expect(screen.getByRole("heading", { name: "Evidence linked to the roadmap" })).toBeInTheDocument();
+    expect(screen.queryByRole("tab", { name: "Delivery" })).not.toBeInTheDocument();
     unmount();
 
     mockUseSearchParams.mockReturnValue(new URLSearchParams("tab=nope"));
     render(<ProductInsightsPage managedProductId={7} />);
-    expect(within(screen.getByRole("tablist", { name: "Insights sections" })).getByRole("tab", { name: "Overview" })).toHaveAttribute("data-state", "active");
+    expect(within(screen.getByRole("tablist", { name: "Insights views" })).getByRole("tab", { name: "Overview" })).toHaveAttribute("data-state", "active");
   });
 
   it("mounts discovery only on the Discovery tab", () => {
@@ -328,34 +330,29 @@ describe("ProductInsightsPage — section tabs", () => {
     expect(screen.queryByRole("heading", { name: "Where to focus" })).not.toBeInTheDocument();
   });
 
-  it("opens Discovery as its own view and keeps the section choice", async () => {
-    mockUseSearchParams.mockReturnValue(new URLSearchParams("tab=feedback"));
+  it("opens Discovery without the page range", async () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("range=7d"));
     const user = userEvent.setup();
     const { unmount } = render(<ProductInsightsPage managedProductId={7} />);
     await user.click(within(screen.getByRole("tablist", { name: "Insights views" })).getByRole("tab", { name: "Discovery" }));
     expect(mockRouterReplace).toHaveBeenCalledWith(
-      "/build/managed-products/7/goals?tab=feedback&view=discovery",
+      "/build/managed-products/7/goals?range=7d&view=discovery",
       { scroll: false },
     );
     unmount();
 
     mockUseSearchParams.mockReturnValue(new URLSearchParams("view=discovery"));
     render(<ProductInsightsPage managedProductId={7} />);
-    expect(screen.queryByRole("tablist", { name: "Insights sections" })).not.toBeInTheDocument();
     expect(within(screen.getByRole("tablist", { name: "Insights views" })).getByRole("tab", { name: "Discovery" })).toHaveAttribute("data-state", "active");
     expect(screen.getByTestId("product-discovery-section")).toHaveTextContent("Discovery 7");
     expect(screen.queryByRole("heading", { name: "Where to focus" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("tab", { name: "Delivery" })).not.toBeInTheDocument();
+    expect(screen.getByTestId("page-wrapper-actions").querySelector('[aria-label="Range"]')).not.toBeInTheDocument();
   });
 
-  it("writes the selected tab without dropping the range", async () => {
+  it("keeps the range when the insights query is scoped", () => {
     mockUseSearchParams.mockReturnValue(new URLSearchParams("range=7d"));
-    const user = userEvent.setup();
     render(<ProductInsightsPage managedProductId={7} />);
-    await user.click(screen.getByRole("tab", { name: "Feedback" }));
-    expect(mockRouterReplace).toHaveBeenCalledWith(
-      "/build/managed-products/7/goals?range=7d&tab=feedback",
-      { scroll: false },
-    );
     expect(useManagedProductInsights).toHaveBeenCalledWith(
       7,
       expect.objectContaining({ range: "7d" }),

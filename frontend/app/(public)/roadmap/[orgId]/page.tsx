@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { format } from "date-fns";
 import {
   ArrowBigUp,
@@ -321,8 +321,10 @@ function FeedbackForm({
 export default function PublicRoadmapPage() {
   const params = useParams<{ orgId: string }>();
   const orgId = params.orgId;
+  const productParam = Number(useSearchParams().get("product"));
+  const managedProductId = Number.isInteger(productParam) && productParam > 0 ? productParam : undefined;
   const voterKey = useVoterKey();
-  const { data, isLoading, isError, refetch } = usePublicRoadmap(orgId);
+  const { data, isLoading, isError, refetch } = usePublicRoadmap(orgId, managedProductId);
   const vote = usePublicVote(orgId);
   const [votedIds, setVotedIds] = useState<Set<string>>(new Set());
 

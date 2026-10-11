@@ -6,6 +6,8 @@ import { lazyContract } from "@/lib/api-envelope";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { growthAndSignQueryKeys } from "@/lib/query-keys/growth-and-sign";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
+import type { FeedbucketSubmission, PaginatedFeedbucketSubmissions } from "@/types/feedbucket";
 import { useQueryClient } from "@tanstack/react-query";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
@@ -25,9 +27,20 @@ const opportunityListContract = z.object({
 });
 
 const addEvidenceContract = z.object({
-  success: z.literal(true),
-  data: z.object({ id: z.number() }),
+  id: z.number(),
+  opportunityId: z.number(),
 });
+
+type AddEvidenceResult = z.infer<typeof addEvidenceContract>;
+
+function withOpportunity<T extends { id: number; opportunityIds: number[] }>(
+  row: T,
+  submissionId: number,
+  opportunityId: number,
+): T {
+  if (row.id !== submissionId || row.opportunityIds.includes(opportunityId)) return row;
+  return { ...row, opportunityIds: [...row.opportunityIds, opportunityId].sort((a, b) => a - b) };
+}
 
 const opportunityListC = lazyContract(() => Promise.resolve(opportunityListContract));
 const addEvidenceC = lazyContract(() => Promise.resolve(addEvidenceContract));
@@ -61,19 +74,34 @@ export function useProductOpportunitiesSearch(
 export function useAddEvidenceToOpportunity() {
   const qc = useQueryClient();
   return useAuthorizedMutation<
-    { success: true; data: { id: number } },
+    AddEvidenceResult,
     Error,
     { managedProductId: number; opportunityId: number; submissionId: number }
   >("build:managed-products:update", {
     mutationKey: ["build", "managed-products", "opportunity", "evidence", "add"],
     mutationFn: ({ managedProductId, opportunityId, submissionId }) =>
-      apiClient.post<{ success: true; data: { id: number } }>(
+      apiClient.post<AddEvidenceResult>(
         `/build/managed-products/${managedProductId}/opportunities/${opportunityId}/evidence`,
         { sourceKind: "feedbucket_submission", sourceId: submissionId },
         undefined,
         addEvidenceC,
       ),
-    onSuccess: (_, { managedProductId }) => {
+    onSuccess: (result, { managedProductId, submissionId }) => {
+      qc.setQueryData<FeedbucketSubmission>(
+        growthAndSignQueryKeys.feedbucket.submission(submissionId),
+        (old) => (old ? withOpportunity(old, submissionId, result.opportunityId) : old),
+      );
+      qc.setQueriesData<PaginatedFeedbucketSubmissions>(
+        { queryKey: growthAndSignQueryKeys.feedbucket.submissions() },
+        (old) =>
+          old && Array.isArray(old.data)
+            ? { ...old, data: old.data.map((row) => withOpportunity(row, submissionId, result.opportunityId)) }
+            : old,
+      );
+      void qc.invalidateQueries({
+        queryKey: buildWorkQueryKeys.projects.managedProducts.opportunities(managedProductId),
+        refetchType: "none",
+      });
       void qc.invalidateQueries({
         queryKey: [
           ...growthAndSignQueryKeys.feedbucket.all,

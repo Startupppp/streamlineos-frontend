@@ -167,16 +167,19 @@ export function buildManagedProductColumns({
       header: "Name",
       className: TABLE_TITLE_CELL,
       cell: (row) => (
-        <Link
-          href={`/build/managed-products/${row.id}`}
-          className={cn(
-            "font-medium text-foreground hover:text-primary hover:underline",
-            TEXT_ONE_LINE,
-          )}
-          title={row.name}
-        >
-          {row.name}
-        </Link>
+        <span className="flex min-w-0 items-center gap-2">
+          <Link
+            href={`/build/managed-products/${row.id}`}
+            className={cn(
+              "font-medium text-foreground hover:text-primary hover:underline",
+              TEXT_ONE_LINE,
+            )}
+            title={row.name}
+          >
+            {row.name}
+          </Link>
+          {row.status === "archived" ? <ManagedProductStatusBadge status="archived" /> : null}
+        </span>
       ),
     },
     {

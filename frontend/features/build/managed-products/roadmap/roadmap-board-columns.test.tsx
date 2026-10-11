@@ -274,4 +274,15 @@ describe("RoadmapBoardColumns — column structure (BSN-RM-BOARD)", () => {
     expect(screen.getByTestId("roadmap-card-52")).toBeInTheDocument();
     expect(screen.queryByText("No items yet")).not.toBeInTheDocument();
   });
+
+  it("adds into a filled column from its header and into an empty one from its placeholder", () => {
+    const onCreateInHorizon = jest.fn();
+    const grouped = { now: [makeItem({ id: 60, horizon: "now" })], next: [], later: [] };
+    render(<RoadmapBoardColumns grouped={grouped} onEdit={onEdit} onDelete={onDelete} onCreateInHorizon={onCreateInHorizon} />);
+    fireEvent.click(screen.getByRole("button", { name: "Add item to Now" }));
+    expect(onCreateInHorizon).toHaveBeenCalledWith("now");
+    expect(screen.queryByRole("button", { name: "Add item to Next" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getAllByRole("button", { name: "+ Add item" })[0]);
+    expect(onCreateInHorizon).toHaveBeenLastCalledWith("next");
+  });
 });

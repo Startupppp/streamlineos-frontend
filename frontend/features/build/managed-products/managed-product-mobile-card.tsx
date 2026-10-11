@@ -21,7 +21,11 @@ export function ManagedProductMobileCard({
   return (
     <BuildMobileCard
       title={product.name}
-      status={<ManagedProductStatusBadge status={product.health ?? product.status} />}
+      status={
+        <ManagedProductStatusBadge
+          status={product.status === "archived" ? "archived" : (product.health ?? product.status)}
+        />
+      }
       person={{ user: ownerOf(product.ownerId), role: "Owner" }}
       meta={[
         { label: "Key", value: product.key },

@@ -61,8 +61,8 @@ describe("CheckInDialog — KR selector", () => {
         onClose={jest.fn()}
       />,
     );
-    expect(screen.getByRole("option", { name: /Increase revenue/i })).toBeInTheDocument();
-    expect(screen.getByRole("option", { name: /Reduce churn/i })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: /Increase revenue/i, hidden: true })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: /Reduce churn/i, hidden: true })).toBeInTheDocument();
   });
 
   it("renders nothing when keyResults is empty", () => {

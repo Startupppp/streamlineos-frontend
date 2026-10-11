@@ -63,8 +63,9 @@ export function ProductInsightsPage({
     withSearch: false,
   });
   const rangeValue = listFilters.value("range");
-  const view = insightViewFromParam(listFilters.value("view"));
-  const tab = insightTabFromParam(listFilters.value("tab"));
+  const requestedView = insightViewFromParam(listFilters.value("view"));
+  const legacyTab = insightTabFromParam(listFilters.value("tab"));
+  const view = requestedView === "discovery" || legacyTab === "discovery" ? "discovery" : "overview";
 
   const typedRange = useMemo(
     () =>
@@ -75,17 +76,20 @@ export function ProductInsightsPage({
   );
 
   const setFilter = listFilters.setValue;
+  const setFilters = listFilters.setValues;
   const handleRangeChange = useCallback(
     (value: string) => setFilter("range", value),
     [setFilter],
   );
   const handleViewChange = useCallback(
-    (value: string) => setFilter("view", value),
-    [setFilter],
-  );
-  const handleTabChange = useCallback(
-    (value: string) => setFilter("tab", value),
-    [setFilter],
+    (value: string) => {
+      if (value === "discovery") {
+        setFilter("view", "discovery");
+        return;
+      }
+      setFilters({ view: "overview", tab: "overview" });
+    },
+    [setFilter, setFilters],
   );
 
   const { data, isLoading, isError, error, refetch } =
@@ -116,54 +120,31 @@ export function ProductInsightsPage({
         subtitle="Customer signals, planned work, and delivery progress"
         contentClassName={MANAGED_PRODUCT_DETAIL_CONTENT_CLASS}
         actions={
-          <BuildFilterSelect
-            label="Range"
-            value={rangeValue || "all"}
-            onValueChange={handleRangeChange}
-            options={RANGE_OPTIONS}
-          />
+          view === "overview" ? (
+            <BuildFilterSelect
+              label="Range"
+              value={rangeValue || "all"}
+              onValueChange={handleRangeChange}
+              options={RANGE_OPTIONS}
+            />
+          ) : undefined
         }
         filters={
-          <div className="flex w-full min-w-0 flex-col gap-2">
-            <PageTabsToolbar
-              tabs={
-                <TabsList aria-label="Insights views">
-                  {INSIGHT_VIEWS.map((item) => (
-                    <TabsTrigger
-                      key={item.id}
-                      value={item.id}
-                      className="px-2 sm:px-3"
-                    >
-                      {item.label}
-                    </TabsTrigger>
-                  ))}
-                </TabsList>
-              }
-            />
-            {view === "overview" ? (
-              <Tabs
-                value={tab}
-                onValueChange={handleTabChange}
-                className="min-w-0 gap-0"
-              >
-                <PageTabsToolbar
-                  tabs={
-                    <TabsList aria-label="Insights sections">
-                      {INSIGHT_TABS.map((item) => (
-                        <TabsTrigger
-                          key={item.id}
-                          value={item.id}
-                          className="px-2 sm:px-3"
-                        >
-                          {item.label}
-                        </TabsTrigger>
-                      ))}
-                    </TabsList>
-                  }
-                />
-              </Tabs>
-            ) : null}
-          </div>
+          <PageTabsToolbar
+            tabs={
+              <TabsList aria-label="Insights views">
+                {INSIGHT_VIEWS.map((item) => (
+                  <TabsTrigger
+                    key={item.id}
+                    value={item.id}
+                    className="px-2 sm:px-3"
+                  >
+                    {item.label}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            }
+          />
         }
       >
         <ManagedProductDetailShell className="h-auto min-h-full flex-none overflow-visible">
@@ -182,28 +163,21 @@ export function ProductInsightsPage({
               className={CONTENT_FILL_PANEL}
             >
               <TabsContent value="overview" className="mt-0 outline-none">
-                {tab === "overview" ? (
+                <div className="space-y-6">
                   <InsightOverviewPanel
                     managedProductId={managedProductId}
                     insights={data}
                     rangeLabel={rangeLabel}
                   />
-                ) : null}
-                {tab === "delivery" ? (
                   <InsightDeliveryPanel
                     managedProductId={managedProductId}
                     insights={data}
                   />
-                ) : null}
-                {tab === "feedback" ? (
                   <InsightFeedbackPanel
                     managedProductId={managedProductId}
                     insights={data}
                   />
-                ) : null}
-                {tab === "discovery" ? (
-                  <InsightDiscoveryPanel managedProductId={managedProductId} />
-                ) : null}
+                </div>
               </TabsContent>
               <TabsContent value="discovery" className="mt-0 outline-none">
                 <InsightDiscoveryPanel managedProductId={managedProductId} />

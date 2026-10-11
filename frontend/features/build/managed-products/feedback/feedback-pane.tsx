@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import Link from "next/link";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,7 @@ interface FeedbackPaneProps {
   managedProductId: number;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onOpenDetail?: () => void;
 }
 
 function ConsentRow({ label, value }: { label: string; value: string | null | undefined }) {
@@ -29,7 +31,7 @@ function ConsentRow({ label, value }: { label: string; value: string | null | un
   );
 }
 
-export function FeedbackPane({ submissionId, managedProductId, open, onOpenChange }: FeedbackPaneProps) {
+export function FeedbackPane({ submissionId, managedProductId, open, onOpenChange, onOpenDetail }: FeedbackPaneProps) {
   const canUpdate = useCan("feedbucket:submissions:update");
   const canManage = useCan("feedbucket:submissions:manage");
   const [classifyOpen, setClassifyOpen] = useState(false);
@@ -109,7 +111,7 @@ export function FeedbackPane({ submissionId, managedProductId, open, onOpenChang
                     </div>
                   )}
                   {submission.duplicateCount > 0 && (
-                    <p className="text-sm text-muted-foreground">{submission.duplicateCount} duplicate{submission.duplicateCount !== 1 ? "s" : ""} reference this</p>
+                    <p className="text-sm text-muted-foreground">{submission.duplicateCount === 1 ? "1 duplicate references this" : `${submission.duplicateCount} duplicates reference this`}</p>
                   )}
                 </div>
               )}
@@ -117,13 +119,13 @@ export function FeedbackPane({ submissionId, managedProductId, open, onOpenChang
                 <div className="flex flex-col gap-2">
                   <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Linked opportunities</h3>
                   {submission.opportunityIds.map((oppId) => (
-                    <a
+                    <Link
                       key={oppId}
-                      href={`?opportunity=${oppId}`}
+                      href={`/build/managed-products/${managedProductId}/insights?view=discovery&opportunity=${oppId}`}
                       className="text-sm text-primary hover:underline font-mono"
                     >
                       #{oppId}
-                    </a>
+                    </Link>
                   ))}
                 </div>
               )}
@@ -136,6 +138,11 @@ export function FeedbackPane({ submissionId, managedProductId, open, onOpenChang
                 {canManage && (
                   <Button type="button" variant="outline" size="sm" onClick={handleOpenLinkOpp}>
                     Link to opportunity
+                  </Button>
+                )}
+                {onOpenDetail && (
+                  <Button type="button" variant="ghost" size="sm" onClick={onOpenDetail}>
+                    Open full details
                   </Button>
                 )}
               </div>

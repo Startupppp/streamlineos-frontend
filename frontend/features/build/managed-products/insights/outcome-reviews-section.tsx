@@ -139,6 +139,7 @@ function CompleteReviewDialog({
                 <FormControl>
                   <Input
                     {...field}
+                    value={field.value ?? ""}
                     className={FIELD_CONTROL_CLASS}
                     placeholder="e.g. 12%"
                   />

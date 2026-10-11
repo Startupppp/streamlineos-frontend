@@ -6,7 +6,7 @@ import {
   EmptyTasksIllustration,
   EmptyActivityIllustration,
 } from "@/components/illustrations";
-import { ListChecks, Link2, History } from "lucide-react";
+import { ListChecks, Link2, History, Gauge } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import {
   PmPanel,
@@ -110,6 +110,81 @@ export function GoalLinkedItemsSection({
           ))}
         </PmPanel>
       )}
+    </PmSection>
+  );
+}
+
+interface GoalOutcomesSectionProps {
+  measurementSources: GoalDetail["measurementSources"];
+  roadmapItems: GoalDetail["linkedRoadmapItems"];
+}
+
+function outcomeFigures(source: GoalDetail["measurementSources"][number]): string {
+  const unit = source.unit ? ` ${source.unit}` : "";
+  return [source.baseline, source.target, source.actual]
+    .map((value) => {
+      if (value === null) return "—";
+      const numeric = Number(value);
+      return `${Number.isFinite(numeric) ? numeric.toLocaleString() : value}${unit}`;
+    })
+    .join(" → ");
+}
+
+export function GoalOutcomesSection({ measurementSources, roadmapItems }: GoalOutcomesSectionProps) {
+  if (measurementSources.length === 0 && roadmapItems.length === 0) {
+    return (
+      <PmPanel className="flex min-h-0 flex-1 items-center justify-center border-border bg-card p-4 shadow-sm">
+        <EmptyState
+          illustration={<EmptyActivityIllustration />}
+          compact
+          title="No outcomes yet"
+          description="Roadmap items and outcome reviews that measure this goal will appear here."
+        />
+      </PmPanel>
+    );
+  }
+  return (
+    <PmSection index={4} className="flex min-h-0 flex-1 flex-col gap-3">
+      {measurementSources.length > 0 ? (
+        <>
+          <div className="flex items-center gap-2">
+            <Gauge className="h-4 w-4 text-muted-foreground" />
+            <h2 className="text-sm font-medium">Outcome reviews</h2>
+            <Badge variant="secondary" className="text-micro">{measurementSources.length}</Badge>
+          </div>
+          <PmPanel className="divide-y divide-border">
+            {measurementSources.map((source) => (
+              <div key={source.id} className="flex flex-wrap items-center justify-between gap-2 p-3">
+                <div className="min-w-0">
+                  <p className={cn(TEXT_BODY, "text-sm font-medium")}>{source.title}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {source.metric ?? "Metric not set"} · {outcomeFigures(source)}
+                  </p>
+                </div>
+                <Badge variant="outline" className="capitalize">{source.result ?? source.state}</Badge>
+              </div>
+            ))}
+          </PmPanel>
+        </>
+      ) : null}
+      {roadmapItems.length > 0 ? (
+        <>
+          <div className="flex items-center gap-2">
+            <h2 className="text-sm font-medium">Roadmap items</h2>
+            <Badge variant="secondary" className="text-micro">{roadmapItems.length}</Badge>
+          </div>
+          <PmPanel className="divide-y divide-border">
+            {roadmapItems.map((item) => (
+              <div key={item.id} className="flex items-center justify-between gap-2 p-3">
+                <p className={cn(TEXT_BODY, "text-sm")}>{item.title}</p>
+                <span className="text-xs capitalize text-muted-foreground">
+                  {item.horizon} · {item.status.replace("_", " ")}
+                </span>
+              </div>
+            ))}
+          </PmPanel>
+        </>
+      ) : null}
     </PmSection>
   );
 }

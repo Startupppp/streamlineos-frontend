@@ -107,7 +107,25 @@ describe("ProductFeedbackPage — usePageState integration (BSN-01-012)", () => 
     expect(callParams).toMatchObject({ managedProductId: 7 });
   });
 
-  it("opens the registered project-scoped detail route for a row owned by the active product", () => {
+  it("opens the feedback pane in place when a row is clicked", () => {
+    useFeedbucketSubmissions.mockReturnValue({
+      ...EMPTY_FEEDBUCKET_RESULT,
+      data: {
+        data: [{ id: 41, message: "Broken export", widget: { projectId: null, managedProductId: 7 } }],
+        total: 1,
+      },
+    });
+    render(<ProductFeedbackPage managedProductId={7} />);
+    screen.getByRole("button", { name: "Broken export" }).click();
+    expect(mockRouterReplace).toHaveBeenCalledWith(
+      expect.stringContaining("submission=41"),
+      { scroll: false },
+    );
+    expect(mockRouterPush).not.toHaveBeenCalled();
+  });
+
+  it("opens the registered project-scoped detail route from the pane for a row owned by the active product", () => {
+    mockUseSearchParams.mockReturnValueOnce(new URLSearchParams("submission=41"));
     useFeedbucketSubmissions.mockReturnValue({
       ...EMPTY_FEEDBUCKET_RESULT,
       data: {
@@ -116,7 +134,7 @@ describe("ProductFeedbackPage — usePageState integration (BSN-01-012)", () => 
       },
     });
     render(<ProductFeedbackPage managedProductId={7} />);
-    screen.getByRole("button", { name: "Broken export" }).click();
+    fireEvent.click(screen.getByRole("button", { name: "Open full details" }));
     expect(mockRouterPush).toHaveBeenCalledWith("/build/12/feedbucket/41");
   });
 
@@ -143,8 +161,9 @@ describe("ProductFeedbackPage — usePageState integration (BSN-01-012)", () => 
     expect(callParams).not.toHaveProperty("linked");
   });
 
-  it("does not navigate when the destination route permission is denied", () => {
+  it("hides the full-details action when the destination route permission is denied", () => {
     useCan.mockImplementation((permission: string) => permission !== "feedbucket:widgets:view");
+    mockUseSearchParams.mockReturnValueOnce(new URLSearchParams("submission=41"));
     useFeedbucketSubmissions.mockReturnValue({
       ...EMPTY_FEEDBUCKET_RESULT,
       data: {
@@ -153,7 +172,8 @@ describe("ProductFeedbackPage — usePageState integration (BSN-01-012)", () => 
       },
     });
     render(<ProductFeedbackPage managedProductId={7} />);
-    expect(screen.queryByRole("button", { name: "Restricted row" })).not.toBeInTheDocument();
+    expect(screen.getByTestId("feedback-pane")).toHaveAttribute("data-submission-id", "41");
+    expect(screen.queryByRole("button", { name: "Open full details" })).not.toBeInTheDocument();
     expect(mockRouterPush).not.toHaveBeenCalled();
   });
 });
@@ -375,12 +395,15 @@ jest.mock("./feedback/feedback-pane", () => ({
   FeedbackPane: ({
     submissionId,
     onOpenChange,
+    onOpenDetail,
   }: {
     submissionId: number;
     onOpenChange: (open: boolean) => void;
+    onOpenDetail?: () => void;
   }) => (
     <div data-testid="feedback-pane" data-submission-id={submissionId}>
       <button type="button" onClick={() => onOpenChange(false)}>Close pane</button>
+      {onOpenDetail ? <button type="button" onClick={onOpenDetail}>Open full details</button> : null}
     </div>
   ),
 }));

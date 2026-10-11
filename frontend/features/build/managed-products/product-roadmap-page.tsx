@@ -258,7 +258,7 @@ export function ProductRoadmapPage({ managedProductId }: ProductRoadmapPageProps
           onClose={handleCloseEdit}
         />
       ) : null}
-      {previewOpen ? <RoadmapPreviewSheet items={allItems} onClose={handleClosePreview} /> : null}
+      {previewOpen ? <RoadmapPreviewSheet items={allItems} managedProductId={managedProductId} onClose={handleClosePreview} /> : null}
 
       <ConfirmDialog
         open={!!deleteTarget}

@@ -28,7 +28,7 @@ export function MarkDuplicateDialog({
   const debouncedSearch = useDebouncedValue(search, 350);
   const [selectedId, setSelectedId] = useState<number | null>(null);
 
-  const { data } = useFeedbucketSubmissions({
+  const { data, isLoading } = useFeedbucketSubmissions({
     managedProductId,
     search: debouncedSearch.trim() || undefined,
     limit: 10,
@@ -84,7 +84,9 @@ export function MarkDuplicateDialog({
             aria-label="Search submissions for duplicate"
           />
           <div className="flex flex-col gap-1 max-h-64 overflow-y-auto">
-            {candidates.length === 0 ? (
+            {isLoading ? (
+              <p className="text-sm text-muted-foreground py-2">Loading submissions…</p>
+            ) : candidates.length === 0 ? (
               <p className="text-sm text-muted-foreground py-2">No submissions found.</p>
             ) : (
               candidates.map((row) => (

@@ -5,7 +5,7 @@ import { z } from "zod";
 import { apiClient } from "@/lib/api-client";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
-import { patchManagedProductLinkCache } from "./project-managed-product-cache";
+import { moveLinkedProjectRowCache, patchManagedProductLinkCache } from "./project-managed-product-cache";
 import type { ProjectListItem } from "@/types/projects";
 import type { LinkedProjectsPage } from "./managed-product-projects";
 
@@ -39,6 +39,11 @@ export function useLinkProjectManagedProduct() {
       ),
     onSuccess: (linked, variables) => {
       patchManagedProductLinkCache(
+        queryClient,
+        { ...variables.project, name: linked.name, key: linked.key },
+        variables.managedProductId,
+      );
+      moveLinkedProjectRowCache(
         queryClient,
         { ...variables.project, name: linked.name, key: linked.key },
         variables.managedProductId,

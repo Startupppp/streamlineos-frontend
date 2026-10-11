@@ -26,8 +26,8 @@ import {
 } from "./outcome-review-form-schema";
 import type { CreateOutcomeReviewInput } from "@/hooks/api/build/product-discovery-mutations";
 import { useOpportunities } from "@/hooks/api/build/product-discovery";
-
-const NO_OPPORTUNITY = "__none__";
+import { useGoals } from "@/hooks/api/goals";
+import { OutcomeReviewLinkField } from "./outcome-review-link-field";
 
 const KIND_OPTIONS = [
   { label: "Outcome review", value: "outcome_review" },
@@ -37,6 +37,11 @@ const KIND_OPTIONS = [
 const DEFAULT_VALUES: ScheduleOutcomeReviewValues = {
   kind: "outcome_review",
   title: "",
+  hypothesis: "",
+  metric: "",
+  unit: "",
+  baseline: "",
+  target: "",
 };
 
 interface OutcomeReviewScheduleSheetProps {
@@ -58,12 +63,14 @@ export function OutcomeReviewScheduleSheet({
     enabled: open,
   });
   const opportunities = opportunitiesPage?.data ?? [];
+  const { data: goals = [] } = useGoals({ managedProductId, limit: 100 }, { enabled: open });
 
   function handleSubmit(values: ScheduleOutcomeReviewValues) {
     const data: CreateOutcomeReviewInput = {
       kind: values.kind,
       title: values.title,
       ...(values.opportunityId ? { opportunityId: values.opportunityId } : {}),
+      ...(values.goalId ? { goalId: values.goalId } : {}),
       ...(values.hypothesis?.trim() ? { hypothesis: values.hypothesis } : {}),
       ...(values.metric?.trim() ? { metric: values.metric } : {}),
       ...(values.unit?.trim() ? { unit: values.unit } : {}),
@@ -137,41 +144,13 @@ export function OutcomeReviewScheduleSheet({
               </FormItem>
             )}
           />
-          {opportunities.length > 0 ? (
-            <FormField
-              control={form.control}
-              name="opportunityId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Opportunity</FormLabel>
-                  <Select
-                    value={field.value ? String(field.value) : NO_OPPORTUNITY}
-                    onValueChange={(v) =>
-                      field.onChange(v === NO_OPPORTUNITY ? undefined : Number(v))
-                    }
-                  >
-                    <FormControl>
-                      <SelectTrigger
-                        className={FIELD_CONTROL_CLASS}
-                        data-testid="opportunity-select"
-                      >
-                        <SelectValue placeholder="Not linked" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value={NO_OPPORTUNITY}>Not linked</SelectItem>
-                      {opportunities.map((o) => (
-                        <SelectItem key={o.id} value={String(o.id)}>
-                          {o.title}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          ) : null}
+          <OutcomeReviewLinkField
+            control={form.control}
+            name="opportunityId"
+            label="Opportunity"
+            options={opportunities}
+          />
+          <OutcomeReviewLinkField control={form.control} name="goalId" label="Goal" options={goals} />
           <FormField
             control={form.control}
             name="hypothesis"

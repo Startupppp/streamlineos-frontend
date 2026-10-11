@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useOpportunities, useEvidenceThemes, useOpportunitiesCompare, useOutcomeReviews } from "@/hooks/api/build/product-discovery";
 import {
   useCreateOutcomeReview,
@@ -57,7 +58,11 @@ export function ProductDiscoverySection({ managedProductId }: ProductDiscoverySe
   const themesQuery = useEvidenceThemes(managedProductId, themeParams);
   const outcomeReviewsQuery = useOutcomeReviews(managedProductId);
 
-  const [openOpportunityId, setOpenOpportunityId] = useState<number | null>(null);
+  const searchParams = useSearchParams();
+  const [openOpportunityId, setOpenOpportunityId] = useState<number | null>(() => {
+    const requested = Number(searchParams.get("opportunity"));
+    return Number.isSafeInteger(requested) && requested > 0 ? requested : null;
+  });
   const [compareOpen, setCompareOpen] = useState(false);
   const [compareSelected, setCompareSelected] = useState<ReadonlySet<number>>(new Set());
 

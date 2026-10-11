@@ -166,7 +166,7 @@ const feedbucketSubmissionRowContract = z.object({
   consentStatus: z.enum(["granted", "denied", "unknown"]),
   consentRecordedAt: z.string().nullable(),
   duplicateOfId: z.number().nullable(),
-  duplicateCount: z.number(),
+  duplicateCount: z.coerce.number().int().nonnegative(),
   opportunityIds: z.array(z.number()),
   customer: z
     .object({ crmOrganizationId: z.number(), name: z.string().nullable() })
@@ -269,27 +269,27 @@ export const feedbucketDeleteSubmissionContract = z.object({
 });
 
 export const feedbucketClassifySubmissionContract = z.object({
-  success: z.literal(true),
-  data: z.object({
-    id: z.number(),
-    theme: z.string().nullable(),
-    segment: z.string().nullable(),
-    sentiment: z.enum(["positive", "neutral", "negative", "mixed"]).nullable(),
-    consentStatus: z.enum(["granted", "denied", "unknown"]),
-    consentRecordedAt: z.string().nullable(),
-    updatedAt: z.string(),
-  }),
+  id: z.number(),
+  theme: z.string().nullable(),
+  segment: z.string().nullable(),
+  sentiment: z.enum(["positive", "neutral", "negative", "mixed"]).nullable(),
+  consentStatus: z.enum(["granted", "denied", "unknown"]),
+  consentRecordedAt: z.string().nullable(),
+  updatedAt: z.string(),
 });
 
 export const feedbucketMarkDuplicateContract = z.object({
-  success: z.literal(true),
-  data: z.object({ id: z.number(), duplicateOfId: z.number() }),
+  id: z.number(),
+  duplicateOfId: z.number(),
 });
 
 export const feedbucketUnmarkDuplicateContract = z.object({
-  success: z.literal(true),
-  data: z.object({ id: z.number() }),
+  id: z.number(),
 });
+
+export type FeedbucketClassifyResult = z.infer<typeof feedbucketClassifySubmissionContract>;
+export type FeedbucketMarkDuplicateResult = z.infer<typeof feedbucketMarkDuplicateContract>;
+export type FeedbucketUnmarkDuplicateResult = z.infer<typeof feedbucketUnmarkDuplicateContract>;
 
 export const feedbucketCaptureSubmissionContract = z.object({
   submissionId: z.number(),

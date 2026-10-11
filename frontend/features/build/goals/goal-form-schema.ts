@@ -25,6 +25,7 @@ export const projectGoalFormSchema = z
     level: z.enum(["company", "team", "individual"]),
     status: z.enum(["not_started", "on_track", "at_risk", "off_track", "completed"]),
     ownerId: z.string(),
+    parentGoalId: z.string(),
     startDate: z.string(),
     dueDate: z.string(),
   })

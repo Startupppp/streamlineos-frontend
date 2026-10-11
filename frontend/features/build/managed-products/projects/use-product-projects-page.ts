@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { useManagedProductProjects, type LinkedProjectRow } from "@/hooks/api/build/managed-product-projects";
 import { useUnlinkProjectManagedProduct } from "@/hooks/api/build/use-link-project-managed-product";
 import { useProjectTeams } from "@/hooks/api/build/teams";
-import { useCrmOrganizationsForPicker } from "@/hooks/api/crm/organizations";
+import { useSimpleClientsList } from "@/hooks/api/crm/clients";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
@@ -89,10 +89,10 @@ export function useProductProjectsPage({ managedProductId }: UseProductProjectsP
     [teamsData],
   );
 
-  const { data: crmOrgsData } = useCrmOrganizationsForPicker();
+  const { data: crmClients } = useSimpleClientsList();
   const clientOptions = useMemo(
-    () => (crmOrgsData?.organizations ?? []).map((o) => ({ value: String(o.id), label: o.name })),
-    [crmOrgsData],
+    () => (crmClients ?? []).map((c) => ({ value: String(c.id), label: c.name ?? `Client #${c.id}` })),
+    [crmClients],
   );
 
   const isFiltered = Boolean(

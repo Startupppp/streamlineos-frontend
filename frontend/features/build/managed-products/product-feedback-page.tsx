@@ -36,10 +36,7 @@ import {
   LINKED_OPP_FILTER_OPTIONS,
 } from "./product-feedback-columns";
 import { ProductFeedbackMobileCard } from "./feedback/product-feedback-mobile-card";
-import { useRouteFeedbucketToIntake } from "@/hooks/api/build/intake-mutations";
 import { useManagedProduct } from "@/hooks/api/build/managed-products";
-import { toast } from "sonner";
-import { getErrorMessage } from "@/lib/get-error-message";
 import { resolveProductFeedbackSubmissionHref } from "./product-feedback-model";
 import {
   useProductFeedbackFilters,
@@ -54,6 +51,11 @@ import {
 import { CaptureSubmissionSheet } from "./feedback/capture-submission-sheet";
 import { FeedbackPane } from "./feedback/feedback-pane";
 import { FeedbucketCollectDialog } from "./feedback/feedbucket-collect-dialog";
+import { RouteToIntakeDialog, useRouteToIntake } from "./feedback/route-to-intake-dialog";
+
+function resolveRowClassName(): string {
+  return "cursor-pointer";
+}
 
 interface ProductFeedbackPageProps {
   managedProductId: number;
@@ -70,7 +72,8 @@ export function ProductFeedbackPage({
   const canDeleteSubmission = useCan("feedbucket:submissions:delete");
   const canRouteToIntake = useCan("feedbucket:submissions:manage");
   const canCapture = useCan("feedbucket:submissions:manage");
-  const routeToIntake = useRouteFeedbucketToIntake();
+  const intakeRouting = useRouteToIntake();
+  const { handleRouteToIntake } = intakeRouting;
 
   const [captureOpen, setCaptureOpen] = useState(false);
   const [feedbucketOpen, setFeedbucketOpen] = useState(false);
@@ -189,39 +192,17 @@ export function ProductFeedbackPage({
     [appliedCrmOrgId, crmOrgsData?.organizations],
   );
 
+  const openSubmissionPane = useCallback(
+    (row: SubmissionRow) => listFilters.setValue("submission", String(row.id)),
+    [listFilters],
+  );
+
   const handleOpenFocused = useCallback(
     (index: number) => {
       const row = visibleRows[index];
-      if (!row) return;
-      const href = resolveProductFeedbackSubmissionHref(
-        row,
-        managedProductId,
-        canOpenSubmissionDetail,
-      );
-      if (href === null) return;
-      requestLeave(() => router.push(href));
+      if (row) openSubmissionPane(row);
     },
-    [visibleRows, managedProductId, canOpenSubmissionDetail, requestLeave, router],
-  );
-
-  const handleRouteToIntake = useCallback(
-    (row: SubmissionRow) => {
-      const projectId = row.widget?.projectId;
-      if (!projectId) return;
-      routeToIntake.mutate(
-        { submissionId: row.id, projectId },
-        {
-          onSuccess: (result) => {
-            if (result.created) toast.success("Routed to Intake");
-            else toast.success("Already in Intake");
-          },
-          onError: (err) => {
-            toast.error(getErrorMessage(err));
-          },
-        },
-      );
-    },
-    [routeToIntake],
+    [visibleRows, openSubmissionPane],
   );
 
   const feedbackColumns = useMemo(
@@ -242,30 +223,20 @@ export function ProductFeedbackPage({
     enabled: true,
   });
 
-  const resolveSubmissionHref = useCallback(
-    (row: SubmissionRow) =>
-      resolveProductFeedbackSubmissionHref(
-        row,
-        managedProductId,
-        canOpenSubmissionDetail,
-      ),
-    [canOpenSubmissionDetail, managedProductId],
+  const paneRow = useMemo(
+    () => rows.find((row) => row.id === paneSubmissionId) ?? null,
+    [rows, paneSubmissionId],
   );
-
-  const handleRowClick = useCallback(
-    (row: SubmissionRow) => {
-      const href = resolveSubmissionHref(row);
-      if (href === null) return;
-      requestLeave(() => router.push(href));
-    },
-    [resolveSubmissionHref, requestLeave, router],
+  const paneDetailHref = useMemo(
+    () =>
+      paneRow
+        ? resolveProductFeedbackSubmissionHref(paneRow, managedProductId, canOpenSubmissionDetail)
+        : null,
+    [paneRow, managedProductId, canOpenSubmissionDetail],
   );
-
-  const resolveRowClassName = useCallback(
-    (row: SubmissionRow): string =>
-      resolveSubmissionHref(row) === null ? "" : "cursor-pointer",
-    [resolveSubmissionHref],
-  );
+  const handleOpenPaneDetail = useCallback(() => {
+    if (paneDetailHref !== null) requestLeave(() => router.push(paneDetailHref));
+  }, [paneDetailHref, requestLeave, router]);
 
   const renderMobileCard = useCallback(
     (row: SubmissionRow) => <ProductFeedbackMobileCard row={row} />,
@@ -535,7 +506,7 @@ export function ProductFeedbackPage({
               isError={isError}
               error={error}
               getRowKey={getSubmissionRowKey}
-              onRowClick={canOpenSubmissionDetail ? handleRowClick : undefined}
+              onRowClick={openSubmissionPane}
               mobileCard={renderMobileCard}
               pagination={{
                 mode: "server",
@@ -588,8 +559,17 @@ export function ProductFeedbackPage({
           managedProductId={managedProductId}
           open={paneSubmissionId !== null}
           onOpenChange={handleCloseFeedbackPane}
+          onOpenDetail={paneDetailHref === null ? undefined : handleOpenPaneDetail}
         />
       )}
+      {intakeRouting.target ? (
+        <RouteToIntakeDialog
+          managedProductId={managedProductId}
+          submission={intakeRouting.target}
+          mutation={intakeRouting.mutation}
+          onOpenChange={intakeRouting.handleTargetOpenChange}
+        />
+      ) : null}
     </>
   );
 }

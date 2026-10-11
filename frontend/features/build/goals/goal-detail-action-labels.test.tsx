@@ -21,7 +21,7 @@ jest.mock("@/hooks/api/goals", () => ({
       owner: null,
       keyResults: [],
       links: [],
-      updates: [],
+      updates: [], measurementSources: [], linkedRoadmapItems: [], parentGoalId: null,
       progress: 0,
       startDate: null,
       dueDate: null,

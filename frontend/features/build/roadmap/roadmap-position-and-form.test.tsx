@@ -153,7 +153,7 @@ describe("roadmap item form — target date validation", () => {
 });
 
 describe("roadmap item form — horizon is included in the payload", () => {
-  it("submits the default horizon (later) when no horizon is selected", async () => {
+  it("submits the default horizon (later) and keeps a new item private when nothing is chosen", async () => {
     const mutate = jest.fn();
     mockUseCreateRoadmapItem.mockReturnValue({ mutate, isPending: false });
     render(<RoadmapItemSheet onClose={jest.fn()} />);
@@ -162,7 +162,7 @@ describe("roadmap item form — horizon is included in the payload", () => {
 
     await waitFor(() => {
       expect(mutate).toHaveBeenCalledWith(
-        expect.objectContaining({ horizon: "later" }),
+        expect.objectContaining({ horizon: "later", isPublic: false }),
         expect.any(Object),
       );
     });

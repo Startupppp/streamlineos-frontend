@@ -8,6 +8,9 @@ import { FormProvider, useFormContext } from "react-hook-form";
 jest.mock("@/hooks/api/goals", () => ({
   useCreateGoal: jest.fn(),
   useUpdateGoal: jest.fn(),
+  useGoals: jest.fn(() => ({
+    data: [{ id: 99, title: "Self", level: "team" }, { id: 37, title: "Company goal", level: "company" }],
+  })),
 }));
 
 jest.mock("@/hooks/api/chat-core-read", () => ({
@@ -62,7 +65,15 @@ jest.mock("./goal-objective-fields", () => ({
 }));
 
 jest.mock("./goal-ownership-fields", () => ({
-  GoalOwnershipFields: () => <div data-testid="ownership-fields" />,
+  GoalOwnershipFields: ({ parentOptions }: { parentOptions: Array<{ id: number; title: string }> }) => {
+    const { register } = useFormContext();
+    return (
+      <select data-testid="parent-goal" {...register("parentGoalId")}>
+        <option value="none">No parent</option>
+        {parentOptions.map((o) => <option key={o.id} value={String(o.id)}>{o.title}</option>)}
+      </select>
+    );
+  },
 }));
 
 jest.mock("./goal-key-results", () => ({
@@ -218,5 +229,45 @@ describe("GoalFormSheet conflict UX (Task C)", () => {
     });
     const alert = screen.getByRole("alert");
     expect(alert).toBeInTheDocument();
+  });
+});
+
+describe("GoalFormSheet parent goal", () => {
+  it("offers other goals as parents and sends the chosen parent on update", async () => {
+    const mutate = buildMutate();
+    mockUseUpdateGoal.mockReturnValue({ mutate, isPending: false });
+    render(<GoalFormSheet open onOpenChange={jest.fn()} goal={baseGoal()} />);
+
+    expect(screen.queryByRole("option", { name: "Self" })).not.toBeInTheDocument();
+    fireEvent.change(screen.getByTestId("parent-goal"), { target: { value: "37" } });
+    fireEvent.submit(document.querySelector("form")!);
+
+    await waitFor(() => {
+      expect(mutate).toHaveBeenCalledWith(expect.objectContaining({ parentGoalId: 37 }), expect.any(Object));
+    });
+  });
+
+  it("leaves the parent out of the update when it did not change", async () => {
+    const mutate = buildMutate();
+    mockUseUpdateGoal.mockReturnValue({ mutate, isPending: false });
+    render(<GoalFormSheet open onOpenChange={jest.fn()} goal={baseGoal({ parentGoalId: 37 })} />);
+
+    fireEvent.submit(document.querySelector("form")!);
+
+    await waitFor(() => expect(mutate).toHaveBeenCalled());
+    expect(mutate.mock.calls[0][0]).not.toHaveProperty("parentGoalId");
+  });
+
+  it("toasts a rejected parent link instead of showing the version conflict", async () => {
+    const cycleError = new ApiError("Goal parent link would create a cycle", 409, "CONFLICT");
+    const mutate = buildMutate((_, opts) => opts.onError?.(cycleError));
+    mockUseUpdateGoal.mockReturnValue({ mutate, isPending: false });
+    render(<GoalFormSheet open onOpenChange={jest.fn()} goal={baseGoal()} />);
+
+    fireEvent.change(screen.getByTestId("parent-goal"), { target: { value: "37" } });
+    fireEvent.submit(document.querySelector("form")!);
+
+    await waitFor(() => expect(mockToast.error).toHaveBeenCalled());
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 });

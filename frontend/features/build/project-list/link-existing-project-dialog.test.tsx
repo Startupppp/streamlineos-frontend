@@ -62,6 +62,7 @@ beforeEach(() => {
       data: [
         { id: 11, key: "FREE", name: "Unlinked project", managedProductId: null },
         { id: 12, key: "TAKEN", name: "Other product project", managedProductId: 4 },
+        { id: 13, key: "HERE", name: "Already linked project", managedProductId: 39 },
       ],
       hasMore: false,
     },
@@ -71,10 +72,11 @@ beforeEach(() => {
   });
 });
 
-it("shows all projects including those linked to other products", () => {
+it("shows unlinked projects and those linked to other products, but not ones already linked here", () => {
   render(<LinkExistingProjectDialog managedProductId={39} open onOpenChange={jest.fn()} />);
   expect(screen.getByRole("button", { name: /FREE Unlinked project/ })).toBeInTheDocument();
   expect(screen.getByRole("button", { name: /Other product project/ })).toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: /Already linked project/ })).not.toBeInTheDocument();
 });
 
 it("links an unassigned project with 'Link project' button", () => {

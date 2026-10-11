@@ -118,7 +118,7 @@ export function RoadmapItemSheet({ item, managedProductId, defaultHorizon, onClo
       goalId: item?.goalId === null || item?.goalId === undefined ? "" : String(item.goalId),
       releaseId: item?.releaseId === null || item?.releaseId === undefined ? "" : String(item.releaseId),
       teamId: item?.teamId === null || item?.teamId === undefined ? "" : String(item.teamId),
-      isPublic: item?.isPublic ?? true,
+      isPublic: item?.isPublic ?? false,
       reach: riceDefault(item?.reach),
       impact: riceDefault(item?.impact),
       confidence: riceDefault(item?.confidence),

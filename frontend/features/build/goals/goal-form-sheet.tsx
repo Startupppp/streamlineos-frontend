@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -19,12 +19,13 @@ import { Target } from "lucide-react";
 import { toast } from "sonner";
 import {
   useCreateGoal,
+  useGoals,
   useUpdateGoal,
   type GoalDetail,
 } from "@/hooks/api/goals";
 import { useChatOrgUsers } from "@/hooks/api/chat-core-read";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { isApiError } from "@/lib/api-envelope";
+import { getApiErrorCode } from "@/lib/api-envelope";
 import type { TicketConflictFieldDiff } from "@/features/build/ticket-details/ticket-conflict-diff";
 import {
   projectGoalFormSchema,
@@ -60,6 +61,11 @@ export function GoalFormSheet({
   >(null);
 
   const { data: orgUsers } = useChatOrgUsers(open);
+  const { data: goalOptions } = useGoals({ limit: 100 }, { enabled: open });
+  const parentOptions = useMemo(
+    () => (goalOptions ?? []).filter((option) => option.id !== goal?.id),
+    [goalOptions, goal?.id],
+  );
   const createGoal = useCreateGoal();
   const updateGoal = useUpdateGoal();
   const isPending = createGoal.isPending || updateGoal.isPending;
@@ -72,6 +78,7 @@ export function GoalFormSheet({
       level: goal?.level ?? "company",
       status: goal?.status ?? "not_started",
       ownerId: goal?.owner?.id ?? "unassigned",
+      parentGoalId: goal?.parentGoalId != null ? String(goal.parentGoalId) : "none",
       startDate: goal?.startDate ?? "",
       dueDate: goal?.dueDate ?? "",
     },
@@ -107,6 +114,8 @@ export function GoalFormSheet({
   function handleSubmit(values: ProjectGoalFormValues) {
     const resolvedOwner =
       values.ownerId === "unassigned" ? null : values.ownerId;
+    const resolvedParent =
+      values.parentGoalId === "none" ? null : Number(values.parentGoalId);
 
     if (isEdit) {
       updateGoal.mutate(
@@ -120,6 +129,7 @@ export function GoalFormSheet({
           ownerId: resolvedOwner,
           startDate: values.startDate || null,
           dueDate: values.dueDate || null,
+          ...(resolvedParent !== goal.parentGoalId ? { parentGoalId: resolvedParent } : {}),
         },
         {
           onSuccess: () => {
@@ -127,7 +137,7 @@ export function GoalFormSheet({
             handleOpenChange(false);
           },
           onError: (e) => {
-            if (isApiError(e) && e.status === 409) {
+            if (getApiErrorCode(e) === "PROJECTS_TICKET_CONFLICT") {
               setConflictFields(buildGoalConflictDiffs(goal, values));
               return;
             }
@@ -147,6 +157,7 @@ export function GoalFormSheet({
         ownerId: resolvedOwner ?? undefined,
         startDate: values.startDate || undefined,
         dueDate: values.dueDate || undefined,
+        parentGoalId: resolvedParent ?? undefined,
         managedProductId,
         keyResults: buildKeyResults(keyResults),
       },
@@ -225,7 +236,11 @@ export function GoalFormSheet({
                   </div>
                 ) : null}
                 <GoalObjectiveFields />
-                <GoalOwnershipFields isEdit={isEdit} orgUsers={orgUsers} />
+                <GoalOwnershipFields
+                  isEdit={isEdit}
+                  orgUsers={orgUsers}
+                  parentOptions={parentOptions}
+                />
 
                 {!isEdit && (
                   <GoalKeyResultsPanel

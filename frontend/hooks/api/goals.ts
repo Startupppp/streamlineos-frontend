@@ -166,12 +166,13 @@ function forEachGoalList(
   }
 }
 
-export function useGoals(params?: GoalsParams) {
+export function useGoals(params?: GoalsParams, options?: { enabled?: boolean }) {
   const queryParams = toQueryParams(params);
   return useGatedQuery("build:goals:view", {
     queryKey: accountingAndSupportQueryKeys.goals.list(queryParams),
     queryFn: async ({ signal }) =>
       (await apiClient.get<GoalsListPage>("/goals", queryParams, signal, goalsListContract)).items,
+    enabled: options?.enabled ?? true,
     staleTime: 30_000,
     placeholderData: keepPreviousData,
     ...INLINE_READ_ERROR,
@@ -354,7 +355,11 @@ function patchGoalListCacheForProduct(
   action: "link" | "unlink",
 ): void {
   const listPrefix = accountingAndSupportQueryKeys.goals.list();
-  for (const [key, cached] of qc.getQueriesData({ queryKey: listPrefix })) {
+  const cachedLists = qc.getQueriesData({ queryKey: listPrefix });
+  const linkedItem = cachedLists
+    .flatMap(([, cached]) => (isGoalsListPage(cached) ? cached.items : []))
+    .find((item) => item.id === goalId);
+  for (const [key, cached] of cachedLists) {
     if (!isGoalsListPage(cached)) continue;
     const keyArr = key as unknown[];
     const params = (keyArr[listPrefix.length] ?? {}) as GoalsParams;
@@ -368,7 +373,17 @@ function patchGoalListCacheForProduct(
         return { ...prev, items: prev.items.filter((item) => item.id !== goalId), total: Math.max(0, prev.total - 1) };
       });
     } else if (action === "link" && isProductScoped) {
-      qc.invalidateQueries({ queryKey: key as readonly unknown[], exact: true, refetchType: "none" });
+      if (cached.items.some((item) => item.id === goalId)) continue;
+      if (linkedItem) {
+        const productLinkage = { managedProductId, linkedAt: new Date().toISOString() };
+        qc.setQueryData<GoalsListPage>(key, {
+          ...cached,
+          items: [{ ...linkedItem, productLinkage }, ...cached.items],
+          total: cached.total + 1,
+        });
+      } else {
+        void qc.invalidateQueries({ queryKey: key, exact: true });
+      }
     } else if (!isProductScoped) {
       qc.setQueryData(key, (prev: GoalsListPage | undefined) => {
         if (!prev) return prev;
@@ -405,10 +420,9 @@ export function useLinkGoalProduct() {
         ),
       onSuccess: (_, variables) => {
         patchGoalListCacheForProduct(qc, variables.goalId, variables.managedProductId, "link");
-        qc.invalidateQueries({
+        void qc.invalidateQueries({
           queryKey: accountingAndSupportQueryKeys.goals.stats(variables.managedProductId),
           exact: true,
-          refetchType: "none",
         });
       },
     },
@@ -430,10 +444,9 @@ export function useUnlinkGoalProduct() {
         ),
       onSuccess: (_, variables) => {
         patchGoalListCacheForProduct(qc, variables.goalId, variables.managedProductId, "unlink");
-        qc.invalidateQueries({
+        void qc.invalidateQueries({
           queryKey: accountingAndSupportQueryKeys.goals.stats(variables.managedProductId),
           exact: true,
-          refetchType: "none",
         });
       },
     },

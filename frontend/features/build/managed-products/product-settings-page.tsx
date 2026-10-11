@@ -102,9 +102,13 @@ function ProductSettingsForm({ managedProductId }: ProductSettingsPageProps) {
           differentiators: product.differentiators ?? undefined,
         }
       : undefined,
+    resetOptions: { keepDirtyValues: true, keepDirty: true },
   });
 
-  useRegisterDirtyState(form.formState.isDirty);
+  const isDirty = form.formState.isDirty;
+  const [baseVersion, setBaseVersion] = useState<number | null>(null);
+  if (product && !isDirty && baseVersion !== product.version) setBaseVersion(product.version);
+  useRegisterDirtyState(isDirty);
 
   const pageState = usePageState({
     permission: "build:managed-products:view",
@@ -117,14 +121,15 @@ function ProductSettingsForm({ managedProductId }: ProductSettingsPageProps) {
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
   const handleDismissConflict = useCallback(() => {
     setIsConflict(false);
+    form.reset();
     void refetch();
-  }, [refetch]);
+  }, [refetch, form]);
 
   const handleSubmit = useCallback(
     (values: EditManagedProductFormValues) => {
       if (!product) return;
       updateProduct.mutate(
-        { managedProductId, ...toEditManagedProductInput(values, product.version) },
+        { managedProductId, ...toEditManagedProductInput(values, baseVersion ?? product.version) },
         {
           onSuccess: () => {
             toast.success("Settings saved.");
@@ -137,7 +142,7 @@ function ProductSettingsForm({ managedProductId }: ProductSettingsPageProps) {
         },
       );
     },
-    [product, updateProduct, managedProductId, form],
+    [product, updateProduct, managedProductId, form, baseVersion],
   );
 
   function handleArchiveConfirm() {
@@ -208,7 +213,7 @@ function ProductSettingsForm({ managedProductId }: ProductSettingsPageProps) {
                       size="sm"
                       isPending={updateProduct.isPending}
                       loadingText="Saving…"
-                      disabled={!form.formState.isDirty}
+                      disabled={!isDirty}
                     >
                       Save changes
                     </LoadingButton>

@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
-import { ProductRowActions } from "./managed-product-table-columns";
+import { buildManagedProductColumns, ProductRowActions } from "./managed-product-table-columns";
 import type { ManagedProduct } from "@/types/projects";
 
 jest.mock("@/hooks/common/use-animated-icon", () => ({
@@ -65,5 +65,32 @@ describe("managed product row action permissions", () => {
 
     expect(screen.getByText("Delete")).toBeInTheDocument();
     expect(screen.queryByText("Edit")).not.toBeInTheDocument();
+  });
+});
+
+describe("managed product name column", () => {
+  function renderName(row: ManagedProduct) {
+    const [nameColumn] = buildManagedProductColumns({
+      canUpdate: true,
+      canDelete: true,
+      ownerOf: () => null,
+      onEdit: jest.fn(),
+      onDelete: jest.fn(),
+    });
+    render(<>{nameColumn.cell(row)}</>);
+  }
+
+  it("marks an archived product next to its name", () => {
+    renderName({ ...product, status: "archived" });
+
+    expect(screen.getByRole("link", { name: "Atlas" })).toBeInTheDocument();
+    expect(screen.getByText("Archived")).toBeInTheDocument();
+  });
+
+  it("shows no archived marker for an active product", () => {
+    renderName(product);
+
+    expect(screen.getByRole("link", { name: "Atlas" })).toBeInTheDocument();
+    expect(screen.queryByText("Archived")).not.toBeInTheDocument();
   });
 });

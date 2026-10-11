@@ -42,7 +42,10 @@ export function LinkExistingProjectDialog({
   );
   const mutation = useLinkProjectManagedProduct();
 
-  const allProjects = useMemo(() => data?.data ?? [], [data]);
+  const allProjects = useMemo(
+    () => (data?.data ?? []).filter((p) => p.managedProductId !== managedProductId),
+    [data, managedProductId],
+  );
 
   const options = useMemo(
     () =>

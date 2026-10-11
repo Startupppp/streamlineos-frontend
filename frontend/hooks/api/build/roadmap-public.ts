@@ -60,13 +60,13 @@ interface SubmitPublicFeedbackInput {
   email?: string;
 }
 
-export function usePublicRoadmap(orgId: string) {
+export function usePublicRoadmap(orgId: string, managedProductId?: number) {
   return useQuery({
-    queryKey: knowledgeAndSurveysQueryKeys.roadmap.publicBoard(orgId),
+    queryKey: knowledgeAndSurveysQueryKeys.roadmap.publicBoard(orgId, managedProductId),
     queryFn: ({ signal }) =>
       apiClient.get<PublicRoadmapBoard>(
         "/public/roadmap",
-        { org: orgId },
+        managedProductId === undefined ? { org: orgId } : { org: orgId, managedProductId },
         signal,
         publicRoadmapBoardContract,
       ),
@@ -88,8 +88,8 @@ export function usePublicVote(orgId: string) {
         publicVoteResultContract,
       ),
     onSuccess: (result) => {
-      qc.setQueryData<PublicRoadmapBoard>(
-        knowledgeAndSurveysQueryKeys.roadmap.publicBoard(orgId),
+      qc.setQueriesData<PublicRoadmapBoard>(
+        { queryKey: knowledgeAndSurveysQueryKeys.roadmap.publicBoard(orgId) },
         (prev) => {
           if (!prev) return prev;
           if (result.type === "roadmap") {

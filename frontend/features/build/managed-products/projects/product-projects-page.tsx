@@ -9,8 +9,6 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { PageState } from "@/components/shared/page-state";
 import { BuildHeaderActions } from "@/features/build/shared/build-header-actions";
-import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
-import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
 import { EmptyProjectsIllustration } from "@/components/illustrations";
 import {
   MANAGED_PRODUCT_DETAIL_CONTENT_CLASS,
@@ -19,14 +17,8 @@ import {
 } from "@/features/build/managed-products/managed-product-detail-layout";
 import { PRODUCT_PROJECT_SKELETON_HEADERS } from "@/features/build/managed-products/managed-product-page-skeletons";
 import { useProductProjectsPage, type LinkedProjectRow } from "./use-product-projects-page";
-import {
-  STATUS_OPTIONS,
-  HEALTH_OPTIONS,
-  ALL_SENTINEL,
-  CONTRIB_OPTIONS,
-  buildProductProjectsColumns,
-  ProductProjectMobileCard,
-} from "./product-projects-table";
+import { buildProductProjectsColumns, ProductProjectMobileCard } from "./product-projects-table";
+import { ProductProjectsToolbar } from "./product-projects-toolbar";
 
 const LinkExistingProjectDialog = dynamic(
   () =>
@@ -42,34 +34,19 @@ interface ProductProjectsPageProps {
 
 export function ProductProjectsPage({ managedProductId }: ProductProjectsPageProps) {
   const router = useRouter();
+  const page = useProductProjectsPage({ managedProductId });
   const {
     canManage,
     rows,
     hasMore,
     hasPrevious,
     resolution,
-    isFiltered,
     isFilteredEmpty,
-    statusValue,
-    healthValue,
-    teamValue,
-    clientValue,
-    contribValue,
-    teamOptions,
-    clientOptions,
-    searchValue,
-    searchInputRef,
     linkDialogOpen,
     setLinkDialogOpen,
     unlinkProjectId,
     unlinkMutation,
     headerActions,
-    handleStatusChange,
-    handleHealthChange,
-    handleTeamChange,
-    handleClientChange,
-    handleContribChange,
-    handleSearchChange,
     handleClearFilters,
     handleNextPage,
     handlePreviousPage,
@@ -77,7 +54,7 @@ export function ProductProjectsPage({ managedProductId }: ProductProjectsPagePro
     handleUnlinkConfirm,
     handleUnlinkDialogOpenChange,
     handleRetry,
-  } = useProductProjectsPage({ managedProductId });
+  } = page;
 
   const handleRowClick = useCallback(
     (row: LinkedProjectRow) => router.push(`/build/projects/${row.id}`),
@@ -102,83 +79,7 @@ export function ProductProjectsPage({ managedProductId }: ProductProjectsPagePro
       subtitle="Projects contributing to this product"
       contentClassName={MANAGED_PRODUCT_DETAIL_CONTENT_CLASS}
       filters={
-        <BuildListToolbar
-          search={{
-            value: searchValue,
-            onValueChange: handleSearchChange,
-            placeholder: "Search projects…",
-            label: "Search projects",
-            inputRef: searchInputRef,
-          }}
-          filters={[
-            {
-              id: "status",
-              label: "Status",
-              active: Boolean(statusValue),
-              control: (
-                <BuildFilterSelect
-                  label="Status"
-                  value={statusValue || ALL_SENTINEL}
-                  onValueChange={(v) => handleStatusChange(v === ALL_SENTINEL ? "" : v)}
-                  options={[{ value: ALL_SENTINEL, label: "All statuses" }, ...STATUS_OPTIONS]}
-                />
-              ),
-            },
-            {
-              id: "health",
-              label: "Health",
-              active: Boolean(healthValue),
-              control: (
-                <BuildFilterSelect
-                  label="Health"
-                  value={healthValue || ALL_SENTINEL}
-                  onValueChange={(v) => handleHealthChange(v === ALL_SENTINEL ? "" : v)}
-                  options={[{ value: ALL_SENTINEL, label: "Any health" }, ...HEALTH_OPTIONS]}
-                />
-              ),
-            },
-            {
-              id: "team",
-              label: "Team",
-              active: Boolean(teamValue),
-              control: (
-                <BuildFilterSelect
-                  label="Team"
-                  value={teamValue || ALL_SENTINEL}
-                  onValueChange={(v) => handleTeamChange(v === ALL_SENTINEL ? "" : v)}
-                  options={[{ value: ALL_SENTINEL, label: "All teams" }, ...teamOptions]}
-                />
-              ),
-            },
-            {
-              id: "customer",
-              label: "Customer",
-              active: Boolean(clientValue),
-              control: (
-                <BuildFilterSelect
-                  label="Customer"
-                  value={clientValue || ALL_SENTINEL}
-                  onValueChange={(v) => handleClientChange(v === ALL_SENTINEL ? "" : v)}
-                  options={[{ value: ALL_SENTINEL, label: "All customers" }, ...clientOptions]}
-                />
-              ),
-            },
-            {
-              id: "contribution",
-              label: "Contribution",
-              active: Boolean(contribValue),
-              control: (
-                <BuildFilterSelect
-                  label="Contribution"
-                  value={contribValue || ALL_SENTINEL}
-                  onValueChange={(v) => handleContribChange(v === ALL_SENTINEL ? "" : v)}
-                  options={[{ value: ALL_SENTINEL, label: "Any contribution" }, ...CONTRIB_OPTIONS]}
-                />
-              ),
-            },
-          ]}
-          onClearAll={isFiltered ? handleClearFilters : undefined}
-        />
+        <ProductProjectsToolbar page={page} />
       }
       actions={<BuildHeaderActions actions={headerActions} />}
     >

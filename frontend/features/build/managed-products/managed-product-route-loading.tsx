@@ -18,7 +18,7 @@ import {
   ProductSettingsSkeleton,
 } from "./managed-product-page-skeletons";
 import { FEEDBACK_SKELETON_HEADERS } from "./product-feedback-columns";
-import { INSIGHT_TABS, INSIGHT_VIEWS } from "./product-insights-tabs";
+import { INSIGHT_VIEWS } from "./product-insights-tabs";
 import { PRODUCT_SETTINGS_TABS } from "./product-settings-tabs";
 
 function RouteToolbar({
@@ -129,12 +129,7 @@ function InsightTabStripRow({
 }
 
 function InsightTabStrip() {
-  return (
-    <div className="flex w-full min-w-0 flex-col gap-2">
-      <InsightTabStripRow tabs={INSIGHT_VIEWS} activeId="overview" />
-      <InsightTabStripRow tabs={INSIGHT_TABS} activeId="overview" />
-    </div>
-  );
+  return <InsightTabStripRow tabs={INSIGHT_VIEWS} activeId="overview" />;
 }
 
 export function ProductInsightsRouteLoading() {

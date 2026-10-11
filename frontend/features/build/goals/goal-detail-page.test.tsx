@@ -254,7 +254,7 @@ const FULL_GOAL_DETAIL = {
       projectKey: "BLD",
     },
   ],
-  updates: [],
+  updates: [], measurementSources: [], linkedRoadmapItems: [], parentGoalId: null,
 };
 
 beforeEach(() => {

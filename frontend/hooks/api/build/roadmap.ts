@@ -234,17 +234,49 @@ function patchRoadmapItemInCache(
   );
 }
 
+function listSortsByPosition(queryKey: readonly unknown[]): boolean {
+  const params = queryKey[queryKey.length - 1];
+  return !(typeof params === "object" && params !== null && "sort" in params && params.sort);
+}
+
+function repositionRoadmapItemInCache(
+  qc: ReturnType<typeof useQueryClient>,
+  updated: ScoredRoadmapItem,
+) {
+  const lists = qc.getQueriesData<CursorPaginated<ScoredRoadmapItem>>({
+    queryKey: knowledgeAndSurveysQueryKeys.roadmap.items(),
+    exact: false,
+  });
+  for (const [queryKey, old] of lists) {
+    if (!old) continue;
+    const data = old.data.map((item) =>
+      item.id === updated.id ? { ...item, ...updated } : item,
+    );
+    if (listSortsByPosition(queryKey)) {
+      data.sort((a, b) => a.sortOrder - b.sortOrder || a.id - b.id);
+    }
+    qc.setQueryData(queryKey, { ...old, data });
+  }
+  qc.setQueryData(knowledgeAndSurveysQueryKeys.roadmap.item(updated.id), updated);
+  void qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.items() });
+}
+
 export function addRoadmapItemToCache(
   qc: ReturnType<typeof useQueryClient>,
   created: ScoredRoadmapItem,
 ) {
-  qc.setQueriesData<CursorPaginated<ScoredRoadmapItem>>(
-    { queryKey: knowledgeAndSurveysQueryKeys.roadmap.items(), exact: false },
-    (old) => {
-      if (!old) return old;
-      return { ...old, data: [created, ...old.data] };
-    },
-  );
+  const lists = qc.getQueriesData<CursorPaginated<ScoredRoadmapItem>>({
+    queryKey: knowledgeAndSurveysQueryKeys.roadmap.items(),
+    exact: false,
+  });
+  for (const [queryKey, old] of lists) {
+    if (!old) continue;
+    const data = [created, ...old.data];
+    if (listSortsByPosition(queryKey)) {
+      data.sort((a, b) => a.sortOrder - b.sortOrder || a.id - b.id);
+    }
+    qc.setQueryData(queryKey, { ...old, data });
+  }
 }
 
 function removeRoadmapItemFromCache(
@@ -335,7 +367,7 @@ export function usePositionRoadmapItem() {
         undefined,
         roadmapItemContract,
       ),
-    onSuccess: (result) => patchRoadmapItemInCache(qc, result),
+    onSuccess: (result) => repositionRoadmapItemInCache(qc, result),
   });
 }
 

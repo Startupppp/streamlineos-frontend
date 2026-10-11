@@ -15,16 +15,17 @@ const routeIntakeContract = lazyContract(() =>
 interface RouteFeedbucketToIntakeInput {
   submissionId: number;
   projectId: number;
+  projectChosen?: boolean;
 }
 
 export function useRouteFeedbucketToIntake() {
   const queryClient = useQueryClient();
   return useAuthorizedMutation("feedbucket:submissions:manage", {
     mutationKey: ["feedbucket", "submissions", "route-to-intake"],
-    mutationFn: ({ submissionId }: RouteFeedbucketToIntakeInput) =>
+    mutationFn: ({ submissionId, projectId, projectChosen }: RouteFeedbucketToIntakeInput) =>
       apiClient.post<{ intakeId: number; created: boolean }>(
         `/feedbucket/submissions/${submissionId}/route-to-intake`,
-        {},
+        projectChosen ? { projectId } : {},
         undefined,
         routeIntakeContract,
       ),
