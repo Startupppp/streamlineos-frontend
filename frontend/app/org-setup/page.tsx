@@ -7,7 +7,7 @@ import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { clearBackendTokenCache } from "@/lib/api-client";
+import { clearBackendTokenCache, setAutoSignOutSuppressed } from "@/lib/api-client";
 import { clearGateCookie, completeOnboardingGate } from "@/lib/onboarding-gate";
 import { signInWithMagicToken } from "@/hooks/common/auth-hooks";
 import {
@@ -159,6 +159,11 @@ export default function OrgSetupPage() {
       toast.error(getErrorMessage(err));
     }
   }, [skipOrgSetup, beginClaimsRefresh, userId]);
+
+  useEffect(() => {
+    setAutoSignOutSuppressed(true);
+    return () => setAutoSignOutSuppressed(false);
+  }, []);
 
   useEffect(() => {
     if (!userId) return;

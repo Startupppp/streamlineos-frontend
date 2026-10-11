@@ -209,12 +209,12 @@ async function refreshAfterUnauthorized(
 export function endSession(): void {
   if (sessionEnded) return;
   sessionEnded = true;
+  const here =
+    typeof window !== "undefined"
+      ? window.location.pathname + window.location.search
+      : undefined;
   clearRegisteredQueryCache();
   void import("next-auth/react").then(({ signOut }) => {
-    const here =
-      typeof window !== "undefined"
-        ? window.location.pathname + window.location.search
-        : undefined;
     void signOut({ callbackUrl: signInPathForMissingSession(here) });
   });
 }

@@ -46,6 +46,20 @@ describe("endSession — sign-out target carries current path as callbackUrl", (
     expect(params.get("callbackUrl")).toBe("/build/45?tab=board");
   });
 
+  test("captures pathname synchronously so a navigation during the dynamic import does not shift callbackUrl", async () => {
+    setWindowPathname("/org-setup");
+    endSession();
+    setWindowPathname("/dashboard");
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(mockSignOut).toHaveBeenCalledTimes(1);
+    const { callbackUrl } = mockSignOut.mock.calls[0][0];
+    expect(callbackUrl).toBeDefined();
+    const params = new URLSearchParams(callbackUrl!.replace(/^[^?]*\?/, ""));
+    expect(params.get("callbackUrl")).toBe("/org-setup");
+  });
+
   test("signOut callbackUrl omits the inner callbackUrl when already on /signin", async () => {
     setWindowPathname("/signin", `?${SESSION_EXPIRED_QUERY}=${SESSION_EXPIRED_VALUE}`);
     clearBackendTokenCache();

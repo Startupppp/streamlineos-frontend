@@ -12,7 +12,6 @@ import { AnimatePresence } from "framer-motion";
 import {
   clearBackendTokenCache,
   isApiError,
-  setAutoSignOutSuppressed,
 } from "@/lib/api-client";
 import { clearGateCookie, completeOnboardingGate } from "@/lib/onboarding-gate";
 import { signInWithMagicToken } from "@/hooks/common/auth-hooks";
@@ -99,11 +98,6 @@ export function StepGeneration({ data, onBackToProducts, idempotencyKey }: StepG
     orgCreatedResult?.orgId ??
     (isPollingAfterTimeout ? provisioning.orgId : null);
   const effectiveAutoLoginToken = orgCreatedResult?.autoLoginToken ?? null;
-
-  useEffect(() => {
-    setAutoSignOutSuppressed(true);
-    return () => setAutoSignOutSuppressed(false);
-  }, []);
 
   useLayoutEffect(() => {
     dataRef.current = data;

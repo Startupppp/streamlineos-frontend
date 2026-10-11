@@ -10,6 +10,7 @@ const mockRefreshSessionClaims = jest.fn();
 const mockClearAll = jest.fn();
 const mockToastError = jest.fn();
 const mockLocationReplace = jest.fn();
+const mockSetAutoSignOutSuppressed = jest.fn();
 const mockUseOrgSetupSessionQuery = jest.fn((_enabled: boolean) => ({
   data: undefined,
 }));
@@ -83,6 +84,7 @@ jest.mock("@/features/org-setup/lib/draft", () => ({
 
 jest.mock("@/lib/api-client", () => ({
   clearBackendTokenCache: jest.fn(),
+  setAutoSignOutSuppressed: (...args: unknown[]) => mockSetAutoSignOutSuppressed(...args),
 }));
 
 const mockUseSession = jest.fn<unknown, unknown[]>(() => ({
@@ -127,6 +129,7 @@ beforeEach(() => {
   mockClearAll.mockReset();
   mockToastError.mockReset();
   mockLocationReplace.mockReset();
+  mockSetAutoSignOutSuppressed.mockReset();
   mockUseOrgSetupSessionQuery.mockClear();
   capturedWelcomeProps = {};
   capturedShellData = null;
@@ -255,6 +258,19 @@ describe("OrgSetupPage — skipping the wizard releases the dashboard only on a 
   });
 });
 
+
+describe("OrgSetupPage — auto sign-out suppression", () => {
+  it("suppresses auto sign-out for the page lifetime and restores it on unmount", async () => {
+    const { unmount } = render(<OrgSetupPage />);
+    await waitFor(() => {
+      expect(mockSetAutoSignOutSuppressed).toHaveBeenCalledWith(true);
+    });
+
+    unmount();
+
+    expect(mockSetAutoSignOutSuppressed).toHaveBeenCalledWith(false);
+  });
+});
 
 describe("OrgSetupPage — session name seeds fullName once", () => {
   it("seeds fullName from session name when draft fullName is empty", async () => {
