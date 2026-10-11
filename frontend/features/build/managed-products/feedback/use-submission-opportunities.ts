@@ -50,8 +50,9 @@ export type OpportunityMinimal = z.infer<typeof opportunityMinimalContract>;
 export function useProductOpportunitiesSearch(
   managedProductId: number,
   search: string,
+  enabled = true,
 ) {
-  return useGatedQuery("feedbucket:submissions:view", {
+  return useGatedQuery("build:managed-products:view", {
     queryKey: [
       ...growthAndSignQueryKeys.feedbucket.all,
       "opportunities",
@@ -66,7 +67,7 @@ export function useProductOpportunitiesSearch(
         opportunityListC,
       ),
     staleTime: 30_000,
-    enabled: managedProductId > 0,
+    enabled: enabled && managedProductId > 0,
     ...INLINE_READ_ERROR,
   });
 }

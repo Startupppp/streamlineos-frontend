@@ -258,7 +258,10 @@ function repositionRoadmapItemInCache(
     qc.setQueryData(queryKey, { ...old, data });
   }
   qc.setQueryData(knowledgeAndSurveysQueryKeys.roadmap.item(updated.id), updated);
-  void qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.items() });
+  void qc.invalidateQueries({
+    queryKey: knowledgeAndSurveysQueryKeys.roadmap.items(),
+    refetchType: "none",
+  });
 }
 
 export function addRoadmapItemToCache(

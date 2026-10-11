@@ -4,8 +4,8 @@ import { useCallback, useMemo, useState } from "react";
 import { DatePicker } from "@/components/ui/date-picker";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ErrorState, NoPermissionState } from "@/components/shared";
-import { useCan } from "@/hooks/api/access";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import {
   useDockAppointments,
   useDockDoors,
@@ -13,67 +13,51 @@ import {
 import { DockBookingForm } from "./dock-booking-form";
 import { DockAppointmentsTable } from "./dock-appointments-table";
 
-function startOfDay(date: Date): string {
-  const copy = new Date(date);
-  copy.setHours(0, 0, 0, 0);
-  return copy.toISOString();
+const SKELETON_ROWS = ["r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8"];
+
+function dayRange(day: string) {
+  const from = new Date(`${day}T00:00:00`);
+  const to = new Date(from);
+  to.setDate(to.getDate() + 1);
+  return { from: from.toISOString(), to: to.toISOString() };
+}
+
+function DockSkeleton() {
+  return (
+    <div className="space-y-3">
+      {SKELETON_ROWS.map((row) => (
+        <Skeleton key={row} className="h-10 w-full" />
+      ))}
+    </div>
+  );
 }
 
 export function DockContent() {
-  const canView = useCan("inventory:dock:manage");
   const [day, setDay] = useState(() => new Date().toISOString().slice(0, 10));
-
-  const range = useMemo(() => {
-    const from = new Date(`${day}T00:00:00`);
-    const to = new Date(from);
-    to.setDate(to.getDate() + 1);
-    return { from: startOfDay(from), to: to.toISOString() };
-  }, [day]);
+  const range = useMemo(() => dayRange(day), [day]);
 
   const doors = useDockDoors();
   const appointments = useDockAppointments(range);
 
+  const pageState = usePageState({
+    permission: "inventory:dock:manage",
+    isLoading: appointments.isLoading,
+    isError: appointments.isError,
+    error: appointments.error,
+  });
+
+  const { refetch: refetchAppointments } = appointments;
+  const { refetch: refetchDoors } = doors;
   const handleRetry = useCallback(() => {
-    void appointments.refetch();
-    void doors.refetch();
-  }, [appointments, doors]);
+    void refetchAppointments();
+    void refetchDoors();
+  }, [refetchAppointments, refetchDoors]);
 
   const rows = useMemo(
     () => (Array.isArray(appointments.data) ? appointments.data : []),
     [appointments.data],
   );
-
-  if (!canView) {
-    return (
-      <PageWrapper title="Dock">
-        <NoPermissionState permission="inventory:dock:manage" className="flex-1" />
-      </PageWrapper>
-    );
-  }
-
-  if (appointments.isLoading) {
-    return (
-      <PageWrapper title="Dock">
-        <div className="space-y-3">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <Skeleton key={i} className="h-10 w-full" />
-          ))}
-        </div>
-      </PageWrapper>
-    );
-  }
-
-  if (appointments.isError) {
-    return (
-      <PageWrapper title="Dock">
-        <ErrorState
-          title="Failed to load the dock calendar"
-          description="An error occurred while fetching appointments."
-          onRetry={handleRetry}
-        />
-      </PageWrapper>
-    );
-  }
+  const doorList = useMemo(() => doors.data ?? [], [doors.data]);
 
   return (
     <PageWrapper
@@ -90,10 +74,12 @@ export function DockContent() {
         />
       }
     >
-      <div className="flex flex-1 min-h-0 flex-col gap-4">
-        <DockBookingForm day={day} doors={doors.data ?? []} />
-        <DockAppointmentsTable appointments={rows} />
-      </div>
+      <PageState resolution={pageState} loading={<DockSkeleton />} onRetry={handleRetry}>
+        <div className="flex flex-1 min-h-0 flex-col gap-4">
+          <DockBookingForm day={day} doors={doorList} />
+          <DockAppointmentsTable appointments={rows} />
+        </div>
+      </PageState>
     </PageWrapper>
   );
 }

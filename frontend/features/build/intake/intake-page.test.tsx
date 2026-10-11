@@ -61,7 +61,7 @@ beforeEach(() => {
   mockAccept.mockImplementation((_body: unknown, handlers: Callbacks) => callbacks.push(handlers));
   mockCan.mockReturnValue(false);
   mockAccess.mockReturnValue(ACCESS_GRANTED);
-  mockFilters.mockReturnValue({ value: () => "pending", setValue: jest.fn() });
+  mockFilters.mockReturnValue({ value: () => "pending", setValue: jest.fn(), resetKey: "pending" });
   mockRequests.mockReturnValue(query({ data: { data: [] } }));
   mockTickets.mockReturnValue({ data: { data: [{ id: 91, ticketNumber: 7, title: "Canonical ticket", status: "todo" }] }, isFetching: false });
   mockSession.mockReturnValue({ status: "authenticated", data: { orgId: "org-1", user: { id: "actor-1" } } });

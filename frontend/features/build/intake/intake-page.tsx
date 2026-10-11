@@ -1,10 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useMemo, useRef } from "react";
-import {
-  useIntakeRequests,
-  useCreateIntakeRequest,
-} from "@/hooks/api/build/intake";
+import { useIntakeRequests } from "@/hooks/api/build/intake";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -17,18 +14,6 @@ import {
   CONTENT_FILL_PANEL,
   PAGE_BODY_EMPTY_CLASS,
 } from "@/components/ui/content-fill-panel";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-  SheetBody,
-} from "@/components/ui/sheet";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Tabs,
@@ -38,27 +23,19 @@ import {
   TABS_CONTENT_PAGE_BODY_CLASS,
 } from "@/components/ui/tabs";
 import { TablePagination } from "@/components/ui/table-pagination";
-import { Plus, ExternalLink, ListChecks } from "lucide-react";
-import { getErrorMessage } from "@/lib/get-error-message";
-import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
+import { ExternalLink, ListChecks } from "lucide-react";
 import {
   BUILD_FILTER_ALL,
   useBuildListFilters,
 } from "@/features/build/shared/use-build-list-filters";
 import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
 import { useBuildCursorPager } from "@/features/build/shared/use-build-cursor-pager";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { IntakeDecisionDialog } from "@/features/build/intake/components/intake-decision-dialog";
 import { IntakeItemCard } from "@/features/build/intake/intake-item-card";
 import { IntakeTriageMode } from "@/features/build/intake/intake-triage-mode";
+import { IntakeCreateSheet } from "@/features/build/intake/intake-create-sheet";
 import { PmPageShell, PmSection, PmStaggerList } from "@/components/pm-chrome";
-import { LoadingButton } from "@/components/ui/loading-button";
-import {
-  createIntakeSchema,
-  type CreateIntakeForm,
-} from "@/features/build/intake/intake-schema";
 import type {
   IntakeSource,
   IntakeStatus,
@@ -72,13 +49,13 @@ const EMPTY_STATUS_COUNTS: IntakeStatusCounts = {
   declined: 0,
   duplicate: 0,
 };
-const INTAKE_TAB_OPTIONS = [
+const INTAKE_STATUS_OPTIONS = [
   "pending",
   "accepted",
   "declined",
   "duplicate",
-  "all",
-] as const;
+] as const satisfies readonly IntakeStatus[];
+const INTAKE_TAB_OPTIONS = [...INTAKE_STATUS_OPTIONS, "all"] as const;
 const INTAKE_MODE_OPTIONS = ["triage"] as const;
 const INTAKE_SOURCE_OPTIONS = [
   "manual",
@@ -135,13 +112,7 @@ export function IntakePage({
         : undefined;
   const statusParam: IntakeStatus | undefined = triageMode
     ? "pending"
-    : activeTab === "all"
-      ? undefined
-      : INTAKE_TAB_OPTIONS.includes(
-            activeTab as (typeof INTAKE_TAB_OPTIONS)[number],
-          ) && activeTab !== "all"
-        ? (activeTab as IntakeStatus)
-        : undefined;
+    : INTAKE_STATUS_OPTIONS.find((status) => status === activeTab);
 
   const {
     data: intakeData,
@@ -155,30 +126,6 @@ export function IntakePage({
     cursor: pager.cursor,
     limit: PAGE_SIZE,
   });
-  const createMutation = useCreateIntakeRequest();
-
-  const createForm = useForm<CreateIntakeForm>({
-    resolver: zodResolver(createIntakeSchema),
-  });
-  useRegisterDirtyState(createOpen && createForm.formState.isDirty);
-
-  const onCreateSubmit = useCallback(
-    (data: CreateIntakeForm) => {
-      createMutation.mutate(
-        { ...data, projectId },
-        {
-          onSuccess: () => {
-            setCreateOpen(false);
-            createForm.reset();
-            toast.success("Intake item created");
-          },
-          onError: (err) => toast.error(getErrorMessage(err)),
-        },
-      );
-    },
-    [createMutation, projectId, createForm],
-  );
-
   const canManage = useCan("build:workspace:manage");
   const pageState = usePageState({
     permission: "build:view",
@@ -200,9 +147,6 @@ export function IntakePage({
   function handleOpenCreate(): void {
     setCreateOpen(true);
   }
-  function handleCloseCreate(): void {
-    setCreateOpen(false);
-  }
   function handleEnterTriage(): void {
     listFilters.setValue("mode", "triage");
   }
@@ -216,7 +160,7 @@ export function IntakePage({
     listFilters.setValue("source", value);
   }
   function handleNextPage(): void {
-    pager.goNext(intakeData?.pagination.nextCursor);
+    pager.goNext(intakeData?.pagination?.nextCursor);
   }
   const items = useMemo(() => intakeData?.data ?? [], [intakeData]);
   const statusCounts = intakeData?.statusCounts ?? EMPTY_STATUS_COUNTS;
@@ -317,79 +261,11 @@ export function IntakePage({
                 <span className="min-[381px]:hidden">Form URL</span>
               </Button>
               {canManage && !triageMode ? (
-                <Sheet open={createOpen} onOpenChange={setCreateOpen}>
-                  <SheetTrigger asChild>
-                    <Button
-                      size="sm"
-                      aria-label="New Item"
-                      className="shrink-0"
-                    >
-                      <Plus className="h-4 w-4 mr-1" /> New Item
-                    </Button>
-                  </SheetTrigger>
-                  <SheetContent
-                    side="right"
-                    className="sm:max-w-md p-0 flex flex-col gap-0"
-                  >
-                    <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
-                      <SheetTitle>Create Intake Item</SheetTitle>
-                      <SheetDescription>
-                        Capture a request so it can be reviewed and triaged into
-                        project work.
-                      </SheetDescription>
-                    </SheetHeader>
-                    <SheetBody className="px-6 py-5">
-                      <form
-                        id="create-intake-form"
-                        onSubmit={createForm.handleSubmit(onCreateSubmit)}
-                        className="space-y-4"
-                      >
-                        <div>
-                          <Label htmlFor="intake-title">Title</Label>
-                          <Input
-                            id="intake-title"
-                            {...createForm.register("title")}
-                          />
-                          {createForm.formState.errors.title && (
-                            <p
-                              className="text-xs text-destructive mt-1"
-                              aria-live="polite"
-                            >
-                              {createForm.formState.errors.title.message}
-                            </p>
-                          )}
-                        </div>
-                        <div>
-                          <Label htmlFor="intake-desc">Description</Label>
-                          <Textarea
-                            id="intake-desc"
-                            {...createForm.register("description")}
-                          />
-                        </div>
-                      </form>
-                    </SheetBody>
-                    <div className="shrink-0 px-6 py-4 border-t">
-                      <div className="grid grid-cols-2 gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={handleCloseCreate}
-                        >
-                          Cancel
-                        </Button>
-                        <LoadingButton
-                          size="sm"
-                          type="submit"
-                          form="create-intake-form"
-                          isPending={createMutation.isPending}
-                          loadingText="Creating…"
-                        >
-                          Create Item
-                        </LoadingButton>
-                      </div>
-                    </div>
-                  </SheetContent>
-                </Sheet>
+                <IntakeCreateSheet
+                  projectId={projectId}
+                  open={createOpen}
+                  onOpenChange={setCreateOpen}
+                />
               ) : null}
             </div>
           }
@@ -540,7 +416,7 @@ export function IntakePage({
                           mode="cursor"
                           rowCount={items.length}
                           pageNumber={pager.pageNumber}
-                          hasMore={Boolean(intakeData?.pagination.hasMore)}
+                          hasMore={Boolean(intakeData?.pagination?.hasMore)}
                           hasPrevious={pager.hasPrevious}
                           onNext={handleNextPage}
                           onPrevious={pager.goPrevious}

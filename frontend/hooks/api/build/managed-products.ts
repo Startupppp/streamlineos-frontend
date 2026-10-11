@@ -232,7 +232,7 @@ export interface ManagedProductFacets {
 
 export function useManagedProductFacets() {
   const canView = useCan("build:managed-products:view");
-  return useQuery<ManagedProductFacets | null>({
+  return useQuery<ManagedProductFacets>({
     queryKey: buildWorkQueryKeys.projects.managedProducts.facets,
     queryFn: async ({ signal }) =>
       apiClient.get<ManagedProductFacets>(

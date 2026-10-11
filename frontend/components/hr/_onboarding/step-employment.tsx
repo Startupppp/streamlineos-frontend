@@ -7,10 +7,19 @@ import { onboardEmployeeInputSchema } from "@/lib/validation/hr";
 import { format } from "date-fns";
 import { Input } from "@/components/ui/input";
 import {
-  FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
 } from "@/components/ui/form";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/date-picker";
 import { parseDateOnly } from "@/lib/date-constraints";
@@ -25,23 +34,29 @@ type FormValues = z.infer<typeof onboardEmployeeInputSchema>;
 interface StepEmploymentProps {
   form: UseFormReturn<FormValues>;
   departments: Array<{ id: string; name: string }>;
-  /** Org units of kind LOCATION. Empty when the org configured none, or when the
-   *  operator cannot read organization settings — hiring stays possible either way. */
   locations: Array<{ id: string; name: string }>;
 }
 
-/** BUG-HRMS-006: Radix Select has no empty value, so "no location" needs a token. */
 const NO_LOCATION = "__none__";
 
-export function StepEmployment({ form, departments, locations }: StepEmploymentProps) {
+export function StepEmployment({
+  form,
+  departments,
+  locations,
+}: StepEmploymentProps) {
   const canCreateDept = useCan("hr:employees:manage");
 
-  function handleJoiningDateChange(onChange: (value: Date) => void) {
-    return (value: string) => {
+  const handleJoiningDateChange = useCallback(
+    (value: string) => {
       const parsed = parseDateOnly(value);
-      if (parsed) onChange(parsed);
-    };
-  }
+      if (parsed)
+        form.setValue("joiningDate", parsed, {
+          shouldDirty: true,
+          shouldValidate: true,
+        });
+    },
+    [form],
+  );
 
   return (
     <div className="grid gap-4 sm:grid-cols-2">
@@ -50,7 +65,9 @@ export function StepEmployment({ form, departments, locations }: StepEmploymentP
         name="departmentId"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Department <span className="text-destructive">*</span></FormLabel>
+            <FormLabel>
+              Department <span className="text-destructive">*</span>
+            </FormLabel>
             <FormControl>
               <DepartmentCombobox
                 value={field.value ?? null}
@@ -72,7 +89,9 @@ export function StepEmployment({ form, departments, locations }: StepEmploymentP
         name="designation"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Designation <span className="text-destructive">*</span></FormLabel>
+            <FormLabel>
+              Designation <span className="text-destructive">*</span>
+            </FormLabel>
             <FormControl>
               <Input placeholder="e.g., Senior Engineer" {...field} />
             </FormControl>
@@ -86,20 +105,27 @@ export function StepEmployment({ form, departments, locations }: StepEmploymentP
         name="role"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Organization Role <span className="text-destructive">*</span></FormLabel>
+            <FormLabel>
+              Organization Role <span className="text-destructive">*</span>
+            </FormLabel>
             <Select value={field.value} onValueChange={field.onChange}>
               <FormControl>
-                <SelectTrigger><SelectValue placeholder="Select role" /></SelectTrigger>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select role" />
+                </SelectTrigger>
               </FormControl>
               <SelectContent>
                 {USER_INVITE_ROLES.map((role) => (
-                  <SelectItem key={role.value} value={role.value}>{role.label}</SelectItem>
+                  <SelectItem key={role.value} value={role.value}>
+                    {role.label}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
             <FormDescription className="text-xs">
-              Member covers everyday access. Org Admin can administer the organization.
-              Module access is granted afterwards in Settings → Roles.
+              Member covers everyday access. Org Admin can administer the
+              organization. Module access is granted afterwards in Settings →
+              Roles.
             </FormDescription>
             <FormMessage />
           </FormItem>
@@ -110,11 +136,13 @@ export function StepEmployment({ form, departments, locations }: StepEmploymentP
         name="joiningDate"
         render={({ field }) => (
           <FormItem className="flex flex-col">
-            <FormLabel>Joining Date <span className="text-destructive">*</span></FormLabel>
+            <FormLabel>
+              Joining Date <span className="text-destructive">*</span>
+            </FormLabel>
             <FormControl>
               <DatePicker
                 value={field.value ? format(field.value, "yyyy-MM-dd") : ""}
-                onChange={handleJoiningDateChange(field.onChange)}
+                onChange={handleJoiningDateChange}
                 placeholder="Pick a date"
                 dateFormat="PPP"
                 ariaLabel="Joining Date"
@@ -134,16 +162,21 @@ export function StepEmployment({ form, departments, locations }: StepEmploymentP
             <FormLabel>Worker Type</FormLabel>
             <Select value={field.value} onValueChange={field.onChange}>
               <FormControl>
-                <SelectTrigger><SelectValue placeholder="Select worker type" /></SelectTrigger>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select worker type" />
+                </SelectTrigger>
               </FormControl>
               <SelectContent>
                 {HR_WORKER_TYPES.map((type) => (
-                  <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
+                  <SelectItem key={type.value} value={type.value}>
+                    {type.label}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
             <FormDescription className="text-xs">
-              Contractors, interns and consultants are recorded as such rather than in the designation text.
+              Contractors, interns and consultants are recorded as such rather
+              than in the designation text.
             </FormDescription>
             <FormMessage />
           </FormItem>
@@ -157,18 +190,28 @@ export function StepEmployment({ form, departments, locations }: StepEmploymentP
             <FormLabel>Work Location</FormLabel>
             <Select
               value={field.value ?? NO_LOCATION}
-              onValueChange={(value) => field.onChange(value === NO_LOCATION ? undefined : value)}
+              onValueChange={(value) =>
+                field.onChange(value === NO_LOCATION ? undefined : value)
+              }
               disabled={locations.length === 0}
             >
               <FormControl>
                 <SelectTrigger>
-                  <SelectValue placeholder={locations.length === 0 ? "No locations configured" : "Select location"} />
+                  <SelectValue
+                    placeholder={
+                      locations.length === 0
+                        ? "No locations configured"
+                        : "Select location"
+                    }
+                  />
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
                 <SelectItem value={NO_LOCATION}>No location</SelectItem>
                 {locations.map((location) => (
-                  <SelectItem key={location.id} value={location.id}>{location.name}</SelectItem>
+                  <SelectItem key={location.id} value={location.id}>
+                    {location.name}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -190,7 +233,9 @@ export function StepEmployment({ form, departments, locations }: StepEmploymentP
             <FormControl>
               <Input placeholder="Auto-generated if blank" {...field} />
             </FormControl>
-            <FormDescription className="text-xs">Leave blank to auto-generate</FormDescription>
+            <FormDescription className="text-xs">
+              Leave blank to auto-generate
+            </FormDescription>
             <FormMessage />
           </FormItem>
         )}

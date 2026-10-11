@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -15,6 +15,8 @@ import {
   type DockAppointmentStatus,
 } from "@/hooks/api/inventory/stock-types-dock";
 
+type ArrivalStatus = "ARRIVED" | "NO_SHOW";
+
 const STATUS_BADGE: Record<DockAppointmentStatus, string> = {
   BOOKED: "bg-status-info-surface text-status-info-ink border-status-info-rule",
   ARRIVED: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
@@ -23,9 +25,40 @@ const STATUS_BADGE: Record<DockAppointmentStatus, string> = {
   NO_SHOW: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
 };
 
+const TIME_FORMAT: Intl.DateTimeFormatOptions = { hour: "2-digit", minute: "2-digit" };
+
 function formatWindow(startIso: string, endIso: string): string {
-  const options: Intl.DateTimeFormatOptions = { hour: "2-digit", minute: "2-digit" };
-  return `${new Date(startIso).toLocaleTimeString(undefined, options)}–${new Date(endIso).toLocaleTimeString(undefined, options)}`;
+  return `${new Date(startIso).toLocaleTimeString(undefined, TIME_FORMAT)}–${new Date(endIso).toLocaleTimeString(undefined, TIME_FORMAT)}`;
+}
+
+function getRowKey(row: DockAppointment) {
+  return row.id;
+}
+
+interface AppointmentActionsProps {
+  appointmentId: number;
+  onSetStatus: (appointmentId: number, status: ArrivalStatus) => void;
+}
+
+function AppointmentActions({ appointmentId, onSetStatus }: AppointmentActionsProps) {
+  const handleArrived = useCallback(
+    () => onSetStatus(appointmentId, "ARRIVED"),
+    [appointmentId, onSetStatus],
+  );
+  const handleNoShow = useCallback(
+    () => onSetStatus(appointmentId, "NO_SHOW"),
+    [appointmentId, onSetStatus],
+  );
+  return (
+    <div className="flex gap-2">
+      <Button type="button" size="sm" variant="outline" onClick={handleArrived}>
+        Arrived
+      </Button>
+      <Button type="button" size="sm" variant="ghost" onClick={handleNoShow}>
+        No show
+      </Button>
+    </div>
+  );
 }
 
 interface DockAppointmentsTableProps {
@@ -33,11 +66,11 @@ interface DockAppointmentsTableProps {
 }
 
 export function DockAppointmentsTable({ appointments }: DockAppointmentsTableProps) {
-  const setStatus = useSetAppointmentStatus();
+  const { mutate: setStatus } = useSetAppointmentStatus();
 
   const handleSetStatus = useCallback(
-    (appointmentId: number, status: "ARRIVED" | "NO_SHOW") => {
-      setStatus.mutate(
+    (appointmentId: number, status: ArrivalStatus) => {
+      setStatus(
         { appointmentId, status },
         { onError: (err) => toast.error(getErrorMessage(err)) },
       );
@@ -45,54 +78,46 @@ export function DockAppointmentsTable({ appointments }: DockAppointmentsTablePro
     [setStatus],
   );
 
-  const columns: DataTableColumn<DockAppointment>[] = [
-    {
-      key: "door",
-      header: "Door",
-      cell: (row) => <span className="font-mono text-sm font-semibold">{row.doorCode}</span>,
-    },
-    { key: "window", header: "Window", cell: (row) => formatWindow(row.windowStart, row.windowEnd) },
-    { key: "direction", header: "Direction", cell: (row) => row.direction },
-    {
-      key: "carrier",
-      header: "Carrier",
-      cell: (row) => row.carrierName ?? row.vehicleRef ?? "—",
-    },
-    {
-      key: "status",
-      header: "Status",
-      cell: (row) => (
-        <Badge variant="outline" className={cn("text-dense", STATUS_BADGE[row.status])}>
-          {row.status}
-        </Badge>
-      ),
-    },
-    {
-      key: "actions",
-      header: "",
-      cell: (row) =>
-        row.status === "BOOKED" ? (
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              className="text-xs"
-              onClick={() => handleSetStatus(row.id, "ARRIVED")}
-            >
-              Arrived
-            </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              className="text-xs"
-              onClick={() => handleSetStatus(row.id, "NO_SHOW")}
-            >
-              No show
-            </Button>
-          </div>
-        ) : null,
-    },
-  ];
+  const columns = useMemo<DataTableColumn<DockAppointment>[]>(
+    () => [
+      {
+        key: "door",
+        header: "Door",
+        cell: (row) => <span className="font-mono text-sm font-semibold">{row.doorCode}</span>,
+      },
+      {
+        key: "window",
+        header: "Window",
+        cell: (row) => (
+          <span className="tabular-nums">{formatWindow(row.windowStart, row.windowEnd)}</span>
+        ),
+      },
+      { key: "direction", header: "Direction", cell: (row) => row.direction },
+      {
+        key: "carrier",
+        header: "Carrier",
+        cell: (row) => row.carrierName ?? row.vehicleRef ?? "—",
+      },
+      {
+        key: "status",
+        header: "Status",
+        cell: (row) => (
+          <Badge variant="outline" className={cn("text-dense", STATUS_BADGE[row.status])}>
+            {row.status}
+          </Badge>
+        ),
+      },
+      {
+        key: "actions",
+        header: "",
+        cell: (row) =>
+          row.status === "BOOKED" ? (
+            <AppointmentActions appointmentId={row.id} onSetStatus={handleSetStatus} />
+          ) : null,
+      },
+    ],
+    [handleSetStatus],
+  );
 
   if (appointments.length === 0) {
     return (
@@ -108,7 +133,7 @@ export function DockAppointmentsTable({ appointments }: DockAppointmentsTablePro
     <DataTable
       data={appointments}
       columns={columns}
-      getRowKey={(row) => row.id}
+      getRowKey={getRowKey}
       pagination={{ pageSize: 25 }}
       className="flex-1 min-h-0"
     />

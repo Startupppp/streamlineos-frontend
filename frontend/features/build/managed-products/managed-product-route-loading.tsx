@@ -1,4 +1,3 @@
-import type { ReactNode } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -38,44 +37,13 @@ function RouteToolbar({
   );
 }
 
-function ProductRouteLoading({
-  title,
-  subtitle,
-  badge,
-  contentClassName,
-  actions,
-  filters,
-  children,
-}: {
-  title: ReactNode;
-  subtitle?: ReactNode;
-  badge?: ReactNode;
-  contentClassName?: string;
-  actions?: ReactNode;
-  filters?: ReactNode;
-  children: ReactNode;
-}) {
-  return (
-    <PageWrapper
-      title={title}
-      subtitle={subtitle}
-      badge={badge}
-      contentClassName={contentClassName}
-      actions={actions}
-      filters={filters}
-    >
-      {children}
-    </PageWrapper>
-  );
-}
-
 function ActionSkeleton({ className }: { className: string }) {
   return <Skeleton className={cn("h-9 rounded-md", className)} />;
 }
 
 export function ManagedProductOverviewRouteLoading() {
   return (
-    <ProductRouteLoading
+    <PageWrapper
       title={<Skeleton className="h-7 w-48" />}
       subtitle={<Skeleton className="h-4 w-64 max-w-full" />}
       badge={<Skeleton className="h-5 w-10 rounded-full" />}
@@ -84,13 +52,13 @@ export function ManagedProductOverviewRouteLoading() {
       filters={<RouteToolbar controls={["w-28", "w-32", "w-24"]} />}
     >
       <ManagedProductOverviewSkeleton />
-    </ProductRouteLoading>
+    </PageWrapper>
   );
 }
 
 export function ProductFeedbackRouteLoading() {
   return (
-    <ProductRouteLoading
+    <PageWrapper
       title="Feedback"
       subtitle="Submissions collected from widgets linked to this product"
       contentClassName={MANAGED_PRODUCT_DETAIL_CONTENT_CLASS}
@@ -100,7 +68,7 @@ export function ProductFeedbackRouteLoading() {
       <ManagedProductDetailShell>
         <DataTableSkeleton rows={10} headers={FEEDBACK_SKELETON_HEADERS} mobileCards />
       </ManagedProductDetailShell>
-    </ProductRouteLoading>
+    </PageWrapper>
   );
 }
 
@@ -134,7 +102,7 @@ function InsightTabStrip() {
 
 export function ProductInsightsRouteLoading() {
   return (
-    <ProductRouteLoading
+    <PageWrapper
       title="Insights"
       subtitle="Customer signals, planned work, and delivery progress"
       contentClassName={MANAGED_PRODUCT_DETAIL_CONTENT_CLASS}
@@ -144,13 +112,13 @@ export function ProductInsightsRouteLoading() {
       <ManagedProductDetailShell className="h-auto min-h-full flex-none overflow-visible">
         <ProductInsightsSkeleton />
       </ManagedProductDetailShell>
-    </ProductRouteLoading>
+    </PageWrapper>
   );
 }
 
 export function ProductRoadmapRouteLoading() {
   return (
-    <ProductRouteLoading
+    <PageWrapper
       title="Roadmap"
       subtitle="Product roadmap items"
       contentClassName={MANAGED_PRODUCT_DETAIL_CONTENT_CLASS}
@@ -166,13 +134,13 @@ export function ProductRoadmapRouteLoading() {
       <ManagedProductDetailShell>
         <ProductRoadmapSkeleton />
       </ManagedProductDetailShell>
-    </ProductRouteLoading>
+    </PageWrapper>
   );
 }
 
 export function ProductGoalsRouteLoading() {
   return (
-    <ProductRouteLoading
+    <PageWrapper
       title="Goals & OKRs"
       subtitle="Product objectives and key results"
       contentClassName={MANAGED_PRODUCT_DETAIL_CONTENT_CLASS}
@@ -185,13 +153,13 @@ export function ProductGoalsRouteLoading() {
         </div>
         <ProductGoalsGridSkeleton />
       </ManagedProductDetailShell>
-    </ProductRouteLoading>
+    </PageWrapper>
   );
 }
 
 export function ProductProjectsRouteLoading() {
   return (
-    <ProductRouteLoading
+    <PageWrapper
       title="Linked Projects"
       subtitle="Projects contributing to this product"
       contentClassName={MANAGED_PRODUCT_DETAIL_CONTENT_CLASS}
@@ -205,7 +173,7 @@ export function ProductProjectsRouteLoading() {
           mobileCards
         />
       </ManagedProductDetailShell>
-    </ProductRouteLoading>
+    </PageWrapper>
   );
 }
 
@@ -229,12 +197,12 @@ function SettingsTabStrip() {
 
 export function ProductSettingsRouteLoading() {
   return (
-    <ProductRouteLoading
+    <PageWrapper
       title="Settings"
       subtitle="Configure this product"
       filters={<SettingsTabStrip />}
     >
       <ProductSettingsSkeleton />
-    </ProductRouteLoading>
+    </PageWrapper>
   );
 }
