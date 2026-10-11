@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
 import { isApiError, lazyContract } from "@/lib/api-envelope";
@@ -12,6 +12,8 @@ import type {
   TestRun,
   TestRunListItem,
   TestRunDetail,
+  TestRunResult,
+  TestRunResultRow,
   Bug,
   CreateTestCaseInput,
   UpdateTestCaseInput,
@@ -232,6 +234,33 @@ export function useDeleteTestRun() {
   });
 }
 
+function patchRunResult(
+  qc: QueryClient,
+  projectId: number,
+  runId: number,
+  resultId: number,
+  patch: Partial<TestRunResult>,
+) {
+  qc.setQueryData<TestRunDetail | null>(
+    buildWorkQueryKeys.projects.qa.run(projectId, runId),
+    (run) => {
+      if (!run) return run;
+      const results = run.results.map((result) =>
+        result.id === resultId ? { ...result, ...patch } : result,
+      );
+      const starts = run.status === "not_started" && patch.status !== undefined && patch.status !== "not_run";
+      return { ...run, results, status: starts ? "in_progress" : run.status };
+    },
+  );
+}
+
+function markRunListsStale(qc: QueryClient, projectId: number) {
+  for (const [key] of qc.getQueriesData({ queryKey: buildWorkQueryKeys.projects.qa.runs(projectId) })) {
+    if (typeof key.at(-1) === "number") continue;
+    void qc.invalidateQueries({ queryKey: key, exact: true, refetchType: "none" });
+  }
+}
+
 export function useUpdateTestResult() {
   const qc = useQueryClient();
   return useAuthorizedMutation("build:qa:execute", {
@@ -242,14 +271,21 @@ export function useUpdateTestResult() {
       resultId,
       ...data
     }: UpdateTestResultInput & { projectId: number; runId: number; resultId: number }) =>
-      apiClient.patch<unknown>(
+      apiClient.patch<TestRunResultRow>(
         `/build/${projectId}/test-runs/${runId}/results/${resultId}`,
         data,
         undefined,
         testRunResultRowContract,
       ),
-    onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.qa.runs(vars.projectId) });
+    onSuccess: (updated, vars) => {
+      patchRunResult(qc, vars.projectId, vars.runId, vars.resultId, {
+        status: updated.status,
+        notes: updated.notes,
+        executedBy: updated.executedBy,
+        executedAt: updated.executedAt,
+        linkedWorkItemId: updated.linkedWorkItemId,
+      });
+      markRunListsStale(qc, vars.projectId);
     },
   });
 }
@@ -276,8 +312,8 @@ export function useCreateBugFromResult() {
         undefined,
         bugRowContract,
       ),
-    onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.qa.run(vars.projectId, vars.runId) });
+    onSuccess: (bug, vars) => {
+      patchRunResult(qc, vars.projectId, vars.runId, vars.resultId, { linkedWorkItemId: bug.id });
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.bugs.list(vars.projectId) });
     },
   });

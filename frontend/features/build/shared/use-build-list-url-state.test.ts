@@ -197,6 +197,14 @@ describe("useBuildListUrlState", () => {
     expect(result.current.filters.priority).toBeUndefined();
   });
 
+  it("reads and writes the My Work query while a ticket pane owns the address bar", () => {
+    const preserved = new URLSearchParams("q=QA-070");
+    const { result } = renderHook(() => useBuildListUrlState({ searchParams: preserved, writePath: "/build/my-work" }));
+    expect(result.current.filters.search).toBe("QA-070");
+    act(() => result.current.setListParams({ status: "TODO" }));
+    expect(replace).toHaveBeenCalledWith("/build/my-work?q=QA-070&status=TODO", { scroll: false });
+  });
+
   it("replaces the URL without scrolling when a filter changes", () => {
     setUrl("cursor=abc");
     const { result } = renderHook(() => useBuildListUrlState());

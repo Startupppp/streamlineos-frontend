@@ -250,11 +250,7 @@ function DecisionOwner({
           const toastId = toast.success("Item accepted — ticket created", {
             duration: ACCEPT_TOAST_DURATION_MS,
           });
-          const summary = result.linkedTicket;
-          const ticketNumber = summary?.id === result.linkedWorkItemId &&
-            summary.projectId === projectId && Number.isSafeInteger(summary.ticketNumber) &&
-            summary.ticketNumber > 0 ? summary.ticketNumber : undefined;
-          setAcceptedTicket({ id: result.linkedWorkItemId, ticketNumber, toastId });
+          setAcceptedTicket({ id: result.linkedWorkItemId, toastId });
         } else
           toast.success(
             submitted.action === "accept"

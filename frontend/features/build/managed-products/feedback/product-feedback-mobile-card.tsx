@@ -1,44 +1,46 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
 import { BuildMobileCard } from "@/features/build/shared/build-mobile-card";
-import {
-  STATUS_LABELS,
-  STATUS_VARIANTS,
-  TYPE_LABELS,
-  TYPE_VARIANTS,
-  formatSubmissionAge,
-} from "@/features/build/feedbucket/feedbucket-constants";
+import { formatSubmissionAge } from "@/features/build/feedbucket/feedbucket-constants";
 import type { SubmissionRow } from "../product-feedback-columns";
+import {
+  ChannelBadge,
+  FrequencyBadge,
+  SentimentBadge,
+  StatusBadge,
+  TypeBadge,
+} from "./feedback-signal-badges";
 
 export function ProductFeedbackMobileCard({ row }: { row: SubmissionRow }) {
+  const consentDenied = row.consentStatus === "denied";
+  const reporterName = consentDenied ? null : row.reporterName;
+  const reporterEmail = consentDenied ? null : row.reporterEmail;
+  const customerName = row.customer?.name ?? row.segment;
+
   return (
     <BuildMobileCard
       title={row.message}
-      status={
-        <Badge variant={STATUS_VARIANTS[row.status]} className="text-xs">
-          {STATUS_LABELS[row.status]}
-        </Badge>
-      }
+      status={<StatusBadge status={row.status} />}
       person={
-        row.reporterName !== null || row.reporterEmail !== null
+        reporterName !== null || reporterEmail !== null
           ? {
-              user: { name: row.reporterName, email: row.reporterEmail },
+              user: { name: reporterName, email: reporterEmail },
               role: "From",
             }
           : undefined
       }
       meta={[
-        {
-          label: "Type",
-          value: (
-            <Badge variant={TYPE_VARIANTS[row.type]} className="text-xs">
-              {TYPE_LABELS[row.type]}
-            </Badge>
-          ),
-        },
         { label: "Age", value: formatSubmissionAge(row.createdAt) },
+        ...(customerName ? [{ label: "Customer", value: customerName }] : []),
       ]}
+      footer={
+        <div className="flex flex-wrap items-center gap-1.5">
+          <TypeBadge type={row.type} />
+          <ChannelBadge channel={row.sourceChannel} />
+          <SentimentBadge sentiment={row.sentiment} />
+          <FrequencyBadge duplicateCount={row.duplicateCount} />
+        </div>
+      }
     />
   );
 }

@@ -98,6 +98,7 @@ describe("WorkloadSection — overload indicator", () => {
     membersRead = () => Promise.resolve({ data: [], nextCursor: null });
     renderWorkload();
     expect(await screen.findByText("No members found")).toBeVisible();
+    expect(screen.getByText(/add people to this project/i)).toBeVisible();
   });
 
   it("keeps legitimate null metrics distinct from loading and failure", async () => {

@@ -90,7 +90,7 @@ function taskRows(paths) {
 function indexText(files) {
   const canonical = files.filter((path) => !isResearch(path) && path !== indexPath);
   const research = researchTraceability(files);
-  const tasks = taskRows(canonical);
+  const tasks = taskRows(canonical).filter((task) => !task.checked);
   const recorded = recordedStages();
   // Retire completed checkboxes; retain staged evidence for IDs still open.
   const counts = canonical.map((path) => {
@@ -98,17 +98,15 @@ function indexText(files) {
     return {
       path,
       open: [...source.matchAll(/^- \[ \]/gm)].length,
-      checked: [...source.matchAll(/^- \[[xX]\]/gm)].length,
     };
   });
   const totalOpen = counts.reduce((sum, item) => sum + item.open, 0);
-  const totalChecked = counts.reduce((sum, item) => sum + item.checked, 0);
-  if (tasks.length !== totalOpen + totalChecked)
-    throw new Error("The task register does not cover every specification checkbox");
+  if (tasks.length !== totalOpen)
+    throw new Error("The task register does not cover every open specification checkbox");
   const lines = [
     "# Build documentation TODO index",
     "",
-    `The Delivery checklist and any inline acceptance checkboxes inside each current specification are the source of truth for its implementation status. Open counts include every unchecked box in that document. Research links below mean only that a historical source is mapped; they do not verify product behavior. Check a specification item only after recording the current revision and required evidence in the requirement ledger and work claims. The ${canonical.length} current specifications plus this index make ${canonical.length + 1} canonical Markdown files.`,
+    `The Delivery checklist and any inline acceptance checkboxes inside each current specification are the source of truth for its implementation status. Open counts include every unchecked box in that document. Checked boxes are removed from this index. Research files, when present, are historical references and do not verify product behavior. Check a specification item only after recording the current revision and required evidence in the requirement ledger and work claims. The ${canonical.length} current specifications plus this index make ${canonical.length + 1} canonical Markdown files.`,
     "",
     "## Delivery checklist",
     "",
@@ -116,12 +114,12 @@ function indexText(files) {
     "- [ ] Every accepted research finding has an adopted or deferred destination in the research traceability map.",
     "- [ ] Release gates, tenant/role browser paths, persistence, and operations evidence are complete.",
     "",
-    `Current specification items: ${totalChecked} checked; ${totalOpen} open. Historical research traceability: ${research.filter(({ mapped }) => mapped).length} mapped of ${research.length} files.`,
+    `Current specification items: ${totalOpen} open.${research.length > 0 ? ` Historical research traceability: ${research.filter(({ mapped }) => mapped).length} mapped of ${research.length} files.` : ""}`,
     "",
     `## Current specifications (${canonical.length})`,
     "",
   ];
-  for (const { path, open, checked } of counts) {
+  for (const { path, open } of counts) {
     const relativePath = normalized(relative(join(root, "implementation"), path));
     const label = normalized(relative(root, path));
     if (open > 0) lines.push(`- [${label}](${relativePath}) — ${open} open`);
@@ -131,7 +129,7 @@ function indexText(files) {
     "",
     `## Item-level task register (${tasks.length})`,
     "",
-    `Every row below maps to exactly one checkbox in a current specification. Its BT ID is stable while that checkbox text and file stay unchanged. The source checkbox is the final completion authority; these stages show partial progress without increasing the ${tasks.length}-item denominator. Completed source rows have been retired; partial evidence remains attached to open IDs.`,
+    `Every row below maps to exactly one open checkbox in a current specification. Its BT ID is stable while that checkbox text and file stay unchanged. The source checkbox is the final completion authority; these stages show partial progress without increasing the ${tasks.length}-item denominator. Checked source rows are omitted.`,
     "",
     "Stages: D = decision and exclusive work claim; I = implementation and contracts; T = focused positive and negative checks; R = applicable database, authorization, cache, and event proof; B = applicable browser and mobile proof; L = applicable deployment and operations proof. `?` means unassessed/open, `x` means proven, and `-` means inapplicable with a reason. A stage marked `x` needs a proof link; `-` needs an `N/A:` rationale in Evidence. Stage evidence can advance while the source checkbox remains open. Complete that checkbox only when its own acceptance text and all applicable stages are satisfied.",
     "",
@@ -146,13 +144,17 @@ function indexText(files) {
     const record = recorded.get(task.id) ?? { values: stages.map(() => "?"), evidence: "—" };
     lines.push(`| ${task.id} | [source](${task.link}#L${task.line}) | ${task.checked ? "[x]" : "[ ]"} | ${record.values.join(" | ")} | ${record.evidence} | ${task.summary} |`);
   }
-  lines.push("", `## Historical research and evidence (${research.length})`, "");
-  for (const { path, mapped } of research) {
-    const relativePath = normalized(relative(join(root, "implementation"), path));
-    const label = normalized(relative(root, path));
-    lines.push(`- [${label}](${relativePath}) — ${mapped ? "mapped" : "unmapped"} historical reference; implementation is tracked in current specifications`);
+  if (research.length > 0) {
+    lines.push("", `## Historical research and evidence (${research.length})`, "");
+    for (const { path, mapped } of research) {
+      const relativePath = normalized(relative(join(root, "implementation"), path));
+      const label = normalized(relative(root, path));
+      lines.push(`- [${label}](${relativePath}) — ${mapped ? "mapped" : "unmapped"} historical reference; implementation is tracked in current specifications`);
+    }
+    lines.push("");
+  } else {
+    lines.push("");
   }
-  lines.push("");
   return lines.join("\n");
 }
 

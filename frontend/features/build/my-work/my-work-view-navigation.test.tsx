@@ -5,8 +5,8 @@ import type { AllWorkTicketMeta } from "./map-all-work-ticket";
 
 const mockNavigate = jest.fn();
 const meta: AllWorkTicketMeta = { id: 35, projectId: 1, projectKey: "STRE", ticketNumber: 35 };
-jest.mock("next/navigation", () => ({ useSearchParams: () => new URLSearchParams("view=list") }));
-jest.mock("@/hooks/common/use-guarded-document-navigation", () => ({ useGuardedDocumentNavigation: () => mockNavigate }));
+jest.mock("next/navigation", () => ({ usePathname: () => "/build/my-work", useSearchParams: () => new URLSearchParams("view=list") }));
+jest.mock("@/hooks/common/use-guarded-document-navigation", () => ({ useGuardedDocumentNavigation: () => mockNavigate, useGuardedSoftNavigation: () => mockNavigate }));
 jest.mock("@/features/build/views/list-view", () => ({ ListView: ({ onTicketClick }: { onTicketClick: (id: number) => void }) => {
   function handleOpen() { onTicketClick(35); }
   return <button type="button" onClick={handleOpen}>Open list ticket</button>;

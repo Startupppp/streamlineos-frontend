@@ -109,6 +109,7 @@ export type FeedbucketSubmission = z.infer<
 export interface CreateFeedbucketWidgetInput {
   name: string;
   projectId?: number | null;
+  managedProductId?: number | null;
   allowedDomains?: string[];
   autoCreateTicket?: boolean;
   defaultTicketType?: string;
@@ -122,6 +123,7 @@ export interface CreateFeedbucketWidgetInput {
 export interface UpdateFeedbucketWidgetInput {
   name?: string;
   projectId?: number | null;
+  managedProductId?: number | null;
   allowedDomains?: string[];
   autoCreateTicket?: boolean;
   defaultTicketType?: string;

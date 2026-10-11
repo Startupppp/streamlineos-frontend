@@ -1,7 +1,6 @@
 "use client";
 
 import { memo, useCallback } from "react";
-import { useSearchParams } from "next/navigation";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageState } from "@/components/shared/page-state";
@@ -24,7 +23,8 @@ import { AllWorkListSkeleton, BucketSection, BUCKET_ORDER } from "./my-work-rows
 import { MyWorkViewBody } from "./my-work-view-body-lazy";
 import { TablePagination } from "@/components/ui/table-pagination";
 import { BuildPaginatedContent } from "@/features/build/shared/build-paginated-content";
-import { useGuardedDocumentNavigation } from "@/hooks/common/use-guarded-document-navigation";
+import { useGuardedSoftNavigation } from "@/hooks/common/use-guarded-document-navigation";
+import { useMyWorkSearchParams } from "./my-work-collection-params";
 import { StatusBadge } from "@/components/shared/ticket-status-badge";
 import { formatTicketKey } from "@/components/shared/format-ticket-key";
 import { PriorityBadge } from "@/features/build/shared/priority-badge";
@@ -84,9 +84,9 @@ export const MyWorkContent = memo(function MyWorkContent({
   orgStatuses,
   boardFilters,
 }: MyWorkContentProps) {
-  const navigate = useGuardedDocumentNavigation();
+  const navigate = useGuardedSoftNavigation();
   const isOnline = useOnlineStatus();
-  const searchParams = useSearchParams();
+  const searchParams = useMyWorkSearchParams();
   const returnHref = buildMyWorkReturnHref(searchParams);
 
   const handleTicketSelect = useCallback(

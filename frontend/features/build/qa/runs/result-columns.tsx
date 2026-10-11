@@ -6,26 +6,13 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import type { DataTableColumn } from "@/components/ui/data-table";
-import type { TestRunResult, TestResultStatus, TestCasePriority } from "@/types/projects";
+import type { TestRunResult, TestResultStatus } from "@/types/projects";
 import { useUpdateTestResult } from "@/hooks/api/build/qa";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { Bug as BugIcon } from "lucide-react";
 import Link from "next/link";
-
-const STATUS_OPTIONS: { value: TestResultStatus; label: string; activeClass: string }[] = [
-  { value: "not_run", label: "Not Run", activeClass: "bg-muted text-foreground border-border" },
-  { value: "passed", label: "Pass", activeClass: "bg-status-success-surface text-status-success-ink-strong border-status-success-rule" },
-  { value: "failed", label: "Fail", activeClass: "bg-status-danger-surface text-status-danger-ink-strong border-status-danger-rule" },
-  { value: "blocked", label: "Blocked", activeClass: "bg-status-warning-surface text-status-warning-ink-strong border-status-warning-rule" },
-  { value: "skipped", label: "Skip", activeClass: "bg-muted text-muted-foreground border-border" },
-];
-
-const PRIORITY_STYLES: Record<TestCasePriority, string> = {
-  low: "text-muted-foreground border-border",
-  medium: "text-status-warning-ink-strong border-status-warning-rule",
-  high: "text-status-danger-ink-strong border-status-danger-rule",
-};
+import { PRIORITY_STYLES, ResultStatusButtons, linkedBugHref } from "./result-status-buttons";
 
 function ResultStatusCell({
   result,
@@ -54,25 +41,11 @@ function ResultStatusCell({
 
   return (
     <div className="flex flex-wrap gap-0.5">
-      {STATUS_OPTIONS.map((opt) => {
-        const isActive = result.status === opt.value;
-        return (
-          <button
-            key={opt.value}
-            type="button"
-            disabled={!canExecute || updateResult.isPending}
-            onClick={() => handleStatusChange(opt.value)}
-            className={cn(
-              "rounded border px-1.5 py-0.5 text-micro transition-colors",
-              isActive
-                ? opt.activeClass
-                : "border-border text-muted-foreground hover:bg-primary/[0.04] disabled:opacity-50",
-            )}
-          >
-            {opt.label}
-          </button>
-        );
-      })}
+      <ResultStatusButtons
+        status={result.status}
+        disabled={!canExecute || updateResult.isPending}
+        onSelect={handleStatusChange}
+      />
     </div>
   );
 }
@@ -106,7 +79,7 @@ function ResultActionsCell({
       </Button>
       {result.linkedWorkItemId ? (
         <Link
-          href={`/build/${projectId}/issues?type=BUG`}
+          href={linkedBugHref(projectId, result.linkedWorkItemId)}
           className="text-micro font-medium text-primary hover:underline"
         >
           Bug

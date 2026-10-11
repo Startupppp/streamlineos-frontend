@@ -6,6 +6,7 @@ import { useWorkloadCapacity } from "@/hooks/api/build/workload-capacity";
 import { useProjectMembers } from "@/hooks/api/build/project-members";
 import { getUserDisplayName } from "@/lib/person-display";
 import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/ui/empty-state";
 import { PageState } from "@/components/shared/page-state";
 import { LoadingState } from "@/components/shared/loading-state";
 import { usePageState } from "@/hooks/api/use-page-state";
@@ -84,9 +85,18 @@ export function WorkloadSection({ projectId }: WorkloadSectionProps) {
         resolution={capacityState}
         loading={<LoadingState />}
         onRetry={handleRetryCapacity}
-        empty={<p className="text-muted-foreground text-sm">No members found</p>}
+        empty={
+          <EmptyState
+            title="No members found"
+            description="Add people to this project to see their estimated work against capacity."
+            compact
+          />
+        }
       >
         <div className="flex flex-col gap-2">
+          <p className="text-muted-foreground text-xs">
+            Estimated hours against capacity for the last 30 days
+          </p>
           {rows.map((row) => (
             <div
               key={row.id}

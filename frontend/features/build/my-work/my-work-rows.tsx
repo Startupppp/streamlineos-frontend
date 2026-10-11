@@ -21,7 +21,7 @@ import { StatusBadge } from "@/components/shared/ticket-status-badge";
 import { PmPanel, PM_ROW } from "@/components/pm-chrome";
 import { FLEX_TITLE_SLOT, TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { getMyWorkTicketHref } from "@/features/build/ticket-details/build-ticket-detail-url";
-import { useGuardedDocumentNavigation } from "@/hooks/common/use-guarded-document-navigation";
+import { useGuardedSoftNavigation } from "@/hooks/common/use-guarded-document-navigation";
 import { formatTicketKey } from "@/components/shared/format-ticket-key";
 import { formatCalendarDate } from "@/lib/date-utils";
 import { getUserDisplayName } from "@/lib/person-display";
@@ -102,7 +102,7 @@ export const WorkItemRow = memo(function WorkItemRow({
   displayOptions?: DisplayOptions;
   onDelete?: () => void;
 }) {
-  const navigate = useGuardedDocumentNavigation();
+  const navigate = useGuardedSoftNavigation();
   const href = item.projectId === null ? "" : item.ticketNumber != null
     ? getMyWorkTicketHref(item.projectId, item.projectKey, item.ticketNumber, returnHref)
     : `/build/${item.projectId}`;

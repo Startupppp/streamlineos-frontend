@@ -1,7 +1,7 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import type { UseMutationOptions, UseQueryOptions } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import type { UseQueryOptions } from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
@@ -9,9 +9,12 @@ import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type {
   IntakeRequest,
+  IntakeSource,
+  IntakeStatus,
   CreateIntakeRequestInput,
   UpdateIntakeRequestInput,
 } from "@/types/projects";
+import { patchIntakeListCaches, type IntakePage } from "@/hooks/api/build/intake-cache";
 
 const intakeListContract = lazyContract(() =>
   import("@/hooks/api/build/workspace-schema").then((m) => m.intakeListContract),
@@ -20,14 +23,9 @@ const intakeItemContract = lazyContract(() =>
   import("@/hooks/api/build/workspace-schema").then((m) => m.intakeItemContract),
 );
 
-interface IntakePage {
-  data: IntakeRequest[];
-  pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
-}
-
 export function useIntakeRequests(
   projectId: number,
-  params?: { status?: string; source?: "manual" | "web_form" | "email"; cursor?: string; limit?: number },
+  params?: { status?: IntakeStatus; source?: IntakeSource; cursor?: string; limit?: number },
   options?: Omit<UseQueryOptions<IntakePage>, "queryKey" | "queryFn" | "enabled">
 ) {
   const canView = useCan("build:view");
@@ -52,25 +50,21 @@ export function useIntakeRequests(
   });
 }
 
-export function useCreateIntakeRequest(options?: Parameters<typeof useMutation>[0]) {
+export function useCreateIntakeRequest() {
   const queryClient = useQueryClient();
   return useAuthorizedMutation("build:workspace:manage", {
-    ...options,
     mutationKey: ["projects", "intake", "create"],
     mutationFn: ({ projectId, ...data }: CreateIntakeRequestInput) =>
       apiClient.post<IntakeRequest>(`/build/${projectId}/intake`, data, undefined, intakeItemContract),
-    onSuccess: (_: unknown, variables: CreateIntakeRequestInput) => {
-      queryClient.invalidateQueries({
-        queryKey: buildWorkQueryKeys.projects.intake(variables.projectId),
-      });
+    onSuccess: (created: IntakeRequest, variables: CreateIntakeRequestInput) => {
+      patchIntakeListCaches(queryClient, variables.projectId, created);
     },
   });
 }
 
-export function useUpdateIntakeRequest(options?: UseMutationOptions<IntakeRequest, Error, UpdateIntakeRequestInput & { projectId: number }>) {
+export function useUpdateIntakeRequest() {
   const queryClient = useQueryClient();
   return useAuthorizedMutation("build:workspace:manage", {
-    ...options,
     mutationKey: ["projects", "intake", "update"],
     mutationFn: ({ intakeRequestId, projectId, ...data }: UpdateIntakeRequestInput & { projectId: number }) =>
       apiClient.patch<IntakeRequest>(
@@ -79,13 +73,8 @@ export function useUpdateIntakeRequest(options?: UseMutationOptions<IntakeReques
         undefined,
         intakeItemContract,
       ),
-    onSuccess: (_: IntakeRequest, variables: UpdateIntakeRequestInput & { projectId: number }) => {
-      queryClient.invalidateQueries({
-        queryKey: buildWorkQueryKeys.projects.intake(variables.projectId),
-      });
-      queryClient.invalidateQueries({
-        queryKey: buildWorkQueryKeys.projects.detail(variables.projectId),
-      });
+    onSuccess: (updated: IntakeRequest, variables: UpdateIntakeRequestInput & { projectId: number }) => {
+      patchIntakeListCaches(queryClient, variables.projectId, updated);
     },
   });
 }

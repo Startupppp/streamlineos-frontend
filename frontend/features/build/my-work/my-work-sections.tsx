@@ -1,7 +1,8 @@
 "use client";
 
 import { type MouseEvent, type RefObject, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
+import { useMyWorkSearchParams } from "./my-work-collection-params";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -63,7 +64,7 @@ export function MyWorkSectionNavigation({
 }) {
   const router = useRouter();
   const requestLeave = useNavigationLeave();
-  const searchParams = useSearchParams();
+  const searchParams = useMyWorkSearchParams();
   const ticketsParams = new URLSearchParams(searchParams.toString());
   ticketsParams.delete("section");
   ticketsParams.delete("draftCursors");

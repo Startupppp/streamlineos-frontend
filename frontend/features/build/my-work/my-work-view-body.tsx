@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import { memo, useCallback } from "react";
-import { useSearchParams } from "next/navigation";
+import { useMyWorkSearchParams } from "./my-work-collection-params";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { MyWorkBoard } from "./my-work-board";
@@ -18,7 +18,7 @@ import {
   buildMyWorkReturnHref,
   getMyWorkTicketHref,
 } from "@/features/build/ticket-details/build-ticket-detail-url";
-import { useGuardedDocumentNavigation } from "@/hooks/common/use-guarded-document-navigation";
+import { useGuardedSoftNavigation } from "@/hooks/common/use-guarded-document-navigation";
 import type { AllWorkFilters } from "@/types/projects";
 
 interface MyWorkViewBodyProps {
@@ -38,8 +38,8 @@ export const MyWorkViewBody = memo(function MyWorkViewBody({
   boardFilters,
   orgStatuses,
 }: MyWorkViewBodyProps) {
-  const navigate = useGuardedDocumentNavigation();
-  const searchParams = useSearchParams();
+  const navigate = useGuardedSoftNavigation();
+  const searchParams = useMyWorkSearchParams();
   const returnHref = buildMyWorkReturnHref(searchParams);
   const shouldReduceMotion = useReducedMotion();
   const swapVariants = shouldReduceMotion ? viewSwapReduced : viewSwap;

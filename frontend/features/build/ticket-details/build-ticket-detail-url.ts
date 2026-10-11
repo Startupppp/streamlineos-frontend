@@ -170,6 +170,29 @@ export function decodeRouteSegment(segment: string): string | null {
   }
 }
 
+export function isTicketDetailPathname(pathname: string): boolean {
+  return TICKET_ROUTE_PATTERN.test(pathname);
+}
+
+export function myWorkCollectionSearchParams(
+  pathname: string,
+  searchParams: { get(name: string): string | null; toString(): string },
+): URLSearchParams {
+  if (!isTicketDetailPathname(pathname)) return new URLSearchParams(searchParams.toString());
+  const match = pathname.match(TICKET_ROUTE_PATTERN);
+  const projectSegment = match?.[1] ? decodeRouteSegment(match[1]) : null;
+  const projectId = projectSegment ? Number(projectSegment) : Number.NaN;
+  if (!Number.isInteger(projectId) || projectId <= 0) return new URLSearchParams();
+  const back = resolveTicketBackHref(projectId, searchParams.get("returnTo"));
+  try {
+    const target = new URL(back, "https://streamline.invalid");
+    if (target.pathname !== "/build/my-work") return new URLSearchParams();
+    return new URLSearchParams(target.searchParams);
+  } catch {
+    return new URLSearchParams();
+  }
+}
+
 export function isTicketDetailPath(
   pathname: string | null,
   projectId: number,

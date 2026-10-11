@@ -92,20 +92,12 @@ export function parseSortField(
   return match ?? fallback;
 }
 
-export function parseSortDirection(
-  raw: string | null,
-  fallback: BuildListSortDirection,
-): BuildListSortDirection {
-  const match = BUILD_LIST_SORT_DIRECTIONS.find(
-    (direction) => direction === raw,
-  );
+export function parseSortDirection(raw: string | null, fallback: BuildListSortDirection): BuildListSortDirection {
+  const match = BUILD_LIST_SORT_DIRECTIONS.find((direction) => direction === raw);
   return match ?? fallback;
 }
 
-export function parseGrouping(
-  raw: string | null,
-  fallback: BuildListGrouping,
-): BuildListGrouping {
+export function parseGrouping(raw: string | null, fallback: BuildListGrouping): BuildListGrouping {
   const match = BUILD_LIST_GROUPINGS.find((grouping) => grouping === raw);
   return match ?? fallback;
 }
@@ -116,6 +108,8 @@ export interface BuildListUrlStateOptions {
   defaultSortDirection?: BuildListSortDirection;
   defaultGrouping?: BuildListGrouping;
   scope?: AllWorkFilters["scope"];
+  searchParams?: URLSearchParams;
+  writePath?: string;
 }
 
 export interface BuildListUrlState {
@@ -169,11 +163,15 @@ export function useBuildListUrlState(
     defaultSortDirection = "desc",
     defaultGrouping = "none",
     scope,
+    searchParams: providedSearchParams,
+    writePath,
   } = options;
 
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
+  const liveSearchParams = useSearchParams();
+  const searchParams = providedSearchParams ?? liveSearchParams;
+  const targetPath = writePath ?? pathname;
   const [isPending, startTransition] = useTransition();
 
   const grouping = parseGrouping(searchParams.get("group"), defaultGrouping);
@@ -188,12 +186,12 @@ export function useBuildListUrlState(
     (next: URLSearchParams) => {
       startTransition(() => {
         const query = next.toString();
-        router.replace(query ? `${pathname}?${query}` : pathname, {
+        router.replace(query ? `${targetPath}?${query}` : targetPath, {
           scroll: false,
         });
       });
     },
-    [pathname, router],
+    [targetPath, router],
   );
 
   const setListParams = useCallback(

@@ -1,8 +1,7 @@
 "use client";
 
 import { memo, useCallback, useMemo } from "react";
-import { useSearchParams } from "next/navigation";
-import { useBuildListUrlState } from "@/features/build/shared/use-build-list-url-state";
+import { useMyWorkListUrlState, useMyWorkSearchParams } from "./my-work-collection-params";
 import { PriorityBadge } from "@/features/build/shared/priority-badge";
 import {
   Drawer,
@@ -34,8 +33,8 @@ function GroupingSidebarBody({
   isLoading,
   className,
 }: GroupingSidebarBodyProps) {
-  const searchParams = useSearchParams();
-  const { setListParams } = useBuildListUrlState();
+  const searchParams = useMyWorkSearchParams();
+  const { setListParams } = useMyWorkListUrlState();
 
   const labelsParam = searchParams.get("labels") ?? "";
   const priorityParam = searchParams.get("priority") ?? "";

@@ -1,13 +1,16 @@
 import { act, renderHook } from "@testing-library/react";
-import { useGuardedDocumentNavigation } from "./use-guarded-document-navigation";
+import { useGuardedDocumentNavigation, useGuardedSoftNavigation } from "./use-guarded-document-navigation";
 
 const mockAssign = jest.fn();
+const mockPush = jest.fn();
 const mockRequestLeave = jest.fn((action: () => void) => action());
 const originalLocation = window.location;
+jest.mock("next/navigation", () => ({ useRouter: () => ({ push: mockPush }) }));
 jest.mock("@/components/shared/dirty-state-context", () => ({ useNavigationLeave: () => mockRequestLeave }));
 
 beforeEach(() => {
   mockAssign.mockReset();
+  mockPush.mockReset();
   mockRequestLeave.mockReset().mockImplementation((action: () => void) => action());
   Object.defineProperty(window, "location", { configurable: true, value: { origin: "http://localhost", assign: mockAssign } });
 });
@@ -32,6 +35,14 @@ describe("guarded document navigation", () => {
     if (!approve) throw new Error("Expected leave approval callback");
     act(approve);
     expect(mockAssign).toHaveBeenCalledWith(href);
+  });
+
+  it("soft-navigates a My Work ticket so the pane can stay over the list", () => {
+    const href = "/build/1/tickets/STRE-35?returnTo=%2Fbuild%2Fmy-work%3Fq%3DQA-070";
+    const { result } = renderHook(useGuardedSoftNavigation);
+    act(() => result.current(href));
+    expect(mockPush).toHaveBeenCalledWith(href);
+    expect(mockAssign).not.toHaveBeenCalled();
   });
 
   it.each(["https://outside.test/build/1", "//outside.test/build/1", "javascript:alert(1)", "/\\outside.test/build/1"])("rejects non-app targets: %s", (href) => {

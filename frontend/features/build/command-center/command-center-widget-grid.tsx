@@ -78,6 +78,19 @@ export function CommandCenterWidgetGrid({
       isWide ? onLayoutChange(next) : onStackedLayoutChange(next),
     [isWide, onLayoutChange, onStackedLayoutChange],
   );
+  const handleRemove = useCallback(
+    (type: WidgetType) => {
+      const index = widgets.findIndex((slot) => slot.type === type);
+      const neighbour = widgets[index + 1] ?? widgets[index - 1];
+      onRemove(type);
+      if (!neighbour) return;
+      requestAnimationFrame(() => {
+        const selector = `[data-widget-type="${neighbour.type}"] .${WIDGET_CONTROL_CLASS}`;
+        containerRef.current?.querySelector<HTMLElement>(selector)?.focus();
+      });
+    },
+    [containerRef, onRemove, widgets],
+  );
 
   return (
     <div
@@ -105,7 +118,7 @@ export function CommandCenterWidgetGrid({
               <CommandCenterWidgetFrame
                 slot={slot}
                 editing={editing}
-                onRemove={onRemove}
+                onRemove={handleRemove}
                 onMove={onMove}
                 isFirst={index === 0}
                 isLast={index === widgets.length - 1}

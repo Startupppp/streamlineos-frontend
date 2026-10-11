@@ -28,6 +28,7 @@ import {
   parseWorkTab,
   parseMyWorkView,
 } from "./use-my-work-data";
+import { useMyWorkSearchParams } from "./my-work-collection-params";
 import {
   MyWorkDraftsPage,
   MyWorkSectionNavigation,
@@ -58,7 +59,7 @@ export function MyWorkPage() {
 function MyWorkTicketsPage() {
   const router = useRouter();
   const requestLeave = useNavigationLeave();
-  const searchParams = useSearchParams();
+  const searchParams = useMyWorkSearchParams();
   const returnHref = buildMyWorkReturnHref(searchParams);
 
   const activeTab = parseWorkTab(

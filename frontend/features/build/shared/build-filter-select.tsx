@@ -52,11 +52,20 @@ export function ResponsiveBuildFilterSelect(props: BuildFilterSelectProps) {
 
   if (!isMobile) return <BuildFilterSelect {...props} />;
 
+  const selectedLabel = props.value
+    ? props.options.find((option) => option.value === props.value)?.label
+    : undefined;
+
   return (
     <ResponsivePopover>
       <ResponsivePopoverTrigger asChild>
-        <Button type="button" variant="outline" className="w-auto shrink-0">
-          {props.label}
+        <Button
+          type="button"
+          variant="outline"
+          className="w-auto min-w-0 max-w-48 shrink-0"
+          aria-label={selectedLabel ? `${props.label}: ${selectedLabel}` : props.label}
+        >
+          <span className="truncate">{selectedLabel ?? props.label}</span>
         </Button>
       </ResponsivePopoverTrigger>
       <ResponsivePopoverContent

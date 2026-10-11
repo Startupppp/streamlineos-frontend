@@ -20,6 +20,12 @@ function wizard(
 }
 
 describe("org setup invitation access", () => {
+  it("uses the entered workspace name when no separate company name is given", () => {
+    const payload = buildOrgSetupPayload({ ...wizard([]), displayName: "Acme Workspace", teamSize: "1-10", industry: "Agency" });
+    expect(payload.companyName).toBe("Acme Workspace");
+    expect(payload.companySize).toBe("1-10");
+    expect(payload.industry).toBe("Agency");
+  });
   it("defaults a MEMBER to MEMBER on every selected module except chat and kb", () => {
     const modules: OrgModuleKey[] = ["build", "crm", "hr", "chat", "kb"];
     expect(defaultInviteModuleAccess("MEMBER", modules)).toEqual([

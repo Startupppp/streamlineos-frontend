@@ -10,9 +10,19 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useFeedbucketWidgets } from "@/hooks/api/feedbucket/use-feedbucket-widgets";
+import { LoadingButton } from "@/components/ui/loading-button";
+import {
+  useCreateFeedbucketWidget,
+  useFeedbucketWidgets,
+  useUpdateFeedbucketWidget,
+} from "@/hooks/api/feedbucket/use-feedbucket-widgets";
+import { useManagedProduct } from "@/hooks/api/build/managed-products";
+import { useCan } from "@/hooks/api/access";
 import { buildFeedbucketEmbedSnippet } from "@/lib/feedbucket";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
+
+const INTERNAL_CAPTURE_WIDGET_NAME = "Product capture";
 
 interface FeedbucketCollectDialogProps {
   managedProductId: number;
@@ -25,19 +35,27 @@ export function FeedbucketCollectDialog({
   open,
   onOpenChange,
 }: FeedbucketCollectDialogProps) {
-  const { data: widgets } = useFeedbucketWidgets();
+  const { data: widgets, isLoading } = useFeedbucketWidgets();
+  const { data: product } = useManagedProduct(managedProductId);
+  const canCreate = useCan("feedbucket:widgets:create");
+  const canUpdate = useCan("feedbucket:widgets:update");
+  const createWidget = useCreateFeedbucketWidget();
+  const updateWidget = useUpdateFeedbucketWidget();
   const [copied, setCopied] = useState(false);
 
   const productWidgets = useMemo(
     () =>
       (widgets ?? []).filter(
         (w) =>
-          w.managedProductId === managedProductId && w.isActive && !w.deletedAt,
+          w.managedProductId === managedProductId &&
+          !w.deletedAt &&
+          w.name !== INTERNAL_CAPTURE_WIDGET_NAME,
       ),
     [widgets, managedProductId],
   );
 
-  const firstWidget = productWidgets[0] ?? null;
+  const firstWidget = productWidgets.find((w) => w.isActive) ?? null;
+  const inactiveWidget = firstWidget ? null : (productWidgets[0] ?? null);
 
   const snippet = useMemo(
     () =>
@@ -56,6 +74,28 @@ export function FeedbucketCollectDialog({
       toast.error("Could not copy to clipboard");
     }
   }, [snippet]);
+
+  const handleCreate = useCallback(() => {
+    const name = product?.name ? `${product.name} feedback` : "Product feedback";
+    createWidget.mutate(
+      { name, managedProductId },
+      {
+        onSuccess: () => toast.success("Feedbucket widget created"),
+        onError: (error) => toast.error(getErrorMessage(error)),
+      },
+    );
+  }, [createWidget, managedProductId, product?.name]);
+
+  const handleActivate = useCallback(() => {
+    if (!inactiveWidget) return;
+    updateWidget.mutate(
+      { widgetId: inactiveWidget.id, input: { isActive: true } },
+      {
+        onSuccess: () => toast.success("Feedbucket widget activated"),
+        onError: (error) => toast.error(getErrorMessage(error)),
+      },
+    );
+  }, [inactiveWidget, updateWidget]);
 
   useEffect(() => {
     if (!copied) return;
@@ -78,7 +118,9 @@ export function FeedbucketCollectDialog({
             channel.
           </DialogDescription>
         </DialogHeader>
-        {firstWidget ? (
+        {isLoading ? (
+          <p className="text-sm text-muted-foreground">Loading widgets…</p>
+        ) : firstWidget ? (
           <div className="flex flex-col gap-3">
             <p className="text-sm text-muted-foreground">
               Active widget:{" "}
@@ -99,18 +141,55 @@ export function FeedbucketCollectDialog({
               {copied ? "Copied!" : "Copy snippet"}
             </Button>
           </div>
+        ) : inactiveWidget ? (
+          <div className="flex flex-col gap-3">
+            <p className="text-sm text-muted-foreground">
+              <span className="font-medium text-foreground">
+                {inactiveWidget.name}
+              </span>{" "}
+              is linked to this product but paused. Activate it to get the embed
+              snippet.
+            </p>
+            {canUpdate ? (
+              <LoadingButton
+                type="button"
+                size="sm"
+                className="self-start"
+                isPending={updateWidget.isPending}
+                loadingText="Activating…"
+                onClick={handleActivate}
+              >
+                Activate widget
+              </LoadingButton>
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                Ask an admin with Feedbucket access to activate it.
+              </p>
+            )}
+          </div>
         ) : (
           <div className="flex flex-col gap-3">
             <p className="text-sm text-muted-foreground">
-              No active Feedbucket widget is linked to this product. Create and
-              activate a widget in the project&apos;s Feedbucket settings, then
-              link it to this managed product.
+              No Feedbucket widget is linked to this product yet. Create one to
+              get an embed snippet for your site.
             </p>
-            <p className="text-xs text-muted-foreground">
-              To link a widget: open <strong>Build → Feedbucket</strong> for a
-              project, create or edit a widget, and set its managed product to
-              this product.
-            </p>
+            {canCreate ? (
+              <LoadingButton
+                type="button"
+                size="sm"
+                className="self-start"
+                isPending={createWidget.isPending}
+                loadingText="Creating…"
+                onClick={handleCreate}
+              >
+                Create product widget
+              </LoadingButton>
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                Ask an admin with Feedbucket access to create a widget for this
+                product.
+              </p>
+            )}
           </div>
         )}
       </DialogContent>

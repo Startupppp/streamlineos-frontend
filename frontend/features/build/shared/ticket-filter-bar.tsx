@@ -99,7 +99,7 @@ export function TicketFilterBar({
         value={localSearch}
         onValueChange={handleSearchChange}
         fill={fillSearch}
-        className="[&_svg]:left-2 [&_svg]:h-3.5 [&_svg]:w-3.5"
+        className="min-w-0 [&_svg]:left-2 [&_svg]:h-3.5 [&_svg]:w-3.5"
         inputClassName="h-9 pl-7 pr-7"
         onBlur={(event) => {
           if (collapsibleSearch && !event.currentTarget.value.trim()) {
@@ -247,7 +247,7 @@ export function TicketFilterBar({
       {leading}
       <div
         className={cn(
-          "flex min-w-0 items-center gap-0.5 sm:gap-1",
+          "flex min-w-0 flex-wrap items-center gap-0.5 sm:gap-1",
           !leading && align === "end" && "sm:justify-end",
           leading ? "shrink-0" : "flex-1",
         )}

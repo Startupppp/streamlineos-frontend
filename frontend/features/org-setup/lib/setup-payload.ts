@@ -119,10 +119,10 @@ export function buildOrgSetupPayload(data: WizardData): OrgSetupPayload {
   );
   const moduleAnswers = buildModuleAnswers(data, enabledModules);
   return {
-    industry: data.industry,
-    companyName: data.companyName,
+    industry: data.industry.trim(),
+    companyName: data.companyName.trim() || data.displayName.trim(),
     ...(data.fullName.trim() ? { fullName: data.fullName.trim() } : {}),
-    companySize: data.teamSize,
+    companySize: data.teamSize.trim(),
     ...(data.country ? { country: data.country } : {}),
     ...(data.timezone ? { timezone: data.timezone } : {}),
     phone: data.phone,

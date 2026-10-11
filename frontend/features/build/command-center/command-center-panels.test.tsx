@@ -70,7 +70,9 @@ jest.mock("next/link", () => ({
 }));
 
 jest.mock("./panel-header", () => ({
-  PanelHeader: ({ title }: { title: string }) => <div data-testid="panel-header">{title}</div>,
+  PanelHeader: ({ title, actions }: { title: string; actions?: ReactNode }) => (
+    <div data-testid="panel-header">{title}{actions}</div>
+  ),
 }));
 
 jest.mock("./command-center-constants", () => ({
@@ -265,6 +267,8 @@ describe("RisksPanel", () => {
     );
     render(<RisksPanel />);
     expect(screen.getByText("Data breach risk")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /data breach risk/i })).toHaveAttribute("href", "/build/1/risks");
+    expect(screen.queryByRole("link", { name: /view all/i })).not.toBeInTheDocument();
   });
 });
 
@@ -330,17 +334,39 @@ jest.mock("./command-center-rows", () => {
   return { ...actual };
 });
 
+jest.mock("./command-center-my-work-row", () => ({
+  MyWorkRow: ({ item }: { item: { title: string } }) => <div>{item.title}</div>,
+}));
+
 describe("BlockersPanel", () => {
-  it("queries all-work with scope blocked and never sends unknown hasBlocker (strict BE schema)", () => {
+  it("queries the same set as My Work's Blocked tab and never sends unknown hasBlocker (strict BE schema)", () => {
     mockUseInfiniteAllWork.mockReturnValue(baseQueryResult({ data: { pages: [{ data: [] }] } }));
     render(<BlockersPanel />);
     expect(mockUseInfiniteAllWork).toHaveBeenCalled();
     const filters = mockUseInfiniteAllWork.mock.calls[0]?.[0] as Record<string, unknown>;
     expect(filters).toMatchObject({
-      scope: "blocked",
+      scope: "mine",
+      blockedOnly: true,
       excludeStatus: "DONE,CANCELLED",
     });
     expect(filters).not.toHaveProperty("hasBlocker");
+  });
+
+  it("links View all to My Work's Blocked tab when blocked issues exist — paired with the empty test", () => {
+    mockUseInfiniteAllWork.mockReturnValue(
+      baseQueryResult({
+        data: {
+          pages: [{
+            data: [{
+              id: 7, projectId: 2, ticketNumber: 7, title: "Wire payments", status: "IN_PROGRESS",
+              priority: "HIGH", type: "TASK", dueDate: null, projectKey: "PAY", projectName: "Payments",
+            }],
+          }],
+        },
+      }),
+    );
+    render(<BlockersPanel />);
+    expect(screen.getByRole("link", { name: /view all/i })).toHaveAttribute("href", "/build/my-work?tab=blocked");
   });
 
   it("renders skeletons while the blocked-tickets query is loading — paired with the loaded test", () => {
@@ -365,11 +391,12 @@ describe("BlockersPanel", () => {
     expect(screen.getByTestId("error-state")).toBeInTheDocument();
   });
 
-  it("renders the empty state when there are no overdue blocked tickets — paired with the populated test", () => {
+  it("renders the empty state without a View all link when nothing is blocked — paired with the populated test", () => {
     mockUseInfiniteAllWork.mockReturnValue(
       baseQueryResult({ data: { pages: [{ data: [] }] } }),
     );
     render(<BlockersPanel />);
     expect(screen.getByTestId("empty-state")).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /view all/i })).not.toBeInTheDocument();
   });
 });

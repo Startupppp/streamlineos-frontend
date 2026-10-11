@@ -30,39 +30,14 @@ import {
 } from "@/hooks/api/build/views";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
-import type { ProjectView, ViewLayoutType } from "@/types/projects";
-import {
-  BUILD_LIST_CURSOR_PARAM,
-  BUILD_LIST_FILTER_PARAMS,
-} from "@/features/build/shared/use-build-list-url-state";
+import type { ProjectView } from "@/types/projects";
 import type { AllWorkView } from "./all-work-view-switcher";
 import { AllWorkViewRow } from "./all-work-view-row";
-
-const VIEW_TO_LAYOUT: Record<AllWorkView, ViewLayoutType> = {
-  list: "list",
-  table: "table",
-  board: "board",
-  calendar: "calendar",
-  timeline: "gantt",
-};
-
-const FILTER_KEYS = [
-  ...BUILD_LIST_FILTER_PARAMS,
-  "cycle",
-] as const satisfies readonly string[];
-
-function buildCurrentFilters(
-  searchParams: ReturnType<typeof useSearchParams>,
-): Record<string, string> {
-  const result: Record<string, string> = {};
-  for (const key of FILTER_KEYS) {
-    const val = searchParams.get(key);
-    if (val) result[key] = val;
-  }
-  const scope = searchParams.get("scope");
-  if (scope) result["scope"] = scope;
-  return result;
-}
+import {
+  VIEW_TO_LAYOUT,
+  buildCurrentFilters,
+  viewToSearchParams,
+} from "./all-work-view-params";
 
 function applyViewToParams(
   view: ProjectView,
@@ -72,26 +47,7 @@ function applyViewToParams(
   startTransition: (fn: () => void) => void,
 ) {
   startTransition(() => {
-    const next = new URLSearchParams(searchParams.toString());
-
-    for (const key of FILTER_KEYS) {
-      next.delete(key);
-    }
-    next.delete("scope");
-    next.delete("page");
-    next.delete(BUILD_LIST_CURSOR_PARAM);
-
-    if (view.filters && typeof view.filters === "object") {
-      for (const [k, val] of Object.entries(view.filters)) {
-        if (typeof val === "string" && val) next.set(k, val);
-      }
-    }
-
-    const lt = view.layoutType;
-    if (lt === "list" || lt === "table" || lt === "board") {
-      next.set("view", lt);
-    }
-
+    const next = viewToSearchParams(view, new URLSearchParams(searchParams.toString()));
     router.replace(`${pathname}?${next.toString()}`, { scroll: false });
   });
 }

@@ -182,11 +182,14 @@ export interface IntakeRequest {
   priority: string | null;
   requestType: string | null;
   linkedWorkItemId: number | null;
-  linkedTicket?: Pick<Ticket, "id" | "projectId" | "ticketNumber">;
+  formSubmissionId: number | null;
+  feedbucketSubmissionId: number | null;
   declineReason: string | null;
   createdAt: string;
   updatedAt: string;
 }
+
+export type IntakeStatusCounts = Record<IntakeStatus, number>;
 
 export interface ProjectAnalytics {
   stateDistribution: { status: string; count: number }[];

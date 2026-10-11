@@ -5,9 +5,10 @@ import { format, subDays } from "date-fns";
 
 const mockReplace = jest.fn();
 let mockSearchParams = new URLSearchParams();
+let mockPathname = "/build/my-work";
 
 jest.mock("next/navigation", () => ({
-  usePathname: () => "/build/my-work",
+  usePathname: () => mockPathname,
   useRouter: () => ({ replace: mockReplace }),
   useSearchParams: () => mockSearchParams,
 }));
@@ -31,6 +32,7 @@ function renderWith(query: string) {
 describe("useMyWorkData Due Dates filter", () => {
   beforeEach(() => {
     mockedUseAllWork.mockClear();
+    mockPathname = "/build/my-work";
   });
 
   it("forwards dueDateFrom and dueDateTo to the mine-scoped all-work request so the always-visible Due Dates filter chip is not a no-op", () => {
@@ -55,6 +57,20 @@ describe("useMyWorkData Due Dates filter", () => {
 
     expect(mineCall?.[0]).not.toHaveProperty("dueDateFrom");
     expect(mineCall?.[0]).not.toHaveProperty("dueDateTo");
+  });
+});
+
+describe("useMyWorkData ticket pane", () => {
+  beforeEach(() => mockedUseAllWork.mockClear());
+  afterEach(() => { mockPathname = "/build/my-work"; });
+
+  it("keeps the My Work search when the ticket pane replaces the address bar", () => {
+    mockPathname = "/build/1/tickets/STRE-35";
+    mockSearchParams = new URLSearchParams();
+    mockSearchParams.set("returnTo", "/build/my-work?q=QA-070");
+    renderHook(() => useMyWorkData({ activeTab: "assigned", activeView: "list" }));
+    const mineCall = mockedUseAllWork.mock.calls.find(([filters]) => filters?.scope === "mine");
+    expect(mineCall?.[0]).toMatchObject({ search: "QA-070" });
   });
 });
 

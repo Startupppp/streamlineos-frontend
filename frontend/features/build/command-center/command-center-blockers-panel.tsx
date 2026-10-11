@@ -1,5 +1,8 @@
 "use client";
 
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
@@ -15,15 +18,18 @@ import { useInfiniteAllWork } from "@/hooks/api/build/all-work";
 import { mapAllWorkTicketToMyWorkItem } from "./command-center-utils";
 import { MyWorkRow } from "./command-center-my-work-row";
 
-const OVERDUE_BLOCKERS_FILTERS = {
-  scope: "blocked" as const,
+const MY_BLOCKED_FILTERS = {
+  scope: "mine" as const,
+  blockedOnly: true,
   excludeStatus: "DONE,CANCELLED",
   limit: 10,
 } as const;
 
+const MY_BLOCKED_HREF = "/build/my-work?tab=blocked";
+
 export function BlockersPanel() {
   const { data, isLoading, isError, error } = useInfiniteAllWork(
-    OVERDUE_BLOCKERS_FILTERS,
+    MY_BLOCKED_FILTERS,
     { throwOnError: false },
   );
 
@@ -37,6 +43,16 @@ export function BlockersPanel() {
       <PmPanel className={COMMAND_CENTER_LIST_PANEL}>
         <PanelHeader
           title="Blockers"
+          actions={
+            items.length > 0 ? (
+              <Button variant="ghost" size="sm" className="h-6 gap-1 px-2 text-micro" asChild>
+                <Link href={MY_BLOCKED_HREF}>
+                  View all
+                  <ArrowRight className="h-3 w-3" />
+                </Link>
+              </Button>
+            ) : undefined
+          }
         />
         <div className={COMMAND_CENTER_PANEL_BODY_SCROLL}>
           {isLoading ? (
@@ -51,7 +67,11 @@ export function BlockersPanel() {
             </div>
           ) : items.length === 0 ? (
             <div className="flex h-full items-center justify-center p-4">
-              <EmptyState title="No blockers" description="No overdue blocked tickets" compact />
+              <EmptyState
+                title="No blockers"
+                description="None of your open issues are blocked by other work"
+                compact
+              />
             </div>
           ) : (
             <div className="overflow-y-auto">

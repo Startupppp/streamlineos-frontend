@@ -69,7 +69,7 @@ export function useNotificationRowPatch<TVars>(spec: NotificationRowPatchSpec<TV
       }
       void context.owner.queryClient.invalidateQueries({
         queryKey: platformCoreQueryKeys.notifications.unreadCount(),
-        refetchType: "none",
+        refetchType: "active",
       });
     },
   });

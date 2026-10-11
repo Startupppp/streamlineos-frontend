@@ -83,7 +83,7 @@ describe("ResponsiveBuildFilterSelect", () => {
     render(<ResponsiveBuildFilterSelect {...props} />);
 
     expect(screen.queryByRole("combobox", { name: "Status" })).toBeNull();
-    fireEvent.click(screen.getByRole("button", { name: "Status" }));
+    fireEvent.click(screen.getByRole("button", { name: "Status: Open" }));
 
     const dialog = await screen.findByRole("dialog");
     expect(dialog).toHaveClass("w-full", "max-w-none");
@@ -91,5 +91,19 @@ describe("ResponsiveBuildFilterSelect", () => {
       "w-full",
       "max-w-none",
     );
+  });
+
+  it("shows the applied value on the mobile trigger so an active filter is visible — paired with the unset test", () => {
+    mockIsMobile = true;
+    render(<ResponsiveBuildFilterSelect {...props} />);
+
+    expect(screen.getByRole("button", { name: "Status: Open" })).toHaveTextContent("Open");
+  });
+
+  it("shows the field name on the mobile trigger when no value is applied — paired with the applied test", () => {
+    mockIsMobile = true;
+    render(<ResponsiveBuildFilterSelect {...props} value="" />);
+
+    expect(screen.getByRole("button", { name: "Status" })).toHaveTextContent("Status");
   });
 });

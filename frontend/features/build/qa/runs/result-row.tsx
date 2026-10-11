@@ -13,21 +13,8 @@ import { useUpdateTestResult } from "@/hooks/api/build/qa";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { PM_PANEL } from "@/components/pm-chrome";
-import type { TestRunResult, TestResultStatus, TestCasePriority } from "@/types/projects";
-
-const STATUS_OPTIONS: { value: TestResultStatus; label: string; activeClass: string }[] = [
-  { value: "not_run", label: "Not Run", activeClass: "bg-muted text-foreground border-border" },
-  { value: "passed", label: "Pass", activeClass: "bg-status-success-surface text-status-success-ink-strong border-status-success-rule" },
-  { value: "failed", label: "Fail", activeClass: "bg-status-danger-surface text-status-danger-ink-strong border-status-danger-rule" },
-  { value: "blocked", label: "Blocked", activeClass: "bg-status-warning-surface text-status-warning-ink-strong border-status-warning-rule" },
-  { value: "skipped", label: "Skip", activeClass: "bg-muted text-muted-foreground border-border" },
-];
-
-const PRIORITY_STYLES: Record<TestCasePriority, string> = {
-  low: "text-muted-foreground border-border",
-  medium: "text-status-warning-ink-strong border-status-warning-rule",
-  high: "text-status-danger-ink-strong border-status-danger-rule",
-};
+import type { TestRunResult, TestResultStatus } from "@/types/projects";
+import { PRIORITY_STYLES, ResultStatusButtons, linkedBugHref } from "./result-status-buttons";
 
 interface ResultRowProps {
   result: TestRunResult;
@@ -100,7 +87,7 @@ export const ResultRow = memo(function ResultRow({
         ) : null}
         {result.linkedWorkItemId ? (
           <Link
-            href={`/build/${projectId}/issues?type=BUG`}
+            href={linkedBugHref(projectId, result.linkedWorkItemId)}
             className="shrink-0 text-micro font-medium text-primary hover:underline"
           >
             Linked bug
@@ -109,25 +96,12 @@ export const ResultRow = memo(function ResultRow({
       </div>
 
       <div className="flex flex-wrap items-center gap-1">
-        {STATUS_OPTIONS.map((opt) => {
-          const isActive = result.status === opt.value;
-          return (
-            <button
-              key={opt.value}
-              type="button"
-              disabled={!canExecute || updateResult.isPending}
-              onClick={() => handleStatusChange(opt.value)}
-              className={cn(
-                "rounded border px-2 py-0.5 text-micro transition-colors",
-                isActive
-                  ? opt.activeClass
-                  : "border-border text-muted-foreground hover:bg-primary/[0.04] disabled:opacity-50",
-              )}
-            >
-              {opt.label}
-            </button>
-          );
-        })}
+        <ResultStatusButtons
+          status={result.status}
+          disabled={!canExecute || updateResult.isPending}
+          onSelect={handleStatusChange}
+          buttonClassName="px-2"
+        />
 
         <button
           type="button"

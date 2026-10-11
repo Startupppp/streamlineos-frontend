@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { Trash2Icon } from "@animateicons/react/lucide";
 import { useTestRuns, useDeleteTestRun } from "@/hooks/api/build/qa";
 import { useCan } from "@/hooks/api/access";
@@ -61,6 +61,7 @@ const FILTER_DEFINITIONS = [
     param: "status",
     options: STATUS_OPTIONS.map((o) => o.value),
   },
+  { param: "failuresOnly", options: ["true"] },
 ] as const;
 
 const TEST_RUN_TABLE_HEADERS = [
@@ -112,7 +113,7 @@ function RunProgress({ run }: { run: TestRunListItem }) {
         />
       </div>
       <span className="shrink-0 text-micro tabular-nums text-muted-foreground">
-        {pct}%
+        {run.passCount}/{total} passed
       </span>
     </div>
   );
@@ -148,8 +149,6 @@ interface TestRunsTabProps {
 
 export function TestRunsTab({ projectId, createNonce = 0 }: TestRunsTabProps) {
   const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
   const canManage = useCan("build:qa:manage");
   const listFilters = useBuildListFilters({
     filters: FILTER_DEFINITIONS,
@@ -161,7 +160,7 @@ export function TestRunsTab({ projectId, createNonce = 0 }: TestRunsTabProps) {
     null,
   );
 
-  const showFailuresOnly = searchParams.get("failuresOnly") === "true";
+  const showFailuresOnly = listFilters.value("failuresOnly") === "true";
 
   const { cursor, pageNumber, hasPrevious, goNext, goPrevious } = useBuildCursorPager(
     listFilters.resetKey,
@@ -181,7 +180,7 @@ export function TestRunsTab({ projectId, createNonce = 0 }: TestRunsTabProps) {
     error,
     refetch,
   } = useTestRuns(projectId, queryFilters);
-  const runs = runsPage?.data ?? [];
+  const runs = useMemo(() => runsPage?.data ?? [], [runsPage]);
   const displayedRuns = runs;
   const deleteRun = useDeleteTestRun();
 
@@ -233,16 +232,9 @@ export function TestRunsTab({ projectId, createNonce = 0 }: TestRunsTabProps) {
   );
 
   const handleToggleRegressionFilter = useCallback(
-    (checked: boolean) => {
-      const next = new URLSearchParams(searchParams.toString());
-      if (checked) {
-        next.set("failuresOnly", "true");
-      } else {
-        next.delete("failuresOnly");
-      }
-      router.replace(`${pathname}?${next.toString()}`, { scroll: false });
-    },
-    [searchParams, router, pathname],
+    (checked: boolean) =>
+      listFilters.setValue("failuresOnly", checked ? "true" : BUILD_FILTER_ALL),
+    [listFilters],
   );
 
   const handleOpenFocused = useCallback(

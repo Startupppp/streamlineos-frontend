@@ -7,10 +7,10 @@ import type { KanbanTicket } from "../shared/types";
 const mockNavigate = jest.fn();
 const mockTicket: KanbanTicket = { id: 35, version: 4, title: "Review", status: "TODO", type: "TASK", ticketNumber: 35, project: { id: 1, key: "STRE", name: "Streamline" } };
 
-jest.mock("next/navigation", () => ({ useRouter: () => ({ push: jest.fn() }), useSearchParams: () => new URLSearchParams() }));
+jest.mock("next/navigation", () => ({ useRouter: () => ({ push: jest.fn() }), usePathname: () => "/build/my-work", useSearchParams: () => new URLSearchParams() }));
 jest.mock("@/components/shared/dirty-state-context", () => ({ useNavigationLeave: () => jest.fn() }));
 jest.mock("@/hooks/common/use-online-status", () => ({ useOnlineStatus: () => true }));
-jest.mock("@/hooks/common/use-guarded-document-navigation", () => ({ useGuardedDocumentNavigation: () => mockNavigate }));
+jest.mock("@/hooks/common/use-guarded-document-navigation", () => ({ useGuardedDocumentNavigation: () => mockNavigate, useGuardedSoftNavigation: () => mockNavigate }));
 jest.mock("./my-work-view-body-lazy", () => ({ MyWorkViewBody: () => <div>Ticket view</div> }));
 jest.mock("@/components/ui/data-table", () => ({ DataTable: ({ onRowClick }: { onRowClick: (ticket: KanbanTicket) => void }) => {
   function handleOpen() { onRowClick(mockTicket); }

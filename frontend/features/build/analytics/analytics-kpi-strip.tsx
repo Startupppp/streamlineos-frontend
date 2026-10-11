@@ -20,13 +20,15 @@ export const AnalyticsKpiStrip = memo(function AnalyticsKpiStrip({
     (acc, row) => (row.status?.toLowerCase() === "done" ? acc + row.count : acc),
     0,
   );
-  const openCount = analytics.stateDistribution.reduce(
-    (acc, row) =>
-      row.status?.toLowerCase() !== "done" && row.status?.toLowerCase() !== "cancelled"
-        ? acc + row.count
-        : acc,
-    0,
-  );
+  const openCount =
+    breakdown?.openTickets ??
+    analytics.stateDistribution.reduce(
+      (acc, row) =>
+        row.status?.toLowerCase() !== "done" && row.status?.toLowerCase() !== "cancelled"
+          ? acc + row.count
+          : acc,
+      0,
+    );
   const derivedTotal =
     totalTickets > 0
       ? totalTickets

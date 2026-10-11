@@ -41,6 +41,7 @@ import { ResultRow } from "./result-row";
 import { RunResultBulkActionBar } from "./run-result-bulk-action-bar";
 import { useUpdateTestResult } from "@/hooks/api/build/qa";
 import type { TestRunCounts, TestRunResult } from "@/types/projects";
+import { deriveRunDisplayStatus } from "./run-effective-status";
 
 const STATUS_STYLES: Record<string, string> = {
   not_started: "text-muted-foreground border-border",
@@ -208,6 +209,11 @@ export function RunExecutionPage({ projectId, runId }: RunExecutionPageProps) {
     setSelectedIds(new Set());
   }, []);
 
+  const handleStatusFilterChange = useCallback(
+    (value: string) => listFilters.setValue("status", value),
+    [listFilters],
+  );
+
   const filteredResults = useMemo(() => {
     const allResults = run?.results ?? [];
     const statusFilter = listFilters.value("status");
@@ -243,6 +249,20 @@ export function RunExecutionPage({ projectId, runId }: RunExecutionPageProps) {
     ),
     [projectId, canExecute, canCreateBug, handleOpenCreateBug],
   );
+
+  const runCounts = useMemo<TestRunCounts>(() => {
+    const results = run?.results ?? [];
+    const countOf = (status: TestRunResult["status"]) =>
+      results.filter((result) => result.status === status).length;
+    return {
+      total: results.length,
+      passed: countOf("passed"),
+      failed: countOf("failed"),
+      blocked: countOf("blocked"),
+      skipped: countOf("skipped"),
+      notRun: countOf("not_run"),
+    };
+  }, [run?.results]);
 
   const pageState = usePageState({
     permission: "build:qa:view",
@@ -304,31 +324,15 @@ export function RunExecutionPage({ projectId, runId }: RunExecutionPageProps) {
     );
   }
 
-  const results = run.results ?? [];
-  const runCounts: TestRunCounts = {
-    total: results.length,
-    passed: results.filter((result) => result.status === "passed").length,
-    failed: results.filter((result) => result.status === "failed").length,
-    blocked: results.filter((result) => result.status === "blocked").length,
-    skipped: results.filter((result) => result.status === "skipped").length,
-    notRun: results.filter((result) => result.status === "not_run").length,
-  };
-
-  const effectiveStatus: string =
-    run.status === "completed" || run.status === "aborted"
-      ? run.status
-      : runCounts.total > 0 && runCounts.notRun === 0
-        ? "completed"
-        : runCounts.total > runCounts.notRun
-          ? "in_progress"
-          : run.status;
+  const displayStatus = deriveRunDisplayStatus(run.status, runCounts);
+  const isRunClosed = run.status === "completed" || run.status === "aborted";
 
   return (
     <PageWrapper
       title={run.name}
       backHref={qaHref}
       actions={
-        canManage && effectiveStatus !== "completed" ? (
+        canManage && !isRunClosed ? (
           <CompleteRunButton onClick={handleCompleteRun} isPending={updateRun.isPending} />
         ) : undefined
       }
@@ -336,12 +340,17 @@ export function RunExecutionPage({ projectId, runId }: RunExecutionPageProps) {
       <PmPageShell>
         <PmSection index={0}>
           <PmPanel className="flex flex-wrap items-center gap-3 px-3 py-2.5">
-            <Badge variant="outline" className={cn("text-micro", STATUS_STYLES[effectiveStatus])}>
-              {STATUS_LABELS[effectiveStatus]}
+            <Badge variant="outline" className={cn("text-micro", STATUS_STYLES[displayStatus])}>
+              {STATUS_LABELS[displayStatus]}
             </Badge>
             {run.environment ? (
               <span className={cn(TEXT_ONE_LINE, "max-w-[12rem] text-dense text-muted-foreground")}>
                 {run.environment}
+              </span>
+            ) : null}
+            {run.browserDevice ? (
+              <span className={cn(TEXT_ONE_LINE, "max-w-[12rem] text-dense text-muted-foreground")}>
+                {run.browserDevice}
               </span>
             ) : null}
             <ProgressBar counts={runCounts} />
@@ -365,7 +374,7 @@ export function RunExecutionPage({ projectId, runId }: RunExecutionPageProps) {
                     label="Status"
                     value={listFilters.value("status")}
                     options={RESULT_STATUS_OPTIONS}
-                    onValueChange={(v) => listFilters.setValue("status", v)}
+                    onValueChange={handleStatusFilterChange}
                   />
                 ),
               },

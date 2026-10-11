@@ -82,6 +82,19 @@ describe("CommandCenterWidgetGrid", () => {
     expect(props.onRemove).toHaveBeenCalledWith("projects");
   });
 
+  it("moves focus to the next widget's remove control after a removal so keyboard users keep their place", () => {
+    mockContainerWidth.mockReturnValue({ width: 1200, mounted: true, containerRef: { current: document.body }, measureWidth: jest.fn() });
+    const raf = jest.spyOn(window, "requestAnimationFrame").mockImplementation((callback) => {
+      callback(0);
+      return 0;
+    });
+    const props = renderGrid({ editing: true });
+    fireEvent.click(screen.getByRole("button", { name: "Remove My issues" }));
+    expect(props.onRemove).toHaveBeenCalledWith("my-issues");
+    expect(screen.getByRole("button", { name: "Remove Projects" })).toHaveFocus();
+    raf.mockRestore();
+  });
+
   it("keeps drag and keyboard ordering available on narrow screens while disabling resize", () => {
     mockContainerWidth.mockReturnValue({ width: 500, mounted: true, containerRef: { current: null }, measureWidth: jest.fn() });
     renderGrid({ editing: true });

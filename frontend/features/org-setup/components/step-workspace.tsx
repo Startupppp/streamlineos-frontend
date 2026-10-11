@@ -97,6 +97,7 @@ export function StepWorkspace({ data, patch, onBack, onNext }: StepWorkspaceProp
 
   const errors = {
     displayName: fieldError(attempted, issues, "displayName"),
+    teamSize: fieldError(attempted, issues, "teamSize"),
     companyName: fieldError(attempted, issues, "companyName"),
     industry: fieldError(attempted, issues, "industry"),
   };
@@ -185,7 +186,7 @@ export function StepWorkspace({ data, patch, onBack, onNext }: StepWorkspaceProp
         </div>
 
         <div className="min-w-0 space-y-1">
-          <Label className="text-label font-semibold text-foreground">Team size</Label>
+          <Label className="text-label font-semibold text-foreground">Team size *</Label>
           <Select onValueChange={handleTeamSizeChange} value={data.teamSize || undefined}>
             <SelectTrigger className="w-full text-sm">
               <SelectValue placeholder="Select team size" />
@@ -198,6 +199,20 @@ export function StepWorkspace({ data, patch, onBack, onNext }: StepWorkspaceProp
               ))}
             </SelectContent>
           </Select>
+          <InlineError id="team-size-error" message={errors.teamSize} />
+        </div>
+
+        <div className="min-w-0 space-y-1">
+          <Label htmlFor="workspace-industry" className="text-label font-semibold text-foreground">Industry *</Label>
+          <Select onValueChange={handleIndustrySelect} value={INDUSTRIES.includes(data.industry) ? data.industry : undefined}>
+            <SelectTrigger id="workspace-industry" className="w-full text-sm" aria-invalid={!!errors.industry} aria-describedby={errors.industry ? "industry-error" : undefined}>
+              <SelectValue placeholder="Select industry" />
+            </SelectTrigger>
+            <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
+              {INDUSTRIES.map((industry) => <SelectItem key={industry} value={industry}>{industry}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <InlineError id="industry-error" message={errors.industry} />
         </div>
 
         <div className="min-w-0 space-y-1">
@@ -281,28 +296,6 @@ export function StepWorkspace({ data, patch, onBack, onNext }: StepWorkspaceProp
                 aria-describedby={errors.companyName ? "company-name-error" : undefined}
               />
               <InlineError id="company-name-error" message={errors.companyName} />
-            </div>
-
-            <div className="min-w-0 space-y-1">
-              <Label htmlFor="workspace-industry" className="text-xs">
-                Industry
-              </Label>
-              <Select
-                onValueChange={handleIndustrySelect}
-                value={INDUSTRIES.includes(data.industry) ? data.industry : undefined}
-              >
-                <SelectTrigger id="workspace-industry" className="w-full text-sm">
-                  <SelectValue placeholder="Select industry" />
-                </SelectTrigger>
-                <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
-                  {INDUSTRIES.map((ind) => (
-                    <SelectItem key={ind} value={ind}>
-                      {ind}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <InlineError id="industry-error" message={errors.industry} />
             </div>
 
             <div className="min-w-0 space-y-1">

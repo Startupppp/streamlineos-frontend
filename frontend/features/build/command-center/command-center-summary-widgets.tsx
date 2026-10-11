@@ -56,7 +56,7 @@ export function OverviewWidget({
             icon={AlertCircle}
             tone={overdueIssues > 0 ? "red" : "default"}
             index={2}
-            href="/build/my-work"
+            href="/build/my-work?tab=overdue"
           />
         </motion.div>
       </StatCardGrid>

@@ -1,10 +1,9 @@
 "use client";
 
 import { useMemo, useCallback } from "react";
-import { useSearchParams } from "next/navigation";
 import { addDays, format, subDays } from "date-fns";
 import { useAllWork } from "@/hooks/api/build/all-work";
-import { useBuildListUrlState } from "@/features/build/shared/use-build-list-url-state";
+import { useMyWorkListUrlState, useMyWorkSearchParams } from "./my-work-collection-params";
 import { parseMyWorkView } from "./my-work-view";
 import {
   mapAllWorkTicketToKanban,
@@ -32,10 +31,10 @@ interface UseMyWorkDataOptions {
 }
 
 export function useMyWorkData({ activeTab, activeView }: UseMyWorkDataOptions) {
-  const searchParams = useSearchParams();
+  const searchParams = useMyWorkSearchParams();
   const defaults = tabToDefaultSort(activeTab);
 
-  const urlState = useBuildListUrlState({
+  const urlState = useMyWorkListUrlState({
     limit: MY_WORK_PAGE_SIZE,
     defaultSortField: defaults.field,
     defaultSortDirection: defaults.dir,

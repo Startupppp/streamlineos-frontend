@@ -8,6 +8,6 @@ describe("BlockersPanel filters", () => {
       "utf8",
     );
     expect(source).not.toMatch(/hasBlocker/);
-    expect(source).toMatch(/scope:\s*"blocked"/);
+    expect(source).toMatch(/blockedOnly:\s*true/);
   });
 });

@@ -1,6 +1,6 @@
 # Build documentation TODO index
 
-The Delivery checklist and any inline acceptance checkboxes inside each current specification are the source of truth for its implementation status. Open counts include every unchecked box in that document. Research links below mean only that a historical source is mapped; they do not verify product behavior. Check a specification item only after recording the current revision and required evidence in the requirement ledger and work claims. The 106 current specifications plus this index make 107 canonical Markdown files.
+The Delivery checklist and any inline acceptance checkboxes inside each current specification are the source of truth for its implementation status. Open counts include every unchecked box in that document. Checked boxes are removed from this index. Research files, when present, are historical references and do not verify product behavior. Check a specification item only after recording the current revision and required evidence in the requirement ledger and work claims. The 106 current specifications plus this index make 107 canonical Markdown files.
 
 ## Delivery checklist
 
@@ -8,7 +8,7 @@ The Delivery checklist and any inline acceptance checkboxes inside each current 
 - [ ] Every accepted research finding has an adopted or deferred destination in the research traceability map.
 - [ ] Release gates, tenant/role browser paths, persistence, and operations evidence are complete.
 
-Current specification items: 0 checked; 854 open. Historical research traceability: 114 mapped of 114 files.
+Current specification items: 852 open. Historical research traceability: 114 mapped of 114 files.
 
 ## Current specifications (106)
 
@@ -53,7 +53,7 @@ Current specification items: 0 checked; 854 open. Historical research traceabili
 - [audit/evidence/2026-10-03-outbox-exact-event.md](../audit/evidence/2026-10-03-outbox-exact-event.md) — 5 open
 - [audit/evidence/2026-10-03-project-access-projection.md](../audit/evidence/2026-10-03-project-access-projection.md) — 2 open
 - [audit/evidence/2026-10-03-project-health-paging.md](../audit/evidence/2026-10-03-project-health-paging.md) — 1 open
-- [audit/managed-product-pending-work.md](../audit/managed-product-pending-work.md) — 9 open
+- [audit/managed-product-pending-work.md](../audit/managed-product-pending-work.md) — 7 open
 - [audit/onboarding-current-state-gap.md](../audit/onboarding-current-state-gap.md) — 7 open
 - [audit/original-wow-research-crosswalk.md](../audit/original-wow-research-crosswalk.md) — 1 open
 - [audit/requirements-coverage.md](../audit/requirements-coverage.md) — 1 open
@@ -100,15 +100,15 @@ Current specification items: 0 checked; 854 open. Historical research traceabili
 - [product/customer-value-and-differentiation.md](../product/customer-value-and-differentiation.md) — 3 open
 - [README.md](../README.md) — 2 open
 
-## Item-level task register (854)
+## Item-level task register (852)
 
-Every row below maps to exactly one checkbox in a current specification. Its BT ID is stable while that checkbox text and file stay unchanged. The source checkbox is the final completion authority; these stages show partial progress without increasing the 854-item denominator. Completed source rows have been retired; partial evidence remains attached to open IDs.
+Every row below maps to exactly one open checkbox in a current specification. Its BT ID is stable while that checkbox text and file stay unchanged. The source checkbox is the final completion authority; these stages show partial progress without increasing the 852-item denominator. Checked source rows are omitted.
 
 Stages: D = decision and exclusive work claim; I = implementation and contracts; T = focused positive and negative checks; R = applicable database, authorization, cache, and event proof; B = applicable browser and mobile proof; L = applicable deployment and operations proof. `?` means unassessed/open, `x` means proven, and `-` means inapplicable with a reason. A stage marked `x` needs a proof link; `-` needs an `N/A:` rationale in Evidence. Stage evidence can advance while the source checkbox remains open. Complete that checkbox only when its own acceptance text and all applicable stages are satisfied.
 
 Before claiming a composite checkbox, list every clause as a numbered acceptance step under its BT ID in WORK-CLAIMS.md and map it to one existing primary package. A shared implementation can satisfy several BT IDs, but keep one file owner and cite the same proof instead of repeating work. Record exact file paths, dependencies, and evidence there; this register does not assign agents or files. Never mark a whole stage complete for partial clause coverage.
 
-Proven stages on open items: 0. Current specification items remain 854 open.
+Proven stages on open items: 0. Current specification items remain 852 open.
 
 | ID | Source | State | D | I | T | R | B | L | Evidence | Task |
 |---|---|---|---|---|---|---|---|---|---|---|
@@ -734,8 +734,8 @@ Proven stages on open items: 0. Current specification items remain 854 open.
 | BT-23009d74e88d | [source](../architecture/08-deep-module-reconciliation.md#L215) | [ ] | ? | ? | ? | ? | ? | ? | — | ARC-09/16: enforce workflow-oriented frontend import direction and one capability registry for routes, navigation, plan locks, searchable More, and preserved authorized deep links. |
 | BT-14f8e72e6e86 | [source](../architecture/screen-data-contracts.md#L77) | [ ] | ? | ? | ? | ? | ? | ? | — | Add same-tenant database constraints and authorized command validation for membership, grant, and record relationships; keep authorization-bearing links out of opaque JSON. |
 | BT-1707f40cf619 | [source](../architecture/screen-data-contracts.md#L78) | [ ] | ? | ? | ? | ? | ? | ? | — | Route legacy Command Center reads through the canonical dashboard owner; cap widget fanout and verify layout/query/cache parity and authorized drill-down. |
-| BT-9839cf3aee1e | [source](../audit/browser-verification-backend-gaps.md#L42) | [ ] | ? | ? | ? | ? | ? | ? | — | BVG-OVW-001: `managed-product-summary.service.ts` now scopes roadmap counts to the segment through the source opportunities. Re-run the unknown-segment deep link in the browser and confirm Now/Next/Later/Completed read 0 and the preview is hidden. |
-| BT-544567953e58 | [source](../audit/browser-verification-backend-gaps.md#L43) | [ ] | ? | ? | ? | ? | ? | ? | — | BVG-BLOCK-001: run Denial with a user lacking managed-product permission and a user from another tenant, then run the create, archive, restore, publish, and edit-save writes against a confirmed disposable environment. |
+| BT-a26be1ef6ee0 | [source](../audit/browser-verification-backend-gaps.md#L82) | [ ] | ? | ? | ? | ? | ? | ? | — | BVG-OWN-001: deploy the backend owner write-path fix, then set and clear the owner on product 39 from Edit product and confirm the overview follows each change. |
+| BT-ce33dd55247a | [source](../audit/browser-verification-backend-gaps.md#L83) | [ ] | ? | ? | ? | ? | ? | ? | — | BVG-BLOCK-001: run Denial with a user lacking managed-product permission and a user from another tenant, then create a product on a confirmed disposable environment. |
 | BT-41b010208812 | [source](../audit/bugs-and-verification.md#L5312) | [ ] | ? | ? | ? | ? | ? | ? | — | Close BLD-INVITE-DELIVERY-01, BLD-INVITE-ATOMIC-02, BLD-INVITE-REPLAY-03, BLD-INVITE-RESEND-04, BLD-INVITE-STATUS-PROVENANCE-05, BLD-MODULE-REVOKE-01, and BLD-MODULE-REGRANT-02 with exact source corrections or disproval, focused negatives, persisted event/access state, cache behavior, and owner/member browser paths. |
 | BT-05e68784a2c2 | [source](../audit/bugs-and-verification.md#L5313) | [ ] | ? | ? | ? | ? | ? | ? | — | Attach network/console, audit/outbox/cache, target DB, responsive, and unauthorized-role evidence before marking an individual bug closed. |
 | BT-1862b7f05032 | [source](../audit/client-portal-activation-gap.md#L121) | [ ] | ? | ? | ? | ? | ? | ? | — | Replace the false-success invite UI with one project-aware activation flow and truthful delivery states. |
@@ -757,15 +757,13 @@ Proven stages on open items: 0. Current specification items remain 854 open.
 | BT-0475219e21b6 | [source](../audit/evidence/2026-10-03-project-access-projection.md#L38) | [ ] | ? | ? | ? | ? | ? | ? | — | Authenticated local browser project detail action, console and network verification on this source revision. |
 | BT-27a74caa38ee | [source](../audit/evidence/2026-10-03-project-access-projection.md#L39) | [ ] | ? | ? | ? | ? | ? | ? | — | Full role and tenant browser acceptance beyond this administrator read. |
 | BT-b887d55a25a0 | [source](../audit/evidence/2026-10-03-project-health-paging.md#L44) | [ ] | ? | ? | ? | ? | ? | ? | — | Browser filtering, pagination, refresh, and access acceptance are evidenced. |
-| BT-e94c3a0d643e | [source](../audit/managed-product-pending-work.md#L39) | [ ] | ? | ? | ? | ? | ? | ? | — | Directory: every filter and chip round-trips through the URL. Create, edit, archive, and restore persist. A version conflict shows recovery. |
-| BT-a1a6223a0702 | [source](../audit/managed-product-pending-work.md#L40) | [ ] | ? | ? | ? | ? | ? | ? | — | Overview: aggregates match the selected period, team, segment, and initiative state. Preview links open the right record. Period, team, and initiative status match at 1280, 768, and 375, and the goal and roadmap previews open the right records. Segment does not narrow results — BVG-OVW-001. |
-| BT-0722c29ec3f4 | [source](../audit/managed-product-pending-work.md#L41) | [ ] | ? | ? | ? | ? | ? | ? | — | Feedback: capture, classify, merge a duplicate (the original text is kept), link to an opportunity, and route to Intake persist. A product-linked Feedbucket widget submission lands with the Feedbucket badge. Filters narrow the server results. |
-| BT-8bc701b0fd50 | [source](../audit/managed-product-pending-work.md#L42) | [ ] | ? | ? | ? | ? | ? | ? | — | Insights: create an opportunity, score it, decline one with a reason, schedule an outcome review through the form, override with a reason (audit row written), accept into the roadmap with goal, epic, visibility, and dependencies, then complete an outcome review. The trace shows every step. |
-| BT-3103e92393a3 | [source](../audit/managed-product-pending-work.md#L43) | [ ] | ? | ? | ? | ? | ? | ? | — | Roadmap: create and edit with project and epic, filters, the board columns with per-column Add item, the timeline view, reorder, move, publish and unpublish, and the public preview matching the public roadmap page. |
-| BT-d7e183244a97 | [source](../audit/managed-product-pending-work.md#L44) | [ ] | ? | ? | ? | ? | ? | ? | — | Goals: link, unlink, check in against a chosen key result, and parent/outcome drill-down. |
-| BT-53619751bc04 | [source](../audit/managed-product-pending-work.md#L45) | [ ] | ? | ? | ? | ? | ? | ? | — | Linked Projects: link, unlink, and move between products with the warning. Every filter, including health, owner, team, customer, and contribution. |
-| BT-f998c0c1b122 | [source](../audit/managed-product-pending-work.md#L46) | [ ] | ? | ? | ? | ? | ? | ? | — | Denial: a user without the managed-products, roadmap, or feedback permission, and a user from another tenant, are refused on pages, selectors, mutations, and deep links. |
-| BT-92e5089f400e | [source](../audit/managed-product-pending-work.md#L47) | [ ] | ? | ? | ? | ? | ? | ? | — | Cache: after each mutation the list, detail, and Overview update without a full refetch. |
+| BT-d0a7544c88b4 | [source](../audit/managed-product-pending-work.md#L11) | [ ] | ? | ? | ? | ? | ? | ? | — | Directory: create a product outside the sandbox — BVG-BLOCK-001. After the backend deploy, set and clear an owner and confirm the overview follows each change — BVG-OWN-001. |
+| BT-465466f80784 | [source](../audit/managed-product-pending-work.md#L12) | [ ] | ? | ? | ? | ? | ? | ? | — | Feedback: capture, classify, merge a duplicate, link an opportunity, route to Intake, and show a Feedbucket badge — BVG-BLOCK-002. A missing product's submissions list still returns 200 — BVG-FB-001. |
+| BT-1c51a6cf8a72 | [source](../audit/managed-product-pending-work.md#L13) | [ ] | ? | ? | ? | ? | ? | ? | — | Insights: accept an opportunity into the roadmap with an epic. The only linkable project has no epics, and creating one needs the owner's approval. |
+| BT-24b37de0632e | [source](../audit/managed-product-pending-work.md#L14) | [ ] | ? | ? | ? | ? | ? | ? | — | Roadmap: reorder a card so it stays in the new place after reload — BVG-RM-001. Pick an epic on a project that has epics. |
+| BT-c28dbf096613 | [source](../audit/managed-product-pending-work.md#L15) | [ ] | ? | ? | ? | ? | ? | ? | — | Linked Projects: choose a real CRM client in the customer filter — BVG-BLOCK-004. |
+| BT-b850d5f3013f | [source](../audit/managed-product-pending-work.md#L16) | [ ] | ? | ? | ? | ? | ? | ? | — | Denial: a user without the managed-products, roadmap, or feedback permission, and a user from another tenant, are refused on pages, selectors, mutations, and deep links. Not run — BVG-BLOCK-001. |
+| BT-cdfa189997ce | [source](../audit/managed-product-pending-work.md#L17) | [ ] | ? | ? | ? | ? | ? | ? | — | Cache: after each mutation the list, detail, and Overview update without a full refetch. Not run — BVG-BLOCK-002. |
 | BT-a28888b8cc8e | [source](../audit/onboarding-current-state-gap.md#L50) | [ ] | ? | ? | ? | ? | ? | ? | — | Implement authenticated, setup-target-aware eligibility preview and prove 402 recovery on a deployed browser with owner, existing-user, and wrong-organization paths. |
 | BT-2b0eaff76a75 | [source](../audit/onboarding-current-state-gap.md#L51) | [ ] | ? | ? | ? | ? | ? | ? | — | Correlate each resent invitation generation with its own email outbox row and derive later terminal failure from that row; separately prove worker claim/CAS safety against duplicate or stale transport writes. |
 | BT-09669d40bf00 | [source](../audit/onboarding-current-state-gap.md#L52) | [ ] | ? | ? | ? | ? | ? | ? | — | Define and migrate a revisioned, identity-scoped pre-organization draft and activation run with idempotent recovery and privacy bounds. |
