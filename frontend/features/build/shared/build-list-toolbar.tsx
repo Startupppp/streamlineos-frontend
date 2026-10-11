@@ -70,7 +70,7 @@ function ToolbarFilterSlot({
       data-slot="build-toolbar-filter"
       data-filter-id={filter.id}
       className={cn(
-        "min-w-0 w-auto shrink-0 basis-auto transition-[flex-basis,width] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]",
+        "min-w-0 w-auto basis-auto md:shrink-0 transition-[flex-basis,width] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]",
         searchCollapsed &&
           "flex-1 basis-0 [&_[data-slot=select-trigger]]:!w-full [&_[data-slot=select-trigger]]:!min-w-0 [&_[data-slot=select-trigger]]:!max-w-none",
         fieldIndex === null
@@ -78,7 +78,7 @@ function ToolbarFilterSlot({
           : cn(
               toolbarInlineVisibility(fieldIndex, collapsed, fieldFilterCount),
               fieldIndex < 2 &&
-                "max-md:[&_[data-slot=select-trigger]]:w-auto max-md:[&_[data-slot=select-trigger]]:max-w-40",
+                "max-md:min-w-0 max-md:flex-1 max-md:basis-0 max-md:[&_[data-slot=select-trigger]]:w-full max-md:[&_[data-slot=select-trigger]]:max-w-none",
             ),
       )}
     >
@@ -295,9 +295,10 @@ export function BuildListToolbar({
             key="build-toolbar-actions"
             data-slot="build-toolbar-actions"
             className={cn(
-              "flex shrink-0 flex-nowrap items-center gap-2 transition-[flex-basis,width] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]",
+              "flex min-w-0 flex-nowrap items-center gap-2 transition-[flex-basis,width] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]",
+              "max-md:w-full md:shrink-0",
               searchCollapsed && "flex-1",
-              fillMobileActions && "max-md:w-full max-md:justify-between",
+              fillMobileActions && "max-md:justify-between",
             )}
             initial={actionInitial}
             animate={actionAnimate}

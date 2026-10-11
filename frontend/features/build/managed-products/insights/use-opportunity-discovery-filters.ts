@@ -1,19 +1,37 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { useBuildListFilters, BUILD_FILTER_ALL } from "@/features/build/shared/use-build-list-filters";
+import {
+  useBuildListFilters,
+  BUILD_FILTER_ALL,
+} from "@/features/build/shared/use-build-list-filters";
 import { useFeedbucketSubmissionFacets } from "@/hooks/api/feedbucket";
 import { useOrgMembers } from "@/hooks/api/organization";
 
+const OPPORTUNITY_STATE_VALUES = [
+  "all",
+  "identified",
+  "validating",
+  "accepted",
+  "declined",
+  "delivered",
+  "measured",
+] as const;
+const OPPORTUNITY_SORT_VALUES = ["score", "updated", "evidence"] as const;
+const OPPORTUNITY_PERIOD_VALUES = ["30d", "90d", "365d", "all"] as const;
+const OPPORTUNITY_CONFIDENCE_VALUES = ["all", "low", "medium", "high"] as const;
+const OPPORTUNITY_EVIDENCE_AGE_VALUES = ["all", "7", "30", "90"] as const;
+const OPPORTUNITY_SCORE_MIN_VALUES = ["all", "10", "25", "50", "100"] as const;
+
 const OPPORTUNITY_FILTER_DEFS = [
-  { param: "oppState" },
-  { param: "oppSort" },
-  { param: "oppThemePeriod" },
+  { param: "oppState", options: OPPORTUNITY_STATE_VALUES },
+  { param: "oppSort", options: OPPORTUNITY_SORT_VALUES },
+  { param: "oppThemePeriod", options: OPPORTUNITY_PERIOD_VALUES },
   { param: "oppSegment" },
   { param: "oppOwner" },
-  { param: "oppConfidence" },
-  { param: "oppEvidenceAge" },
-  { param: "oppScoreMin" },
+  { param: "oppConfidence", options: OPPORTUNITY_CONFIDENCE_VALUES },
+  { param: "oppEvidenceAge", options: OPPORTUNITY_EVIDENCE_AGE_VALUES },
+  { param: "oppScoreMin", options: OPPORTUNITY_SCORE_MIN_VALUES },
 ] as const;
 
 export function useOpportunityDiscoveryFilters(managedProductId: number) {
@@ -36,33 +54,55 @@ export function useOpportunityDiscoveryFilters(managedProductId: number) {
   const facetsQuery = useFeedbucketSubmissionFacets({ managedProductId });
   const membersQuery = useOrgMembers(1, 100);
 
-  const segmentOptions = useMemo(() => [
-    { value: "all", label: "All segments" },
-    ...(facetsQuery.data?.segments ?? [])
-      .filter((s): s is { value: string; count: number } => s.value !== null)
-      .map((s) => ({ value: s.value, label: s.value })),
-  ], [facetsQuery.data?.segments]);
+  const segmentOptions = useMemo(
+    () => [
+      { value: "all", label: "All segments" },
+      ...(facetsQuery.data?.segments ?? [])
+        .filter((s): s is { value: string; count: number } => s.value !== null)
+        .map((s) => ({ value: s.value, label: s.value })),
+    ],
+    [facetsQuery.data?.segments],
+  );
 
-  const ownerOptions = useMemo(() => [
-    { value: "all", label: "All owners" },
-    ...(membersQuery.data?.data ?? []).map((m) => ({
-      value: String(m.membershipId),
-      label: m.name ?? m.email,
-    })),
-  ], [membersQuery.data?.data]);
+  const ownerOptions = useMemo(
+    () => [
+      { value: "all", label: "All owners" },
+      ...(membersQuery.data?.data ?? []).map((m) => ({
+        value: String(m.membershipId),
+        label: m.name ?? m.email,
+      })),
+    ],
+    [membersQuery.data?.data],
+  );
+
+  const typedSegment = segmentFilter.trim();
+  const typedOwner =
+    /^\d+$/.test(ownerFilter) && Number(ownerFilter) > 0 ? ownerFilter : "";
 
   const oppQueryParams = useMemo(() => {
     const p: Record<string, string> = {};
     if (stateFilter && stateFilter !== "all") p.state = stateFilter;
     if (sortFilter && sortFilter !== "all") p.sort = sortFilter;
     if (filters.cursor) p.cursor = filters.cursor;
-    if (segmentFilter && segmentFilter !== BUILD_FILTER_ALL) p.segment = segmentFilter;
-    if (ownerFilter && ownerFilter !== BUILD_FILTER_ALL) p.ownerMembershipId = ownerFilter;
-    if (confidenceFilter && confidenceFilter !== "all") p.confidence = confidenceFilter;
-    if (evidenceAgeFilter && evidenceAgeFilter !== "all") p.evidenceAgeDays = evidenceAgeFilter;
+    if (typedSegment && typedSegment !== BUILD_FILTER_ALL)
+      p.segment = typedSegment;
+    if (typedOwner) p.ownerMembershipId = typedOwner;
+    if (confidenceFilter && confidenceFilter !== "all")
+      p.confidence = confidenceFilter;
+    if (evidenceAgeFilter && evidenceAgeFilter !== "all")
+      p.evidenceAgeDays = evidenceAgeFilter;
     if (scoreMinFilter && scoreMinFilter !== "all") p.scoreMin = scoreMinFilter;
     return p;
-  }, [stateFilter, sortFilter, filters.cursor, segmentFilter, ownerFilter, confidenceFilter, evidenceAgeFilter, scoreMinFilter]);
+  }, [
+    stateFilter,
+    sortFilter,
+    filters.cursor,
+    typedSegment,
+    typedOwner,
+    confidenceFilter,
+    evidenceAgeFilter,
+    scoreMinFilter,
+  ]);
 
   const themeParams = useMemo(
     () =>
@@ -76,19 +116,25 @@ export function useOpportunityDiscoveryFilters(managedProductId: number) {
 
   const isFiltered = !!(
     (stateFilter && stateFilter !== "all") ||
-    (segmentFilter && segmentFilter !== BUILD_FILTER_ALL) ||
-    (ownerFilter && ownerFilter !== BUILD_FILTER_ALL) ||
+    (typedSegment && typedSegment !== BUILD_FILTER_ALL) ||
+    typedOwner ||
     (confidenceFilter && confidenceFilter !== "all") ||
     (evidenceAgeFilter && evidenceAgeFilter !== "all") ||
     (scoreMinFilter && scoreMinFilter !== "all")
   );
 
   const handleStateChange = useCallback(
-    (v: string) => { filters.setValue("oppState", v); setPageNumber(1); },
+    (v: string) => {
+      filters.setValue("oppState", v);
+      setPageNumber(1);
+    },
     [filters],
   );
   const handleSortChange = useCallback(
-    (v: string) => { filters.setValue("oppSort", v); setPageNumber(1); },
+    (v: string) => {
+      filters.setValue("oppSort", v);
+      setPageNumber(1);
+    },
     [filters],
   );
   const handleThemePeriodChange = useCallback(
@@ -96,23 +142,38 @@ export function useOpportunityDiscoveryFilters(managedProductId: number) {
     [filters],
   );
   const handleSegmentChange = useCallback(
-    (v: string) => { filters.setValue("oppSegment", v); setPageNumber(1); },
+    (v: string) => {
+      filters.setValue("oppSegment", v);
+      setPageNumber(1);
+    },
     [filters],
   );
   const handleOwnerChange = useCallback(
-    (v: string) => { filters.setValue("oppOwner", v); setPageNumber(1); },
+    (v: string) => {
+      filters.setValue("oppOwner", v);
+      setPageNumber(1);
+    },
     [filters],
   );
   const handleConfidenceChange = useCallback(
-    (v: string) => { filters.setValue("oppConfidence", v); setPageNumber(1); },
+    (v: string) => {
+      filters.setValue("oppConfidence", v);
+      setPageNumber(1);
+    },
     [filters],
   );
   const handleEvidenceAgeChange = useCallback(
-    (v: string) => { filters.setValue("oppEvidenceAge", v); setPageNumber(1); },
+    (v: string) => {
+      filters.setValue("oppEvidenceAge", v);
+      setPageNumber(1);
+    },
     [filters],
   );
   const handleScoreMinChange = useCallback(
-    (v: string) => { filters.setValue("oppScoreMin", v); setPageNumber(1); },
+    (v: string) => {
+      filters.setValue("oppScoreMin", v);
+      setPageNumber(1);
+    },
     [filters],
   );
 

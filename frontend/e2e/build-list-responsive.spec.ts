@@ -154,7 +154,9 @@ test.describe("Build list responsive contract", () => {
 
       const status = await scope.locator("[data-filter-id=status]").boundingBox();
       const search = await scope.locator("[data-slot=search-input]").boundingBox();
-      expect(Math.round(search?.y ?? 0)).toBe(Math.round(status?.y ?? -1));
+      const toolbar = await scope.locator("[data-slot=build-list-toolbar]").boundingBox();
+      expect(Math.round(search?.y ?? 0)).toBeLessThan(Math.round(status?.y ?? 0));
+      expect((status?.width ?? 0) / (toolbar?.width ?? 1)).toBeGreaterThan(0.8);
     });
 
     test("two filters stay on the row and the third opens from Filters", async ({ page }) => {
@@ -271,12 +273,15 @@ test.describe("Build list responsive contract", () => {
       await page.goto(GALLERY);
     });
 
-    test("three filters stay inline and the drawer trigger retires", async ({ page }) => {
+    test("two filters stay beside search and the third opens from Filters", async ({ page }) => {
       const scope = frame(page, "four-actions-three-filters");
+      const search = await scope.locator("[data-slot=search-input]").boundingBox();
+      const status = await scope.locator("[data-filter-id=status]").boundingBox();
       await expect(scope.locator("[data-filter-id=status]")).toBeVisible();
       await expect(scope.locator("[data-filter-id=health]")).toBeVisible();
-      await expect(scope.locator("[data-filter-id=lead]")).toBeVisible();
-      await expect(scope.getByRole("button", { name: /^Filters/ })).toBeHidden();
+      await expect(scope.locator("[data-filter-id=lead]")).toBeHidden();
+      await expect(scope.getByRole("button", { name: /^Filters/ })).toBeVisible();
+      expect(Math.abs((search?.y ?? 0) - (status?.y ?? -1))).toBeLessThan(8);
     });
 
     test("the desktop table replaces the mobile cards", async ({ page }) => {
@@ -297,6 +302,16 @@ test.describe("Build list responsive contract", () => {
     test.beforeEach(async ({ page }) => {
       await page.setViewportSize({ width: 1280, height: 800 });
       await page.goto(GALLERY);
+    });
+
+    test("search and three filters share one row", async ({ page }) => {
+      const scope = frame(page, "four-actions-three-filters");
+      const search = await scope.locator("[data-slot=search-input]").boundingBox();
+      const lead = scope.locator("[data-filter-id=lead]");
+      await expect(lead).toBeVisible();
+      const leadBox = await lead.boundingBox();
+      expect(Math.abs((search?.y ?? 0) - (leadBox?.y ?? -1))).toBeLessThan(8);
+      await expect(scope.getByRole("button", { name: /^Filters/ })).toBeHidden();
     });
 
     test("search grows but stays capped so selects keep readable widths", async ({ page }) => {
@@ -477,11 +492,12 @@ test.describe("Build list responsive contract", () => {
 
       test("each filter select trigger is named by its visual label", async ({ page }) => {
         const scope = frame(page, "four-actions-three-filters");
-        for (const label of ["Status", "Health", "Lead"]) {
+        for (const label of ["Status", "Health"]) {
           await expect(
             scope.getByRole("combobox", { name: label, exact: true }),
           ).toBeVisible();
         }
+        await expect(scope.locator("[data-filter-id=lead]")).toBeHidden();
       });
     });
 

@@ -114,10 +114,16 @@ function describeIssue(issue: { path?: unknown; message: string }): string {
   return `${path}: ${issue.message.trim()}`;
 }
 
+function validationIssues(details: unknown): unknown[] {
+  if (Array.isArray(details)) return details;
+  if (isRecord(details) && Array.isArray(details.details)) return details.details;
+  return [];
+}
+
 function validationDetail(error: unknown): string {
   if (!error || typeof error !== "object" || !("details" in error)) return "";
-  const { details } = error;
-  if (!Array.isArray(details)) return "";
+  const details = validationIssues(error.details);
+  if (details.length === 0) return "";
 
   const issues = details
     .filter(isValidationIssue)

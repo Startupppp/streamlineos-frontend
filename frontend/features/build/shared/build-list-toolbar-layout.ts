@@ -25,7 +25,7 @@ export const BUILD_TOOLBAR_DRAWER_DESCRIPTION =
   "Narrow this list. Changes apply immediately; close the sheet to return to the results.";
 
 export const BUILD_TOOLBAR_ROOT_CLASS =
-  "flex w-full min-w-0 flex-wrap items-center gap-2 md:overflow-x-hidden";
+  "flex w-full min-w-0 flex-wrap items-center gap-2 md:flex-nowrap md:overflow-x-hidden";
 
 export const BUILD_TOOLBAR_TRAILING_CLASS =
   "flex min-w-0 shrink-0 items-center gap-2 md:ml-auto";
@@ -113,7 +113,7 @@ export function toolbarInlineVisibility(
   _fieldFilterCount: number,
 ): string {
   if (index < 2) return "";
-  if (index === 2) return "max-md:hidden";
+  if (index === 2) return "max-lg:hidden";
   return "hidden";
 }
 
@@ -123,7 +123,7 @@ export function toolbarDrawerVisibility(
   _fieldFilterCount: number,
 ): string {
   if (index < 2) return "hidden";
-  if (index === 2) return "md:hidden";
+  if (index === 2) return "lg:hidden";
   return "";
 }
 
@@ -132,6 +132,6 @@ export function toolbarMoreButtonClass(
   _collapse: boolean,
 ): string {
   if (filterCount <= 2) return "hidden";
-  if (filterCount === 3) return "inline-flex shrink-0 md:hidden";
+  if (filterCount === 3) return "inline-flex shrink-0 lg:hidden";
   return "inline-flex shrink-0";
 }

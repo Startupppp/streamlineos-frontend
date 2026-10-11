@@ -6,6 +6,7 @@ import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useCan } from "@/hooks/api/access";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
 const opportunitiesListContract = lazyContract(() =>
   import("@/contracts/build-contracts.generated").then(
@@ -87,6 +88,7 @@ export function useOpportunities(
       ),
     enabled: canView && managedProductId > 0 && (options?.enabled ?? true),
     staleTime: 30_000,
+    ...INLINE_READ_ERROR,
   });
 }
 

@@ -121,6 +121,17 @@ describe("getErrorMessage on a validation refusal", () => {
     return Object.assign(new Error(message), { status: 400, code: "VALIDATION_FAILED", details });
   }
 
+  it("reads issues when a correlation id is stored beside the list", () => {
+    expect(
+      getErrorMessage(
+        refusal({
+          details: [{ path: "state", message: "Invalid input: expected array, received string" }],
+          correlationId: "1769d475-33d2-4730-8c11-bc7583312ff9",
+        }),
+      ),
+    ).toBe("state: Invalid input: expected array, received string");
+  });
+
   it("says which field was refused instead of just that something was", () => {
     expect(
       getErrorMessage(

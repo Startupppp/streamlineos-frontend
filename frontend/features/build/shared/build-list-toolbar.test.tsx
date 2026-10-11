@@ -232,14 +232,14 @@ describe("BuildListToolbar", () => {
         ]}
       />,
     );
-    expect(screen.getByRole("button", { name: /^Filters/ })).toHaveClass("md:hidden");
+    expect(screen.getByRole("button", { name: /^Filters/ })).toHaveClass("lg:hidden");
     for (const id of ["status", "severity"]) {
-      expect(container.querySelector(`[data-filter-id=${id}]`)?.className).not.toContain(
-        "max-md:hidden",
+      expect(container.querySelector(`[data-filter-id=${id}]`)?.className).toContain(
+        "max-md:flex-1",
       );
     }
     expect(container.querySelector("[data-filter-id=owner]")?.className).toContain(
-      "max-md:hidden",
+      "max-lg:hidden",
     );
   });
 
