@@ -1,7 +1,7 @@
 import type { StatusTone } from "@/lib/design-tokens";
 import type { SubmissionRow } from "./product-feedback-columns";
 
-export const CHANNEL_LABELS: Record<string, string> = {
+const CHANNEL_LABELS: Record<string, string> = {
   feedbucket: "Feedbucket",
   widget: "Widget",
   email: "Email",

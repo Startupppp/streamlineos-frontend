@@ -82,7 +82,7 @@ function ProjectOption({ project, selected, onSelect }: ProjectOptionProps) {
       onClick={handleClick}
       className={cn(
         "flex items-center justify-between gap-3 rounded-md border px-3 py-2 text-left text-sm transition-colors",
-        selected ? "border-primary bg-primary/5 text-foreground" : "border-border hover:bg-muted",
+        selected ? "border-primary bg-accent text-foreground" : "border-border bg-card hover:bg-muted",
       )}
     >
       <span className="line-clamp-1">{project.name}</span>

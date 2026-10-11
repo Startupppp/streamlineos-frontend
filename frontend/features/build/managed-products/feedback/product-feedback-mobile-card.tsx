@@ -11,7 +11,23 @@ import {
   TypeBadge,
 } from "./feedback-signal-badges";
 
-export function ProductFeedbackMobileCard({ row }: { row: SubmissionRow }) {
+type FeedbackMobileRow = Pick<
+  SubmissionRow,
+  | "message"
+  | "status"
+  | "type"
+  | "sourceChannel"
+  | "sentiment"
+  | "duplicateCount"
+  | "createdAt"
+  | "reporterName"
+  | "reporterEmail"
+  | "consentStatus"
+  | "customer"
+  | "segment"
+>;
+
+export function ProductFeedbackMobileCard({ row }: { row: FeedbackMobileRow }) {
   const consentDenied = row.consentStatus === "denied";
   const reporterName = consentDenied ? null : row.reporterName;
   const reporterEmail = consentDenied ? null : row.reporterEmail;

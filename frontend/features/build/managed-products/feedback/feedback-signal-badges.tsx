@@ -34,7 +34,7 @@ interface ToneBadgeProps {
   className?: string;
 }
 
-export function ToneBadge({ tone, children, className }: ToneBadgeProps) {
+function ToneBadge({ tone, children, className }: ToneBadgeProps) {
   const classes = statusToneClasses(tone);
   return (
     <Badge
