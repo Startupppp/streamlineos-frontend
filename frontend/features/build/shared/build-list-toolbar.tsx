@@ -170,7 +170,7 @@ export function BuildListToolbar({
             drawerClassName="w-full max-w-none"
             stickyFooter
             showHeader={showFilterPanelHeader}
-            className="flex max-h-[min(36rem,calc(100dvh-2rem))] w-[min(28rem,calc(100vw-2rem))] flex-col gap-0 overflow-hidden p-0"
+            className="flex max-h-[min(36rem,calc(100dvh-2rem))] w-72 max-w-[calc(100vw-2rem)] flex-col gap-0 overflow-hidden p-0"
           >
             <div className="flex min-h-0 flex-1 flex-col">
               <div
