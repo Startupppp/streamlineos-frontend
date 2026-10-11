@@ -25,7 +25,9 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { PmPageShell } from "@/components/pm-chrome";
 import { CreatedSecretDialog } from "./git-created-secret-dialog";
-import { GitConnectionDialog, AddConnectionButton } from "./git-connection-dialog";
+import { GitConnectionDialog } from "./git-connection-dialog";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { PlusIcon } from "@animateicons/react/lucide";
 import { GitConnectionsContent } from "./git-connections-content";
 
 type IntegrationsTab = "connections" | "agent";
@@ -159,7 +161,7 @@ export function ProjectsGitIntegrationSettings({
         subtitle="Connect Git repositories to link commits and pull requests to tickets"
         actions={
           activeTab === "connections" && isOnline ? (
-            <AddConnectionButton onClick={handleOpenDialog} />
+            <AnimatedIconButton icon={PlusIcon} iconSize={14} iconClassName="mr-1" size="sm" onClick={handleOpenDialog}>Add connection</AnimatedIconButton>
           ) : null
         }
       >

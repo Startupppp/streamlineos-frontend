@@ -17,8 +17,9 @@ import {
 import { PageState } from "@/components/shared/page-state";
 import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { PlusIcon } from "@animateicons/react/lucide";
 import { AutomationCard } from "./automation-card";
-import { NewAutomationButton } from "./new-automation-button";
 import { AutomationSheet } from "./automation-sheet";
 import { ShortcutHelpDialog } from "@/components/shared/shortcut-help-dialog";
 import {
@@ -116,7 +117,11 @@ export function AutomationsPage({ projectId }: AutomationsPageProps) {
       title="Automations"
       subtitle="Automate repetitive actions with if-then rules"
       actions={
-        canManage ? <NewAutomationButton onClick={handleOpenNew} /> : undefined
+        canManage ? (
+          <AnimatedIconButton size="sm" icon={PlusIcon} iconSize={14} iconClassName="mr-1" onClick={handleOpenNew}>
+            New Automation
+          </AnimatedIconButton>
+        ) : undefined
       }
     >
       <PmPageShell>

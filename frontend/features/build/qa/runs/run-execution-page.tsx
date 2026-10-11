@@ -89,23 +89,6 @@ function ProgressBar({ counts }: { counts: TestRunCounts }) {
   );
 }
 
-function CompleteRunButton({ onClick, isPending }: { onClick: () => void; isPending: boolean }) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <LoadingButton
-      size="sm"
-      className="gap-1 text-dense"
-      onClick={onClick}
-      isPending={isPending}
-      loadingText="Completing…"
-      {...hoverHandlers}
-    >
-      <CircleCheckIcon ref={iconRef} size={14} />
-      Complete Run
-    </LoadingButton>
-  );
-}
-
 interface RunExecutionPageProps {
   projectId: number;
   runId: number;
@@ -113,6 +96,7 @@ interface RunExecutionPageProps {
 
 export function RunExecutionPage({ projectId, runId }: RunExecutionPageProps) {
   const qaHref = `/build/${projectId}/qa?tab=runs`;
+  const { iconRef: completeRunIconRef, hoverHandlers: completeRunHoverHandlers } = useAnimatedIcon();
   const canManage = useCan("build:qa:manage");
   const canExecute = useCan("build:qa:execute");
   const canCreateBug = useCan("build:bugs:create");
@@ -333,7 +317,17 @@ export function RunExecutionPage({ projectId, runId }: RunExecutionPageProps) {
       backHref={qaHref}
       actions={
         canManage && !isRunClosed ? (
-          <CompleteRunButton onClick={handleCompleteRun} isPending={updateRun.isPending} />
+          <LoadingButton
+            size="sm"
+            className="gap-1 text-dense"
+            onClick={handleCompleteRun}
+            isPending={updateRun.isPending}
+            loadingText="Completing…"
+            {...completeRunHoverHandlers}
+          >
+            <CircleCheckIcon ref={completeRunIconRef} size={14} />
+            Complete Run
+          </LoadingButton>
         ) : undefined
       }
     >

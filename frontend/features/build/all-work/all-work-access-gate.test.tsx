@@ -161,9 +161,6 @@ jest.mock("@/features/build/views/list-view", () => ({
 jest.mock("@/features/build/views/kanban-board", () => ({
   KanbanBoard: () => null,
 }));
-jest.mock("./project-chip", () => ({
-  ProjectChip: () => null,
-}));
 jest.mock("@/components/ui/truncated-text", () => ({
   TruncatedText: ({ text }: { text: string }) => <span>{text}</span>,
 }));

@@ -38,10 +38,9 @@ import {
 } from "@/components/pm-chrome";
 import { TEXT_BODY } from "@/lib/text-overflow";
 import { cn } from "@/lib/utils";
-import {
-  PortfolioActionsButton,
-  DetailSkeleton,
-} from "./portfolio-detail-helpers";
+import { DetailSkeleton } from "./portfolio-detail-helpers";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { EllipsisIcon } from "@animateicons/react/lucide";
 import { PortfolioLinkedProjectsSection } from "./portfolio-linked-projects-section";
 import { PortfolioLinkedProgramsSection } from "./portfolio-linked-programs-section";
 
@@ -194,7 +193,7 @@ function PortfolioDetailContent({ portfolioId }: Props) {
         canManage ? (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <PortfolioActionsButton />
+              <AnimatedIconButton icon={EllipsisIcon} iconSize={14} variant="outline">Actions</AnimatedIconButton>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={() => setEditOpen(true)}>

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useEffectEvent, useRef, useState } from "react"
 import { toast } from "sonner";
 import { Download, FileText, Trash2 } from "lucide-react";
 import { PlusIcon } from "@animateicons/react/lucide";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import {
   useProjectFiles,
   useUploadProjectFile,
@@ -50,15 +50,6 @@ function formatFileSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-function UploadButton({ onUpload }: { onUpload: () => void }) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <Button onClick={onUpload} {...hoverHandlers}>
-      <PlusIcon ref={iconRef} size={14} />
-      Upload file
-    </Button>
-  );
-}
 
 function FileDownloadButton({ projectId, file }: { projectId: number; file: ProjectFileRow }) {
   const [enabled, setEnabled] = useState(false);
@@ -242,7 +233,9 @@ export function FilesPage({ projectId }: FilesPageProps) {
               onChange={handleFileChange}
               aria-hidden="true"
             />
-            <UploadButton onUpload={handleUploadClick} />
+            <AnimatedIconButton icon={PlusIcon} iconSize={14} onClick={handleUploadClick}>
+              Upload file
+            </AnimatedIconButton>
           </>
         ) : undefined
       }

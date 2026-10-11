@@ -1,7 +1,7 @@
 "use client";
 
 import { type UseFormReturn } from "react-hook-form";
-import { PlusIcon } from "@animateicons/react/lucide";
+import { PlusIcon, XIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,7 +26,6 @@ import { cn } from "@/lib/utils";
 import { TRIGGER_EVENTS, ACTION_TYPES } from "@/hooks/api/build/automations";
 import type { ProjectAutomation } from "@/types/projects";
 import { AutomationValueInput } from "./automation-value-input";
-import { RemoveButton } from "./remove-button";
 import {
   type FormValues,
   CONDITION_FIELDS,
@@ -204,7 +203,7 @@ export function AutomationRulesForm({
                       </div>
                     )}
                   </div>
-                  <RemoveButton onClick={makeRemoveConditionHandler(idx)} />
+                  <AnimatedIconButton type="button" variant="ghost" aria-label="Remove" className="h-6 w-6 rounded text-muted-foreground hover:text-destructive" icon={XIcon} iconSize={14} onClick={makeRemoveConditionHandler(idx)} />
                 </div>
               ))}
             </div>
@@ -258,7 +257,7 @@ export function AutomationRulesForm({
                       />
                     </div>
                   </div>
-                  <RemoveButton onClick={makeRemoveActionHandler(idx)} />
+                  <AnimatedIconButton type="button" variant="ghost" aria-label="Remove" className="h-6 w-6 rounded text-muted-foreground hover:text-destructive" icon={XIcon} iconSize={14} onClick={makeRemoveActionHandler(idx)} />
                 </div>
               ))}
               {form.formState.errors.actions?.root && (

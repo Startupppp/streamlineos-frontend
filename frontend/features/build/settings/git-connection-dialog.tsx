@@ -5,8 +5,6 @@ import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ExternalLink } from "lucide-react";
-import { PlusIcon } from "@animateicons/react/lucide";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
@@ -186,12 +184,3 @@ export function GitConnectionDialog({
   );
 }
 
-export function AddConnectionButton({ onClick }: { onClick: () => void }) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <Button size="sm" onClick={onClick} {...hoverHandlers}>
-      <PlusIcon ref={iconRef} size={14} className="mr-1" />
-      Add connection
-    </Button>
-  );
-}

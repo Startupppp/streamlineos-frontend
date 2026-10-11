@@ -15,9 +15,10 @@ import {
 import { TEXT_BODY } from "@/lib/text-overflow";
 import { cn } from "@/lib/utils";
 import type { KeyResult, GoalDetail } from "@/hooks/api/goals";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { PlusIcon } from "@animateicons/react/lucide";
 import { KeyResultRow } from "@/features/build/goals/key-result-row";
 import { LinkRow } from "@/features/build/goals/link-row";
-import { AddLinkButton } from "@/features/build/goals/goal-detail-actions";
 
 interface GoalKeyResultsSectionProps {
   keyResults: GoalDetail["keyResults"];
@@ -87,7 +88,11 @@ export function GoalLinkedItemsSection({
             {links.length}
           </Badge>
         </div>
-        {canManage ? <AddLinkButton onClick={onOpenAddLink} /> : null}
+        {canManage ? (
+          <AnimatedIconButton size="sm" variant="outline" icon={PlusIcon} iconSize={14} iconClassName="mr-1" onClick={onOpenAddLink}>
+            Link
+          </AnimatedIconButton>
+        ) : null}
       </div>
       {links.length === 0 ? (
         <PmPanel className="flex min-h-0 flex-1 items-center justify-center border-border bg-card p-4 shadow-sm">

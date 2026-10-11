@@ -1,7 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { GoalOutcomesSection } from "./goal-detail-sections";
 
-jest.mock("./goal-detail-actions", () => ({ AddLinkButton: () => null }));
 
 const SOURCE = {
   id: 5,

@@ -1,8 +1,6 @@
 "use client";
 
-import { forwardRef, type MouseEvent, type ReactNode } from "react";
-import { Trash2Icon } from "@animateicons/react/lucide";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { type ReactNode } from "react";
 import { Badge } from "@/components/ui/badge";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import type { DataTableColumn } from "@/components/ui/data-table";
@@ -138,32 +136,3 @@ export function SubmissionMobileCard({
   );
 }
 
-interface DeleteSubmissionButtonProps {
-  submissionId: number;
-  onRequestDelete: (submissionId: number) => void;
-}
-
-export const DeleteSubmissionButton = forwardRef<
-  HTMLButtonElement,
-  DeleteSubmissionButtonProps
->(function DeleteSubmissionButton({ submissionId, onRequestDelete }, ref) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-
-  function handleClick(event: MouseEvent<HTMLButtonElement>) {
-    event.stopPropagation();
-    onRequestDelete(submissionId);
-  }
-
-  return (
-    <button
-      ref={ref}
-      type="button"
-      onClick={handleClick}
-      aria-label="Delete submission"
-      className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-status-danger-ink"
-      {...hoverHandlers}
-    >
-      <Trash2Icon ref={iconRef} size={14} />
-    </button>
-  );
-});

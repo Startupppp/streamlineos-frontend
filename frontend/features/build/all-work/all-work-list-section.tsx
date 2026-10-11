@@ -2,13 +2,14 @@
 
 import { memo, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { FolderKanban } from "lucide-react";
 import { ListView } from "@/features/build/views/list-view";
 import type { ListSelection } from "@/features/build/views/list-view-shared";
 import { PmPanel } from "@/components/pm-chrome";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import { ProjectChip } from "./project-chip";
+import { cn } from "@/lib/utils";
 import type { AllWorkTicket } from "@/types/projects";
 import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
 import { useNavigationLeave } from "@/components/shared/dirty-state-context";
@@ -76,6 +77,10 @@ const GroupSection = memo(function GroupSection({
   const projectId = group.projectId;
   const projectKey = group.projectKey ?? "";
 
+  function handleProjectLinkClick(e: React.MouseEvent) {
+    e.stopPropagation();
+  }
+
   return (
     <PmPanel className="overflow-hidden ring-1 ring-border/40">
       <div className="flex min-w-0 items-center gap-2.5 border-b border-border/60 bg-gradient-to-r from-muted/70 via-muted/30 to-transparent px-3 py-2.5 sm:px-4">
@@ -83,11 +88,17 @@ const GroupSection = memo(function GroupSection({
           <FolderKanban className="h-3.5 w-3.5" aria-hidden="true" />
         </span>
         {projectId !== undefined && (
-          <ProjectChip
-            projectId={projectId}
-            projectKey={projectKey}
-            projectName={group.label}
-          />
+          <Link
+            href={`/build/${projectId}`}
+            onClick={handleProjectLinkClick}
+            title={group.label}
+            className={cn(
+              "inline-flex shrink-0 items-center rounded-md px-1.5 py-0.5 text-micro font-normal tabular-nums",
+              "bg-primary/10 text-primary ring-1 ring-primary/10 transition-colors duration-150 hover:bg-primary/15 hover:ring-primary/20",
+            )}
+          >
+            {projectKey}
+          </Link>
         )}
         <div className="min-w-0 flex-1">
           <span className="sr-only">Project: </span>

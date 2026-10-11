@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import { ApiError } from "@/lib/api-envelope";
@@ -246,7 +246,7 @@ it("falls back to a readable label instead of rendering blank text for a run sta
   } as unknown as TestRun;
   mockUseTestRuns.mockReturnValue(baseQuery({ data: { data: [runWithUnknownStatus], hasMore: false, nextCursor: null } }));
   render(<TestRunsTab projectId={1} />);
-  expect(screen.getByText("in review")).toBeInTheDocument();
+  expect(screen.getAllByText("in review").length).toBeGreaterThan(0);
   expect(screen.queryByText("undefined")).not.toBeInTheDocument();
 });
 
@@ -284,7 +284,7 @@ it("opens the run from the mobile card so a populated execution is reachable wit
   };
   mockUseTestRuns.mockReturnValue(baseQuery({ data: { data: [run], hasMore: false, nextCursor: null } }));
   render(<TestRunsTab projectId={6} />);
-  fireEvent.click(screen.getByRole("button", { name: /QA verify regression run/i }));
+  fireEvent.click(screen.getByTestId("mobile-card").querySelector("[role='button']")!);
   expect(mockRouterPush).toHaveBeenCalledWith("/build/6/qa/runs/4");
 });
 
@@ -303,7 +303,11 @@ it("does not open the run when the mobile delete control is pressed", () => {
   };
   mockUseTestRuns.mockReturnValue(baseQuery({ data: { data: [run], hasMore: false, nextCursor: null } }));
   render(<TestRunsTab projectId={6} />);
-  fireEvent.click(screen.getByRole("button", { name: "Delete QA verify regression run" }));
+  fireEvent.click(
+    within(screen.getByTestId("mobile-card")).getByRole("button", {
+      name: "Delete QA verify regression run",
+    }),
+  );
   expect(mockRouterPush).not.toHaveBeenCalled();
 });
 

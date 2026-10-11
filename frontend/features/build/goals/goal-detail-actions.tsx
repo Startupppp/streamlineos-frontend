@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Pencil } from "lucide-react";
-import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
+import { Trash2Icon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 
 interface GoalDetailActionsProps {
@@ -30,18 +30,5 @@ export function GoalDetailActions({ onEdit, onDelete }: GoalDetailActionsProps) 
         <span className="hidden sm:inline">Delete</span>
       </Button>
     </div>
-  );
-}
-
-interface AddLinkButtonProps {
-  onClick: () => void;
-}
-
-export function AddLinkButton({ onClick }: AddLinkButtonProps) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <Button size="sm" variant="outline" onClick={onClick} {...hoverHandlers}>
-      <PlusIcon ref={iconRef} size={14} className="mr-1" /> Link
-    </Button>
   );
 }

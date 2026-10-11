@@ -2,12 +2,13 @@
 
 import { useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { KanbanBoard } from "@/features/build/views/kanban-board";
 import type { ListSelection } from "@/features/build/views/list-view-shared";
 import { PmPanel } from "@/components/pm-chrome";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import { ProjectChip } from "./project-chip";
+import { cn } from "@/lib/utils";
 import { toKanbanTicket, type TicketGroup } from "./all-work-ticket-utils";
 import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
 import { useNavigationLeave } from "@/components/shared/dirty-state-context";
@@ -40,10 +41,24 @@ function BoardGroupSection({
 
   if (projectId === undefined) return null;
 
+  function handleProjectLinkClick(e: React.MouseEvent) {
+    e.stopPropagation();
+  }
+
   return (
     <PmPanel className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
       <div className="flex shrink-0 min-w-0 items-center gap-2 border-b border-border/50 bg-muted/20 px-3 py-2">
-        <ProjectChip projectId={projectId} projectKey={projectKey} projectName={group.label} />
+        <Link
+          href={`/build/${projectId}`}
+          onClick={handleProjectLinkClick}
+          title={group.label}
+          className={cn(
+            "inline-flex shrink-0 items-center rounded-md px-1.5 py-0.5 text-micro font-normal tabular-nums",
+            "bg-primary/10 text-primary ring-1 ring-primary/10 transition-colors duration-150 hover:bg-primary/15 hover:ring-primary/20",
+          )}
+        >
+          {projectKey}
+        </Link>
         <TruncatedText text={group.label} className="text-label font-medium text-foreground" />
         <Badge
           variant="secondary"

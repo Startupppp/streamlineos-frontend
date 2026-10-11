@@ -36,7 +36,7 @@ import { MilestoneUpsertSheet } from "@/features/build/milestones/milestone-upse
 import { MilestoneCard } from "@/features/build/milestones/milestone-card";
 import { toMilestoneTargetDate } from "@/features/build/milestones/milestone-status";
 import { isPast, isToday } from "date-fns";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import {
   PmPageShell,
   PmSection,
@@ -68,16 +68,6 @@ const MILESTONE_FILTER_DEFINITIONS = [
 
 function readDateFilter(value: string): string | undefined {
   return /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : undefined;
-}
-
-function NewMilestoneButton({ onClick }: { onClick: () => void }) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <Button size="sm" className="gap-1.5" onClick={onClick} {...hoverHandlers}>
-      <PlusIcon ref={iconRef} size={14} />
-      New Milestone
-    </Button>
-  );
 }
 
 interface ProjectMilestonesPageProps {
@@ -191,7 +181,7 @@ export function ProjectMilestonesPage({
       subtitle="Key checkpoints and target dates for this project"
       actions={
         canManage ? (
-          <NewMilestoneButton onClick={actions.handleOpenCreate} />
+          <AnimatedIconButton icon={PlusIcon} size="sm" className="gap-1.5" onClick={actions.handleOpenCreate}>New Milestone</AnimatedIconButton>
         ) : undefined
       }
       filters={

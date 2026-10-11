@@ -43,35 +43,6 @@ interface MyWorkToolbarActionsProps {
   onViewChange: (next: ViewType) => void;
 }
 
-function GroupingSidebarButton({
-  showGroupingSidebar,
-  labeled,
-  onToggleSidebar,
-}: {
-  showGroupingSidebar: boolean;
-  labeled: boolean;
-  onToggleSidebar: () => void;
-}) {
-  return (
-    <AnimatedIconButton
-      type="button"
-      icon={LayoutListIcon}
-      iconSize={14}
-      variant="outline"
-      size={labeled ? "sm" : "icon"}
-      className={cn(
-        labeled ? "w-full justify-start gap-2" : "size-9 shrink-0",
-        showGroupingSidebar && "border-primary bg-primary/10 text-primary",
-      )}
-      aria-label="Toggle grouping sidebar"
-      aria-pressed={showGroupingSidebar}
-      onClick={onToggleSidebar}
-    >
-      {labeled ? "Grouping sidebar" : null}
-    </AnimatedIconButton>
-  );
-}
-
 function DesktopActions(props: MyWorkToolbarActionsProps) {
   return (
     <div className="flex shrink-0 items-center gap-1" data-testid="desktop-work-actions">
@@ -97,10 +68,19 @@ function DesktopActions(props: MyWorkToolbarActionsProps) {
         <TooltipProvider delayDuration={200}>
           <Tooltip>
             <TooltipTrigger asChild>
-              <GroupingSidebarButton
-                showGroupingSidebar={props.showGroupingSidebar}
-                labeled={false}
-                onToggleSidebar={props.onToggleSidebar}
+              <AnimatedIconButton
+                type="button"
+                icon={LayoutListIcon}
+                iconSize={14}
+                variant="outline"
+                size="icon"
+                className={cn(
+                  "size-9 shrink-0",
+                  props.showGroupingSidebar && "border-primary bg-primary/10 text-primary",
+                )}
+                aria-label="Toggle grouping sidebar"
+                aria-pressed={props.showGroupingSidebar}
+                onClick={props.onToggleSidebar}
               />
             </TooltipTrigger>
             <TooltipContent side="bottom" className="text-xs">Grouping sidebar</TooltipContent>
@@ -163,11 +143,22 @@ function CompactActions(props: MyWorkToolbarActionsProps) {
               onChange={props.onDisplayOptionsChange}
             />
           </section>
-          <GroupingSidebarButton
-            showGroupingSidebar={props.showGroupingSidebar}
-            labeled
-            onToggleSidebar={handleToggleSidebar}
-          />
+          <AnimatedIconButton
+            type="button"
+            icon={LayoutListIcon}
+            iconSize={14}
+            variant="outline"
+            size="sm"
+            className={cn(
+              "w-full justify-start gap-2",
+              props.showGroupingSidebar && "border-primary bg-primary/10 text-primary",
+            )}
+            aria-label="Toggle grouping sidebar"
+            aria-pressed={props.showGroupingSidebar}
+            onClick={handleToggleSidebar}
+          >
+            Grouping sidebar
+          </AnimatedIconButton>
         </> : null}
       </ResponsivePopoverContent>
     </ResponsivePopover>

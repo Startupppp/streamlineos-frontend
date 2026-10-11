@@ -1,76 +1,8 @@
 "use client";
 
-import { PlusIcon, XIcon, EllipsisIcon } from "@animateicons/react/lucide";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
-import { Button } from "@/components/ui/button";
-import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PmPageShell, PM_PANEL } from "@/components/pm-chrome";
 import { cn } from "@/lib/utils";
-
-export function UnlinkProjectButton({
-  projectName,
-  projectId,
-  isPending,
-  onUnlink,
-}: {
-  projectName: string;
-  projectId: number;
-  isPending: boolean;
-  onUnlink: (id: number) => void;
-}) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  function handleClick() {
-    onUnlink(projectId);
-  }
-  return (
-    <Button
-      variant="ghost"
-      size="icon"
-      className="w-7 shrink-0"
-      onClick={handleClick}
-      disabled={isPending}
-      aria-label={`Unlink ${projectName}`}
-      {...hoverHandlers}
-    >
-      <XIcon ref={iconRef} size={14} />
-    </Button>
-  );
-}
-
-export function LinkProjectButton({
-  disabled,
-  isPending,
-  onClick,
-}: {
-  disabled: boolean;
-  isPending: boolean;
-  onClick: () => void;
-}) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <LoadingButton
-      size="sm"
-      className="gap-1 text-xs"
-      onClick={onClick}
-      disabled={disabled}
-      isPending={isPending}
-      loadingText="Linking…"
-      {...hoverHandlers}
-    >
-      <PlusIcon ref={iconRef} size={12} /> Link
-    </LoadingButton>
-  );
-}
-
-export function PortfolioActionsButton() {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <Button variant="outline" {...hoverHandlers}>
-      <EllipsisIcon ref={iconRef} size={14} /> Actions
-    </Button>
-  );
-}
 
 export function DetailSkeleton() {
   return (

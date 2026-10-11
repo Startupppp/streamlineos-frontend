@@ -33,9 +33,6 @@ jest.mock("@/components/ui/truncated-text", () => ({
   TruncatedText: ({ text }: { text?: string | null }) => <span>{text}</span>,
 }));
 
-jest.mock("./project-chip", () => ({
-  ProjectChip: () => null,
-}));
 
 jest.mock("@/components/shared/format-ticket-key", () => ({
   getTicketDetailHref: () => "/build/1/tickets/1",

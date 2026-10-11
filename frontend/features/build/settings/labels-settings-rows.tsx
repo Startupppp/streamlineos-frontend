@@ -3,7 +3,7 @@
 import { useReducedMotion } from "framer-motion";
 import { motion } from "framer-motion";
 import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
-import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { resolveLabelColor } from "@/components/labels/label-colors";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
@@ -46,23 +46,6 @@ function DeleteLabelButton({
   );
 }
 
-function AddLabelButton({ onClick }: { onClick: () => void }) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-
-  return (
-    <Button
-      variant="outline"
-      size="sm"
-      onClick={onClick}
-      className="shrink-0 gap-1.5 text-xs"
-      {...hoverHandlers}
-    >
-      <PlusIcon ref={iconRef} size={14} />
-      Add Label
-    </Button>
-  );
-}
-
 export function LabelsHeader({
   showAdd,
   onAdd,
@@ -78,7 +61,18 @@ export function LabelsHeader({
           Manage labels for organizing tickets across this organization.
         </p>
       </div>
-      {showAdd ? <AddLabelButton onClick={onAdd} /> : null}
+      {showAdd ? (
+        <AnimatedIconButton
+          icon={PlusIcon}
+          iconSize={14}
+          variant="outline"
+          size="sm"
+          className="shrink-0 gap-1.5 text-xs"
+          onClick={onAdd}
+        >
+          Add Label
+        </AnimatedIconButton>
+      ) : null}
     </div>
   );
 }

@@ -172,6 +172,11 @@ Post-fix browser reload is blocked on a fresh sign-in.
 - Unmark: 200, toast "Duplicate mark removed", frequency 2 to 1 with no GET. Re-marking returned it to 2.
 - Opportunity link: `POST /build/managed-products/39/opportunities/1/evidence` and `/2/evidence` — 201, toast "Linked to opportunity". The pane lists "#1 #2". Each link opens Insights at `?view=discovery&opportunity=<id>`, which errors until BVG-INS-001 is deployed.
 - Route to Intake: the project picker opens for submission 94, lists BQS and STRE, and keeps Route disabled until a project is chosen. The request returns the pre-deploy 404 (BVG-FB-003).
+- 2026-10-11 evening, signed in again. Overview for product 39 shows owner adityachalla01, Build lifecycle, Record opportunity (sheet opens, Cancel does not create), Needs attention, and the signal-to-outcome track.
+- Feedback inbox shows three rows with channel and status badges. Route to Intake lists Build QA Sandbox (BQS) and StreamlineOS (STRE); Route stays disabled until a project is chosen. After choosing BQS and clicking Route the dialog closed; a success toast was not still on screen, so the write is not counted as proven.
+- Collect via Feedbucket offers Create product widget. The widget was not created.
+- Linked Projects filters include Team, Owner, Customer, Contribution, and dates. Customer offers only All customers (BVG-BLOCK-004).
+- Goals shows QA BV Goal and testing, both owned by adityachalla01, with pagination.
 
 ## Delivery checklist
 

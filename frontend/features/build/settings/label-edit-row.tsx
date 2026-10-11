@@ -3,7 +3,7 @@
 import { useCallback } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { CheckIcon, XIcon } from "@animateicons/react/lucide";
-import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Input } from "@/components/ui/input";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { LabelColorPicker } from "@/components/labels";
@@ -21,52 +21,6 @@ interface LabelEditRowProps {
   onCancel: () => void;
 }
 
-function SaveLabelButton({
-  disabled,
-  isPending,
-  onClick,
-}: {
-  disabled: boolean;
-  isPending: boolean;
-  onClick: () => void;
-}) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-
-  return (
-    <LoadingButton
-      type="button"
-      size="sm"
-      className="gap-1.5 text-xs"
-      onClick={onClick}
-      disabled={disabled}
-      isPending={isPending}
-      loadingText="Saving…"
-      {...hoverHandlers}
-    >
-      <CheckIcon ref={iconRef} size={14} />
-      Save
-    </LoadingButton>
-  );
-}
-
-function CancelLabelButton({ onClick }: { onClick: () => void }) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-
-  return (
-    <Button
-      type="button"
-      size="sm"
-      variant="outline"
-      className="gap-1.5 text-xs"
-      onClick={onClick}
-      {...hoverHandlers}
-    >
-      <XIcon ref={iconRef} size={14} />
-      Cancel
-    </Button>
-  );
-}
-
 export function LabelEditRow({
   name,
   color,
@@ -76,6 +30,7 @@ export function LabelEditRow({
   onSave,
   onCancel,
 }: LabelEditRowProps) {
+  const { iconRef: saveIconRef, hoverHandlers: saveHoverHandlers } = useAnimatedIcon();
   const reduceMotion = useReducedMotion();
   const resolvedColor = resolveLabelColor(color);
   const trimmedName = name.trim();
@@ -153,8 +108,30 @@ export function LabelEditRow({
       />
 
       <div className="flex items-center justify-end gap-2 pt-0.5">
-        <CancelLabelButton onClick={onCancel} />
-        <SaveLabelButton disabled={!canSave} isPending={isPending} onClick={onSave} />
+        <AnimatedIconButton
+          type="button"
+          icon={XIcon}
+          iconSize={14}
+          size="sm"
+          variant="outline"
+          className="gap-1.5 text-xs"
+          onClick={onCancel}
+        >
+          Cancel
+        </AnimatedIconButton>
+        <LoadingButton
+          type="button"
+          size="sm"
+          className="gap-1.5 text-xs"
+          onClick={onSave}
+          disabled={!canSave}
+          isPending={isPending}
+          loadingText="Saving…"
+          {...saveHoverHandlers}
+        >
+          <CheckIcon ref={saveIconRef} size={14} />
+          Save
+        </LoadingButton>
       </div>
     </motion.div>
   );

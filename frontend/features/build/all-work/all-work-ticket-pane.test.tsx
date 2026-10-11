@@ -19,9 +19,6 @@ jest.mock("@/components/pm-chrome", () => ({
   PmPanel: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
-jest.mock("./project-chip", () => ({
-  ProjectChip: () => null,
-}));
 
 jest.mock("@/components/ui/badge", () => ({
   Badge: ({ children }: { children: React.ReactNode }) => <span>{children}</span>,

@@ -1,18 +1,17 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, type MouseEvent } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Trash2Icon } from "@animateicons/react/lucide";
 import { useTestRuns, useDeleteTestRun } from "@/hooks/api/build/qa";
 import { useCan } from "@/hooks/api/access";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { useBuildCursorPager } from "@/features/build/shared/use-build-cursor-pager";
 import type { TestRunListItem } from "@/types/projects";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -130,35 +129,6 @@ function RunProgress({ run }: { run: TestRunListItem }) {
   );
 }
 
-function RunDeleteButton({
-  run,
-  onDelete,
-}: {
-  run: TestRunListItem;
-  onDelete: (r: TestRunListItem) => void;
-}) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  const handleDelete = useCallback(
-    (event: MouseEvent<HTMLButtonElement>) => {
-      event.stopPropagation();
-      onDelete(run);
-    },
-    [run, onDelete],
-  );
-  return (
-    <Button
-      variant="ghost"
-      size="icon"
-      className="h-6 w-6 text-muted-foreground hover:text-destructive"
-      aria-label={`Delete ${run.name}`}
-      onClick={handleDelete}
-      {...hoverHandlers}
-    >
-      <Trash2Icon ref={iconRef} size={14} />
-    </Button>
-  );
-}
-
 function RunMobileCard({
   run,
   canManage,
@@ -171,6 +141,12 @@ function RunMobileCard({
   onDelete: (run: TestRunListItem) => void;
 }) {
   const handleOpen = useCallback(() => onOpen(run), [onOpen, run]);
+
+  function handleDeleteClick(event: React.MouseEvent<HTMLButtonElement>) {
+    event.stopPropagation();
+    onDelete(run);
+  }
+
   return (
     <BuildMobileCard
       eyebrow={`Run #${run.runNumber}`}
@@ -182,7 +158,15 @@ function RunMobileCard({
       ]}
       actions={
         canManage ? (
-          <RunDeleteButton run={run} onDelete={onDelete} />
+          <AnimatedIconButton
+            icon={Trash2Icon}
+            iconSize={14}
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6 text-muted-foreground hover:text-destructive"
+            aria-label={`Delete ${run.name}`}
+            onClick={handleDeleteClick}
+          />
         ) : null
       }
       onClick={handleOpen}
@@ -353,10 +337,23 @@ export function TestRunsTab({ projectId, createNonce = 0 }: TestRunsTabProps) {
         key: "actions",
         header: "Actions",
         headerClassName: "sr-only",
-        cell: (row) =>
-          canManage ? (
-            <RunDeleteButton run={row} onDelete={handleDeleteRow} />
-          ) : null,
+        cell: (row) => {
+          function handleDeleteClick(event: React.MouseEvent<HTMLButtonElement>) {
+            event.stopPropagation();
+            handleDeleteRow(row);
+          }
+          return canManage ? (
+            <AnimatedIconButton
+              icon={Trash2Icon}
+              iconSize={14}
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 text-muted-foreground hover:text-destructive"
+              aria-label={`Delete ${row.name}`}
+              onClick={handleDeleteClick}
+            />
+          ) : null;
+        },
         className: "w-[40px]",
       },
     ],

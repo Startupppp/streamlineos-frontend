@@ -1,6 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { PlusIcon, XIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import { TablePagination } from "@/components/ui/table-pagination";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -18,10 +22,6 @@ import {
 } from "@/components/pm-chrome";
 import { TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { cn } from "@/lib/utils";
-import {
-  UnlinkProjectButton,
-  LinkProjectButton,
-} from "./portfolio-detail-helpers";
 
 interface LinkedProject {
   id: number;
@@ -70,6 +70,8 @@ export function PortfolioLinkedProjectsSection({
   pager,
   onNext,
 }: PortfolioLinkedProjectsSectionProps) {
+  const { iconRef: linkIconRef, hoverHandlers: linkHoverHandlers } = useAnimatedIcon();
+
   return (
     <PmSection index={1} className="space-y-3">
       <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
@@ -91,11 +93,17 @@ export function PortfolioLinkedProjectsSection({
                 ))}
               </SelectContent>
             </Select>
-            <LinkProjectButton
+            <LoadingButton
+              size="sm"
+              className="gap-1 text-xs"
+              onClick={onLink}
               disabled={!linkProjectId}
               isPending={isLinkPending}
-              onClick={onLink}
-            />
+              loadingText="Linking…"
+              {...linkHoverHandlers}
+            >
+              <PlusIcon ref={linkIconRef} size={12} /> Link
+            </LoadingButton>
           </div>
         ) : null}
       </div>
@@ -111,37 +119,46 @@ export function PortfolioLinkedProjectsSection({
         </PmPanel>
       ) : (
         <PmPanel>
-          {linkedProjects.map((proj) => (
-            <div key={proj.id} className={PM_ROW}>
-              <span className="shrink-0 font-mono text-xs text-muted-foreground">
-                {proj.key}
-              </span>
-              <Link
-                href={`/build/${proj.id}`}
-                className={cn(
-                  TEXT_ONE_LINE,
-                  "flex-1 text-sm font-medium text-foreground hover:text-primary",
-                )}
-                title={proj.name}
-              >
-                {proj.name}
-              </Link>
-              <Badge
-                variant="outline"
-                className="shrink-0 px-1.5 py-0.5 text-micro"
-              >
-                {proj.status}
-              </Badge>
-              {canManage ? (
-                <UnlinkProjectButton
-                  projectName={proj.name}
-                  projectId={proj.id}
-                  isPending={isUnlinkPending}
-                  onUnlink={onUnlink}
-                />
-              ) : null}
-            </div>
-          ))}
+          {linkedProjects.map((proj) => {
+            function handleUnlinkProject() {
+              onUnlink(proj.id);
+            }
+            return (
+              <div key={proj.id} className={PM_ROW}>
+                <span className="shrink-0 font-mono text-xs text-muted-foreground">
+                  {proj.key}
+                </span>
+                <Link
+                  href={`/build/${proj.id}`}
+                  className={cn(
+                    TEXT_ONE_LINE,
+                    "flex-1 text-sm font-medium text-foreground hover:text-primary",
+                  )}
+                  title={proj.name}
+                >
+                  {proj.name}
+                </Link>
+                <Badge
+                  variant="outline"
+                  className="shrink-0 px-1.5 py-0.5 text-micro"
+                >
+                  {proj.status}
+                </Badge>
+                {canManage ? (
+                  <AnimatedIconButton
+                    icon={XIcon}
+                    iconSize={14}
+                    variant="ghost"
+                    size="icon"
+                    className="w-7 shrink-0"
+                    onClick={handleUnlinkProject}
+                    disabled={isUnlinkPending}
+                    aria-label={`Unlink ${proj.name}`}
+                  />
+                ) : null}
+              </div>
+            );
+          })}
           <TablePagination
             mode="cursor"
             rowCount={linkedProjects.length}
