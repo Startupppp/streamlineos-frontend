@@ -24,21 +24,21 @@ Mirror ClickUp deep pattern: surface → what Linear does → Design take. Cite 
 
 | # | Surface | Linear (free walk) | Design take for Build | Gate / evidence |
 |---|---------|--------------------|----------------------|-----------------|
-| 1 | **Inbox** | Unread badge + list/detail split; empty detail until select | **ADOPT** first-class notification inbox with unread + deep links | Free · `evidence/inbox.png` · BG-08 |
-| 2 | **My issues** | Assigned / Created / Subscribed / Activity tabs; empty Assigned + Create CTA | **ADOPT** personal work tabs beyond single assignee list | Free · `evidence/my-issues.png` · BG-09 |
-| 3 | **Projects** | Workspace All projects empty; New project + Documentation | **ADOPT** project shell + list + docs entry (parity check) | Free · `evidence/projects.png` · BG-10 |
-| 4 | **Views / Custom Views** | WS + team Views; Issues/Projects tabs; New view builder (name/desc/scope) — opened & cancelled | **ADOPT** named saved views (personal/shared lifecycle) | Free · `evidence/views.png`, `custom-view-builder.png` · BG-11 · Completeness Next #31 |
-| 5 | **Agent** | New chat · Ask Linear · Skills · example prompts; Agent Enabled; Usage $0.00 | **ADAPT** safe auditable assistant Later; **AVOID** day-1 “Agent = Code Intelligence” | Agent free-ish · Code Intelligence **Business** · `evidence/agent.png`, `ai-agents.png` · BG-14/22 |
-| 6 | **Team overview** | Overview / Documents / Members; resources + links to Issues/Projects/Views | **ADOPT** lightweight team home + resource links | Free · `evidence/team-overview.png` |
-| 7 | **Team Documents** | Empty team docs; New/Create document | **AVOID** Freeze Docs hub sprawl; **SHIP** linked project brief instead (same AVOID as ClickUp Docs) | Free · `evidence/team-documents.png` · BG-13 |
-| 8 | **Cycles** | Dedicated Cycles route; “This team has no cycles.” — no paywall on page | **ADOPT** cycle nav + honest no-cycles empty **before** create/edit; deepen active-cycle chrome (UX-024) Completeness Next | Free · `evidence/cycles.png` · BG-12 |
-| 9 | **Integrations / GitHub** | GitHub detail: PR workflows, review, sync, Agent codebase; Enable visible (not clicked) | **ADAPT** GitHub issue/PR linking + small discoverable catalog | Free surface · `evidence/github-settings.png` · BG-15 |
-| 10 | **Integrations catalog** | Searchable catalog: Essentials, Agents, AI clients, Engineering, Automations, Analytics… | **ADAPT** small free catalog; don’t clone Linear breadth | Free · `evidence/integrations-catalog.png` · BG-15/21 |
-| 11 | **Issue Templates** | “No issue templates” + New template (Project Templates in nav) | **ADOPT** reusable issue templates with **no paid prerequisite** | Free · `evidence/issue-templates.png` · BG-16 |
-| 12 | **SLAs** | Copy + “available on Business and Enterprise”; Start free trial; Add rule **disabled** | **AVOID** treating Business SLA as day-1 table-stakes / freelancer desperation; **SHIP** transparent free deadline/risk badges with limits (BUILD ADVANTAGE framing) | **Business+** · `evidence/slas.png` · BG-20 |
-| 13 | **Initiatives** | Enable Initiatives **off**; update controls inactive while disabled | **AVOID** day-1 Initiatives clone; product decision — free strategy layer or explicit defer (BG-17) | Disabled on walk · `evidence/initiatives.png` |
-| 14 | **Asks** | Structured Slack/email intake; “available on Business or Enterprise”; Start free trial only | **AVOID** Business Asks as day-1 desperation; **SHIP** free structured intake / public Form (Completeness Next #46) as BUILD ADVANTAGE | **Business+** · `evidence/asks.png` · BG-19 |
-| 15 | **AI & Agents** | Linear Agent Enabled; Coding sessions “Available on Basic”; Code Intelligence “Available on Business”; Loops Business banner | **ADAPT** packaging honesty: basic agent free-ok; reserve heavy code intelligence for deliberate paid boundary — **not** freelancer day-1 | Code Intelligence **Business** · `evidence/ai-agents.png` · BG-22 |
+| 1 | **Inbox** | Unread badge + list/detail split; empty detail until select | **ADOPT** first-class notification inbox with unread + deep links | Free · · BG-08 |
+| 2 | **My issues** | Assigned / Created / Subscribed / Activity tabs; empty Assigned + Create CTA | **ADOPT** personal work tabs beyond single assignee list | Free · · BG-09 |
+| 3 | **Projects** | Workspace All projects empty; New project + Documentation | **ADOPT** project shell + list + docs entry (parity check) | Free · · BG-10 |
+| 4 | **Views / Custom Views** | WS + team Views; Issues/Projects tabs; New view builder (name/desc/scope) — opened & cancelled | **ADOPT** named saved views (personal/shared lifecycle) | Free · · BG-11 · Completeness Next #31 |
+| 5 | **Agent** | New chat · Ask Linear · Skills · example prompts; Agent Enabled; Usage $0.00 | **ADAPT** safe auditable assistant Later; **AVOID** day-1 “Agent = Code Intelligence” | Agent free-ish · Code Intelligence **Business** · · BG-14/22 |
+| 6 | **Team overview** | Overview / Documents / Members; resources + links to Issues/Projects/Views | **ADOPT** lightweight team home + resource links | Free · |
+| 7 | **Team Documents** | Empty team docs; New/Create document | **AVOID** Freeze Docs hub sprawl; **SHIP** linked project brief instead (same AVOID as ClickUp Docs) | Free · · BG-13 |
+| 8 | **Cycles** | Dedicated Cycles route; “This team has no cycles.” — no paywall on page | **ADOPT** cycle nav + honest no-cycles empty **before** create/edit; deepen active-cycle chrome (UX-024) Completeness Next | Free · · BG-12 |
+| 9 | **Integrations / GitHub** | GitHub detail: PR workflows, review, sync, Agent codebase; Enable visible (not clicked) | **ADAPT** GitHub issue/PR linking + small discoverable catalog | Free surface · · BG-15 |
+| 10 | **Integrations catalog** | Searchable catalog: Essentials, Agents, AI clients, Engineering, Automations, Analytics… | **ADAPT** small free catalog; don’t clone Linear breadth | Free · · BG-15/21 |
+| 11 | **Issue Templates** | “No issue templates” + New template (Project Templates in nav) | **ADOPT** reusable issue templates with **no paid prerequisite** | Free · · BG-16 |
+| 12 | **SLAs** | Copy + “available on Business and Enterprise”; Start free trial; Add rule **disabled** | **AVOID** treating Business SLA as day-1 table-stakes / freelancer desperation; **SHIP** transparent free deadline/risk badges with limits (BUILD ADVANTAGE framing) | **Business+** · · BG-20 |
+| 13 | **Initiatives** | Enable Initiatives **off**; update controls inactive while disabled | **AVOID** day-1 Initiatives clone; product decision — free strategy layer or explicit defer (BG-17) | Disabled on walk · |
+| 14 | **Asks** | Structured Slack/email intake; “available on Business or Enterprise”; Start free trial only | **AVOID** Business Asks as day-1 desperation; **SHIP** free structured intake / public Form (Completeness Next #46) as BUILD ADVANTAGE | **Business+** · · BG-19 |
+| 15 | **AI & Agents** | Linear Agent Enabled; Coding sessions “Available on Basic”; Code Intelligence “Available on Business”; Loops Business banner | **ADAPT** packaging honesty: basic agent free-ok; reserve heavy code intelligence for deliberate paid boundary — **not** freelancer day-1 | Code Intelligence **Business** · · BG-22 |
 
 **Non-filter UI-verified count = 15** (CI PAGE-INVENTORY). Excludes route probes below.
 
@@ -46,9 +46,9 @@ Mirror ClickUp deep pattern: surface → what Linear does → Design take. Cite 
 
 | Probe | UI result | Design note | Evidence |
 |-------|-----------|-------------|----------|
-| **Triage** `/team/TAR/triage` | Redirect → All issues; no separate Triage queue/controls | Availability observation only — **not** proof Linear lacks triage. Completeness Next still **SHIP** Triage ritual (UX-029) from docs + product need; walk did **not** UI-verify Accept/Decline/Snooze on free WS | `evidence/triage-redirect-all-issues.png` |
-| **Roadmap** team + WS | Team Roadmap **Not found**; WS `/roadmap` → Projects | Do not market “Linear has no roadmap” universally; free WS had no roadmap artifact | `evidence/not-found-insights-roadmap.png` |
-| **Insights** | `/insights` **Not found**; analytics via Integrations add-ons | Native free insights/dashboard = BUILD ADVANTAGE opportunity (BG-18) — not HAVE | `evidence/not-found-insights-roadmap.png` |
+| **Triage** `/team/TAR/triage` | Redirect → All issues; no separate Triage queue/controls | Availability observation only — **not** proof Linear lacks triage. Completeness Next still **SHIP** Triage ritual (UX-029) from docs + product need; walk did **not** UI-verify Accept/Decline/Snooze on free WS | |
+| **Roadmap** team + WS | Team Roadmap **Not found**; WS `/roadmap` → Projects | Do not market “Linear has no roadmap” universally; free WS had no roadmap artifact | |
+| **Insights** | `/insights` **Not found**; analytics via Integrations add-ons | Native free insights/dashboard = BUILD ADVANTAGE opportunity (BG-18) — not HAVE | |
 
 ## Free-tier / Business+ gates — Design packaging rules
 

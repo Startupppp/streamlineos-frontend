@@ -48,10 +48,10 @@ Legend: **Hypothesis** = not yet confirmed on a signed-in Direct page · **Build
 
 | Pattern | Verdict | Notes | Evidence |
 |---------|---------|-------|----------|
-| Active-cycle chrome (scope, progress, focus) | **ADOPT** from Linear | Issue↔cycle link exists; chrome shallow; Cycles route + no-cycles empty **Walk-confirmed** free | UX-024 · `linear/evidence/cycles.png` |
+| Active-cycle chrome (scope, progress, focus) | **ADOPT** from Linear | Issue↔cycle link exists; chrome shallow; Cycles route + no-cycles empty **Walk-confirmed** free | UX-024 · |
 | Epic as first-class filter + panel | **ADOPT** | Issue↔epic VERIFIED; Epic-relation filter missing | UX-027 · Build + Hypothesis |
-| Release membership on issues | **ADOPT** filter/membership honesty | Jira free team-managed: Affects versions in Filters More **yes**; Releases/Versions/Components surface **no** (routes→Details). UX-025 ≠ “match Releases module” | UX-025 · `jira/UX-NOTES.md` · filters-basic-more-options.png |
-| Program↔project membership | **ADOPT** | Jira Plans directory **empty** (“No plans yet”) — shell only, not filled Plans; Build UX-028 = real membership | UX-028 · `jira/evidence/plans.png` |
+| Release membership on issues | **ADOPT** filter/membership honesty | Jira free team-managed: Affects versions in Filters More **yes**; Releases/Versions/Components surface **no** (routes→Details). UX-025 ≠ “match Releases module” | UX-025 · `jira/UX-NOTES.md` · |
+| Program↔project membership | **ADOPT** | Jira Plans directory **empty** (“No plans yet”) — shell only, not filled Plans; Build UX-028 = real membership | UX-028 · |
 | Milestone↔issue linking | **ADOPT** | Census BEHIND | Milestones · Build-proven |
 
 ## 6. Filters & views
@@ -60,7 +60,7 @@ Legend: **Hypothesis** = not yet confirmed on a signed-in Direct page · **Build
 |---------|---------|-------|----------|
 | Shared FilterBar tokens (Status/Owner/Health) | **ADAPT** | Consolidate; keep chip UX | Themes #2 · Build-proven |
 | Labels filter on issues | **ADOPT** | Missing vs Jira/ClickUp | UX-026 · Build-proven |
-| Saved views / named filters | **ADOPT** | Linear Custom Views builder + ClickUp Save **Walk-confirmed** | FILTERS · `linear/evidence/custom-view-builder.png` |
+| Saved views / named filters | **ADOPT** | Linear Custom Views builder + ClickUp Save **Walk-confirmed** | FILTERS · |
 | Display density controls | **ADAPT** | Keep; align with Directs | Themes #2 |
 
 ## 7. Templates & activation packs
@@ -101,30 +101,30 @@ Legend: **Hypothesis** = not yet confirmed on a signed-in Direct page · **Build
 
 | Pattern | Verdict | Notes | Evidence |
 |---------|---------|-------|----------|
-| Business+ SLA / Asks as day-1 table-stakes | **AVOID** | Free walk: SLA Add rule disabled; Asks trial-only — not freelancer desperation | `linear/evidence/slas.png`, `asks.png` |
-| Code Intelligence as day-1 AI | **AVOID** | Explicitly Business; Agent Enabled + Coding sessions Basic ≠ Code Intelligence | `linear/evidence/ai-agents.png` |
+| Business+ SLA / Asks as day-1 table-stakes | **AVOID** | Free walk: SLA Add rule disabled; Asks trial-only — not freelancer desperation | |
+| Code Intelligence as day-1 AI | **AVOID** | Explicitly Business; Agent Enabled + Coding sessions Basic ≠ Code Intelligence | |
 | Free structured intake / public Form | **ADOPT** (SHIP) | Asks Business+ → Build free Form Completeness Next | BG-19 · Top15 #46 |
 | Free deadline/risk honesty (not full SLA suite) | **ADAPT** | Transparent limits; don’t clone Linear Business SLA | BG-20 · SHIP #99/#107 |
-| Notification Inbox unread + list/detail | **ADOPT** | Linear Inbox free | `linear/evidence/inbox.png` |
-| My-work tabs (Assigned/Created/Subscribed) | **ADOPT** | Beyond single assignee filter | `linear/evidence/my-issues.png` |
-| Team Documents / Docs hub in Freeze | **AVOID** sprawl | Free Docs exist; SHIP linked project brief instead | `linear/evidence/team-documents.png` |
-| Initiatives / Roadmap as day-1 strategy | **AVOID** / defer | Initiatives off; Roadmap/Insights Not found on free WS | `initiatives.png`, `not-found-insights-roadmap.png` |
-| Triage ritual (Accept/Decline/Snooze) | **ADOPT** Completeness Next | Free WS Triage **redirected** to All issues — ritual still SHIP; surface not UI-verified here | `triage-redirect-all-issues.png` · UX-029 |
+| Notification Inbox unread + list/detail | **ADOPT** | Linear Inbox free | |
+| My-work tabs (Assigned/Created/Subscribed) | **ADOPT** | Beyond single assignee filter | |
+| Team Documents / Docs hub in Freeze | **AVOID** sprawl | Free Docs exist; SHIP linked project brief instead | |
+| Initiatives / Roadmap as day-1 strategy | **AVOID** / defer | Initiatives off; Roadmap/Insights Not found on free WS | |
+| Triage ritual (Accept/Decline/Snooze) | **ADOPT** Completeness Next | Free WS Triage **redirected** to All issues — ritual still SHIP; surface not UI-verified here | UX-029 |
 
 ## 12. Free-tier packaging (Jira deep 2026-10-01)
 
 | Pattern | Verdict | Notes | Evidence |
 |---------|---------|-------|----------|
 | Company-managed Releases/Components as free day-1 | **AVOID** | This walk: versions/components routes → Details; no Releases nav | `jira/` PAGE-INVENTORY |
-| UX-025 = “match Jira Releases module” | **AVOID** claim | Completeness Next = release **membership + filter honesty**; Affects versions in More picker only | filters-basic-more-options.png · UX-025 |
-| Filled Plans / capacity as VERIFIED | **AVOID** | Plans = “No plans yet” + Create — empty shell | `jira/evidence/plans.png` |
-| Promote Reports that 404 | **AVOID** | Summary Reports CTA → 404 here | `jira/evidence/summary.png` |
-| Backlog/Sprints dead-end nav | **AVOID** | Backlog 404; Sprints “Requires a backlog” | `features-settings.png` |
-| Confluence Docs hub in Freeze | **AVOID** sprawl | Upsell empty; no payment opened — SHIP linked brief | `jira/evidence/docs.png` |
-| Opinionated board + list + summary KPIs | **ADOPT** | Free Kanban + List + Summary UI-VERIFIED | board-kanban / list / summary.png |
-| Automation recipes + audit + usage | **ADOPT** | Flows/Templates/Usage free | `jira/evidence/automation.png` |
-| Dashboards Create + share metadata | **ADOPT** | Free dashboards directory | `jira/evidence/dashboards.png` |
-| Marketplace 1000-app clone | **ADAPT** curated | Small catalog + free/paid labels | `jira/evidence/marketplace.png` |
+| UX-025 = “match Jira Releases module” | **AVOID** claim | Completeness Next = release **membership + filter honesty**; Affects versions in More picker only | UX-025 |
+| Filled Plans / capacity as VERIFIED | **AVOID** | Plans = “No plans yet” + Create — empty shell | |
+| Promote Reports that 404 | **AVOID** | Summary Reports CTA → 404 here | |
+| Backlog/Sprints dead-end nav | **AVOID** | Backlog 404; Sprints “Requires a backlog” | |
+| Confluence Docs hub in Freeze | **AVOID** sprawl | Upsell empty; no payment opened — SHIP linked brief | |
+| Opinionated board + list + summary KPIs | **ADOPT** | Free Kanban + List + Summary UI-VERIFIED |  |
+| Automation recipes + audit + usage | **ADOPT** | Flows/Templates/Usage free | |
+| Dashboards Create + share metadata | **ADOPT** | Free dashboards directory | |
+| Marketplace 1000-app clone | **ADAPT** curated | Small catalog + free/paid labels | |
 | Forms as Jira free table-stakes | **AVOID** invent | Forms **not** in settings nav this walk; SHIP free public Form Completeness Next | FEATURES Forms § |
 
 ## Fold cadence

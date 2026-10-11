@@ -20,15 +20,3 @@ The existing Chrome session was still signed in. Active issues loaded successful
 - No paid feature, checkout, or upgrade flow was opened.
 - No login, OTP, CAPTCHA, or Error 9 occurred during this walk.
 
-## Evidence
-
-- `evidence/filters-active.png`
-- `evidence/filters-field-menu.png`
-- `evidence/filters-status-options.png`
-- `evidence/filters-relations-options.png`
-- `evidence/filters-date-custom.png`
-- `evidence/filters-advanced-empty.png`
-- `evidence/filters-advanced-and.png`
-- `evidence/filters-advanced-nested.png`
-- `evidence/custom-views-empty.png`
-- `evidence/custom-view-builder.png`

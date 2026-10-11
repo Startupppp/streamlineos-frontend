@@ -51,12 +51,5 @@ Switched only the Build scope to organization `All of Build` (org header remaine
 
 ## Evidence files
 
-- `approvals-empty.webp` — project Approvals empty state and filters
-- `approvals-request-form.webp` — cancellable Request Approval form
-- `org-approvals-empty.webp` — organization Approvals empty state, search/filters, counters
-- `budget-empty.webp` — project Budget empty state and summary cards
-- `budget-edit-form.webp` — cancellable Set Budget editor
-- `org-more-tools.webp` — organization More tools list (no Budget)
-- `org-budget-search-none.webp` — organization More tools search `Budget` showing “No matching tools”
 
 No OTP, sign-out, membership/role, Client Access, delete, or payment/spend flow was entered.

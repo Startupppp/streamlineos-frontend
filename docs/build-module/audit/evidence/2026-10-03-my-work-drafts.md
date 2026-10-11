@@ -44,7 +44,7 @@ The coordinator tested the local frontend at `16c370453` using the existing auth
 | 375 px mobile Drafts → Tickets | Section navigation worked; bottom navigation used My Work. Document scroll width equaled 375 px. | Full mobile actions, touch targets, focus, and real device testing remain unverified. |
 | Mobile Tickets search `QA-070` | URL `q` updated; one matching row appeared. Its native ticket link carried the same encoded My Work search return context. Scroll width remained 375 px. | Search denial/tenant equivalence, other filters, and successful detail return remain unverified. |
 
-Screenshots: [Drafts desktop](2026-10-03-browser/my-work-drafts-desktop.jpg), [ticket read error](2026-10-03-browser/my-work-draft-ticket-error.jpg), [Drafts at 375 px](2026-10-03-browser/my-work-drafts-mobile-375.jpg), and [mobile search](2026-10-03-browser/my-work-search-mobile-375.jpg). The temporary viewport override was reset. No draft/comment deletion, submission, ticket mutation, or business-record change was performed by these browser checks.
+The temporary viewport override was reset. No draft/comment deletion, submission, ticket mutation, or business-record change was performed by these browser checks.
 
 ## Reviewed row-safety follow-up
 
@@ -52,7 +52,7 @@ Frontend `9c6622b44` changes the owned draft row to a native canonical Link with
 
 At this revision, the coordinator verified the saved row exposes a native canonical link carrying the retained My Work search/section return context. Middle-click opened a separate ticket tab and left the source Drafts URL intact. The ticket tab still failed its deployed project read; this verifies native new-tab navigation, not successful ticket detail loading. The coordinator closed that temporary tab. A read-only DOM check confirmed the delete button is not inside the link. Clicking Clear all drafts opened the permanent-deletion dialog with no fabricated capped-array count; Cancel restored the saved row and focus. The final deletion action was not executed.
 
-Screenshots: [clear-all confirmation](2026-10-03-browser/drafts-clear-all-confirmation.jpg) and [native draft row at 1280 px](2026-10-03-browser/drafts-native-row-desktop-1280.jpg). The latter was initially named as a 375 px capture, but its measured DOM width was 1280 px because the viewport control applied to another selected tab. The file was renamed to match the measured viewport; it supplies no new 375 px proof. The earlier 375 px checks above remain separate evidence. Actual deletion persistence, dirty-editor navigation, successful detail return, additional modifier combinations, revoked actors, and physical mobile-device behavior remain open.
+Actual deletion persistence, dirty-editor navigation, successful detail return, additional modifier combinations, revoked actors, and physical mobile-device behavior remain open.
 
 The broader BLD-008 and BLD-023 checkboxes remain open because they include pane, full role/mobile/browser acceptance, and navigation requirements beyond these source slices.
 
@@ -68,7 +68,7 @@ Frontend `de5e6052e` removes the page-local gray section-link styling. `TabsNavi
 
 Independent review passed, the existing My Work and offline suites passed 24 tests, production TypeScript exited 0, scoped ESLint passed, and the staged diff check passed. Actual browser checks measured the active Tickets link and existing Assigned tab with identical backgrounds `rgb(28, 25, 23)` and text `rgb(250, 250, 249)`. Tickets and Drafts clicks retained `q=QA-070`; Browser Back restored the ticket list and search. At 375 px, both section links shared the row equally, had the same active styling, and document width equaled the viewport width. Native new-tab acceptance remains open: the attempted middle-click did not yield a confirmed new tab. The browser also recorded an `AccessUnavailableError` from the deployed permission read; this is not an error-free browser or local-backend parity claim. The temporary responsive tab was closed and viewport override reset.
 
-Screenshots: [default tabs on desktop](2026-10-03-browser/my-work-default-tabs-desktop.jpg), measured 1072 px, and [default tabs at 375 px](2026-10-03-browser/my-work-default-tabs-mobile-375.jpg). No browser comment submission, deletion, or ticket mutation was performed. Physical-device behavior, dirty-editor navigation and full role/tenant acceptance remain open.
+No browser comment submission, deletion, or ticket mutation was performed. Physical-device behavior, dirty-editor navigation and full role/tenant acceptance remain open.
 
 ## Caller-owned composer draft resume
 

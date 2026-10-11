@@ -193,7 +193,7 @@ export const FEEDBACK_COLUMNS: DataTableColumn<SubmissionRow>[] = [
     header: "Freq",
     cell: (row) => (
       <span className="text-xs font-mono tabular-nums text-muted-foreground">
-        {row.duplicateCount + 1}
+        {typeof row.duplicateCount === "number" ? row.duplicateCount + 1 : 1}
       </span>
     ),
     className: "w-[60px] text-right hidden md:table-cell",

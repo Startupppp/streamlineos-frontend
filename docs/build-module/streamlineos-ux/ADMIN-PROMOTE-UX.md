@@ -12,9 +12,6 @@
 
 ## Evidence
 `/workspace/streamlineos-ux/evidence/admin-promote/`
-- `build-module-admin-assigned.webp`
-- `build-access-confirmed.webp`
-- `org-admin-role-catalog.webp`
 
 ## Design follow-ups
 - **Build Module Admin shell census** (as that user): still needed — Tester owns Member session; Design to coordinate / score chrome vs Owner.

@@ -135,7 +135,7 @@ A separate IAM application-role transaction then asserted `current_user=streamli
 
 ### Advanced navigation browser observation
 
-The existing authenticated browser, still connected to the deployed API, opened More Build tools. Searching `approv` left only Approvals at its canonical `/build/approvals` destination. Escape dismissed the dialog and returned focus to the More Build tools button. The screenshot measures 1280 × 720: [search result](2026-10-03-browser/build-more-tools-search-desktop.jpg). No pin or record mutation was issued. Other roles, denied destinations, pin persistence, mobile navigation, and the complete navigation criterion remain open.
+The existing authenticated browser, still connected to the deployed API, opened More Build tools. Searching `approv` left only Approvals at its canonical `/build/approvals` destination. Escape dismissed the dialog and returned focus to the More Build tools button. No pin or record mutation was issued. Other roles, denied destinations, pin persistence, mobile navigation, and the complete navigation criterion remain open.
 
 ## Impossible-date regression and reviewed API retest
 

@@ -4,6 +4,8 @@ import { ProductFeedbackPage } from "./product-feedback-page";
 import {
   EMPTY_FEEDBUCKET_RESULT,
   mockRouterPush,
+  mockNotFound,
+  mockRouterReplace,
   mockUseSearchParams,
   render,
   screen,
@@ -243,6 +245,27 @@ describe("ProductFeedbackPage — URL-backed filter params (BSN-01-FB-FILTERS)",
     expect(callParams).not.toHaveProperty("crmOrganizationId");
   });
 
+  it("omits a whitespace theme so the submissions request is not rejected", () => {
+    mockUseSearchParams.mockReturnValueOnce(new URLSearchParams("theme=%20%20"));
+    useFeedbucketSubmissions.mockReturnValue(EMPTY_FEEDBUCKET_RESULT);
+    render(<ProductFeedbackPage managedProductId={7} />);
+    const [callParams] = useFeedbucketSubmissions.mock.calls[0] as [Record<string, unknown>];
+    expect(callParams).not.toHaveProperty("theme");
+  });
+
+  it("omits a reversed date range and hides unfiltered rows", () => {
+    mockUseSearchParams.mockReturnValueOnce(new URLSearchParams("from=2026-12-31&to=2020-01-01"));
+    useFeedbucketSubmissions.mockReturnValue({
+      ...EMPTY_FEEDBUCKET_RESULT,
+      data: { data: [{ id: 1, message: "Should stay hidden" }], total: 1 },
+    });
+    render(<ProductFeedbackPage managedProductId={7} />);
+    const [callParams] = useFeedbucketSubmissions.mock.calls[0] as [Record<string, unknown>];
+    expect(callParams).not.toHaveProperty("from");
+    expect(callParams).not.toHaveProperty("to");
+    expect(screen.queryByText("Should stay hidden")).not.toBeInTheDocument();
+  });
+
   it("omits a non-date from bound so the submissions request is not rejected", () => {
     mockUseSearchParams.mockReturnValueOnce(new URLSearchParams("from=not-a-date"));
     useFeedbucketSubmissions.mockReturnValue(EMPTY_FEEDBUCKET_RESULT);
@@ -350,8 +373,16 @@ jest.mock("./feedback/capture-submission-sheet", () => ({
 }));
 
 jest.mock("./feedback/feedback-pane", () => ({
-  FeedbackPane: ({ submissionId }: { submissionId: number }) => (
-    <div data-testid="feedback-pane" data-submission-id={submissionId} />
+  FeedbackPane: ({
+    submissionId,
+    onOpenChange,
+  }: {
+    submissionId: number;
+    onOpenChange: (open: boolean) => void;
+  }) => (
+    <div data-testid="feedback-pane" data-submission-id={submissionId}>
+      <button type="button" onClick={() => onOpenChange(false)}>Close pane</button>
+    </div>
   ),
 }));
 
@@ -451,6 +482,42 @@ describe("ProductFeedbackPage — feedback pane deep link (BSN-01-FB-PANE)", () 
     render(<ProductFeedbackPage managedProductId={7} />);
     expect(screen.queryByTestId("feedback-pane")).not.toBeInTheDocument();
   });
+
+  it("treats a missing product as not found instead of an empty inbox", () => {
+    const { useManagedProduct } = jest.requireMock(
+      "@/hooks/api/build/managed-products",
+    ) as { useManagedProduct: jest.Mock };
+    useManagedProduct.mockReturnValue({
+      data: null,
+      isSuccess: true,
+      isLoading: false,
+      isError: false,
+      error: null,
+    });
+    useFeedbucketSubmissions.mockReturnValue(EMPTY_FEEDBUCKET_RESULT);
+    render(<ProductFeedbackPage managedProductId={999999999} />);
+    expect(mockNotFound).toHaveBeenCalled();
+    useManagedProduct.mockReturnValue({
+      data: { id: 7, name: "QA" },
+      isSuccess: true,
+      isLoading: false,
+      isError: false,
+      error: null,
+    });
+  });
+
+  it("closes the pane without dropping the other filters", () => {
+    mockUseSearchParams.mockReturnValueOnce(new URLSearchParams("q=keep-me&submission=42"));
+    useFeedbucketSubmissions.mockReturnValue(EMPTY_FEEDBUCKET_RESULT);
+    render(<ProductFeedbackPage managedProductId={7} />);
+    fireEvent.click(screen.getByRole("button", { name: "Close pane" }));
+    expect(mockRouterReplace).toHaveBeenCalledWith(
+      expect.stringContaining("q=keep-me"),
+      { scroll: false },
+    );
+    const [nextUrl] = mockRouterReplace.mock.calls.at(-1) as [string];
+    expect(nextUrl).not.toContain("submission");
+  });
 });
 
 import { SOURCE_CHANNEL_FILTER_OPTIONS, FEEDBACK_COLUMNS } from "./product-feedback-columns";
@@ -472,6 +539,15 @@ describe("ProductFeedbackPage — feedbucket source channel integration (BSN-01-
     const row = { sourceChannel: "feedbucket" } as unknown as Parameters<NonNullable<typeof channelCol.cell>>[0];
     const { getByText } = render(<>{channelCol.cell(row)}</>);
     expect(getByText("Feedbucket")).toBeInTheDocument();
+  });
+
+  it("shows frequency 1 when a captured row has no duplicate count yet", () => {
+    const frequencyCol = FEEDBACK_COLUMNS.find((c) => c.key === "frequency");
+    if (!frequencyCol?.cell) throw new Error("frequency column missing");
+    const row = { duplicateCount: undefined } as unknown as Parameters<NonNullable<typeof frequencyCol.cell>>[0];
+    const { getByText } = render(<>{frequencyCol.cell(row)}</>);
+    expect(getByText("1")).toBeInTheDocument();
+    expect(screen.queryByText("NaN")).not.toBeInTheDocument();
   });
 
   it("renders Collect via Feedbucket button when actor has feedbucket:submissions:manage permission", () => {

@@ -8,17 +8,17 @@
 
 | Surface | Walk result | Evidence / route |
 | --- | --- | --- |
-| Filters / work search | Basic + JQL modes; More filters showed 10 of 41; Affects versions was visible; JQL autocomplete, defaults, Save filter, sortable result table, and Configure columns | `/issues/?jql=` · `filters-basic-more-options.png`, `filters-jql-functions.png`, `filters-jql-operators.png` |
-| Board | Kanban with To Do, In Progress, In Review, Done; Search, Filter, Group, share, Automation | `/jira/software/projects/KAN/boards/2` · `board-kanban.png` |
-| Summary | KPI cards, status overview, Epic progress, Filter, and Reports promotion | `/jira/software/projects/KAN/summary` · `summary.png` |
-| List | Project-scoped searchable/filterable list, grouping, sortable columns, inline edits; 3 of 3 results | `/jira/software/projects/KAN/list` · `list.png` |
-| Development | Beta delivery metrics and related-work tabs; values were zero with no provider data | `/jira/software/projects/KAN/development` · `development.png` |
-| Plans / Roadmaps | Directory loaded with **No plans yet**, Create plan, and a getting-started guide; no plan was created | `/jira/plans` · `plans.png` |
-| Dashboards | Search, Owner/Space/Group filters, Create dashboard, Default dashboard row with sharing metadata | `/jira/dashboards` · `dashboards.png` |
-| Automation | Flows, Audit log, Templates, Usage, Create flow, and starter templates | Space settings > Automation · `automation.png` |
-| Apps / Marketplace | Explore apps, search, pricing/trust/category/use-case filters, over 1,000 apps; no app installed | `/jira/marketplace/discover` · `marketplace.png` |
-| Project settings | Details, Access, Notifications, Automation, Fields, Work types, Features, Custom filters, Timeline, Toolchain, Apps | `/jira/software/projects/KAN/settings/details` · `project-settings.png` |
-| Goals | External Atlassian Goals directory with 23 goals, search, ownership/status/team filters | Atlassian Home Goals · `goals.png` |
+| Filters / work search | Basic + JQL modes; More filters showed 10 of 41; Affects versions was visible; JQL autocomplete, defaults, Save filter, sortable result table, and Configure columns | `/issues/?jql=` |
+| Board | Kanban with To Do, In Progress, In Review, Done; Search, Filter, Group, share, Automation | `/jira/software/projects/KAN/boards/2` · |
+| Summary | KPI cards, status overview, Epic progress, Filter, and Reports promotion | `/jira/software/projects/KAN/summary` · |
+| List | Project-scoped searchable/filterable list, grouping, sortable columns, inline edits; 3 of 3 results | `/jira/software/projects/KAN/list` · |
+| Development | Beta delivery metrics and related-work tabs; values were zero with no provider data | `/jira/software/projects/KAN/development` · |
+| Plans / Roadmaps | Directory loaded with **No plans yet**, Create plan, and a getting-started guide; no plan was created | `/jira/plans` · |
+| Dashboards | Search, Owner/Space/Group filters, Create dashboard, Default dashboard row with sharing metadata | `/jira/dashboards` · |
+| Automation | Flows, Audit log, Templates, Usage, Create flow, and starter templates | Space settings > Automation · |
+| Apps / Marketplace | Explore apps, search, pricing/trust/category/use-case filters, over 1,000 apps; no app installed | `/jira/marketplace/discover` · |
+| Project settings | Details, Access, Notifications, Automation, Fields, Work types, Features, Custom filters, Timeline, Toolchain, Apps | `/jira/software/projects/KAN/settings/details` · |
+| Goals | External Atlassian Goals directory with 23 goals, search, ownership/status/team filters | Atlassian Home Goals · |
 | For you / personal work | `/jira/your-work` redirected to a working For you view | `PAGE-INVENTORY.md` |
 
 ## Honesty locks — do not flatten route outcomes into feature claims

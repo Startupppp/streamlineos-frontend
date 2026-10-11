@@ -54,7 +54,7 @@ Changes required to achieve passing state (all on this branch):
 
 ## Source availability limitations
 
-Historical sources mention QA ledgers/reports and deleted release documents that were not included in the supplied packs: original QA surface/role matrices, member/client pass reports, BUG-001 detail, BUILD-OS-BUGS, RELEASE-GATE and TESTING-SUMMARY. Their historical references are retained as unavailable original evidence, not converted into fabricated local proof. The referenced D-build.webp is absent; D-dashboard.webp and actual project screenshots remain available. Brace-group competitor path notation is shorthand, not a real file; actual competitor feature files are retained individually.
+Historical sources mention QA ledgers/reports and deleted release documents that were not included in the supplied packs: original QA surface/role matrices, member/client pass reports, BUG-001 detail, BUILD-OS-BUGS, RELEASE-GATE and TESTING-SUMMARY. Their historical references are retained as unavailable original evidence, not converted into fabricated local proof. Brace-group competitor path notation is shorthand, not a real file; actual competitor feature files are retained individually.
 
 Only three representative Streamline screenshots were visually reviewed in the planning audit. The remaining images are inventoried and retained, not claimed visually/currently verified. Research ID extraction found 213 distinct textual IDs; reuse across lanes is disambiguated by source.
 

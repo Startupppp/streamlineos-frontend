@@ -13,6 +13,6 @@
 ClickUp opened directly into the signed-in Vaivammcapital workspace. Project 1 is visible in Team Space with List, Board, Table, Calendar, Gantt and a test view. No login wall appeared.
 
 ## Filters result
-**UI-VERIFIED.** List filter panel opened successfully and was also checked on Board and Table. Evidence is in `evidence/filters-*.png`.
+**UI-VERIFIED.** List filter panel opened successfully and was also checked on Board and Table.
 
 Observed filter chrome: field picker, per-clause operator/value controls, `AND` / `OR`, `Add nested filter`, `Add filter`, per-row `Clear filter`, global `Clear all`, `Saved filters`, and `Close`.

@@ -9,27 +9,27 @@ The deep walk verified these 15 non-filter surfaces; the existing filter walk re
 
 | Surface | Linear deep evidence |
 | --- | --- |
-| Inbox | `BG-08` · `evidence/inbox.png` |
-| My Issues | `BG-09` · `evidence/my-issues.png` |
-| Projects | `BG-10` · `evidence/projects.png` |
-| Workspace / team Custom Views | `BG-11` · `evidence/views.png`, `custom-view-builder.png` |
-| Team overview | `BG-13` · `evidence/team-overview.png` |
-| Team Documents | `BG-13` · `evidence/team-documents.png` |
-| Cycles | `BG-12` · `evidence/cycles.png` |
-| Agent | `BG-14` · `evidence/agent.png` |
-| GitHub | `BG-15` · `evidence/github-settings.png` |
-| Integrations catalogue | `BG-21` · `evidence/integrations-catalog.png` |
-| Issue / project templates | `BG-16` · `evidence/issue-templates.png` |
-| Initiatives | `BG-17` · `evidence/initiatives.png` |
-| Asks | `BG-19` · `evidence/asks.png` |
-| SLAs | `BG-20` · `evidence/slas.png` |
-| AI & Agents / Code Intelligence | `BG-22` · `evidence/ai-agents.png` |
+| Inbox | `BG-08` |
+| My Issues | `BG-09` |
+| Projects | `BG-10` |
+| Workspace / team Custom Views | `BG-11` |
+| Team overview | `BG-13` |
+| Team Documents | `BG-13` |
+| Cycles | `BG-12` |
+| Agent | `BG-14` |
+| GitHub | `BG-15` |
+| Integrations catalogue | `BG-21` |
+| Issue / project templates | `BG-16` |
+| Initiatives | `BG-17` |
+| Asks | `BG-19` |
+| SLAs | `BG-20` |
+| AI & Agents / Code Intelligence | `BG-22` |
 
 **Route outcomes (not claims that Linear universally lacks these):**
 
-- **Triage → All issues:** `/team/TAR/triage` redirected to `/team/TAR/all`; no separate queue or controls were exposed. Evidence: `evidence/triage-redirect-all-issues.png`.
+- **Triage → All issues:** `/team/TAR/triage` redirected to `/team/TAR/all`; no separate queue or controls were exposed.
 - **Roadmap not found:** team Roadmap rendered Not found; workspace `/roadmap` redirected to Projects. No roadmap artifact was visible.
-- **Insights not found:** `/insights` rendered Not found; analytics integrations were visible, but no native Insights page was exposed. Evidence: `evidence/not-found-insights-roadmap.png`.
+- **Insights not found:** `/insights` rendered Not found; analytics integrations were visible, but no native Insights page was exposed.
 
 ## Free-tier gates / caveats for Aditya
 

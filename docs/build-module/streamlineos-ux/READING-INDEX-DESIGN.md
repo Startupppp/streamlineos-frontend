@@ -8,7 +8,6 @@
 5. `PM-001-design-challenge.md`
 
 ## Evidence
-6. `D-dashboard.webp` · `D-build.webp`
 
 ## Council
 7. `../streamlineos-pm-pack/01-freeze-completeness/READING-INDEX-ALL.md`

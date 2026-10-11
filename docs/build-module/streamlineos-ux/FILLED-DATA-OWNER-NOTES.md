@@ -25,12 +25,6 @@ Project overview confirms org/project: https://www.streamlineos.in/build/47
 
 ## Evidence
 `/workspace/streamlineos-ux/evidence/filled-data/`
-- `project-overview-org-project-confirmed.webp`
-- `cycle-created-PXC-Cycle-1.webp`
-- `epic-created-PXC-Epic-1.webp`
-- `release-created-PXC-Release-1.webp`
-- `issues-board-TODO-filter.webp`
-- `issues-list-TODO-filter.webp`
 
 ## Next / BLOCKED
 - Org Admin / Module Admin role UX — **next**

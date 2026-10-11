@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { notFound, useRouter } from "next/navigation";
 import { DataTableSkeleton } from "@/components/ui/data-table";
 import { BuildListSurface } from "@/features/build/shared/build-list-surface";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -37,6 +37,7 @@ import {
 } from "./product-feedback-columns";
 import { ProductFeedbackMobileCard } from "./feedback/product-feedback-mobile-card";
 import { useRouteFeedbucketToIntake } from "@/hooks/api/build/intake-mutations";
+import { useManagedProduct } from "@/hooks/api/build/managed-products";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { resolveProductFeedbackSubmissionHref } from "./product-feedback-model";
@@ -61,6 +62,7 @@ export function ProductFeedbackPage({
   managedProductId,
 }: ProductFeedbackPageProps) {
   const router = useRouter();
+  const productQuery = useManagedProduct(managedProductId);
   const requestLeave = useNavigationLeave();
   const canOpenSubmissionDetail = useCan("feedbucket:widgets:view");
   const canUpdateSubmission = useCan("feedbucket:submissions:update");
@@ -90,6 +92,7 @@ export function ProductFeedbackPage({
     typedTo,
     typedAssigneeId,
     paneSubmissionId,
+    dateRangeReversed,
     isFiltered,
     appliedSegment,
     appliedTheme,
@@ -125,6 +128,10 @@ export function ProductFeedbackPage({
     void refetch();
   }, [refetch]);
   const rows = useMemo(() => data?.data ?? [], [data]);
+  const visibleRows = useMemo(
+    () => (dateRangeReversed ? [] : rows),
+    [dateRangeReversed, rows],
+  );
   const selectedIds = useMemo(
     () => [...selected].map(Number).filter((id) => Number.isFinite(id)),
     [selected],
@@ -183,7 +190,7 @@ export function ProductFeedbackPage({
 
   const handleOpenFocused = useCallback(
     (index: number) => {
-      const row = rows[index];
+      const row = visibleRows[index];
       if (!row) return;
       const href = resolveProductFeedbackSubmissionHref(
         row,
@@ -193,7 +200,7 @@ export function ProductFeedbackPage({
       if (href === null) return;
       requestLeave(() => router.push(href));
     },
-    [rows, managedProductId, canOpenSubmissionDetail, requestLeave, router],
+    [visibleRows, managedProductId, canOpenSubmissionDetail, requestLeave, router],
   );
 
   const handleRouteToIntake = useCallback(
@@ -226,7 +233,7 @@ export function ProductFeedbackPage({
   );
 
   useBuildListKeyboard({
-    itemCount: rows.length,
+    itemCount: visibleRows.length,
     onOpen: handleOpenFocused,
     onEdit: handleOpenFocused,
     onClearSelection: handleClearSelection,
@@ -273,22 +280,22 @@ export function ProductFeedbackPage({
   const handleOpenFeedbucket = useCallback(() => setFeedbucketOpen(true), []);
   const handleCloseFeedbackPane = useCallback(
     (open: boolean) => {
-      if (!open) router.replace(`?`, { scroll: false });
+      if (!open) listFilters.setValue("submission", "all");
     },
-    [router],
+    [listFilters],
   );
 
   const filteredEmptyState = useMemo(
     () => (
       <EmptyState
         illustration={<EmptyInboxIllustration className="h-24 w-24" />}
-        title="No feedback matches your filters"
-        description="Try adjusting or clearing your filters."
+        title={dateRangeReversed ? "End date is before the start date" : "No feedback matches your filters"}
+        description={dateRangeReversed ? "Choose a start date on or before the end date." : "Try adjusting or clearing your filters."}
         action={{ label: "Clear filters", onClick: listFilters.clearAll }}
         className={CONTENT_FILL_PANEL}
       />
     ),
-    [listFilters.clearAll],
+    [dateRangeReversed, listFilters.clearAll],
   );
 
   const emptyState = useMemo(
@@ -302,6 +309,8 @@ export function ProductFeedbackPage({
     ),
     [],
   );
+
+  if (productQuery.isSuccess && productQuery.data === null) notFound();
 
   return (
     <>
@@ -519,7 +528,7 @@ export function ProductFeedbackPage({
           <ManagedProductDetailPrimarySection>
             <BuildListSurface<SubmissionRow>
               permission="feedbucket:submissions:view"
-              rows={rows}
+              rows={visibleRows}
               columns={feedbackColumns}
               isLoading={isLoading}
               isError={isError}

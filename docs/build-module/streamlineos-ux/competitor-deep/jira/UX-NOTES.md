@@ -16,8 +16,6 @@
 
 **AVOID for Freelancer Now:** leading with JQL. **ADOPT for PM/PjM:** saved filters + currentUser defaults.
 
-Evidence: `evidence/filters-basic-more-options.png`, `filters-jql-functions.png`, `filters-jql-operators.png`.
-
 ### Filter honesty — Affects versions ≠ Releases module
 
 **Affects versions** appears in the Filters **More** picker on this free walk. That does **not** prove a Releases/Versions project surface. Direct `/settings/versions` and `/settings/components` **redirected to Settings → Details**; no Releases/Versions or Components nav in this team-managed space.
@@ -30,17 +28,17 @@ Mirror Linear/ClickUp deep pattern: surface → what Jira free walk shows → De
 
 | # | Surface | Jira (free team-managed walk) | Design take for Build | Gate / evidence |
 |---|---------|-------------------------------|----------------------|-----------------|
-| 1 | **Boards** | Kanban To Do / In Progress / In Review / Done; cards; search, Filter, Group, share, Automation | **ADOPT** opinionated board + fast triage, grouping, safe status transitions | Free · `evidence/board-kanban.png` · BG Boards |
-| 2 | **Summary** | KPI cards (completed/updated/created/due-soon); status overview; Epic progress; Filter; **Reports** promotion | **ADOPT** project cockpit KPIs + deep links; **AVOID** promoting Reports that 404 | Free · `evidence/summary.png` |
-| 3 | **List** | Project-scoped table; Search/Filter/Group; sortable cols; inline edits; 3 of 3 | **ADOPT** list/board parity + inline affordances | Free · `evidence/list.png` |
-| 4 | **Development** | Beta delivery metrics (cycle/lead time, overdue, PRs, vulns…) + Related work tabs; all zeros, no provider | **ADAPT** optional integrations useful at zero data; transparent missing-provider empty | Free · `evidence/development.png` |
-| 5 | **Plans** | Directory **“No plans yet”** + Create plan + getting-started guide — **no plan created** | **ADOPT** honest empty plan/roadmap shell + Create; **AVOID** claiming filled Plans / capacity craft as VERIFIED | Free empty shell · `evidence/plans.png` · UX-028 adjacent |
-| 6 | **Dashboards** | Search; Owner/Space/Group filters; Create; Default dashboard sharing metadata | **ADOPT** composable free dashboards + permission-safe share | Free · `evidence/dashboards.png` |
-| 7 | **Automation** | Flows / Audit log / Templates / Usage; starter recipes; Create flow; Global admin | **ADOPT** no-code trigger/action + templates + audit + usage limits | Free · `evidence/automation.png` |
-| 8 | **Marketplace / Apps** | Explore apps; 1000+ catalog; Pricing/Trust/Categories/Use cases filters — nothing installed | **ADAPT** curated small catalog with clear free/paid labels; don’t clone Atlassian breadth | Free chrome · `evidence/marketplace.png` |
-| 9 | **Project settings** | Details, Access, Notifications, Automation, Fields, Work types, Features, Custom filters, Timeline, Toolchain, Apps | **ADOPT** centralized governance; make capability gates discoverable **before** setup | Free · `evidence/project-settings.png`, `features-settings.png` |
-| 10 | **Goals** | Atlassian Home Goals: 23 goals; All/My/Archived; Tag/Status/Owner/Team filters; Create first goal | **ADAPT** small free goal directory linked to work/KPIs — not day-1 Atlassian Home clone | Free via Home · `evidence/goals.png` |
-| 11 | **Docs / Confluence** | Empty promotion: Try Confluence / Discover Confluence; no connected pages | **AVOID** Freeze Docs hub sprawl; **SHIP** linked project brief (same AVOID as ClickUp/Linear Docs) | Upsell empty · `evidence/docs.png` |
+| 1 | **Boards** | Kanban To Do / In Progress / In Review / Done; cards; search, Filter, Group, share, Automation | **ADOPT** opinionated board + fast triage, grouping, safe status transitions | Free · · BG Boards |
+| 2 | **Summary** | KPI cards (completed/updated/created/due-soon); status overview; Epic progress; Filter; **Reports** promotion | **ADOPT** project cockpit KPIs + deep links; **AVOID** promoting Reports that 404 | Free · |
+| 3 | **List** | Project-scoped table; Search/Filter/Group; sortable cols; inline edits; 3 of 3 | **ADOPT** list/board parity + inline affordances | Free · |
+| 4 | **Development** | Beta delivery metrics (cycle/lead time, overdue, PRs, vulns…) + Related work tabs; all zeros, no provider | **ADAPT** optional integrations useful at zero data; transparent missing-provider empty | Free · |
+| 5 | **Plans** | Directory **“No plans yet”** + Create plan + getting-started guide — **no plan created** | **ADOPT** honest empty plan/roadmap shell + Create; **AVOID** claiming filled Plans / capacity craft as VERIFIED | Free empty shell · · UX-028 adjacent |
+| 6 | **Dashboards** | Search; Owner/Space/Group filters; Create; Default dashboard sharing metadata | **ADOPT** composable free dashboards + permission-safe share | Free · |
+| 7 | **Automation** | Flows / Audit log / Templates / Usage; starter recipes; Create flow; Global admin | **ADOPT** no-code trigger/action + templates + audit + usage limits | Free · |
+| 8 | **Marketplace / Apps** | Explore apps; 1000+ catalog; Pricing/Trust/Categories/Use cases filters — nothing installed | **ADAPT** curated small catalog with clear free/paid labels; don’t clone Atlassian breadth | Free chrome · |
+| 9 | **Project settings** | Details, Access, Notifications, Automation, Fields, Work types, Features, Custom filters, Timeline, Toolchain, Apps | **ADOPT** centralized governance; make capability gates discoverable **before** setup | Free · |
+| 10 | **Goals** | Atlassian Home Goals: 23 goals; All/My/Archived; Tag/Status/Owner/Team filters; Create first goal | **ADAPT** small free goal directory linked to work/KPIs — not day-1 Atlassian Home clone | Free via Home · |
+| 11 | **Docs / Confluence** | Empty promotion: Try Confluence / Discover Confluence; no connected pages | **AVOID** Freeze Docs hub sprawl; **SHIP** linked project brief (same AVOID as ClickUp/Linear Docs) | Upsell empty · |
 | 12 | **Filters** (already) | Basic + JQL + More + Save + defaults — see table above | Keep Filters ADOPT/ADAPT; version filter after membership | Free · filters evidence |
 
 **Non-filter UI-verified count = 11 surfaces** (+ Filters already counted). Route probes / absences below are honesty locks — **not** inventable ship-sets.
@@ -50,13 +48,13 @@ Mirror Linear/ClickUp deep pattern: surface → what Jira free walk shows → De
 | Probe | UI result | Design note | Evidence |
 |-------|-----------|-------------|----------|
 | **Backlog** | `/boards/2/backlog` → **404** (“view does not exist”) | Do not claim backlog on this free team-managed Kanban | PAGE-INVENTORY |
-| **Sprints** | Features: Sprints **disabled** — **“Requires a backlog”**; Estimation off; Standups on | **AVOID** dead-end sprint nav; make gating explicit if Build offers backlog→sprint | `evidence/features-settings.png` |
+| **Sprints** | Features: Sprints **disabled** — **“Requires a backlog”**; Estimation off; Standups on | **AVOID** dead-end sprint nav; make gating explicit if Build offers backlog→sprint | |
 | **Releases / Versions** | No nav; `/settings/versions` → Details | **UX-025 ≠ match Jira Releases module.** Affects versions in Filters More only. Completeness Next = membership + filter honesty | PAGE-INVENTORY · FEATURES |
 | **Components** | No nav; `/settings/components` → Details | Optional lightweight components = differentiator Later — **not** free-tier table-stakes from this walk | PAGE-INVENTORY |
 | **Forms** | **Not** in project settings nav on this walk | Do not invent Jira Forms UI here; Build public Form Completeness Next still SHIP from ClickUp/Linear Asks framing | FEATURES Forms § |
-| **Reports** | Summary promotes Reports → `/boards/2/reports` **404** | **AVOID** promote-then-404; **ADOPT** named report Create/Run that works (UX-030) | `evidence/summary.png` |
-| **Plans filled** | Directory empty only | Program/roadmap craft = **shell**, not filled Plans. UX-028 = Build program↔project membership — **not** “we have Jira Plans filled” | `evidence/plans.png` |
-| **Confluence payment** | Upsell empty; **no payment opened** | Don’t treat Confluence as day-1 Build Docs prerequisite | `evidence/docs.png` |
+| **Reports** | Summary promotes Reports → `/boards/2/reports` **404** | **AVOID** promote-then-404; **ADOPT** named report Create/Run that works (UX-030) | |
+| **Plans filled** | Directory empty only | Program/roadmap craft = **shell**, not filled Plans. UX-028 = Build program↔project membership — **not** “we have Jira Plans filled” | |
+| **Confluence payment** | Upsell empty; **no payment opened** | Don’t treat Confluence as day-1 Build Docs prerequisite | |
 
 ## Free-tier / team-managed gates — Design packaging rules
 

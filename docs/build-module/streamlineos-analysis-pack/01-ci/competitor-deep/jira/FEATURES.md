@@ -39,7 +39,6 @@ The Filters sidebar showed **Search work items** and an expanded **Default filte
 
 The work list showed sortable columns: Work, Assignee, Reporter, Priority, Status, Resolution, Created, Updated, Due date, plus **Configure columns**. The loaded result count was **13 of 13**.
 
-Evidence: `evidence/filters-basic-more-options.png` (Basic picker), `evidence/filters-jql-functions.png` (EMPTY/currentUser autocomplete), `evidence/filters-jql-operators.png` (WAS/CHANGED and other operators).
 
 ## Boards
 

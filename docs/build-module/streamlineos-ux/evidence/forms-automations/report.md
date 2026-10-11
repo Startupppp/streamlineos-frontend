@@ -32,10 +32,5 @@
 ## Evidence
 
 Files in `/workspace/streamlineos-ux/evidence/forms-automations/`:
-- `automations-empty.webp` — empty Automations surface
-- `automation-wizard.webp` — New Automation wizard before cancel
-- `forms-empty-filtered.webp` — Forms empty state with Active filter
-- `forms-list.webp` — Forms list after the auto-created inactive draft
-- `form-builder.webp` — Untitled Form builder craft state
 
 Search terms used in UI: **More tools**, **Forms**, **Automations**. No target surface was missing in project scope; org-scope More tools simply did not list either tool.

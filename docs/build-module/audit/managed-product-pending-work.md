@@ -37,7 +37,7 @@ Code and tests are complete for every row (2026-10-11). Accept and decline retur
 Only browser verification remains. Each item needs an authenticated session against the current deployment at 375, 768, and 1280 px, plus keyboard checks.
 
 - [ ] Directory: every filter and chip round-trips through the URL. Create, edit, archive, and restore persist. A version conflict shows recovery.
-- [ ] Overview: aggregates match the selected period, team, segment, and initiative state. Preview links open the right record.
+- [ ] Overview: aggregates match the selected period, team, segment, and initiative state. Preview links open the right record. Period, team, and initiative status match at 1280, 768, and 375, and the goal and roadmap previews open the right records. Segment does not narrow results — [BVG-OVW-001](./browser-verification-backend-gaps.md).
 - [ ] Feedback: capture, classify, merge a duplicate (the original text is kept), link to an opportunity, and route to Intake persist. A product-linked Feedbucket widget submission lands with the Feedbucket badge. Filters narrow the server results.
 - [ ] Insights: create an opportunity, score it, decline one with a reason, schedule an outcome review through the form, override with a reason (audit row written), accept into the roadmap with goal, epic, visibility, and dependencies, then complete an outcome review. The trace shows every step.
 - [ ] Roadmap: create and edit with project and epic, filters, the board columns with per-column Add item, the timeline view, reorder, move, publish and unpublish, and the public preview matching the public roadmap page.

@@ -41,7 +41,6 @@ Projects / Products / Portfolios / Programs / Goals / Roadmap repeat Status / Ow
 5. Saved views / Set as default — Linear Display docs Hypothesis until walk
 
 ## Evidence
-`/workspace/streamlineos-ux/evidence/` — `issues-*-filter*.webp` / labels-missing (see FILTERS-PORTFOLIOS-OWNER.md list)
 
 ## CI / PM sync
 - CI: put Direct filter grammar in FEATURES Filters section (ClickUp next; Linear blocked anti-bot)

@@ -12,7 +12,7 @@ Project: `PXC-Project-Alpha` (`/build/47`).
 - URL params observed: `?dueDateFrom=2026-10-01&dueDateTo=2026-10-31`.
 - Result: intentional empty result — **“No tickets match your filters”** with helper “Try adjusting your search or filters to find what you’re looking for.”
 - Craft/UX notes: filter chip shows the range; Add filter shows an active-count badge; Due Dates panel clearly shows “Range active” and both selected dates; both panel and empty state expose “Clear all filters”. The filter panel remains open in the evidence capture, making the range and empty result legible together.
-- Evidence: `due-date-filter.webp`
+-
 
 ### 2. Triage: VERIFIED
 - Discovered through project **More tools**; real route: `https://www.streamlineos.in/build/47/triage`.
@@ -20,7 +20,7 @@ Project: `PXC-Project-Alpha` (`/build/47`).
 - Available controls: **Search triage** field only; no empty-state CTA, create-rule CTA, or other action surfaced. No rule creation attempted because it was not one-click obvious.
 - Chrome: project sidebar, project scope switcher, top search/create/inbox/account bar, trial notice, and feedback/ASK OS affordances remain present.
 - Craft/UX notes: generous illustrated empty-state panel and concise next-state explanation; search remains available even when empty; no recovery/action CTA means the empty state is informational rather than task-guiding.
-- Evidence: `triage-empty.webp`
+-
 
 ### 3. Templates: VERIFIED
 - Discovered through organization-level **More tools** after switching Build scope to **All of Build**; real route: `https://www.streamlineos.in/build/templates`.
@@ -28,7 +28,7 @@ Project: `PXC-Project-Alpha` (`/build/47`).
 - CTAs: top-right **New Template** and centered **Create your first template**.
 - List chrome: **Search templates…**, **All categories** filter, **Newest first** sort; no template cards/list items present.
 - Craft/UX notes: clear single-purpose empty state with duplicated primary entry points (persistent top action plus contextual center CTA); search/filter/sort affordances are visible despite no rows; org-level sidebar identifies **All of Build / Organization**.
-- Evidence: `templates-empty.webp`
+-
 
 ## Competitor note
 

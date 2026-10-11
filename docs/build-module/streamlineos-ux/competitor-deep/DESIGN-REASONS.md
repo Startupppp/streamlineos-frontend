@@ -183,18 +183,18 @@ CI signed-in beyond-Filters: 15 surfaces + free-tier gates. Design ADOPT/ADAPT/A
 
 | # | Design reason | Verdict | CI evidence |
 |---|---------------|---------|-------------|
-| 113 | Notification Inbox with unread + list/detail | **ADOPT** | `evidence/inbox.png` · BG-08 |
-| 114 | My-work tabs Assigned/Created/Subscribed/Activity | **ADOPT** | `evidence/my-issues.png` · BG-09 |
-| 115 | Named Custom Views builder (name/desc/scope) free | **ADOPT** Completeness Next | `custom-view-builder.png` · BG-11 |
-| 116 | Cycles nav + honest “no cycles” empty (free) | **ADOPT** before create flows · UX-024 chrome Next | `evidence/cycles.png` · BG-12 |
-| 117 | Free issue templates (no paid gate) | **ADOPT** | `evidence/issue-templates.png` · BG-16 |
-| 118 | Business+ SLA as day-1 / freelancer desperation | **AVOID**; SHIP free deadline honesty with limits | `evidence/slas.png` · BG-20 |
-| 119 | Business+ Asks as day-1 intake | **AVOID**; SHIP free public Form Completeness Next | `evidence/asks.png` · BG-19 |
-| 120 | Code Intelligence / Loops as day-1 AI | **AVOID**; Agent Enabled ≠ Code Intelligence | `evidence/ai-agents.png` · BG-22 |
-| 121 | Initiatives / Roadmap as day-1 strategy layer | **AVOID** / defer — Initiatives off; Roadmap Not found free WS | `initiatives.png`, `not-found-insights-roadmap.png` · BG-17 |
+| 113 | Notification Inbox with unread + list/detail | **ADOPT** | BG-08 |
+| 114 | My-work tabs Assigned/Created/Subscribed/Activity | **ADOPT** | BG-09 |
+| 115 | Named Custom Views builder (name/desc/scope) free | **ADOPT** Completeness Next | BG-11 |
+| 116 | Cycles nav + honest “no cycles” empty (free) | **ADOPT** before create flows · UX-024 chrome Next | BG-12 |
+| 117 | Free issue templates (no paid gate) | **ADOPT** | BG-16 |
+| 118 | Business+ SLA as day-1 / freelancer desperation | **AVOID**; SHIP free deadline honesty with limits | BG-20 |
+| 119 | Business+ Asks as day-1 intake | **AVOID**; SHIP free public Form Completeness Next | BG-19 |
+| 120 | Code Intelligence / Loops as day-1 AI | **AVOID**; Agent Enabled ≠ Code Intelligence | BG-22 |
+| 121 | Initiatives / Roadmap as day-1 strategy layer | **AVOID** / defer — Initiatives off; Roadmap Not found free WS | BG-17 |
 | 122 | Native free insights vs add-on analytics | **ADAPT** opportunity (not HAVE) | Insights Not found · BG-18 |
-| 123 | Team Documents hub in Freeze | **AVOID** sprawl; SHIP linked project brief | `evidence/team-documents.png` · BG-13 |
-| 124 | Triage Accept/Decline/Snooze ritual | **ADOPT** Completeness Next — free WS redirected; surface **not** UI-verified | `triage-redirect-all-issues.png` · UX-029 |
+| 123 | Team Documents hub in Freeze | **AVOID** sprawl; SHIP linked project brief | BG-13 |
+| 124 | Triage Accept/Decline/Snooze ritual | **ADOPT** Completeness Next — free WS redirected; surface **not** UI-verified | UX-029 |
 
 **Linear deep status:** Filters + 15 non-filter surfaces **UI-VERIFIED**. Triage/Roadmap/Insights = route outcomes only. Business+ gates documented — Design must not treat them as day-1 table-stakes.
 
@@ -204,16 +204,16 @@ CI signed-in beyond-Filters: Boards · Summary · List · Development · Plans (
 
 | # | Design reason | Verdict | CI evidence |
 |---|---------------|---------|-------------|
-| 125 | Opinionated Kanban board + Filter/Group/Automation | **ADOPT** | `evidence/board-kanban.png` |
-| 126 | Project Summary KPIs + Epic progress (no promote-then-404) | **ADOPT** KPIs; **AVOID** Reports CTA→404 | `evidence/summary.png` |
-| 127 | Project List with inline edits + list/board parity | **ADOPT** | `evidence/list.png` |
-| 128 | Dev metrics useful at zero provider data | **ADAPT** optional integrations + honest empty | `evidence/development.png` |
-| 129 | Plans directory honest empty (“No plans yet”) — not filled Plans | **ADOPT** empty shell; **AVOID** filled Plans claim · UX-028 = membership craft | `evidence/plans.png` |
-| 130 | Free dashboards Create + Owner/Space share metadata | **ADOPT** | `evidence/dashboards.png` |
-| 131 | Automation Flows + Templates + Audit + Usage | **ADOPT** | `evidence/automation.png` |
-| 132 | UX-025 = release membership + filter — **not** “match Releases module” | **ADAPT** honesty: Affects versions in More **yes**; Versions/Components surface **no** on free team-managed | filters-basic-more-options.png · PAGE-INVENTORY |
-| 133 | Backlog/Sprints coherent gating (no 404 / “Requires a backlog” dead-end) | **ADAPT** Build opportunity; **AVOID** dead-end nav | `evidence/features-settings.png` |
-| 134 | Confluence Docs hub in Freeze | **AVOID** sprawl; SHIP linked project brief | `evidence/docs.png` |
+| 125 | Opinionated Kanban board + Filter/Group/Automation | **ADOPT** | |
+| 126 | Project Summary KPIs + Epic progress (no promote-then-404) | **ADOPT** KPIs; **AVOID** Reports CTA→404 | |
+| 127 | Project List with inline edits + list/board parity | **ADOPT** | |
+| 128 | Dev metrics useful at zero provider data | **ADAPT** optional integrations + honest empty | |
+| 129 | Plans directory honest empty (“No plans yet”) — not filled Plans | **ADOPT** empty shell; **AVOID** filled Plans claim · UX-028 = membership craft | |
+| 130 | Free dashboards Create + Owner/Space share metadata | **ADOPT** | |
+| 131 | Automation Flows + Templates + Audit + Usage | **ADOPT** | |
+| 132 | UX-025 = release membership + filter — **not** “match Releases module” | **ADAPT** honesty: Affects versions in More **yes**; Versions/Components surface **no** on free team-managed | PAGE-INVENTORY |
+| 133 | Backlog/Sprints coherent gating (no 404 / “Requires a backlog” dead-end) | **ADAPT** Build opportunity; **AVOID** dead-end nav | |
+| 134 | Confluence Docs hub in Freeze | **AVOID** sprawl; SHIP linked project brief | |
 | 135 | Company-managed Jira depth as free/F day-1 table-stakes | **AVOID** | Free-only walk · ACCOUNT.md · BUILD-GAPS |
 | 136 | Forms absent from settings — free public Form still Completeness Next | **ADOPT** Form SHIP; **AVOID** inventing Jira Forms UI from this walk | FEATURES Forms § |
 

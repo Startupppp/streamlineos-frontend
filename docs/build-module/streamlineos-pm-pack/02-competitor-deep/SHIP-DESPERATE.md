@@ -88,9 +88,9 @@ Linear deep walk is now folded in `LINEAR-DEEP-FOLD.md`; it adds **8** non-Freez
 | SHIP note | CI ID(s) | Linear deep evidence | PM action |
 | --- | --- | --- | --- |
 | Cycle chrome and cadence | #7, #41 | `BG-12` | Validate current-cycle chrome, then repeat/rollover cadence; do not infer parity from an empty Linear Cycles page. |
-| Usable Triage ritual | #8, #42 | `triage-redirect-all-issues.png` | Keep accept/decline/duplicate/snooze and rules CTA as the target; do not claim Linear triage absence. |
+| Usable Triage ritual | #8, #42 |  | Keep accept/decline/duplicate/snooze and rules CTA as the target; do not claim Linear triage absence. |
 | Strategic Initiatives / roadmap decision | #67 | `BG-17` + roadmap route outcome | Decide free strategy-layer scope or explicitly defer; no Freeze change. |
-| Native Insights | #70 | `BG-18` + `not-found-insights-roadmap.png` | Keep native measure/slice/share as a later target; do not claim Build has it. |
+| Native Insights | #70 | `BG-18` +  | Keep native measure/slice/share as a later target; do not claim Build has it. |
 | Durable named views | #31, #37, #38 | `BG-11` | Validate named personal/shared views, sharing, and favourite behaviour beyond URL chips. |
 | Structured external intake | #87 | `BG-19` | Treat free structured intake as an opportunity; do not claim it is shipped. |
 | Light SLA clocks | #96 | `BG-20` | Consider after the wedge with transparent free limits; Business/Enterprise gate observed in Linear. |

@@ -23,17 +23,6 @@
 | V-02 | New view builder supports name, optional description, destination workspace/team, Cancel, and Create view | **Needs parity check** |
 | V-03 | The task required no mutation, so save/share/favorite behavior was not exercised; do not infer it from this walk | **Not scored** |
 
-## Evidence paths
-
-- `evidence/filters-field-menu.png`
-- `evidence/filters-status-options.png`
-- `evidence/filters-relations-options.png`
-- `evidence/filters-date-custom.png`
-- `evidence/filters-advanced-empty.png`
-- `evidence/filters-advanced-and.png`
-- `evidence/filters-advanced-nested.png`
-- `evidence/custom-views-empty.png`
-- `evidence/custom-view-builder.png`
 
 ## Beyond Filters — sellable gap framing vs Build
 

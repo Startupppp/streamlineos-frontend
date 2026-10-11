@@ -78,7 +78,14 @@ export function CaptureSubmissionSheet({
             if (!old) return old;
             return {
               ...old,
-              data: [{ id: result.submissionId, ...values }, ...old.data],
+              data: [{
+                id: result.submissionId,
+                ...values,
+                status: "open",
+                duplicateCount: 0,
+                createdAt: new Date().toISOString(),
+                opportunityIds: [],
+              }, ...old.data],
             };
           });
         },

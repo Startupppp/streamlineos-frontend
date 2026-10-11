@@ -29,13 +29,6 @@ The Add filter chooser was exercised beyond status: Priority, Type, Assignee, Cy
 
 ## Evidence screenshots
 
-- `issues-priority-medium.webp`
-- `issues-priority-high-empty.webp`
-- `issues-assignee-unassigned.webp`
-- `issues-cycle-pxc-cycle-1.webp`
-- `issues-labels-missing.webp`
-- `portfolios-pxc-portfolio-1.webp`
-- `programs-pxc-program-1.webp`
 
 No member/role changes, deletes, Client Access submission, or sign-out were performed.
 

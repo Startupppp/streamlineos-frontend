@@ -91,18 +91,18 @@ export function useProductFeedbackFilters(managedProductId: number) {
   );
   const typedFrom = isoDateParam(fromValue, listFilters.isActive("from"));
   const typedTo = isoDateParam(toValue, listFilters.isActive("to"));
+  const dateRangeReversed = Boolean(typedFrom && typedTo && typedFrom > typedTo);
   const typedSourceChannel = useMemo(
     () => SOURCE_CHANNEL_VALUES.includes(sourceChannelValue as FeedbucketSourceChannel)
       ? [sourceChannelValue as FeedbucketSourceChannel]
       : undefined,
     [sourceChannelValue],
   );
-  const typedTheme = useMemo(
-    () => themeValue && themeValue !== BUILD_FILTER_ALL
-      ? themeValue === "untagged" ? [""] : [themeValue]
-      : undefined,
-    [themeValue],
-  );
+  const typedTheme = useMemo(() => {
+    const trimmed = themeValue.trim();
+    if (!trimmed || trimmed === BUILD_FILTER_ALL) return undefined;
+    return trimmed === "untagged" ? [""] : [trimmed];
+  }, [themeValue]);
   const typedSentiment = useMemo(
     () => SENTIMENT_VALUES.includes(sentimentValue as FeedbucketSentiment)
       ? [sentimentValue as FeedbucketSentiment]
@@ -159,8 +159,8 @@ export function useProductFeedbackFilters(managedProductId: number) {
     ...(typedLinked && { linked: typedLinked }),
     ...(typedAssigneeId && { assigneeId: typedAssigneeId }),
     ...(typedDuplicate && { duplicate: typedDuplicate }),
-    ...(typedFrom && { from: wireDateTime(typedFrom, "from") }),
-    ...(typedTo && { to: wireDateTime(typedTo, "to") }),
+    ...(!dateRangeReversed && typedFrom && { from: wireDateTime(typedFrom, "from") }),
+    ...(!dateRangeReversed && typedTo && { to: wireDateTime(typedTo, "to") }),
     ...(typedSourceChannel && { sourceChannel: typedSourceChannel }),
     ...(typedTheme && { theme: typedTheme }),
     ...(typedSentiment && { sentiment: typedSentiment }),
@@ -171,7 +171,7 @@ export function useProductFeedbackFilters(managedProductId: number) {
     ...(listFilters.debouncedSearch.trim() && { search: listFilters.debouncedSearch.trim() }),
   }), [
     managedProductId, typedType, typedStatus, typedLinked, typedAssigneeId, typedDuplicate,
-    typedFrom, typedTo, typedSourceChannel, typedTheme, typedSentiment,
+    dateRangeReversed, typedFrom, typedTo, typedSourceChannel, typedTheme, typedSentiment,
     typedConsentStatus, typedLinkedToOpportunity, typedSegment, typedCrmOrgId,
     listFilters.debouncedSearch,
   ]);
@@ -224,6 +224,7 @@ export function useProductFeedbackFilters(managedProductId: number) {
     typedTo,
     typedAssigneeId,
     paneSubmissionId,
+    dateRangeReversed,
     isFiltered,
     appliedSegment: typedSegment?.[0],
     appliedTheme: typedTheme

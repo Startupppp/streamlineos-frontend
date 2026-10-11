@@ -60,7 +60,7 @@ Access date: 2026-09-30 · Role: new Org Owner (Account A) · Viewport: 1280×80
 - Notices: HR not enabled (red); 14-day trial banner
 - Floating: ASK OS, capture utilities
 - Status: VERIFIED
-- Evidence: `D-dashboard.webp`
+-
 
 ### D-006 · Build OS — All Projects (default)
 - Route: `/build`
@@ -71,7 +71,7 @@ Access date: 2026-09-30 · Role: new Org Owner (Account A) · Viewport: 1280×80
 - Empty state: illustration + “No projects yet” + CTA
 - Toolbar: Search projects, Filters, Display, Grid/List toggles
 - Status: VERIFIED empty
-- Evidence: `/workspace/streamlineos-ux/D-build.webp`
+-
 - Console (session): 401 billing entitlements; 402 dashboard executive; 404 `/api/build/46`
 
 ### D-007… · Overview / Products / Portfolios / Programs / Teams / Inbox / Assigned / Drafts / Build settings / More tools / project detail / create flows

@@ -20,9 +20,9 @@
 
 | Product | Walk status | Filter inventory |
 | --- | --- | --- |
-| **ClickUp** | **SIGNED IN — UI-VERIFIED** (2026-10-01 IST) | `FEATURES.md` §Filters; `BUILD-GAPS.md`; `ACCOUNT.md`; evidence `filters-*.png` |
-| **Linear** | **SIGNED IN — UI-VERIFIED** (2026-10-01 IST) | `FEATURES.md` §Filters + §Custom Views; `BUILD-GAPS.md` F-01…F-07 / V-01…V-02; evidence `filters-*.png` / `custom-view*.png` |
-| **Jira Cloud** | **SIGNED IN — UI-VERIFIED** (2026-10-01 IST) | `FEATURES.md` §Filters (Basic + JQL); `BUILD-GAPS.md`; evidence `filters-basic-more-options.png` / `filters-jql-*.png` |
+| **ClickUp** | **SIGNED IN — UI-VERIFIED** (2026-10-01 IST) | `FEATURES.md` §Filters; `BUILD-GAPS.md`; `ACCOUNT.md`; |
+| **Linear** | **SIGNED IN — UI-VERIFIED** (2026-10-01 IST) | `FEATURES.md` §Filters + §Custom Views; `BUILD-GAPS.md` F-01…F-07 / V-01…V-02; / |
+| **Jira Cloud** | **SIGNED IN — UI-VERIFIED** (2026-10-01 IST) | `FEATURES.md` §Filters (Basic + JQL); `BUILD-GAPS.md`; / |
 | monday / Asana | No CI walk MDs | **PUBLIC / Hypothesis** |
 | Zoho | Secondary · no CI walk | **PUBLIC / Hypothesis** |
 
@@ -81,7 +81,7 @@
 
 ### 1. ClickUp — **UI-VERIFIED**
 
-**Evidence:** `../../streamlineos-analysis-pack/01-ci/competitor-deep/clickup/FEATURES.md` · `BUILD-GAPS.md` · `ACCOUNT.md` · `evidence/filters-*.png`
+**Evidence:** `../../streamlineos-analysis-pack/01-ci/competitor-deep/clickup/FEATURES.md` · `BUILD-GAPS.md` · `ACCOUNT.md` ·
 **Scope:** Signed-in Vaivammcapital · Project 1 · List/Board/Table · Free-only.
 
 | Dimension | UI-VERIFIED | Notes |
@@ -89,8 +89,8 @@
 | Where | Funnel/Filter on List; same panel on Board and Table | Cross-view grammar shared |
 | Fields (observed picker) | Status; **Tags**; Due date; Priority; Assignee; Archived; Assigned comment; Created by; Date closed / created / updated / done; **Dependency**; Duration; Location/List; Recurring; Start date; Status is closed; Time estimate; Time tracked; Sprint points; Follower; Task Type; Last status change; Task Name; Task Description | ~26 fields; **no custom-field entry** in this small workspace; naming is **Tags** (not Labels) |
 | Operators | Status: `Is` / `Is not`; Tags/Due: `Is` / `Is not` / `Is set` / `Is not set`; Priority/Assignee default `Is` + value picker; Assigned comment: `Has assigned comments` | Operator menus UI-opened |
-| Assignee / Me | `Unassigned`, **`Me`**, distinct **`Me Mode`**, signed-in user, Agents… | Evidence `filters-assignee-me-mode.png` |
-| AND / OR / nest | Sibling clauses under `Where`; visible **AND / OR**; **Add nested filter**; Add filter; Clear filter / Clear all | Evidence `filters-list-and-or-tags-operators.png` |
+| Assignee / Me | `Unassigned`, **`Me`**, distinct **`Me Mode`**, signed-in user, Agents… | Evidence |
+| AND / OR / nest | Sibling clauses under `Where`; visible **AND / OR**; **Add nested filter**; Add filter; Clear filter / Clear all | Evidence |
 | Saved filters | Menu: **No saved filters yet** + **Save new filter** | Empty-state affordance verified; none created |
 | Special | List/Board/Table share filter grammar | No AI filter observed on this walk |
 
@@ -100,7 +100,7 @@
 
 ### 2. Linear — **UI-VERIFIED**
 
-**Evidence:** `../../streamlineos-analysis-pack/01-ci/competitor-deep/linear/FEATURES.md` · `BUILD-GAPS.md` (F-01…F-07, V-01…V-02) · `ACCOUNT.md` · `evidence/filters-*.png` / `custom-view*.png`
+**Evidence:** `../../streamlineos-analysis-pack/01-ci/competitor-deep/linear/FEATURES.md` · `BUILD-GAPS.md` (F-01…F-07, V-01…V-02) · `ACCOUNT.md` · /
 **Scope:** Signed-in Tarunchintakunta / team TAR · 2026-10-01 IST · Free-only UI inspection.
 
 | Dimension | UI-VERIFIED | Notes |
@@ -111,7 +111,7 @@
 | Relations | Parent issues; Sub-issues; **Blocked** / **Blocking**; Recurring; Issues with relations; Duplicates | Epic-*class* = Parent; dependency-class = Blocked/Blocking (F-03) |
 | Dates | Due / Created / Updated / Started / Completed / Auto-closed / Triaged / Time in current status; Due presets Overdue, 1d/3d/1w/1m/3m, Custom, No due date; custom operator **in** + Day/Month/Quarter/Half-year/Year | Relative + custom timeframe (F-04) |
 | Values / operators | Multi-value checklist pickers for Status, Assignee (`No assignee` / **Current user** / …), Priority, Labels, etc.; Auto-closed = direct leaf; Content = text input | No separate Is/Is not label on checklist fields |
-| AND / OR / nest | **Advanced filter** → + Filter · Add filter group · toggle **or** / **and** · nested groups with own operator + delete | Evidence `filters-advanced-*.png` (F-05) |
+| AND / OR / nest | **Advanced filter** → + Filter · Add filter group · toggle **or** / **and** · nested groups with own operator + delete | Evidence (F-05) |
 | AI filter | Prompt menu suggestions: `assigned to me`, `completed in the last month`, `due in the next 2 weeks` | Free-only inspect; no paid action |
 | Custom Views | Team Views empty + **Create new view**; builder: name, optional description, Save to workspace, Cancel, Create view | Save/share/favorite **not** exercised (V-03 Not scored) |
 | Keyboard `F` | **Not observed** on this walk | Do not claim walk-verified |
@@ -122,7 +122,7 @@
 
 ### 3. Jira Cloud — **UI-VERIFIED**
 
-**Evidence:** `../../streamlineos-analysis-pack/01-ci/competitor-deep/jira/FEATURES.md` · `BUILD-GAPS.md` · `ACCOUNT.md` · `evidence/filters-basic-more-options.png` / `filters-jql-*.png`
+**Evidence:** `../../streamlineos-analysis-pack/01-ci/competitor-deep/jira/FEATURES.md` · `BUILD-GAPS.md` · `ACCOUNT.md` · /
 **Scope:** `https://pxc-cijira2026100.atlassian.net/issues/?jql=` · 13 seeded work items · Free signup path.
 
 | Dimension | UI-VERIFIED | Notes |
