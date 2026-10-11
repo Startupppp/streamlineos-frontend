@@ -75,6 +75,7 @@ jest.mock("@/features/org-setup/lib/draft", () => ({
   loadStep: jest.fn(() => 1),
   saveStep: jest.fn(),
   clampStep: jest.fn(() => 1),
+  reachableStep: jest.fn((step: number) => step),
   hasDraftProgress: jest.fn(() => false),
   hasCompletionMarker: jest.fn(() => false),
   clearAll: jest.fn((...args: unknown[]) => mockClearAll(...args)),

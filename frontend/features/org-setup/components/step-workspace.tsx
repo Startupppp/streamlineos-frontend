@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import type { ZodIssue } from "zod";
 import {
-  workspaceStepSchema,
+  parseWorkspaceStep,
   DISPLAY_NAME_MAX_LENGTH,
   COMPANY_NAME_MAX_LENGTH,
 } from "../lib/basics-schema";
@@ -69,29 +69,7 @@ export function StepWorkspace({ data, patch, onBack, onNext }: StepWorkspaceProp
   const [attempted, setAttempted] = useState(false);
   const [advancedOpen, setAdvancedOpen] = useState(false);
 
-  const parsed = useMemo(
-    () =>
-      workspaceStepSchema.safeParse({
-        displayName: data.displayName,
-        teamSize: data.teamSize || undefined,
-        timezone: data.timezone || undefined,
-        region: data.region || undefined,
-        companyName: data.companyName || undefined,
-        industry: data.industry || undefined,
-        phone: data.phone || undefined,
-        goals: data.goals.length > 0 ? data.goals : undefined,
-      }),
-    [
-      data.displayName,
-      data.teamSize,
-      data.timezone,
-      data.region,
-      data.companyName,
-      data.industry,
-      data.phone,
-      data.goals,
-    ],
-  );
+  const parsed = useMemo(() => parseWorkspaceStep(data), [data]);
 
   const issues = parsed.success ? [] : parsed.error.issues;
 

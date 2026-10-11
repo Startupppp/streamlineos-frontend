@@ -111,6 +111,10 @@ function buildModuleAnswers(
 }
 
 export function buildOrgSetupPayload(data: WizardData): OrgSetupPayload {
+  if (!data.industry.trim())
+    throw new Error("Select an industry before launching.");
+  if (!data.teamSize.trim())
+    throw new Error("Select a team size before launching.");
   const inviteError = getInviteAccessError(data);
   if (inviteError) throw new Error(inviteError);
   const enabledModules = enabledModulesFor(data);

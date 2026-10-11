@@ -3,6 +3,7 @@ import { getToken, type JWT } from "next-auth/jwt";
 import { recordLegacyRedirect } from "@/lib/observability/legacy-redirect";
 import {
   sessionCookieBases,
+  isSessionCookieName,
   SESSION_EXPIRED_QUERY,
   SESSION_EXPIRED_VALUE,
   withExpiredSessionCookies,
@@ -219,10 +220,15 @@ export async function proxy(req: NextRequest) {
     matchesAny(pathname, PROTECTED_ROUTES) || isBlogAdminPath(pathname);
 
   if (!token && isProtected) {
+    const hasSessionCookie = req.cookies
+      .getAll()
+      .some((c) => isSessionCookieName(c.name));
     const url = req.nextUrl.clone();
     url.pathname = "/signin";
     url.search = "";
-    url.searchParams.set(SESSION_EXPIRED_QUERY, SESSION_EXPIRED_VALUE);
+    if (hasSessionCookie) {
+      url.searchParams.set(SESSION_EXPIRED_QUERY, SESSION_EXPIRED_VALUE);
+    }
     url.searchParams.set("callbackUrl", pathname + req.nextUrl.search);
     return NextResponse.redirect(url);
   }

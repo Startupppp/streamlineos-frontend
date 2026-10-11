@@ -32,6 +32,7 @@ import {
   loadStep,
   saveStep,
   clampStep,
+  reachableStep,
   hasDraftProgress,
   hasCompletionMarker,
   getCompletionDestination,
@@ -178,7 +179,11 @@ export default function OrgSetupPage() {
         ? { ...savedDraft, fullName: sessionName }
         : savedDraft;
     const savedSequence = getStepSequence();
-    const restoredStep = clampStep(loadStep(userId), savedSequence.length);
+    const restoredStep = reachableStep(
+      clampStep(loadStep(userId), savedSequence.length),
+      hydrated,
+      savedSequence,
+    );
     setData(hydrated);
     saveDraft(hydrated, userId);
     setStep(restoredStep);
@@ -203,10 +208,13 @@ export default function OrgSetupPage() {
       serverSession.currentStep,
       mergedSequence,
     );
-    const restoredStep =
+    const restoredStep = reachableStep(
       stepFromServer >= 1
         ? clampStep(stepFromServer, mergedSequence.length)
-        : clampStep(loadStep(userId), mergedSequence.length);
+        : clampStep(loadStep(userId), mergedSequence.length),
+      merged,
+      mergedSequence,
+    );
 
     setData(merged);
     saveDraft(merged, userId);

@@ -10,8 +10,10 @@ import {
   loadStep,
   mergeServerDraft,
   syncDraftToServer,
+  reachableStep,
   type SyncStatus,
 } from "./draft";
+import { DEFAULT_DATA, getStepSequence } from "./constants";
 
 const USER_A = "user-aaa";
 const USER_B = "user-bbb";
@@ -241,5 +243,22 @@ describe("getCompletionDestination", () => {
     sessionStorage.setItem(`org-setup-complete--${USER_A}--${ORG_X}`, "1");
     expect(hasCompletionMarker(USER_A, ORG_X)).toBe(true);
     expect(getCompletionDestination(USER_A, ORG_X)).toBe("/dashboard");
+  });
+});
+
+describe("reachableStep — a restored draft cannot skip an incomplete workspace step", () => {
+  const sequence = getStepSequence();
+  const complete = { ...DEFAULT_DATA, displayName: "Acme", teamSize: "1-10", industry: "Agency" };
+
+  it("sends a draft missing team size and industry back to the workspace step", () => {
+    expect(reachableStep(4, { ...DEFAULT_DATA, displayName: "Acme" }, sequence)).toBe(2);
+  });
+
+  it("keeps the restored step when the workspace step is complete", () => {
+    expect(reachableStep(4, complete, sequence)).toBe(4);
+  });
+
+  it("keeps steps at or before the workspace step", () => {
+    expect(reachableStep(1, DEFAULT_DATA, sequence)).toBe(1);
   });
 });

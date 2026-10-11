@@ -10,7 +10,7 @@ export function describeInviteFailure(action: InviteAction, raw: string): string
   const message = raw.toLowerCase();
 
   if (message.includes("already a member") || message.includes("already member")) {
-    return "This person is already a member of the organization. Manage their access from the People tab instead.";
+    return "This person is already a member of the organization. Manage their access from the Members & Access tab instead.";
   }
   if (message.includes("already accepted") || message.includes("accepted")) {
     return "This invitation was already used — the recipient has joined. Nothing to do.";

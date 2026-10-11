@@ -36,7 +36,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import { describeInviteFailure } from "@/features/directory/users/invite-error-message";
 import { CheckCircle2, Mail } from "lucide-react";
-import { USER_INVITE_ROLES } from "@/lib/constants/user-invite-roles";
+import { DEFAULT_INVITE_ROLE, USER_INVITE_ROLES } from "@/lib/constants/user-invite-roles";
 import { InviteSeatNotice } from "./invite-seat-notice";
 import { INVITE_ACCESS_PRESETS, ModuleAccessSection } from "./invite-module-access";
 import {
@@ -84,7 +84,7 @@ export function UserInviteDialog({
     resolver: zodResolver(inviteUserSchema),
     defaultValues: {
       email: defaultEmail ?? "",
-      role: undefined,
+      role: DEFAULT_INVITE_ROLE,
       moduleAccess: defaultModuleAccess,
     },
   });
@@ -94,7 +94,7 @@ export function UserInviteDialog({
       if (!isOpen) {
         form.reset({
           email: defaultEmail ?? "",
-          role: undefined,
+          role: DEFAULT_INVITE_ROLE,
           moduleAccess: defaultModuleAccess,
         });
         setInvited(false);
@@ -142,7 +142,7 @@ export function UserInviteDialog({
   const handleResetInvite = useCallback(() => {
     form.reset({
           email: defaultEmail ?? "",
-          role: undefined,
+          role: DEFAULT_INVITE_ROLE,
           moduleAccess: defaultModuleAccess,
         });
     setInvited(false);

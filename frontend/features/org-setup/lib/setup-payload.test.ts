@@ -13,6 +13,8 @@ function wizard(
 ): WizardData {
   return {
     ...DEFAULT_DATA,
+    industry: "Technology",
+    teamSize: "1-10",
     modules,
     installedApps: modules,
     invitees,
@@ -178,6 +180,8 @@ describe("buildOrgSetupPayload — moduleAnswers", () => {
   it("includes non-empty answers for selected modules in the payload", () => {
     const data: WizardData = {
       ...DEFAULT_DATA,
+      industry: "Technology",
+      teamSize: "1-10",
       modules: ["build", "hr", "chat", "kb"],
       installedApps: ["build", "hr", "chat", "kb"],
       invitees: [],
@@ -196,6 +200,8 @@ describe("buildOrgSetupPayload — moduleAnswers", () => {
   it("omits moduleAnswers from payload when all answers are empty", () => {
     const data: WizardData = {
       ...DEFAULT_DATA,
+      industry: "Technology",
+      teamSize: "1-10",
       modules: ["build", "chat", "kb"],
       installedApps: ["build", "chat", "kb"],
       invitees: [],
@@ -208,6 +214,8 @@ describe("buildOrgSetupPayload — moduleAnswers", () => {
   it("omits answers for modules not in enabledModules", () => {
     const data: WizardData = {
       ...DEFAULT_DATA,
+      industry: "Technology",
+      teamSize: "1-10",
       modules: ["crm", "chat", "kb"],
       installedApps: ["crm", "chat", "kb"],
       invitees: [],
@@ -218,5 +226,25 @@ describe("buildOrgSetupPayload — moduleAnswers", () => {
     };
     const payload = buildOrgSetupPayload(data);
     expect(payload.moduleAnswers).toEqual({ crm: { salesModel: "B2B" } });
+  });
+});
+
+describe("buildOrgSetupPayload — required workspace fields", () => {
+  it("throws when industry is empty", () => {
+    expect(() =>
+      buildOrgSetupPayload({ ...wizard([]), industry: "" }),
+    ).toThrow("Select an industry before launching.");
+  });
+
+  it("throws when teamSize is empty", () => {
+    expect(() =>
+      buildOrgSetupPayload({ ...wizard([]), teamSize: "" }),
+    ).toThrow("Select a team size before launching.");
+  });
+
+  it("succeeds when both required fields are present", () => {
+    expect(() =>
+      buildOrgSetupPayload({ ...wizard([]), industry: "Technology", teamSize: "1-10" }),
+    ).not.toThrow();
   });
 });

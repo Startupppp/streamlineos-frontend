@@ -1,6 +1,7 @@
 import { apiClient } from "@/lib/api-client";
 import { orgSetupDraftSaveContract, orgSetupDraftContract } from "@/hooks/api/org-setup-schema";
-import { ALWAYS_ENABLED_MODULES, DEFAULT_DATA, DRAFT_KEY } from "./constants";
+import { ALWAYS_ENABLED_MODULES, DEFAULT_DATA, DRAFT_KEY, type StepId } from "./constants";
+import { parseWorkspaceStep } from "./basics-schema";
 import { parseWizardDraft, type WizardData } from "./wizard-data-schema";
 
 const STEP_KEY = "org-setup-step";
@@ -100,6 +101,16 @@ export function hasDraftProgress(data: WizardData): boolean {
 export function clampStep(step: number, totalSteps: number): number {
   if (!Number.isFinite(step) || totalSteps < 1) return 1;
   return Math.min(Math.max(Math.trunc(step), 1), totalSteps);
+}
+
+export function reachableStep(
+  step: number,
+  data: WizardData,
+  sequence: readonly StepId[],
+): number {
+  const workspaceStep = sequence.indexOf("workspace") + 1;
+  if (workspaceStep < 1 || step <= workspaceStep) return step;
+  return parseWorkspaceStep(data).success ? step : workspaceStep;
 }
 
 export function loadStep(scopeId: string): number {
