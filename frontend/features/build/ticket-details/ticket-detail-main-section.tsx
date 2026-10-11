@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import type { ProjectMember } from "./types";
 import type { Ticket } from "@/types/projects";
+import { TICKET_TITLE_MAX } from "@/lib/validation/projects";
 
 const TiptapEditorDynamic = dynamic(
   () => import("@/components/editor/tiptap-editor").then((m) => ({ default: m.TiptapEditor })),
@@ -225,6 +226,7 @@ export function TicketDetailMainSection({
               onTitleChange(event);
             }}
             rows={2}
+            maxLength={TICKET_TITLE_MAX}
             aria-invalid={titleError ? true : undefined}
             aria-describedby={titleError ? `ticket-title-error-${ticketId}` : undefined}
             className="h-auto min-h-12 w-full max-w-full resize-none break-words rounded-md border-border bg-card px-3 py-2 text-base font-medium leading-snug shadow-none transition-colors duration-200 [overflow-wrap:anywhere] [word-break:break-word] hover:border-foreground/30 focus-visible:ring-1"

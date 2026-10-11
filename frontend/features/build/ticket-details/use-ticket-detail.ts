@@ -21,6 +21,7 @@ import {
   type TicketConflictFieldDiff,
 } from "./ticket-conflict-diff";
 import { useTicketDetailProjectData } from "./use-ticket-detail-project-data";
+import { TICKET_TITLE_MAX } from "@/lib/validation/projects";
 
 interface UseTicketDetailOptions {
   projectId: number;
@@ -44,6 +45,7 @@ export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDet
   const offlineDraftRef = useRef<Record<string, unknown>>({});
   const [conflict, setConflict] = useState<TicketConflictState | null>(null);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingSaveRef = useRef<Record<string, unknown> | null>(null);
   const lastSavedAtRef = useRef<string | undefined>(undefined);
   const lastSavedVersionRef = useRef<number | undefined>(undefined);
   const saveQueueRef = useRef<Promise<void>>(Promise.resolve());
@@ -214,8 +216,10 @@ export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDet
   const debouncedSave = useCallback(
     (field: Record<string, unknown>) => {
       if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+      pendingSaveRef.current = field;
       setSaving(true);
       debounceTimerRef.current = setTimeout(() => {
+        pendingSaveRef.current = null;
         enqueueSave(field);
       }, 500);
     },
@@ -224,8 +228,38 @@ export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDet
 
   useEffect(() => {
     return () => {
-      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+      const pending = pendingSaveRef.current;
+      if (debounceTimerRef.current !== null) {
+        clearTimeout(debounceTimerRef.current);
+        debounceTimerRef.current = null;
+      }
+      pendingSaveRef.current = null;
+      if (pending) enqueueSaveRef.current?.(pending);
     };
+  }, []);
+
+  useEffect(() => {
+    function handleBeforeUnload(e: BeforeUnloadEvent) {
+      if (pendingSaveRef.current !== null) {
+        e.preventDefault();
+      }
+    }
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, []);
+
+  useEffect(() => {
+    function handlePageHide() {
+      const pending = pendingSaveRef.current;
+      if (pending !== null && debounceTimerRef.current !== null) {
+        clearTimeout(debounceTimerRef.current);
+        debounceTimerRef.current = null;
+        pendingSaveRef.current = null;
+        enqueueSaveRef.current?.(pending);
+      }
+    }
+    window.addEventListener("pagehide", handlePageHide);
+    return () => window.removeEventListener("pagehide", handlePageHide);
   }, []);
 
   const discardConflictingEdit = useCallback(() => {
@@ -259,19 +293,23 @@ export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDet
       if (!trimmed) {
         return "Title is required";
       }
+      if (trimmed.length > TICKET_TITLE_MAX) {
+        return `Title must be at most ${TICKET_TITLE_MAX} characters`;
+      }
       setLocalTitle(trimmed);
       if (trimmed !== (ticket?.title ?? "")) {
-        debouncedSave({ title: trimmed });
+        autoSave({ title: trimmed });
       }
       return null;
     },
-    [debouncedSave, setLocalTitle, ticket?.title],
+    [autoSave, setLocalTitle, ticket?.title],
   );
 
   const revertTitle = useCallback(() => {
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
       debounceTimerRef.current = null;
+      pendingSaveRef.current = null;
       setSaving(false);
     }
     setLocalTitle(ticket?.title ?? "");

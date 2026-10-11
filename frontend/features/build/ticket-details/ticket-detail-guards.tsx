@@ -19,7 +19,6 @@ interface TicketDetailGuardsProps {
   parsed: ParsedTicketKey | null;
   backHref: string;
   displayKey: string;
-  projectLoading: boolean;
   byKeyLoading: boolean;
   canViewAccess: AccessState;
   byKeyError: Error | null;
@@ -55,7 +54,6 @@ export function TicketDetailGuards({
   parsed,
   backHref,
   displayKey,
-  projectLoading,
   byKeyLoading,
   canViewAccess,
   byKeyError,
@@ -74,7 +72,7 @@ export function TicketDetailGuards({
 }: TicketDetailGuardsProps): ReactNode {
   if (!parsed) return notFound();
 
-  if (projectLoading || byKeyLoading || canViewAccess === "loading") {
+  if (byKeyLoading || canViewAccess === "loading") {
     return (
       <PageWrapper title="Loading..." backHref={backHref} noInternalScroll className="h-full">
         <DetailSkeleton />

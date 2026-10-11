@@ -18,7 +18,7 @@ describe("Ticket title edit commit contract (F2)", () => {
   });
 
   it("only saves title through commitTitle", () => {
-    expect(detail).toMatch(/debouncedSave\(\{\s*title:/);
+    expect(detail).toMatch(/autoSave\(\{\s*title:/);
     expect(detail).toMatch(/commitTitle/);
   });
 });

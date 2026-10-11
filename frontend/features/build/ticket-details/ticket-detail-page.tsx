@@ -60,7 +60,7 @@ export function TicketDetailPage({
   const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
 
   const parsed = useMemo(() => parseTicketKey(ticketKey), [ticketKey]);
-  const { data: projectData, isLoading: projectLoading } = useProject(projectId);
+  const { data: projectData } = useProject(projectId);
   const {
     data: byKeyTicket,
     isLoading: byKeyLoading,
@@ -146,7 +146,6 @@ export function TicketDetailPage({
       parsed={parsed}
       backHref={backHref}
       displayKey={displayKey}
-      projectLoading={projectLoading}
       byKeyLoading={byKeyLoading}
       canViewAccess={canViewAccess}
       byKeyError={byKeyError ?? null}
