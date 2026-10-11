@@ -3,7 +3,6 @@
 import { useMemo, useCallback } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { UseFormReturn } from "react-hook-form";
-import { z } from "zod";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -22,21 +21,7 @@ import { useGoals } from "@/hooks/api/goals";
 import { useEpics } from "@/hooks/api/build/epics";
 import { useRoadmapItems } from "@/hooks/api/build/roadmap";
 import type { AcceptOpportunityInput } from "@/hooks/api/build/product-discovery-mutations";
-
-const acceptSchema = z.object({
-  horizon: z.enum(["now", "next", "later"]),
-  title: z.string().optional(),
-  projectId: z.number().int().positive().optional(),
-  goalId: z.number().int().positive().optional(),
-  releaseId: z.number().int().positive().optional(),
-  epicTicketId: z.number().int().positive().optional(),
-  isPublic: z.boolean().optional(),
-  dependsOnIds: z.array(z.number().int().positive()).optional(),
-  note: z.string().optional(),
-  expectedVersion: z.number().int(),
-});
-
-type AcceptFormValues = z.infer<typeof acceptSchema>;
+import { acceptSchema, type AcceptFormValues } from "./opportunity-accept-schema";
 
 interface NamedItem {
   id: number;

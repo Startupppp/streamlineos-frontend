@@ -18,3 +18,8 @@ export function formatRiceScore(score: number | null): string {
   if (score === null) return "Unscored";
   return score.toFixed(2);
 }
+
+export function formatStoredRiceScore(value: string | null | undefined): string {
+  const score = value == null || value.trim() === "" ? Number.NaN : Number(value);
+  return formatRiceScore(Number.isFinite(score) ? score : null);
+}

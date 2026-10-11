@@ -8,6 +8,7 @@ import { BuildListSurface } from "@/features/build/shared/build-list-surface";
 import type { DataTableColumn } from "@/components/ui/data-table.types";
 import type { DiscoveryListOpportunitiesResponse } from "@/contracts/build-contracts.generated";
 import { COMPARE_MAX } from "./compare-drawer";
+import { formatStoredRiceScore } from "./rice-formula";
 
 type OpportunityRow = DiscoveryListOpportunitiesResponse["data"][number];
 type OpportunitiesListPagination = DiscoveryListOpportunitiesResponse["pagination"];
@@ -20,10 +21,9 @@ function ScoreBadge({ row }: { row: OpportunityRow }) {
       </span>
     );
   }
-  const score = row.latestScore?.effectiveScore ?? null;
   return (
     <span className="font-mono tabular-nums text-sm font-semibold text-foreground">
-      {score ?? "—"}
+      {formatStoredRiceScore(row.latestScore?.effectiveScore)}
     </span>
   );
 }
