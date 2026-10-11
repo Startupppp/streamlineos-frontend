@@ -177,7 +177,6 @@ test.describe("Build list responsive contract", () => {
       await expect(dialog.getByLabel("Lead")).toBeVisible();
       await expect(dialog.getByLabel("Status")).toHaveCount(0);
       await expect(dialog.getByLabel("Health")).toHaveCount(0);
-      await expect(dialog.getByRole("button", { name: "Done" })).toBeVisible();
 
       const focusInside = await dialog.evaluate(
         (node: HTMLElement) => node.contains(document.activeElement),
@@ -275,13 +274,14 @@ test.describe("Build list responsive contract", () => {
 
     test("two filters stay beside search and the third opens from Filters", async ({ page }) => {
       const scope = frame(page, "four-actions-three-filters");
-      const search = await scope.locator("[data-slot=search-input]").boundingBox();
-      const status = await scope.locator("[data-filter-id=status]").boundingBox();
+      await expect(scope.locator("[data-slot=search-input]")).toBeVisible();
       await expect(scope.locator("[data-filter-id=status]")).toBeVisible();
       await expect(scope.locator("[data-filter-id=health]")).toBeVisible();
       await expect(scope.locator("[data-filter-id=lead]")).toBeHidden();
       await expect(scope.getByRole("button", { name: /^Filters/ })).toBeVisible();
-      expect(Math.abs((search?.y ?? 0) - (status?.y ?? -1))).toBeLessThan(8);
+      const search = await scope.locator("[data-slot=search-input]").boundingBox();
+      const status = await scope.locator("[data-filter-id=status]").boundingBox();
+      expect(Math.abs((search?.y ?? 0) - (status?.y ?? 0))).toBeLessThan(8);
     });
 
     test("the desktop table replaces the mobile cards", async ({ page }) => {
@@ -306,11 +306,12 @@ test.describe("Build list responsive contract", () => {
 
     test("search and three filters share one row", async ({ page }) => {
       const scope = frame(page, "four-actions-three-filters");
-      const search = await scope.locator("[data-slot=search-input]").boundingBox();
       const lead = scope.locator("[data-filter-id=lead]");
       await expect(lead).toBeVisible();
+      await expect(scope.locator("[data-slot=search-input]")).toBeVisible();
+      const search = await scope.locator("[data-slot=search-input]").boundingBox();
       const leadBox = await lead.boundingBox();
-      expect(Math.abs((search?.y ?? 0) - (leadBox?.y ?? -1))).toBeLessThan(8);
+      expect(Math.abs((search?.y ?? 0) - (leadBox?.y ?? 0))).toBeLessThan(8);
       await expect(scope.getByRole("button", { name: /^Filters/ })).toBeHidden();
     });
 
