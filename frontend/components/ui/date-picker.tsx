@@ -36,9 +36,10 @@ interface DatePickerProps {
   disabledDays?: (date: Date) => boolean;
   dateFormat?: string;
   disablePast?: boolean;
-  /** Lets an optional field return to empty. */
   clearable?: boolean;
   ariaLabel?: string;
+  "aria-describedby"?: string;
+  "aria-invalid"?: boolean;
 }
 
 function parseDateValue(value: string | undefined): Date | undefined {
@@ -63,6 +64,8 @@ export function DatePicker({
   disablePast = false,
   clearable = false,
   ariaLabel,
+  "aria-describedby": ariaDescribedBy,
+  "aria-invalid": ariaInvalid,
 }: DatePickerProps) {
   const [open, setOpen] = useState(false);
   const selected = parseDateValue(value);
@@ -109,62 +112,65 @@ export function DatePicker({
     toDate !== undefined ||
     disabledDays !== undefined;
 
-  const sized = className != null && /\b(?:w-|max-w-|min-w-|flex-)/.test(className);
+  const sized =
+    className != null && /\b(?:w-|max-w-|min-w-|flex-)/.test(className);
 
   return (
     <div className={cn("relative min-w-0", sized ? className : "w-full")}>
-    <Popover open={open} onOpenChange={handleOpenChange} modal>
-      <PopoverTrigger asChild>
-        <Button
-          id={id}
-          type="button"
-          variant="outline"
-          disabled={disabled}
-          aria-label={ariaLabel}
-          className={cn(
-            FIELD_CONTROL_CLASS,
-            "w-full min-w-0 justify-start gap-2 px-3 text-left font-normal",
-            clearable && selected && "pr-8",
-            !selected && "text-muted-foreground",
-            className,
-          )}
+      <Popover open={open} onOpenChange={handleOpenChange} modal>
+        <PopoverTrigger asChild>
+          <Button
+            id={id}
+            type="button"
+            variant="outline"
+            disabled={disabled}
+            aria-label={ariaLabel}
+            aria-describedby={ariaDescribedBy}
+            aria-invalid={ariaInvalid}
+            className={cn(
+              FIELD_CONTROL_CLASS,
+              "w-full min-w-0 justify-start gap-2 px-3 text-left font-normal",
+              clearable && selected && "pr-8",
+              !selected && "text-muted-foreground",
+              className,
+            )}
+          >
+            <CalendarIcon className="h-4 w-4 shrink-0" />
+            <span className="truncate">
+              {selected ? format(selected, dateFormat) : placeholder}
+            </span>
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent
+          className={cn(FIELD_DATE_POPOVER_CONTENT_CLASS, "p-0")}
+          align="start"
         >
-          <CalendarIcon className="h-4 w-4 shrink-0" />
-          <span className="truncate">
-            {selected ? format(selected, dateFormat) : placeholder}
-          </span>
+          <Calendar
+            mode="single"
+            selected={selected}
+            onSelect={handleSelect}
+            fromDate={effectiveFromDate}
+            toDate={toDate}
+            fromYear={yearBounds.fromYear}
+            toYear={yearBounds.toYear}
+            defaultMonth={selected ?? effectiveFromDate}
+            initialFocus
+            disabled={hasDisabledDates ? isDateDisabled : undefined}
+          />
+        </PopoverContent>
+      </Popover>
+      {clearable && selected && !disabled ? (
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-sm"
+          className="absolute right-1 top-1/2 size-7 -translate-y-1/2"
+          aria-label={ariaLabel ? `Clear ${ariaLabel}` : "Clear date"}
+          onClick={handleClear}
+        >
+          <X className="h-3.5 w-3.5" />
         </Button>
-      </PopoverTrigger>
-      <PopoverContent
-        className={cn(FIELD_DATE_POPOVER_CONTENT_CLASS, "p-0")}
-        align="start"
-      >
-        <Calendar
-          mode="single"
-          selected={selected}
-          onSelect={handleSelect}
-          fromDate={effectiveFromDate}
-          toDate={toDate}
-          fromYear={yearBounds.fromYear}
-          toYear={yearBounds.toYear}
-          defaultMonth={selected ?? effectiveFromDate}
-          initialFocus
-          disabled={hasDisabledDates ? isDateDisabled : undefined}
-        />
-      </PopoverContent>
-    </Popover>
-    {clearable && selected && !disabled ? (
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon-sm"
-        className="absolute right-1 top-1/2 size-7 -translate-y-1/2"
-        aria-label={ariaLabel ? `Clear ${ariaLabel}` : "Clear date"}
-        onClick={handleClear}
-      >
-        <X className="h-3.5 w-3.5" />
-      </Button>
-    ) : null}
+      ) : null}
     </div>
   );
 }

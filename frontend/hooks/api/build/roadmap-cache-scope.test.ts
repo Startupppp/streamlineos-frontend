@@ -19,7 +19,8 @@ function invalidationsIn(hookName: string): string {
     let m: RegExpExecArray | null;
     while ((m = helperPattern.exec(hookBody)) !== null) {
       const helperName = m[1];
-      const hIdx = src.lastIndexOf(`\nfunction ${helperName}(`, start);
+      const plainIdx = src.lastIndexOf(`\nfunction ${helperName}(`, start);
+      const hIdx = plainIdx !== -1 ? plainIdx : src.lastIndexOf(`\nexport function ${helperName}(`, start);
       if (hIdx === -1) continue;
       const hEnd = src.indexOf("\nfunction ", hIdx + 1);
       expanded += src.slice(hIdx, hEnd === -1 ? start : Math.min(hEnd, start));

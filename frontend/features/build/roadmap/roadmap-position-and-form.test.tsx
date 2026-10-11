@@ -24,6 +24,27 @@ jest.mock("@/components/ui/combobox", () => ({
   Combobox: () => <select aria-label="Delivery project" />,
 }));
 
+jest.mock("@/components/ui/date-picker", () => ({
+  DatePicker: ({
+    value,
+    onChange,
+    ariaLabel,
+    id,
+  }: {
+    value?: string;
+    onChange: (value: string) => void;
+    ariaLabel?: string;
+    id?: string;
+  }) => (
+    <input
+      id={id}
+      aria-label={ariaLabel}
+      value={value ?? ""}
+      onChange={(event) => onChange(event.target.value)}
+    />
+  ),
+}));
+
 jest.mock("@/components/shared/dirty-state-context", () => ({
   useRegisterDirtyState: jest.fn(),
   useNavigationLeave: () => (action: () => void) => action(),

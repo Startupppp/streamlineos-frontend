@@ -9,7 +9,7 @@ import {
   goalDetailContract,
 } from "./goals-schema";
 
-const GOALS_SERVICE = "src/modules/goals/goals.service.ts";
+const GOALS_SERVICE = "src/modules/goals/goals-read.service.ts";
 const GOALS_RESPONSE_SCHEMAS = "src/modules/goals/dto/goals-response.schemas.ts";
 
 function firstRowKeys<T extends object>(rows: T[]): string[] {

@@ -1,7 +1,9 @@
 "use client";
 
-import type { Control } from "react-hook-form";
+import { parseISO, isValid } from "date-fns";
+import { useWatch, type Control } from "react-hook-form";
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
@@ -23,6 +25,12 @@ import { useGoals } from "@/hooks/api/goals";
 
 const BUILD_FILTER_NONE = "__none__";
 
+function parseTargetDate(value: string | undefined): Date | undefined {
+  if (!value) return undefined;
+  const parsed = parseISO(value);
+  return isValid(parsed) ? parsed : undefined;
+}
+
 interface RoadmapItemFormFieldsProps {
   control: Control<RoadmapItemFormValues>;
   isEdit: boolean;
@@ -37,6 +45,8 @@ export function RoadmapItemFormFields({
   managedProductId,
 }: RoadmapItemFormFieldsProps) {
   const { data: goals } = useGoals();
+  const targetStart = useWatch({ control, name: "targetStart" });
+  const earliestEnd = parseTargetDate(targetStart);
 
   const decisionSnapshot = item?.decisionSnapshot;
 
@@ -147,7 +157,14 @@ export function RoadmapItemFormFields({
             <FormItem>
               <FormLabel>Target Start</FormLabel>
               <FormControl>
-                <Input type="date" {...field} />
+                <DatePicker
+                  value={field.value}
+                  onChange={field.onChange}
+                  ariaLabel="Target Start"
+                  placeholder="Pick a date"
+                  dateFormat="dd MMM yyyy"
+                  clearable
+                />
               </FormControl>
               <FormMessage className="text-xs" />
             </FormItem>
@@ -160,7 +177,15 @@ export function RoadmapItemFormFields({
             <FormItem>
               <FormLabel>Target End</FormLabel>
               <FormControl>
-                <Input type="date" {...field} />
+                <DatePicker
+                  value={field.value}
+                  onChange={field.onChange}
+                  ariaLabel="Target End"
+                  placeholder="Pick a date"
+                  dateFormat="dd MMM yyyy"
+                  fromDate={earliestEnd}
+                  clearable
+                />
               </FormControl>
               <FormMessage className="text-xs" />
             </FormItem>
