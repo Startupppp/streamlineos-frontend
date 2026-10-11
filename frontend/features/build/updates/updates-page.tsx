@@ -3,7 +3,7 @@
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { PlusIcon } from "@animateicons/react/lucide";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import {
   useProjectUpdates,
   useCreateProjectUpdate,
@@ -32,16 +32,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import type { ProjectUpdateRow } from "@/hooks/api/build/project-updates";
 import { createUpdateSchema, type CreateUpdateInput } from "./updates-schema";
 import { UpdateFormFields } from "./update-form-fields";
-
-function NewUpdateButton({ onClick }: { onClick: () => void }) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <Button onClick={onClick} {...hoverHandlers}>
-      <PlusIcon ref={iconRef} size={14} />
-      Post Update
-    </Button>
-  );
-}
 
 function UpdateCard({
   update,
@@ -204,7 +194,11 @@ export function UpdatesPage({ projectId }: UpdatesPageProps) {
     <PageWrapper
       title="Updates"
       subtitle="Project status updates and announcements"
-      actions={canManage ? <NewUpdateButton onClick={handleOpenDialog} /> : undefined}
+      actions={canManage ? (
+          <AnimatedIconButton type="button" icon={PlusIcon} onClick={handleOpenDialog}>
+            Post Update
+          </AnimatedIconButton>
+        ) : undefined}
     >
       {!isOnline && (
         <p className="mb-2 rounded-md bg-muted/50 px-4 py-2 text-sm text-muted-foreground">

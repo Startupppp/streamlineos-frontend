@@ -77,29 +77,6 @@ function TriageActions({ isArchived, actions }: { isArchived: boolean; actions: 
   </div>;
 }
 
-function TrashButton({
-  onClick,
-  isDeleting,
-}: {
-  onClick: (e: React.MouseEvent) => void;
-  isDeleting?: boolean;
-}) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <Button
-      variant="ghost"
-      size="icon"
-      className="h-7 w-7 shrink-0 hover:text-destructive"
-      aria-label="Delete notification"
-      onClick={onClick}
-      disabled={isDeleting}
-      {...hoverHandlers}
-    >
-      <Trash2Icon ref={iconRef} size={14} />
-    </Button>
-  );
-}
-
 export interface NotificationCardActionsProps {
   pinned: boolean;
   isArchived: boolean;
@@ -161,7 +138,16 @@ export function NotificationCardActions({
         </Button>
       ) : null}
       {onDelete ? (
-        <TrashButton onClick={onDelete} isDeleting={isDeleting} />
+        <AnimatedIconButton
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7 shrink-0 hover:text-destructive"
+          aria-label="Delete notification"
+          onClick={onDelete}
+          disabled={isDeleting}
+          icon={Trash2Icon}
+          iconSize={14}
+        />
       ) : null}
     </div>
   );

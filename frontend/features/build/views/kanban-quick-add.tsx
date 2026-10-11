@@ -2,29 +2,14 @@
 
 import { useState, useRef, useCallback } from "react";
 import { Input } from "@/components/ui/input";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { PlusIcon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { useCreateTicket } from "@/hooks/api/build/tickets";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
-
-function HeaderAddButton({ onClick }: { onClick: () => void }) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="flex h-6 w-6 items-center justify-center rounded hover:bg-muted/70 transition-colors text-muted-foreground hover:text-foreground shrink-0"
-      aria-label="Add ticket to column"
-      {...hoverHandlers}
-    >
-      <PlusIcon ref={iconRef} size={14} />
-    </button>
-  );
-}
 
 interface QuickAddInputProps {
   columnId: string;
@@ -41,6 +26,7 @@ function QuickAddInputContent({ columnId, projectId }: QuickAddInputProps) {
   const [value, setValue] = useState("");
   const [isAdding, setIsAdding] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const { iconRef: addIconRef, hoverHandlers: addHoverHandlers } = useAnimatedIcon();
   const queryClient = useQueryClient();
 
   const createTicket = useCreateTicket({
@@ -97,8 +83,18 @@ function QuickAddInputContent({ columnId, projectId }: QuickAddInputProps) {
     setTimeout(() => inputRef.current?.focus(), 50);
   }, []);
 
-  if (!isAdding) 
-    return <HeaderAddButton onClick={handleAddClick} />;
+  if (!isAdding)
+    return (
+      <button
+        type="button"
+        onClick={handleAddClick}
+        className="flex h-6 w-6 items-center justify-center rounded hover:bg-muted/70 transition-colors text-muted-foreground hover:text-foreground shrink-0"
+        aria-label="Add ticket to column"
+        {...addHoverHandlers}
+      >
+        <PlusIcon ref={addIconRef} size={14} />
+      </button>
+    );
   
 
   return (

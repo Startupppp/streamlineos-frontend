@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
-import { PlusIcon, EllipsisIcon } from "@animateicons/react/lucide";
+import { EllipsisIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -25,16 +25,6 @@ export const TRANSITION_TABLE_HEADERS = [
   "Allowed roles",
   "Actions",
 ] as const;
-
-export function AddTransitionButton({ onClick }: { onClick: () => void }) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <Button size="sm" variant="outline" className="h-7 gap-1.5 text-xs" onClick={onClick} {...hoverHandlers}>
-      <PlusIcon ref={iconRef} size={14} />
-      Add
-    </Button>
-  );
-}
 
 export function TransitionRowActions({
   transition,

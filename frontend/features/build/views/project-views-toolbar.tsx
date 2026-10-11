@@ -3,7 +3,6 @@
 import { useCallback, type RefObject } from "react";
 import { Save, X } from "lucide-react";
 import { BookmarkIcon } from "@animateicons/react/lucide";
-import type { IconHandle } from "@animateicons/react";
 import { Badge } from "@/components/ui/badge";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -28,31 +27,7 @@ import { useCan } from "@/hooks/api/access";
 import { useModules } from "@/hooks/api/build/modules";
 import { useModuleFilterParam } from "@/features/build/views/use-module-filter-param";
 
-type AnimatedToolbarIcon = React.ForwardRefExoticComponent<
-  { size?: number } & React.RefAttributes<IconHandle>
->;
-
-interface ToolbarIconButtonProps {
-  onClick: () => void;
-  ariaLabel: string;
-  Icon: AnimatedToolbarIcon;
-}
-
 const TOOLBAR_ICON_BTN = "size-9 shrink-0 border-border/70 bg-card";
-
-function ToolbarIconButton({ onClick, ariaLabel, Icon }: ToolbarIconButtonProps) {
-  return (
-    <AnimatedIconButton
-      icon={Icon}
-      iconSize={14}
-      variant="outline"
-      size="icon"
-      onClick={onClick}
-      className={TOOLBAR_ICON_BTN}
-      aria-label={ariaLabel}
-    />
-  );
-}
 
 interface Member {
   id: string;
@@ -176,10 +151,14 @@ export function ProjectViewsToolbar({
         />
 
         {canManageViews ? (
-          <ToolbarIconButton
+          <AnimatedIconButton
+            icon={BookmarkIcon}
+            iconSize={14}
+            variant="outline"
+            size="icon"
             onClick={handleSaveViewClick}
-            ariaLabel="Save view"
-            Icon={BookmarkIcon}
+            className={TOOLBAR_ICON_BTN}
+            aria-label="Save view"
           />
         ) : null}
       </div>

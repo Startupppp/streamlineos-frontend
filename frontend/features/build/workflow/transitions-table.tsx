@@ -16,13 +16,17 @@ import { Badge } from "@/components/ui/badge";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { TransitionFormSheet } from "./transition-form-sheet";
 import type { CustomState } from "@/hooks/api/build/custom-states";
-import type { WorkflowTransition, CreateTransitionInput } from "@/types/projects/workflow";
+import type {
+  WorkflowTransition,
+  CreateTransitionInput,
+} from "@/types/projects/workflow";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { cn } from "@/lib/utils";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { PlusIcon } from "@animateicons/react/lucide";
 import {
   TRANSITION_TABLE_HEADERS,
-  AddTransitionButton,
   TransitionRowActions,
   buildTransitionColumns,
 } from "./transition-table-parts";
@@ -49,21 +53,33 @@ export function TransitionsTable({
   onEditTargetChange,
 }: TransitionsTableProps) {
   const canManage = useCan("build:workflow:manage");
-  const { data: ownTransitions, isLoading: ownIsLoading, isError: ownIsError, error: ownError, refetch } = useWorkflowTransitions(projectId);
+  const {
+    data: ownTransitions,
+    isLoading: ownIsLoading,
+    isError: ownIsError,
+    error: ownError,
+    refetch,
+  } = useWorkflowTransitions(projectId);
   const createTransition = useCreateTransition(projectId);
   const updateTransition = useUpdateTransition(projectId);
   const deleteTransition = useDeleteTransition(projectId);
 
   const [internalSheetOpen, setInternalSheetOpen] = useState(false);
-  const [internalEditTarget, setInternalEditTarget] = useState<WorkflowTransition | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<WorkflowTransition | null>(null);
+  const [internalEditTarget, setInternalEditTarget] =
+    useState<WorkflowTransition | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<WorkflowTransition | null>(
+    null,
+  );
 
-  const transitions = externalTransitions ?? (ownTransitions ?? []);
-  const isLoading = externalIsLoading !== undefined ? externalIsLoading : ownIsLoading;
+  const transitions = externalTransitions ?? ownTransitions ?? [];
+  const isLoading =
+    externalIsLoading !== undefined ? externalIsLoading : ownIsLoading;
   const isError = externalTransitions === undefined ? ownIsError : false;
   const error = externalTransitions === undefined ? ownError : undefined;
-  const sheetOpen = externalSheetOpen !== undefined ? externalSheetOpen : internalSheetOpen;
-  const editTarget = externalEditTarget !== undefined ? externalEditTarget : internalEditTarget;
+  const sheetOpen =
+    externalSheetOpen !== undefined ? externalSheetOpen : internalSheetOpen;
+  const editTarget =
+    externalEditTarget !== undefined ? externalEditTarget : internalEditTarget;
   const setSheetOpen = onSheetOpenChange ?? setInternalSheetOpen;
   const setEditTarget = onEditTargetChange ?? setInternalEditTarget;
 
@@ -139,7 +155,10 @@ export function TransitionsTable({
       <div className="flex items-start justify-between gap-2 px-3 py-3">
         <div className="min-w-0 flex-1 space-y-1.5">
           <div className="flex flex-wrap items-center gap-1.5">
-            <Badge variant={row.fromStatusId === null ? "secondary" : "outline"} className="text-xs">
+            <Badge
+              variant={row.fromStatusId === null ? "secondary" : "outline"}
+              className="text-xs"
+            >
               {resolveStatusName(row.fromStatusId)}
             </Badge>
             <span className="text-xs text-muted-foreground">→</span>
@@ -151,7 +170,9 @@ export function TransitionsTable({
             <p className="text-sm font-medium text-foreground">{row.name}</p>
           ) : null}
           {row.requiresApproval ? (
-            <Badge variant="secondary" className="text-micro">Approval required</Badge>
+            <Badge variant="secondary" className="text-micro">
+              Approval required
+            </Badge>
           ) : null}
         </div>
         {canManage ? (
@@ -175,8 +196,21 @@ export function TransitionsTable({
   return (
     <>
       <div className="mb-3 flex min-w-0 items-center justify-between gap-2 px-4 pt-4">
-        <h2 className={cn("text-sm font-medium", TEXT_ONE_LINE)}>Transitions</h2>
-        {canManage ? <AddTransitionButton onClick={handleAddClick} /> : null}
+        <h2 className={cn("text-sm font-medium", TEXT_ONE_LINE)}>
+          Transitions
+        </h2>
+        {canManage ? (
+          <AnimatedIconButton
+            type="button"
+            size="sm"
+            variant="outline"
+            className="h-7 gap-1.5 text-xs"
+            icon={PlusIcon}
+            onClick={handleAddClick}
+          >
+            Add
+          </AnimatedIconButton>
+        ) : null}
       </div>
 
       <BuildListSurface<WorkflowTransition>
@@ -191,14 +225,25 @@ export function TransitionsTable({
         minWidth="680px"
         tableClassName="border-0"
         compact
-        loading={<DataTableSkeleton rows={12} headers={TRANSITION_TABLE_HEADERS} className="px-4 pb-4" mobileCards />}
+        loading={
+          <DataTableSkeleton
+            rows={12}
+            headers={TRANSITION_TABLE_HEADERS}
+            className="px-4 pb-4"
+            mobileCards
+          />
+        }
         empty={
           <EmptyState
             illustrationPreset="projects"
             compact
             title="No transitions defined"
             description="All status changes are currently unrestricted. Add a transition to enforce your workflow."
-            action={canManage ? { label: "Add transition", onClick: handleAddClick } : undefined}
+            action={
+              canManage
+                ? { label: "Add transition", onClick: handleAddClick }
+                : undefined
+            }
             className="px-4 pb-4"
           />
         }
