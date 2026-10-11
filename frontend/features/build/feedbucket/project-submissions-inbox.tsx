@@ -2,6 +2,8 @@
 
 import { useCallback, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { Trash2Icon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { type DataTableColumn } from "@/components/ui/data-table";
@@ -10,7 +12,6 @@ import { EmptyInboxIllustration } from "@/components/illustrations";
 import {
   type SubmissionRow,
   SubmissionMobileCard,
-  DeleteSubmissionButton,
 } from "./submission-inbox-columns";
 import {
   SubmissionInboxFilters,
@@ -90,10 +91,19 @@ export function ProjectSubmissionsInbox({
   const columns = useMemo<DataTableColumn<SubmissionRow>[]>(() => {
     if (!canDelete) return baseColumns;
     function renderDelete(row: SubmissionRow) {
+      function handleDeleteClick(e: React.MouseEvent) {
+        e.stopPropagation();
+        handleRequestDelete(row.id);
+      }
       return (
-        <DeleteSubmissionButton
-          submissionId={row.id}
-          onRequestDelete={handleRequestDelete}
+        <AnimatedIconButton
+          type="button"
+          variant="ghost"
+          className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-status-danger-ink"
+          aria-label="Delete submission"
+          icon={Trash2Icon}
+          iconSize={14}
+          onClick={handleDeleteClick}
         />
       );
     }
@@ -104,19 +114,30 @@ export function ProjectSubmissionsInbox({
   }, [canDelete, handleRequestDelete, baseColumns]);
 
   const renderMobileCard = useCallback(
-    (row: SubmissionRow) => (
-      <SubmissionMobileCard
-        row={row}
-        actions={
-          canDelete ? (
-            <DeleteSubmissionButton
-              submissionId={row.id}
-              onRequestDelete={handleRequestDelete}
-            />
-          ) : undefined
-        }
-      />
-    ),
+    (row: SubmissionRow) => {
+      function handleDeleteClick(e: React.MouseEvent) {
+        e.stopPropagation();
+        handleRequestDelete(row.id);
+      }
+      return (
+        <SubmissionMobileCard
+          row={row}
+          actions={
+            canDelete ? (
+              <AnimatedIconButton
+                type="button"
+                variant="ghost"
+                className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-status-danger-ink"
+                aria-label="Delete submission"
+                icon={Trash2Icon}
+                iconSize={14}
+                onClick={handleDeleteClick}
+              />
+            ) : undefined
+          }
+        />
+      );
+    },
     [canDelete, handleRequestDelete],
   );
 
