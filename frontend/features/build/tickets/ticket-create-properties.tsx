@@ -26,6 +26,7 @@ import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
 import type { ProjectStatusRecord, ProjectMemberRecord, Cycle, TicketLabel } from "@/types/projects";
 import { PillButton, PRIORITIES } from "./ticket-create-properties-parts";
 import { useTicketCreateProperties } from "./use-ticket-create-properties";
+import { MAX_TICKET_POINTS } from "@/lib/validation/projects";
 import { TicketCycleLabelPickers } from "./ticket-create-cycle-label-pickers";
 
 export interface CreateTicketPropertiesValue {
@@ -62,6 +63,7 @@ export const TicketCreateProperties = memo(function TicketCreateProperties({
     assigneeOpen,
     setAssigneeOpen,
     estimateInput,
+    pointsError,
     statusConfig,
     statusList,
     currentStatus,
@@ -182,20 +184,26 @@ export const TicketCreateProperties = memo(function TicketCreateProperties({
         </ResponsivePopoverContent>
       </ResponsivePopover>
 
-      <div className="inline-flex h-7 items-center gap-1 rounded-md border border-border bg-card px-2">
-        <Zap className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-        <Input
-          type="number"
-          min={0}
-          step={1}
-          inputMode="numeric"
-          aria-label="Story points"
-          value={estimateInput}
-          onChange={handleEstimateChange}
-          placeholder="0"
-          className="h-6 w-12 border-0 bg-transparent px-1 py-0 text-xs font-mono tabular-nums shadow-none focus-visible:ring-0"
-        />
-        <span className="shrink-0 text-micro text-muted-foreground">pts</span>
+      <div className="flex flex-col gap-0.5">
+        <div className="inline-flex h-7 items-center gap-1 rounded-md border border-border bg-card px-2">
+          <Zap className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+          <Input
+            type="number"
+            min={0}
+            max={MAX_TICKET_POINTS}
+            step={1}
+            inputMode="numeric"
+            aria-label="Story points"
+            value={estimateInput}
+            onChange={handleEstimateChange}
+            placeholder="0"
+            className="h-6 w-12 border-0 bg-transparent px-1 py-0 text-xs font-mono tabular-nums shadow-none focus-visible:ring-0"
+          />
+          <span className="shrink-0 text-micro text-muted-foreground">pts</span>
+        </div>
+        {pointsError ? (
+          <span className="text-micro text-destructive">{pointsError}</span>
+        ) : null}
       </div>
 
       <TicketCycleLabelPickers

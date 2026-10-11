@@ -48,6 +48,8 @@ export function useBuildListKeyboard({
   const onCreateRef = useRef(onCreate);
   const onClearRef = useRef(onClearSelection);
   const onShortcutHelpRef = useRef(onShortcutHelp);
+  const focusedIndexRef = useRef<number | null>(null);
+  const itemCountRef = useRef(itemCount);
 
   useEffect(() => {
     onOpenRef.current = onOpen;
@@ -68,6 +70,14 @@ export function useBuildListKeyboard({
   useEffect(() => {
     onShortcutHelpRef.current = onShortcutHelp;
   }, [onShortcutHelp]);
+
+  useEffect(() => {
+    focusedIndexRef.current = focusedIndex;
+  }, [focusedIndex]);
+
+  useEffect(() => {
+    itemCountRef.current = itemCount;
+  }, [itemCount]);
 
   useEffect(() => {
     if (focusedIndex !== null && focusedIndex >= itemCount) {
@@ -92,9 +102,9 @@ export function useBuildListKeyboard({
         case "ArrowDown": {
           e.preventDefault();
           setFocusedIndex((prev) => {
-            if (itemCount === 0) return null;
+            if (itemCountRef.current === 0) return null;
             if (prev === null) return 0;
-            return Math.min(prev + 1, itemCount - 1);
+            return Math.min(prev + 1, itemCountRef.current - 1);
           });
           break;
         }
@@ -108,9 +118,9 @@ export function useBuildListKeyboard({
           break;
         }
         case "Enter": {
-          if (focusedIndex !== null) {
+          if (focusedIndexRef.current !== null) {
             e.preventDefault();
-            onOpenRef.current(focusedIndex);
+            onOpenRef.current(focusedIndexRef.current);
           }
           break;
         }
@@ -127,9 +137,9 @@ export function useBuildListKeyboard({
           break;
         }
         case "e": {
-          if (focusedIndex !== null && onEditRef.current) {
+          if (focusedIndexRef.current !== null && onEditRef.current) {
             e.preventDefault();
-            onEditRef.current(focusedIndex);
+            onEditRef.current(focusedIndexRef.current);
           }
           break;
         }
@@ -154,7 +164,7 @@ export function useBuildListKeyboard({
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [enabled, focusedIndex, itemCount, searchInputRef]);
+  }, [enabled, searchInputRef]);
 
   const setFocusedIndexStable = useCallback(
     (index: number | null) => setFocusedIndex(index),

@@ -1,5 +1,8 @@
 import { z } from "zod";
 
+export const MAX_TICKET_POINTS = 100;
+export const TICKET_TITLE_MAX = 500;
+
 const projectStatusSchema = z.enum(["ACTIVE", "COMPLETED", "ARCHIVED"]);
 
 const ticketTypeSchema = z.enum(["EPIC", "STORY", "TASK", "BUG"]);
@@ -34,7 +37,7 @@ export const createTicketInputSchema = z.object({
   epicId: z.number().int().positive().optional(),
   cycleId: z.number().int().positive().optional(),
   labelIds: z.array(z.number().int().positive()).optional(),
-  points: z.number().int().min(0).optional(),
+  points: z.number().int().min(0).max(MAX_TICKET_POINTS).optional(),
   link: z.string().url("Must be a valid URL").optional().or(z.literal("")),
   originalEstimate: z.number().positive().optional(),
   parentTicketId: z.number().int().positive().optional(),

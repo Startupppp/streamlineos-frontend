@@ -42,6 +42,7 @@ export function useCreateTicketForm({
   setOpen,
   onCreated,
   onClose,
+  onReset,
 }: UseCreateTicketFormOptions) {
   const [files, setFiles] = useState<File[]>([]);
   const [relatedLinks, setRelatedLinks] = useState<RelatedLinkDraft[]>([]);
@@ -144,11 +145,12 @@ export function useCreateTicketForm({
           labelIds: [],
         }));
       }
+      onReset?.();
       if (preserveContext) {
         queueMicrotask(() => titleRef.current?.focus({ preventScroll: true }));
       }
     },
-    [form, defaultStatusValue, activeCycleId, defaultCycleId, setProperties],
+    [form, defaultStatusValue, activeCycleId, defaultCycleId, setProperties, onReset],
   );
 
   const finishCreation = useCallback(() => {
@@ -170,9 +172,9 @@ export function useCreateTicketForm({
     if (createMore) {
       resetForm(true);
     } else {
+      resetForm(false);
       setOpen(false);
       onClose?.();
-      resetForm(false);
     }
   }, [queryClient, projectId, createMore, resetForm, onCreated, onClose, setOpen]);
 

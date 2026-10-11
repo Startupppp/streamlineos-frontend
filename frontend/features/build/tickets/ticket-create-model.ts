@@ -38,6 +38,7 @@ export interface UseCreateTicketFormOptions {
   setOpen: (value: boolean) => void;
   onCreated?: () => void;
   onClose?: () => void;
+  onReset?: () => void;
 }
 
 interface PostCreateContext {

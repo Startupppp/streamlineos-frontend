@@ -57,6 +57,14 @@ export function useCreateTicketDialogState({
         ? (projects[0]?.id ?? null)
         : null;
 
+  const [showLinksEditor, setShowLinksEditor] = useState(false);
+  const [descriptionEditorKey, setDescriptionEditorKey] = useState(0);
+
+  const handleFormReset = useCallback(() => {
+    setDescriptionEditorKey((k) => k + 1);
+    setShowLinksEditor(false);
+  }, []);
+
   const {
     form,
     files,
@@ -91,6 +99,7 @@ export function useCreateTicketDialogState({
       setOpen(value);
     },
     onClose: handleExternalClose,
+    onReset: handleFormReset,
   });
 
   useRegisterDirtyState(resolvedOpen && form.formState.isDirty);
@@ -105,8 +114,6 @@ export function useCreateTicketDialogState({
     isDirtyRef.current = form.formState.isDirty;
   }, [form.formState.isDirty]);
 
-  const [showLinksEditor, setShowLinksEditor] = useState(false);
-  const [descriptionEditorKey, setDescriptionEditorKey] = useState(0);
   const [titleInlineSession, setTitleInlineSession] = useState<AiInlineSession | null>(null);
   const [descriptionInlineSession, setDescriptionInlineSession] = useState<AiInlineSession | null>(null);
   const [fieldsInlineSession, setFieldsInlineSession] = useState<AiInlineSession | null>(null);

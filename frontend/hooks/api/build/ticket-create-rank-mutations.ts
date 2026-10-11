@@ -165,6 +165,13 @@ export function useCreateTicket(
             };
           },
         );
+        queryClient.setQueryData<Record<string, number>>(
+          buildWorkQueryKeys.projects.columnCounts(variables.projectId),
+          (counts) =>
+            counts
+              ? { ...counts, [data.status]: (counts[data.status] ?? 0) + 1 }
+              : counts,
+        );
       }
       options?.onSuccess?.(data, variables, context, mutFnCtx);
     },

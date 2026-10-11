@@ -188,18 +188,16 @@ export function useBoardNavigationActions({
 
   const handleCreateOpenChange = useCallback(
     (open: boolean) => {
-      if (open) {
-        const next = currentSearchParams(searchParams);
-        next.set("create", "1");
-        router.replace(`?${next.toString()}`, { scroll: false });
-        return;
-      }
       const next = currentSearchParams(searchParams);
-      next.delete("create");
-      next.delete("cycleId");
-      router.replace(`?${next.toString()}`, { scroll: false });
+      if (open) {
+        next.set("create", "1");
+      } else {
+        next.delete("create");
+        next.delete("cycleId");
+      }
+      window.history.replaceState(null, "", `?${next.toString()}`);
     },
-    [router, searchParams],
+    [searchParams],
   );
 
   const handleSelectionChange = useCallback(

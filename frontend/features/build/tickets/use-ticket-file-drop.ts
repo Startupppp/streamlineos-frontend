@@ -1,12 +1,22 @@
 "use client";
 
 import { useRef, useCallback, useEffect, useEffectEvent, useState } from "react";
+import { toast } from "sonner";
 import {
   MAX_FILES,
   MAX_TOTAL_BYTES,
   MAX_FILE_BYTES,
+  ALLOWED_ATTACHMENT_MIME_TYPES,
+  ALLOWED_ATTACHMENT_EXTENSIONS,
   isImageMime,
 } from "./ticket-attachment-preview";
+
+function isAllowedAttachment(file: File): boolean {
+  if (ALLOWED_ATTACHMENT_MIME_TYPES.has(file.type)) return true;
+  if (file.type !== "") return false;
+  const dot = file.name.lastIndexOf(".");
+  return dot >= 0 && ALLOWED_ATTACHMENT_EXTENSIONS.has(file.name.slice(dot).toLowerCase());
+}
 
 interface UseTicketFileDropProps {
   files: File[];
@@ -38,20 +48,34 @@ export function useTicketFileDrop({ files, addFiles, handleRemoveFile }: UseTick
 
   const validateAndAddFiles = useCallback(
     (selected: File[]) => {
+      const disallowed = selected.find((f) => !isAllowedAttachment(f));
+      if (disallowed) {
+        const msg = `${disallowed.name} is not an allowed file type.`;
+        setFileError(msg);
+        toast.error(msg);
+        return;
+      }
       const nextCount = files.length + selected.length;
       if (nextCount > MAX_FILES) {
-        setFileError(`You can upload up to ${MAX_FILES} files per ticket.`);
+        const msg = `You can upload up to ${MAX_FILES} files per ticket.`;
+        setFileError(msg);
+        toast.error(msg);
         return;
       }
       const oversized = selected.find((f) => f.size > MAX_FILE_BYTES);
       if (oversized) {
-        setFileError(`${oversized.name} exceeds the 25MB per-file limit.`);
+        const mb = MAX_FILE_BYTES / (1024 * 1024);
+        const msg = `${oversized.name} exceeds the ${mb}MB per-file limit.`;
+        setFileError(msg);
+        toast.error(msg);
         return;
       }
       const currentTotal = files.reduce((sum, f) => sum + f.size, 0);
       const newTotal = selected.reduce((sum, f) => sum + f.size, currentTotal);
       if (newTotal > MAX_TOTAL_BYTES) {
-        setFileError("Total attachments exceed the 100MB limit.");
+        const msg = "Total attachments exceed the 100MB limit.";
+        setFileError(msg);
+        toast.error(msg);
         return;
       }
       setFileError(null);

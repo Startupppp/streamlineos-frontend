@@ -128,4 +128,15 @@ describe("column-count invalidation — filtered and unfiltered queries (ticket 
 
     expect(client.getQueryState(UNFILTERED_COUNTS_KEY)?.isInvalidated).toBe(true);
   });
+
+  it("a create mutation immediately increments the status count in the unfiltered column-count cache", async () => {
+    const { result } = renderHook(() => useCreateTicket(), { wrapper: wrap(client) });
+
+    await act(async () => {
+      await result.current.mutateAsync({ projectId: 42, title: "New ticket", type: "TASK" });
+    });
+
+    const counts = client.getQueryData<Record<string, number>>(UNFILTERED_COUNTS_KEY);
+    expect(counts?.["TODO"]).toBe(11);
+  });
 });

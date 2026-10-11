@@ -4,6 +4,7 @@ import { buildStatusConfig } from "../shared/types";
 import { getStatusEntry } from "@/lib/status-config";
 import { getPriorityColor } from "../shared/priority-badge";
 import { parseTicketPointsInput } from "../shared/ticket-points";
+import { MAX_TICKET_POINTS } from "@/lib/validation/projects";
 import { Minus } from "lucide-react";
 import { PRIORITIES } from "./ticket-create-properties-parts";
 import type { ProjectStatusRecord, ProjectMemberRecord } from "@/types/projects";
@@ -26,6 +27,7 @@ export function useTicketCreateProperties({
   const [statusOpen, setStatusOpen] = useState(false);
   const [priorityOpen, setPriorityOpen] = useState(false);
   const [assigneeOpen, setAssigneeOpen] = useState(false);
+  const [pointsError, setPointsError] = useState<string | null>(null);
   const [estimateInput, setEstimateInput] = useSourceOverride(
     value.points,
     value.points !== null ? String(value.points) : "",
@@ -77,6 +79,11 @@ export function useTicketCreateProperties({
     const parsed = parseTicketPointsInput(next);
     if (parsed !== undefined) {
       onChange({ points: parsed });
+      setPointsError(null);
+    } else if (next.trim() !== "") {
+      setPointsError(`Enter a whole number between 0 and ${MAX_TICKET_POINTS}`);
+    } else {
+      setPointsError(null);
     }
   }
 
@@ -88,6 +95,7 @@ export function useTicketCreateProperties({
     assigneeOpen,
     setAssigneeOpen,
     estimateInput,
+    pointsError,
     statusConfig,
     statusList,
     currentStatus,
