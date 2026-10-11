@@ -151,28 +151,26 @@ describe("isToolbarMobileSearchExpanded", () => {
 });
 
 describe("toolbar viewport visibility", () => {
-  it("keeps four filters on the toolbar and parks the rest in Filters", () => {
-    expect(toolbarInlineVisibility(0, false, 6)).toBe("");
-    expect(toolbarInlineVisibility(1, false, 6)).toBe("");
-    expect(toolbarInlineVisibility(2, true, 6)).toBe("");
-    expect(toolbarInlineVisibility(3, true, 6)).toBe("");
-    expect(toolbarInlineVisibility(4, true, 6)).toBe("hidden");
+  it("keeps two filters inline on mobile and a third from tablet up", () => {
+    expect(toolbarInlineVisibility(0, false, 4)).toBe("");
+    expect(toolbarInlineVisibility(1, false, 4)).toBe("");
+    expect(toolbarInlineVisibility(2, true, 4)).toBe("max-md:hidden");
+    expect(toolbarInlineVisibility(3, true, 4)).toBe("hidden");
+    expect(toolbarInlineVisibility(4, true, 5)).toBe("hidden");
   });
 
-  it("puts only the filters after the fourth in the drawer", () => {
-    expect(toolbarDrawerVisibility(0, false, 6)).toBe("hidden");
-    expect(toolbarDrawerVisibility(1, false, 6)).toBe("hidden");
-    expect(toolbarDrawerVisibility(2, true, 6)).toBe("hidden");
-    expect(toolbarDrawerVisibility(3, true, 6)).toBe("hidden");
-    expect(toolbarDrawerVisibility(4, true, 6)).toBe("");
+  it("puts only the overflow filters in the drawer", () => {
+    expect(toolbarDrawerVisibility(0, false, 4)).toBe("hidden");
+    expect(toolbarDrawerVisibility(1, false, 4)).toBe("hidden");
+    expect(toolbarDrawerVisibility(2, true, 4)).toBe("md:hidden");
+    expect(toolbarDrawerVisibility(3, true, 4)).toBe("");
   });
 
-  it("shows Filters only when more than four field filters exist", () => {
+  it("shows Filters only when a breakpoint still has overflow", () => {
     expect(toolbarMoreButtonClass(1, false)).toBe("hidden");
     expect(toolbarMoreButtonClass(2, false)).toBe("hidden");
-    expect(toolbarMoreButtonClass(3, true)).toBe("hidden");
-    expect(toolbarMoreButtonClass(4, true)).toBe("hidden");
-    expect(toolbarMoreButtonClass(5, true)).toBe("inline-flex shrink-0");
+    expect(toolbarMoreButtonClass(3, true)).toBe("inline-flex shrink-0 md:hidden");
+    expect(toolbarMoreButtonClass(4, true)).toBe("inline-flex shrink-0");
     expect(toolbarMoreButtonClass(6, true)).toBe("inline-flex shrink-0");
   });
 });

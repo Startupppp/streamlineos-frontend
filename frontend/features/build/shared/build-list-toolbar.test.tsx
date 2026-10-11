@@ -147,16 +147,6 @@ describe("BuildListToolbar", () => {
             label: "Segment",
             control: <button type="button">Segment</button>,
           },
-          {
-            id: "theme",
-            label: "Theme",
-            control: <button type="button">Theme</button>,
-          },
-          {
-            id: "theme",
-            label: "Theme",
-            control: <button type="button">Theme</button>,
-          },
         ]}
       />,
     );
@@ -167,8 +157,7 @@ describe("BuildListToolbar", () => {
     expect(overlay).not.toHaveAttribute("data-slot", "drawer-content");
     expect(overlay).toHaveAttribute("aria-label", "Filters");
     expect(document.querySelector('[data-slot="drawer-content"]')).toBeNull();
-    expect(within(overlay).getByRole("button", { name: "Theme" })).toBeInTheDocument();
-    expect(within(overlay).queryByRole("button", { name: "Segment" })).toBeNull();
+    expect(within(overlay).getByRole("button", { name: "Segment" })).toBeInTheDocument();
     expect(within(overlay).queryByRole("combobox", { name: "Status" })).toBeNull();
     expect(within(overlay).queryByText(/Changes apply immediately/)).toBeNull();
   });
@@ -232,7 +221,7 @@ describe("BuildListToolbar", () => {
     expect(filtersTriggerBtn.className).not.toContain("w-full");
   });
 
-  it("keeps the first four filters inline and parks the fifth in Filters", () => {
+  it("keeps the first two filters inline and parks the third in the mobile drawer", () => {
     const { container } = render(
       <BuildListToolbar
         search={search}
@@ -240,21 +229,17 @@ describe("BuildListToolbar", () => {
           statusFilter(),
           severityFilter(),
           { id: "owner", label: "Owner", control: <button type="button">Owner</button> },
-          { id: "segment", label: "Segment", control: <button type="button">Segment</button> },
-          { id: "theme", label: "Theme", control: <button type="button">Theme</button> },
         ]}
       />,
     );
-    expect(screen.getByRole("button", { name: /^Filters/ })).toHaveClass("inline-flex");
-    expect(screen.getByRole("button", { name: /^Filters/ })).not.toHaveClass("hidden");
-    for (const id of ["status", "severity", "owner", "segment"]) {
+    expect(screen.getByRole("button", { name: /^Filters/ })).toHaveClass("md:hidden");
+    for (const id of ["status", "severity"]) {
       expect(container.querySelector(`[data-filter-id=${id}]`)?.className).not.toContain(
-        "hidden",
+        "max-md:hidden",
       );
     }
-    expect(container.querySelector("[data-filter-id=theme]")?.className).toContain("hidden");
-    expect(container.querySelector("[data-slot=build-toolbar-actions]")?.className).toContain(
-      "max-md:overflow-x-auto",
+    expect(container.querySelector("[data-filter-id=owner]")?.className).toContain(
+      "max-md:hidden",
     );
   });
 
@@ -303,10 +288,8 @@ describe("BuildListToolbar", () => {
     ).toBeInTheDocument();
     expect(within(dialog).queryByText("Status")).toBeNull();
     expect(within(dialog).queryByText("Severity")).toBeNull();
-    expect(within(dialog).queryByRole("button", { name: "Owner" })).toBeNull();
-    expect(within(dialog).queryByRole("button", { name: "Segment" })).toBeNull();
-    expect(within(dialog).getByRole("button", { name: "Theme" })).toBeInTheDocument();
-    expect(dialog.querySelector(".border-b.px-4.py-3")).toBeNull();
+    expect(within(dialog).getByRole("button", { name: "Owner" })).toBeInTheDocument();
+    expect(within(dialog).getByRole("button", { name: "Segment" })).toBeInTheDocument();
     expect(within(dialog).queryByRole("button", { name: "Done" })).toBeNull();
   });
 
@@ -421,7 +404,7 @@ describe("BuildListToolbar", () => {
     useIsMobile.mockReturnValue(true);
     function SearchToolbar() {
       const [value, setValue] = useState("");
-      return <BuildListToolbar search={{ ...search, value, onValueChange: setValue }} filters={[statusFilter(), severityFilter(), { id: "team", label: "Team", control: <button type="button">Team</button> }, { id: "health", label: "Health", control: <button type="button">Health</button> }, { id: "owner", label: "Owner", control: <button type="button">Owner</button> }]} trailing={<button type="button">Grid view</button>} />;
+      return <BuildListToolbar search={{ ...search, value, onValueChange: setValue }} filters={[statusFilter(), severityFilter(), { id: "owner", label: "Owner", control: <button type="button">Owner</button> }]} trailing={<button type="button">Grid view</button>} />;
     }
     render(<SearchToolbar />);
     const input = screen.getByLabelText("Search bugs");

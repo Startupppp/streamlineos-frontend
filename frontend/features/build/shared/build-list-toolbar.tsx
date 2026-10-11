@@ -28,7 +28,6 @@ import {
   BUILD_TOOLBAR_CLEAR_LABEL,
   BUILD_TOOLBAR_DRAWER_DESCRIPTION,
   BUILD_TOOLBAR_FILTERS_LABEL,
-  BUILD_TOOLBAR_OUTSIDE_FILTERS,
   BUILD_TOOLBAR_ROOT_CLASS,
   BUILD_TOOLBAR_TRAILING_CLASS,
   buildToolbarLayout,
@@ -78,8 +77,8 @@ function ToolbarFilterSlot({
           ? "max-md:min-w-0 max-md:shrink-0"
           : cn(
               toolbarInlineVisibility(fieldIndex, collapsed, fieldFilterCount),
-              fieldIndex < BUILD_TOOLBAR_OUTSIDE_FILTERS &&
-                "max-md:[&_[data-slot=select-trigger]]:w-auto max-md:[&_[data-slot=select-trigger]]:max-w-none",
+              fieldIndex < 2 &&
+                "max-md:[&_[data-slot=select-trigger]]:w-auto max-md:[&_[data-slot=select-trigger]]:max-w-40",
             ),
       )}
     >
@@ -113,7 +112,7 @@ export function BuildListToolbar({
   className,
   collapseActionsOnSearchFocus = false,
   fillMobileActions = false,
-  showFilterPanelHeader = false,
+  showFilterPanelHeader = true,
 }: BuildListToolbarProps) {
   const {
     value: searchValue,
@@ -192,10 +191,7 @@ export function BuildListToolbar({
                 className={cn(
                   "justify-center",
                   RESPONSIVE_ICON_LABEL_TRIGGER_CLASS,
-                  toolbarMoreButtonClass(
-                    layout.fieldFilterCount,
-                    layout.collapse,
-                  ),
+                  toolbarMoreButtonClass(layout.fieldFilterCount, layout.collapse),
                 )}
               >
                 <SlidersHorizontal
@@ -299,11 +295,9 @@ export function BuildListToolbar({
             key="build-toolbar-actions"
             data-slot="build-toolbar-actions"
             className={cn(
-              "flex min-w-0 items-center gap-2 transition-[flex-basis,width] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]",
-              "max-md:w-full max-md:flex-nowrap max-md:overflow-x-auto",
-              "md:flex-wrap",
+              "flex shrink-0 flex-nowrap items-center gap-2 transition-[flex-basis,width] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]",
               searchCollapsed && "flex-1",
-              fillMobileActions && "max-md:justify-between",
+              fillMobileActions && "max-md:w-full max-md:justify-between",
             )}
             initial={actionInitial}
             animate={actionAnimate}

@@ -157,25 +157,34 @@ test.describe("Build list responsive contract", () => {
       expect(Math.round(search?.y ?? 0)).toBe(Math.round(status?.y ?? -1));
     });
 
-    test("three filters stay on the row and Filters stays hidden", async ({ page }) => {
+    test("two filters stay on the row and the third opens from Filters", async ({ page }) => {
       const scope = frame(page, "four-actions-three-filters");
       await expect(scope.locator("[data-filter-id=status]")).toBeVisible();
       await expect(scope.locator("[data-filter-id=health]")).toBeVisible();
-      await expect(scope.locator("[data-filter-id=lead]")).toBeVisible();
-      await expect(scope.getByRole("button", { name: /^Filters/ })).toBeHidden();
+      await expect(scope.locator("[data-filter-id=lead]")).toBeHidden();
+      await expect(scope.getByRole("button", { name: /^Filters/ })).toBeVisible();
     });
 
-    test("the filter row scrolls sideways instead of opening a sheet", async ({ page }) => {
+    test("the filters drawer takes focus, shows every filter and gives it back", async ({ page }) => {
       const scope = frame(page, "four-actions-three-filters");
-      const row = scope.locator("[data-slot=build-toolbar-actions]");
-      await expect(row).toBeVisible();
-      const metrics = await row.evaluate((node: HTMLElement) => ({
-        overflowX: getComputedStyle(node).overflowX,
-        nowrap: getComputedStyle(node).flexWrap === "nowrap",
-      }));
-      expect(metrics.overflowX).toBe("auto");
-      expect(metrics.nowrap).toBe(true);
-      await expect(page.getByRole("dialog")).toHaveCount(0);
+      const trigger = scope.getByRole("button", { name: /^Filters/ });
+      await trigger.click();
+
+      const dialog = page.getByRole("dialog");
+      await expect(dialog).toBeVisible();
+      await expect(dialog.getByLabel("Lead")).toBeVisible();
+      await expect(dialog.getByLabel("Status")).toHaveCount(0);
+      await expect(dialog.getByLabel("Health")).toHaveCount(0);
+      await expect(dialog.getByRole("button", { name: "Done" })).toBeVisible();
+
+      const focusInside = await dialog.evaluate(
+        (node: HTMLElement) => node.contains(document.activeElement),
+      );
+      expect(focusInside).toBe(true);
+
+      await page.keyboard.press("Escape");
+      await expect(dialog).toBeHidden();
+      await expect(trigger).toBeFocused();
     });
 
     test("a select popup is never narrower than the trigger that opened it", async ({ page }) => {
