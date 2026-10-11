@@ -26,6 +26,7 @@ import {
   type RoadmapViewMode,
   isRoadmapHorizon,
   isRoadmapStatus,
+  positiveFilterId,
 } from "./product-roadmap-model";
 import {
   MANAGED_PRODUCT_DETAIL_CONTENT_CLASS,
@@ -76,9 +77,13 @@ export function ProductRoadmapPage({ managedProductId }: ProductRoadmapPageProps
       ...(horizonValue && horizonValue !== BUILD_FILTER_ALL && isRoadmapHorizon(horizonValue) ? { horizon: horizonValue } : {}),
       ...(listFilters.debouncedSearch.trim() ? { search: listFilters.debouncedSearch.trim() } : {}),
       ...(sortValue && sortValue !== BUILD_FILTER_ALL ? { sort: sortValue } : {}),
-      ...(teamIdValue && teamIdValue !== BUILD_FILTER_ALL ? { teamId: Number(teamIdValue) } : {}),
-      ...(goalIdValue && goalIdValue !== BUILD_FILTER_ALL ? { goalId: Number(goalIdValue) } : {}),
-      ...(segmentValue && segmentValue !== BUILD_FILTER_ALL ? { segment: segmentValue } : {}),
+      ...(teamIdValue && teamIdValue !== BUILD_FILTER_ALL && positiveFilterId(teamIdValue) !== undefined
+        ? { teamId: positiveFilterId(teamIdValue) }
+        : {}),
+      ...(goalIdValue && goalIdValue !== BUILD_FILTER_ALL && positiveFilterId(goalIdValue) !== undefined
+        ? { goalId: positiveFilterId(goalIdValue) }
+        : {}),
+      ...(segmentValue && segmentValue.trim() && segmentValue.trim() !== BUILD_FILTER_ALL ? { segment: segmentValue.trim() } : {}),
       ...(confidenceMinValue && confidenceMinValue !== BUILD_FILTER_ALL ? { confidenceMin: Number(confidenceMinValue) } : {}),
       ...(targetFromValue && targetFromValue !== BUILD_FILTER_ALL ? { targetFrom: targetFromValue } : {}),
       ...(targetToValue && targetToValue !== BUILD_FILTER_ALL ? { targetTo: targetToValue } : {}),

@@ -1,8 +1,9 @@
 "use client";
 
 import { useCallback, useMemo } from "react";
-import { ArrowUpDown, GitCompare } from "lucide-react";
+import { GitCompare } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { BuildListSurface } from "@/features/build/shared/build-list-surface";
 import type { DataTableColumn } from "@/components/ui/data-table.types";
 import type { DiscoveryListOpportunitiesResponse } from "@/contracts/build-contracts.generated";
@@ -145,7 +146,7 @@ export function OpportunitiesTable({
   const handleRetry = useCallback(() => onRetry?.(), [onRetry]);
 
   const toolbar = (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="flex w-full min-w-0 flex-col gap-2">
       {filtersSlot}
       {selected.size >= 2 && (
         <Button
@@ -153,9 +154,10 @@ export function OpportunitiesTable({
           variant="outline"
           size="sm"
           onClick={onOpenCompare}
+          className="w-fit"
           data-testid="open-compare-btn"
         >
-          <GitCompare className="size-3.5 mr-1" aria-hidden />
+          <GitCompare className="size-3.5" aria-hidden />
           Compare ({selected.size})
         </Button>
       )}
@@ -185,15 +187,23 @@ export function OpportunitiesTable({
         onPrevious,
       }}
       empty={
-        <p className="text-sm text-muted-foreground py-8 text-center" data-testid="opportunities-empty">
-          No opportunities yet.
-        </p>
+        <div data-testid="opportunities-empty">
+          <EmptyState
+            compact
+            illustrationSize="xs"
+            title="No opportunities yet"
+            description="Capture a customer problem, then score it and link the evidence."
+          />
+        </div>
       }
       filteredEmpty={
-        <div className="py-8 text-center" data-testid="opportunities-filtered-empty">
-          <ArrowUpDown className="size-8 text-muted-foreground mx-auto mb-2" aria-hidden />
-          <p className="text-sm text-muted-foreground">No opportunities match your filters.</p>
-          <p className="text-xs text-muted-foreground mt-1">Try clearing the filters.</p>
+        <div data-testid="opportunities-filtered-empty">
+          <EmptyState
+            compact
+            illustrationSize="xs"
+            title="No opportunities match your filters"
+            description="Clear a filter to see the rest of the list."
+          />
         </div>
       }
       loadingHeaders={["Title / problem", "Evidence", "Segment", "State", "RICE", "Outcome target"]}

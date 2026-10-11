@@ -478,6 +478,41 @@ describe("ManagedProductsPage — owner filter (BSN-MP-OWNER)", () => {
     );
   });
 
+  it("omits a non-numeric team or project id and a blank segment so an illegal URL does not 400 the list", () => {
+    mockUseBuildListFilters.mockReturnValue({
+      value: (param: string) => {
+        if (param === "teamId") return "not-a-team";
+        if (param === "linkedProjectId") return "nope";
+        if (param === "segment") return "  ";
+        if (param === "tag") return " ";
+        if (param === "ownerId") return "user-123";
+        return "all";
+      },
+      isActive: () => false,
+      setValue: jest.fn(),
+      clearAll: jest.fn(),
+      search: "",
+      debouncedSearch: "",
+      setSearch: jest.fn(),
+      resetKey: "teamId=not-a-team",
+      isPending: false,
+      isFiltered: true,
+      activeCount: 1,
+      cursor: null,
+      setCursor: jest.fn(),
+    });
+    render(<ManagedProductsPage />);
+    expect(useManagedProducts).toHaveBeenCalledWith(
+      expect.objectContaining({
+        ownerId: "user-123",
+        teamId: undefined,
+        linkedProjectId: undefined,
+        segment: undefined,
+        tag: undefined,
+      }),
+    );
+  });
+
   it("passes archived=true to useManagedProducts when the archived filter is set", () => {
     mockUseBuildListFilters.mockReturnValue({
       value: (param: string) => (param === "archived" ? "true" : "all"),

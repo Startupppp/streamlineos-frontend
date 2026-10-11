@@ -1,6 +1,9 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
+import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
+import type { BuildToolbarFilter } from "@/features/build/shared/build-list-toolbar-layout";
 
 const STATE_OPTIONS = [
   { label: "All states", value: "all" },
@@ -57,6 +60,8 @@ export interface OpportunitiesFilterBarProps {
   onConfidenceChange: (v: string) => void;
   onEvidenceAgeChange: (v: string) => void;
   onScoreMinChange: (v: string) => void;
+  onClearAll?: () => void;
+  trailing?: ReactNode;
 }
 
 export function OpportunitiesFilterBar({
@@ -76,55 +81,115 @@ export function OpportunitiesFilterBar({
   onConfidenceChange,
   onEvidenceAgeChange,
   onScoreMinChange,
+  onClearAll,
+  trailing,
 }: OpportunitiesFilterBarProps) {
-  return (
-    <div className="flex flex-wrap items-center gap-2">
-      <BuildFilterSelect
-        label="State"
-        value={stateFilter}
-        onValueChange={onStateChange}
-        options={STATE_OPTIONS}
-      />
-      <BuildFilterSelect
-        label="Sort"
-        value={sortFilter}
-        onValueChange={onSortChange}
-        options={SORT_OPTIONS}
-      />
-      {segmentOptions.length > 1 && (
+  const filters: BuildToolbarFilter[] = [
+    {
+      id: "oppState",
+      label: "State",
+      active: stateFilter !== "all",
+      control: (
+        <BuildFilterSelect
+          label="State"
+          value={stateFilter}
+          onValueChange={onStateChange}
+          options={STATE_OPTIONS}
+        />
+      ),
+    },
+    {
+      id: "oppSort",
+      label: "Sort",
+      active: sortFilter !== "all",
+      control: (
+        <BuildFilterSelect
+          label="Sort"
+          value={sortFilter}
+          onValueChange={onSortChange}
+          options={SORT_OPTIONS}
+        />
+      ),
+    },
+  ];
+  if (segmentOptions.length > 1) {
+    filters.push({
+      id: "oppSegment",
+      label: "Segment",
+      active: segmentFilter !== "all",
+      control: (
         <BuildFilterSelect
           label="Segment"
           value={segmentFilter}
           onValueChange={onSegmentChange}
           options={segmentOptions}
         />
-      )}
-      {ownerOptions.length > 1 && (
+      ),
+    });
+  }
+  if (ownerOptions.length > 1) {
+    filters.push({
+      id: "oppOwner",
+      label: "Owner",
+      active: ownerFilter !== "all",
+      control: (
         <BuildFilterSelect
           label="Owner"
           value={ownerFilter}
           onValueChange={onOwnerChange}
           options={ownerOptions}
         />
-      )}
-      <BuildFilterSelect
-        label="Confidence"
-        value={confidenceFilter}
-        onValueChange={onConfidenceChange}
-        options={CONFIDENCE_OPTIONS}
-      />
-      <BuildFilterSelect
-        label="Evidence age"
-        value={evidenceAgeFilter}
-        onValueChange={onEvidenceAgeChange}
-        options={EVIDENCE_AGE_OPTIONS}
-      />
-      <BuildFilterSelect
-        label="Min score"
-        value={scoreMinFilter}
-        onValueChange={onScoreMinChange}
-        options={SCORE_MIN_OPTIONS}
-      />
-    </div>
+      ),
+    });
+  }
+  filters.push(
+    {
+      id: "oppConfidence",
+      label: "Confidence",
+      active: confidenceFilter !== "all",
+      control: (
+        <BuildFilterSelect
+          label="Confidence"
+          value={confidenceFilter}
+          onValueChange={onConfidenceChange}
+          options={CONFIDENCE_OPTIONS}
+        />
+      ),
+    },
+    {
+      id: "oppEvidenceAge",
+      label: "Evidence age",
+      active: evidenceAgeFilter !== "all",
+      control: (
+        <BuildFilterSelect
+          label="Evidence age"
+          value={evidenceAgeFilter}
+          onValueChange={onEvidenceAgeChange}
+          options={EVIDENCE_AGE_OPTIONS}
+        />
+      ),
+    },
+    {
+      id: "oppScoreMin",
+      label: "Min score",
+      active: scoreMinFilter !== "all",
+      control: (
+        <BuildFilterSelect
+          label="Min score"
+          value={scoreMinFilter}
+          onValueChange={onScoreMinChange}
+          options={SCORE_MIN_OPTIONS}
+        />
+      ),
+    },
+  );
+
+  return (
+    <BuildListToolbar
+      filters={filters}
+      onClearAll={onClearAll}
+      trailing={trailing}
+      row={{ mobile: 2, tablet: 3, desktop: 4 }}
+    />
   );
 }

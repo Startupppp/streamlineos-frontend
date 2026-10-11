@@ -5,8 +5,8 @@ import { ManagedProductFormSheet } from "@/features/build/managed-products/manag
 import { BuildHeaderActions } from "@/features/build/shared/build-header-actions";
 import { PageState } from "@/components/shared/page-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
+import { BuildInlineFilters } from "@/features/build/shared/build-inline-filters";
 import { BuildOfflineNotice } from "@/features/build/shared/build-offline-notice";
 import { ManagedProductOverviewSkeleton } from "@/features/build/managed-products/managed-product-page-skeletons";
 import { ManagedProductOverviewStrategyCard } from "./managed-product-overview-strategy-card";
@@ -55,12 +55,10 @@ export function ManagedProductOverviewPage({ managedProductId }: ManagedProductO
       contentClassName="h-auto"
       actions={<BuildHeaderActions actions={editActions} />}
       filters={
-        <BuildListToolbar
+        <BuildInlineFilters
           filters={[
             {
               id: "period",
-              label: "Period",
-              active: listFilters.isActive("period"),
               control: (
                 <BuildFilterSelect
                   label="Period"
@@ -72,8 +70,6 @@ export function ManagedProductOverviewPage({ managedProductId }: ManagedProductO
             },
             {
               id: "teamId",
-              label: "Team",
-              active: listFilters.isActive("teamId"),
               control: (
                 <BuildFilterSelect
                   label="Team"
@@ -85,8 +81,6 @@ export function ManagedProductOverviewPage({ managedProductId }: ManagedProductO
             },
             {
               id: "initiativeStatus",
-              label: "Status",
-              active: listFilters.isActive("initiativeStatus"),
               control: (
                 <BuildFilterSelect
                   label="Status"
@@ -98,8 +92,6 @@ export function ManagedProductOverviewPage({ managedProductId }: ManagedProductO
             },
             {
               id: "segment",
-              label: "Segment",
-              active: listFilters.isActive("segment"),
               control: (
                 <BuildFilterSelect
                   label="Segment"
@@ -110,7 +102,6 @@ export function ManagedProductOverviewPage({ managedProductId }: ManagedProductO
               ),
             },
           ]}
-          onClearAll={listFilters.clearAll}
         />
       }
     >

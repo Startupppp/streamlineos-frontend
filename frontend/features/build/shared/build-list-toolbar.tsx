@@ -37,6 +37,7 @@ import {
   toolbarInlineVisibility,
   toolbarMoreButtonClass,
   type BuildToolbarFilter,
+  type BuildToolbarRow,
   type BuildToolbarSearch,
 } from "./build-list-toolbar-layout";
 
@@ -50,6 +51,7 @@ interface BuildListToolbarProps {
   collapseActionsOnSearchFocus?: boolean;
   fillMobileActions?: boolean;
   showFilterPanelHeader?: boolean;
+  row?: BuildToolbarRow;
 }
 
 function ToolbarFilterSlot({
@@ -58,25 +60,30 @@ function ToolbarFilterSlot({
   fieldIndex,
   fieldFilterCount,
   searchCollapsed,
+  row,
 }: {
   filter: BuildToolbarFilter;
   collapsed: boolean;
   fieldIndex: number | null;
   fieldFilterCount: number;
   searchCollapsed: boolean;
+  row?: BuildToolbarRow;
 }) {
   return (
     <div
       data-slot="build-toolbar-filter"
       data-filter-id={filter.id}
       className={cn(
-        "min-w-0 w-auto basis-auto md:shrink-0 transition-[flex-basis,width] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]",
+        "min-w-0 w-auto basis-auto transition-[flex-basis,width] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]",
+        row
+          ? "md:min-w-0 md:shrink md:basis-0 md:flex-1 md:[&_[data-slot=select-trigger]]:!w-full md:[&_[data-slot=select-trigger]]:!min-w-0 md:[&_[data-slot=select-trigger]]:!max-w-none"
+          : "md:shrink-0",
         searchCollapsed &&
           "flex-1 basis-0 [&_[data-slot=select-trigger]]:!w-full [&_[data-slot=select-trigger]]:!min-w-0 [&_[data-slot=select-trigger]]:!max-w-none",
         fieldIndex === null
           ? "max-md:min-w-0 max-md:shrink-0"
           : cn(
-              toolbarInlineVisibility(fieldIndex, collapsed, fieldFilterCount),
+              toolbarInlineVisibility(fieldIndex, collapsed, fieldFilterCount, row),
               fieldIndex < 2 &&
                 "max-md:min-w-0 max-md:flex-1 max-md:basis-0 max-md:[&_[data-slot=select-trigger]]:w-full max-md:[&_[data-slot=select-trigger]]:max-w-none",
             ),
@@ -113,6 +120,7 @@ export function BuildListToolbar({
   collapseActionsOnSearchFocus = false,
   fillMobileActions = false,
   showFilterPanelHeader = true,
+  row,
 }: BuildListToolbarProps) {
   const {
     value: searchValue,
@@ -177,6 +185,7 @@ export function BuildListToolbar({
           fieldIndex={entry.fieldIndex}
           fieldFilterCount={layout.fieldFilterCount}
           searchCollapsed={searchCollapsed}
+          row={row}
         />
       ))}
 
@@ -191,7 +200,7 @@ export function BuildListToolbar({
                 className={cn(
                   "justify-center",
                   RESPONSIVE_ICON_LABEL_TRIGGER_CLASS,
-                  toolbarMoreButtonClass(layout.fieldFilterCount, layout.collapse),
+                  toolbarMoreButtonClass(layout.fieldFilterCount, layout.collapse, row),
                 )}
               >
                 <SlidersHorizontal
@@ -232,6 +241,7 @@ export function BuildListToolbar({
                     entry.fieldIndex ?? 0,
                     entry.collapsed,
                     layout.fieldFilterCount,
+                    row,
                   );
                   if (drawerClass === "hidden") return null;
                   return (
@@ -296,7 +306,7 @@ export function BuildListToolbar({
             data-slot="build-toolbar-actions"
             className={cn(
               "flex min-w-0 flex-nowrap items-center gap-2 transition-[flex-basis,width] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]",
-              "max-md:w-full md:shrink-0",
+              row ? "max-md:w-full md:min-w-0 md:flex-1" : "max-md:w-full md:shrink-0",
               searchCollapsed && "flex-1",
               fillMobileActions && "max-md:justify-between",
             )}

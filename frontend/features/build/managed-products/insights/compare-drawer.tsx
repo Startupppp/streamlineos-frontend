@@ -54,18 +54,18 @@ export function CompareDrawer({
           )}
 
           {selectedItems.length > 0 && (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+            <div className="overflow-x-auto rounded-xl border border-border bg-card shadow-sm">
+              <table className="w-full min-w-[40rem] text-sm">
                 <thead>
-                  <tr className="border-b border-border text-xs font-medium text-muted-foreground">
-                    <th className="px-3 py-2 text-left">Opportunity</th>
-                    <th className="px-3 py-2 text-right tabular-nums font-mono">Evidence</th>
-                    <th className="px-3 py-2 text-right tabular-nums font-mono">Reach</th>
-                    <th className="px-3 py-2 text-right tabular-nums font-mono">Impact</th>
-                    <th className="px-3 py-2 text-right tabular-nums font-mono">Confidence</th>
-                    <th className="px-3 py-2 text-right tabular-nums font-mono">Effort</th>
-                    <th className="px-3 py-2 text-right tabular-nums font-mono">RICE score</th>
-                    <th className="px-3 py-2" aria-label="Actions" />
+                  <tr className="border-b border-border bg-muted/50 text-xs font-medium text-muted-foreground">
+                    <th className="whitespace-nowrap px-4 py-2.5 text-left">Opportunity</th>
+                    <th className="whitespace-nowrap px-4 py-2.5 text-right tabular-nums">Evidence</th>
+                    <th className="whitespace-nowrap px-4 py-2.5 text-right tabular-nums">Reach</th>
+                    <th className="whitespace-nowrap px-4 py-2.5 text-right tabular-nums">Impact</th>
+                    <th className="whitespace-nowrap px-4 py-2.5 text-right tabular-nums">Confidence</th>
+                    <th className="whitespace-nowrap px-4 py-2.5 text-right tabular-nums">Effort</th>
+                    <th className="whitespace-nowrap px-4 py-2.5 text-right tabular-nums">RICE score</th>
+                    <th className="px-4 py-2.5" aria-label="Actions" />
                   </tr>
                 </thead>
                 <tbody>
@@ -73,37 +73,36 @@ export function CompareDrawer({
                     const compItem = compareData?.items.find((c) => c.opportunityId === item.id);
                     const score = compItem?.latestScore;
                     return (
-                      <tr key={item.id} className="border-b border-border last:border-0" data-testid={`compare-row-${item.id}`}>
-                        <td className="px-3 py-2 font-medium text-foreground max-w-[200px] truncate">
+                      <tr key={item.id} className="border-b border-border/60 last:border-0" data-testid={`compare-row-${item.id}`}>
+                        <td className="max-w-[200px] truncate px-4 py-3 font-medium text-foreground">
                           {item.title}
                         </td>
-                        <td className="px-3 py-2 text-right tabular-nums font-mono">
+                        <td className="px-4 py-3 text-right tabular-nums">
                           {compItem?.evidenceCount ?? "—"}
                         </td>
-                        <td className="px-3 py-2 text-right tabular-nums font-mono">
+                        <td className="px-4 py-3 text-right tabular-nums">
                           {score?.reach ?? "—"}
                         </td>
-                        <td className="px-3 py-2 text-right tabular-nums font-mono">
+                        <td className="px-4 py-3 text-right tabular-nums">
                           {score?.impact ?? "—"}
                         </td>
-                        <td className="px-3 py-2 text-right tabular-nums font-mono">
+                        <td className="px-4 py-3 text-right tabular-nums">
                           {score?.confidence ?? "—"}
                         </td>
-                        <td className="px-3 py-2 text-right tabular-nums font-mono">
+                        <td className="px-4 py-3 text-right tabular-nums">
                           {score?.effort ?? "—"}
                           {score?.effortUnit && (
                             <span className="ml-1 text-xs text-muted-foreground">{score.effortUnit.replace("person_", "")}</span>
                           )}
                         </td>
-                        <td className="px-3 py-2 text-right tabular-nums font-mono font-semibold">
+                        <td className="px-4 py-3 text-right font-semibold tabular-nums">
                           {isLoading ? "..." : (score?.effectiveScore ?? "Unscored")}
                         </td>
-                        <td className="px-3 py-2">
+                        <td className="px-4 py-3">
                           <Button
                             type="button"
                             variant="ghost"
                             size="icon"
-                            className="size-6"
                             onClick={() => onDeselect(item.id)}
                             aria-label={`Remove ${item.title} from comparison`}
                           >

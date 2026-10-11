@@ -94,7 +94,7 @@ export function OpportunityCreateButton({ managedProductId }: OpportunityCreateB
   return (
     <>
       <Button type="button" size="sm" onClick={handleOpen} data-testid="new-opportunity-btn">
-        <Plus className="size-3.5 mr-1" aria-hidden />
+        <Plus className="size-3.5" aria-hidden />
         New opportunity
       </Button>
       <EntityFormSheet<CreateOpportunityFormValues>

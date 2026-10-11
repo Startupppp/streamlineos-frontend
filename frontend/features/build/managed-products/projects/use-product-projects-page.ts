@@ -27,6 +27,20 @@ const DATE_FROM_PARAM = "pp_dateFrom";
 const DATE_TO_PARAM = "pp_dateTo";
 const SEARCH_PARAM = "pp_search";
 
+function positiveQueryId(value: string): number | undefined {
+  if (!/^\d+$/.test(value)) return undefined;
+  const id = Number(value);
+  return id > 0 ? id : undefined;
+}
+
+function isoDateTime(value: string, endOfDay: boolean): string | undefined {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (!match) return undefined;
+  const year = Number(match[1]), month = Number(match[2]), day = Number(match[3]);
+  const date = new Date(Date.UTC(year, month - 1, day, endOfDay ? 23 : 0, endOfDay ? 59 : 0, endOfDay ? 59 : 0, endOfDay ? 999 : 0));
+  return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day ? date.toISOString() : undefined;
+}
+
 const CONTRIB_BUCKETS: Record<string, { min: number; max: number }> = {
   none: { min: 0, max: 0 },
   low: { min: 1, max: 30 },
@@ -92,14 +106,14 @@ export function useProductProjectsPage({ managedProductId }: UseProductProjectsP
       managedProductId,
       limit: PAGE_SIZE,
       cursor: cursorValue,
-      ...(statusValue ? { status: statusValue } : {}),
-      ...(healthValue ? { health: healthValue } : {}),
-      ...(ownerValue ? { ownerId: Number(ownerValue) } : {}),
-      ...(teamValue ? { teamId: Number(teamValue) } : {}),
-      ...(clientValue ? { clientId: Number(clientValue) } : {}),
+      ...(statusValue === "ACTIVE" || statusValue === "COMPLETED" || statusValue === "ARCHIVED" ? { status: statusValue } : {}),
+      ...(healthValue === "on_track" || healthValue === "at_risk" || healthValue === "off_track" ? { health: healthValue } : {}),
+      ...(positiveQueryId(ownerValue) !== undefined ? { ownerId: positiveQueryId(ownerValue) } : {}),
+      ...(positiveQueryId(teamValue) !== undefined ? { teamId: positiveQueryId(teamValue) } : {}),
+      ...(positiveQueryId(clientValue) !== undefined ? { clientId: positiveQueryId(clientValue) } : {}),
       ...(contribRange ? { minContribution: contribRange.min, maxContribution: contribRange.max } : {}),
-      ...(dateFromValue ? { dateFrom: dateFromValue } : {}),
-      ...(dateToValue ? { dateTo: dateToValue } : {}),
+      ...(isoDateTime(dateFromValue, false) ? { dateFrom: isoDateTime(dateFromValue, false) } : {}),
+      ...(isoDateTime(dateToValue, true) ? { dateTo: isoDateTime(dateToValue, true) } : {}),
       ...(debouncedSearch.trim() ? { search: debouncedSearch.trim() } : {}),
     }),
     [managedProductId, cursorValue, statusValue, healthValue, ownerValue, teamValue, clientValue, contribRange, dateFromValue, dateToValue, debouncedSearch],

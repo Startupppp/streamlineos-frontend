@@ -49,6 +49,7 @@ export function ProductDiscoverySection({ managedProductId }: ProductDiscoverySe
     handleConfidenceChange,
     handleEvidenceAgeChange,
     handleScoreMinChange,
+    clearAll,
   } = useOpportunityDiscoveryFilters(managedProductId);
 
   const hasFilters = Object.keys(oppQueryParams).length > 0;
@@ -171,6 +172,7 @@ export function ProductDiscoverySection({ managedProductId }: ProductDiscoverySe
       onConfidenceChange={handleConfidenceChange}
       onEvidenceAgeChange={handleEvidenceAgeChange}
       onScoreMinChange={handleScoreMinChange}
+      onClearAll={clearAll}
     />
   );
 
@@ -186,7 +188,7 @@ export function ProductDiscoverySection({ managedProductId }: ProductDiscoverySe
 
       <section aria-labelledby="opportunities-heading">
         <div className="mb-4 flex items-center justify-between gap-3">
-          <h2 id="opportunities-heading" className="text-sm font-semibold text-foreground">
+          <h2 id="opportunities-heading" className="text-base font-semibold text-foreground">
             Opportunities
           </h2>
           <OpportunityCreateButton managedProductId={managedProductId} />

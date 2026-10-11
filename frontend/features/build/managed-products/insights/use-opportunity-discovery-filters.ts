@@ -7,6 +7,7 @@ import {
 } from "@/features/build/shared/use-build-list-filters";
 import { useFeedbucketSubmissionFacets } from "@/hooks/api/feedbucket";
 import { useOrgMembers } from "@/hooks/api/organization";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
 const OPPORTUNITY_STATE_VALUES = [
   "all",
@@ -52,7 +53,7 @@ export function useOpportunityDiscoveryFilters(managedProductId: number) {
   const scoreMinFilter = filters.value("oppScoreMin");
 
   const facetsQuery = useFeedbucketSubmissionFacets({ managedProductId });
-  const membersQuery = useOrgMembers(1, 100);
+  const membersQuery = useOrgMembers(1, 100, undefined, INLINE_READ_ERROR);
 
   const segmentOptions = useMemo(
     () => [
@@ -202,5 +203,6 @@ export function useOpportunityDiscoveryFilters(managedProductId: number) {
     handleConfidenceChange,
     handleEvidenceAgeChange,
     handleScoreMinChange,
+    clearAll: filters.clearAll,
   };
 }

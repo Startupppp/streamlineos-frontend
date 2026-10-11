@@ -173,4 +173,18 @@ describe("toolbar viewport visibility", () => {
     expect(toolbarMoreButtonClass(4, true)).toBe("inline-flex shrink-0");
     expect(toolbarMoreButtonClass(6, true)).toBe("inline-flex shrink-0");
   });
+
+  it("can show four filters on desktop and three on tablet", () => {
+    const discovery = { mobile: 2, tablet: 3, desktop: 4 };
+    expect(toolbarInlineVisibility(0, false, 7, discovery)).toBe("");
+    expect(toolbarInlineVisibility(1, false, 7, discovery)).toBe("");
+    expect(toolbarInlineVisibility(2, true, 7, discovery)).toBe("max-md:hidden");
+    expect(toolbarInlineVisibility(3, true, 7, discovery)).toBe("max-lg:hidden");
+    expect(toolbarInlineVisibility(4, true, 7, discovery)).toBe("hidden");
+    expect(toolbarDrawerVisibility(0, false, 7, discovery)).toBe("hidden");
+    expect(toolbarDrawerVisibility(2, true, 7, discovery)).toBe("md:hidden");
+    expect(toolbarDrawerVisibility(3, true, 7, discovery)).toBe("lg:hidden");
+    expect(toolbarDrawerVisibility(4, true, 7, discovery)).toBe("");
+    expect(toolbarMoreButtonClass(7, true, discovery)).toBe("inline-flex shrink-0");
+  });
 });

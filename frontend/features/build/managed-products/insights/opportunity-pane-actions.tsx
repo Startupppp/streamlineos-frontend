@@ -28,7 +28,7 @@ export function OpportunityPaneActions({
           onClick={onAccept}
           data-testid="accept-opportunity-btn"
         >
-          <CheckCircle2 className="size-3.5 mr-1" aria-hidden />
+          <CheckCircle2 className="size-3.5" aria-hidden />
           Accept
         </Button>
       )}
@@ -40,7 +40,7 @@ export function OpportunityPaneActions({
           onClick={onDecline}
           data-testid="decline-opportunity-btn"
         >
-          <XCircle className="size-3.5 mr-1" aria-hidden />
+          <XCircle className="size-3.5" aria-hidden />
           Decline
         </Button>
       )}
@@ -51,7 +51,7 @@ export function OpportunityPaneActions({
         onClick={onScore}
         data-testid="score-opportunity-btn"
       >
-        <Calculator className="size-3.5 mr-1" aria-hidden />
+        <Calculator className="size-3.5" aria-hidden />
         Score
       </Button>
       <Button
@@ -61,7 +61,7 @@ export function OpportunityPaneActions({
         onClick={onOverride}
         data-testid="override-score-btn"
       >
-        <GitBranch className="size-3.5 mr-1" aria-hidden />
+        <GitBranch className="size-3.5" aria-hidden />
         Override score
       </Button>
     </div>

@@ -72,7 +72,7 @@ export function EvidenceThemesSection({
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <TrendingUp className="size-4 text-muted-foreground" aria-hidden />
-          <h2 id="evidence-themes-heading" className="text-sm font-semibold text-foreground">
+          <h2 id="evidence-themes-heading" className="text-base font-semibold text-foreground">
             Evidence themes
           </h2>
         </div>
@@ -85,29 +85,29 @@ export function EvidenceThemesSection({
       </div>
 
       {sortedThemes.length > 0 && (
-        <div className="rounded-xl border border-border overflow-x-auto">
-          <table className="w-full text-sm">
+        <div className="overflow-x-auto rounded-xl border border-border bg-card shadow-sm">
+          <table className="w-full min-w-[40rem] text-sm">
             <thead>
-              <tr className="border-b border-border text-xs font-medium text-muted-foreground">
-                <th className="px-4 py-2 text-left">Theme</th>
-                <th className="px-4 py-2 text-right tabular-nums font-mono">Count</th>
-                <th className="px-4 py-2 text-left">Sentiment</th>
-                <th className="px-4 py-2 text-right tabular-nums font-mono">Opportunities</th>
-                <th className="px-4 py-2 text-left">Weekly trend</th>
+              <tr className="border-b border-border bg-muted/50 text-xs font-medium text-muted-foreground">
+                <th className="whitespace-nowrap px-4 py-2.5 text-left">Theme</th>
+                <th className="whitespace-nowrap px-4 py-2.5 text-right tabular-nums">Count</th>
+                <th className="whitespace-nowrap px-4 py-2.5 text-left">Sentiment</th>
+                <th className="whitespace-nowrap px-4 py-2.5 text-right tabular-nums">Opportunities</th>
+                <th className="whitespace-nowrap px-4 py-2.5 text-left">Weekly trend</th>
               </tr>
             </thead>
             <tbody>
               {sortedThemes.map((row) => (
-                <tr key={row.theme ?? "__null"} className="border-b border-border last:border-0 hover:bg-muted/40">
-                  <td className="px-4 py-2 font-medium text-foreground">
-                    {row.theme ?? <span className="text-muted-foreground italic">Unthemed</span>}
+                <tr key={row.theme ?? "__null"} className="border-b border-border/60 last:border-0 hover:bg-muted/40">
+                  <td className="px-4 py-3 font-medium text-foreground">
+                    {row.theme ?? <span className="text-muted-foreground">Unthemed</span>}
                   </td>
-                  <td className="px-4 py-2 text-right tabular-nums font-mono">{row.count}</td>
-                  <td className="px-4 py-2">
+                  <td className="px-4 py-3 text-right tabular-nums">{row.count}</td>
+                  <td className="px-4 py-3">
                     <SentimentBar breakdown={row.sentimentBreakdown} />
                   </td>
-                  <td className="px-4 py-2 text-right tabular-nums font-mono">{row.opportunityCount}</td>
-                  <td className="px-4 py-2">
+                  <td className="px-4 py-3 text-right tabular-nums">{row.opportunityCount}</td>
+                  <td className="px-4 py-3">
                     <SparklineBar trend={row.trend} />
                   </td>
                 </tr>
@@ -118,7 +118,10 @@ export function EvidenceThemesSection({
       )}
 
       {sortedThemes.length === 0 && (
-        <p className="text-sm text-muted-foreground">No evidence themes for this period.</p>
+        <div className="rounded-xl border border-dashed border-border bg-card px-4 py-6">
+          <p className="text-sm font-medium text-foreground">No evidence themes</p>
+          <p className="mt-1 text-sm text-muted-foreground">Nothing is grouped for this period.</p>
+        </div>
       )}
 
       {suggestedThemes.length > 0 && (
@@ -135,9 +138,9 @@ export function EvidenceThemesSection({
           <p className="text-xs text-muted-foreground">
             Patterns identified by AI. These are suggestions only — review before acting on them.
           </p>
-          <ul className="space-y-2">
+          <ul className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-card">
             {suggestedThemes.map((s) => (
-              <li key={s.label} className="flex items-start justify-between gap-4" data-testid="ai-suggestion-item">
+              <li key={s.label} className="flex items-center justify-between gap-4 px-3 py-2.5" data-testid="ai-suggestion-item">
                 <div className="flex-1">
                   <span className="text-sm font-medium text-foreground">{s.label}</span>
                   <span className="ml-2 text-xs text-muted-foreground tabular-nums font-mono">

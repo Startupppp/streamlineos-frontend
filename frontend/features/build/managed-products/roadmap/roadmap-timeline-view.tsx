@@ -40,9 +40,9 @@ export function RoadmapTimelineView({ items, onEdit, onDelete }: RoadmapTimeline
         if (allItems.length === 0) return null;
         return (
           <div key={section.horizon}>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-foreground">
+            <h3 className="mb-2 text-sm font-semibold text-foreground">
               {section.label}
-            </p>
+            </h3>
             <ol className="flex flex-col gap-2" aria-label={`${section.label} roadmap items`}>
               {allItems.map((item) => (
                 <li key={item.id}>

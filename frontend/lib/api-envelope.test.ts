@@ -85,6 +85,15 @@ describe("parseApiResponse — failure shapes", () => {
     expect(error.status).toBe(502);
   });
 
+  it("turns a successful body that is not JSON into an API error", async () => {
+    const error = await errorFrom(nonJsonResponse(200));
+    expect({ status: error.status, code: error.code, endpoint: error.endpoint }).toEqual({
+      status: 200,
+      code: "INVALID_JSON",
+      endpoint: "response",
+    });
+  });
+
   it("keeps the payment-required code the upgrade prompt reads", async () => {
     const error = await errorFrom(
       jsonResponse(402, { message: "Module disabled", code: "MODULE_DISABLED" }),

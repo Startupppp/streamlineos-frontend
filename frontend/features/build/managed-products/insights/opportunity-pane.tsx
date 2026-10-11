@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -152,10 +153,10 @@ export function OpportunityPane({
             <SheetTitle className="truncate text-base">
               {isLoading ? "Loading…" : (opportunity?.title ?? "Opportunity")}
             </SheetTitle>
-            <div className="flex gap-2 mt-2">
+            <div className="mt-3 inline-flex h-9 items-center gap-1 rounded-lg border border-input bg-card p-1">
               <button
                 type="button"
-                className={`text-sm px-3 py-1 rounded-md transition-colors ${activeTab === "details" ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                className={`h-7 rounded-md px-3 text-sm font-medium transition-colors ${activeTab === "details" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
                 onClick={handleTabDetails}
                 aria-pressed={activeTab === "details"}
               >
@@ -163,7 +164,7 @@ export function OpportunityPane({
               </button>
               <button
                 type="button"
-                className={`text-sm px-3 py-1 rounded-md transition-colors ${activeTab === "trace" ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                className={`h-7 rounded-md px-3 text-sm font-medium transition-colors ${activeTab === "trace" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
                 onClick={handleTabTrace}
                 aria-pressed={activeTab === "trace"}
                 data-testid="trace-tab-btn"
@@ -189,23 +190,17 @@ export function OpportunityPane({
 
                 <div className="flex flex-wrap gap-2">
                   {opportunity.theme && (
-                    <span className="rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground">
-                      {opportunity.theme}
-                    </span>
+                    <Badge variant="secondary">{opportunity.theme}</Badge>
                   )}
                   {opportunity.affectedSegment && (
-                    <span className="rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground">
-                      {opportunity.affectedSegment}
-                    </span>
+                    <Badge variant="outline">{opportunity.affectedSegment}</Badge>
                   )}
-                  <span className="rounded-full border border-border px-2.5 py-1 text-xs capitalize text-muted-foreground">
-                    {opportunity.state}
-                  </span>
+                  <Badge variant="outline" className="capitalize">{opportunity.state}</Badge>
                 </div>
 
-                <div className="rounded-xl border border-border p-3 space-y-1">
+                <div className="space-y-1 rounded-xl border border-border bg-card p-4 shadow-sm">
                   <p className="text-xs font-medium text-muted-foreground">RICE score</p>
-                  <p className="text-lg font-bold font-mono tabular-nums text-foreground">
+                  <p className="text-2xl font-semibold tabular-nums text-foreground">
                     {opportunity.scoreStatus === "unscored"
                       ? "Unscored"
                       : (opportunity.latestScore?.effectiveScore ?? "—")}

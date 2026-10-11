@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { OutcomeReviewRow } from "./outcome-review-row";
 import {
   FormField,
   FormItem,
@@ -190,7 +190,7 @@ export function OutcomeReviewsSection({
       <div className="flex items-center justify-between gap-2">
         <h2
           id="outcome-reviews-heading"
-          className="text-sm font-semibold text-foreground"
+          className="text-base font-semibold text-foreground"
         >
           Outcome reviews &amp; experiments
         </h2>
@@ -202,7 +202,7 @@ export function OutcomeReviewsSection({
             onClick={() => setScheduleOpen(true)}
             disabled={isCreating}
           >
-            <Plus className="size-3.5 mr-1" aria-hidden />
+            <Plus className="size-3.5" aria-hidden />
             Schedule
           </Button>
         )}
@@ -211,78 +211,27 @@ export function OutcomeReviewsSection({
       {isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
 
       {!isLoading && reviews.length === 0 && (
-        <p
-          className="text-sm text-muted-foreground"
+        <div
+          className="rounded-xl border border-dashed border-border bg-card px-4 py-6"
           data-testid="outcome-reviews-empty"
         >
-          No reviews or experiments scheduled.
-        </p>
+          <p className="text-sm font-medium text-foreground">No reviews scheduled</p>
+          <p className="mt-1 max-w-prose text-sm text-muted-foreground">
+            Schedule an outcome review or experiment when you want to measure a result.
+          </p>
+        </div>
       )}
 
       {reviews.length > 0 && (
         <ul className="space-y-2">
           {reviews.map((review) => (
-            <li
+            <OutcomeReviewRow
               key={review.id}
-              className="rounded-xl border border-border p-3 flex items-start justify-between gap-4"
-              data-testid={`outcome-review-row-${review.id}`}
-            >
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground">
-                  {review.title}
-                </p>
-                <div className="flex items-center gap-2 mt-0.5">
-                  <span className="text-xs text-muted-foreground capitalize">
-                    {review.kind.replace("_", " ")}
-                  </span>
-                  <span className="text-xs text-muted-foreground">·</span>
-                  <span className="text-xs text-muted-foreground capitalize">
-                    {review.state}
-                  </span>
-                  {review.result && (
-                    <>
-                      <span className="text-xs text-muted-foreground">·</span>
-                      <span className="text-xs font-medium text-foreground capitalize">
-                        {review.result.replace(/_/g, " ")}
-                      </span>
-                    </>
-                  )}
-                </div>
-              </div>
-              {canWrite &&
-                review.state !== "completed" &&
-                review.state !== "cancelled" && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCompletingId(review.id)}
-                    data-testid={`complete-review-btn-${review.id}`}
-                  >
-                    Complete
-                  </Button>
-                )}
-              {canWrite && (
-                <ConfirmDialog
-                  title="Delete review?"
-                  description="This review will be permanently removed."
-                  confirmLabel="Delete"
-                  destructive
-                  onConfirm={() => onDelete(review.id)}
-                  trigger={
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="text-destructive hover:text-destructive"
-                      data-testid={`delete-review-btn-${review.id}`}
-                    >
-                      Delete
-                    </Button>
-                  }
-                />
-              )}
-            </li>
+              review={review}
+              canWrite={canWrite}
+              onComplete={() => setCompletingId(review.id)}
+              onDelete={() => onDelete(review.id)}
+            />
           ))}
         </ul>
       )}

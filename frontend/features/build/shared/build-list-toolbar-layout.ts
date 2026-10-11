@@ -107,13 +107,29 @@ export function buildToolbarLayout({
   };
 }
 
+export interface BuildToolbarRow {
+  mobile: number;
+  tablet: number;
+  desktop: number;
+}
+
+function resolveToolbarRow(row?: BuildToolbarRow): BuildToolbarRow {
+  const mobile = Math.max(0, row?.mobile ?? 2);
+  const tablet = Math.max(mobile, row?.tablet ?? 2);
+  const desktop = Math.max(tablet, row?.desktop ?? 3);
+  return { mobile, tablet, desktop };
+}
+
 export function toolbarInlineVisibility(
   index: number,
   _collapsed: boolean,
   _fieldFilterCount: number,
+  row?: BuildToolbarRow,
 ): string {
-  if (index < 2) return "";
-  if (index === 2) return "max-lg:hidden";
+  const resolved = resolveToolbarRow(row);
+  if (index < resolved.mobile) return "";
+  if (index < resolved.tablet) return "max-md:hidden";
+  if (index < resolved.desktop) return "max-lg:hidden";
   return "hidden";
 }
 
@@ -121,17 +137,23 @@ export function toolbarDrawerVisibility(
   index: number,
   _collapsed: boolean,
   _fieldFilterCount: number,
+  row?: BuildToolbarRow,
 ): string {
-  if (index < 2) return "hidden";
-  if (index === 2) return "lg:hidden";
+  const resolved = resolveToolbarRow(row);
+  if (index < resolved.mobile) return "hidden";
+  if (index < resolved.tablet) return "md:hidden";
+  if (index < resolved.desktop) return "lg:hidden";
   return "";
 }
 
 export function toolbarMoreButtonClass(
   filterCount: number,
   _collapse: boolean,
+  row?: BuildToolbarRow,
 ): string {
-  if (filterCount <= 2) return "hidden";
-  if (filterCount === 3) return "inline-flex shrink-0 lg:hidden";
+  const resolved = resolveToolbarRow(row);
+  if (filterCount <= resolved.mobile) return "hidden";
+  if (filterCount <= resolved.tablet) return "inline-flex shrink-0 md:hidden";
+  if (filterCount <= resolved.desktop) return "inline-flex shrink-0 lg:hidden";
   return "inline-flex shrink-0";
 }

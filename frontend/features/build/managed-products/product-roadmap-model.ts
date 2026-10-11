@@ -44,6 +44,12 @@ export function isRoadmapStatus(v: string): v is RoadmapStatus {
   return STATUS_VALUES.includes(v);
 }
 
+export function positiveFilterId(value: string): number | undefined {
+  if (!/^\d+$/.test(value)) return undefined;
+  const id = Number(value);
+  return id > 0 ? id : undefined;
+}
+
 export const ROADMAP_FILTER_DEFS = [
   { param: "status", options: ROADMAP_STATUS_OPTS.map((o) => o.value) },
   { param: "horizon", options: ROADMAP_HORIZON_OPTS.map((o) => o.value) },

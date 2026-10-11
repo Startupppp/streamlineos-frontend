@@ -15,6 +15,17 @@ import { PAGE_SIZE, FILTER_DEFINITIONS } from "./managed-products-filter-constan
 import { useManagedProductFilterOptions } from "./use-managed-product-filter-options";
 import { useManagedProductMutations } from "./use-managed-product-mutations";
 
+function positiveId(value: string | undefined): string | undefined {
+  if (!value || value === BUILD_FILTER_ALL || !/^\d+$/.test(value)) return undefined;
+  return Number(value) > 0 ? value : undefined;
+}
+
+function trimmedText(value: string | undefined): string | undefined {
+  if (!value || value === BUILD_FILTER_ALL) return undefined;
+  const trimmed = value.trim();
+  return trimmed || undefined;
+}
+
 export function useManagedProductsPage() {
   const router = useRouter();
   const searchInputRef = useRef<HTMLInputElement | null>(null);
@@ -50,7 +61,7 @@ export function useManagedProductsPage() {
     limit: PAGE_SIZE,
     status: statusValue !== BUILD_FILTER_ALL ? statusValue : undefined,
     search: listFilters.debouncedSearch.trim() || undefined,
-    ownerId: ownerIdValue !== BUILD_FILTER_ALL ? ownerIdValue : undefined,
+    ownerId: trimmedText(ownerIdValue),
     sort:
       sortValue &&
       sortValue !== BUILD_FILTER_ALL &&
@@ -59,10 +70,10 @@ export function useManagedProductsPage() {
         : undefined,
     lifecycle: lifecycleValue !== BUILD_FILTER_ALL ? lifecycleValue : undefined,
     health: healthValue !== BUILD_FILTER_ALL ? healthValue : undefined,
-    teamId: teamIdValue !== BUILD_FILTER_ALL ? teamIdValue : undefined,
-    segment: segmentValue !== BUILD_FILTER_ALL ? segmentValue : undefined,
-    tag: tagValue !== BUILD_FILTER_ALL ? tagValue : undefined,
-    linkedProjectId: linkedProjectIdValue !== BUILD_FILTER_ALL ? linkedProjectIdValue : undefined,
+    teamId: positiveId(teamIdValue),
+    segment: trimmedText(segmentValue),
+    tag: trimmedText(tagValue),
+    linkedProjectId: positiveId(linkedProjectIdValue),
     archived: archivedValue === "true" ? true : undefined,
   });
 
