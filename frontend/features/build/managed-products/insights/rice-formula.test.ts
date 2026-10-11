@@ -1,4 +1,4 @@
-import { computeRiceScore, formatRiceScore } from "./rice-formula";
+import { computeRiceScore, formatRiceScore, formatStoredRiceScore } from "./rice-formula";
 
 describe("computeRiceScore — RICE formula math (BSN-RICE-MATH)", () => {
   it("computes reach × impact × confidence ÷ effort so the live preview equals the score the server stores", () => {
@@ -30,5 +30,18 @@ describe("formatRiceScore — display (BSN-RICE-DISPLAY)", () => {
 
   it("formats a numeric score to 2 decimal places so the column aligns correctly", () => {
     expect(formatRiceScore(4.12345)).toBe("4.12");
+  });
+});
+
+describe("formatStoredRiceScore — server numeric strings", () => {
+  it("shows the server's four-decimal numeric as two decimals", () => {
+    expect(formatStoredRiceScore("400.0000")).toBe("400.00");
+  });
+
+  it("shows Unscored for a missing or non-numeric stored score", () => {
+    expect(formatStoredRiceScore(null)).toBe("Unscored");
+    expect(formatStoredRiceScore(undefined)).toBe("Unscored");
+    expect(formatStoredRiceScore("")).toBe("Unscored");
+    expect(formatStoredRiceScore("n/a")).toBe("Unscored");
   });
 });

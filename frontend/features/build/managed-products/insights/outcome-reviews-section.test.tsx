@@ -118,6 +118,26 @@ describe("OutcomeReviewsSection — result required (BSN-OUTCOME-RESULT)", () =>
     expect(noop).not.toHaveBeenCalledWith(expect.objectContaining({ result: expect.anything() }));
   });
 
+  it("offers labelled actual and notes fields so the learning is recorded with the result", () => {
+    render(
+      <OutcomeReviewsSection
+        managedProductId={10}
+        reviews={[SCHEDULED_REVIEW]}
+        isLoading={false}
+        onCreate={noop}
+        onComplete={noop}
+        onDelete={noop}
+        isCreating={false}
+        isUpdating={false}
+      />,
+    );
+
+    fireEvent.click(screen.getByTestId("complete-review-btn-1"));
+
+    expect(screen.getByLabelText("Actual measurement (optional)")).toBeInTheDocument();
+    expect(screen.getByLabelText("Notes (optional)")).toBeInTheDocument();
+  });
+
   it("shows the empty state when no reviews are present", () => {
     render(
       <OutcomeReviewsSection

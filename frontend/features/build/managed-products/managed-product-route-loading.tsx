@@ -18,7 +18,7 @@ import {
   ProductSettingsSkeleton,
 } from "./managed-product-page-skeletons";
 import { FEEDBACK_SKELETON_HEADERS } from "./product-feedback-columns";
-import { INSIGHT_TABS } from "./product-insights-tabs";
+import { INSIGHT_TABS, INSIGHT_VIEWS } from "./product-insights-tabs";
 import { PRODUCT_SETTINGS_TABS } from "./product-settings-tabs";
 
 function RouteToolbar({
@@ -104,20 +104,35 @@ export function ProductFeedbackRouteLoading() {
   );
 }
 
-function InsightTabStrip() {
+function InsightTabStripRow({
+  tabs,
+  activeId,
+}: {
+  tabs: readonly { id: string; label: string }[];
+  activeId: string;
+}) {
   return (
     <div className="box-border flex h-9 w-full min-w-0 items-center gap-1 overflow-x-auto rounded-lg border border-input bg-card p-1 text-muted-foreground md:w-fit">
-      {INSIGHT_TABS.map((tab) => (
+      {tabs.map((tab) => (
         <span
           key={tab.id}
           className={cn(
             "inline-flex h-7 min-w-fit flex-1 items-center justify-center whitespace-nowrap rounded-md px-3 text-sm font-medium md:flex-none",
-            tab.id === "overview" && "bg-foreground text-background shadow-sm",
+            tab.id === activeId && "bg-foreground text-background shadow-sm",
           )}
         >
           {tab.label}
         </span>
       ))}
+    </div>
+  );
+}
+
+function InsightTabStrip() {
+  return (
+    <div className="flex w-full min-w-0 flex-col gap-2">
+      <InsightTabStripRow tabs={INSIGHT_VIEWS} activeId="overview" />
+      <InsightTabStripRow tabs={INSIGHT_TABS} activeId="overview" />
     </div>
   );
 }

@@ -1,5 +1,6 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { ManagedProductOverviewPage } from "./managed-product-overview-page";
+import { OVERVIEW_SUMMARY } from "./managed-product-overview-test-fixtures";
 
 const usePageState = jest.fn();
 const mockRouterReplace = jest.fn();
@@ -40,6 +41,12 @@ jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn(() => true),
 }));
 
+const mockMutateProduct = jest.fn();
+
+jest.mock("@/hooks/api/build/managed-product-mutations", () => ({
+  useUpdateManagedProduct: jest.fn(() => ({ mutate: mockMutateProduct, isPending: false })),
+}));
+
 jest.mock("@/hooks/api/build/teams", () => ({
   useProjectTeams: jest.fn(() => ({ data: undefined })),
 }));
@@ -49,65 +56,6 @@ jest.mock("@/features/build/managed-products/managed-product-form-sheet", () => 
     open ? <div data-testid="managed-product-edit-sheet" /> : null,
 }));
 
-const FULL_SUMMARY = {
-  product: {
-    id: 42,
-    orgId: "org-1",
-    name: "Payments Platform",
-    key: "PAY",
-    description: null,
-    status: "active" as const,
-    ownerId: null,
-    vision: null,
-    missionStatement: null,
-    targetCustomer: null,
-    differentiators: null,
-    currentPhase: null,
-    targetLaunchDate: null,
-    successMetrics: null,
-    ownerMembershipId: null,
-    lifecycle: "growth",
-    health: "on_track",
-    teamId: null,
-    segments: [],
-    tags: [],
-    northStarMetric: null,
-    lastReviewedAt: null,
-    owner: null,
-    version: 1,
-    deletedAt: null,
-    createdAt: "2024-01-01T00:00:00Z",
-    updatedAt: "2024-01-01T00:00:00Z",
-  },
-  evidence: {
-    feedbackCount: 12,
-    feedbackLast30d: 3,
-    themedCount: 6,
-    latestFeedbackAt: null,
-    opportunityCount: 2,
-    opportunitiesByState: { open: 1, exploring: 1 },
-  },
-  delivery: {
-    linkedProjects: 3,
-    roadmapByHorizon: { now: 2, next: 5, later: 8 },
-    roadmapCompleted: 4,
-    ticketTotals: { total: 20, done: 10 },
-    nextRelease: null,
-  },
-  outcomes: {
-    goalsLinked: 2,
-    outcomeReviews: { scheduled: 3, completed: 1, met: 1, notMet: 0 },
-    latestReviewAt: null,
-  },
-  previews: {
-    themes: [],
-    roadmap: [],
-    releases: [],
-    opportunities: [],
-  },
-  generatedAt: "2024-01-01T00:00:00Z",
-};
-
 beforeEach(() => {
   jest.clearAllMocks();
   usePageState.mockReturnValue({ kind: "ready" });
@@ -115,7 +63,7 @@ beforeEach(() => {
     "@/hooks/api/build/managed-product-summary",
   );
   (useManagedProductSummary as jest.Mock).mockReturnValue({
-    data: FULL_SUMMARY,
+    data: OVERVIEW_SUMMARY,
     isLoading: false,
     isError: false,
     error: null,
@@ -171,9 +119,9 @@ describe("ManagedProductOverviewPage — owner display in subtitle (FE-85)", () 
     );
     (useManagedProductSummary as jest.Mock).mockReturnValue({
       data: {
-        ...FULL_SUMMARY,
+        ...OVERVIEW_SUMMARY,
         product: {
-          ...FULL_SUMMARY.product,
+          ...OVERVIEW_SUMMARY.product,
           ownerId: "7f3c1b2e-0000-4000-8000-000000000001",
           owner: { id: "7f3c1b2e-0000-4000-8000-000000000001", firstName: "Ada", lastName: "Lovelace", email: "ada@example.com", image: null },
         },
@@ -257,6 +205,52 @@ describe("ManagedProductOverviewPage — edit action (BSN-OVW-EDIT)", () => {
   });
 });
 
+describe("ManagedProductOverviewPage — mark reviewed", () => {
+  it("records today's review against the current product version", () => {
+    const { useCan } = jest.requireMock("@/hooks/api/access");
+    (useCan as jest.Mock).mockReturnValue(true);
+    render(<ManagedProductOverviewPage managedProductId={42} />);
+    fireEvent.click(screen.getAllByRole("button", { name: /Mark reviewed/i })[0]!);
+    expect(mockMutateProduct).toHaveBeenCalledWith(
+      expect.objectContaining({ managedProductId: 42, version: 1, lastReviewedAt: expect.any(String) }),
+      expect.anything(),
+    );
+  });
+
+  it("offers no review action to a viewer who cannot update the product", () => {
+    const { useCan } = jest.requireMock("@/hooks/api/access");
+    (useCan as jest.Mock).mockReturnValue(false);
+    render(<ManagedProductOverviewPage managedProductId={42} />);
+    expect(screen.queryAllByRole("button", { name: /Mark reviewed/i })).toHaveLength(0);
+  });
+});
+
+describe("ManagedProductOverviewPage — needs attention", () => {
+  it("flags the missing owner and the unreviewed product with links to fix them", () => {
+    render(<ManagedProductOverviewPage managedProductId={42} />);
+    const panel = screen.getByRole("region", { name: "Needs attention" });
+    expect(within(panel).getByText("No product owner")).toBeInTheDocument();
+    expect(within(panel).getByText("Product has never been reviewed")).toBeInTheDocument();
+    expect(within(panel).getByRole("link", { name: /Assign owner/i })).toHaveAttribute(
+      "href",
+      "/build/managed-products/42/settings",
+    );
+  });
+
+  it("walks the signal-to-outcome stages in order with their counts", () => {
+    render(<ManagedProductOverviewPage managedProductId={42} />);
+    const stages = within(screen.getByRole("list", { name: "Signal to outcome" })).getAllByRole("link");
+    expect(stages.map((stage) => stage.textContent)).toEqual([
+      expect.stringContaining("Feedback12"),
+      expect.stringContaining("Themed6"),
+      expect.stringContaining("Opportunities2"),
+      expect.stringContaining("On roadmap19"),
+      expect.stringContaining("Shipped4"),
+      expect.stringContaining("Measured1"),
+    ]);
+  });
+});
+
 describe("ManagedProductOverviewPage — offline state (BSN-OVW-OFFLINE)", () => {
   const onlineSpy = jest.spyOn(navigator, "onLine", "get");
 
@@ -276,7 +270,7 @@ describe("ManagedProductOverviewPage — offline state (BSN-OVW-OFFLINE)", () =>
       "@/hooks/api/build/managed-product-summary",
     );
     (useManagedProductSummary as jest.Mock).mockReturnValue({
-      data: FULL_SUMMARY,
+      data: OVERVIEW_SUMMARY,
       dataUpdatedAt: Date.now(),
       isLoading: false,
       isError: false,

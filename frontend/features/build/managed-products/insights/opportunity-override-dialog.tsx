@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { ControllerRenderProps, UseFormReturn } from "react-hook-form";
-import { FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { EntityFormDialog } from "@/components/shared/entity-form-dialog";
@@ -50,16 +50,18 @@ export function OpportunityOverrideDialog({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Override score</FormLabel>
-                <Input
-                  type="number"
-                  min={0}
-                  step={0.01}
-                  className={FIELD_CONTROL_CLASS}
-                  placeholder="e.g. 4.5"
-                  value={field.value ?? ""}
-                  onChange={(e) => field.onChange(Number(e.target.value))}
-                  data-testid="override-score-input"
-                />
+                <FormControl>
+                  <Input
+                    type="number"
+                    min={0}
+                    step={0.01}
+                    className={FIELD_CONTROL_CLASS}
+                    placeholder="e.g. 4.5"
+                    value={field.value ?? ""}
+                    onChange={(e) => field.onChange(Number(e.target.value))}
+                    data-testid="override-score-input"
+                  />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
@@ -70,13 +72,15 @@ export function OpportunityOverrideDialog({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Reason (required)</FormLabel>
-                <Textarea
-                  {...field}
-                  className={FIELD_CONTROL_CLASS}
-                  placeholder="Explain why this score is being overridden"
-                  rows={3}
-                  data-testid="override-reason-input"
-                />
+                <FormControl>
+                  <Textarea
+                    {...field}
+                    className={FIELD_CONTROL_CLASS}
+                    placeholder="Explain why this score is being overridden"
+                    rows={3}
+                    data-testid="override-reason-input"
+                  />
+                </FormControl>
                 <FormMessage data-testid="override-reason-error" />
               </FormItem>
             )}
@@ -137,13 +141,15 @@ function renderNoteField({ field }: { field: ControllerRenderProps<DeclineFormVa
   return (
     <FormItem>
       <FormLabel>Reason</FormLabel>
-      <Textarea
-        {...field}
-        className={FIELD_CONTROL_CLASS}
-        placeholder="Why is this opportunity not being pursued?"
-        rows={3}
-        data-testid="decline-note-input"
-      />
+      <FormControl>
+        <Textarea
+          {...field}
+          className={FIELD_CONTROL_CLASS}
+          placeholder="Why is this opportunity not being pursued?"
+          rows={3}
+          data-testid="decline-note-input"
+        />
+      </FormControl>
       <FormMessage />
     </FormItem>
   );

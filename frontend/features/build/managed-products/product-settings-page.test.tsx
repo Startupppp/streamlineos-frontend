@@ -1,10 +1,5 @@
-import { render, screen } from "@testing-library/react";
-import { fireEvent } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { ProductSettingsPage } from "./product-settings-page";
-import {
-  createManagedProductSchema,
-  editManagedProductSchema,
-} from "./managed-product-schema";
 
 const mockReplace = jest.fn();
 let mockSearch = "";
@@ -56,12 +51,6 @@ jest.mock("@/hooks/api/build/managed-product-members", () => ({
   useRemoveManagedProductMember: jest.fn(),
 }));
 
-jest.mock("@/hooks/api/build/managed-product-releases", () => ({
-  useManagedProductReleases: jest.fn(),
-  useCreateManagedProductRelease: jest.fn(),
-  useUpdateManagedProductRelease: jest.fn(),
-}));
-
 jest.mock("@/hooks/api/build/build-members", () => ({
   useBuildMembers: jest.fn(),
 }));
@@ -86,15 +75,6 @@ const {
   useManagedProductMembers: jest.Mock;
   useAddManagedProductMember: jest.Mock;
   useRemoveManagedProductMember: jest.Mock;
-};
-const {
-  useManagedProductReleases: mockUseManagedProductReleases,
-  useCreateManagedProductRelease: mockUseCreateManagedProductRelease,
-  useUpdateManagedProductRelease: mockUseUpdateManagedProductRelease,
-} = jest.requireMock("@/hooks/api/build/managed-product-releases") as {
-  useManagedProductReleases: jest.Mock;
-  useCreateManagedProductRelease: jest.Mock;
-  useUpdateManagedProductRelease: jest.Mock;
 };
 const { useBuildMembers: mockUseBuildMembers } = jest.requireMock("@/hooks/api/build/build-members") as { useBuildMembers: jest.Mock };
 
@@ -152,7 +132,6 @@ const MOCK_PRODUCT = {
 };
 
 const EMPTY_MEMBERS = { data: [] };
-const EMPTY_RELEASES = { data: [], pagination: { limit: 20, hasMore: false, nextCursor: null } };
 
 function setupDefaultMocks() {
   mockUseManagedProduct.mockReturnValue({
@@ -169,9 +148,6 @@ function setupDefaultMocks() {
   mockUseManagedProductMembers.mockReturnValue({ data: EMPTY_MEMBERS, isLoading: false });
   mockUseAddManagedProductMember.mockReturnValue({ mutate: jest.fn(), isPending: false });
   mockUseRemoveManagedProductMember.mockReturnValue({ mutate: jest.fn(), isPending: false });
-  mockUseManagedProductReleases.mockReturnValue({ data: EMPTY_RELEASES, isLoading: false });
-  mockUseCreateManagedProductRelease.mockReturnValue({ mutate: jest.fn(), isPending: false });
-  mockUseUpdateManagedProductRelease.mockReturnValue({ mutate: jest.fn(), isPending: false });
   mockUseBuildMembers.mockReturnValue({ data: { data: [], pagination: { hasMore: false, nextCursor: null } } });
 }
 
@@ -192,12 +168,6 @@ describe("ProductSettingsPage — sections render", () => {
     mockSearch = "tab=members";
     render(<ProductSettingsPage managedProductId={7} />);
     expect(screen.getByRole("heading", { name: "Members" })).toBeInTheDocument();
-  });
-
-  it("renders the releases section heading", () => {
-    mockSearch = "tab=releases";
-    render(<ProductSettingsPage managedProductId={7} />);
-    expect(screen.getByRole("heading", { name: "Releases" })).toBeInTheDocument();
   });
 
   it("renders the danger zone section heading", () => {
@@ -244,13 +214,6 @@ describe("ProductSettingsPage — denied / read-only", () => {
     expect(screen.queryByRole("button", { name: /add member/i })).not.toBeInTheDocument();
   });
 
-  it("hides Add release button when canUpdate is false", () => {
-    mockSearch = "tab=releases";
-    mockUseCan.mockImplementation((key: string) => key !== "build:managed-products:update");
-    render(<ProductSettingsPage managedProductId={7} />);
-    expect(screen.queryByRole("button", { name: /add release/i })).not.toBeInTheDocument();
-  });
-
   it("renders NoPermissionState when page state is denied", () => {
     mockUsePageState.mockReturnValue({ kind: "denied", permission: "build:managed-products:view" });
     render(<ProductSettingsPage managedProductId={7} />);
@@ -291,50 +254,22 @@ describe("ProductSettingsPage — members", () => {
   });
 });
 
-describe("ProductSettingsPage — releases", () => {
-  beforeEach(() => {
-    mockSearch = "tab=releases";
-  });
-
-  it("renders existing releases", () => {
-    mockUseManagedProductReleases.mockReturnValue({
-      data: {
-        data: [
-          {
-            id: 20,
-            orgId: "org-1",
-            managedProductId: 7,
-            name: "v1.0.0",
-            version: "1.0.0",
-            description: null,
-            status: "released",
-            releaseDate: "2024-06-01",
-            createdBy: null,
-            createdAt: "2024-01-01T00:00:00Z",
-            updatedAt: "2024-01-01T00:00:00Z",
-          },
-        ],
-        pagination: { limit: 20, hasMore: false, nextCursor: null },
-      },
-      isLoading: false,
-    });
-    render(<ProductSettingsPage managedProductId={7} />);
-    expect(screen.getByText("v1.0.0")).toBeInTheDocument();
-  });
-
-  it("shows Add release button when canUpdate is true", () => {
-    render(<ProductSettingsPage managedProductId={7} />);
-    expect(screen.getByRole("button", { name: /add release/i })).toBeInTheDocument();
-  });
-});
-
 describe("ProductSettingsPage — section tabs", () => {
   it("shows General by default and hides members and releases", () => {
     render(<ProductSettingsPage managedProductId={7} />);
     expect(screen.getByRole("tab", { name: "General", selected: true })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Members" })).toBeInTheDocument();
+    expect(screen.queryByRole("tab", { name: "Releases" })).not.toBeInTheDocument();
     expect(screen.getByText("Identity, strategy & lifecycle")).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Members" })).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Releases" })).not.toBeInTheDocument();
+  });
+
+  it("falls back to General for a stale tab=releases link", () => {
+    mockSearch = "tab=releases";
+    render(<ProductSettingsPage managedProductId={7} />);
+    expect(screen.getByRole("tab", { name: "General", selected: true })).toBeInTheDocument();
+    expect(screen.getByText("Identity, strategy & lifecycle")).toBeInTheDocument();
   });
 
   it("falls back to General when the tab param is unknown", () => {
@@ -359,64 +294,5 @@ describe("ProductSettingsPage — archive confirm", () => {
     render(<ProductSettingsPage managedProductId={7} />);
     fireEvent.click(screen.getByRole("button", { name: "Archive" }));
     expect(screen.getByRole("alertdialog")).toBeInTheDocument();
-  });
-});
-
-describe("managed-product schemas — validation limits", () => {
-  it("rejects tags array longer than 20 items", () => {
-    const result = createManagedProductSchema.safeParse({
-      name: "P",
-      key: "K",
-      description: "",
-      ownerId: "",
-      tags: Array.from({ length: 21 }, (_, i) => `tag${i}`),
-    });
-    expect(result.success).toBe(false);
-  });
-
-  it("rejects a tag value longer than 40 characters", () => {
-    const result = createManagedProductSchema.safeParse({
-      name: "P",
-      key: "K",
-      description: "",
-      ownerId: "",
-      tags: ["a".repeat(41)],
-    });
-    expect(result.success).toBe(false);
-  });
-
-  it("rejects segments array longer than 20 items", () => {
-    const result = createManagedProductSchema.safeParse({
-      name: "P",
-      key: "K",
-      description: "",
-      ownerId: "",
-      segments: Array.from({ length: 21 }, (_, i) => `seg${i}`),
-    });
-    expect(result.success).toBe(false);
-  });
-
-  it("rejects successMetrics array longer than 10 items", () => {
-    const result = editManagedProductSchema.safeParse({
-      name: "P",
-      description: "",
-      ownerId: "",
-      status: "active",
-      successMetrics: Array.from({ length: 11 }, (_, i) => ({ label: `m${i}` })),
-    });
-    expect(result.success).toBe(false);
-  });
-
-  it("accepts 20 tags each at most 40 chars", () => {
-    const result = createManagedProductSchema.safeParse({
-      name: "P",
-      key: "K",
-      description: "",
-      ownerId: "",
-      segments: [],
-      successMetrics: [],
-      tags: Array.from({ length: 20 }, (_, i) => `tag${i}`),
-    });
-    expect(result.success).toBe(true);
   });
 });

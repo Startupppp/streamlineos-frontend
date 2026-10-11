@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { getUserDisplayName } from "@/lib/person-display";
+import { formatShortDate } from "@/lib/date-utils";
 import { ROADMAP_STATUS_OPTIONS, ROADMAP_HORIZON_OPTIONS } from "./roadmap-constants";
 import { RoadmapDeliveryProgress } from "./roadmap-delivery-progress";
 import { RoadmapRiceFormFields } from "./roadmap-rice-form-fields";
@@ -29,6 +30,62 @@ function parseTargetDate(value: string | undefined): Date | undefined {
   if (!value) return undefined;
   const parsed = parseISO(value);
   return isValid(parsed) ? parsed : undefined;
+}
+
+function snapshotNumber(value: unknown): number | null {
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
+function snapshotText(value: unknown): string | null {
+  return typeof value === "string" && value.trim() !== "" ? value : null;
+}
+
+function DecisionSnapshotSummary({ snapshot }: { snapshot: Record<string, unknown> }) {
+  const decidedAt = snapshotText(snapshot.decidedAt);
+  const score = snapshotNumber(snapshot.score);
+  const scoreVersion = snapshotNumber(snapshot.scoreVersion);
+  const evidenceCount = snapshotNumber(snapshot.evidenceCount);
+  const note = snapshotText(snapshot.note);
+
+  return (
+    <div
+      className="rounded-lg border border-border bg-muted/30 px-3 py-2.5 space-y-1.5"
+      data-testid="roadmap-decision-snapshot"
+    >
+      <p className="text-xs font-medium text-foreground">
+        Decision snapshot
+        {decidedAt ? (
+          <span className="font-normal text-muted-foreground">
+            {" "}
+            · accepted {formatShortDate(decidedAt)}
+          </span>
+        ) : null}
+      </p>
+      <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs">
+        <dt className="text-muted-foreground">Score</dt>
+        <dd className="font-mono tabular-nums text-foreground">
+          {score === null ? "Unscored" : score.toFixed(2)}
+          {scoreVersion === null ? null : (
+            <span className="ml-1.5 font-sans text-muted-foreground">v{scoreVersion}</span>
+          )}
+        </dd>
+        {evidenceCount === null ? null : (
+          <>
+            <dt className="text-muted-foreground">Evidence</dt>
+            <dd className="text-foreground">
+              {evidenceCount} {evidenceCount === 1 ? "piece" : "pieces"}
+            </dd>
+          </>
+        )}
+        {note ? (
+          <>
+            <dt className="text-muted-foreground">Note</dt>
+            <dd className="text-foreground whitespace-pre-wrap break-words">{note}</dd>
+          </>
+        ) : null}
+      </dl>
+    </div>
+  );
 }
 
 interface RoadmapItemFormFieldsProps {
@@ -261,14 +318,7 @@ export function RoadmapItemFormFields({
         tierWeighting={item?.tierWeighting}
       />
       {isEdit && item ? <RoadmapDeliveryProgress roadmapItemId={item.id} /> : null}
-      {decisionSnapshot ? (
-        <div className="rounded-lg border border-border bg-muted/30 px-3 py-2.5 space-y-1">
-          <p className="text-xs font-medium text-foreground">Decision snapshot</p>
-          <pre className="text-xs text-muted-foreground whitespace-pre-wrap break-words">
-            {JSON.stringify(decisionSnapshot, null, 2)}
-          </pre>
-        </div>
-      ) : null}
+      {decisionSnapshot ? <DecisionSnapshotSummary snapshot={decisionSnapshot} /> : null}
       <FormField
         control={control}
         name="isPublic"

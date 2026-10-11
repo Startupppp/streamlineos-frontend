@@ -121,6 +121,11 @@ const BUILD_ROUTE_MANIFEST: readonly BuildRouteManifestEntry[] = [
     target: null,
   },
   {
+    route: "/build/managed-products/[managedProductId]/releases",
+    decision: "KEEP",
+    target: null,
+  },
+  {
     route: "/build/managed-products/[managedProductId]/roadmap",
     decision: "KEEP",
     target: null,

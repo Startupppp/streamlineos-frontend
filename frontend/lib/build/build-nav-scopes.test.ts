@@ -139,7 +139,7 @@ describe("product scope catalog", () => {
   const productScope = resolveBuildScope("/build/managed-products/7");
   const fullAccess = accessWith(ALL_BUILD_PERMISSIONS, { feedbucket: true });
 
-  it("exposes Overview, Feedback, Insights, Roadmap, Goals and Linked projects under the managed product base path (BSN-01-012, BSN-01-022)", () => {
+  it("exposes Overview, Feedback, Insights, Roadmap, Releases, Goals and Linked projects under the managed product base path (BSN-01-012, BSN-01-022)", () => {
     const model = resolveBuildNavModel({
       scope: productScope,
       access: fullAccess,
@@ -150,6 +150,7 @@ describe("product scope catalog", () => {
       "/build/managed-products/7/feedback",
       "/build/managed-products/7/insights",
       "/build/managed-products/7/roadmap",
+      "/build/managed-products/7/releases",
       "/build/managed-products/7/goals",
       "/build/managed-products/7/projects",
     ]);

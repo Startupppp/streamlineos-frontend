@@ -5,6 +5,7 @@ import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import type { DiscoveryCompareOpportunitiesResponse } from "@/contracts/build-contracts.generated";
+import { formatStoredRiceScore } from "./rice-formula";
 
 const MAX_COMPARE = 5;
 
@@ -96,7 +97,7 @@ export function CompareDrawer({
                           )}
                         </td>
                         <td className="px-4 py-3 text-right font-semibold tabular-nums">
-                          {isLoading ? "..." : (score?.effectiveScore ?? "Unscored")}
+                          {isLoading ? "..." : formatStoredRiceScore(score?.effectiveScore)}
                         </td>
                         <td className="px-4 py-3">
                           <Button

@@ -12,6 +12,7 @@ import type {
   UpdateManagedProductInput,
 } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import type { ManagedProductSummary } from "@/hooks/api/build/managed-product-summary";
 
 const managedProductRowContract = lazyContract(() =>
   import("@/contracts/build-contracts.generated").then(
@@ -47,6 +48,22 @@ function patchManagedProductListCache(
     return { ...cache, pages: cache.pages.map(patchPage) };
   }
   return patchPage(cache);
+}
+
+function patchSummaryProduct(
+  summary: ManagedProductSummary,
+  updated: ManagedProduct,
+): ManagedProductSummary {
+  const { status, owner, ...fields } = updated;
+  return {
+    ...summary,
+    product: {
+      ...summary.product,
+      ...fields,
+      status: status === "archived" ? "archived" : "active",
+      owner: owner === undefined ? summary.product.owner : owner,
+    },
+  };
 }
 
 function removeManagedProductFromListCache(
@@ -124,6 +141,10 @@ export function useUpdateManagedProduct() {
       qc.setQueryData(
         buildWorkQueryKeys.projects.managedProducts.detail(vars.managedProductId),
         updated,
+      );
+      qc.setQueriesData<ManagedProductSummary | null>(
+        { queryKey: buildWorkQueryKeys.projects.managedProducts.summary(vars.managedProductId) },
+        (prev) => (prev ? patchSummaryProduct(prev, updated) : prev),
       );
       const loadedPages = qc.getQueriesData<ManagedProductsListCache>({
         queryKey: buildWorkQueryKeys.projects.managedProducts.list(),

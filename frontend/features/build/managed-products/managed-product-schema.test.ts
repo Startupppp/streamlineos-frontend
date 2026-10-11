@@ -1,6 +1,7 @@
 import { managedProductsCreateManagedProductBodySchema } from "@/contracts/build-contracts.generated";
 import {
   createManagedProductSchema,
+  editManagedProductSchema,
   toCreateManagedProductInput,
 } from "./managed-product-schema";
 
@@ -48,5 +49,38 @@ describe("createManagedProductSchema", () => {
 
     expect(request).toEqual({ name: "Alpha", key: "ALPHA-001" });
     expect(managedProductsCreateManagedProductBodySchema.safeParse(request).success).toBe(true);
+  });
+
+  it("rejects more than 20 tags", () => {
+    const tags = Array.from({ length: 21 }, (_, i) => `tag${i}`);
+    expect(createManagedProductSchema.safeParse({ ...BASE, tags }).success).toBe(false);
+  });
+
+  it("rejects a tag longer than 40 characters", () => {
+    expect(createManagedProductSchema.safeParse({ ...BASE, tags: ["a".repeat(41)] }).success).toBe(false);
+  });
+
+  it("rejects more than 20 segments", () => {
+    const segments = Array.from({ length: 21 }, (_, i) => `seg${i}`);
+    expect(createManagedProductSchema.safeParse({ ...BASE, segments }).success).toBe(false);
+  });
+
+  it("accepts 20 tags of at most 40 characters", () => {
+    const tags = Array.from({ length: 20 }, (_, i) => `tag${i}`);
+    expect(createManagedProductSchema.safeParse({ ...BASE, tags }).success).toBe(true);
+  });
+});
+
+describe("editManagedProductSchema", () => {
+  const BASE = { name: "P", description: "", ownerId: "", status: "active", segments: [], tags: [] };
+
+  it("rejects more than 10 success metrics", () => {
+    const successMetrics = Array.from({ length: 11 }, (_, i) => ({ label: `m${i}` }));
+    expect(editManagedProductSchema.safeParse({ ...BASE, successMetrics }).success).toBe(false);
+  });
+
+  it("accepts 10 success metrics", () => {
+    const successMetrics = Array.from({ length: 10 }, (_, i) => ({ label: `m${i}` }));
+    expect(editManagedProductSchema.safeParse({ ...BASE, successMetrics }).success).toBe(true);
   });
 });

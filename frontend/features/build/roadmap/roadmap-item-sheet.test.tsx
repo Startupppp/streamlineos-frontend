@@ -297,3 +297,38 @@ describe("RoadmapItemSheet — product association", () => {
     ));
   });
 });
+
+describe("RoadmapItemSheet — decision snapshot", () => {
+  it("summarises the acceptance decision instead of dumping raw JSON with the decider id", () => {
+    mockUseUpdateRoadmapItem.mockReturnValue({ mutate: jest.fn(), isPending: false });
+    mockUseCreateRoadmapItem.mockReturnValue({ mutate: jest.fn(), isPending: false });
+
+    render(
+      <RoadmapItemSheet
+        item={{
+          ...BASELINE_ITEM,
+          opportunityId: 1,
+          decisionSnapshot: {
+            note: "Highest RICE after override",
+            score: 450,
+            decidedAt: "2026-10-11T07:21:25.425Z",
+            decidedBy: "3a99283a-40be-4758-953b-458548e064fa",
+            scoreVersion: 5,
+            evidenceCount: 0,
+            opportunityId: 1,
+          },
+        }}
+        onClose={jest.fn()}
+      />,
+    );
+
+    const snapshot = screen.getByTestId("roadmap-decision-snapshot");
+    expect(snapshot).toHaveTextContent("accepted 11 Oct 2026");
+    expect(snapshot).toHaveTextContent("450.00");
+    expect(snapshot).toHaveTextContent("v5");
+    expect(snapshot).toHaveTextContent("0 pieces");
+    expect(snapshot).toHaveTextContent("Highest RICE after override");
+    expect(snapshot).not.toHaveTextContent("3a99283a");
+    expect(snapshot).not.toHaveTextContent("{");
+  });
+});

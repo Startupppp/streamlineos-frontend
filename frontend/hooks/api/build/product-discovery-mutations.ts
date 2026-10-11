@@ -1,6 +1,6 @@
 "use client";
 
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
@@ -12,7 +12,7 @@ import type {
   DiscoveryReviewsListOutcomeReviewsResponse,
 } from "@/contracts/build-contracts.generated";
 
-const opportunityCreateContract = lazyContract(() =>
+const opportunityRowContract = lazyContract(() =>
   import("@/contracts/build-contracts.generated").then(
     (m) => m.discoveryCreateOpportunityResponseSchema,
   ),
@@ -52,14 +52,45 @@ const noContentContract = lazyContract(() =>
 );
 
 type OpportunityListRow = DiscoveryListOpportunitiesResponse["data"][number];
-type OutcomeReviewListRow = DiscoveryReviewsListOutcomeReviewsResponse["data"][number];
+type OutcomeReviewListRow =
+  DiscoveryReviewsListOutcomeReviewsResponse["data"][number];
+
+function getLoadedOpportunityLists(qc: QueryClient, managedProductId: number) {
+  const prefix = buildWorkQueryKeys.projects.managedProducts.opportunities(managedProductId);
+  return qc.getQueriesData<DiscoveryListOpportunitiesResponse>({
+    queryKey: prefix,
+    predicate: (query) => {
+      const next = query.queryKey[prefix.length];
+      return next === undefined || (typeof next === "object" && next !== null);
+    },
+  });
+}
+
+function patchOpportunityScoreInListCache(
+  cache: DiscoveryListOpportunitiesResponse | undefined,
+  opportunityId: number,
+  latestScore: OpportunityListRow["latestScore"],
+): DiscoveryListOpportunitiesResponse | undefined {
+  if (cache === undefined || !Array.isArray(cache.data)) return cache;
+  return {
+    ...cache,
+    data: cache.data.map((row) =>
+      row.id === opportunityId
+        ? { ...row, latestScore, scoreStatus: latestScore ? ("scored" as const) : row.scoreStatus }
+        : row,
+    ),
+  };
+}
 
 function patchOpportunityInListCache(
   cache: DiscoveryListOpportunitiesResponse | undefined,
   updated: OpportunityListRow,
 ): DiscoveryListOpportunitiesResponse | undefined {
   if (cache === undefined || !Array.isArray(cache.data)) return cache;
-  return { ...cache, data: cache.data.map((row) => (row.id === updated.id ? updated : row)) };
+  return {
+    ...cache,
+    data: cache.data.map((row) => (row.id === updated.id ? updated : row)),
+  };
 }
 
 function patchOutcomeReviewInListCache(
@@ -67,7 +98,10 @@ function patchOutcomeReviewInListCache(
   updated: OutcomeReviewListRow,
 ): DiscoveryReviewsListOutcomeReviewsResponse | undefined {
   if (cache === undefined || !Array.isArray(cache.data)) return cache;
-  return { ...cache, data: cache.data.map((row) => (row.id === updated.id ? updated : row)) };
+  return {
+    ...cache,
+    data: cache.data.map((row) => (row.id === updated.id ? updated : row)),
+  };
 }
 
 function removeOutcomeReviewFromListCache(
@@ -96,28 +130,95 @@ interface CreateOpportunityInput {
 export function useCreateOpportunity(managedProductId: number) {
   const qc = useQueryClient();
   return useAuthorizedMutation("build:managed-products:update", {
-    mutationKey: ["projects", "managed-products", managedProductId, "opportunities", "create"],
+    mutationKey: [
+      "projects",
+      "managed-products",
+      managedProductId,
+      "opportunities",
+      "create",
+    ],
     mutationFn: (data: CreateOpportunityInput) =>
       apiClient.post(
         `/build/managed-products/${managedProductId}/opportunities`,
         data,
         undefined,
-        opportunityCreateContract,
+        opportunityRowContract,
       ),
     onSuccess: (created) => {
-      const defaultKey = buildWorkQueryKeys.projects.managedProducts.opportunities(managedProductId);
-      qc.setQueryData<DiscoveryListOpportunitiesResponse>(defaultKey, (prev) => {
-        if (!prev) return prev;
-        return { ...prev, data: [created, ...prev.data] };
-      });
-      const otherKeys = qc
-        .getQueriesData<DiscoveryListOpportunitiesResponse>({
-          queryKey: buildWorkQueryKeys.projects.managedProducts.opportunities(managedProductId),
-        })
-        .filter(([k]) => JSON.stringify(k) !== JSON.stringify(defaultKey));
+      const defaultKey =
+        buildWorkQueryKeys.projects.managedProducts.opportunities(
+          managedProductId,
+        );
+      qc.setQueryData<DiscoveryListOpportunitiesResponse>(
+        defaultKey,
+        (prev) => {
+          if (!prev) return prev;
+          return { ...prev, data: [created, ...prev.data] };
+        },
+      );
+      const otherKeys = getLoadedOpportunityLists(qc, managedProductId).filter(
+        ([k]) => JSON.stringify(k) !== JSON.stringify(defaultKey),
+      );
       for (const [key] of otherKeys) {
-        qc.invalidateQueries({ queryKey: key, exact: true, refetchType: "none" });
+        qc.invalidateQueries({
+          queryKey: key,
+          exact: true,
+          refetchType: "none",
+        });
       }
+    },
+  });
+}
+
+export interface UpdateOpportunityInput extends Partial<CreateOpportunityInput> {
+  version: number;
+  state?: OpportunityListRow["state"];
+}
+
+export function useUpdateOpportunity(managedProductId: number) {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("build:managed-products:update", {
+    mutationKey: [
+      "projects",
+      "managed-products",
+      managedProductId,
+      "opportunities",
+      "update",
+    ],
+    mutationFn: ({
+      opportunityId,
+      ...data
+    }: UpdateOpportunityInput & { opportunityId: number }) =>
+      apiClient.patch(
+        `/build/managed-products/${managedProductId}/opportunities/${opportunityId}`,
+        data,
+        undefined,
+        opportunityRowContract,
+      ),
+    onSuccess: (updated, vars) => {
+      qc.setQueryData<DiscoveryGetOpportunityResponse>(
+        buildWorkQueryKeys.projects.managedProducts.opportunity(
+          managedProductId,
+          vars.opportunityId,
+        ),
+        (prev) => (prev ? { ...prev, ...updated } : prev),
+      );
+      const loadedPages = getLoadedOpportunityLists(qc, managedProductId);
+      for (const [key, page] of loadedPages) {
+        if (page === undefined) continue;
+        qc.setQueryData<DiscoveryListOpportunitiesResponse>(
+          key,
+          patchOpportunityInListCache(page, updated),
+        );
+      }
+      qc.invalidateQueries({
+        queryKey: buildWorkQueryKeys.projects.managedProducts.opportunityTrace(
+          managedProductId,
+          vars.opportunityId,
+        ),
+        exact: true,
+        refetchType: "none",
+      });
     },
   });
 }
@@ -138,8 +239,17 @@ export interface AcceptOpportunityInput {
 export function useAcceptOpportunity(managedProductId: number) {
   const qc = useQueryClient();
   return useAuthorizedMutation("build:managed-products:update", {
-    mutationKey: ["projects", "managed-products", managedProductId, "opportunities", "accept"],
-    mutationFn: ({ opportunityId, ...data }: AcceptOpportunityInput & { opportunityId: number }) =>
+    mutationKey: [
+      "projects",
+      "managed-products",
+      managedProductId,
+      "opportunities",
+      "accept",
+    ],
+    mutationFn: ({
+      opportunityId,
+      ...data
+    }: AcceptOpportunityInput & { opportunityId: number }) =>
       apiClient.post(
         `/build/managed-products/${managedProductId}/opportunities/${opportunityId}/accept`,
         data,
@@ -148,12 +258,13 @@ export function useAcceptOpportunity(managedProductId: number) {
       ),
     onSuccess: (result, vars) => {
       qc.setQueryData<DiscoveryGetOpportunityResponse>(
-        buildWorkQueryKeys.projects.managedProducts.opportunity(managedProductId, vars.opportunityId),
+        buildWorkQueryKeys.projects.managedProducts.opportunity(
+          managedProductId,
+          vars.opportunityId,
+        ),
         (prev) => (prev ? { ...prev, ...result.opportunity } : prev),
       );
-      const loadedPages = qc.getQueriesData<DiscoveryListOpportunitiesResponse>({
-        queryKey: buildWorkQueryKeys.projects.managedProducts.opportunities(managedProductId),
-      });
+      const loadedPages = getLoadedOpportunityLists(qc, managedProductId);
       for (const [key, page] of loadedPages) {
         if (page === undefined) continue;
         qc.setQueryData<DiscoveryListOpportunitiesResponse>(
@@ -162,7 +273,10 @@ export function useAcceptOpportunity(managedProductId: number) {
         );
       }
       qc.invalidateQueries({
-        queryKey: buildWorkQueryKeys.projects.managedProducts.opportunityTrace(managedProductId, vars.opportunityId),
+        queryKey: buildWorkQueryKeys.projects.managedProducts.opportunityTrace(
+          managedProductId,
+          vars.opportunityId,
+        ),
         exact: true,
         refetchType: "none",
       });
@@ -174,8 +288,21 @@ export function useAcceptOpportunity(managedProductId: number) {
 export function useDeclineOpportunity(managedProductId: number) {
   const qc = useQueryClient();
   return useAuthorizedMutation("build:managed-products:update", {
-    mutationKey: ["projects", "managed-products", managedProductId, "opportunities", "decline"],
-    mutationFn: ({ opportunityId, ...data }: { opportunityId: number; note: string; expectedVersion: number }) =>
+    mutationKey: [
+      "projects",
+      "managed-products",
+      managedProductId,
+      "opportunities",
+      "decline",
+    ],
+    mutationFn: ({
+      opportunityId,
+      ...data
+    }: {
+      opportunityId: number;
+      note: string;
+      expectedVersion: number;
+    }) =>
       apiClient.post(
         `/build/managed-products/${managedProductId}/opportunities/${opportunityId}/decline`,
         data,
@@ -184,12 +311,13 @@ export function useDeclineOpportunity(managedProductId: number) {
       ),
     onSuccess: (result, vars) => {
       qc.setQueryData<DiscoveryGetOpportunityResponse>(
-        buildWorkQueryKeys.projects.managedProducts.opportunity(managedProductId, vars.opportunityId),
+        buildWorkQueryKeys.projects.managedProducts.opportunity(
+          managedProductId,
+          vars.opportunityId,
+        ),
         (prev) => (prev ? { ...prev, ...result } : prev),
       );
-      const loadedPages = qc.getQueriesData<DiscoveryListOpportunitiesResponse>({
-        queryKey: buildWorkQueryKeys.projects.managedProducts.opportunities(managedProductId),
-      });
+      const loadedPages = getLoadedOpportunityLists(qc, managedProductId);
       for (const [key, page] of loadedPages) {
         if (page === undefined) continue;
         qc.setQueryData<DiscoveryListOpportunitiesResponse>(
@@ -215,8 +343,17 @@ interface ScoreOpportunityInput {
 export function useScoreOpportunity(managedProductId: number) {
   const qc = useQueryClient();
   return useAuthorizedMutation("build:managed-products:update", {
-    mutationKey: ["projects", "managed-products", managedProductId, "opportunities", "score"],
-    mutationFn: ({ opportunityId, ...data }: ScoreOpportunityInput & { opportunityId: number }) =>
+    mutationKey: [
+      "projects",
+      "managed-products",
+      managedProductId,
+      "opportunities",
+      "score",
+    ],
+    mutationFn: ({
+      opportunityId,
+      ...data
+    }: ScoreOpportunityInput & { opportunityId: number }) =>
       apiClient.post(
         `/build/managed-products/${managedProductId}/opportunities/${opportunityId}/scores`,
         data,
@@ -225,36 +362,32 @@ export function useScoreOpportunity(managedProductId: number) {
       ),
     onSuccess: (result, vars) => {
       qc.setQueryData<DiscoveryGetOpportunityResponse>(
-        buildWorkQueryKeys.projects.managedProducts.opportunity(managedProductId, vars.opportunityId),
+        buildWorkQueryKeys.projects.managedProducts.opportunity(
+          managedProductId,
+          vars.opportunityId,
+        ),
         (prev) =>
           prev
             ? {
                 ...prev,
                 latestScore: result.latestScore,
-                scoreStatus: result.latestScore ? ("scored" as const) : prev.scoreStatus,
+                scoreStatus: result.latestScore
+                  ? ("scored" as const)
+                  : prev.scoreStatus,
               }
             : prev,
       );
-      const loadedPages = qc.getQueriesData<DiscoveryListOpportunitiesResponse>({
-        queryKey: buildWorkQueryKeys.projects.managedProducts.opportunities(managedProductId),
-      });
+      const loadedPages = getLoadedOpportunityLists(qc, managedProductId);
       for (const [key, page] of loadedPages) {
         if (page === undefined) continue;
-        qc.setQueryData<DiscoveryListOpportunitiesResponse>(key, (prev) => {
-          if (!prev) return prev;
-          return {
-            ...prev,
-            data: prev.data.map((row) =>
-              row.id === vars.opportunityId
-                ? {
-                    ...row,
-                    latestScore: result.latestScore,
-                    scoreStatus: result.latestScore ? ("scored" as const) : row.scoreStatus,
-                  }
-                : row,
-            ),
-          };
-        });
+        qc.setQueryData<DiscoveryListOpportunitiesResponse>(
+          key,
+          patchOpportunityScoreInListCache(
+            page,
+            vars.opportunityId,
+            result.latestScore,
+          ),
+        );
       }
     },
   });
@@ -263,8 +396,22 @@ export function useScoreOpportunity(managedProductId: number) {
 export function useOverrideOpportunityScore(managedProductId: number) {
   const qc = useQueryClient();
   return useAuthorizedMutation("build:managed-products:update", {
-    mutationKey: ["projects", "managed-products", managedProductId, "opportunities", "score-override"],
-    mutationFn: ({ opportunityId, ...data }: { opportunityId: number; overrideScore: number; reason: string; expectedScoreVersion: number }) =>
+    mutationKey: [
+      "projects",
+      "managed-products",
+      managedProductId,
+      "opportunities",
+      "score-override",
+    ],
+    mutationFn: ({
+      opportunityId,
+      ...data
+    }: {
+      opportunityId: number;
+      overrideScore: number;
+      reason: string;
+      expectedScoreVersion: number;
+    }) =>
       apiClient.post(
         `/build/managed-products/${managedProductId}/opportunities/${opportunityId}/score-override`,
         data,
@@ -273,36 +420,32 @@ export function useOverrideOpportunityScore(managedProductId: number) {
       ),
     onSuccess: (result, vars) => {
       qc.setQueryData<DiscoveryGetOpportunityResponse>(
-        buildWorkQueryKeys.projects.managedProducts.opportunity(managedProductId, vars.opportunityId),
+        buildWorkQueryKeys.projects.managedProducts.opportunity(
+          managedProductId,
+          vars.opportunityId,
+        ),
         (prev) =>
           prev
             ? {
                 ...prev,
                 latestScore: result.latestScore,
-                scoreStatus: result.latestScore ? ("scored" as const) : prev.scoreStatus,
+                scoreStatus: result.latestScore
+                  ? ("scored" as const)
+                  : prev.scoreStatus,
               }
             : prev,
       );
-      const loadedPages = qc.getQueriesData<DiscoveryListOpportunitiesResponse>({
-        queryKey: buildWorkQueryKeys.projects.managedProducts.opportunities(managedProductId),
-      });
+      const loadedPages = getLoadedOpportunityLists(qc, managedProductId);
       for (const [key, page] of loadedPages) {
         if (page === undefined) continue;
-        qc.setQueryData<DiscoveryListOpportunitiesResponse>(key, (prev) => {
-          if (!prev) return prev;
-          return {
-            ...prev,
-            data: prev.data.map((row) =>
-              row.id === vars.opportunityId
-                ? {
-                    ...row,
-                    latestScore: result.latestScore,
-                    scoreStatus: result.latestScore ? ("scored" as const) : row.scoreStatus,
-                  }
-                : row,
-            ),
-          };
-        });
+        qc.setQueryData<DiscoveryListOpportunitiesResponse>(
+          key,
+          patchOpportunityScoreInListCache(
+            page,
+            vars.opportunityId,
+            result.latestScore,
+          ),
+        );
       }
     },
   });
@@ -343,7 +486,13 @@ export interface UpdateOutcomeReviewInput {
 export function useCreateOutcomeReview(managedProductId: number) {
   const qc = useQueryClient();
   return useAuthorizedMutation("build:managed-products:update", {
-    mutationKey: ["projects", "managed-products", managedProductId, "outcome-reviews", "create"],
+    mutationKey: [
+      "projects",
+      "managed-products",
+      managedProductId,
+      "outcome-reviews",
+      "create",
+    ],
     mutationFn: (data: CreateOutcomeReviewInput) =>
       apiClient.post(
         `/build/managed-products/${managedProductId}/outcome-reviews`,
@@ -352,18 +501,31 @@ export function useCreateOutcomeReview(managedProductId: number) {
         outcomeReviewContract,
       ),
     onSuccess: (created) => {
-      const defaultKey = buildWorkQueryKeys.projects.managedProducts.outcomeReviews(managedProductId);
-      qc.setQueryData<DiscoveryReviewsListOutcomeReviewsResponse>(defaultKey, (prev) => {
-        if (!prev) return prev;
-        return { ...prev, data: [created, ...prev.data] };
-      });
+      const defaultKey =
+        buildWorkQueryKeys.projects.managedProducts.outcomeReviews(
+          managedProductId,
+        );
+      qc.setQueryData<DiscoveryReviewsListOutcomeReviewsResponse>(
+        defaultKey,
+        (prev) => {
+          if (!prev) return prev;
+          return { ...prev, data: [created, ...prev.data] };
+        },
+      );
       const otherKeys = qc
         .getQueriesData<DiscoveryReviewsListOutcomeReviewsResponse>({
-          queryKey: buildWorkQueryKeys.projects.managedProducts.outcomeReviews(managedProductId),
+          queryKey:
+            buildWorkQueryKeys.projects.managedProducts.outcomeReviews(
+              managedProductId,
+            ),
         })
         .filter(([k]) => JSON.stringify(k) !== JSON.stringify(defaultKey));
       for (const [key] of otherKeys) {
-        qc.invalidateQueries({ queryKey: key, exact: true, refetchType: "none" });
+        qc.invalidateQueries({
+          queryKey: key,
+          exact: true,
+          refetchType: "none",
+        });
       }
     },
   });
@@ -372,8 +534,17 @@ export function useCreateOutcomeReview(managedProductId: number) {
 export function useUpdateOutcomeReview(managedProductId: number) {
   const qc = useQueryClient();
   return useAuthorizedMutation("build:managed-products:update", {
-    mutationKey: ["projects", "managed-products", managedProductId, "outcome-reviews", "update"],
-    mutationFn: ({ outcomeReviewId, ...data }: UpdateOutcomeReviewInput & { outcomeReviewId: number }) =>
+    mutationKey: [
+      "projects",
+      "managed-products",
+      managedProductId,
+      "outcome-reviews",
+      "update",
+    ],
+    mutationFn: ({
+      outcomeReviewId,
+      ...data
+    }: UpdateOutcomeReviewInput & { outcomeReviewId: number }) =>
       apiClient.patch(
         `/build/managed-products/${managedProductId}/outcome-reviews/${outcomeReviewId}`,
         data,
@@ -381,9 +552,13 @@ export function useUpdateOutcomeReview(managedProductId: number) {
         outcomeReviewUpdateContract,
       ),
     onSuccess: (updated) => {
-      const loadedPages = qc.getQueriesData<DiscoveryReviewsListOutcomeReviewsResponse>({
-        queryKey: buildWorkQueryKeys.projects.managedProducts.outcomeReviews(managedProductId),
-      });
+      const loadedPages =
+        qc.getQueriesData<DiscoveryReviewsListOutcomeReviewsResponse>({
+          queryKey:
+            buildWorkQueryKeys.projects.managedProducts.outcomeReviews(
+              managedProductId,
+            ),
+        });
       for (const [key, page] of loadedPages) {
         if (page === undefined) continue;
         qc.setQueryData<DiscoveryReviewsListOutcomeReviewsResponse>(
@@ -398,7 +573,13 @@ export function useUpdateOutcomeReview(managedProductId: number) {
 export function useDeleteOutcomeReview(managedProductId: number) {
   const qc = useQueryClient();
   return useAuthorizedMutation("build:managed-products:update", {
-    mutationKey: ["projects", "managed-products", managedProductId, "outcome-reviews", "delete"],
+    mutationKey: [
+      "projects",
+      "managed-products",
+      managedProductId,
+      "outcome-reviews",
+      "delete",
+    ],
     mutationFn: (outcomeReviewId: number) =>
       apiClient.delete(
         `/build/managed-products/${managedProductId}/outcome-reviews/${outcomeReviewId}`,
@@ -407,9 +588,13 @@ export function useDeleteOutcomeReview(managedProductId: number) {
         noContentContract,
       ),
     onSuccess: (_data, outcomeReviewId) => {
-      const loadedPages = qc.getQueriesData<DiscoveryReviewsListOutcomeReviewsResponse>({
-        queryKey: buildWorkQueryKeys.projects.managedProducts.outcomeReviews(managedProductId),
-      });
+      const loadedPages =
+        qc.getQueriesData<DiscoveryReviewsListOutcomeReviewsResponse>({
+          queryKey:
+            buildWorkQueryKeys.projects.managedProducts.outcomeReviews(
+              managedProductId,
+            ),
+        });
       for (const [key, page] of loadedPages) {
         if (page === undefined) continue;
         qc.setQueryData<DiscoveryReviewsListOutcomeReviewsResponse>(

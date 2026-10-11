@@ -39,6 +39,10 @@ jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn(() => true),
 }));
 
+jest.mock("@/hooks/api/build/managed-product-mutations", () => ({
+  useUpdateManagedProduct: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+}));
+
 jest.mock("@/hooks/api/build/teams", () => ({
   useProjectTeams: jest.fn(() => ({ data: undefined })),
 }));

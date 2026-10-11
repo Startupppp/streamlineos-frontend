@@ -20,6 +20,8 @@ import { FIELD_CONTROL_CLASS } from "@/components/ui/field-control";
 import { useGoals } from "@/hooks/api/goals";
 import { useEpics } from "@/hooks/api/build/epics";
 import { useRoadmapItems } from "@/hooks/api/build/roadmap";
+import { useManagedProductProjects } from "@/hooks/api/build/managed-product-projects";
+import { useManagedProductReleases } from "@/hooks/api/build/managed-product-releases";
 import type { AcceptOpportunityInput } from "@/hooks/api/build/product-discovery-mutations";
 import { acceptSchema, type AcceptFormValues } from "./opportunity-accept-schema";
 
@@ -45,8 +47,6 @@ interface OpportunityAcceptDialogProps {
   opportunityTitle: string;
   expectedVersion: number;
   managedProductId: number;
-  projects?: NamedItem[];
-  releases?: Release[];
   isSubmitting: boolean;
   onAccept: (data: AcceptOpportunityInput) => void;
 }
@@ -95,9 +95,11 @@ function FieldSelect({
         <FormItem>
           <FormLabel>{label}</FormLabel>
           <Select value={idSelectValue(field.value)} onValueChange={handleChange}>
-            <SelectTrigger className={FIELD_CONTROL_CLASS} data-testid={testId}>
-              <SelectValue placeholder={placeholder} />
-            </SelectTrigger>
+            <FormControl>
+              <SelectTrigger className={FIELD_CONTROL_CLASS} data-testid={testId}>
+                <SelectValue placeholder={placeholder} />
+              </SelectTrigger>
+            </FormControl>
             <SelectContent>
               {items.map((i) => (
                 <SelectItem key={i.id} value={String(i.id)}>
@@ -155,9 +157,11 @@ function AcceptFields({ form, projects, releases, goals, roadmapItems }: AcceptF
           <FormItem>
             <FormLabel>Horizon</FormLabel>
             <Select value={field.value} onValueChange={(v) => v && field.onChange(v)}>
-              <SelectTrigger className={FIELD_CONTROL_CLASS} data-testid="horizon-select">
-                <SelectValue />
-              </SelectTrigger>
+              <FormControl>
+                <SelectTrigger className={FIELD_CONTROL_CLASS} data-testid="horizon-select">
+                  <SelectValue />
+                </SelectTrigger>
+              </FormControl>
               <SelectContent>
                 <SelectItem value="now">Now</SelectItem>
                 <SelectItem value="next">Next</SelectItem>
@@ -275,12 +279,14 @@ function AcceptFields({ form, projects, releases, goals, roadmapItems }: AcceptF
         render={({ field }) => (
           <FormItem>
             <FormLabel>Note (optional)</FormLabel>
-            <Textarea
-              {...field}
-              className={FIELD_CONTROL_CLASS}
-              placeholder="Why are you accepting this opportunity?"
-              rows={3}
-            />
+            <FormControl>
+              <Textarea
+                {...field}
+                className={FIELD_CONTROL_CLASS}
+                placeholder="Why are you accepting this opportunity?"
+                rows={3}
+              />
+            </FormControl>
             <FormMessage />
           </FormItem>
         )}
@@ -296,8 +302,6 @@ export function OpportunityAcceptDialog({
   opportunityTitle,
   expectedVersion,
   managedProductId,
-  projects = [],
-  releases = [],
   isSubmitting,
   onAccept,
 }: OpportunityAcceptDialogProps) {
@@ -305,6 +309,10 @@ export function OpportunityAcceptDialog({
   const goals = useMemo<TitledItem[]>(() => goalsRaw ?? [], [goalsRaw]);
   const { data: roadmapPage } = useRoadmapItems({ managedProductId });
   const roadmapItems = useMemo<TitledItem[]>(() => roadmapPage?.data ?? [], [roadmapPage]);
+  const { data: projectsPage } = useManagedProductProjects({ managedProductId, limit: 100 });
+  const projects = useMemo<NamedItem[]>(() => projectsPage?.data ?? [], [projectsPage]);
+  const { data: releasesPage } = useManagedProductReleases(managedProductId, { enabled: open });
+  const releases = useMemo<Release[]>(() => releasesPage?.data ?? [], [releasesPage]);
 
   return (
     <EntityFormSheet<AcceptFormValues>

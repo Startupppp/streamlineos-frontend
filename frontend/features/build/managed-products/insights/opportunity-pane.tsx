@@ -12,12 +12,14 @@ import {
   useDeclineOpportunity,
   useOverrideOpportunityScore,
   useScoreOpportunity,
+  useUpdateOpportunity,
 } from "@/hooks/api/build/product-discovery-mutations";
 import { OpportunityTrace } from "./opportunity-trace";
 import { OpportunityAcceptDialog } from "./opportunity-accept-dialog";
 import { OpportunityDeclineDialog, OpportunityOverrideDialog } from "./opportunity-override-dialog";
 import { OpportunityScoreDialog } from "./opportunity-rice-form";
 import { OpportunityPaneActions } from "./opportunity-pane-actions";
+import { formatStoredRiceScore } from "./rice-formula";
 import type { AcceptOpportunityInput } from "@/hooks/api/build/product-discovery-mutations";
 import type { DeclineFormValues, OverrideFormValues, RiceFormValues } from "./opportunity-rice-schema";
 
@@ -52,6 +54,18 @@ export function OpportunityPane({
   const declineMutation = useDeclineOpportunity(managedProductId);
   const overrideMutation = useOverrideOpportunityScore(managedProductId);
   const scoreMutation = useScoreOpportunity(managedProductId);
+  const updateMutation = useUpdateOpportunity(managedProductId);
+
+  const handleStartValidating = useCallback(() => {
+    if (!opportunityId || !opportunity) return;
+    updateMutation.mutate(
+      { opportunityId, version: opportunity.version, state: "validating" },
+      {
+        onSuccess: () => toast.success("Opportunity moved to validating."),
+        onError: (err) => toast.error(getErrorMessage(err)),
+      },
+    );
+  }, [opportunityId, opportunity, updateMutation]);
 
   const handleAccept = useCallback(
     (data: AcceptOpportunityInput) => {
@@ -210,7 +224,7 @@ export function OpportunityPane({
                   <p className="text-2xl font-semibold tabular-nums text-foreground">
                     {opportunity.scoreStatus === "unscored"
                       ? "Unscored"
-                      : (opportunity.latestScore?.effectiveScore ?? "—")}
+                      : formatStoredRiceScore(opportunity.latestScore?.effectiveScore)}
                   </p>
                   {opportunity.latestScore?.isOverride && (
                     <p className="text-xs text-status-warning-ink-strong">
@@ -222,6 +236,12 @@ export function OpportunityPane({
                 {canWrite && (
                   <OpportunityPaneActions
                     allowedActions={opportunity.allowedActions}
+                    canStartValidating={
+                      opportunity.state === "identified" &&
+                      opportunity.allowedActions.includes("edit")
+                    }
+                    isStartingValidation={updateMutation.isPending}
+                    onStartValidating={handleStartValidating}
                     onAccept={handleOpenAccept}
                     onDecline={handleOpenDecline}
                     onScore={handleOpenScore}

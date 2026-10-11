@@ -1,6 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { useMemo } from "react";
+import { motion } from "framer-motion";
+import { useMotionVariants } from "@/lib/motion-variants";
 import { ManagedProductFormSheet } from "@/features/build/managed-products/managed-product-form-sheet";
 import { BuildHeaderActions } from "@/features/build/shared/build-header-actions";
 import { PageState } from "@/components/shared/page-state";
@@ -13,7 +16,12 @@ import { ManagedProductOverviewStrategyCard } from "./managed-product-overview-s
 import { ManagedProductOverviewEvidenceCard } from "./managed-product-overview-evidence-card";
 import { ManagedProductOverviewDeliveryCard } from "./managed-product-overview-delivery-card";
 import { ManagedProductOverviewOutcomesCard } from "./managed-product-overview-outcomes-card";
-import { ManagedProductOverviewPreviewsCard } from "./managed-product-overview-previews-card";
+import { ManagedProductOverviewDecisionsCard } from "./managed-product-overview-decisions-card";
+import { ManagedProductOverviewHero } from "./managed-product-overview-hero";
+import { ManagedProductOverviewAttention } from "./managed-product-overview-attention";
+import { ManagedProductOverviewPulse } from "./managed-product-overview-pulse";
+import { ManagedProductOverviewFlow } from "./managed-product-overview-flow";
+import { deriveAttentionSignals } from "./overview-attention-signals";
 import {
   useManagedProductOverview,
   PERIOD_OPTIONS,
@@ -33,6 +41,9 @@ export function ManagedProductOverviewPage({ managedProductId }: ManagedProductO
     setEditOpen,
     resolution,
     overviewSubtitle,
+    now,
+    markReviewed,
+    isMarkingReviewed,
     editActions,
     summaryData,
     summaryDataUpdatedAt,
@@ -46,6 +57,11 @@ export function ManagedProductOverviewPage({ managedProductId }: ManagedProductO
     handleInitiativeStatusChange,
     handleSegmentChange,
   } = useManagedProductOverview(managedProductId);
+  const { staggerContainer, fadeUp } = useMotionVariants();
+  const attentionSignals = useMemo(
+    () => (summaryData ? deriveAttentionSignals(summaryData, managedProductId, now) : []),
+    [summaryData, managedProductId, now],
+  );
 
   return (
     <PageWrapper
@@ -119,35 +135,67 @@ export function ManagedProductOverviewPage({ managedProductId }: ManagedProductO
         onRetry={handleRetry}
         className="h-auto flex-none"
       >
-        <div className="flex w-full min-w-0 flex-col gap-4 pb-8">
+        <motion.div
+          className="flex w-full min-w-0 flex-col gap-4 pb-8"
+          variants={staggerContainer}
+          initial="hidden"
+          animate="visible"
+        >
           <BuildOfflineNotice dataUpdatedAt={summaryDataUpdatedAt} />
 
           {summaryData ? (
             <>
+              <motion.div
+                variants={fadeUp}
+                className="grid grid-cols-1 items-stretch gap-4 xl:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)]"
+              >
+                <ManagedProductOverviewHero product={summaryData.product} now={now} />
+                <ManagedProductOverviewAttention
+                  signals={attentionSignals}
+                  onMarkReviewed={markReviewed}
+                  isMarkingReviewed={isMarkingReviewed}
+                />
+              </motion.div>
+              <motion.div variants={fadeUp} className="min-w-0">
+                <ManagedProductOverviewPulse managedProductId={managedProductId} summary={summaryData} />
+              </motion.div>
               <ManagedProductOverviewStrategyCard
                 managedProductId={managedProductId}
                 product={summaryData.product}
               />
-              <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
+              <motion.div variants={fadeUp} className="min-w-0">
+                <ManagedProductOverviewFlow managedProductId={managedProductId} summary={summaryData} />
+              </motion.div>
+              <motion.div
+                variants={fadeUp}
+                className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]"
+              >
                 <ManagedProductOverviewDeliveryCard
                   managedProductId={managedProductId}
                   delivery={summaryData.delivery}
                   previews={summaryData.previews}
+                  now={now}
                 />
                 <ManagedProductOverviewEvidenceCard
                   managedProductId={managedProductId}
                   evidence={summaryData.evidence}
                   previews={summaryData.previews}
                 />
-              </div>
-              <ManagedProductOverviewOutcomesCard
-                managedProductId={managedProductId}
-                outcomes={summaryData.outcomes}
-              />
-              <ManagedProductOverviewPreviewsCard
-                managedProductId={managedProductId}
-                previews={summaryData.previews}
-              />
+              </motion.div>
+              <motion.div
+                variants={fadeUp}
+                className="grid grid-cols-1 items-stretch gap-4 lg:grid-cols-2"
+              >
+                <ManagedProductOverviewOutcomesCard
+                  managedProductId={managedProductId}
+                  outcomes={summaryData.outcomes}
+                  goals={summaryData.previews.goals}
+                />
+                <ManagedProductOverviewDecisionsCard
+                  managedProductId={managedProductId}
+                  decisions={summaryData.previews.decisions}
+                />
+              </motion.div>
             </>
           ) : (
             <p className="text-sm text-muted-foreground">
@@ -160,7 +208,7 @@ export function ManagedProductOverviewPage({ managedProductId }: ManagedProductO
               </Link>
             </p>
           )}
-        </div>
+        </motion.div>
       </PageState>
     </PageWrapper>
   );

@@ -403,6 +403,14 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
     backendRoute: { method: "get", path: "/build/managed-products/{managedProductId}/insights" },
   },
   {
+    prefix: "/build/managed-products/[managedProductId]/releases",
+    product: "build",
+    permission: "build:managed-products:view",
+    reason:
+      "Product releases page. First read is GET /build/managed-products/{managedProductId}/releases, which requires build:managed-products:view. Create, edit, mark-released, archive and restore gate separately on build:managed-products:update; this entry keeps the nav key and route-access resolution in agreement.",
+    backendRoute: { method: "get", path: "/build/managed-products/{managedProductId}/releases" },
+  },
+  {
     prefix: "/build/managed-products/[managedProductId]/settings",
     product: "build",
     permission: "build:managed-products:view",

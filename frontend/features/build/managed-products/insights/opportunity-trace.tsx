@@ -12,6 +12,8 @@ import {
   XCircle,
 } from "lucide-react";
 import type { DiscoveryGetTraceResponse } from "@/contracts/build-contracts.generated";
+import { formatShortDate } from "@/lib/date-utils";
+import { formatStoredRiceScore } from "./rice-formula";
 
 interface OpportunityTraceProps {
   managedProductId: number;
@@ -38,14 +40,19 @@ function TraceStep({
         <div className="mt-1 flex-1 w-px bg-border" aria-hidden />
       </div>
       <div className="pb-4 flex-1 min-w-0">
-        <p className="text-xs font-medium text-muted-foreground mb-1">{label}</p>
+        <p className="text-xs font-medium text-muted-foreground mb-1">
+          {label}
+        </p>
         {content}
       </div>
     </div>
   );
 }
 
-export function OpportunityTrace({ managedProductId, trace }: OpportunityTraceProps) {
+export function OpportunityTrace({
+  managedProductId,
+  trace,
+}: OpportunityTraceProps) {
   return (
     <div className="space-y-0 py-2" data-testid="opportunity-trace">
       <TraceStep
@@ -54,8 +61,10 @@ export function OpportunityTrace({ managedProductId, trace }: OpportunityTracePr
         label="Evidence"
         content={
           <p className="text-sm text-foreground">
-            <span className="font-mono tabular-nums font-semibold">{trace.evidence.length}</span>
-            {" "}piece{trace.evidence.length !== 1 ? "s" : ""} of evidence
+            <span className="font-mono tabular-nums font-semibold">
+              {trace.evidence.length}
+            </span>{" "}
+            piece{trace.evidence.length !== 1 ? "s" : ""} of evidence
           </p>
         }
       />
@@ -65,7 +74,9 @@ export function OpportunityTrace({ managedProductId, trace }: OpportunityTracePr
         icon={<TrendingUp className="size-3.5" aria-hidden />}
         label="Opportunity"
         content={
-          <p className="text-sm font-medium text-foreground">{trace.opportunity.title}</p>
+          <p className="text-sm font-medium text-foreground">
+            {trace.opportunity.title}
+          </p>
         }
       />
 
@@ -76,9 +87,11 @@ export function OpportunityTrace({ managedProductId, trace }: OpportunityTracePr
         content={
           trace.scores.latest ? (
             <p className="text-sm text-foreground font-mono tabular-nums">
-              {trace.scores.latest.effectiveScore ?? "Unscored"}
+              {formatStoredRiceScore(trace.scores.latest.effectiveScore)}
               {trace.scores.latest.isOverride && (
-                <span className="ml-2 text-xs text-status-warning-ink-strong">(override)</span>
+                <span className="ml-2 text-xs text-status-warning-ink-strong">
+                  (override)
+                </span>
               )}
             </p>
           ) : (
@@ -92,9 +105,15 @@ export function OpportunityTrace({ managedProductId, trace }: OpportunityTracePr
         icon={
           trace.decision ? (
             trace.opportunity.state === "declined" ? (
-              <XCircle className="size-3.5 text-status-danger-ink" aria-hidden />
+              <XCircle
+                className="size-3.5 text-status-danger-ink"
+                aria-hidden
+              />
             ) : (
-              <CheckCircle2 className="size-3.5 text-status-success-ink" aria-hidden />
+              <CheckCircle2
+                className="size-3.5 text-status-success-ink"
+                aria-hidden
+              />
             )
           ) : (
             <GitBranch className="size-3.5" aria-hidden />
@@ -105,13 +124,20 @@ export function OpportunityTrace({ managedProductId, trace }: OpportunityTracePr
           trace.decision ? (
             <div className="text-sm text-foreground space-y-0.5">
               <p>
-                <span className="capitalize font-medium">{trace.opportunity.state}</span>
-                {trace.decision.decidedBy && (
-                  <span className="text-muted-foreground"> by {trace.decision.decidedBy}</span>
+                <span className="capitalize font-medium">
+                  {trace.opportunity.state}
+                </span>
+                {trace.decision.decidedAt && (
+                  <span className="text-muted-foreground">
+                    {" "}
+                    on {formatShortDate(trace.decision.decidedAt)}
+                  </span>
                 )}
               </p>
               {trace.decision.note && (
-                <p className="text-muted-foreground text-xs">{trace.decision.note}</p>
+                <p className="text-muted-foreground text-xs">
+                  {trace.decision.note}
+                </p>
               )}
             </div>
           ) : (
@@ -153,7 +179,8 @@ export function OpportunityTrace({ managedProductId, trace }: OpportunityTracePr
               </Link>
               {trace.delivery.tickets && (
                 <p className="text-muted-foreground text-xs font-mono tabular-nums">
-                  {trace.delivery.tickets.done}/{trace.delivery.tickets.total} tickets done
+                  {trace.delivery.tickets.done}/{trace.delivery.tickets.total}{" "}
+                  tickets done
                   {trace.delivery.tickets.percent !== null && (
                     <span> ({trace.delivery.tickets.percent}%)</span>
                   )}
@@ -172,7 +199,9 @@ export function OpportunityTrace({ managedProductId, trace }: OpportunityTracePr
           content={
             <p className="text-sm font-medium text-foreground">
               {trace.release.name}{" "}
-              <span className="text-muted-foreground font-normal">{trace.release.version}</span>
+              <span className="text-muted-foreground font-normal">
+                {trace.release.version}
+              </span>
             </p>
           }
         />
@@ -188,9 +217,13 @@ export function OpportunityTrace({ managedProductId, trace }: OpportunityTracePr
               {trace.outcomeReviews.map((r) => (
                 <li key={r.id} className="text-sm text-foreground">
                   <span className="font-medium">{r.title}</span>
-                  <span className="ml-2 text-xs text-muted-foreground capitalize">{r.state}</span>
+                  <span className="ml-2 text-xs text-muted-foreground capitalize">
+                    {r.state}
+                  </span>
                   {r.result && (
-                    <span className="ml-2 text-xs text-muted-foreground">— {r.result.replace(/_/g, " ")}</span>
+                    <span className="ml-2 text-xs text-muted-foreground">
+                      — {r.result.replace(/_/g, " ")}
+                    </span>
                   )}
                 </li>
               ))}
@@ -209,8 +242,12 @@ export function OpportunityTrace({ managedProductId, trace }: OpportunityTracePr
               {trace.dependencies.map((d) => (
                 <li key={d.dependsOnId} className="text-sm text-foreground">
                   <span className="font-medium">{d.title}</span>
-                  <span className="ml-2 text-xs text-muted-foreground capitalize">{d.status.replace(/_/g, " ")}</span>
-                  <span className="ml-2 text-xs text-muted-foreground capitalize">{d.horizon}</span>
+                  <span className="ml-2 text-xs text-muted-foreground capitalize">
+                    {d.status.replace(/_/g, " ")}
+                  </span>
+                  <span className="ml-2 text-xs text-muted-foreground capitalize">
+                    {d.horizon}
+                  </span>
                 </li>
               ))}
             </ul>

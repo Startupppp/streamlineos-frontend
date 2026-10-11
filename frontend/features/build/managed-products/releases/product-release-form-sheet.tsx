@@ -4,7 +4,6 @@ import { useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from "@/components/ui/sheet";
 import {
   Form,
@@ -34,15 +33,8 @@ import type { ManagedProductRelease } from "@/hooks/api/build/managed-product-re
 import { isWriteConflict } from "@/lib/api-envelope";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
-
-const releaseFormSchema = z.object({
-  name: z.string().min(1, "Required").max(255),
-  version: z.string().min(1, "Required").max(50),
-  description: z.string().max(2000).optional(),
-  releaseDate: z.string().optional(),
-  status: z.enum(["draft", "released", "archived"]),
-});
-type ReleaseFormValues = z.infer<typeof releaseFormSchema>;
+import { releaseFormSchema } from "./product-release-form-schema";
+import type { ReleaseFormValues } from "./product-release-form-schema";
 
 interface ProductReleaseFormSheetProps {
   managedProductId: number;
@@ -96,6 +88,10 @@ export function ProductReleaseFormSheet({
     onOpenChange(next);
   }
 
+  function handleCancel() {
+    handleOpenChange(false);
+  }
+
   const handleSubmit = useCallback(
     (values: ReleaseFormValues) => {
       if (isPending) return;
@@ -133,7 +129,7 @@ export function ProductReleaseFormSheet({
         <SheetHeader className="px-6 pt-6 pb-4 border-b border-border">
           <SheetTitle>{isEdit ? "Edit release" : "New release"}</SheetTitle>
         </SheetHeader>
-        <div className="flex-1 overflow-y-auto px-6 py-4">
+        <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4">
           <Form {...form}>
             <form
               id={FORM_ID}
@@ -193,7 +189,7 @@ export function ProductReleaseFormSheet({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Status</FormLabel>
-                    <Select value={field.value} onValueChange={(v) => v && field.onChange(v)}>
+                    <Select value={field.value} onValueChange={field.onChange}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue />
@@ -235,7 +231,7 @@ export function ProductReleaseFormSheet({
             type="button"
             variant="outline"
             size="sm"
-            onClick={() => handleOpenChange(false)}
+            onClick={handleCancel}
             disabled={isPending}
           >
             Cancel

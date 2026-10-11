@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { ManagedProductOverviewPage } from "./managed-product-overview-page";
+import { OVERVIEW_SUMMARY } from "./managed-product-overview-test-fixtures";
 
 const usePageState = jest.fn();
 
@@ -39,6 +40,10 @@ jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn(() => true),
 }));
 
+jest.mock("@/hooks/api/build/managed-product-mutations", () => ({
+  useUpdateManagedProduct: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+}));
+
 jest.mock("@/hooks/api/build/teams", () => ({
   useProjectTeams: jest.fn(() => ({ data: undefined })),
 }));
@@ -47,65 +52,6 @@ jest.mock("@/features/build/managed-products/managed-product-form-sheet", () => 
   ManagedProductFormSheet: () => null,
 }));
 
-const FULL_SUMMARY = {
-  product: {
-    id: 42,
-    orgId: "org-1",
-    name: "Payments Platform",
-    key: "PAY",
-    description: null,
-    status: "active" as const,
-    ownerId: null,
-    vision: null,
-    missionStatement: null,
-    targetCustomer: null,
-    differentiators: null,
-    currentPhase: null,
-    targetLaunchDate: null,
-    successMetrics: null,
-    ownerMembershipId: null,
-    lifecycle: "growth",
-    health: "on_track",
-    teamId: null,
-    segments: [],
-    tags: [],
-    northStarMetric: null,
-    lastReviewedAt: null,
-    owner: null,
-    version: 1,
-    deletedAt: null,
-    createdAt: "2024-01-01T00:00:00Z",
-    updatedAt: "2024-01-01T00:00:00Z",
-  },
-  evidence: {
-    feedbackCount: 12,
-    feedbackLast30d: 3,
-    themedCount: 6,
-    latestFeedbackAt: null,
-    opportunityCount: 2,
-    opportunitiesByState: { open: 1, exploring: 1 },
-  },
-  delivery: {
-    linkedProjects: 3,
-    roadmapByHorizon: { now: 2, next: 5, later: 8 },
-    roadmapCompleted: 4,
-    ticketTotals: { total: 20, done: 10 },
-    nextRelease: null,
-  },
-  outcomes: {
-    goalsLinked: 2,
-    outcomeReviews: { scheduled: 3, completed: 1, met: 1, notMet: 0 },
-    latestReviewAt: null,
-  },
-  previews: {
-    themes: [],
-    roadmap: [],
-    releases: [],
-    opportunities: [],
-  },
-  generatedAt: "2024-01-01T00:00:00Z",
-};
-
 beforeEach(() => {
   jest.clearAllMocks();
   usePageState.mockReturnValue({ kind: "ready" });
@@ -113,7 +59,7 @@ beforeEach(() => {
     "@/hooks/api/build/managed-product-summary",
   );
   (useManagedProductSummary as jest.Mock).mockReturnValue({
-    data: FULL_SUMMARY,
+    data: OVERVIEW_SUMMARY,
     isLoading: false,
     isError: false,
     error: null,
@@ -134,8 +80,8 @@ describe("ManagedProductOverviewPage — absent sources show Unknown, not 0", ()
     );
     (useManagedProductSummary as jest.Mock).mockReturnValue({
       data: {
-        ...FULL_SUMMARY,
-        evidence: { ...FULL_SUMMARY.evidence, feedbackCount: 0, themedCount: 0 },
+        ...OVERVIEW_SUMMARY,
+        evidence: { ...OVERVIEW_SUMMARY.evidence, feedbackCount: 0, themedCount: 0 },
       },
       isLoading: false,
       isError: false,
@@ -158,8 +104,8 @@ describe("ManagedProductOverviewPage — absent sources show Unknown, not 0", ()
     );
     (useManagedProductSummary as jest.Mock).mockReturnValue({
       data: {
-        ...FULL_SUMMARY,
-        delivery: { ...FULL_SUMMARY.delivery, ticketTotals: { total: 0, done: 0 } },
+        ...OVERVIEW_SUMMARY,
+        delivery: { ...OVERVIEW_SUMMARY.delivery, ticketTotals: { total: 0, done: 0 } },
       },
       isLoading: false,
       isError: false,
@@ -177,9 +123,9 @@ describe("ManagedProductOverviewPage — absent sources show Unknown, not 0", ()
     );
     (useManagedProductSummary as jest.Mock).mockReturnValue({
       data: {
-        ...FULL_SUMMARY,
+        ...OVERVIEW_SUMMARY,
         outcomes: {
-          ...FULL_SUMMARY.outcomes,
+          ...OVERVIEW_SUMMARY.outcomes,
           outcomeReviews: { scheduled: 2, completed: 0, met: 0, notMet: 0 },
         },
       },
@@ -201,9 +147,9 @@ describe("ManagedProductOverviewPage — preview links carry ids", () => {
     );
     (useManagedProductSummary as jest.Mock).mockReturnValue({
       data: {
-        ...FULL_SUMMARY,
+        ...OVERVIEW_SUMMARY,
         previews: {
-          ...FULL_SUMMARY.previews,
+          ...OVERVIEW_SUMMARY.previews,
           roadmap: [{ id: 7, title: "Launch checkout", horizon: "now", status: "planned" }],
         },
       },
@@ -224,9 +170,9 @@ describe("ManagedProductOverviewPage — preview links carry ids", () => {
     );
     (useManagedProductSummary as jest.Mock).mockReturnValue({
       data: {
-        ...FULL_SUMMARY,
+        ...OVERVIEW_SUMMARY,
         previews: {
-          ...FULL_SUMMARY.previews,
+          ...OVERVIEW_SUMMARY.previews,
           opportunities: [{ id: 99, title: "Reduce churn", state: "open", score: 0.8, scoreLabel: "High" }],
         },
       },
@@ -247,9 +193,9 @@ describe("ManagedProductOverviewPage — preview links carry ids", () => {
     );
     (useManagedProductSummary as jest.Mock).mockReturnValue({
       data: {
-        ...FULL_SUMMARY,
+        ...OVERVIEW_SUMMARY,
         previews: {
-          ...FULL_SUMMARY.previews,
+          ...OVERVIEW_SUMMARY.previews,
           themes: [{ theme: "Payment friction", count: 5 }],
         },
       },
@@ -281,8 +227,8 @@ describe("ManagedProductOverviewPage — strategy card", () => {
     );
     (useManagedProductSummary as jest.Mock).mockReturnValue({
       data: {
-        ...FULL_SUMMARY,
-        product: { ...FULL_SUMMARY.product, missionStatement: "Enable seamless payments for all" },
+        ...OVERVIEW_SUMMARY,
+        product: { ...OVERVIEW_SUMMARY.product, missionStatement: "Enable seamless payments for all" },
       },
       isLoading: false,
       isError: false,

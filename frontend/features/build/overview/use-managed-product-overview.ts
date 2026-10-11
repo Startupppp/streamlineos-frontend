@@ -1,6 +1,9 @@
 import { useCallback, useMemo, useState } from "react";
-import { Pencil } from "lucide-react";
+import { CalendarCheck, Pencil } from "lucide-react";
+import { toast } from "sonner";
 import { useCan } from "@/hooks/api/access";
+import { useUpdateManagedProduct } from "@/hooks/api/build/managed-product-mutations";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { BUILD_FILTER_ALL, useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
@@ -36,6 +39,12 @@ export const INITIATIVE_STATUS_OPTIONS = [
 ];
 
 const EDIT_ACTION_BASE = { id: "edit", label: "Edit product", icon: Pencil, primary: true as const };
+const REVIEW_ACTION_BASE = {
+  id: "mark-reviewed",
+  label: "Mark reviewed",
+  loadingLabel: "Saving…",
+  icon: CalendarCheck,
+};
 
 function positiveTeamId(value: string | undefined): number | undefined {
   if (!value || value === BUILD_FILTER_ALL || !/^[1-9]\d*$/.test(value)) return undefined;
@@ -138,22 +147,43 @@ export function useManagedProductOverview(managedProductId: number) {
 
   const handleOpenEdit = useCallback(() => setEditOpen(true), []);
 
+  const updateProduct = useUpdateManagedProduct();
+  const { mutate: mutateProduct, isPending: isMarkingReviewed } = updateProduct;
+  const handleMarkReviewed = useCallback(() => {
+    if (!product) return;
+    mutateProduct(
+      { managedProductId, version: product.version, lastReviewedAt: new Date().toISOString() },
+      {
+        onSuccess: () => toast.success(`Marked ${product.name} as reviewed today`),
+        onError: (error) => toast.error(getErrorMessage(error)),
+      },
+    );
+  }, [managedProductId, mutateProduct, product]);
+
   const editActions = useMemo(
-    () => (canEdit && !!product ? [{ ...EDIT_ACTION_BASE, onSelect: handleOpenEdit }] : []),
-    [canEdit, product, handleOpenEdit],
+    () =>
+      canEdit && !!product
+        ? [
+            { ...REVIEW_ACTION_BASE, onSelect: handleMarkReviewed, isPending: isMarkingReviewed },
+            { ...EDIT_ACTION_BASE, onSelect: handleOpenEdit },
+          ]
+        : [],
+    [canEdit, product, handleMarkReviewed, isMarkingReviewed, handleOpenEdit],
   );
 
   const overviewSubtitle = useMemo(() => {
     if (!product) return undefined;
-    const parts: string[] = [];
-    if (product.lifecycle) parts.push(readableToken(product.lifecycle));
-    if (product.health) parts.push(readableToken(product.health));
+    const parts: string[] = [`${readableToken(product.lifecycle)} stage`];
     parts.push(`Owner ${getUserDisplayName(product.owner)}`);
-    if (product.lastReviewedAt) {
-      parts.push(`Reviewed ${formatRelativeTime(product.lastReviewedAt)}`);
-    }
+    parts.push(
+      product.lastReviewedAt
+        ? `Reviewed ${formatRelativeTime(product.lastReviewedAt)}`
+        : "Never reviewed",
+    );
     return parts.join(" · ");
   }, [product]);
+
+  const now = useMemo(() => new Date(summaryQuery.dataUpdatedAt), [summaryQuery.dataUpdatedAt]);
 
   return {
     listFilters,
@@ -168,6 +198,9 @@ export function useManagedProductOverview(managedProductId: number) {
     summaryData: summaryQuery.data ?? null,
     summaryDataUpdatedAt: summaryQuery.dataUpdatedAt,
     overviewSubtitle,
+    now,
+    markReviewed: canEdit && !!product ? handleMarkReviewed : undefined,
+    isMarkingReviewed,
     teamOptions,
     segmentOptions,
     teamSelectValue: teamIdNum !== undefined ? String(teamIdNum) : BUILD_FILTER_ALL,

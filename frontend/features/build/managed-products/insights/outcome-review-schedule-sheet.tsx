@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
+  FormControl,
   FormField,
   FormItem,
   FormLabel,
@@ -24,6 +25,9 @@ import {
   type ScheduleOutcomeReviewValues,
 } from "./outcome-review-form-schema";
 import type { CreateOutcomeReviewInput } from "@/hooks/api/build/product-discovery-mutations";
+import { useOpportunities } from "@/hooks/api/build/product-discovery";
+
+const NO_OPPORTUNITY = "__none__";
 
 const KIND_OPTIONS = [
   { label: "Outcome review", value: "outcome_review" },
@@ -36,6 +40,7 @@ const DEFAULT_VALUES: ScheduleOutcomeReviewValues = {
 };
 
 interface OutcomeReviewScheduleSheetProps {
+  managedProductId: number;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (data: CreateOutcomeReviewInput) => void;
@@ -43,15 +48,22 @@ interface OutcomeReviewScheduleSheetProps {
 }
 
 export function OutcomeReviewScheduleSheet({
+  managedProductId,
   open,
   onOpenChange,
   onSubmit,
   isSubmitting,
 }: OutcomeReviewScheduleSheetProps) {
+  const { data: opportunitiesPage } = useOpportunities(managedProductId, undefined, {
+    enabled: open,
+  });
+  const opportunities = opportunitiesPage?.data ?? [];
+
   function handleSubmit(values: ScheduleOutcomeReviewValues) {
     const data: CreateOutcomeReviewInput = {
       kind: values.kind,
       title: values.title,
+      ...(values.opportunityId ? { opportunityId: values.opportunityId } : {}),
       ...(values.hypothesis?.trim() ? { hypothesis: values.hypothesis } : {}),
       ...(values.metric?.trim() ? { metric: values.metric } : {}),
       ...(values.unit?.trim() ? { unit: values.unit } : {}),
@@ -87,12 +99,14 @@ export function OutcomeReviewScheduleSheet({
                   value={field.value}
                   onValueChange={(v) => v && field.onChange(v)}
                 >
-                  <SelectTrigger
-                    className={FIELD_CONTROL_CLASS}
-                    data-testid="kind-select"
-                  >
-                    <SelectValue placeholder="Select type" />
-                  </SelectTrigger>
+                  <FormControl>
+                    <SelectTrigger
+                      className={FIELD_CONTROL_CLASS}
+                      data-testid="kind-select"
+                    >
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
+                  </FormControl>
                   <SelectContent>
                     {KIND_OPTIONS.map((o) => (
                       <SelectItem key={o.value} value={o.value}>
@@ -111,28 +125,67 @@ export function OutcomeReviewScheduleSheet({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Title (required)</FormLabel>
-                <Input
-                  {...field}
-                  className={FIELD_CONTROL_CLASS}
-                  placeholder="e.g. NPS impact review"
-                  data-testid="title-input"
-                />
+                <FormControl>
+                  <Input
+                    {...field}
+                    className={FIELD_CONTROL_CLASS}
+                    placeholder="e.g. NPS impact review"
+                    data-testid="title-input"
+                  />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
+          {opportunities.length > 0 ? (
+            <FormField
+              control={form.control}
+              name="opportunityId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Opportunity</FormLabel>
+                  <Select
+                    value={field.value ? String(field.value) : NO_OPPORTUNITY}
+                    onValueChange={(v) =>
+                      field.onChange(v === NO_OPPORTUNITY ? undefined : Number(v))
+                    }
+                  >
+                    <FormControl>
+                      <SelectTrigger
+                        className={FIELD_CONTROL_CLASS}
+                        data-testid="opportunity-select"
+                      >
+                        <SelectValue placeholder="Not linked" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value={NO_OPPORTUNITY}>Not linked</SelectItem>
+                      {opportunities.map((o) => (
+                        <SelectItem key={o.id} value={String(o.id)}>
+                          {o.title}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          ) : null}
           <FormField
             control={form.control}
             name="hypothesis"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Hypothesis</FormLabel>
-                <Textarea
-                  {...field}
-                  className={FIELD_CONTROL_CLASS}
-                  placeholder="If we do X, then Y will improve by Z"
-                  rows={3}
-                />
+                <FormControl>
+                  <Textarea
+                    {...field}
+                    className={FIELD_CONTROL_CLASS}
+                    placeholder="If we do X, then Y will improve by Z"
+                    rows={3}
+                  />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
@@ -143,11 +196,13 @@ export function OutcomeReviewScheduleSheet({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Metric</FormLabel>
-                <Input
-                  {...field}
-                  className={FIELD_CONTROL_CLASS}
-                  placeholder="e.g. NPS score"
-                />
+                <FormControl>
+                  <Input
+                    {...field}
+                    className={FIELD_CONTROL_CLASS}
+                    placeholder="e.g. NPS score"
+                  />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
@@ -158,11 +213,13 @@ export function OutcomeReviewScheduleSheet({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Unit</FormLabel>
-                <Input
-                  {...field}
-                  className={FIELD_CONTROL_CLASS}
-                  placeholder="e.g. %"
-                />
+                <FormControl>
+                  <Input
+                    {...field}
+                    className={FIELD_CONTROL_CLASS}
+                    placeholder="e.g. %"
+                  />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
@@ -173,11 +230,13 @@ export function OutcomeReviewScheduleSheet({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Baseline</FormLabel>
-                <Input
-                  {...field}
-                  className={FIELD_CONTROL_CLASS}
-                  placeholder="Current value"
-                />
+                <FormControl>
+                  <Input
+                    {...field}
+                    className={FIELD_CONTROL_CLASS}
+                    placeholder="Current value"
+                  />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
@@ -188,11 +247,13 @@ export function OutcomeReviewScheduleSheet({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Target</FormLabel>
-                <Input
-                  {...field}
-                  className={FIELD_CONTROL_CLASS}
-                  placeholder="Desired value"
-                />
+                <FormControl>
+                  <Input
+                    {...field}
+                    className={FIELD_CONTROL_CLASS}
+                    placeholder="Desired value"
+                  />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}

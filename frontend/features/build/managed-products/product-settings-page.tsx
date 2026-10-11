@@ -31,7 +31,6 @@ import {
 import { ManagedProductEditFields } from "./managed-product-edit-fields";
 import { ProductSettingsDangerSection } from "./product-settings-danger-section";
 import { ProductSettingsMembersSection } from "./product-settings-members-section";
-import { ProductSettingsReleasesSection } from "./product-settings-releases-section";
 import {
   PRODUCT_SETTINGS_TABS,
   productSettingsTabFromParam,
@@ -50,6 +49,10 @@ const SETTINGS_FILTER_DEFINITIONS = [
 ] as const;
 
 const FORM_ID = "product-settings-form";
+
+function toFormStatus(status: string): EditManagedProductFormValues["status"] {
+  return status === "archived" ? "archived" : "active";
+}
 
 function ProductSettingsForm({ managedProductId }: ProductSettingsPageProps) {
   const canUpdate = useCan("build:managed-products:update");
@@ -85,7 +88,7 @@ function ProductSettingsForm({ managedProductId }: ProductSettingsPageProps) {
           name: product.name,
           description: product.description ?? "",
           ownerId: product.ownerId ?? "",
-          status: product.status as "active" | "archived",
+          status: toFormStatus(product.status),
           lifecycle: product.lifecycle ?? undefined,
           health: product.health ?? undefined,
           teamId: product.teamId,
@@ -226,10 +229,6 @@ function ProductSettingsForm({ managedProductId }: ProductSettingsPageProps) {
 
           <TabsContent value="members" className="mt-0 outline-none">
             <ProductSettingsMembersSection managedProductId={managedProductId} />
-          </TabsContent>
-
-          <TabsContent value="releases" className="mt-0 outline-none">
-            <ProductSettingsReleasesSection managedProductId={managedProductId} />
           </TabsContent>
 
           <ConfirmDialog

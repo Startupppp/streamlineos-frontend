@@ -1,0 +1,168 @@
+"use client";
+
+import { useCallback, useMemo, useState } from "react";
+import { toast } from "sonner";
+import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
+import {
+  useInfiniteManagedProductReleases,
+  useUpdateManagedProductRelease,
+} from "@/hooks/api/build/managed-product-releases";
+import type {
+  ManagedProductRelease,
+  UpdateManagedProductReleaseInput,
+} from "@/hooks/api/build/managed-product-releases";
+import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
+import { getTodayString } from "@/lib/date-utils";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { groupReleases, RELEASE_VIEWS } from "./product-releases-model";
+import type { ReleaseView } from "./product-releases-model";
+import type { ReleaseActions } from "./release-actions-context";
+
+const RELEASES_PAGE_LIMIT = 100;
+
+const RELEASE_VIEW_FILTERS = [
+  { param: "view", all: "active", options: RELEASE_VIEWS },
+] as const;
+
+type LifecycleAction = "archive" | "restore";
+
+interface LifecycleTarget {
+  release: ManagedProductRelease;
+  action: LifecycleAction;
+}
+
+export function useProductReleasesPage(managedProductId: number) {
+  const canUpdate = useCan("build:managed-products:update");
+  const filters = useBuildListFilters({ withSearch: false, filters: RELEASE_VIEW_FILTERS });
+  const view: ReleaseView = filters.value("view") === "archived" ? "archived" : "active";
+  const { setValue } = filters;
+
+  const query = useInfiniteManagedProductReleases(managedProductId, { limit: RELEASES_PAGE_LIMIT });
+  const { data, isLoading, isError, error, refetch, hasNextPage, isFetchingNextPage, fetchNextPage } =
+    query;
+  const rows = useMemo(() => data?.pages.flatMap((page) => page.data) ?? [], [data]);
+  const groups = useMemo(() => groupReleases(rows, getTodayString()), [rows]);
+
+  const resolution = usePageState({
+    permission: "build:managed-products:view",
+    isLoading,
+    isError,
+    error,
+    isEmpty: groups.total === 0,
+  });
+
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [editTarget, setEditTarget] = useState<ManagedProductRelease | undefined>(undefined);
+  const [lifecycleTarget, setLifecycleTarget] = useState<LifecycleTarget | null>(null);
+
+  const updateRelease = useUpdateManagedProductRelease(managedProductId);
+  const { mutate: mutateRelease } = updateRelease;
+  const pendingReleaseId = updateRelease.isPending ? (updateRelease.variables?.releaseId ?? null) : null;
+
+  const runUpdate = useCallback(
+    (input: UpdateManagedProductReleaseInput, successMessage: string, onDone?: () => void) => {
+      mutateRelease(input, {
+        onSuccess: () => {
+          toast.success(successMessage);
+          onDone?.();
+        },
+        onError: (e) => toast.error(getErrorMessage(e)),
+      });
+    },
+    [mutateRelease],
+  );
+
+  const handleCreate = useCallback(() => {
+    setEditTarget(undefined);
+    setSheetOpen(true);
+  }, []);
+
+  const handleEdit = useCallback((release: ManagedProductRelease) => {
+    setEditTarget(release);
+    setSheetOpen(true);
+  }, []);
+
+  const handleSheetOpenChange = useCallback((open: boolean) => {
+    setSheetOpen(open);
+    if (!open) setEditTarget(undefined);
+  }, []);
+
+  const handleMarkReleased = useCallback(
+    (release: ManagedProductRelease) => {
+      runUpdate(
+        {
+          releaseId: release.id,
+          status: "released",
+          releaseDate: release.releaseDate ?? getTodayString(),
+        },
+        `Marked ${release.name} as released.`,
+      );
+    },
+    [runUpdate],
+  );
+
+  const handleArchive = useCallback((release: ManagedProductRelease) => {
+    setLifecycleTarget({ release, action: "archive" });
+  }, []);
+
+  const handleRestore = useCallback((release: ManagedProductRelease) => {
+    setLifecycleTarget({ release, action: "restore" });
+  }, []);
+
+  const handleLifecycleOpenChange = useCallback((open: boolean) => {
+    if (!open) setLifecycleTarget(null);
+  }, []);
+
+  const handleLifecycleConfirm = useCallback(() => {
+    if (!lifecycleTarget) return;
+    const { release, action } = lifecycleTarget;
+    const closeDialog = () => setLifecycleTarget(null);
+    if (action === "archive") {
+      runUpdate({ releaseId: release.id, status: "archived" }, `Archived ${release.name}.`, closeDialog);
+    } else {
+      runUpdate({ releaseId: release.id, status: "draft" }, `Restored ${release.name} as a draft.`, closeDialog);
+    }
+  }, [lifecycleTarget, runUpdate]);
+
+  const handleViewChange = useCallback((next: string) => setValue("view", next), [setValue]);
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+  const handleLoadMore = useCallback(() => {
+    void fetchNextPage();
+  }, [fetchNextPage]);
+
+  const actions = useMemo<ReleaseActions>(
+    () => ({
+      canUpdate,
+      pendingReleaseId,
+      onEdit: handleEdit,
+      onMarkReleased: handleMarkReleased,
+      onArchive: handleArchive,
+      onRestore: handleRestore,
+    }),
+    [canUpdate, pendingReleaseId, handleEdit, handleMarkReleased, handleArchive, handleRestore],
+  );
+
+  return {
+    canUpdate,
+    view,
+    groups,
+    hasMore: hasNextPage,
+    isFetchingNextPage,
+    resolution,
+    actions,
+    sheetOpen,
+    editTarget,
+    lifecycleTarget,
+    isLifecyclePending: updateRelease.isPending,
+    handleCreate,
+    handleSheetOpenChange,
+    handleLifecycleOpenChange,
+    handleLifecycleConfirm,
+    handleViewChange,
+    handleRetry,
+    handleLoadMore,
+  };
+}

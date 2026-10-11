@@ -146,6 +146,7 @@ describe("Build route-access permission posture is pinned for every manifested p
     ["/build/managed-products/[managedProductId]/goals", "module:build + build:goals:view"],
     ["/build/managed-products/[managedProductId]/insights", "module:build + build:managed-products:view"],
     ["/build/managed-products/[managedProductId]/projects", "module:build + build:view"],
+    ["/build/managed-products/[managedProductId]/releases", "module:build + build:managed-products:view"],
     ["/build/managed-products/[managedProductId]/roadmap", "module:build + build:roadmap:view"],
     ["/build/managed-products/[managedProductId]/settings", "module:build + build:managed-products:view"],
     ["/build/my-work", "module:build + build:tickets:view"],

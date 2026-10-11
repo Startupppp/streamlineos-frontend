@@ -3,25 +3,33 @@ import userEvent from "@testing-library/user-event";
 
 const scoreMutate = jest.fn();
 const declineMutate = jest.fn();
+const updateMutate = jest.fn();
+
+const VALIDATING_ACTIONS = ["view", "edit", "score", "add_evidence", "accept", "decline", "delete"];
+const IDENTIFIED_ACTIONS = ["view", "edit", "score", "add_evidence", "delete"];
+const DECLINED_ACTIONS = ["view"];
+
+let mockOpportunity: Record<string, unknown> = {};
+
+function setOpportunity(state: string, allowedActions: string[]) {
+  mockOpportunity = {
+    id: 7,
+    title: "Mobile onboarding friction",
+    problem: null,
+    theme: null,
+    affectedSegment: null,
+    state,
+    scoreStatus: "unscored",
+    latestScore: null,
+    version: 4,
+    allowedActions,
+  };
+}
 
 jest.mock("@/hooks/api/access", () => ({ useCan: jest.fn(() => true) }));
 
 jest.mock("@/hooks/api/build/product-discovery", () => ({
-  useOpportunity: jest.fn(() => ({
-    isLoading: false,
-    data: {
-      id: 7,
-      title: "Mobile onboarding friction",
-      problem: null,
-      theme: null,
-      affectedSegment: null,
-      state: "validating",
-      scoreStatus: "unscored",
-      latestScore: null,
-      version: 4,
-      allowedActions: ["accept", "decline"],
-    },
-  })),
+  useOpportunity: jest.fn(() => ({ isLoading: false, data: mockOpportunity })),
   useOpportunityTrace: jest.fn(() => ({ data: undefined })),
 }));
 
@@ -30,6 +38,7 @@ jest.mock("@/hooks/api/build/product-discovery-mutations", () => ({
   useDeclineOpportunity: jest.fn(() => ({ mutate: declineMutate, isPending: false })),
   useOverrideOpportunityScore: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   useScoreOpportunity: jest.fn(() => ({ mutate: scoreMutate, isPending: false })),
+  useUpdateOpportunity: jest.fn(() => ({ mutate: updateMutate, isPending: false })),
 }));
 
 jest.mock("./opportunity-accept-dialog", () => ({ OpportunityAcceptDialog: () => null }));
@@ -38,7 +47,10 @@ jest.mock("./opportunity-trace", () => ({ OpportunityTrace: () => null }));
 import { OpportunityPane } from "./opportunity-pane";
 
 describe("OpportunityPane — decline and score flows (BSN-PANE-ACTIONS)", () => {
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => {
+    jest.clearAllMocks();
+    setOpportunity("validating", VALIDATING_ACTIONS);
+  });
 
   it("opens a reason dialog on Decline instead of declining immediately so no empty note reaches the server", async () => {
     render(<OpportunityPane managedProductId={5} opportunityId={7} onClose={jest.fn()} />);
@@ -73,5 +85,36 @@ describe("OpportunityPane — decline and score flows (BSN-PANE-ACTIONS)", () =>
         expect.any(Object),
       ),
     );
+  });
+});
+
+describe("OpportunityPane — moving an identified opportunity into validation", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    setOpportunity("identified", IDENTIFIED_ACTIONS);
+  });
+
+  it("offers Start validating instead of Accept or Decline while the opportunity is only identified", () => {
+    render(<OpportunityPane managedProductId={5} opportunityId={7} onClose={jest.fn()} />);
+    expect(screen.getByTestId("start-validating-opportunity-btn")).toBeInTheDocument();
+    expect(screen.queryByTestId("accept-opportunity-btn")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("decline-opportunity-btn")).not.toBeInTheDocument();
+  });
+
+  it("patches the state to validating with the current version", () => {
+    render(<OpportunityPane managedProductId={5} opportunityId={7} onClose={jest.fn()} />);
+    fireEvent.click(screen.getByTestId("start-validating-opportunity-btn"));
+    expect(updateMutate).toHaveBeenCalledWith(
+      { opportunityId: 7, version: 4, state: "validating" },
+      expect.any(Object),
+    );
+  });
+
+  it("hides scoring and validation once the opportunity is declined because the server refuses them", () => {
+    setOpportunity("declined", DECLINED_ACTIONS);
+    render(<OpportunityPane managedProductId={5} opportunityId={7} onClose={jest.fn()} />);
+    expect(screen.queryByTestId("start-validating-opportunity-btn")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("score-opportunity-btn")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("override-score-btn")).not.toBeInTheDocument();
   });
 });

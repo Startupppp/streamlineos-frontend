@@ -111,6 +111,15 @@ describe("OpportunityTrace — step rendering (BSN-TRACE-STEPS)", () => {
     expect(screen.getByTestId("trace-step-dependencies")).toBeInTheDocument();
   });
 
+  it("shows when the decision was made instead of the raw decider id", () => {
+    render(<OpportunityTrace managedProductId={1} trace={FULL_TRACE} />);
+
+    const decision = screen.getByTestId("trace-step-decision");
+    expect(decision).toHaveTextContent("on 10 Sept 2026");
+    expect(decision).not.toHaveTextContent("Bob");
+    expect(decision).toHaveTextContent("Q3 priority");
+  });
+
   it("renders a link to the product roadmap page from the roadmap item so the user can navigate to the roadmap", () => {
     render(<OpportunityTrace managedProductId={99} trace={FULL_TRACE} />);
 

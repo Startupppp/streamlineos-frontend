@@ -4,6 +4,7 @@ import {
   LayoutGrid,
   Map,
   MessageSquare,
+  Rocket,
   Settings,
   Target,
 } from "lucide-react";
@@ -48,6 +49,14 @@ export function buildManagedProductCatalog(
         icon: Map,
         requiredPermission: "build:roadmap:view",
         mobilePriority: 40,
+      },
+      {
+        id: "product-releases",
+        label: "Releases",
+        href: `${basePath}/releases`,
+        icon: Rocket,
+        requiredPermission: "build:managed-products:view",
+        mobilePriority: 45,
       },
       {
         id: "product-goals",

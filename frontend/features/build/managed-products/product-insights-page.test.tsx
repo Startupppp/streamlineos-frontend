@@ -1,4 +1,5 @@
 import "./product-scope-pages.test-harness";
+import { within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ProductInsightsPage } from "./product-insights-page";
 import {
@@ -65,7 +66,7 @@ describe("ProductInsightsPage — page states (BSN-INS-STATE)", () => {
     render(<ProductInsightsPage managedProductId={7} />);
     expect(screen.getByTestId("page-state-loading")).toBeInTheDocument();
     expect(screen.getByTestId("product-insights-skeleton")).toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: "Overview" })).toHaveAttribute("data-state", "active");
+    expect(within(screen.getByRole("tablist", { name: "Insights sections" })).getByRole("tab", { name: "Overview" })).toHaveAttribute("data-state", "active");
     expect(screen.getByRole("heading", { name: "Where to focus" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Product context" })).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Delivery coverage" })).not.toBeInTheDocument();
@@ -297,7 +298,12 @@ describe("ProductInsightsPage — section tabs", () => {
   it("opens on Overview and hides the other sections", () => {
     mockUseSearchParams.mockReturnValue(new URLSearchParams());
     render(<ProductInsightsPage managedProductId={7} />);
-    expect(screen.getByRole("tab", { name: "Overview" })).toHaveAttribute("data-state", "active");
+    const sections = screen.getByRole("tablist", { name: "Insights sections" });
+    expect(within(sections).getByRole("tab", { name: "Overview" })).toHaveAttribute("data-state", "active");
+    expect(within(sections).getByRole("tab", { name: "Delivery" })).toBeInTheDocument();
+    expect(within(sections).getByRole("tab", { name: "Feedback" })).toBeInTheDocument();
+    expect(within(sections).getByRole("tab", { name: "Discovery" })).toBeInTheDocument();
+    expect(within(screen.getByRole("tablist", { name: "Insights views" })).getByRole("tab", { name: "Overview" })).toHaveAttribute("data-state", "active");
     expect(screen.getByRole("heading", { name: "Where to focus" })).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Delivery coverage" })).not.toBeInTheDocument();
     expect(screen.queryByTestId("product-discovery-section")).not.toBeInTheDocument();
@@ -312,12 +318,31 @@ describe("ProductInsightsPage — section tabs", () => {
 
     mockUseSearchParams.mockReturnValue(new URLSearchParams("tab=nope"));
     render(<ProductInsightsPage managedProductId={7} />);
-    expect(screen.getByRole("tab", { name: "Overview" })).toHaveAttribute("data-state", "active");
+    expect(within(screen.getByRole("tablist", { name: "Insights sections" })).getByRole("tab", { name: "Overview" })).toHaveAttribute("data-state", "active");
   });
 
   it("mounts discovery only on the Discovery tab", () => {
     mockUseSearchParams.mockReturnValue(new URLSearchParams("tab=discovery"));
     render(<ProductInsightsPage managedProductId={7} />);
+    expect(screen.getByTestId("product-discovery-section")).toHaveTextContent("Discovery 7");
+    expect(screen.queryByRole("heading", { name: "Where to focus" })).not.toBeInTheDocument();
+  });
+
+  it("opens Discovery as its own view and keeps the section choice", async () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("tab=feedback"));
+    const user = userEvent.setup();
+    const { unmount } = render(<ProductInsightsPage managedProductId={7} />);
+    await user.click(within(screen.getByRole("tablist", { name: "Insights views" })).getByRole("tab", { name: "Discovery" }));
+    expect(mockRouterReplace).toHaveBeenCalledWith(
+      "/build/managed-products/7/goals?tab=feedback&view=discovery",
+      { scroll: false },
+    );
+    unmount();
+
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("view=discovery"));
+    render(<ProductInsightsPage managedProductId={7} />);
+    expect(screen.queryByRole("tablist", { name: "Insights sections" })).not.toBeInTheDocument();
+    expect(within(screen.getByRole("tablist", { name: "Insights views" })).getByRole("tab", { name: "Discovery" })).toHaveAttribute("data-state", "active");
     expect(screen.getByTestId("product-discovery-section")).toHaveTextContent("Discovery 7");
     expect(screen.queryByRole("heading", { name: "Where to focus" })).not.toBeInTheDocument();
   });

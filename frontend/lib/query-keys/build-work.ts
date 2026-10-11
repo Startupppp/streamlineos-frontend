@@ -332,6 +332,10 @@ export const buildWorkQueryKeys = {
           : ([...base, "projects", "managed-products", managedProductId, "linked-projects", filters] as const),
       releases: (managedProductId: number) =>
         [...base, "projects", "managed-products", "releases", managedProductId] as const,
+      releasesTimeline: (managedProductId: number, params?: QueryKeyParams) =>
+        params === undefined
+          ? ([...base, "projects", "managed-products", "releases", managedProductId, "timeline"] as const)
+          : ([...base, "projects", "managed-products", "releases", managedProductId, "timeline", params] as const),
       members: (managedProductId: number) =>
         [...base, "projects", "managed-products", "members", managedProductId] as const,
       facets: [...base, "projects", "managed-products", "facets"] as const,

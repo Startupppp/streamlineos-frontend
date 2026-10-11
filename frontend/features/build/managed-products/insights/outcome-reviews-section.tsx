@@ -7,12 +7,14 @@ import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { OutcomeReviewRow } from "./outcome-review-row";
 import {
+  FormControl,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -108,12 +110,14 @@ function CompleteReviewDialog({
                   value={field.value ?? ""}
                   onValueChange={(v) => v && field.onChange(v)}
                 >
-                  <SelectTrigger
-                    className={FIELD_CONTROL_CLASS}
-                    data-testid="result-select"
-                  >
-                    <SelectValue placeholder="Select result" />
-                  </SelectTrigger>
+                  <FormControl>
+                    <SelectTrigger
+                      className={FIELD_CONTROL_CLASS}
+                      data-testid="result-select"
+                    >
+                      <SelectValue placeholder="Select result" />
+                    </SelectTrigger>
+                  </FormControl>
                   <SelectContent>
                     {RESULT_OPTIONS.map((o) => (
                       <SelectItem key={o.value} value={o.value}>
@@ -132,11 +136,32 @@ function CompleteReviewDialog({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Actual measurement (optional)</FormLabel>
-                <Input
-                  {...field}
-                  className={FIELD_CONTROL_CLASS}
-                  placeholder="e.g. 12%"
-                />
+                <FormControl>
+                  <Input
+                    {...field}
+                    className={FIELD_CONTROL_CLASS}
+                    placeholder="e.g. 12%"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="notes"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Notes (optional)</FormLabel>
+                <FormControl>
+                  <Textarea
+                    {...field}
+                    value={field.value ?? ""}
+                    className={FIELD_CONTROL_CLASS}
+                    placeholder="What did you learn?"
+                    rows={3}
+                  />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
@@ -152,6 +177,7 @@ function CompleteReviewDialog({
 }
 
 export function OutcomeReviewsSection({
+  managedProductId,
   reviews,
   isLoading,
   onCreate,
@@ -247,6 +273,7 @@ export function OutcomeReviewsSection({
       )}
 
       <OutcomeReviewScheduleSheet
+        managedProductId={managedProductId}
         open={scheduleOpen}
         onOpenChange={setScheduleOpen}
         onSubmit={handleScheduleSubmit}

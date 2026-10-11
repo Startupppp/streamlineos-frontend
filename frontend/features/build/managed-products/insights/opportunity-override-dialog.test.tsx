@@ -43,8 +43,8 @@ describe("OpportunityOverrideDialog — reason required (BSN-OVERRIDE-REQUIRED)"
       />,
     );
 
-    await user.type(screen.getByTestId("override-score-input"), "6.25");
-    await user.type(screen.getByTestId("override-reason-input"), "Q3 NPS signals");
+    await user.type(screen.getByLabelText("Override score"), "6.25");
+    await user.type(screen.getByLabelText("Reason (required)"), "Q3 NPS signals");
     fireEvent.click(screen.getByRole("button", { name: /save override/i }));
 
     await waitFor(() => {
@@ -97,7 +97,7 @@ describe("OpportunityDeclineDialog — reason required (BSN-DECLINE-NOTE)", () =
     const handleDecline = jest.fn();
     const user = userEvent.setup();
     render(<OpportunityDeclineDialog open onOpenChange={noop} isSubmitting={false} onDecline={handleDecline} />);
-    await user.type(screen.getByTestId("decline-note-input"), "Out of scope for this year");
+    await user.type(screen.getByLabelText("Reason"), "Out of scope for this year");
     fireEvent.click(screen.getByRole("button", { name: /^decline$/i }));
     await waitFor(() =>
       expect(handleDecline).toHaveBeenCalledWith({ note: "Out of scope for this year" }, expect.any(Object)),

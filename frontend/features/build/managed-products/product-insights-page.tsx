@@ -23,7 +23,12 @@ import {
   InsightFeedbackPanel,
   InsightOverviewPanel,
 } from "./product-insights-panels";
-import { INSIGHT_TABS, insightTabFromParam } from "./product-insights-tabs";
+import {
+  INSIGHT_TABS,
+  INSIGHT_VIEWS,
+  insightTabFromParam,
+  insightViewFromParam,
+} from "./product-insights-tabs";
 
 const RANGE_OPTIONS = [
   { label: "All time", value: "all" },
@@ -34,6 +39,11 @@ const RANGE_OPTIONS = [
 
 const INSIGHTS_FILTER_DEFINITIONS = [
   { param: "range" },
+  {
+    param: "view",
+    all: "overview",
+    options: INSIGHT_VIEWS.map((view) => view.id),
+  },
   {
     param: "tab",
     all: "overview",
@@ -53,6 +63,7 @@ export function ProductInsightsPage({
     withSearch: false,
   });
   const rangeValue = listFilters.value("range");
+  const view = insightViewFromParam(listFilters.value("view"));
   const tab = insightTabFromParam(listFilters.value("tab"));
 
   const typedRange = useMemo(
@@ -66,6 +77,10 @@ export function ProductInsightsPage({
   const setFilter = listFilters.setValue;
   const handleRangeChange = useCallback(
     (value: string) => setFilter("range", value),
+    [setFilter],
+  );
+  const handleViewChange = useCallback(
+    (value: string) => setFilter("view", value),
     [setFilter],
   );
   const handleTabChange = useCallback(
@@ -92,8 +107,8 @@ export function ProductInsightsPage({
 
   return (
     <Tabs
-      value={tab}
-      onValueChange={handleTabChange}
+      value={view}
+      onValueChange={handleViewChange}
       className="h-full min-h-0 min-w-0 flex-1"
     >
       <PageWrapper
@@ -109,21 +124,46 @@ export function ProductInsightsPage({
           />
         }
         filters={
-          <PageTabsToolbar
-            tabs={
-              <TabsList aria-label="Insights sections">
-                {INSIGHT_TABS.map((item) => (
-                  <TabsTrigger
-                    key={item.id}
-                    value={item.id}
-                    className="px-2 sm:px-3"
-                  >
-                    {item.label}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-            }
-          />
+          <div className="flex w-full min-w-0 flex-col gap-2">
+            <PageTabsToolbar
+              tabs={
+                <TabsList aria-label="Insights views">
+                  {INSIGHT_VIEWS.map((item) => (
+                    <TabsTrigger
+                      key={item.id}
+                      value={item.id}
+                      className="px-2 sm:px-3"
+                    >
+                      {item.label}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              }
+            />
+            {view === "overview" ? (
+              <Tabs
+                value={tab}
+                onValueChange={handleTabChange}
+                className="min-w-0 gap-0"
+              >
+                <PageTabsToolbar
+                  tabs={
+                    <TabsList aria-label="Insights sections">
+                      {INSIGHT_TABS.map((item) => (
+                        <TabsTrigger
+                          key={item.id}
+                          value={item.id}
+                          className="px-2 sm:px-3"
+                        >
+                          {item.label}
+                        </TabsTrigger>
+                      ))}
+                    </TabsList>
+                  }
+                />
+              </Tabs>
+            ) : null}
+          </div>
         }
       >
         <ManagedProductDetailShell className="h-auto min-h-full flex-none overflow-visible">
@@ -142,23 +182,28 @@ export function ProductInsightsPage({
               className={CONTENT_FILL_PANEL}
             >
               <TabsContent value="overview" className="mt-0 outline-none">
-                <InsightOverviewPanel
-                  managedProductId={managedProductId}
-                  insights={data}
-                  rangeLabel={rangeLabel}
-                />
-              </TabsContent>
-              <TabsContent value="delivery" className="mt-0 outline-none">
-                <InsightDeliveryPanel
-                  managedProductId={managedProductId}
-                  insights={data}
-                />
-              </TabsContent>
-              <TabsContent value="feedback" className="mt-0 outline-none">
-                <InsightFeedbackPanel
-                  managedProductId={managedProductId}
-                  insights={data}
-                />
+                {tab === "overview" ? (
+                  <InsightOverviewPanel
+                    managedProductId={managedProductId}
+                    insights={data}
+                    rangeLabel={rangeLabel}
+                  />
+                ) : null}
+                {tab === "delivery" ? (
+                  <InsightDeliveryPanel
+                    managedProductId={managedProductId}
+                    insights={data}
+                  />
+                ) : null}
+                {tab === "feedback" ? (
+                  <InsightFeedbackPanel
+                    managedProductId={managedProductId}
+                    insights={data}
+                  />
+                ) : null}
+                {tab === "discovery" ? (
+                  <InsightDiscoveryPanel managedProductId={managedProductId} />
+                ) : null}
               </TabsContent>
               <TabsContent value="discovery" className="mt-0 outline-none">
                 <InsightDiscoveryPanel managedProductId={managedProductId} />

@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
+import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { KanbanColumnSkeleton } from "@/components/ui/kanban-skeleton";
 import { PM_PANEL } from "@/components/pm-chrome";
 import { cn } from "@/lib/utils";
@@ -44,17 +44,44 @@ export function ManagedProductOverviewSkeleton() {
       data-testid="managed-product-overview-skeleton"
       className="flex w-full min-w-0 flex-col gap-4 pb-8"
     >
-      <Skeleton className="h-4 w-56 max-w-full" />
-      <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
-        <PanelSkeleton titleWidth="w-32">
-          <div className="mt-3 grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-4">
-            {ROADMAP_COLUMN_SLOTS.map((slot) => (
-              <div key={slot} className="space-y-2 bg-card px-3 py-3">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)]">
+        <PanelSkeleton titleWidth="w-20">
+          <Skeleton className="mt-3 h-4 w-3/4" />
+          <div className="mt-5 grid grid-cols-5 gap-1.5">
+            {GOAL_CARD_SLOTS.slice(0, 5).map((slot) => (
+              <div key={slot} className="space-y-1.5">
+                <Skeleton className="h-1.5 w-full rounded-full" />
                 <Skeleton className="h-3 w-12" />
-                <Skeleton className="h-5 w-6" />
               </div>
             ))}
           </div>
+        </PanelSkeleton>
+        <PanelSkeleton titleWidth="w-28">
+          <div className="mt-3 space-y-3">
+            {ROADMAP_CARD_SLOTS.map((slot) => (
+              <div key={slot} className="flex items-center gap-3">
+                <Skeleton className="size-7 shrink-0 rounded-md" />
+                <Skeleton className="h-4 flex-1" />
+              </div>
+            ))}
+          </div>
+        </PanelSkeleton>
+      </div>
+      <StatCardGridSkeleton cols={5} count={5} stackOnMobile={2} />
+      <PanelSkeleton titleWidth="w-32">
+        <div className="mt-3 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+          {GOAL_CARD_SLOTS.map((slot) => (
+            <div key={slot} className="space-y-2">
+              <Skeleton className="h-3 w-16" />
+              <Skeleton className="h-6 w-10" />
+              <Skeleton className="h-3 w-20" />
+            </div>
+          ))}
+        </div>
+      </PanelSkeleton>
+      <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
+        <PanelSkeleton titleWidth="w-32">
+          <Skeleton className="mt-3 h-2 w-full rounded-full" />
           <Skeleton className="mt-4 h-1.5 w-full rounded-full" />
           <div className="mt-4 space-y-3">
             <Skeleton className="h-4 w-full" />
