@@ -4,7 +4,7 @@ import { useId } from "react";
 import { useFormContext } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { EntityFormDialog } from "@/components/shared/entity-form-dialog";
-import { FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -58,13 +58,15 @@ function OpportunityRiceFormFields() {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Reach</FormLabel>
-              <Input
-                {...field}
-                type="number"
-                min={0}
-                className={FIELD_CONTROL_CLASS}
-                placeholder="e.g. 500"
-              />
+              <FormControl>
+                <Input
+                  {...field}
+                  type="number"
+                  min={0}
+                  className={FIELD_CONTROL_CLASS}
+                  placeholder="e.g. 500"
+                />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
@@ -125,16 +127,18 @@ function OpportunityRiceFormFields() {
         render={({ field }) => (
           <FormItem>
             <FormLabel>Confidence (0–1)</FormLabel>
-            <Input
-              {...field}
-              type="number"
-              min={0}
-              max={1}
-              step={0.1}
-              className={FIELD_CONTROL_CLASS}
-              placeholder="e.g. 0.8"
-              onChange={(e) => field.onChange(Number(e.target.value))}
-            />
+            <FormControl>
+              <Input
+                {...field}
+                type="number"
+                min={0}
+                max={1}
+                step={0.1}
+                className={FIELD_CONTROL_CLASS}
+                placeholder="e.g. 0.8"
+                onChange={(e) => field.onChange(Number(e.target.value))}
+              />
+            </FormControl>
             <FormMessage />
           </FormItem>
         )}
@@ -147,15 +151,17 @@ function OpportunityRiceFormFields() {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Effort</FormLabel>
-              <Input
-                {...field}
-                type="number"
-                min={0.1}
-                step={0.5}
-                className={FIELD_CONTROL_CLASS}
-                placeholder="e.g. 10"
-                onChange={(e) => field.onChange(Number(e.target.value))}
-              />
+              <FormControl>
+                <Input
+                  {...field}
+                  type="number"
+                  min={0.1}
+                  step={0.5}
+                  className={FIELD_CONTROL_CLASS}
+                  placeholder="e.g. 10"
+                  onChange={(e) => field.onChange(Number(e.target.value))}
+                />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
@@ -226,9 +232,6 @@ export function OpportunityScoreDialog({
     effortUnit: "person_weeks",
     expectedScoreVersion,
   };
-  function renderRiceFields() {
-    return <OpportunityRiceFormFields />;
-  }
   return (
     <EntityFormDialog
       open={open}
@@ -242,7 +245,7 @@ export function OpportunityScoreDialog({
       submitLabel="Save score"
       resetOnOpen
     >
-      {renderRiceFields}
+      {OpportunityRiceFormFields}
     </EntityFormDialog>
   );
 }
