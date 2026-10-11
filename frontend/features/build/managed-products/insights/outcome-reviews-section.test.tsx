@@ -1,9 +1,47 @@
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
 import { OutcomeReviewsSection } from "./outcome-reviews-section";
 import type { DiscoveryReviewsListOutcomeReviewsResponse } from "@/contracts/build-contracts.generated";
+import type { CreateOutcomeReviewInput } from "@/hooks/api/build/product-discovery-mutations";
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn(() => true),
+}));
+
+jest.mock("@/components/ui/confirm-dialog", () => ({
+  ConfirmDialog: ({ trigger }: { trigger: React.ReactNode }) => <>{trigger}</>,
+}));
+
+jest.mock("./outcome-review-schedule-sheet", () => ({
+  OutcomeReviewScheduleSheet: ({
+    open,
+    onOpenChange,
+    onSubmit,
+  }: {
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+    onSubmit: (data: CreateOutcomeReviewInput) => void;
+    isSubmitting: boolean;
+  }) => {
+    if (!open) return null;
+    return (
+      <div data-testid="schedule-sheet">
+        <button
+          type="button"
+          data-testid="submit-schedule"
+          onClick={() => onSubmit({ kind: "experiment", title: "Test review" })}
+        >
+          Submit
+        </button>
+        <button
+          type="button"
+          data-testid="close-schedule"
+          onClick={() => onOpenChange(false)}
+        >
+          Close
+        </button>
+      </div>
+    );
+  },
 }));
 
 type ReviewRow = DiscoveryReviewsListOutcomeReviewsResponse["data"][number];
@@ -95,5 +133,56 @@ describe("OutcomeReviewsSection — result required (BSN-OUTCOME-RESULT)", () =>
     );
 
     expect(screen.getByTestId("outcome-reviews-empty")).toBeInTheDocument();
+  });
+});
+
+describe("OutcomeReviewsSection — schedule form (BSN-SCHEDULE-FORM)", () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  it("clicking Schedule opens the form and does not immediately call onCreate", () => {
+    const onCreate = jest.fn();
+    render(
+      <OutcomeReviewsSection
+        managedProductId={10}
+        reviews={[]}
+        isLoading={false}
+        onCreate={onCreate}
+        onComplete={noop}
+        onDelete={noop}
+        isCreating={false}
+        isUpdating={false}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /schedule/i }));
+
+    expect(screen.getByTestId("schedule-sheet")).toBeInTheDocument();
+    expect(onCreate).not.toHaveBeenCalled();
+  });
+
+  it("submitting the schedule form calls onCreate with the entered values", async () => {
+    const onCreate = jest.fn();
+    render(
+      <OutcomeReviewsSection
+        managedProductId={10}
+        reviews={[]}
+        isLoading={false}
+        onCreate={onCreate}
+        onComplete={noop}
+        onDelete={noop}
+        isCreating={false}
+        isUpdating={false}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /schedule/i }));
+    fireEvent.click(screen.getByTestId("submit-schedule"));
+
+    await waitFor(() => {
+      expect(onCreate).toHaveBeenCalledWith({ kind: "experiment", title: "Test review" }, expect.any(Function));
+    });
+    expect(screen.getByTestId("schedule-sheet")).toBeInTheDocument();
+    act(() => onCreate.mock.calls[0][1]());
+    expect(screen.queryByTestId("schedule-sheet")).not.toBeInTheDocument();
   });
 });

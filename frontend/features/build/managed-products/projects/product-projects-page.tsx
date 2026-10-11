@@ -17,6 +17,7 @@ import {
   ManagedProductDetailPrimarySection,
   ManagedProductDetailShell,
 } from "@/features/build/managed-products/managed-product-detail-layout";
+import { PRODUCT_PROJECT_SKELETON_HEADERS } from "@/features/build/managed-products/managed-product-page-skeletons";
 import { useProductProjectsPage, type LinkedProjectRow } from "./use-product-projects-page";
 import {
   STATUS_OPTIONS,
@@ -185,7 +186,12 @@ export function ProductProjectsPage({ managedProductId }: ProductProjectsPagePro
         <ManagedProductDetailPrimarySection index={0}>
           <PageState
             resolution={resolution}
-            loading={<DataTableSkeleton mobileCards />}
+            loading={
+              <DataTableSkeleton
+                mobileCards
+                headers={PRODUCT_PROJECT_SKELETON_HEADERS}
+              />
+            }
             empty={
               isFilteredEmpty ? (
                 <EmptyState

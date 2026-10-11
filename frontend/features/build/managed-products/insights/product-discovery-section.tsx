@@ -109,9 +109,12 @@ export function ProductDiscoverySection({ managedProductId }: ProductDiscoverySe
   }, []);
 
   const handleCreateOutcomeReview = useCallback(
-    (data: CreateOutcomeReviewInput) => {
+    (data: CreateOutcomeReviewInput, onCreated: () => void) => {
       createOutcomeReviewMutation.mutate(data, {
-        onSuccess: () => toast.success("Review scheduled."),
+        onSuccess: () => {
+          toast.success("Review scheduled.");
+          onCreated();
+        },
         onError: (err) => toast.error(getErrorMessage(err)),
       });
     },
@@ -214,7 +217,7 @@ export function ProductDiscoverySection({ managedProductId }: ProductDiscoverySe
         onCreate={handleCreateOutcomeReview}
         onComplete={handleCompleteOutcomeReview}
         onDelete={handleDeleteOutcomeReview}
-        isCreating={createOpportunityMutation.isPending}
+        isCreating={createOutcomeReviewMutation.isPending}
         isUpdating={updateOutcomeReviewMutation.isPending}
       />
 

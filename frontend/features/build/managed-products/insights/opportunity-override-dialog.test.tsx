@@ -1,6 +1,7 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { OpportunityOverrideDialog } from "./opportunity-override-dialog";
+import { OpportunityDeclineDialog, OpportunityOverrideDialog } from "./opportunity-override-dialog";
+import { OpportunityScoreDialog } from "./opportunity-rice-form";
 
 const noop = jest.fn();
 
@@ -80,5 +81,55 @@ describe("OpportunityOverrideDialog — reason required (BSN-OVERRIDE-REQUIRED)"
       expect(screen.getByTestId("override-reason-error")).toBeInTheDocument();
     });
     expect(handleOverride).not.toHaveBeenCalled();
+  });
+});
+
+describe("OpportunityDeclineDialog — reason required (BSN-DECLINE-NOTE)", () => {
+  it("does not call onDecline when the reason is blank so the server never receives an empty note", async () => {
+    const handleDecline = jest.fn();
+    render(<OpportunityDeclineDialog open onOpenChange={noop} isSubmitting={false} onDecline={handleDecline} />);
+    fireEvent.click(screen.getByRole("button", { name: /^decline$/i }));
+    await waitFor(() => expect(screen.getByText("Add a reason for declining")).toBeInTheDocument());
+    expect(handleDecline).not.toHaveBeenCalled();
+  });
+
+  it("calls onDecline with the typed reason so the decision note is persisted", async () => {
+    const handleDecline = jest.fn();
+    const user = userEvent.setup();
+    render(<OpportunityDeclineDialog open onOpenChange={noop} isSubmitting={false} onDecline={handleDecline} />);
+    await user.type(screen.getByTestId("decline-note-input"), "Out of scope for this year");
+    fireEvent.click(screen.getByRole("button", { name: /^decline$/i }));
+    await waitFor(() =>
+      expect(handleDecline).toHaveBeenCalledWith({ note: "Out of scope for this year" }, expect.any(Object)),
+    );
+  });
+});
+
+describe("OpportunityScoreDialog — RICE scoring (BSN-RICE-SCORE)", () => {
+  it("previews the same score the server computes and submits the entered RICE inputs", async () => {
+    const handleScore = jest.fn();
+    const user = userEvent.setup();
+    render(
+      <OpportunityScoreDialog open onOpenChange={noop} expectedScoreVersion={2} isSubmitting={false} onScore={handleScore} />,
+    );
+    await user.type(screen.getByPlaceholderText("e.g. 500"), "1200");
+    expect(screen.getByTestId("rice-score-value")).toHaveTextContent("960.00");
+    fireEvent.click(screen.getByRole("button", { name: /save score/i }));
+    await waitFor(() =>
+      expect(handleScore).toHaveBeenCalledWith(
+        expect.objectContaining({ reach: "1200", impact: 1, confidence: 0.8, effort: 1, expectedScoreVersion: 2 }),
+        expect.any(Object),
+      ),
+    );
+  });
+
+  it("does not submit when reach is empty so an unscored opportunity is never saved as a score", async () => {
+    const handleScore = jest.fn();
+    render(
+      <OpportunityScoreDialog open onOpenChange={noop} expectedScoreVersion={0} isSubmitting={false} onScore={handleScore} />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: /save score/i }));
+    await waitFor(() => expect(screen.getByText("Reach is required")).toBeInTheDocument());
+    expect(handleScore).not.toHaveBeenCalled();
   });
 });

@@ -8,7 +8,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { PageState } from "@/components/shared/page-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { Skeleton } from "@/components/ui/skeleton";
+import { ProductSettingsSkeleton } from "./managed-product-page-skeletons";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { useManagedProduct } from "@/hooks/api/build/managed-products";
@@ -152,13 +152,7 @@ function ProductSettingsForm({ managedProductId }: ProductSettingsPageProps) {
   return (
     <PageState
       resolution={pageState}
-      loading={
-        <div className="space-y-3 max-w-2xl">
-          {[0, 1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-10 w-full" />
-          ))}
-        </div>
-      }
+      loading={<ProductSettingsSkeleton />}
       onRetry={handleRetry}
       className="flex-1"
     >

@@ -31,3 +31,13 @@ export const overrideFormSchema = z.object({
 });
 
 export type OverrideFormValues = z.infer<typeof overrideFormSchema>;
+
+export const declineFormSchema = z.object({
+  note: z
+    .string()
+    .trim()
+    .min(1, "Add a reason for declining")
+    .max(2000, "Keep the reason under 2000 characters"),
+});
+
+export type DeclineFormValues = z.infer<typeof declineFormSchema>;

@@ -226,6 +226,9 @@ export function OpportunityScoreDialog({
     effortUnit: "person_weeks",
     expectedScoreVersion,
   };
+  function renderRiceFields() {
+    return <OpportunityRiceFormFields />;
+  }
   return (
     <EntityFormDialog
       open={open}
@@ -239,7 +242,7 @@ export function OpportunityScoreDialog({
       submitLabel="Save score"
       resetOnOpen
     >
-      {() => <OpportunityRiceFormFields />}
+      {renderRiceFields}
     </EntityFormDialog>
   );
 }

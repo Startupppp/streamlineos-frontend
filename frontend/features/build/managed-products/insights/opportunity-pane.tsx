@@ -2,8 +2,6 @@
 
 import { useState, useCallback } from "react";
 import { toast } from "sonner";
-import { CheckCircle2, GitBranch, XCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -16,9 +14,11 @@ import {
 } from "@/hooks/api/build/product-discovery-mutations";
 import { OpportunityTrace } from "./opportunity-trace";
 import { OpportunityAcceptDialog } from "./opportunity-accept-dialog";
-import { OpportunityOverrideDialog } from "./opportunity-override-dialog";
+import { OpportunityDeclineDialog, OpportunityOverrideDialog } from "./opportunity-override-dialog";
+import { OpportunityScoreDialog } from "./opportunity-rice-form";
+import { OpportunityPaneActions } from "./opportunity-pane-actions";
 import type { AcceptOpportunityInput } from "@/hooks/api/build/product-discovery-mutations";
-import type { OverrideFormValues } from "./opportunity-rice-schema";
+import type { DeclineFormValues, OverrideFormValues, RiceFormValues } from "./opportunity-rice-schema";
 
 interface OpportunityPaneProps {
   managedProductId: number;
@@ -34,6 +34,8 @@ export function OpportunityPane({
   const canWrite = useCan("build:managed-products:update");
   const [acceptOpen, setAcceptOpen] = useState(false);
   const [overrideOpen, setOverrideOpen] = useState(false);
+  const [scoreOpen, setScoreOpen] = useState(false);
+  const [declineOpen, setDeclineOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"details" | "trace">("details");
 
   const { data: opportunity, isLoading } = useOpportunity(
@@ -48,7 +50,7 @@ export function OpportunityPane({
   const acceptMutation = useAcceptOpportunity(managedProductId);
   const declineMutation = useDeclineOpportunity(managedProductId);
   const overrideMutation = useOverrideOpportunityScore(managedProductId);
-  const _scoreMutation = useScoreOpportunity(managedProductId);
+  const scoreMutation = useScoreOpportunity(managedProductId);
 
   const handleAccept = useCallback(
     (data: AcceptOpportunityInput) => {
@@ -68,18 +70,54 @@ export function OpportunityPane({
     [opportunityId, acceptMutation, onClose],
   );
 
-  const handleDecline = useCallback(() => {
-    if (!opportunityId || !opportunity) return;
-    declineMutation.mutate(
-      { opportunityId, note: "", expectedVersion: opportunity.version },
-      {
-        onSuccess: () => {
-          toast.success("Opportunity declined.");
+  const handleDecline = useCallback(
+    (values: DeclineFormValues) => {
+      if (!opportunityId || !opportunity) return;
+      declineMutation.mutate(
+        { opportunityId, note: values.note, expectedVersion: opportunity.version },
+        {
+          onSuccess: () => {
+            toast.success("Opportunity declined.");
+            setDeclineOpen(false);
+          },
+          onError: (err) => toast.error(getErrorMessage(err)),
         },
-        onError: (err) => toast.error(getErrorMessage(err)),
-      },
-    );
-  }, [opportunityId, opportunity, declineMutation]);
+      );
+    },
+    [opportunityId, opportunity, declineMutation],
+  );
+
+  const handleScore = useCallback(
+    (values: RiceFormValues) => {
+      if (!opportunityId) return;
+      scoreMutation.mutate(
+        {
+          opportunityId,
+          reach: Number(values.reach),
+          reachPeriod: values.reachPeriod,
+          reachUnit: values.reachUnit?.trim() || undefined,
+          impact: String(values.impact),
+          confidence: values.confidence,
+          effort: values.effort,
+          effortUnit: values.effortUnit,
+          expectedScoreVersion: values.expectedScoreVersion,
+        },
+        {
+          onSuccess: () => {
+            toast.success("Score saved.");
+            setScoreOpen(false);
+          },
+          onError: (err) => toast.error(getErrorMessage(err)),
+        },
+      );
+    },
+    [opportunityId, scoreMutation],
+  );
+
+  const handleOpenScore = useCallback(() => setScoreOpen(true), []);
+  const handleOpenAccept = useCallback(() => setAcceptOpen(true), []);
+  const handleOpenOverride = useCallback(() => setOverrideOpen(true), []);
+  const handleOpenDecline = useCallback(() => setDeclineOpen(true), []);
 
   const handleOverride = useCallback(
     (values: OverrideFormValues) => {
@@ -180,42 +218,13 @@ export function OpportunityPane({
                 </div>
 
                 {canWrite && (
-                  <div className="flex flex-wrap gap-2">
-                    {opportunity.allowedActions.includes("accept") && (
-                      <Button
-                        type="button"
-                        variant="default"
-                        size="sm"
-                        onClick={() => setAcceptOpen(true)}
-                        data-testid="accept-opportunity-btn"
-                      >
-                        <CheckCircle2 className="size-3.5 mr-1" aria-hidden />
-                        Accept
-                      </Button>
-                    )}
-                    {opportunity.allowedActions.includes("decline") && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={handleDecline}
-                        data-testid="decline-opportunity-btn"
-                      >
-                        <XCircle className="size-3.5 mr-1" aria-hidden />
-                        Decline
-                      </Button>
-                    )}
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setOverrideOpen(true)}
-                      data-testid="override-score-btn"
-                    >
-                      <GitBranch className="size-3.5 mr-1" aria-hidden />
-                      Override score
-                    </Button>
-                  </div>
+                  <OpportunityPaneActions
+                    allowedActions={opportunity.allowedActions}
+                    onAccept={handleOpenAccept}
+                    onDecline={handleOpenDecline}
+                    onScore={handleOpenScore}
+                    onOverride={handleOpenOverride}
+                  />
                 )}
               </div>
             )}
@@ -248,6 +257,19 @@ export function OpportunityPane({
             expectedScoreVersion={opportunity.latestScore?.scoreVersion ?? 0}
             isSubmitting={overrideMutation.isPending}
             onOverride={handleOverride}
+          />
+          <OpportunityScoreDialog
+            open={scoreOpen}
+            onOpenChange={setScoreOpen}
+            expectedScoreVersion={opportunity.latestScore?.scoreVersion ?? 0}
+            isSubmitting={scoreMutation.isPending}
+            onScore={handleScore}
+          />
+          <OpportunityDeclineDialog
+            open={declineOpen}
+            onOpenChange={setDeclineOpen}
+            isSubmitting={declineMutation.isPending}
+            onDecline={handleDecline}
           />
         </>
       )}

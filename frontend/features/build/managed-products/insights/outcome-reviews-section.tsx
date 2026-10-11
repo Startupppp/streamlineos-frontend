@@ -5,7 +5,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import {
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -22,8 +28,10 @@ import type {
   CreateOutcomeReviewInput,
   UpdateOutcomeReviewInput,
 } from "@/hooks/api/build/product-discovery-mutations";
+import { OutcomeReviewScheduleSheet } from "./outcome-review-schedule-sheet";
 
-type OutcomeReviewRow = DiscoveryReviewsListOutcomeReviewsResponse["data"][number];
+type OutcomeReviewRow =
+  DiscoveryReviewsListOutcomeReviewsResponse["data"][number];
 
 const RESULT_OPTIONS = [
   { label: "Met", value: "met" },
@@ -47,7 +55,7 @@ interface OutcomeReviewsSectionProps {
   managedProductId: number;
   reviews: OutcomeReviewRow[];
   isLoading: boolean;
-  onCreate: (data: CreateOutcomeReviewInput) => void;
+  onCreate: (data: CreateOutcomeReviewInput, onCreated: () => void) => void;
   onComplete: (reviewId: number, data: UpdateOutcomeReviewInput) => void;
   onDelete: (reviewId: number) => void;
   isCreating: boolean;
@@ -96,13 +104,21 @@ function CompleteReviewDialog({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Result (required)</FormLabel>
-                <Select value={field.value ?? ""} onValueChange={(v) => v && field.onChange(v)}>
-                  <SelectTrigger className={FIELD_CONTROL_CLASS} data-testid="result-select">
+                <Select
+                  value={field.value ?? ""}
+                  onValueChange={(v) => v && field.onChange(v)}
+                >
+                  <SelectTrigger
+                    className={FIELD_CONTROL_CLASS}
+                    data-testid="result-select"
+                  >
                     <SelectValue placeholder="Select result" />
                   </SelectTrigger>
                   <SelectContent>
                     {RESULT_OPTIONS.map((o) => (
-                      <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                      <SelectItem key={o.value} value={o.value}>
+                        {o.label}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -116,12 +132,19 @@ function CompleteReviewDialog({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Actual measurement (optional)</FormLabel>
-                <Input {...field} className={FIELD_CONTROL_CLASS} placeholder="e.g. 12%" />
+                <Input
+                  {...field}
+                  className={FIELD_CONTROL_CLASS}
+                  placeholder="e.g. 12%"
+                />
                 <FormMessage />
               </FormItem>
             )}
           />
-          <Input type="hidden" {...form.register("version", { valueAsNumber: true })} />
+          <Input
+            type="hidden"
+            {...form.register("version", { valueAsNumber: true })}
+          />
         </div>
       )}
     </EntityFormDialog>
@@ -139,6 +162,12 @@ export function OutcomeReviewsSection({
 }: OutcomeReviewsSectionProps) {
   const canWrite = useCan("build:managed-products:update");
   const [completingId, setCompletingId] = useState<number | null>(null);
+  const [scheduleOpen, setScheduleOpen] = useState(false);
+  const handleScheduleSubmit = useCallback(
+    (data: CreateOutcomeReviewInput) =>
+      onCreate(data, () => setScheduleOpen(false)),
+    [onCreate],
+  );
 
   const completingReview = useMemo(
     () => reviews.find((r) => r.id === completingId) ?? null,
@@ -159,7 +188,10 @@ export function OutcomeReviewsSection({
   return (
     <section aria-labelledby="outcome-reviews-heading" className="space-y-4">
       <div className="flex items-center justify-between gap-2">
-        <h2 id="outcome-reviews-heading" className="text-sm font-semibold text-foreground">
+        <h2
+          id="outcome-reviews-heading"
+          className="text-sm font-semibold text-foreground"
+        >
           Outcome reviews &amp; experiments
         </h2>
         {canWrite && (
@@ -167,7 +199,7 @@ export function OutcomeReviewsSection({
             type="button"
             variant="outline"
             size="sm"
-            onClick={() => onCreate({ kind: "outcome_review", title: "New review" })}
+            onClick={() => setScheduleOpen(true)}
             disabled={isCreating}
           >
             <Plus className="size-3.5 mr-1" aria-hidden />
@@ -176,12 +208,13 @@ export function OutcomeReviewsSection({
         )}
       </div>
 
-      {isLoading && (
-        <p className="text-sm text-muted-foreground">Loading…</p>
-      )}
+      {isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
 
       {!isLoading && reviews.length === 0 && (
-        <p className="text-sm text-muted-foreground" data-testid="outcome-reviews-empty">
+        <p
+          className="text-sm text-muted-foreground"
+          data-testid="outcome-reviews-empty"
+        >
           No reviews or experiments scheduled.
         </p>
       )}
@@ -195,13 +228,17 @@ export function OutcomeReviewsSection({
               data-testid={`outcome-review-row-${review.id}`}
             >
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground">{review.title}</p>
+                <p className="text-sm font-medium text-foreground">
+                  {review.title}
+                </p>
                 <div className="flex items-center gap-2 mt-0.5">
                   <span className="text-xs text-muted-foreground capitalize">
                     {review.kind.replace("_", " ")}
                   </span>
                   <span className="text-xs text-muted-foreground">·</span>
-                  <span className="text-xs text-muted-foreground capitalize">{review.state}</span>
+                  <span className="text-xs text-muted-foreground capitalize">
+                    {review.state}
+                  </span>
                   {review.result && (
                     <>
                       <span className="text-xs text-muted-foreground">·</span>
@@ -212,28 +249,38 @@ export function OutcomeReviewsSection({
                   )}
                 </div>
               </div>
-              {canWrite && review.state !== "completed" && review.state !== "cancelled" && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCompletingId(review.id)}
-                  data-testid={`complete-review-btn-${review.id}`}
-                >
-                  Complete
-                </Button>
-              )}
+              {canWrite &&
+                review.state !== "completed" &&
+                review.state !== "cancelled" && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCompletingId(review.id)}
+                    data-testid={`complete-review-btn-${review.id}`}
+                  >
+                    Complete
+                  </Button>
+                )}
               {canWrite && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onDelete(review.id)}
-                  className="text-destructive hover:text-destructive"
-                  data-testid={`delete-review-btn-${review.id}`}
-                >
-                  Delete
-                </Button>
+                <ConfirmDialog
+                  title="Delete review?"
+                  description="This review will be permanently removed."
+                  confirmLabel="Delete"
+                  destructive
+                  onConfirm={() => onDelete(review.id)}
+                  trigger={
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="text-destructive hover:text-destructive"
+                      data-testid={`delete-review-btn-${review.id}`}
+                    >
+                      Delete
+                    </Button>
+                  }
+                />
               )}
             </li>
           ))}
@@ -249,6 +296,13 @@ export function OutcomeReviewsSection({
           isSubmitting={isUpdating}
         />
       )}
+
+      <OutcomeReviewScheduleSheet
+        open={scheduleOpen}
+        onOpenChange={setScheduleOpen}
+        onSubmit={handleScheduleSubmit}
+        isSubmitting={isCreating}
+      />
     </section>
   );
 }

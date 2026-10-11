@@ -1,12 +1,18 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import type { ControllerRenderProps, UseFormReturn } from "react-hook-form";
 import { FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { EntityFormDialog } from "@/components/shared/entity-form-dialog";
 import { FIELD_CONTROL_CLASS } from "@/components/ui/field-control";
-import { overrideFormSchema, type OverrideFormValues } from "./opportunity-rice-schema";
+import {
+  declineFormSchema,
+  overrideFormSchema,
+  type DeclineFormValues,
+  type OverrideFormValues,
+} from "./opportunity-rice-schema";
 
 interface OpportunityOverrideDialogProps {
   open: boolean;
@@ -82,5 +88,63 @@ export function OpportunityOverrideDialog({
         </div>
       )}
     </EntityFormDialog>
+  );
+}
+
+interface OpportunityDeclineDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  isSubmitting: boolean;
+  onDecline: (data: DeclineFormValues) => void;
+}
+
+const DECLINE_DEFAULTS: DeclineFormValues = { note: "" };
+
+export function OpportunityDeclineDialog({
+  open,
+  onOpenChange,
+  isSubmitting,
+  onDecline,
+}: OpportunityDeclineDialogProps) {
+  function renderDeclineFields(form: UseFormReturn<DeclineFormValues>) {
+    return (
+      <FormField
+        control={form.control}
+        name="note"
+        render={renderNoteField}
+      />
+    );
+  }
+  return (
+    <EntityFormDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Decline opportunity"
+      description="The reason is kept on the opportunity so the decision can be revisited later."
+      resolver={zodResolver(declineFormSchema)}
+      defaultValues={DECLINE_DEFAULTS}
+      onSubmit={onDecline}
+      isSubmitting={isSubmitting}
+      submitLabel="Decline"
+      resetOnOpen
+    >
+      {renderDeclineFields}
+    </EntityFormDialog>
+  );
+}
+
+function renderNoteField({ field }: { field: ControllerRenderProps<DeclineFormValues, "note"> }) {
+  return (
+    <FormItem>
+      <FormLabel>Reason</FormLabel>
+      <Textarea
+        {...field}
+        className={FIELD_CONTROL_CLASS}
+        placeholder="Why is this opportunity not being pursued?"
+        rows={3}
+        data-testid="decline-note-input"
+      />
+      <FormMessage />
+    </FormItem>
   );
 }

@@ -1,33 +1,44 @@
 "use client";
 
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import type { ReactNode } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { StatCardGridSkeleton } from "@/components/ui/stat-card";
+import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { PM_PANEL } from "@/components/pm-chrome";
 import { cn } from "@/lib/utils";
+import {
+  AlertTriangle,
+  BarChart2,
+  CheckCircle2,
+  ClipboardCheck,
+  Clock,
+  FolderOpen,
+  Inbox,
+  LayoutGrid,
+  MessageSquare,
+  Target,
+  ThumbsUp,
+  TrendingUp,
+} from "lucide-react";
 
-const PRODUCT_CARD_SLOTS = [0, 1, 2] as const;
 const GOAL_CARD_SLOTS = [0, 1, 2, 3, 4, 5] as const;
 const ROADMAP_COLUMN_SLOTS = [0, 1, 2, 3] as const;
 const ROADMAP_CARD_SLOTS = [0, 1] as const;
 
-function SummaryPanelSkeleton({ cardCount }: { cardCount: number }) {
+function PanelSkeleton({
+  titleWidth,
+  children,
+}: {
+  titleWidth: string;
+  children: ReactNode;
+}) {
   return (
-    <div className="rounded-xl border border-border bg-card p-4 sm:p-5">
-      <div className="flex items-center justify-between gap-2">
-        <div className="space-y-2">
-          <Skeleton className="h-5 w-32" />
-          <Skeleton className="h-4 w-64 max-w-full" />
-        </div>
-        <Skeleton className="h-7 w-20 rounded-full" />
+    <section className="min-w-0 rounded-xl border border-border bg-card px-4 py-4">
+      <div className="flex items-center justify-between gap-3">
+        <Skeleton className={cn("h-4", titleWidth)} />
+        <Skeleton className="h-4 w-24" />
       </div>
-      <StatCardGridSkeleton
-        cols={cardCount === 4 ? 4 : cardCount === 3 ? 3 : 2}
-        count={cardCount}
-        className="mt-4"
-        stackOnMobile={cardCount === 3}
-      />
-    </div>
+      {children}
+    </section>
   );
 }
 
@@ -37,88 +48,173 @@ export function ManagedProductOverviewSkeleton() {
       data-testid="managed-product-overview-skeleton"
       className="flex w-full min-w-0 flex-col gap-4 pb-8"
     >
-      <StatCardGridSkeleton cols={3} count={3} />
-
-      <Card>
-        <CardHeader className="pb-2">
-          <div className="flex items-center justify-between gap-2">
-            <div className="space-y-2">
-              <Skeleton className="h-4 w-28" />
-              <Skeleton className="h-3 w-64 max-w-full" />
-            </div>
-            <Skeleton className="h-4 w-24" />
-          </div>
-        </CardHeader>
-        <CardContent className="grid gap-2 sm:grid-cols-3">
-          {PRODUCT_CARD_SLOTS.map((slot) => (
-            <div key={slot} className="space-y-2 rounded-md border border-border bg-muted/30 p-3">
-              <Skeleton className="h-3 w-20" />
-              <Skeleton className="h-5 w-10" />
-              <Skeleton className="h-3 w-24" />
-            </div>
-          ))}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader className="pb-2">
-          <Skeleton className="h-4 w-24" />
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {PRODUCT_CARD_SLOTS.map((slot) => (
-            <div key={slot} className="flex items-center justify-between gap-3">
-              <Skeleton className="h-4 w-2/3" />
-              <Skeleton className="h-5 w-20 rounded-full" />
-            </div>
-          ))}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader className="pb-2">
-          <Skeleton className="h-4 w-28" />
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {[0, 1].map((slot) => (
-            <div key={slot} className="flex items-center gap-3">
-              <Skeleton className="size-8 rounded-lg" />
-              <div className="min-w-0 flex-1 space-y-1.5">
-                <Skeleton className="h-3.5 w-2/5" />
-                <Skeleton className="h-3 w-1/4" />
+      <Skeleton className="h-4 w-56 max-w-full" />
+      <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
+        <PanelSkeleton titleWidth="w-32">
+          <div className="mt-3 grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-4">
+            {ROADMAP_COLUMN_SLOTS.map((slot) => (
+              <div key={slot} className="space-y-2 bg-card px-3 py-3">
+                <Skeleton className="h-3 w-12" />
+                <Skeleton className="h-5 w-6" />
               </div>
+            ))}
+          </div>
+          <Skeleton className="mt-4 h-1.5 w-full rounded-full" />
+          <div className="mt-4 space-y-3">
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-10 w-full" />
+          </div>
+        </PanelSkeleton>
+        <PanelSkeleton titleWidth="w-36">
+          <div className="mt-2 space-y-3">
+            {ROADMAP_COLUMN_SLOTS.map((slot) => (
+              <div key={slot} className="flex items-center justify-between gap-4">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-4 w-10" />
+              </div>
+            ))}
+          </div>
+        </PanelSkeleton>
+      </div>
+      <PanelSkeleton titleWidth="w-36">
+        <div className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {GOAL_CARD_SLOTS.slice(0, 5).map((slot) => (
+            <div key={slot} className="flex items-center justify-between gap-4">
+              <Skeleton className="h-4 w-28" />
+              <Skeleton className="h-4 w-16" />
             </div>
           ))}
-        </CardContent>
-      </Card>
+        </div>
+      </PanelSkeleton>
     </div>
   );
+}
+
+function LoadingStat({
+  label,
+  icon,
+  tone = "default",
+}: {
+  label: string;
+  icon: typeof Inbox;
+  tone?: "default" | "amber" | "blue" | "emerald";
+}) {
+  return <StatCard label={label} value={0} icon={icon} tone={tone} isLoading />;
 }
 
 export function ProductInsightsSkeleton() {
   return (
     <div data-testid="product-insights-skeleton" className="space-y-6">
-      <SummaryPanelSkeleton cardCount={3} />
-
-      <div>
-        <Skeleton className="mb-3 h-4 w-32" />
-        <StatCardGridSkeleton cols={3} count={3} />
+      <div className="rounded-xl border border-border bg-card p-4 sm:p-5">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h2 className="text-base font-semibold text-foreground">Where to focus</h2>
+            <p className="text-sm text-muted-foreground">Activity for the selected range</p>
+          </div>
+          <Skeleton className="h-7 w-20 rounded-full" />
+        </div>
+        <StatCardGrid cols={3} className="mt-4" stackOnMobile>
+          <LoadingStat label="Needs triage" icon={Inbox} tone="amber" />
+          <LoadingStat label="Planned or underway" icon={Clock} tone="blue" />
+          <LoadingStat label="Delivered" icon={CheckCircle2} tone="emerald" />
+        </StatCardGrid>
       </div>
-
       <div>
-        <Skeleton className="mb-3 h-4 w-36" />
-        <StatCardGridSkeleton cols={4} count={4} />
+        <h2 className="mb-3 text-sm font-medium text-foreground">Delivery coverage</h2>
+        <StatCardGrid cols={3}>
+          <LoadingStat label="Linked projects" icon={LayoutGrid} />
+          <LoadingStat label="Active" icon={FolderOpen} tone="emerald" />
+          <LoadingStat label="Completed" icon={CheckCircle2} tone="blue" />
+        </StatCardGrid>
       </div>
-
       <div>
-        <Skeleton className="mb-2 h-4 w-52" />
-        <Skeleton className="mb-3 h-3 w-72 max-w-full" />
-        <StatCardGridSkeleton cols={4} count={4} />
+        <h2 className="mb-3 text-sm font-medium text-foreground">Customer response</h2>
+        <StatCardGrid cols={4}>
+          <LoadingStat label="Open" icon={Inbox} />
+          <LoadingStat label="In progress" icon={BarChart2} tone="amber" />
+          <LoadingStat label="Resolved" icon={CheckCircle2} tone="emerald" />
+          <LoadingStat label="Archived" icon={FolderOpen} />
+        </StatCardGrid>
       </div>
-
       <div>
-        <Skeleton className="mb-3 h-4 w-28" />
-        <StatCardGridSkeleton cols={2} count={2} />
+        <h2 className="mb-1 text-sm font-medium text-foreground">Evidence linked to the roadmap</h2>
+        <p className="mb-3 text-xs text-muted-foreground">Linked feedback posts are distinct from widget submissions above.</p>
+        <StatCardGrid cols={4}>
+          <LoadingStat label="Roadmap items" icon={LayoutGrid} />
+          <LoadingStat label="Completed items" icon={CheckCircle2} tone="blue" />
+          <LoadingStat label="Linked feedback" icon={MessageSquare} tone="amber" />
+          <LoadingStat label="Feedback votes" icon={ThumbsUp} tone="emerald" />
+        </StatCardGrid>
       </div>
+      <div>
+        <h2 className="mb-3 text-sm font-medium text-foreground">Product context</h2>
+        <StatCardGrid cols={2}>
+          <LoadingStat label="Days since product update" icon={Clock} />
+          <LoadingStat label="Confidence score" icon={CheckCircle2} tone="blue" />
+        </StatCardGrid>
+      </div>
+      <div>
+        <h2 className="mb-4 text-sm font-semibold text-foreground">Opportunities</h2>
+        <Skeleton className="h-40 w-full rounded-xl" />
+      </div>
+    </div>
+  );
+}
+
+export function ProductGoalsStatRow() {
+  return (
+    <StatCardGrid cols={5}>
+      <LoadingStat label="Total Goals" icon={Target} />
+      <LoadingStat label="On Track" icon={TrendingUp} tone="emerald" />
+      <LoadingStat label="At Risk" icon={AlertTriangle} tone="amber" />
+      <LoadingStat label="Avg Progress" icon={TrendingUp} />
+      <LoadingStat label="Stale Check-ins" icon={ClipboardCheck} />
+    </StatCardGrid>
+  );
+}
+
+export const PRODUCT_PROJECT_SKELETON_HEADERS = [
+  "Project",
+  "Status",
+  "Health",
+  "Next milestone",
+  "Next release",
+  "Linked goals",
+  "Contribution",
+  "Dates",
+  "Roadmap items",
+] as const;
+
+const SETTINGS_FIELDS = [0, 1, 2, 3, 4, 5] as const;
+
+export function ProductSettingsSkeleton() {
+  return (
+    <div className="flex max-w-2xl flex-col gap-8 pb-12">
+      <section className="flex flex-col gap-4">
+        <h2 className="text-sm font-semibold text-foreground">Identity, strategy & lifecycle</h2>
+        {SETTINGS_FIELDS.map((field) => (
+          <div key={field} className="space-y-1.5">
+            <Skeleton className="h-3.5 w-28" />
+            <Skeleton className={cn("h-9 w-full rounded-md", field === 2 && "h-20")} />
+          </div>
+        ))}
+      </section>
+      <div className="border-t border-border" />
+      <section className="flex flex-col gap-3">
+        <h2 className="text-sm font-semibold text-foreground">Members</h2>
+        <Skeleton className="h-10 w-full rounded-md" />
+        <Skeleton className="h-10 w-full rounded-md" />
+      </section>
+      <div className="border-t border-border" />
+      <section className="flex flex-col gap-3">
+        <h2 className="text-sm font-semibold text-foreground">Releases</h2>
+        <Skeleton className="h-10 w-full rounded-md" />
+      </section>
+      <div className="border-t border-border" />
+      <section className="flex flex-col gap-3">
+        <h2 className="text-sm font-semibold text-destructive">Danger zone</h2>
+        <Skeleton className="h-16 w-full rounded-md" />
+      </section>
     </div>
   );
 }

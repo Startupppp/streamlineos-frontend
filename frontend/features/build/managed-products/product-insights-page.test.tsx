@@ -63,7 +63,13 @@ describe("ProductInsightsPage — page states (BSN-INS-STATE)", () => {
     render(<ProductInsightsPage managedProductId={7} />);
     expect(screen.getByTestId("page-state-loading")).toBeInTheDocument();
     expect(screen.getByTestId("product-insights-skeleton")).toBeInTheDocument();
-    expect(screen.getAllByTestId("stat-card-grid-skeleton")).toHaveLength(5);
+    expect(screen.getByRole("heading", { name: "Where to focus" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Delivery coverage" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Customer response" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Evidence linked to the roadmap" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Product context" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Opportunities" })).toBeInTheDocument();
+    expect(screen.getAllByTestId("stat-card")).toHaveLength(16);
   });
 
   it("shows the error state when usePageState resolves to error so the user can retry", () => {

@@ -201,11 +201,11 @@ export function useDeclineOpportunity(managedProductId: number) {
   });
 }
 
-export interface ScoreOpportunityInput {
-  reach: string;
+interface ScoreOpportunityInput {
+  reach: number;
   reachPeriod: "month" | "quarter" | "year";
-  reachUnit: string;
-  impact: 0.25 | 0.5 | 1 | 2 | 3;
+  reachUnit?: string;
+  impact: string;
   confidence: number;
   effort: number;
   effortUnit: "person_days" | "person_weeks" | "person_months";
