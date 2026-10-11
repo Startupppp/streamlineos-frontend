@@ -1,17 +1,17 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import Link from "next/link";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useFeedbucketSubmission, useUnmarkDuplicate } from "@/hooks/api/feedbucket/use-feedbucket-submissions";
 import { useCan } from "@/hooks/api/access";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { ClassifySubmissionSheet } from "./classify-submission-sheet";
+import { FeedbackPaneDetail } from "./feedback-pane-detail";
 import { MarkDuplicateDialog } from "./mark-duplicate-dialog";
 import { LinkToOpportunityDialog } from "./link-to-opportunity-dialog";
+import { StatusBadge, TypeBadge } from "./feedback-signal-badges";
 
 interface FeedbackPaneProps {
   submissionId: number;
@@ -21,12 +21,20 @@ interface FeedbackPaneProps {
   onOpenDetail?: () => void;
 }
 
-function ConsentRow({ label, value }: { label: string; value: string | null | undefined }) {
-  if (value == null) return null;
+function FeedbackPaneSkeleton() {
   return (
-    <div className="flex items-start gap-2 text-sm">
-      <span className="text-muted-foreground w-32 shrink-0">{label}</span>
-      <span className="text-foreground break-all">{value}</span>
+    <div className="flex flex-1 flex-col gap-6 px-6 py-5">
+      <div className="flex flex-col gap-2">
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-5/6" />
+        <Skeleton className="h-4 w-2/3" />
+      </div>
+      <div className="flex flex-wrap gap-1.5">
+        <Skeleton className="h-5 w-16 rounded-full" />
+        <Skeleton className="h-5 w-14 rounded-full" />
+        <Skeleton className="h-5 w-20 rounded-full" />
+      </div>
+      <Skeleton className="h-36 w-full rounded-xl" />
     </div>
   );
 }
@@ -55,101 +63,43 @@ export function FeedbackPane({ submissionId, managedProductId, open, onOpenChang
   const handleOpenDuplicate = useCallback(() => setDuplicateOpen(true), []);
   const handleOpenLinkOpp = useCallback(() => setLinkOppOpen(true), []);
 
-  const consentDenied = submission?.consentStatus === "denied";
+  const title = isLoading ? "Feedback" : (submission?.message ?? "Feedback");
 
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent className="p-0 flex flex-col gap-0 sm:max-w-lg overflow-y-auto">
-          <SheetHeader className="p-6 pb-3">
-            <SheetTitle>Feedback</SheetTitle>
+        <SheetContent className="flex flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">
+          <SheetHeader className="shrink-0 border-b border-border px-6 py-4">
+            <SheetTitle className="line-clamp-3 text-pretty text-base leading-snug">
+              {title}
+            </SheetTitle>
+            {submission ? (
+              <SheetDescription className="flex flex-wrap items-center gap-1.5">
+                <TypeBadge type={submission.type} />
+                <StatusBadge status={submission.status} />
+              </SheetDescription>
+            ) : (
+              <SheetDescription>Submission details</SheetDescription>
+            )}
           </SheetHeader>
           {isLoading ? (
-            <div className="flex-1 flex items-center justify-center text-sm text-muted-foreground p-6">
-              Loading…
-            </div>
+            <FeedbackPaneSkeleton />
           ) : submission ? (
-            <div className="flex flex-col gap-6 p-6 pt-2">
-              <div>
-                <p className="text-sm text-foreground whitespace-pre-wrap">{submission.message}</p>
-              </div>
-              <div className="flex flex-col gap-2">
-                <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Provenance</h3>
-                <ConsentRow label="Channel" value={submission.sourceChannel} />
-                <ConsentRow label="Page URL" value={submission.pageUrl} />
-                {!consentDenied && <ConsentRow label="Reporter" value={submission.reporterName ?? submission.reporterEmail} />}
-                <ConsentRow label="Consent" value={submission.consentStatus} />
-                {submission.consentRecordedAt && (
-                  <ConsentRow label="Recorded at" value={new Date(submission.consentRecordedAt).toLocaleDateString()} />
-                )}
-              </div>
-              <div className="flex flex-col gap-2">
-                <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Classification</h3>
-                <div className="flex flex-wrap gap-2">
-                  {submission.theme && <Badge variant="secondary">{submission.theme}</Badge>}
-                  {submission.segment && <Badge variant="outline">{submission.segment}</Badge>}
-                  {submission.sentiment && <Badge variant="outline">{submission.sentiment}</Badge>}
-                </div>
-                {canUpdate && (
-                  <Button type="button" variant="outline" size="sm" onClick={handleOpenClassify}>
-                    Edit classification
-                  </Button>
-                )}
-              </div>
-              {(submission.duplicateOfId || submission.duplicateCount > 0) && (
-                <div className="flex flex-col gap-2">
-                  <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Duplicates</h3>
-                  {submission.duplicateOfId && (
-                    <div className="flex items-center gap-2 text-sm">
-                      <span className="text-muted-foreground">Duplicate of</span>
-                      <span className="font-mono">#{submission.duplicateOfId}</span>
-                      {canUpdate && (
-                        <Button type="button" variant="ghost" size="sm" onClick={handleUnmarkDuplicate}>
-                          Unmark
-                        </Button>
-                      )}
-                    </div>
-                  )}
-                  {submission.duplicateCount > 0 && (
-                    <p className="text-sm text-muted-foreground">{submission.duplicateCount === 1 ? "1 duplicate references this" : `${submission.duplicateCount} duplicates reference this`}</p>
-                  )}
-                </div>
-              )}
-              {submission.opportunityIds && submission.opportunityIds.length > 0 && (
-                <div className="flex flex-col gap-2">
-                  <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Linked opportunities</h3>
-                  {submission.opportunityIds.map((oppId) => (
-                    <Link
-                      key={oppId}
-                      href={`/build/managed-products/${managedProductId}/insights?view=discovery&opportunity=${oppId}`}
-                      className="text-sm text-primary hover:underline font-mono"
-                    >
-                      #{oppId}
-                    </Link>
-                  ))}
-                </div>
-              )}
-              <div className="flex flex-wrap gap-2 pt-2">
-                {canUpdate && !submission.duplicateOfId && (
-                  <Button type="button" variant="outline" size="sm" onClick={handleOpenDuplicate}>
-                    Mark duplicate
-                  </Button>
-                )}
-                {canManage && (
-                  <Button type="button" variant="outline" size="sm" onClick={handleOpenLinkOpp}>
-                    Link to opportunity
-                  </Button>
-                )}
-                {onOpenDetail && (
-                  <Button type="button" variant="ghost" size="sm" onClick={onOpenDetail}>
-                    Open full details
-                  </Button>
-                )}
-              </div>
-            </div>
+            <FeedbackPaneDetail
+              submission={submission}
+              managedProductId={managedProductId}
+              canUpdate={canUpdate}
+              canManage={canManage}
+              unmarkPending={unmarkDuplicate.isPending}
+              onClassify={handleOpenClassify}
+              onDuplicate={handleOpenDuplicate}
+              onUnmark={handleUnmarkDuplicate}
+              onLinkOpp={handleOpenLinkOpp}
+              onOpenDetail={onOpenDetail}
+            />
           ) : (
-            <div className="flex-1 flex items-center justify-center text-sm text-muted-foreground p-6">
-              Submission not found.
+            <div className="flex flex-1 items-center justify-center px-6 py-8">
+              <p className="text-sm text-muted-foreground">Submission not found.</p>
             </div>
           )}
         </SheetContent>

@@ -88,7 +88,7 @@ export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
   return (
     <PageWrapper
       title="Goals & OKRs"
-      subtitle="Product objectives and key results"
+      subtitle="Objectives linked to this product"
       contentClassName={MANAGED_PRODUCT_DETAIL_CONTENT_CLASS}
       filters={<GoalsListToolbar listFilters={listFilters} searchInputRef={searchInputRef} />}
       actions={<BuildHeaderActions actions={createActions} />}
@@ -148,7 +148,7 @@ export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
                 description={
                   listFilters.isFiltered
                     ? undefined
-                    : "Create goals linked to this product."
+                    : "Create a goal or link an existing org goal to this product."
                 }
                 filtersActive={listFilters.isFiltered}
                 onClearFilters={listFilters.clearAll}
@@ -174,18 +174,24 @@ export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
                 />
               ) : null}
             >
-                <PmStaggerList className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                  {flatGoals.map((goal) => (
-                    <GoalCard
-                      key={goal.id}
-                      goal={goal}
-                      onEdit={canManage ? handleEditGoalCard : undefined}
-                      onDelete={canManage ? handleDeleteGoalCard : undefined}
-                      onUnlink={canManage ? handleUnlinkGoalCard : undefined}
-                      onCheckIn={handleCheckInGoalCard}
-                    />
-                  ))}
-                </PmStaggerList>
+                <div className="flex flex-col gap-4">
+                  <p className="text-sm text-muted-foreground">
+                    <span className="font-medium tabular-nums text-foreground">{totalGoals}</span>
+                    {totalGoals === 1 ? " goal linked to this product" : " goals linked to this product"}
+                  </p>
+                  <PmStaggerList className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {flatGoals.map((goal) => (
+                      <GoalCard
+                        key={goal.id}
+                        goal={goal}
+                        onEdit={canManage ? handleEditGoalCard : undefined}
+                        onDelete={canManage ? handleDeleteGoalCard : undefined}
+                        onUnlink={canManage ? handleUnlinkGoalCard : undefined}
+                        onCheckIn={handleCheckInGoalCard}
+                      />
+                    ))}
+                  </PmStaggerList>
+                </div>
             </BuildPaginatedContent>
           </PageState>
         </ManagedProductDetailPrimarySection>

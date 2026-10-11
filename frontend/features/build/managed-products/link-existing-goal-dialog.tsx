@@ -92,6 +92,8 @@ export function LinkExistingGoalDialog({
     onOpenChange(false);
   };
 
+  const selectedLabel = options.find((option) => option.value === String(selectedId))?.label;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
@@ -103,7 +105,7 @@ export function LinkExistingGoalDialog({
             but never deletes the goal.
           </DialogDescription>
         </DialogHeader>
-        <DialogBody>
+        <DialogBody className="flex flex-col gap-3">
           <Combobox
             aria-label="Select a goal to link"
             options={options}
@@ -135,6 +137,12 @@ export function LinkExistingGoalDialog({
               ) : undefined
             }
           />
+          {selectedLabel ? (
+            <p className="text-pretty text-sm text-muted-foreground">
+              <span className="font-medium text-foreground">{selectedLabel}</span>
+              {" "}will appear on this product{"'"}s Goals tab.
+            </p>
+          ) : null}
         </DialogBody>
         <DialogFooter>
           <Button type="button" variant="outline" onClick={handleCancel}>

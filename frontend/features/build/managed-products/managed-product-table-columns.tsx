@@ -16,10 +16,18 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import type { NamedUser } from "@/lib/person-display";
-import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/lib/text-overflow";
-import { cn } from "@/lib/utils";
+import { TABLE_TITLE_CELL } from "@/lib/text-overflow";
 import type { ManagedProduct } from "@/types/projects";
 import { ManagedProductStatusBadge } from "./managed-product-status-badge";
+import {
+  ProductFeedbackCell,
+  ProductLifecycleCell,
+  ProductNameCell,
+  ProductOwnerCell,
+  ProductProjectsCell,
+  ProductReleaseCell,
+  ProductUpdatedCell,
+} from "./managed-product-list-cells";
 
 export const MANAGED_PRODUCT_TABLE_HEADERS = [
   "Name",
@@ -43,16 +51,6 @@ export interface ManagedProductRowHandlers {
   onDelete: (row: ManagedProduct) => void;
   onArchive?: (row: ManagedProduct) => void;
   onRestore?: (row: ManagedProduct) => void;
-}
-
-function ownerLabel(user: NamedUser | null): string {
-  return user?.name ?? user?.email ?? "—";
-}
-
-function feedbackTrendLabel(last30d: number, previous30d: number): string {
-  if (last30d > previous30d) return `${last30d} ↑`;
-  if (last30d < previous30d) return `${last30d} ↓`;
-  return String(last30d);
 }
 
 export function ProductRowActions({
@@ -161,122 +159,95 @@ export function buildManagedProductColumns({
   onArchive,
   onRestore,
 }: ManagedProductRowHandlers): DataTableColumn<ManagedProduct>[] {
+  function renderName(row: ManagedProduct) {
+    return <ProductNameCell product={row} />;
+  }
+  function renderLifecycle(row: ManagedProduct) {
+    return <ProductLifecycleCell product={row} />;
+  }
+  function renderHealth(row: ManagedProduct) {
+    return <ManagedProductStatusBadge status={row.health ?? row.status} />;
+  }
+  function renderOwner(row: ManagedProduct) {
+    return <ProductOwnerCell product={row} ownerOf={ownerOf} />;
+  }
+  function renderProjects(row: ManagedProduct) {
+    return <ProductProjectsCell product={row} />;
+  }
+  function renderRelease(row: ManagedProduct) {
+    return <ProductReleaseCell product={row} />;
+  }
+  function renderFeedback(row: ManagedProduct) {
+    return <ProductFeedbackCell product={row} />;
+  }
+  function renderUpdated(row: ManagedProduct) {
+    return <ProductUpdatedCell product={row} />;
+  }
+  function renderActions(row: ManagedProduct) {
+    return canUpdate || canDelete ? (
+      <ProductRowActions
+        product={row}
+        canUpdate={canUpdate}
+        canDelete={canDelete}
+        onEdit={onEdit}
+        onDelete={onDelete}
+        onArchive={onArchive}
+        onRestore={onRestore}
+      />
+    ) : null;
+  }
+
   return [
     {
       key: "name",
       header: "Name",
       className: TABLE_TITLE_CELL,
-      cell: (row) => (
-        <span className="flex min-w-0 items-center gap-2">
-          <Link
-            href={`/build/managed-products/${row.id}`}
-            className={cn(
-              "font-medium text-foreground hover:text-primary hover:underline",
-              TEXT_ONE_LINE,
-            )}
-            title={row.name}
-          >
-            {row.name}
-          </Link>
-          {row.status === "archived" ? <ManagedProductStatusBadge status="archived" /> : null}
-        </span>
-      ),
+      cell: renderName,
     },
     {
       key: "lifecycle",
       header: "Lifecycle",
-      cell: (row) =>
-        row.lifecycle ? (
-          <span className="text-sm capitalize text-muted-foreground">{row.lifecycle.replace("_", " ")}</span>
-        ) : null,
+      cell: renderLifecycle,
     },
     {
       key: "health",
       header: "Health",
-      cell: (row) => <ManagedProductStatusBadge status={row.health ?? row.status} />,
+      cell: renderHealth,
     },
     {
       key: "ownerId",
       header: "Owner",
-      cell: (row) => {
-        const label = ownerLabel(ownerOf(row.ownerId));
-        return label !== "—" ? (
-          <span className={cn("max-w-[140px] text-sm text-muted-foreground", TEXT_ONE_LINE)}>
-            {label}
-          </span>
-        ) : null;
-      },
+      cell: renderOwner,
     },
     {
       key: "linkedProjectCount",
       header: "Projects",
       className: "w-20",
-      cell: (row) =>
-        row.linkedProjectCount !== undefined ? (
-          <span className="font-mono tabular-nums text-sm text-muted-foreground">
-            {row.linkedProjectCount}
-          </span>
-        ) : null,
+      cell: renderProjects,
     },
     {
       key: "nextRelease",
       header: "Next release",
-      cell: (row) =>
-        row.nextRelease ? (
-          <span className={cn("max-w-[160px] text-sm text-muted-foreground", TEXT_ONE_LINE)}>
-            {row.nextRelease.name}
-          </span>
-        ) : null,
+      cell: renderRelease,
     },
     {
       key: "feedbackTrend",
       header: "Feedback",
       className: "w-24",
-      cell: (row) =>
-        row.feedbackTrend !== undefined ? (
-          <span
-            className={cn(
-              "font-mono tabular-nums text-sm",
-              row.feedbackTrend.last30d > row.feedbackTrend.previous30d
-                ? "text-status-success-ink-strong"
-                : row.feedbackTrend.last30d < row.feedbackTrend.previous30d
-                  ? "text-status-danger-ink-strong"
-                  : "text-muted-foreground",
-            )}
-          >
-            {feedbackTrendLabel(row.feedbackTrend.last30d, row.feedbackTrend.previous30d)}
-          </span>
-        ) : null,
+      cell: renderFeedback,
     },
     {
       key: "updatedAt",
       header: "Updated",
       className: "w-28",
-      cell: (row) => (
-        <span className="text-xs text-muted-foreground">
-          {new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" }).format(
-            new Date(row.updatedAt),
-          )}
-        </span>
-      ),
+      cell: renderUpdated,
     },
     {
       key: "actions",
       header: "Actions",
       headerClassName: "sr-only",
       className: "w-10",
-      cell: (row) =>
-        canUpdate || canDelete ? (
-          <ProductRowActions
-            product={row}
-            canUpdate={canUpdate}
-            canDelete={canDelete}
-            onEdit={onEdit}
-            onDelete={onDelete}
-            onArchive={onArchive}
-            onRestore={onRestore}
-          />
-        ) : null,
+      cell: renderActions,
     },
   ];
 }

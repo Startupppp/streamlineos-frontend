@@ -5,6 +5,7 @@ import type { ManagedProductRelease } from "@/hooks/api/build/managed-product-re
 import { formatCalendarDate } from "@/lib/date-utils";
 import { statusToneClasses } from "@/lib/design-tokens";
 import { cn } from "@/lib/utils";
+import { useReleaseActions } from "./release-actions-context";
 import { ReleaseIdentity, ReleaseSection } from "./release-list-parts";
 import { ReleaseRowActions } from "./release-row-actions";
 
@@ -16,45 +17,68 @@ interface ReleaseShippedTimelineProps {
 
 const SHIPPED_DOT_CLASS = statusToneClasses("success").fill;
 
-export function ReleaseShippedTimeline({ releases, count, className }: ReleaseShippedTimelineProps) {
+function ShippedReleaseItem({
+  release,
+  showRail,
+}: {
+  release: ManagedProductRelease;
+  showRail: boolean;
+}) {
   return (
-    <ReleaseSection id="releases-shipped" title="Shipped" count={count} className={className}>
+    <li className="flex gap-3">
+      <div className="flex w-24 shrink-0 flex-col pt-0.5">
+        {release.releaseDate ? (
+          <time dateTime={release.releaseDate} className="font-mono text-dense tabular-nums text-muted-foreground">
+            {formatCalendarDate(release.releaseDate)}
+          </time>
+        ) : (
+          <span className="text-dense text-muted-foreground">No date</span>
+        )}
+      </div>
+      <div aria-hidden="true" className="flex flex-col items-center pt-1.5">
+        <span className={cn("size-2.5 shrink-0 rounded-full", SHIPPED_DOT_CLASS)} />
+        {showRail ? <span className="mt-1 w-px flex-1 bg-border" /> : null}
+      </div>
+      <div className="flex min-w-0 flex-1 flex-col gap-1 pb-5">
+        <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
+          <ReleaseIdentity release={release} />
+          <ReleaseRowActions release={release} />
+        </div>
+        {release.description ? (
+          <p className="line-clamp-3 max-w-[65ch] whitespace-pre-line text-sm text-pretty text-muted-foreground">
+            {release.description}
+          </p>
+        ) : null}
+      </div>
+    </li>
+  );
+}
+
+export function ReleaseShippedTimeline({ releases, count, className }: ReleaseShippedTimelineProps) {
+  const { canUpdate, onCreate } = useReleaseActions();
+  const lastIndex = releases.length - 1;
+
+  return (
+    <ReleaseSection
+      id="releases-shipped"
+      title="Shipped"
+      description="Released versions, newest first"
+      count={count}
+      className={className}
+    >
       {releases.length === 0 ? (
         <EmptyState
           compact
           bare
+          illustrationSize="xs"
           title="Nothing shipped yet"
-          description="Releases marked as released build a timeline here, newest first."
+          description="Mark a draft released to start this product's ship history."
+          action={canUpdate ? { label: "New release", onClick: onCreate } : undefined}
         />
       ) : (
         <ol aria-label="Shipped releases" className="flex flex-col px-4 pt-4">
           {releases.map((release, index) => (
-            <li key={release.id} className="flex gap-3">
-              <div aria-hidden="true" className="flex flex-col items-center pt-1.5">
-                <span className={cn("size-2.5 shrink-0 rounded-full", SHIPPED_DOT_CLASS)} />
-                {index < releases.length - 1 ? <span className="mt-1 w-px flex-1 bg-border" /> : null}
-              </div>
-              <div className="flex min-w-0 flex-1 flex-col gap-1 pb-5">
-                <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
-                  <div className="flex min-w-0 flex-col gap-1">
-                    <ReleaseIdentity release={release} />
-                    {release.releaseDate ? (
-                      <time dateTime={release.releaseDate} className="text-xs text-muted-foreground">
-                        {formatCalendarDate(release.releaseDate)}
-                      </time>
-                    ) : (
-                      <span className="text-xs text-muted-foreground">No release date</span>
-                    )}
-                  </div>
-                  <ReleaseRowActions release={release} />
-                </div>
-                {release.description ? (
-                  <p className="line-clamp-3 whitespace-pre-line text-sm text-muted-foreground">
-                    {release.description}
-                  </p>
-                ) : null}
-              </div>
-            </li>
+            <ShippedReleaseItem key={release.id} release={release} showRail={index < lastIndex} />
           ))}
         </ol>
       )}

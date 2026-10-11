@@ -85,12 +85,14 @@ export function ManagedProductsToolbar({
   );
 
   return (
-    <>
+    <div className="flex w-full min-w-0 flex-col gap-2">
       <BuildListToolbar
+        collapseActionsOnSearchFocus
+        row={{ mobile: 1, tablet: 3, desktop: 5 }}
         search={{
           value: listFilters.search,
           onValueChange: listFilters.setSearch,
-          placeholder: "Search products…",
+          placeholder: "Search by name or key…",
           label: "Search products",
           inputRef: searchInputRef,
         }}
@@ -252,6 +254,6 @@ export function ManagedProductsToolbar({
         onClearLinkedProject={handleLinkedProjectChange}
         onClearArchived={handleArchivedChange}
       />
-    </>
+    </div>
   );
 }

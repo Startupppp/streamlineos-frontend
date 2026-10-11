@@ -81,8 +81,9 @@ export function ProductReleasesPage({ managedProductId }: ProductReleasesPagePro
               empty={
                 <EmptyState
                   className="flex-1"
+                  illustrationPreset="calendar"
                   title="No releases yet"
-                  description="Plan your first release to track what ships and when."
+                  description="Draft a version, pick a ship date, then mark it released. Upcoming, shipped, and archive stay in one place."
                   action={page.canUpdate ? { label: "New release", onClick: handleCreate } : undefined}
                 />
               }

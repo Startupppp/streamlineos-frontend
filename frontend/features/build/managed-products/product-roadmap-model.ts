@@ -1,4 +1,5 @@
 import { BUILD_FILTER_ALL } from "@/features/build/shared/use-build-list-filters";
+import type { StatusTone } from "@/lib/design-tokens";
 import type { RoadmapHorizon, RoadmapStatus } from "@/types/projects";
 
 export const ROADMAP_STATUS_OPTS = [
@@ -61,3 +62,37 @@ export const ROADMAP_FILTER_DEFS = [
   { param: "targetFrom" },
   { param: "targetTo" },
 ] as const;
+
+export const ROADMAP_HORIZON_TONE: Record<RoadmapHorizon, StatusTone> = {
+  now: "success",
+  next: "info",
+  later: "neutral",
+};
+
+export const ROADMAP_HORIZON_CAPTION: Record<RoadmapHorizon, string> = {
+  now: "Shipping this cycle",
+  next: "Queued after current work",
+  later: "Parked until sequenced",
+};
+
+export const ROADMAP_HORIZON_EMPTY: Record<RoadmapHorizon, string> = {
+  now: "Put work you are shipping now in this column.",
+  next: "Stage the next slice after current work.",
+  later: "Park ideas that are not sequenced yet.",
+};
+
+export function roadmapTargetDate(item: {
+  targetEnd?: string | null;
+  targetStart?: string | null;
+}): string | null {
+  const raw = item.targetEnd ?? item.targetStart;
+  return raw && raw.length > 0 ? raw : null;
+}
+
+export function roadmapVoteLabel(votes: number): string {
+  return votes === 1 ? "1 vote" : `${votes} votes`;
+}
+
+export function joinReadableMeta(parts: Array<string | null | undefined>): string {
+  return parts.filter((part): part is string => Boolean(part && part.trim())).join(" · ");
+}

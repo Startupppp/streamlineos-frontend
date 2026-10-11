@@ -3,7 +3,15 @@
 import { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogBody,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { cn } from "@/lib/utils";
@@ -119,7 +127,8 @@ export function RouteToIntakeDialog({
             This feedback was captured on the product. Choose the linked project whose Intake queue should triage it.
           </DialogDescription>
         </DialogHeader>
-        <p className="line-clamp-3 rounded-md bg-muted px-3 py-2 text-sm text-foreground">{submission.message}</p>
+        <DialogBody className="flex flex-col gap-3">
+        <p className="line-clamp-3 text-pretty rounded-md border border-border bg-muted px-3 py-2 text-sm text-foreground">{submission.message}</p>
         <div role="radiogroup" aria-label="Project" className="flex max-h-64 flex-col gap-1 overflow-y-auto">
           {isLoading ? (
             <p className="py-2 text-sm text-muted-foreground">Loading projects…</p>
@@ -144,7 +153,8 @@ export function RouteToIntakeDialog({
             ))
           )}
         </div>
-        <div className="flex justify-end gap-2">
+        </DialogBody>
+        <DialogFooter>
           <Button type="button" variant="outline" onClick={handleClose}>
             Cancel
           </Button>
@@ -156,7 +166,7 @@ export function RouteToIntakeDialog({
           >
             Route
           </LoadingButton>
-        </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

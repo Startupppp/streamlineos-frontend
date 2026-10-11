@@ -25,7 +25,6 @@ import { Button } from "@/components/ui/button";
 import {
   type SubmissionRow,
   FEEDBACK_SKELETON_HEADERS,
-  buildFeedbackColumnsWithActions,
   TYPE_FILTER_OPTIONS,
   STATUS_FILTER_OPTIONS,
   LINKED_FILTER_OPTIONS,
@@ -48,6 +47,7 @@ import {
   ManagedProductDetailShell,
   ManagedProductNotFound,
 } from "./managed-product-detail-layout";
+import { buildCraftedFeedbackColumns } from "./feedback/feedback-inbox-columns";
 import { CaptureSubmissionSheet } from "./feedback/capture-submission-sheet";
 import { FeedbackPane } from "./feedback/feedback-pane";
 import { FeedbucketCollectDialog } from "./feedback/feedbucket-collect-dialog";
@@ -207,7 +207,7 @@ export function ProductFeedbackPage({
 
   const feedbackColumns = useMemo(
     () =>
-      buildFeedbackColumnsWithActions({
+      buildCraftedFeedbackColumns({
         canRouteToIntake,
         onRouteToIntake: handleRouteToIntake,
       }),
@@ -288,7 +288,7 @@ export function ProductFeedbackPage({
     <>
       <PageWrapper
         title="Feedback"
-        subtitle="Submissions collected from widgets linked to this product"
+        subtitle="Inbox for widgets and captures linked to this product"
         contentClassName={MANAGED_PRODUCT_DETAIL_CONTENT_CLASS}
         actions={
           canCapture ? (
@@ -467,7 +467,7 @@ export function ProductFeedbackPage({
                   <UserCombobox
                     value={typedAssigneeId ?? ""}
                     onChange={handleAssigneeChange}
-                    placeholder={typedAssigneeId ?? "Select member…"}
+                    placeholder="Select member…"
                   />
                 ),
               },

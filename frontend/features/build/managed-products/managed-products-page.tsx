@@ -77,10 +77,13 @@ export function ManagedProductsPage() {
     [canDelete, canUpdate, handleDeleteRow, handleEditRow, handleArchiveRow, ownerOf],
   );
 
+  const getProductRowKey = useCallback((row: ManagedProduct) => row.id, []);
+  const getProductRowLabel = useCallback((row: ManagedProduct) => row.name, []);
+
   return (
     <PageWrapper
       title="Managed Products"
-      subtitle="Track products and link projects to them"
+      subtitle="Projects, releases, and feedback — grouped by product"
       filters={
         <ManagedProductsToolbar
           listFilters={listFilters}
@@ -126,7 +129,7 @@ export function ManagedProductsPage() {
             isError={isError}
             error={error}
             isFiltered={listFilters.isFiltered}
-            getRowKey={(row) => row.id}
+            getRowKey={getProductRowKey}
             minWidth="900px"
             mobileCard={renderMobileCard}
             selection={
@@ -134,7 +137,7 @@ export function ManagedProductsPage() {
                 ? {
                     selected,
                     onChange: setSelected,
-                    getRowLabel: (row: ManagedProduct) => row.name,
+                    getRowLabel: getProductRowLabel,
                   }
                 : undefined
             }
@@ -151,8 +154,8 @@ export function ManagedProductsPage() {
               <EmptyState
                 className={CONTENT_FILL_PANEL}
                 illustrationPreset="projects"
-                title="No managed products yet"
-                description="Create a managed product to track delivery across projects."
+                title="Start with a product"
+                description="A product is the home for projects, releases, and feedback. Create one to see delivery in one place."
                 action={
                   canCreate
                     ? { label: "New product", onClick: handleOpenCreate }
@@ -163,9 +166,10 @@ export function ManagedProductsPage() {
             filteredEmpty={
               <EmptyState
                 className={CONTENT_FILL_PANEL}
-                illustrationPreset="projects"
-                title="No managed products match your filters"
-                description="Try adjusting or clearing your filters."
+                illustrationPreset="search"
+                filtersActive
+                filteredTitle="No products match"
+                description="Nothing on this page matches the current filters. Clear them to see every product."
                 onClearFilters={listFilters.clearAll}
               />
             }

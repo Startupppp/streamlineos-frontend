@@ -93,4 +93,62 @@ describe("managed product name column", () => {
     expect(screen.getByRole("link", { name: "Atlas" })).toBeInTheDocument();
     expect(screen.queryByText("Archived")).not.toBeInTheDocument();
   });
+
+  it("shows the product key under the name", () => {
+    renderName(product);
+
+    expect(screen.getByText("ATL")).toBeInTheDocument();
+  });
+});
+
+describe("managed product owner column", () => {
+  const ownerUuid = "550e8400-e29b-41d4-a716-446655440000";
+
+  function renderOwner(
+    row: ManagedProduct,
+    ownerOf: () => { name?: string | null; email?: string | null } | null = () => null,
+  ) {
+    const columns = buildManagedProductColumns({
+      canUpdate: true,
+      canDelete: true,
+      ownerOf,
+      onEdit: jest.fn(),
+      onDelete: jest.fn(),
+    });
+    const ownerColumn = columns.find((column) => column.key === "ownerId");
+    render(<>{ownerColumn?.cell(row)}</>);
+  }
+
+  it("renders the embedded owner name and never the owner id", () => {
+    renderOwner({
+      ...product,
+      ownerId: ownerUuid,
+      owner: {
+        id: ownerUuid,
+        firstName: "Ada",
+        lastName: "Lovelace",
+        email: "ada@example.com",
+        image: null,
+      },
+    });
+
+    expect(screen.getByText("Ada Lovelace")).toBeInTheDocument();
+    expect(screen.queryByText(ownerUuid)).not.toBeInTheDocument();
+  });
+
+  it("does not render a UUID when that is the only stored member name", () => {
+    renderOwner({ ...product, ownerId: ownerUuid }, () => ({
+      name: ownerUuid,
+      email: "ada@example.com",
+    }));
+
+    expect(screen.getByText("ada")).toBeInTheDocument();
+    expect(screen.queryByText(ownerUuid)).not.toBeInTheDocument();
+  });
+
+  it("renders Unassigned when no owner can be resolved", () => {
+    renderOwner(product);
+
+    expect(screen.getByText("Unassigned")).toBeInTheDocument();
+  });
 });

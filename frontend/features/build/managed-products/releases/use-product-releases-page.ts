@@ -137,12 +137,13 @@ export function useProductReleasesPage(managedProductId: number) {
     () => ({
       canUpdate,
       pendingReleaseId,
+      onCreate: handleCreate,
       onEdit: handleEdit,
       onMarkReleased: handleMarkReleased,
       onArchive: handleArchive,
       onRestore: handleRestore,
     }),
-    [canUpdate, pendingReleaseId, handleEdit, handleMarkReleased, handleArchive, handleRestore],
+    [canUpdate, pendingReleaseId, handleCreate, handleEdit, handleMarkReleased, handleArchive, handleRestore],
   );
 
   return {

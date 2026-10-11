@@ -13,8 +13,11 @@ const SHIPPED_ROWS = ["shipped-1", "shipped-2", "shipped-3", "shipped-4", "shipp
 
 function PanelHeader() {
   return (
-    <div className="flex items-center justify-between border-b border-border px-4 py-3">
-      <Skeleton className="h-4 w-24" />
+    <div className="flex items-start justify-between gap-3 border-b border-border px-4 py-3">
+      <div className="flex flex-col gap-1">
+        <Skeleton className="h-4 w-24" />
+        <Skeleton className="h-3 w-40" />
+      </div>
       <Skeleton className="h-4 w-6" />
     </div>
   );
@@ -44,10 +47,10 @@ export function ProductReleasesSkeleton() {
           <div className="flex flex-col gap-5 px-4 py-4">
             {SHIPPED_ROWS.map((key) => (
               <div key={key} className="flex gap-3">
+                <Skeleton className="h-3 w-20 shrink-0" />
                 <Skeleton className="mt-1 size-2.5 shrink-0 rounded-full" />
                 <div className="flex min-w-0 flex-1 flex-col gap-2">
                   <Skeleton className="h-4 w-1/2" />
-                  <Skeleton className="h-3 w-24" />
                   <Skeleton className="h-3 w-4/5" />
                 </div>
               </div>

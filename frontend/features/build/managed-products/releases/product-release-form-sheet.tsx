@@ -4,25 +4,15 @@ import { useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from "@/components/ui/sheet";
 import {
-  Form,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage,
-} from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { DatePicker } from "@/components/ui/date-picker";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetFooter,
+} from "@/components/ui/sheet";
+import { Form } from "@/components/ui/form";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Button } from "@/components/ui/button";
 import {
@@ -33,6 +23,7 @@ import type { ManagedProductRelease } from "@/hooks/api/build/managed-product-re
 import { isWriteConflict } from "@/lib/api-envelope";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
+import { ProductReleaseFormFields } from "./product-release-form-fields";
 import { releaseFormSchema } from "./product-release-form-schema";
 import type { ReleaseFormValues } from "./product-release-form-schema";
 
@@ -125,115 +116,24 @@ export function ProductReleaseFormSheet({
 
   return (
     <Sheet open={open} onOpenChange={handleOpenChange}>
-      <SheetContent side="right" className="p-0 flex flex-col gap-0 sm:max-w-md">
-        <SheetHeader className="px-6 pt-6 pb-4 border-b border-border">
+      <SheetContent side="right" className="flex flex-col gap-0 p-0 sm:max-w-md">
+        <SheetHeader className="gap-1 border-b border-border px-6 py-4 text-left">
           <SheetTitle>{isEdit ? "Edit release" : "New release"}</SheetTitle>
+          <SheetDescription>
+            {isEdit
+              ? "Update the name, version, date, or status. Dates stay on the calendar."
+              : "Name the drop, set a version, and optionally a ship date."}
+          </SheetDescription>
         </SheetHeader>
-        <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4">
+        <div className="min-h-0 flex-1 overflow-y-auto px-6 py-4">
           <Form {...form}>
-            <form
-              id={FORM_ID}
-              onSubmit={form.handleSubmit(handleSubmit)}
-              className="space-y-4"
-              noValidate
-            >
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Name</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="Release name" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="version"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Version</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="e.g. 1.0.0" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="releaseDate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Release date (optional)</FormLabel>
-                    <FormControl>
-                      <DatePicker
-                        value={field.value ?? ""}
-                        onChange={field.onChange}
-                        placeholder="Pick a date"
-                        dateFormat="dd MMM yyyy"
-                        clearable
-                        ariaLabel="Release date"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="status"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Status</FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="draft">Draft</SelectItem>
-                        <SelectItem value="released">Released</SelectItem>
-                        <SelectItem value="archived">Archived</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Description (optional)</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        {...field}
-                        value={field.value ?? ""}
-                        rows={3}
-                        placeholder="What's in this release…"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            <form id={FORM_ID} onSubmit={form.handleSubmit(handleSubmit)} className="flex flex-col" noValidate>
+              <ProductReleaseFormFields />
             </form>
           </Form>
         </div>
-        <SheetFooter className="px-6 py-4 border-t border-border flex flex-row justify-end gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={handleCancel}
-            disabled={isPending}
-          >
+        <SheetFooter className="flex flex-row justify-end gap-2 border-t border-border px-6 py-4">
+          <Button type="button" variant="outline" size="sm" onClick={handleCancel} disabled={isPending}>
             Cancel
           </Button>
           <LoadingButton

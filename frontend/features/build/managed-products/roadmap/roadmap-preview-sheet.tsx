@@ -18,14 +18,14 @@ import {
 } from "@/features/build/roadmap/roadmap-constants";
 import type { ScorableRoadmapItem } from "@/features/build/roadmap/roadmap-item-card";
 import { cn } from "@/lib/utils";
-import { statusToneClasses, type StatusTone } from "@/lib/design-tokens";
+import { statusToneClasses } from "@/lib/design-tokens";
 import type { RoadmapHorizon } from "@/types/projects";
-
-const HORIZON_TONES: Record<RoadmapHorizon, StatusTone> = {
-  now: "success",
-  next: "info",
-  later: "neutral",
-};
+import {
+  joinReadableMeta,
+  ROADMAP_HORIZON_CAPTION,
+  ROADMAP_HORIZON_TONE,
+  roadmapVoteLabel,
+} from "../product-roadmap-model";
 
 interface RoadmapPreviewSheetProps {
   items: ScorableRoadmapItem[];
@@ -33,27 +33,24 @@ interface RoadmapPreviewSheetProps {
   onClose: () => void;
 }
 
-function voteLabel(votes: number) {
-  return `${votes} ${votes === 1 ? "vote" : "votes"}`;
-}
-
 function PreviewItem({ item }: { item: ScorableRoadmapItem }) {
-  const status = ROADMAP_STATUS_LABEL[String(item.status)] ?? String(item.status);
-  const detail = [status, item.category, item.targetQuarter].filter(Boolean).join(" · ");
+  const detail = joinReadableMeta([
+    ROADMAP_STATUS_LABEL[String(item.status)] ?? String(item.status),
+    item.category,
+    item.targetQuarter,
+  ]);
 
   return (
-    <li className="py-3">
+    <li className="flex flex-col gap-1 py-3">
       <div className="flex items-baseline justify-between gap-4">
-        <p className="min-w-0 text-sm text-foreground">
-          <span className="font-medium">{item.title}</span>
-          <span className="text-muted-foreground"> · {detail}</span>
-        </p>
+        <p className="min-w-0 text-sm font-medium text-foreground">{item.title}</p>
         <p className="shrink-0 font-mono text-sm tabular-nums text-muted-foreground">
-          {voteLabel(item.votes)}
+          {roadmapVoteLabel(item.votes)}
         </p>
       </div>
+      {detail ? <p className="text-dense text-muted-foreground">{detail}</p> : null}
       {item.description ? (
-        <p className="mt-1 line-clamp-2 max-w-[65ch] text-sm text-muted-foreground text-pretty">
+        <p className="line-clamp-2 max-w-[65ch] text-sm text-pretty text-muted-foreground">
           {item.description}
         </p>
       ) : null}
@@ -95,7 +92,7 @@ export function RoadmapPreviewSheet({ items, managedProductId, onClose }: Roadma
               rel="noopener noreferrer"
               className="inline-flex w-fit items-center gap-1 text-sm font-medium text-primary underline-offset-2 hover:underline"
             >
-              <ExternalLink className="h-3.5 w-3.5" aria-hidden />
+              <ExternalLink className="size-3.5" aria-hidden />
               Open public page
             </Link>
           ) : (
@@ -104,20 +101,28 @@ export function RoadmapPreviewSheet({ items, managedProductId, onClose }: Roadma
         </SheetHeader>
         <SheetBody className="px-6 py-5">
           {publicItems.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Nothing to preview yet.</p>
+            <div className="flex flex-col gap-1">
+              <p className="text-sm font-medium text-foreground">Nothing to preview yet</p>
+              <p className="text-sm text-pretty text-muted-foreground">
+                Publish an item on the board to see how customers will read this roadmap.
+              </p>
+            </div>
           ) : (
             <div className="divide-y divide-border">
               {ROADMAP_HORIZON_COLUMNS.map((column) => {
                 const horizonItems = grouped[column.horizon] ?? [];
-                const tone = statusToneClasses(HORIZON_TONES[column.horizon]);
+                const tone = statusToneClasses(ROADMAP_HORIZON_TONE[column.horizon]);
                 return (
                   <section key={column.horizon} className="py-5 first:pt-0 last:pb-0">
-                    <div className="flex items-center gap-2">
-                      <span className={cn("size-2 shrink-0 rounded-full", tone.fill)} aria-hidden />
-                      <h2 className="text-sm font-medium text-foreground">{column.label}</h2>
-                      <span className="font-mono text-sm tabular-nums text-muted-foreground">
-                        {horizonItems.length}
-                      </span>
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center gap-2">
+                        <span className={cn("size-2 shrink-0 rounded-full", tone.fill)} aria-hidden />
+                        <h2 className="text-sm font-medium text-foreground">{column.label}</h2>
+                        <span className="font-mono text-sm tabular-nums text-muted-foreground">
+                          {horizonItems.length}
+                        </span>
+                      </div>
+                      <p className="text-dense text-muted-foreground">{ROADMAP_HORIZON_CAPTION[column.horizon]}</p>
                     </div>
                     {horizonItems.length === 0 ? (
                       <p className="mt-2 text-sm text-muted-foreground">Nothing public here.</p>

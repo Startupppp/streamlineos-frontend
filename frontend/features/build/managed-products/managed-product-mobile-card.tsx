@@ -2,6 +2,10 @@
 
 import { BuildMobileCard } from "@/features/build/shared/build-mobile-card";
 import type { ManagedProduct } from "@/types/projects";
+import {
+  ProductMobileSignals,
+  productOwnerForDisplay,
+} from "./managed-product-list-cells";
 import { ManagedProductStatusBadge } from "./managed-product-status-badge";
 import {
   ProductRowActions,
@@ -18,22 +22,18 @@ export function ManagedProductMobileCard({
   onArchive,
   onRestore,
 }: { product: ManagedProduct } & ManagedProductRowHandlers) {
+  const owner = productOwnerForDisplay(product, ownerOf);
+
   return (
     <BuildMobileCard
+      eyebrow={product.key}
       title={product.name}
       status={
         <ManagedProductStatusBadge
           status={product.status === "archived" ? "archived" : (product.health ?? product.status)}
         />
       }
-      person={{ user: ownerOf(product.ownerId), role: "Owner" }}
-      meta={[
-        { label: "Key", value: product.key },
-        { label: "Lifecycle", value: product.lifecycle ?? "" },
-        ...(product.linkedProjectCount !== undefined
-          ? [{ label: "Projects", value: String(product.linkedProjectCount) }]
-          : []),
-      ]}
+      person={{ user: owner.user, avatarUrl: owner.avatarUrl, role: "Owner" }}
       actions={
         canUpdate || canDelete ? (
           <ProductRowActions
@@ -47,6 +47,7 @@ export function ManagedProductMobileCard({
           />
         ) : null
       }
+      footer={<ProductMobileSignals product={product} />}
     />
   );
 }

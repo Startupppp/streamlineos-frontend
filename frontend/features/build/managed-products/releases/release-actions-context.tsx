@@ -6,6 +6,7 @@ import type { ManagedProductRelease } from "@/hooks/api/build/managed-product-re
 export interface ReleaseActions {
   canUpdate: boolean;
   pendingReleaseId: number | null;
+  onCreate: () => void;
   onEdit: (release: ManagedProductRelease) => void;
   onMarkReleased: (release: ManagedProductRelease) => void;
   onArchive: (release: ManagedProductRelease) => void;
