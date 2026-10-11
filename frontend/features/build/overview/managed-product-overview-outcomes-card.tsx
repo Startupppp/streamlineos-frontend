@@ -36,7 +36,9 @@ export function ManagedProductOverviewOutcomesCard({
         <OverviewFact label="Met / not met">
           {hasReviews ? `${outcomeReviews.met} / ${outcomeReviews.notMet}` : "Not measured yet"}
         </OverviewFact>
-        <OverviewFact label="Latest review">{reviewFreshnessLabel(latestReviewAt)}</OverviewFact>
+        <OverviewFact label="Latest review" className="sm:col-span-2">
+          {reviewFreshnessLabel(latestReviewAt)}
+        </OverviewFact>
       </dl>
     </section>
   );

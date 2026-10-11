@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { cn } from "@/lib/utils";
 
 export function OverviewSectionLink({ href, children }: { href: string; children: string }) {
   return (
@@ -12,9 +13,22 @@ export function OverviewSectionLink({ href, children }: { href: string; children
   );
 }
 
-export function OverviewFact({ label, children }: { label: string; children: ReactNode }) {
+export function OverviewFact({
+  label,
+  children,
+  className,
+}: {
+  label: string;
+  children: ReactNode;
+  className?: string;
+}) {
   return (
-    <div className="flex min-h-11 items-center justify-between gap-4 border-b border-border/80 py-2 last:border-b-0">
+    <div
+      className={cn(
+        "flex min-h-11 items-center justify-between gap-4 border-b border-border/80 py-2 last:border-b-0",
+        className,
+      )}
+    >
       <dt className="text-sm text-muted-foreground">{label}</dt>
       <dd className="text-right font-mono text-sm tabular-nums text-foreground">{children}</dd>
     </div>

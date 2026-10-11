@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const OPENAPI_HASH =
-  "sha256:778163694c0b93a3b3e6e07a55543055367d0826c9ebb5b3079c1845339ce8a4" as const;
+  "sha256:2655ba27c1903c2dac9408754ceb1cc989017162dc7ed0e68e2b20c3e271aacd" as const;
 
 export const agentTokensListResponseSchema = z.array(
   z.object({
@@ -2242,6 +2242,82 @@ export type DiscoveryUpdateOpportunityBody = z.input<
 
 export const discoveryAcceptOpportunityResponseSchema = z.object({
   roadmapItemId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  opportunity: z.object({
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    title: z.string(),
+    problem: z.string().nullable(),
+    hypothesis: z.string().nullable(),
+    affectedSegment: z.string().nullable(),
+    theme: z.string().nullable(),
+    owner: z
+      .object({
+        membershipId: z
+          .number()
+          .int()
+          .gte(-9007199254740991)
+          .lte(9007199254740991),
+        name: z.string().nullable(),
+      })
+      .nullable(),
+    state: z.enum([
+      "identified",
+      "validating",
+      "accepted",
+      "declined",
+      "delivered",
+      "measured",
+    ]),
+    desiredOutcome: z.string().nullable(),
+    outcomeMetric: z.string().nullable(),
+    outcomeUnit: z.string().nullable(),
+    outcomeBaseline: z.string().nullable(),
+    outcomeTarget: z.string().nullable(),
+    goalId: z
+      .number()
+      .int()
+      .gte(-9007199254740991)
+      .lte(9007199254740991)
+      .nullable(),
+    roadmapItemId: z
+      .number()
+      .int()
+      .gte(-9007199254740991)
+      .lte(9007199254740991)
+      .nullable(),
+    evidence: z.object({
+      count: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      latestAt: z.iso.datetime({ offset: true }).nullable(),
+    }),
+    latestScore: z
+      .object({
+        scoreVersion: z
+          .number()
+          .int()
+          .gte(-9007199254740991)
+          .lte(9007199254740991),
+        reach: z.string().nullable(),
+        reachPeriod: z.enum(["month", "quarter", "year"]).nullable(),
+        reachUnit: z.string().nullable(),
+        impact: z.string().nullable(),
+        confidence: z.string().nullable(),
+        effort: z.string().nullable(),
+        effortUnit: z
+          .enum(["person_days", "person_weeks", "person_months"])
+          .nullable(),
+        computedScore: z.string().nullable(),
+        isOverride: z.boolean(),
+        overrideScore: z.string().nullable(),
+        overrideReason: z.string().nullable(),
+        effectiveScore: z.string().nullable(),
+        createdAt: z.iso.datetime({ offset: true }),
+        createdBy: z.string().nullable(),
+      })
+      .nullable(),
+    scoreStatus: z.enum(["scored", "unscored"]),
+    version: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    updatedAt: z.iso.datetime({ offset: true }),
+    allowedActions: z.array(z.string()),
+  }),
 });
 export type DiscoveryAcceptOpportunityResponse = z.infer<
   typeof discoveryAcceptOpportunityResponseSchema

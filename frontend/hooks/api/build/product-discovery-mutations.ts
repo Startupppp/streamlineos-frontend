@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
+import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type {
   DiscoveryListOpportunitiesResponse,
@@ -11,11 +12,6 @@ import type {
   DiscoveryReviewsListOutcomeReviewsResponse,
 } from "@/contracts/build-contracts.generated";
 
-const opportunityContract = lazyContract(() =>
-  import("@/contracts/build-contracts.generated").then(
-    (m) => m.discoveryGetOpportunityResponseSchema,
-  ),
-);
 const opportunityCreateContract = lazyContract(() =>
   import("@/contracts/build-contracts.generated").then(
     (m) => m.discoveryCreateOpportunityResponseSchema,
@@ -41,11 +37,6 @@ const overrideContract = lazyContract(() =>
     (m) => m.discoveryAddScoreOverrideResponseSchema,
   ),
 );
-const addEvidenceContract = lazyContract(() =>
-  import("@/contracts/build-contracts.generated").then(
-    (m) => m.discoveryAddEvidenceResponseSchema,
-  ),
-);
 const outcomeReviewContract = lazyContract(() =>
   import("@/contracts/build-contracts.generated").then(
     (m) => m.discoveryReviewsCreateOutcomeReviewResponseSchema,
@@ -67,23 +58,15 @@ function patchOpportunityInListCache(
   cache: DiscoveryListOpportunitiesResponse | undefined,
   updated: OpportunityListRow,
 ): DiscoveryListOpportunitiesResponse | undefined {
-  if (cache === undefined) return cache;
+  if (cache === undefined || !Array.isArray(cache.data)) return cache;
   return { ...cache, data: cache.data.map((row) => (row.id === updated.id ? updated : row)) };
-}
-
-function removeOpportunityFromListCache(
-  cache: DiscoveryListOpportunitiesResponse | undefined,
-  id: number,
-): DiscoveryListOpportunitiesResponse | undefined {
-  if (cache === undefined) return cache;
-  return { ...cache, data: cache.data.filter((row) => row.id !== id) };
 }
 
 function patchOutcomeReviewInListCache(
   cache: DiscoveryReviewsListOutcomeReviewsResponse | undefined,
   updated: OutcomeReviewListRow,
 ): DiscoveryReviewsListOutcomeReviewsResponse | undefined {
-  if (cache === undefined) return cache;
+  if (cache === undefined || !Array.isArray(cache.data)) return cache;
   return { ...cache, data: cache.data.map((row) => (row.id === updated.id ? updated : row)) };
 }
 
@@ -91,11 +74,11 @@ function removeOutcomeReviewFromListCache(
   cache: DiscoveryReviewsListOutcomeReviewsResponse | undefined,
   id: number,
 ): DiscoveryReviewsListOutcomeReviewsResponse | undefined {
-  if (cache === undefined) return cache;
+  if (cache === undefined || !Array.isArray(cache.data)) return cache;
   return { ...cache, data: cache.data.filter((row) => row.id !== id) };
 }
 
-export interface CreateOpportunityInput {
+interface CreateOpportunityInput {
   title: string;
   problem?: string;
   hypothesis?: string;
@@ -108,23 +91,6 @@ export interface CreateOpportunityInput {
   outcomeBaseline?: string;
   outcomeTarget?: string;
   goalId?: number;
-}
-
-export interface UpdateOpportunityInput {
-  title?: string;
-  problem?: string | null;
-  hypothesis?: string | null;
-  affectedSegment?: string | null;
-  theme?: string | null;
-  ownerMembershipId?: number | null;
-  desiredOutcome?: string | null;
-  outcomeMetric?: string | null;
-  outcomeUnit?: string | null;
-  outcomeBaseline?: string | null;
-  outcomeTarget?: string | null;
-  goalId?: number | null;
-  state?: string;
-  version: number;
 }
 
 export function useCreateOpportunity(managedProductId: number) {
@@ -156,66 +122,6 @@ export function useCreateOpportunity(managedProductId: number) {
   });
 }
 
-export function useUpdateOpportunity(managedProductId: number) {
-  const qc = useQueryClient();
-  return useAuthorizedMutation("build:managed-products:update", {
-    mutationKey: ["projects", "managed-products", managedProductId, "opportunities", "update"],
-    mutationFn: ({ opportunityId, ...data }: UpdateOpportunityInput & { opportunityId: number }) =>
-      apiClient.patch(
-        `/build/managed-products/${managedProductId}/opportunities/${opportunityId}`,
-        data,
-        undefined,
-        opportunityContract,
-      ),
-    onSuccess: (updated, vars) => {
-      qc.setQueryData(
-        buildWorkQueryKeys.projects.managedProducts.opportunity(managedProductId, vars.opportunityId),
-        updated,
-      );
-      const loadedPages = qc.getQueriesData<DiscoveryListOpportunitiesResponse>({
-        queryKey: buildWorkQueryKeys.projects.managedProducts.opportunities(managedProductId),
-      });
-      for (const [key, page] of loadedPages) {
-        if (page === undefined) continue;
-        qc.setQueryData<DiscoveryListOpportunitiesResponse>(
-          key,
-          patchOpportunityInListCache(page, updated),
-        );
-      }
-    },
-  });
-}
-
-export function useDeleteOpportunity(managedProductId: number) {
-  const qc = useQueryClient();
-  return useAuthorizedMutation("build:managed-products:update", {
-    mutationKey: ["projects", "managed-products", managedProductId, "opportunities", "delete"],
-    mutationFn: (opportunityId: number) =>
-      apiClient.delete(
-        `/build/managed-products/${managedProductId}/opportunities/${opportunityId}`,
-        undefined,
-        undefined,
-        noContentContract,
-      ),
-    onSuccess: (_data, opportunityId) => {
-      const loadedPages = qc.getQueriesData<DiscoveryListOpportunitiesResponse>({
-        queryKey: buildWorkQueryKeys.projects.managedProducts.opportunities(managedProductId),
-      });
-      for (const [key, page] of loadedPages) {
-        if (page === undefined) continue;
-        qc.setQueryData<DiscoveryListOpportunitiesResponse>(
-          key,
-          removeOpportunityFromListCache(page, opportunityId),
-        );
-      }
-      qc.removeQueries({
-        queryKey: buildWorkQueryKeys.projects.managedProducts.opportunity(managedProductId, opportunityId),
-        exact: true,
-      });
-    },
-  });
-}
-
 export interface AcceptOpportunityInput {
   horizon: "now" | "next" | "later";
   title?: string;
@@ -240,17 +146,26 @@ export function useAcceptOpportunity(managedProductId: number) {
         undefined,
         acceptContract,
       ),
-    onSuccess: (_result, vars) => {
-      qc.invalidateQueries({
-        queryKey: buildWorkQueryKeys.projects.managedProducts.opportunity(managedProductId, vars.opportunityId),
-        exact: true,
-        refetchType: "none",
-      });
-      qc.invalidateQueries({
+    onSuccess: (result, vars) => {
+      qc.setQueryData<DiscoveryGetOpportunityResponse>(
+        buildWorkQueryKeys.projects.managedProducts.opportunity(managedProductId, vars.opportunityId),
+        (prev) => (prev ? { ...prev, ...result.opportunity } : prev),
+      );
+      const loadedPages = qc.getQueriesData<DiscoveryListOpportunitiesResponse>({
         queryKey: buildWorkQueryKeys.projects.managedProducts.opportunities(managedProductId),
-        exact: false,
-        refetchType: "none",
       });
+      for (const [key, page] of loadedPages) {
+        if (page === undefined) continue;
+        qc.setQueryData<DiscoveryListOpportunitiesResponse>(
+          key,
+          patchOpportunityInListCache(page, result.opportunity),
+        );
+      }
+      qc.invalidateQueries({
+        queryKey: buildWorkQueryKeys.projects.managedProducts.opportunityTrace(managedProductId, vars.opportunityId),
+        exact: true,
+      });
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.items(), refetchType: "none" });
     },
   });
 }
@@ -388,48 +303,6 @@ export function useOverrideOpportunityScore(managedProductId: number) {
           };
         });
       }
-    },
-  });
-}
-
-export function useAddOpportunityEvidence(managedProductId: number) {
-  const qc = useQueryClient();
-  return useAuthorizedMutation("build:managed-products:update", {
-    mutationKey: ["projects", "managed-products", managedProductId, "opportunities", "add-evidence"],
-    mutationFn: ({ opportunityId, ...data }: { opportunityId: number; sourceKind: "feedbucket_submission" | "feedback_post"; sourceId: number; note?: string }) =>
-      apiClient.post(
-        `/build/managed-products/${managedProductId}/opportunities/${opportunityId}/evidence`,
-        data,
-        undefined,
-        addEvidenceContract,
-      ),
-    onSuccess: (_result, vars) => {
-      qc.invalidateQueries({
-        queryKey: buildWorkQueryKeys.projects.managedProducts.opportunity(managedProductId, vars.opportunityId),
-        exact: true,
-        refetchType: "none",
-      });
-    },
-  });
-}
-
-export function useRemoveOpportunityEvidence(managedProductId: number) {
-  const qc = useQueryClient();
-  return useAuthorizedMutation("build:managed-products:update", {
-    mutationKey: ["projects", "managed-products", managedProductId, "opportunities", "remove-evidence"],
-    mutationFn: ({ opportunityId, evidenceId }: { opportunityId: number; evidenceId: number }) =>
-      apiClient.delete(
-        `/build/managed-products/${managedProductId}/opportunities/${opportunityId}/evidence/${evidenceId}`,
-        undefined,
-        undefined,
-        noContentContract,
-      ),
-    onSuccess: (_result, vars) => {
-      qc.invalidateQueries({
-        queryKey: buildWorkQueryKeys.projects.managedProducts.opportunity(managedProductId, vars.opportunityId),
-        exact: true,
-        refetchType: "none",
-      });
     },
   });
 }
