@@ -50,7 +50,7 @@ describe("CheckInDialog — KR selector", () => {
       />,
     );
     expect(screen.getByText("Key result")).toBeInTheDocument();
-    expect(screen.getAllByText("Increase revenue").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByRole("combobox")).toBeInTheDocument();
   });
 
   it("shows both KR titles in the selector", () => {
@@ -61,8 +61,8 @@ describe("CheckInDialog — KR selector", () => {
         onClose={jest.fn()}
       />,
     );
-    expect(screen.getAllByText("Increase revenue").length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText("Reduce churn")).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: /Increase revenue/i })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: /Reduce churn/i })).toBeInTheDocument();
   });
 
   it("renders nothing when keyResults is empty", () => {

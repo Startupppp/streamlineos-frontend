@@ -28,6 +28,7 @@ import {
 import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { toast } from "sonner";
 import { groupMailMessages } from "./mail-group-messages";
 import { MAIL_LIST_BOTTOM_PADDING_CLASS } from "./mail-presentation";
@@ -246,13 +247,12 @@ export function MailListPane({
 
   const initialLoading =
     isLoading || isFetched === false || (isFetching && pages.length === 0);
-  const listPageState = isError
-    ? { kind: "error" as const, error }
-    : initialLoading
-      ? { kind: "loading" as const }
-      : visibleMessages.length === 0 && !hasNextPage
-        ? { kind: "empty" as const }
-        : { kind: "ready" as const };
+  const listPageState = usePageState({
+    isLoading: initialLoading,
+    isError,
+    error,
+    isEmpty: visibleMessages.length === 0 && !hasNextPage,
+  });
 
   if (accounts.length === 0) {
     return (
