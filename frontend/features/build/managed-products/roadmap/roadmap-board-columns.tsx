@@ -2,21 +2,37 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { usePositionRoadmapItem, usePublishRoadmapItem } from "@/hooks/api/build/roadmap";
-import { PmPanel, PmStaggerList } from "@/components/pm-chrome";
+import { useCan } from "@/hooks/api/access";
+import { PmStaggerList } from "@/components/pm-chrome";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { RoadmapItemCard, type ScorableRoadmapItem } from "@/features/build/roadmap/roadmap-item-card";
 import { ROADMAP_HORIZON_COLUMNS } from "@/features/build/roadmap/roadmap-constants";
+import { statusToneClasses, type StatusTone } from "@/lib/design-tokens";
 import type { RoadmapHorizon } from "@/types/projects";
+
+const HORIZON_TONES: Record<RoadmapHorizon, StatusTone> = {
+  now: "success",
+  next: "info",
+  later: "neutral",
+};
 
 interface RoadmapBoardColumnsProps {
   grouped: Record<RoadmapHorizon, ScorableRoadmapItem[]>;
   onEdit: (item: ScorableRoadmapItem) => void;
   onDelete: (item: ScorableRoadmapItem) => void;
+  onCreateInHorizon?: (horizon: RoadmapHorizon) => void;
 }
 
-export function RoadmapBoardColumns({ grouped, onEdit, onDelete }: RoadmapBoardColumnsProps) {
+export function RoadmapBoardColumns({
+  grouped,
+  onEdit,
+  onDelete,
+  onCreateInHorizon,
+}: RoadmapBoardColumnsProps) {
+  const canManage = useCan("build:roadmap:manage");
   const positionItem = usePositionRoadmapItem();
   const publishItem = usePublishRoadmapItem();
   const [publishTarget, setPublishTarget] = useState<ScorableRoadmapItem | null>(null);
@@ -43,12 +59,15 @@ export function RoadmapBoardColumns({ grouped, onEdit, onDelete }: RoadmapBoardC
     if (!open) setPublishTarget(null);
   }, []);
 
-  const handleMove = useCallback((item: ScorableRoadmapItem, horizon: RoadmapHorizon) => {
-    positionItem.mutate(
-      { roadmapItemId: item.id, version: item.version, horizon },
-      { onError: (e) => toast.error(getErrorMessage(e)) },
-    );
-  }, [positionItem]);
+  const handleMove = useCallback(
+    (item: ScorableRoadmapItem, horizon: RoadmapHorizon) => {
+      positionItem.mutate(
+        { roadmapItemId: item.id, version: item.version, horizon },
+        { onError: (e) => toast.error(getErrorMessage(e)) },
+      );
+    },
+    [positionItem],
+  );
 
   const moveHandlers = useMemo(() => {
     const result: Record<number, { up?: () => void; down?: () => void }> = {};
@@ -59,16 +78,18 @@ export function RoadmapBoardColumns({ grouped, onEdit, onDelete }: RoadmapBoardC
         const below = items[idx + 1];
         result[item.id] = {
           up: above
-            ? () => positionItem.mutate(
-                { roadmapItemId: item.id, version: item.version, beforeItemId: above.id },
-                { onError: (e) => toast.error(getErrorMessage(e)) },
-              )
+            ? () =>
+                positionItem.mutate(
+                  { roadmapItemId: item.id, version: item.version, beforeItemId: above.id },
+                  { onError: (e) => toast.error(getErrorMessage(e)) },
+                )
             : undefined,
           down: below
-            ? () => positionItem.mutate(
-                { roadmapItemId: item.id, version: item.version, afterItemId: below.id },
-                { onError: (e) => toast.error(getErrorMessage(e)) },
-              )
+            ? () =>
+                positionItem.mutate(
+                  { roadmapItemId: item.id, version: item.version, afterItemId: below.id },
+                  { onError: (e) => toast.error(getErrorMessage(e)) },
+                )
             : undefined,
         };
       });
@@ -76,41 +97,77 @@ export function RoadmapBoardColumns({ grouped, onEdit, onDelete }: RoadmapBoardC
     return result;
   }, [grouped, positionItem]);
 
+  const horizonCreateHandlers = useMemo(
+    () => ({
+      now: () => onCreateInHorizon?.("now"),
+      next: () => onCreateInHorizon?.("next"),
+      later: () => onCreateInHorizon?.("later"),
+    }),
+    [onCreateInHorizon],
+  );
+
   return (
-    <>
-      {ROADMAP_HORIZON_COLUMNS.map((col) => (
-        <PmPanel key={col.horizon} className="flex flex-col border-border/70 bg-muted/30 p-2.5 dark:bg-muted/20">
-          <div className="mb-2.5 flex items-center justify-between gap-2 px-0.5">
-            <span className="text-xs font-semibold uppercase tracking-wide text-foreground">{col.label}</span>
-            <span
-              className="min-w-6 rounded-full border border-border bg-card px-1.5 py-0.5 text-center text-xs font-medium tabular-nums text-foreground"
-              aria-label={`${(grouped[col.horizon] ?? []).length} items`}
-            >
-              {(grouped[col.horizon] ?? []).length}
-            </span>
-          </div>
-          {(grouped[col.horizon] ?? []).length === 0 ? (
-            <div className="rounded-lg border border-dashed border-border/70 bg-background/40 px-3 py-5 text-center text-xs text-muted-foreground">
-              No items
+    <div data-testid="roadmap-board-columns" className="flex min-h-0 flex-1 gap-3 overflow-x-auto pb-2">
+      {ROADMAP_HORIZON_COLUMNS.map((col) => {
+        const tone = HORIZON_TONES[col.horizon];
+        const toneClasses = statusToneClasses(tone);
+        const items = grouped[col.horizon] ?? [];
+        return (
+          <div
+            key={col.horizon}
+            className="flex w-72 shrink-0 flex-col rounded-xl border border-border bg-card shadow-sm"
+          >
+            <div className="flex shrink-0 items-center justify-between gap-2 border-b border-border/60 px-3 py-2.5">
+              <div className="flex items-center gap-1.5">
+                <span className={cn("h-2 w-2 shrink-0 rounded-full", toneClasses.fill)} aria-hidden />
+                <span className="text-sm font-semibold text-foreground">{col.label}</span>
+              </div>
+              <span
+                className={cn(
+                  "min-w-5 rounded-full border px-1.5 py-0.5 text-center tabular-nums text-micro font-semibold",
+                  toneClasses.surface,
+                  toneClasses.ink,
+                  toneClasses.rule,
+                )}
+                aria-label={`${items.length} items`}
+              >
+                {items.length}
+              </span>
             </div>
-          ) : (
-            <PmStaggerList className="flex flex-col gap-1.5">
-              {(grouped[col.horizon] ?? []).map((item) => (
-                <RoadmapItemCard
-                  key={item.id}
-                  item={item}
-                  onEdit={onEdit}
-                  onDelete={onDelete}
-                  onMove={handleMove}
-                  onMoveUp={moveHandlers[item.id]?.up}
-                  onMoveDown={moveHandlers[item.id]?.down}
-                  onPublishToggle={handlePublishToggle}
-                />
-              ))}
-            </PmStaggerList>
-          )}
-        </PmPanel>
-      ))}
+            <div className="min-h-0 flex-1 overflow-y-auto p-2">
+              {items.length === 0 ? (
+                <div className="flex flex-col items-center gap-2 rounded-lg border border-dashed border-border/60 bg-background/40 px-3 py-6 text-center">
+                  <p className="text-xs text-muted-foreground">No items yet</p>
+                  {canManage && onCreateInHorizon ? (
+                    <button
+                      type="button"
+                      onClick={horizonCreateHandlers[col.horizon]}
+                      className="text-xs font-medium text-primary underline-offset-2 hover:underline"
+                    >
+                      + Add item
+                    </button>
+                  ) : null}
+                </div>
+              ) : (
+                <PmStaggerList className="flex flex-col gap-1.5">
+                  {items.map((item) => (
+                    <RoadmapItemCard
+                      key={item.id}
+                      item={item}
+                      onEdit={onEdit}
+                      onDelete={onDelete}
+                      onMove={handleMove}
+                      onMoveUp={moveHandlers[item.id]?.up}
+                      onMoveDown={moveHandlers[item.id]?.down}
+                      onPublishToggle={handlePublishToggle}
+                    />
+                  ))}
+                </PmStaggerList>
+              )}
+            </div>
+          </div>
+        );
+      })}
       <ConfirmDialog
         open={!!publishTarget}
         onOpenChange={handlePublishOpenChange}
@@ -125,6 +182,6 @@ export function RoadmapBoardColumns({ grouped, onEdit, onDelete }: RoadmapBoardC
         onConfirm={handlePublishConfirmed}
         isPending={publishItem.isPending}
       />
-    </>
+    </div>
   );
 }

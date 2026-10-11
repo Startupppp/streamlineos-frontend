@@ -18,6 +18,7 @@ import {
   ProductSettingsSkeleton,
 } from "./managed-product-page-skeletons";
 import { FEEDBACK_SKELETON_HEADERS } from "./product-feedback-columns";
+import { INSIGHT_TABS } from "./product-insights-tabs";
 
 function RouteToolbar({
   search = false,
@@ -102,6 +103,24 @@ export function ProductFeedbackRouteLoading() {
   );
 }
 
+function InsightTabStrip() {
+  return (
+    <div className="box-border flex h-9 w-full min-w-0 items-center gap-1 overflow-x-auto rounded-lg border border-input bg-card p-1 text-muted-foreground md:w-fit">
+      {INSIGHT_TABS.map((tab) => (
+        <span
+          key={tab.id}
+          className={cn(
+            "inline-flex h-7 min-w-fit flex-1 items-center justify-center whitespace-nowrap rounded-md px-3 text-sm font-medium md:flex-none",
+            tab.id === "overview" && "bg-foreground text-background shadow-sm",
+          )}
+        >
+          {tab.label}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 export function ProductInsightsRouteLoading() {
   return (
     <ProductRouteLoading
@@ -109,6 +128,7 @@ export function ProductInsightsRouteLoading() {
       subtitle="Customer signals, planned work, and delivery progress"
       contentClassName={MANAGED_PRODUCT_DETAIL_CONTENT_CLASS}
       actions={<ActionSkeleton className="w-28" />}
+      filters={<InsightTabStrip />}
     >
       <ManagedProductDetailShell className="h-auto min-h-full flex-none overflow-visible">
         <ProductInsightsSkeleton />

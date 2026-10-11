@@ -3,7 +3,6 @@
 import { useCallback, useMemo, useState } from "react";
 import { useOpportunities, useEvidenceThemes, useOpportunitiesCompare, useOutcomeReviews } from "@/hooks/api/build/product-discovery";
 import {
-  useCreateOpportunity,
   useCreateOutcomeReview,
   useDeleteOutcomeReview,
   useUpdateOutcomeReview,
@@ -16,6 +15,7 @@ import { OpportunitiesFilterBar } from "./opportunities-filter-bar";
 import { OpportunityPane } from "./opportunity-pane";
 import { CompareDrawer, COMPARE_MAX } from "./compare-drawer";
 import { OutcomeReviewsSection } from "./outcome-reviews-section";
+import { OpportunityCreateButton } from "./opportunity-create-sheet";
 import { useOpportunityDiscoveryFilters } from "./use-opportunity-discovery-filters";
 import type { CreateOutcomeReviewInput, UpdateOutcomeReviewInput } from "@/hooks/api/build/product-discovery-mutations";
 
@@ -66,7 +66,6 @@ export function ProductDiscoverySection({ managedProductId }: ProductDiscoverySe
   );
   const compareQuery = useOpportunitiesCompare(managedProductId, compareIds);
 
-  const createOpportunityMutation = useCreateOpportunity(managedProductId);
   const createOutcomeReviewMutation = useCreateOutcomeReview(managedProductId);
   const updateOutcomeReviewMutation = useUpdateOutcomeReview(managedProductId);
   const deleteOutcomeReviewMutation = useDeleteOutcomeReview(managedProductId);
@@ -186,9 +185,12 @@ export function ProductDiscoverySection({ managedProductId }: ProductDiscoverySe
       />
 
       <section aria-labelledby="opportunities-heading">
-        <h2 id="opportunities-heading" className="mb-4 text-sm font-semibold text-foreground">
-          Opportunities
-        </h2>
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <h2 id="opportunities-heading" className="text-sm font-semibold text-foreground">
+            Opportunities
+          </h2>
+          <OpportunityCreateButton managedProductId={managedProductId} />
+        </div>
         <OpportunitiesTable
           managedProductId={managedProductId}
           rows={oppsRows}

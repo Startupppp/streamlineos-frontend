@@ -13,14 +13,17 @@ export const feedbucketWidgetRowContract = z.object({
   managedProductId: z.number().nullable(),
   defaultProjectId: z.number().nullable().optional(),
   defaultAssigneeMembershipId: z.number().nullable().optional(),
-  assigneeRules: z.object({
-    bug: z.number().optional(),
-    idea: z.number().optional(),
-    feature: z.number().optional(),
-    question: z.number().optional(),
-    praise: z.number().optional(),
-    other: z.number().optional(),
-  }).nullable().optional(),
+  assigneeRules: z
+    .object({
+      bug: z.number().optional(),
+      idea: z.number().optional(),
+      feature: z.number().optional(),
+      question: z.number().optional(),
+      praise: z.number().optional(),
+      other: z.number().optional(),
+    })
+    .nullable()
+    .optional(),
   name: z.string(),
   publicKey: z.string(),
   allowedDomains: z.array(z.string()),
@@ -50,11 +53,14 @@ const feedbucketWidgetListItemContract = feedbucketWidgetRowContract.and(
   }),
 );
 
-export const feedbucketWidgetListContract = z.array(feedbucketWidgetListItemContract);
-
-export const feedbucketWidgetWithProjectContract = feedbucketWidgetRowContract.and(
-  z.object({ project: projectMinimalContract.nullable() }),
+export const feedbucketWidgetListContract = z.array(
+  feedbucketWidgetListItemContract,
 );
+
+export const feedbucketWidgetWithProjectContract =
+  feedbucketWidgetRowContract.and(
+    z.object({ project: projectMinimalContract.nullable() }),
+  );
 
 const feedbucketMetadataContract = z.object({
   browser: z.string().optional(),
@@ -89,7 +95,14 @@ const feedbucketNetworkEntryContract = z.object({
 });
 
 const feedbucketAiAnalysisContract = z.object({
-  type: z.enum(["bug", "feature", "improvement", "question", "praise", "other"]),
+  type: z.enum([
+    "bug",
+    "feature",
+    "improvement",
+    "question",
+    "praise",
+    "other",
+  ]),
   confidence: z.number(),
   suggestedTicketType: z.enum(["EPIC", "BUG", "STORY", "TASK"]),
   title: z.string(),
@@ -135,7 +148,18 @@ const feedbucketSubmissionRowContract = z.object({
   createdAt: z.string(),
   updatedAt: z.string(),
   deletedAt: z.string().nullable(),
-  sourceChannel: z.enum(["widget", "email", "support", "sales", "interview", "survey", "public_portal", "manual", "import"]),
+  sourceChannel: z.enum([
+    "widget",
+    "feedbucket",
+    "email",
+    "support",
+    "sales",
+    "interview",
+    "survey",
+    "public_portal",
+    "manual",
+    "import",
+  ]),
   segment: z.string().nullable(),
   theme: z.string().nullable(),
   sentiment: z.enum(["positive", "neutral", "negative", "mixed"]).nullable(),
@@ -144,7 +168,9 @@ const feedbucketSubmissionRowContract = z.object({
   duplicateOfId: z.number().nullable(),
   duplicateCount: z.number(),
   opportunityIds: z.array(z.number()),
-  customer: z.object({ crmOrganizationId: z.number(), name: z.string().nullable() }).nullable(),
+  customer: z
+    .object({ crmOrganizationId: z.number(), name: z.string().nullable() })
+    .nullable(),
 });
 
 export const feedbucketSubmissionListContract = z.object({
@@ -176,22 +202,27 @@ export const feedbucketBulkSubmissionsContract = z.object({
   ),
 });
 
-export const feedbucketSubmissionDetailContract = feedbucketSubmissionRowContract.and(
-  z.object({
-    widget: feedbucketWidgetRowContract.nullable(),
-    linkedTicket: z.object({
-      id: z.number(),
-      orgId: z.string(),
-      projectId: z.number(),
-      title: z.string(),
-      type: z.string(),
-      status: z.string(),
-    }).nullable(),
-    recordingUrl: z.string().nullable(),
-  }),
-);
+export const feedbucketSubmissionDetailContract =
+  feedbucketSubmissionRowContract.and(
+    z.object({
+      widget: feedbucketWidgetRowContract.nullable(),
+      linkedTicket: z
+        .object({
+          id: z.number(),
+          orgId: z.string(),
+          projectId: z.number(),
+          title: z.string(),
+          type: z.string(),
+          status: z.string(),
+        })
+        .nullable(),
+      recordingUrl: z.string().nullable(),
+    }),
+  );
 
-export const feedbucketConvertTicketContract = z.object({ ticketId: z.number() });
+export const feedbucketConvertTicketContract = z.object({
+  ticketId: z.number(),
+});
 
 const aiUsageMetaContract = z.object({
   model: z.string(),
@@ -203,7 +234,14 @@ const aiUsageMetaContract = z.object({
 });
 
 export const feedbucketFeedbackAnalysisContract = z.object({
-  type: z.enum(["bug", "feature", "improvement", "question", "praise", "other"]),
+  type: z.enum([
+    "bug",
+    "feature",
+    "improvement",
+    "question",
+    "praise",
+    "other",
+  ]),
   confidence: z.number(),
   suggestedTicketType: z.enum(["EPIC", "BUG", "STORY", "TASK"]),
   title: z.string(),
@@ -223,9 +261,12 @@ export const feedbucketCreateTicketFromAnalysisContract = z.object({
   ticketType: z.enum(["EPIC", "BUG", "STORY", "TASK"]),
 });
 
-export const feedbucketUpdateSubmissionContract = feedbucketSubmissionRowContract;
+export const feedbucketUpdateSubmissionContract =
+  feedbucketSubmissionRowContract;
 
-export const feedbucketDeleteSubmissionContract = z.object({ success: z.literal(true) });
+export const feedbucketDeleteSubmissionContract = z.object({
+  success: z.literal(true),
+});
 
 export const feedbucketClassifySubmissionContract = z.object({
   success: z.literal(true),
@@ -267,4 +308,6 @@ export const feedbucketSubmissionFacetsContract = z.object({
   sourceChannels: z.array(feedbucketFacetCountContract).optional(),
 });
 
-export type FeedbucketSubmissionRow = z.infer<typeof feedbucketSubmissionRowContract>;
+export type FeedbucketSubmissionRow = z.infer<
+  typeof feedbucketSubmissionRowContract
+>;

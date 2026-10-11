@@ -32,6 +32,11 @@ jest.mock("@/components/ui/date-range-picker", () => ({
   ),
 }));
 
+jest.mock("@/features/build/managed-products/feedback/feedbucket-collect-dialog", () => ({
+  FeedbucketCollectDialog: ({ open }: { open: boolean }) =>
+    open ? <div data-testid="feedbucket-collect-dialog" /> : null,
+}));
+
 jest.mock("@/components/ui/user-combobox", () => ({
   UserCombobox: ({ value }: { value: string }) => (
     <div data-testid="user-combobox" data-value={value} />
@@ -424,5 +429,41 @@ describe("ProductFeedbackPage — feedback pane deep link (BSN-01-FB-PANE)", () 
     useFeedbucketSubmissions.mockReturnValue(EMPTY_FEEDBUCKET_RESULT);
     render(<ProductFeedbackPage managedProductId={7} />);
     expect(screen.queryByTestId("feedback-pane")).not.toBeInTheDocument();
+  });
+});
+
+import { SOURCE_CHANNEL_FILTER_OPTIONS, FEEDBACK_COLUMNS } from "./product-feedback-columns";
+
+describe("ProductFeedbackPage — feedbucket source channel integration (BSN-01-FB-FEEDBUCKET)", () => {
+  it("SOURCE_CHANNEL_FILTER_OPTIONS includes feedbucket as a selectable filter value", () => {
+    const values = SOURCE_CHANNEL_FILTER_OPTIONS.map((o) => o.value);
+    expect(values).toContain("feedbucket");
+  });
+
+  it("SOURCE_CHANNEL_FILTER_OPTIONS feedbucket entry has label 'Feedbucket'", () => {
+    const opt = SOURCE_CHANNEL_FILTER_OPTIONS.find((o) => o.value === "feedbucket");
+    expect(opt?.label).toBe("Feedbucket");
+  });
+
+  it("channel column renders 'Feedbucket' label for a submission with sourceChannel feedbucket", () => {
+    const channelCol = FEEDBACK_COLUMNS.find((c) => c.key === "channel");
+    if (!channelCol?.cell) throw new Error("channel column missing");
+    const row = { sourceChannel: "feedbucket" } as unknown as Parameters<NonNullable<typeof channelCol.cell>>[0];
+    const { getByText } = render(<>{channelCol.cell(row)}</>);
+    expect(getByText("Feedbucket")).toBeInTheDocument();
+  });
+
+  it("renders Collect via Feedbucket button when actor has feedbucket:submissions:manage permission", () => {
+    useFeedbucketSubmissions.mockReturnValue(EMPTY_FEEDBUCKET_RESULT);
+    useCan.mockImplementation((key: string) => key === "feedbucket:submissions:manage");
+    render(<ProductFeedbackPage managedProductId={7} />);
+    expect(screen.getByRole("button", { name: /collect via feedbucket/i })).toBeInTheDocument();
+  });
+
+  it("does not render Collect via Feedbucket button when permission is denied", () => {
+    useFeedbucketSubmissions.mockReturnValue(EMPTY_FEEDBUCKET_RESULT);
+    useCan.mockReturnValue(false);
+    render(<ProductFeedbackPage managedProductId={7} />);
+    expect(screen.queryByRole("button", { name: /collect via feedbucket/i })).not.toBeInTheDocument();
   });
 });

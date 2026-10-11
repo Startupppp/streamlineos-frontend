@@ -41,3 +41,18 @@ export const declineFormSchema = z.object({
 });
 
 export type DeclineFormValues = z.infer<typeof declineFormSchema>;
+
+export const createOpportunityFormSchema = z.object({
+  title: z.string().trim().min(1, "Title is required").max(500),
+  problem: z.string().max(5000).optional(),
+  hypothesis: z.string().max(5000).optional(),
+  affectedSegment: z.string().max(200).optional(),
+  theme: z.string().max(200).optional(),
+  desiredOutcome: z.string().max(2000).optional(),
+  outcomeMetric: z.string().max(500).optional(),
+  outcomeUnit: z.string().max(100).optional(),
+  outcomeBaseline: z.string().optional(),
+  outcomeTarget: z.string().optional(),
+});
+
+export type CreateOpportunityFormValues = z.infer<typeof createOpportunityFormSchema>;

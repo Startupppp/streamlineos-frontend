@@ -77,6 +77,7 @@ function buildRoadmapConflictDiffs(
 interface RoadmapItemSheetProps {
   item?: ScorableRoadmapItem;
   managedProductId?: number;
+  defaultHorizon?: "now" | "next" | "later";
   onClose: () => void;
 }
 
@@ -84,7 +85,7 @@ function riceDefault(value: number | null | undefined): string {
   return value === null || value === undefined ? "" : String(value);
 }
 
-export function RoadmapItemSheet({ item, managedProductId, onClose }: RoadmapItemSheetProps) {
+export function RoadmapItemSheet({ item, managedProductId, defaultHorizon, onClose }: RoadmapItemSheetProps) {
   const queryClient = useQueryClient();
   const isEdit = !!item;
   const create = useCreateRoadmapItem();
@@ -107,7 +108,7 @@ export function RoadmapItemSheet({ item, managedProductId, onClose }: RoadmapIte
       description: item?.description ?? "",
       outcome: item?.outcome ?? "",
       status: (["planned", "in_progress", "completed", "cancelled"] as const).find((v) => v === item?.status) ?? "planned",
-      horizon: (["now", "next", "later"] as const).find((v) => v === item?.horizon) ?? "later",
+      horizon: (["now", "next", "later"] as const).find((v) => v === item?.horizon) ?? defaultHorizon ?? "later",
       category: item?.category ?? "",
       targetQuarter: item?.targetQuarter ?? "",
       targetStart: item?.targetStart ?? "",

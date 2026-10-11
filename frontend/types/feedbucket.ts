@@ -5,12 +5,34 @@ import type { feedbucketWidgetRowContract } from "@/hooks/api/feedbucket/feedbuc
 import type { feedbucketBulkSubmissionsContract } from "@/hooks/api/feedbucket/feedbucket-schema";
 import type { AiUsageMeta } from "@/components/ai/ai-usage-chip";
 
-export type FeedbucketSubmissionType = "bug" | "idea" | "feature" | "question" | "praise" | "other";
-export type FeedbucketSourceChannel = "widget" | "email" | "support" | "sales" | "interview" | "survey" | "public_portal" | "manual" | "import";
+export type FeedbucketSubmissionType =
+  | "bug"
+  | "idea"
+  | "feature"
+  | "question"
+  | "praise"
+  | "other";
+export type FeedbucketSourceChannel =
+  | "widget"
+  | "feedbucket"
+  | "email"
+  | "support"
+  | "sales"
+  | "interview"
+  | "survey"
+  | "public_portal"
+  | "manual"
+  | "import";
 export type FeedbucketSentiment = "positive" | "neutral" | "negative" | "mixed";
 export type FeedbucketConsentStatus = "granted" | "denied" | "unknown";
 
-export type FeedbucketAiType = "bug" | "feature" | "improvement" | "question" | "praise" | "other";
+export type FeedbucketAiType =
+  | "bug"
+  | "feature"
+  | "improvement"
+  | "question"
+  | "praise"
+  | "other";
 export type FeedbucketAiTicketType = "EPIC" | "BUG" | "STORY" | "TASK";
 export type FeedbucketAiPriority = "LOW" | "MEDIUM" | "HIGH" | "URGENT";
 
@@ -29,7 +51,11 @@ export interface FeedbucketAiAnalysis {
   processedAt: string;
   aiUsage?: AiUsageMeta | null;
 }
-export type FeedbucketSubmissionStatus = "open" | "in_progress" | "resolved" | "archived";
+export type FeedbucketSubmissionStatus =
+  | "open"
+  | "in_progress"
+  | "resolved"
+  | "archived";
 export type FeedbucketSubmissionPriority = "low" | "medium" | "high" | "urgent";
 
 export interface FeedbucketWidgetTheme {
@@ -76,7 +102,9 @@ export type FeedbucketWidget = z.infer<typeof feedbucketWidgetRowContract> & {
   openCount?: number;
 };
 
-export type FeedbucketSubmission = z.infer<typeof feedbucketSubmissionDetailContract>;
+export type FeedbucketSubmission = z.infer<
+  typeof feedbucketSubmissionDetailContract
+>;
 
 export interface CreateFeedbucketWidgetInput {
   name: string;
@@ -186,4 +214,6 @@ export interface FeedbucketSubmissionFacets {
   sourceChannels?: Array<{ value: string | null; count: number }>;
 }
 
-export type PaginatedFeedbucketSubmissions = z.infer<typeof feedbucketSubmissionListContract>;
+export type PaginatedFeedbucketSubmissions = z.infer<
+  typeof feedbucketSubmissionListContract
+>;

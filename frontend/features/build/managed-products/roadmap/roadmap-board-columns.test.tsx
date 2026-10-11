@@ -58,8 +58,11 @@ jest.mock("@/features/build/roadmap/roadmap-item-card", () => ({
   ),
 }));
 
+jest.mock("@/hooks/api/access", () => ({
+  useCan: jest.fn(() => true),
+}));
+
 jest.mock("@/components/pm-chrome", () => ({
-  PmPanel: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   PmStaggerList: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
 
@@ -246,5 +249,29 @@ describe("RoadmapBoardColumns — in-column reorder (BSN-RM-SORT)", () => {
     render(<RoadmapBoardColumns grouped={grouped} onEdit={onEdit} onDelete={onDelete} />);
     expect(screen.getByRole("button", { name: /Move down Item 40/i })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Move down Item 41/i })).not.toBeInTheDocument();
+  });
+});
+
+describe("RoadmapBoardColumns — column structure (BSN-RM-BOARD)", () => {
+  it("renders all three horizon columns even when all groups are empty", () => {
+    const grouped = { now: [], next: [], later: [] };
+    render(<RoadmapBoardColumns grouped={grouped} onEdit={onEdit} onDelete={onDelete} />);
+    expect(screen.getByText("Now")).toBeInTheDocument();
+    expect(screen.getByText("Next")).toBeInTheDocument();
+    expect(screen.getByText("Later")).toBeInTheDocument();
+    expect(screen.getAllByText("No items yet")).toHaveLength(3);
+  });
+
+  it("places cards in the column matching their horizon", () => {
+    const grouped = {
+      now: [makeItem({ id: 50, horizon: "now", title: "Now item" })],
+      next: [makeItem({ id: 51, horizon: "next", title: "Next item" })],
+      later: [makeItem({ id: 52, horizon: "later", title: "Later item" })],
+    };
+    render(<RoadmapBoardColumns grouped={grouped} onEdit={onEdit} onDelete={onDelete} />);
+    expect(screen.getByTestId("roadmap-card-50")).toBeInTheDocument();
+    expect(screen.getByTestId("roadmap-card-51")).toBeInTheDocument();
+    expect(screen.getByTestId("roadmap-card-52")).toBeInTheDocument();
+    expect(screen.queryByText("No items yet")).not.toBeInTheDocument();
   });
 });

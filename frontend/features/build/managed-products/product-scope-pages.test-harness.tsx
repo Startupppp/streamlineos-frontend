@@ -418,7 +418,9 @@ jest.mock("@animateicons/react/lucide", () => ({
 jest.mock(
   "@/features/build/managed-products/insights/product-discovery-section",
   () => ({
-    ProductDiscoverySection: () => null,
+    ProductDiscoverySection: ({ managedProductId }: { managedProductId: number }) => (
+      <section data-testid="product-discovery-section">Discovery {managedProductId}</section>
+    ),
   }),
 );
 

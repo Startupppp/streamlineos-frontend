@@ -45,6 +45,7 @@ import {
 } from "./managed-product-detail-layout";
 import { CaptureSubmissionSheet } from "./feedback/capture-submission-sheet";
 import { FeedbackPane } from "./feedback/feedback-pane";
+import { FeedbucketCollectDialog } from "./feedback/feedbucket-collect-dialog";
 
 interface ProductFeedbackPageProps { managedProductId: number; }
 
@@ -59,6 +60,7 @@ export function ProductFeedbackPage({ managedProductId }: ProductFeedbackPagePro
   const routeToIntake = useRouteFeedbucketToIntake();
 
   const [captureOpen, setCaptureOpen] = useState(false);
+  const [feedbucketOpen, setFeedbucketOpen] = useState(false);
 
   const filterState = useProductFeedbackFilters(managedProductId);
   const {
@@ -151,6 +153,7 @@ export function ProductFeedbackPage({ managedProductId }: ProductFeedbackPagePro
   const getSubmissionRowKey = useCallback((row: SubmissionRow) => row.id, []);
 
   const handleOpenCapture = useCallback(() => setCaptureOpen(true), []);
+  const handleOpenFeedbucket = useCallback(() => setFeedbucketOpen(true), []);
   const handleCloseFeedbackPane = useCallback((open: boolean) => {
     if (!open) router.replace(`?`, { scroll: false });
   }, [router]);
@@ -169,7 +172,14 @@ export function ProductFeedbackPage({ managedProductId }: ProductFeedbackPagePro
         title="Feedback"
         subtitle="Submissions collected from widgets linked to this product"
         contentClassName={MANAGED_PRODUCT_DETAIL_CONTENT_CLASS}
-        actions={canCapture ? <Button type="button" onClick={handleOpenCapture}>Capture feedback</Button> : undefined}
+        actions={
+          canCapture ? (
+            <div className="flex gap-2">
+              <Button type="button" variant="outline" onClick={handleOpenFeedbucket}>Collect via Feedbucket</Button>
+              <Button type="button" onClick={handleOpenCapture}>Capture feedback</Button>
+            </div>
+          ) : undefined
+        }
         filters={
           <BuildListToolbar
             search={{ value: listFilters.search, onValueChange: listFilters.setSearch, placeholder: "Search feedback…", label: "Search feedback", inputRef: searchInputRef }}
@@ -233,6 +243,9 @@ export function ProductFeedbackPage({ managedProductId }: ProductFeedbackPagePro
       </PageWrapper>
       {canCapture && (
         <CaptureSubmissionSheet managedProductId={managedProductId} open={captureOpen} onOpenChange={setCaptureOpen} />
+      )}
+      {canCapture && (
+        <FeedbucketCollectDialog managedProductId={managedProductId} open={feedbucketOpen} onOpenChange={setFeedbucketOpen} />
       )}
       {paneSubmissionId !== null && (
         <FeedbackPane submissionId={paneSubmissionId} managedProductId={managedProductId} open={paneSubmissionId !== null} onOpenChange={handleCloseFeedbackPane} />

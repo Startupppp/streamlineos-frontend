@@ -64,6 +64,7 @@ export const DUPLICATE_FILTER_OPTIONS = [
 
 export const SOURCE_CHANNEL_FILTER_OPTIONS = [
   { value: BUILD_FILTER_ALL, label: "All channels" },
+  { value: "feedbucket", label: "Feedbucket" },
   { value: "widget", label: "Widget" },
   { value: "email", label: "Email" },
   { value: "support", label: "Support" },
@@ -124,6 +125,7 @@ export const FEEDBACK_SKELETON_HEADERS = [
 
 
 const CHANNEL_LABELS: Record<string, string> = {
+  feedbucket: "Feedbucket",
   widget: "Widget",
   email: "Email",
   support: "Support",

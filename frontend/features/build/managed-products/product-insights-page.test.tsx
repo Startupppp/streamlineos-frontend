@@ -1,6 +1,8 @@
 import "./product-scope-pages.test-harness";
+import userEvent from "@testing-library/user-event";
 import { ProductInsightsPage } from "./product-insights-page";
 import {
+  mockRouterReplace,
   mockUseSearchParams,
   render,
   screen,
@@ -63,13 +65,13 @@ describe("ProductInsightsPage — page states (BSN-INS-STATE)", () => {
     render(<ProductInsightsPage managedProductId={7} />);
     expect(screen.getByTestId("page-state-loading")).toBeInTheDocument();
     expect(screen.getByTestId("product-insights-skeleton")).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Overview" })).toHaveAttribute("data-state", "active");
     expect(screen.getByRole("heading", { name: "Where to focus" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Delivery coverage" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Customer response" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Evidence linked to the roadmap" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Product context" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Opportunities" })).toBeInTheDocument();
-    expect(screen.getAllByTestId("stat-card")).toHaveLength(16);
+    expect(screen.queryByRole("heading", { name: "Delivery coverage" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Customer response" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Opportunities" })).not.toBeInTheDocument();
+    expect(screen.getAllByTestId("stat-card")).toHaveLength(5);
   });
 
   it("shows the error state when usePageState resolves to error so the user can retry", () => {
@@ -220,6 +222,7 @@ describe("ProductInsightsPage — feedback submission drill-down links (BT-6733a
   ])(
     "the %s feedback stat card links to %s so the actor lands on exactly the matching source rows",
     (label, expectedHref) => {
+      mockUseSearchParams.mockReturnValue(new URLSearchParams("tab=feedback"));
       render(<ProductInsightsPage managedProductId={7} />);
       const link = screen
         .getAllByTestId("stat-card-link")
@@ -230,6 +233,7 @@ describe("ProductInsightsPage — feedback submission drill-down links (BT-6733a
   );
 
   it("each status drill-down link uses a distinct predicate so no two stat cards share the same filtered URL", () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("tab=feedback"));
     render(<ProductInsightsPage managedProductId={7} />);
     const statusLabels = new Set(["Open", "In progress", "Resolved", "Archived"]);
     const links = screen.getAllByTestId("stat-card-link")
@@ -239,25 +243,97 @@ describe("ProductInsightsPage — feedback submission drill-down links (BT-6733a
     expect(unique.size).toBe(links.length);
   });
 
-  it("puts the range selector in the page header and keeps the long insights body scrollable", () => {
+  it("puts the range selector in the page header and keeps the insights body scrollable", () => {
     render(<ProductInsightsPage managedProductId={7} />);
     expect(screen.getByTestId("page-wrapper-actions").querySelector('[aria-label="Range"]')).toBeInTheDocument();
-    expect(screen.getByTestId("page-wrapper-filters")).toBeEmptyDOMElement();
+    expect(screen.getByRole("tablist", { name: "Insights sections" })).toBeInTheDocument();
     expect(screen.getByTestId("pm-page-shell")).toHaveClass("overflow-visible");
   });
 
-  it.each<[string, string]>([
-    ["Needs triage", "/build/managed-products/7/feedback?status=open"],
-    ["Linked projects", "/build/managed-products/7/projects"],
-    ["Active", "/build/managed-products/7/projects?filterStatus=ACTIVE"],
-    ["Completed", "/build/managed-products/7/projects?filterStatus=COMPLETED"],
-    ["Roadmap items", "/build/managed-products/7/roadmap"],
-    ["Completed items", "/build/managed-products/7/roadmap?status=completed"],
-    ["Linked feedback", "/build/managed-products/7/roadmap"],
-    ["Feedback votes", "/build/managed-products/7/roadmap"],
-  ])("the %s insight opens its relevant source", (label, href) => {
+  it.each<[string, string, string]>([
+    ["Needs triage", "/build/managed-products/7/feedback?status=open", ""],
+    ["Linked projects", "/build/managed-products/7/projects", "tab=delivery"],
+    ["Active", "/build/managed-products/7/projects?filterStatus=ACTIVE", "tab=delivery"],
+    ["Completed", "/build/managed-products/7/projects?filterStatus=COMPLETED", "tab=delivery"],
+    ["Roadmap items", "/build/managed-products/7/roadmap", "tab=delivery"],
+    ["Completed items", "/build/managed-products/7/roadmap?status=completed", "tab=delivery"],
+    ["Linked feedback", "/build/managed-products/7/roadmap", "tab=delivery"],
+    ["Feedback votes", "/build/managed-products/7/roadmap", "tab=delivery"],
+  ])("the %s insight opens its relevant source", (label, href, query) => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams(query));
     render(<ProductInsightsPage managedProductId={7} />);
     const link = screen.getAllByTestId("stat-card-link").find((el) => el.getAttribute("data-label") === label);
     expect(link).toHaveAttribute("href", href);
+  });
+});
+
+describe("ProductInsightsPage — section tabs", () => {
+  const insightsData = {
+    linkedProjectCount: 1,
+    projectsByStatus: { active: 1, completed: 0, archived: 0 },
+    submissionsByStatus: { open: 5, in_progress: 2, resolved: 8, archived: 1 },
+    roadmapItemCount: 3,
+    roadmapItemsByStatus: { planned: 1, in_progress: 1, completed: 1, cancelled: 0 },
+    feedbackByStatus: { open: 4, planned: 0, in_progress: 0, completed: 0, declined: 0 },
+    linkedFeedbackVoteCount: 7,
+    ageDays: 12,
+    confidenceScore: null,
+    overrideReason: null,
+    overriddenBy: null,
+    overriddenAt: null,
+  };
+
+  beforeEach(() => {
+    mockRouterReplace.mockClear();
+    useManagedProductInsights.mockReturnValue({
+      data: insightsData,
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+  });
+
+  it("opens on Overview and hides the other sections", () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams());
+    render(<ProductInsightsPage managedProductId={7} />);
+    expect(screen.getByRole("tab", { name: "Overview" })).toHaveAttribute("data-state", "active");
+    expect(screen.getByRole("heading", { name: "Where to focus" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Delivery coverage" })).not.toBeInTheDocument();
+    expect(screen.queryByTestId("product-discovery-section")).not.toBeInTheDocument();
+  });
+
+  it("shows delivery counts when tab=delivery and ignores an unknown tab", () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("tab=delivery"));
+    const { unmount } = render(<ProductInsightsPage managedProductId={7} />);
+    expect(screen.getByRole("tab", { name: "Delivery" })).toHaveAttribute("data-state", "active");
+    expect(screen.getByRole("heading", { name: "Evidence linked to the roadmap" })).toBeInTheDocument();
+    unmount();
+
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("tab=nope"));
+    render(<ProductInsightsPage managedProductId={7} />);
+    expect(screen.getByRole("tab", { name: "Overview" })).toHaveAttribute("data-state", "active");
+  });
+
+  it("mounts discovery only on the Discovery tab", () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("tab=discovery"));
+    render(<ProductInsightsPage managedProductId={7} />);
+    expect(screen.getByTestId("product-discovery-section")).toHaveTextContent("Discovery 7");
+    expect(screen.queryByRole("heading", { name: "Where to focus" })).not.toBeInTheDocument();
+  });
+
+  it("writes the selected tab without dropping the range", async () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("range=7d"));
+    const user = userEvent.setup();
+    render(<ProductInsightsPage managedProductId={7} />);
+    await user.click(screen.getByRole("tab", { name: "Feedback" }));
+    expect(mockRouterReplace).toHaveBeenCalledWith(
+      "/build/managed-products/7/goals?range=7d&tab=feedback",
+      { scroll: false },
+    );
+    expect(useManagedProductInsights).toHaveBeenCalledWith(
+      7,
+      expect.objectContaining({ range: "7d" }),
+    );
   });
 });

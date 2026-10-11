@@ -150,9 +150,9 @@ describe("ProductRoadmapPage — confidenceMin URL param (BSN-RM-CONF)", () => {
 });
 
 describe("ProductRoadmapPage — view toggle (BSN-RM-VIEW)", () => {
-  it("renders the board view by default with a Timeline button to switch", () => {
+  it("renders the board view by default with a Timeline tab to switch", () => {
     render(<ProductRoadmapPage managedProductId={7} />);
-    expect(screen.getByRole("button", { name: /timeline/i })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: /timeline/i })).toBeInTheDocument();
     expect(screen.getByTestId("roadmap-board-columns")).toBeInTheDocument();
   });
 

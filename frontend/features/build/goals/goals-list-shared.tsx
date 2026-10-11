@@ -8,16 +8,12 @@ import {
   CalendarDays,
   CheckCircle2,
   ChevronUp,
-  Link2 as LinkIcon,
-  ListChecks,
   Map,
   Target,
-  Users,
 } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { TruncatedText } from "@/components/ui/truncated-text";
 import { PM_PANEL } from "@/components/pm-chrome";
 import { TEXT_TWO_LINES } from "@/lib/text-overflow";
 import { cn } from "@/lib/utils";
@@ -77,31 +73,46 @@ export function GoalCard({ goal, onEdit, onDelete, onUnlink, onCheckIn }: GoalCa
       onContextMenu={handleContextMenu}
     >
       <div className="group relative">
-        <div
+          <div
           className={cn(
             PM_PANEL,
-            "space-y-3 border-border/80 bg-card p-4 shadow-sm transition-[border-color,box-shadow,transform] duration-200 group-hover:-translate-y-0.5 group-hover:border-primary/40 group-hover:shadow-md",
+            "flex flex-col gap-3 border-border/80 bg-card p-4 shadow-sm transition-[border-color,box-shadow] duration-200 group-hover:border-primary/40 group-hover:shadow-md",
           )}
         >
-          <div className="flex min-w-0 items-center justify-between gap-2">
-            <span className="inline-flex min-w-0 items-center gap-1.5 text-micro font-medium text-muted-foreground">
-              <Target className="h-3.5 w-3.5 shrink-0 text-primary" />
-              {LEVEL_LABEL[goal.level]} objective
-            </span>
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              <p className="text-xs text-muted-foreground">
+                {LEVEL_LABEL[goal.level]} objective
+              </p>
+              <Link
+                href={`/build/goals/${goal.id}`}
+                className="mt-1 block min-w-0 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <h3
+                  className={cn(
+                    TEXT_TWO_LINES,
+                    "text-base font-semibold leading-snug text-foreground transition-colors group-hover:text-primary",
+                  )}
+                  title={goal.title}
+                >
+                  {goal.title}
+                </h3>
+              </Link>
+            </div>
             <div className="flex shrink-0 items-center gap-1">
               {freshnessCfg && FreshnessIcon ? (
                 <span
                   className={cn(
-                    "inline-flex items-center gap-1 text-micro font-medium",
+                    "inline-flex items-center gap-1 text-xs font-medium",
                     freshnessCfg.className,
                   )}
                   title={`Check-in: ${freshnessCfg.label}`}
                 >
                   <FreshnessIcon className="h-3.5 w-3.5" aria-hidden="true" />
-                  {freshnessCfg.label}
+                  <span className="sr-only">{freshnessCfg.label}</span>
                 </span>
               ) : null}
-              <Badge variant={cfg.variant} className="shrink-0 text-micro">
+              <Badge variant={cfg.variant} className="shrink-0">
                 {cfg.label}
               </Badge>
               {hasActions ? (
@@ -118,22 +129,12 @@ export function GoalCard({ goal, onEdit, onDelete, onUnlink, onCheckIn }: GoalCa
             </div>
           </div>
 
-          <Link href={`/build/goals/${goal.id}`} className="block min-w-0 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-              <h3
-                className={cn(
-                  TEXT_TWO_LINES,
-                  "text-sm font-semibold leading-snug text-foreground transition-colors group-hover:text-primary",
-                )}
-                title={goal.title}
-              >
-                {goal.title}
-              </h3>
-          </Link>
-
-          <div className="flex flex-col gap-1.5 rounded-lg border border-border/60 bg-muted/30 px-3 py-2.5">
-            <div className="flex items-center justify-between text-xs text-muted-foreground">
-              <span>Progress</span>
-              <span className="font-mono tabular-nums font-semibold text-foreground">{goal.progress}%</span>
+          <div>
+            <div className="mb-1.5 flex items-baseline justify-between gap-3">
+              <span className="text-xs text-muted-foreground">Progress</span>
+              <span className="font-mono text-sm font-semibold tabular-nums text-foreground">
+                {goal.progress}%
+              </span>
             </div>
             <Progress
               value={goal.progress}
@@ -142,30 +143,24 @@ export function GoalCard({ goal, onEdit, onDelete, onUnlink, onCheckIn }: GoalCa
             />
           </div>
 
-          <div className="flex min-w-0 items-center justify-between text-xs text-muted-foreground">
-            <span className="flex min-w-0 items-center gap-1.5">
-              <Users className="h-3.5 w-3.5 shrink-0" />
-              <TruncatedText text={ownerName ?? "Unassigned"} />
-            </span>
-            <span className="flex shrink-0 items-center gap-1.5">
-              <ListChecks className="h-3.5 w-3.5" />
-              {goal.keyResultCount} KR{goal.keyResultCount === 1 ? "" : "s"}
-            </span>
+          <div className="grid grid-cols-2 gap-3 border-t border-border/80 pt-3">
+            <div className="min-w-0">
+              <p className="text-xs text-muted-foreground">Owner</p>
+              <p className="mt-0.5 truncate text-sm text-foreground">{ownerName ?? "Unassigned"}</p>
+            </div>
+            <div className="min-w-0 text-right">
+              <p className="text-xs text-muted-foreground">Key results</p>
+              <p className="mt-0.5 font-mono text-sm tabular-nums text-foreground">
+                {goal.keyResultCount}
+              </p>
+            </div>
           </div>
 
-          <div className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
-            <LinkIcon className="h-3.5 w-3.5 shrink-0" />
-            {goal.linkCount === 0 ? (
-              <span>No linked initiatives</span>
-            ) : (
-              <span>
-                {goal.linkCount} linked ({goal.linkedProjectCount} project
-                {goal.linkedProjectCount === 1 ? "" : "s"},{" "}
-                {goal.linkedTicketCount} ticket
-                {goal.linkedTicketCount === 1 ? "" : "s"})
-              </span>
-            )}
-          </div>
+          <p className="text-xs leading-5 text-muted-foreground">
+            {goal.linkCount === 0
+              ? "No linked initiatives"
+              : `${goal.linkCount} linked (${goal.linkedProjectCount} project${goal.linkedProjectCount === 1 ? "" : "s"}, ${goal.linkedTicketCount} ticket${goal.linkedTicketCount === 1 ? "" : "s"})`}
+          </p>
 
           {(goal.linkedRoadmapItemCount > 0 || goal.linkedOpportunityCount > 0) ? (
             <div className="flex min-w-0 items-center gap-3 text-xs text-muted-foreground">

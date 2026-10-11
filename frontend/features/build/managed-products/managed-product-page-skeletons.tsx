@@ -3,20 +3,16 @@
 import type { ReactNode } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
+import { KanbanColumnSkeleton } from "@/components/ui/kanban-skeleton";
 import { PM_PANEL } from "@/components/pm-chrome";
 import { cn } from "@/lib/utils";
 import {
   AlertTriangle,
-  BarChart2,
   CheckCircle2,
   ClipboardCheck,
   Clock,
-  FolderOpen,
   Inbox,
-  LayoutGrid,
-  MessageSquare,
   Target,
-  ThumbsUp,
   TrendingUp,
 } from "lucide-react";
 
@@ -106,44 +102,12 @@ export function ProductInsightsSkeleton() {
   return (
     <div data-testid="product-insights-skeleton" className="space-y-6">
       <div className="rounded-xl border border-border bg-card p-4 sm:p-5">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div>
-            <h2 className="text-base font-semibold text-foreground">Where to focus</h2>
-            <p className="text-sm text-muted-foreground">Activity for the selected range</p>
-          </div>
-          <Skeleton className="h-7 w-20 rounded-full" />
-        </div>
+        <h2 className="text-base font-semibold text-foreground">Where to focus</h2>
+        <p className="mt-1 text-sm text-muted-foreground">Activity for the selected range</p>
         <StatCardGrid cols={3} className="mt-4" stackOnMobile>
           <LoadingStat label="Needs triage" icon={Inbox} tone="amber" />
           <LoadingStat label="Planned or underway" icon={Clock} tone="blue" />
           <LoadingStat label="Delivered" icon={CheckCircle2} tone="emerald" />
-        </StatCardGrid>
-      </div>
-      <div>
-        <h2 className="mb-3 text-sm font-medium text-foreground">Delivery coverage</h2>
-        <StatCardGrid cols={3}>
-          <LoadingStat label="Linked projects" icon={LayoutGrid} />
-          <LoadingStat label="Active" icon={FolderOpen} tone="emerald" />
-          <LoadingStat label="Completed" icon={CheckCircle2} tone="blue" />
-        </StatCardGrid>
-      </div>
-      <div>
-        <h2 className="mb-3 text-sm font-medium text-foreground">Customer response</h2>
-        <StatCardGrid cols={4}>
-          <LoadingStat label="Open" icon={Inbox} />
-          <LoadingStat label="In progress" icon={BarChart2} tone="amber" />
-          <LoadingStat label="Resolved" icon={CheckCircle2} tone="emerald" />
-          <LoadingStat label="Archived" icon={FolderOpen} />
-        </StatCardGrid>
-      </div>
-      <div>
-        <h2 className="mb-1 text-sm font-medium text-foreground">Evidence linked to the roadmap</h2>
-        <p className="mb-3 text-xs text-muted-foreground">Linked feedback posts are distinct from widget submissions above.</p>
-        <StatCardGrid cols={4}>
-          <LoadingStat label="Roadmap items" icon={LayoutGrid} />
-          <LoadingStat label="Completed items" icon={CheckCircle2} tone="blue" />
-          <LoadingStat label="Linked feedback" icon={MessageSquare} tone="amber" />
-          <LoadingStat label="Feedback votes" icon={ThumbsUp} tone="emerald" />
         </StatCardGrid>
       </div>
       <div>
@@ -152,10 +116,6 @@ export function ProductInsightsSkeleton() {
           <LoadingStat label="Days since product update" icon={Clock} />
           <LoadingStat label="Confidence score" icon={CheckCircle2} tone="blue" />
         </StatCardGrid>
-      </div>
-      <div>
-        <h2 className="mb-4 text-sm font-semibold text-foreground">Opportunities</h2>
-        <Skeleton className="h-40 w-full rounded-xl" />
       </div>
     </div>
   );
@@ -223,24 +183,32 @@ export function ProductGoalsGridSkeleton() {
   return (
     <div data-testid="product-goals-skeleton" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
       {GOAL_CARD_SLOTS.map((slot) => (
-        <div key={slot} className={cn(PM_PANEL, "space-y-3 border-border/80 bg-card p-4 shadow-sm")}>
-          <div className="flex items-center justify-between gap-2">
-            <Skeleton className="h-3.5 w-28" />
+        <div key={slot} className={cn(PM_PANEL, "flex flex-col gap-3 border-border/80 bg-card p-4 shadow-sm")}>
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0 flex-1 space-y-2">
+              <Skeleton className="h-3 w-24" />
+              <Skeleton className="h-5 w-4/5" />
+            </div>
             <Skeleton className="h-5 w-20 rounded-full" />
           </div>
-          <Skeleton className="h-4 w-4/5" />
-          <div className="space-y-2 rounded-lg border border-border/60 bg-muted/30 px-3 py-2.5">
-            <div className="flex justify-between gap-2">
+          <div className="space-y-1.5">
+            <div className="flex justify-between gap-3">
               <Skeleton className="h-3 w-14" />
-              <Skeleton className="h-3 w-8" />
+              <Skeleton className="h-4 w-8" />
             </div>
             <Skeleton className="h-1.5 w-full rounded-full" />
           </div>
-          <div className="flex justify-between gap-3">
-            <Skeleton className="h-3 w-24" />
-            <Skeleton className="h-3 w-10" />
+          <div className="grid grid-cols-2 gap-3 border-t border-border/80 pt-3">
+            <div className="space-y-1.5">
+              <Skeleton className="h-3 w-12" />
+              <Skeleton className="h-4 w-24" />
+            </div>
+            <div className="space-y-1.5">
+              <Skeleton className="ml-auto h-3 w-16" />
+              <Skeleton className="ml-auto h-4 w-6" />
+            </div>
           </div>
-          <Skeleton className="h-3 w-32" />
+          <Skeleton className="h-3 w-40" />
         </div>
       ))}
     </div>
@@ -271,6 +239,16 @@ export function ProductRoadmapSkeleton() {
           ))}
         </div>
       ))}
+    </div>
+  );
+}
+
+export function ProductRoadmapBoardSkeleton() {
+  return (
+    <div data-testid="product-roadmap-skeleton" className="flex min-h-0 flex-1 gap-3 overflow-x-auto pb-2">
+      <KanbanColumnSkeleton />
+      <KanbanColumnSkeleton />
+      <KanbanColumnSkeleton />
     </div>
   );
 }
