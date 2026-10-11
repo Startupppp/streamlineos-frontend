@@ -138,14 +138,14 @@ export function ManagedProductOverviewPage({ managedProductId }: ManagedProductO
                 product={summaryData.product}
               />
               <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
-                <ManagedProductOverviewEvidenceCard
-                  managedProductId={managedProductId}
-                  evidence={summaryData.evidence}
-                  previews={summaryData.previews}
-                />
                 <ManagedProductOverviewDeliveryCard
                   managedProductId={managedProductId}
                   delivery={summaryData.delivery}
+                  previews={summaryData.previews}
+                />
+                <ManagedProductOverviewEvidenceCard
+                  managedProductId={managedProductId}
+                  evidence={summaryData.evidence}
                   previews={summaryData.previews}
                 />
               </div>

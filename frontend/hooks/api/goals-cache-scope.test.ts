@@ -16,22 +16,32 @@ const GOAL_WRITES = [
   "useDeleteGoal",
 ];
 
-const CHECK_IN_WRITES = ["useCheckIn"];
-
 describe("goals cache invalidation is scoped correctly", () => {
   it.each(GOAL_WRITES)(
-    "%s patches the cache via setQueryData and never does a broad goals.all refetch",
+    "%s never does a broad goals.all refetch",
     (hook) => {
-      expect(bodyOf(hook)).toContain("setQueryData");
       expect(bodyOf(hook)).not.toContain("goals.all");
     },
   );
 
+  it("useCreateGoal inserts into loaded lists and seeds the detail cache from the response", () => {
+    const body = bodyOf("useCreateGoal");
+    expect(body).toContain("setQueryData");
+    expect(body).toContain("goals.detail(");
+    expect(body).toContain("forEachGoalList");
+  });
+
   it("useUpdateGoal patches the detail and every loaded list page from the response", () => {
     const body = bodyOf("useUpdateGoal");
     expect(body).toContain("goals.detail(");
-    expect(body).toContain("goals.list()");
+    expect(body).toContain("forEachGoalList");
     expect(body).toContain("setQueryData");
+  });
+
+  it("useDeleteGoal removes the goal from every loaded list and evicts the detail entry", () => {
+    const body = bodyOf("useDeleteGoal");
+    expect(body).toContain("forEachGoalList");
+    expect(body).toContain("removeQueries");
   });
 
   it.each(GOAL_WRITES)("%s carries a named mutationKey so concurrent mutations are identifiable", (hook) => {
@@ -41,7 +51,7 @@ describe("goals cache invalidation is scoped correctly", () => {
   it("useCheckIn patches the detail and loaded lists from the response; stats are server-side aggregates so they are marked stale only", () => {
     const body = bodyOf("useCheckIn");
     expect(body).toContain("goals.detail(");
-    expect(body).toContain("goals.list()");
+    expect(body).toContain("forEachGoalList");
     expect(body).toContain("goals.stats()");
     expect(body).not.toContain("goals.all");
   });
@@ -50,14 +60,14 @@ describe("goals cache invalidation is scoped correctly", () => {
     const body = bodyOf("useAddGoalLink");
     expect(body).not.toContain("goals.all");
     expect(body).toContain("goals.detail(");
-    expect(body).toContain("goals.list()");
+    expect(body).toContain("forEachGoalList");
   });
 
   it("useRemoveGoalLink removes the link from the detail cache and decrements list link counts", () => {
     const body = bodyOf("useRemoveGoalLink");
     expect(body).not.toContain("goals.all");
     expect(body).toContain("goals.detail(");
-    expect(body).toContain("goals.list()");
+    expect(body).toContain("forEachGoalList");
   });
 
   it("useGoals uses the gated query with the build:goals:view permission so a denied read is not a hang", () => {
