@@ -1,7 +1,11 @@
 "use client";
 
 import * as React from "react";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   Drawer,
   DrawerContent,
@@ -111,8 +115,9 @@ function ResponsivePopoverTrigger({
 const DEFAULT_DRAWER_DESCRIPTION =
   "A sheet of controls for the button you just activated. Press Escape, or swipe the sheet down, to close it and return to the page.";
 
-interface ResponsivePopoverContentProps
-  extends React.ComponentPropsWithoutRef<typeof PopoverContent> {
+interface ResponsivePopoverContentProps extends React.ComponentPropsWithoutRef<
+  typeof PopoverContent
+> {
   title?: string;
   description?: string;
   drawerClassName?: string;
@@ -193,12 +198,6 @@ const ResponsivePopoverContent = React.forwardRef<
       className={className}
       {...props}
     >
-      {showHeader ? (
-        <div className="shrink-0 border-b border-border px-4 py-3 text-left">
-          <h2 className="text-base font-semibold">{title}</h2>
-          <p className="mt-1 text-label text-muted-foreground">{description}</p>
-        </div>
-      ) : null}
       {children}
     </PopoverContent>
   );

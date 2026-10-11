@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { notFound, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { DataTableSkeleton } from "@/components/ui/data-table";
 import { BuildListSurface } from "@/features/build/shared/build-list-surface";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -49,6 +49,7 @@ import {
   MANAGED_PRODUCT_DETAIL_CONTENT_CLASS,
   ManagedProductDetailPrimarySection,
   ManagedProductDetailShell,
+  ManagedProductNotFound,
 } from "./managed-product-detail-layout";
 import { CaptureSubmissionSheet } from "./feedback/capture-submission-sheet";
 import { FeedbackPane } from "./feedback/feedback-pane";
@@ -310,7 +311,7 @@ export function ProductFeedbackPage({
     [],
   );
 
-  if (productQuery.isSuccess && productQuery.data === null) notFound();
+  if (productQuery.isSuccess && productQuery.data === null) return <ManagedProductNotFound />;
 
   return (
     <>

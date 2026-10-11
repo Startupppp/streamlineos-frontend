@@ -5,7 +5,6 @@ export { render, screen };
 export const mockRouterPush = jest.fn();
 
 export const mockRouterReplace = jest.fn();
-export const mockNotFound = jest.fn();
 
 export const mockUseSearchParams = jest.fn(() => new URLSearchParams());
 
@@ -13,7 +12,6 @@ jest.mock("next/navigation", () => ({
   useRouter: () => ({ replace: mockRouterReplace, push: mockRouterPush }),
   usePathname: () => "/build/managed-products/7/goals",
   useSearchParams: mockUseSearchParams,
-  notFound: mockNotFound,
 }));
 
 jest.mock("@/hooks/api/access", () => ({

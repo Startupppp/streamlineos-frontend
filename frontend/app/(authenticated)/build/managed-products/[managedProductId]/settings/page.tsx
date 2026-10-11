@@ -1,5 +1,5 @@
-import { notFound } from "next/navigation";
 import { enforceRouteAccess } from "@/lib/rbac/route-access/enforce-route-access";
+import { ManagedProductNotFound } from "@/features/build/managed-products/managed-product-detail-layout";
 import { ProductSettingsPage } from "@/features/build/managed-products/product-settings-page";
 
 export const metadata = {
@@ -14,6 +14,6 @@ export default async function ProductSettingsRoute({ params }: Props) {
   await enforceRouteAccess("/build/managed-products/[managedProductId]/settings");
   const { managedProductId } = await params;
   const parsed = Number(managedProductId);
-  if (!Number.isInteger(parsed) || parsed <= 0) notFound();
+  if (!Number.isInteger(parsed) || parsed <= 0) return <ManagedProductNotFound />;
   return <ProductSettingsPage managedProductId={parsed} />;
 }
