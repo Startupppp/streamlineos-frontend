@@ -119,7 +119,7 @@ None yet.
 
 - Screen: managed-product Overview, and the Denial checklist item
 - Reason: this session has one signed-in actor who can view and edit Build QA Sandbox. A second user without managed-product permission, and a second tenant, are not available. Denial was not executed.
-- Writes still open: creating a product, which adds a product outside the sandbox. Archive, restore, and edit-save were checked on product 39 and are removed from this list.
+- Writes still open: none for create. Product "QA BV product create" (QABVCR, id 40) was created from New product and is on the directory after reload. Denial is still open because this session has one signed-in actor.
 
 ### BVG-BLOCK-002
 
@@ -127,13 +127,13 @@ None yet.
 - Checklist source: `docs/build-module/audit/managed-product-pending-work.md` — Feedback capture, classify, merge, opportunity link, Intake route, and a product-linked Feedbucket widget submission
 - Reason: the environment was not confirmed disposable, so classify, duplicate merge, opportunity link, route to Intake, and a Feedbucket widget submission were not executed. Denial stays on BVG-BLOCK-001 (one signed-in actor).
 - Accidental write already on the product: one `POST /feedbucket/submissions/capture` returned 201. The row is Type Idea, channel Manual, status Open, frequency 1, and the message is not meaningful customer text. It survived refresh. The row has no archive control on the list. It was left in place and reused only as the filter fixture.
-- Cache checklist: not proven. The capture hook invalidates with `refetchType: "none"`, and the first client patch omitted `duplicateCount` (frequency rendered NaN until refresh). The patch now includes status, duplicate count, and created time, and that patch was not re-checked with another write.
+- Cache checklist: proven. A capture updated the overview feedback count from 5 to 6 with no summary GET. See the Verification log.
 
 ### BVG-BLOCK-004
 
 - Screen: `http://localhost:1000/build/managed-products/39/projects`
 - Checklist source: `docs/build-module/audit/managed-product-pending-work.md` — Linked Projects customer filter
-- Reason: the organization has no CRM clients (`/crm/clients` shows "No clients yet"), and a client is only created when a lead is won. Neither linked project has a client, so the only case available is the empty one. Making a client means winning a real CRM lead, which was not done
+- Reason: the organization has no CRM clients (`/crm/clients` shows "No clients yet"). New Client submits `POST /clients` with `{ "name": "QA BV Client" }` and returns 400 `VALIDATION_FAILED`: `fk_client_party_map_legacy` references a record that does not exist. Migration `1093_party_map_drop_legacy_fks` drops that constraint because the write path no longer inserts a legacy `clients` row. Production still enforces it, so the list stays empty and the customer filter cannot be set to a real client.
 - Proven so far: the Customer list loads from `GET /clients/list` (200) and offers only "All customers"
 
 ### BVG-BLOCK-002 update
@@ -144,7 +144,7 @@ None yet.
 
 - Screen: `http://localhost:1000/build/managed-products/39` and every other product route
 - Checklist source: `docs/build-module/audit/managed-product-pending-work.md` — remaining browser verification
-- Reason: every Cursor IDE browser tab redirected to `/signin?session=expired`. Credentials are not invented. Browser clicks on Overview, Roadmap, Feedback, Goals, Projects, and Denial cannot continue until the user signs in again.
+- Reason: an earlier pass lost the session and stopped. The later pass was signed in. Denial and the customer filter remain open for the reasons in BVG-BLOCK-001 and BVG-BLOCK-004.
 
 ## Assumptions
 
@@ -177,13 +177,26 @@ Post-fix browser reload is blocked on a fresh sign-in.
 - Collect via Feedbucket offers Create product widget. The widget was not created.
 - Linked Projects filters include Team, Owner, Customer, Contribution, and dates. Customer offers only All customers (BVG-BLOCK-004).
 - Goals shows QA BV Goal and testing, both owned by adityachalla01, with pagination.
+- 2026-10-11 after the backend deploy. Insights at `?view=discovery&opportunity=1` loads opportunities and opens QA BV Opportunity A with RICE 450.00 and the override reason.
+- Owner: Edit product, choose Unassigned, save. Overview reads "Owner Unassigned" and "No product owner". Set the owner back to adityachalla01, save, reload. Overview reads "Owner adityachalla01".
+- Roadmap: Move up on QA BV Roadmap item in Now. After reload it stays first and QA BV Opportunity A is second. Moved Opportunity A back up so the column is in its previous order.
+- Route to Intake: `POST /feedbucket/submissions/94/route-to-intake` — 201, `intakeId` 10, `created` true. Build QA Sandbox Intake (`/build/6/intake`) lists that pending Feedbucket item. Submission 96 was already in Intake (`created` false, `intakeId` 9) and is listed there too.
+- Missing product: `GET /build/managed-products/999999999` — 404 and `GET /feedbucket/submissions?managedProductId=999999999` — 404. The screen is Product not found. `GET /feedbucket/submissions/facets?managedProductId=999999999` still returns 200.
+- Collect via Feedbucket: Create product widget succeeds and shows the embed snippet for "Build QA Sandbox feedback". Submitting through that snippet adds a row, "QA BV widget check: product widget submission", with the Feedbucket channel.
+- Directory create: New product "QA BV product create", key QABVCR. `POST /build/managed-products` created id 40. After reload the directory lists it above Build QA Sandbox, owner Unassigned, 0 projects.
+- Epic accept: roadmap item 41 "QA BV epic accept" is in Next with project 6 and epic 89. The Epic link target `/build/6/issues?ticket=89` opens "Build module end-to-end auditQA Epic —", status In Review.
+- Epic picker: Edit "QA BV Roadmap item", choose delivery project Build QA Sandbox, then epic "Build module end-to-end auditQA Epic —", and save. Toast "Roadmap item updated". After reload the card keeps the Epic link, and `GET /build/roadmap?managedProductId=39` returns item 40 with `projectId` 6 and `epicTicketId` 89.
+- Cache: overview showed New feedback 5 and Total feedback 5. Capture "QA BV cache count two: overview should follow this capture" returned `POST /feedbucket/submissions/capture` 201 and no summary GET. Opening Overview then showed New feedback 6, Total feedback 6, and 4 unthemed items, with no GET of the summary.
+- Directory create, second product: New product "QA BV Outside Sandbox", key QBOS. Toast "Managed product created". After reload the directory still lists it.
+- Missing-product facets: `GET /feedbucket/submissions/facets?managedProductId=999999999` still returns 200 on the deployed API. Local `FeedbucketFacetsService.facets` now rejects a missing product the same way the submissions list does. That change is not deployed, so the box stays with the submissions list only.
 
 ## Delivery checklist
 
-- [ ] BVG-OWN-001: deploy the backend owner write-path fix, then set and clear the owner on product 39 from Edit product and confirm the overview follows each change.
-- [ ] BVG-BLOCK-001: run Denial with a user lacking managed-product permission and a user from another tenant, then create a product on a confirmed disposable environment.
-- [ ] BVG-RM-001: deploy, then Move up a tied card on the product 39 roadmap and confirm it stays after reload.
-- [ ] BVG-FB-003: deploy, then route submission 94 to Build QA Sandbox and confirm it appears in that project's Intake.
-- [ ] BVG-INS-001: deploy, then open product 39 Insights and the `opportunity=1` deep link.
-- [ ] BVG-FB-004: deploy, then Create product widget from Collect via Feedbucket, submit through its snippet, and confirm the row shows the Feedbucket badge.
+- [x] BVG-OWN-001: deploy the backend owner write-path fix, then set and clear the owner on product 39 from Edit product and confirm the overview follows each change.
+- [x] BVG-BLOCK-001 create: create a product on the directory and confirm it remains after reload.
+- [ ] BVG-BLOCK-001: run Denial with a user lacking managed-product permission and a user from another tenant.
+- [x] BVG-RM-001: deploy, then Move up a tied card on the product 39 roadmap and confirm it stays after reload.
+- [x] BVG-FB-003: deploy, then route submission 94 to Build QA Sandbox and confirm it appears in that project's Intake.
+- [x] BVG-INS-001: deploy, then open product 39 Insights and the `opportunity=1` deep link.
+- [x] BVG-FB-004: deploy, then Create product widget from Collect via Feedbucket, submit through its snippet, and confirm the row shows the Feedbucket badge.
 - [ ] BVG-BLOCK-004: win a CRM lead into a client, link it to a product project, and filter Linked Projects by that customer.

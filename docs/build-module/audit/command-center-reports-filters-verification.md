@@ -87,6 +87,10 @@ This does not close the [Command Center](../experience/03-command-center-and-per
 - Post-fix browser proof at 375/768/1280, keyboard Customize, and Reset. Blocked on a fresh sign-in.
 - Denial, tenant isolation, and saved-view create/apply against the live API were not re-run after the param fix.
 
+## Delivery checklist
+
+The remaining checks are the Still open list above. None of them is closed.
+
 ## Frontend files
 
 - `frontend/features/build/command-center/command-center-summary-widgets.tsx`

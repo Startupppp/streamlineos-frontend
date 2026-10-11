@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import { createElement } from "react";
 import { createAppQueryClient } from "@/components/providers/query-provider";
 import { growthAndSignQueryKeys } from "@/lib/query-keys/growth-and-sign";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { apiClient } from "@/lib/api-client";
 
 jest.mock("@/lib/dom-mutation-guard", () => ({}));
@@ -117,6 +118,32 @@ describe("feedbucket triage writes keep the product feedback list in step withou
     expect(listRow(client, 96)?.duplicateOfId).toBeNull();
     expect(listRow(client, 95)?.duplicateCount).toBe(0);
     expect(detail(client, 95)?.duplicateCount).toBe(0);
+  });
+
+  it("raises the product overview feedback count without refetching the summary", async () => {
+    const client = createAppQueryClient("authenticated:org-1:u-1");
+    const summaryKey = buildWorkQueryKeys.projects.managedProducts.summary(39);
+    client.setQueryData(summaryKey, {
+      evidence: { feedbackCount: 4, feedbackLast30d: 2, themedCount: 1, latestFeedbackAt: null },
+    });
+    mockPost.mockResolvedValue({ submissionId: 101, widgetId: 7, widgetCreated: false });
+    const { useCaptureSubmission } = await import("./use-feedbucket-submissions");
+    const { result } = renderHook(() => useCaptureSubmission(), { wrapper: wrapper(client) });
+    await act(async () => {
+      await result.current.mutateAsync({
+        managedProductId: 39,
+        message: "QA BV cache count",
+        sourceChannel: "manual",
+        type: "idea",
+        consentStatus: "unknown",
+      });
+    });
+    expect(client.getQueryData<{ evidence: { feedbackCount: number; feedbackLast30d: number; themedCount: number; latestFeedbackAt: string | null } }>(summaryKey)?.evidence).toMatchObject({
+      feedbackCount: 5,
+      feedbackLast30d: 3,
+      themedCount: 1,
+    });
+    expect(mockPost).toHaveBeenCalledTimes(1);
   });
 
   it("leaves the list untouched when the write fails", async () => {
