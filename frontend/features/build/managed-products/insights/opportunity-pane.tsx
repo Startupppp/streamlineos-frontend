@@ -39,7 +39,7 @@ export function OpportunityPane({
   const [declineOpen, setDeclineOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"details" | "trace">("details");
 
-  const { data: opportunity, isLoading } = useOpportunity(
+  const { data: opportunity, isLoading, isError, error } = useOpportunity(
     managedProductId,
     opportunityId ?? 0,
   );
@@ -179,7 +179,14 @@ export function OpportunityPane({
               <p className="text-sm text-muted-foreground">Loading opportunity…</p>
             )}
 
-            {!isLoading && opportunity && activeTab === "details" && (
+            {isError && (
+              <div className="flex flex-col items-center justify-center gap-3 py-8 text-center">
+                <p className="text-sm font-medium text-foreground">Could not load opportunity</p>
+                <p className="text-xs text-muted-foreground">{getErrorMessage(error)}</p>
+              </div>
+            )}
+
+            {!isLoading && !isError && opportunity && activeTab === "details" && (
               <div className="space-y-4">
                 {opportunity.problem && (
                   <div>
