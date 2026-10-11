@@ -83,7 +83,7 @@ export function ManagedProductOverviewDeliveryCard({
         <p className="text-sm text-muted-foreground">Linked projects</p>
         <Link
           href={`/build/managed-products/${managedProductId}/projects`}
-          className="inline-flex min-h-11 items-center font-mono text-sm tabular-nums text-primary underline-offset-2 hover:underline"
+          className="inline-flex min-h-11 min-w-11 items-center justify-end font-mono text-sm tabular-nums text-primary underline-offset-2 hover:underline"
         >
           {delivery.linkedProjects}
         </Link>

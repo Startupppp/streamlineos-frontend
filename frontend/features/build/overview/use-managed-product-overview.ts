@@ -37,6 +37,18 @@ export const INITIATIVE_STATUS_OPTIONS = [
 
 const EDIT_ACTION_BASE = { id: "edit", label: "Edit product", icon: Pencil, primary: true as const };
 
+function positiveTeamId(value: string | undefined): number | undefined {
+  if (!value || value === BUILD_FILTER_ALL || !/^[1-9]\d*$/.test(value)) return undefined;
+  const parsed = Number(value);
+  return Number.isSafeInteger(parsed) ? parsed : undefined;
+}
+
+function activeSegment(value: string | undefined): string | undefined {
+  if (!value || value === BUILD_FILTER_ALL) return undefined;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+}
+
 function readableToken(value: string): string {
   return value.replaceAll("_", " ").replace(/\b[a-z]/g, (letter) => letter.toUpperCase());
 }
@@ -53,23 +65,24 @@ export function useManagedProductOverview(managedProductId: number) {
   const initiativeStatus: InitiativeStatus | undefined = INITIATIVE_STATUS_VALUES.find(
     (v) => v === rawInitiativeStatus,
   );
-  const teamIdNum =
-    rawTeamId && rawTeamId !== BUILD_FILTER_ALL ? Number(rawTeamId) : undefined;
-  const segment =
-    rawSegment && rawSegment !== BUILD_FILTER_ALL ? rawSegment : undefined;
+  const teamIdNum = positiveTeamId(rawTeamId);
+  const segment = activeSegment(rawSegment);
 
   const isOnline = useOnlineStatus();
   const canEdit = useCan("build:managed-products:update") && isOnline;
 
   const { data: teamsRes } = useProjectTeams({ pageSize: 100 });
   const teams = useMemo(() => teamsRes?.data ?? [], [teamsRes]);
-  const teamOptions = useMemo(
-    () => [
+  const teamOptions = useMemo(() => {
+    const options = [
       { value: BUILD_FILTER_ALL, label: "All teams" },
       ...teams.map((t) => ({ value: String(t.id), label: t.name })),
-    ],
-    [teams],
-  );
+    ];
+    if (teamIdNum !== undefined && !options.some((option) => option.value === String(teamIdNum))) {
+      options.push({ value: String(teamIdNum), label: `Team ${teamIdNum}` });
+    }
+    return options;
+  }, [teams, teamIdNum]);
 
   const summaryQuery = useManagedProductSummary(managedProductId, {
     period,
@@ -80,13 +93,16 @@ export function useManagedProductOverview(managedProductId: number) {
 
   const product = summaryQuery.data?.product ?? null;
 
-  const segmentOptions = useMemo(
-    () => [
+  const segmentOptions = useMemo(() => {
+    const options = [
       { value: BUILD_FILTER_ALL, label: "All segments" },
       ...(product?.segments ?? []).map((s) => ({ value: s, label: s })),
-    ],
-    [product],
-  );
+    ];
+    if (segment && !options.some((option) => option.value === segment)) {
+      options.push({ value: segment, label: segment });
+    }
+    return options;
+  }, [product, segment]);
 
   const resolution = usePageState({
     permission: "build:managed-products:view",
@@ -154,6 +170,8 @@ export function useManagedProductOverview(managedProductId: number) {
     overviewSubtitle,
     teamOptions,
     segmentOptions,
+    teamSelectValue: teamIdNum !== undefined ? String(teamIdNum) : BUILD_FILTER_ALL,
+    segmentSelectValue: segment ?? BUILD_FILTER_ALL,
     handleRetry,
     handlePeriodChange,
     handleTeamChange,

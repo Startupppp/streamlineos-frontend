@@ -28,8 +28,6 @@ export function ManagedProductOverviewPage({ managedProductId }: ManagedProductO
   const {
     listFilters,
     rawPeriod,
-    rawTeamId,
-    rawSegment,
     product,
     editOpen,
     setEditOpen,
@@ -40,6 +38,8 @@ export function ManagedProductOverviewPage({ managedProductId }: ManagedProductO
     summaryDataUpdatedAt,
     teamOptions,
     segmentOptions,
+    teamSelectValue,
+    segmentSelectValue,
     handleRetry,
     handlePeriodChange,
     handleTeamChange,
@@ -77,7 +77,7 @@ export function ManagedProductOverviewPage({ managedProductId }: ManagedProductO
               control: (
                 <BuildFilterSelect
                   label="Team"
-                  value={rawTeamId ?? "all"}
+                  value={teamSelectValue}
                   onValueChange={handleTeamChange}
                   options={teamOptions}
                 />
@@ -103,7 +103,7 @@ export function ManagedProductOverviewPage({ managedProductId }: ManagedProductO
               control: (
                 <BuildFilterSelect
                   label="Segment"
-                  value={rawSegment ?? "all"}
+                  value={segmentSelectValue}
                   onValueChange={handleSegmentChange}
                   options={segmentOptions}
                 />

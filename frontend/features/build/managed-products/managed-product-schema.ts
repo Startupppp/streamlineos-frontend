@@ -10,7 +10,7 @@ const SUCCESS_METRIC_SCHEMA = z.object({
 });
 
 export const createManagedProductSchema = z.object({
-  name: z.string().min(1, "Required").max(255),
+  name: z.string().trim().min(1, "Required").max(255),
   key: z
     .string()
     .min(1, "Required")
@@ -56,7 +56,7 @@ export function toCreateManagedProductInput(
 }
 
 export const editManagedProductSchema = z.object({
-  name: z.string().min(1, "Required").max(255),
+  name: z.string().trim().min(1, "Required").max(255),
   description: z.string().max(2000),
   ownerId: z.string(),
   status: z.enum(["active", "archived"]),

@@ -138,6 +138,56 @@ describe("ManagedProductOverviewPage — period URL param forwarded to summary h
     );
   });
 
+  it("drops a non-numeric team id and a whitespace segment before the summary request", () => {
+    const { useBuildListFilters } = jest.requireMock(
+      "@/features/build/shared/use-build-list-filters",
+    );
+    (useBuildListFilters as jest.Mock).mockReturnValue({
+      value: jest.fn((key: string) => {
+        if (key === "teamId") return "abc";
+        if (key === "segment") return "   ";
+        return undefined;
+      }),
+      setValue: jest.fn(),
+      isActive: jest.fn(() => false),
+      clearAll: jest.fn(),
+      isFiltered: true,
+    });
+    const { useManagedProductSummary } = jest.requireMock(
+      "@/hooks/api/build/managed-product-summary",
+    );
+    render(<ManagedProductOverviewPage managedProductId={42} />);
+    expect(useManagedProductSummary).toHaveBeenCalledWith(
+      42,
+      expect.objectContaining({ teamId: undefined, segment: undefined }),
+    );
+  });
+
+  it("forwards a positive team id and a trimmed segment", () => {
+    const { useBuildListFilters } = jest.requireMock(
+      "@/features/build/shared/use-build-list-filters",
+    );
+    (useBuildListFilters as jest.Mock).mockReturnValue({
+      value: jest.fn((key: string) => {
+        if (key === "teamId") return "12";
+        if (key === "segment") return "  enterprise  ";
+        return undefined;
+      }),
+      setValue: jest.fn(),
+      isActive: jest.fn(() => true),
+      clearAll: jest.fn(),
+      isFiltered: true,
+    });
+    const { useManagedProductSummary } = jest.requireMock(
+      "@/hooks/api/build/managed-product-summary",
+    );
+    render(<ManagedProductOverviewPage managedProductId={42} />);
+    expect(useManagedProductSummary).toHaveBeenCalledWith(
+      42,
+      expect.objectContaining({ teamId: 12, segment: "enterprise" }),
+    );
+  });
+
   it("renders the Period filter control so the URL param is reachable without editing the URL", () => {
     mockPeriod(undefined);
     render(<ManagedProductOverviewPage managedProductId={42} />);

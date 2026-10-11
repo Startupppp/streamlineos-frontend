@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useCan } from "@/hooks/api/access";
+import { readErrorExceptNotFoundReachesBoundary } from "@/lib/query-error-policy";
 import type { ManagedProductRelationsGetManagedProductSummaryResponse } from "@/contracts/build-contracts.generated";
 
 const managedProductSummaryContract = lazyContract(() =>
@@ -51,5 +52,6 @@ export function useManagedProductSummary(managedProductId: number, filters?: Sum
     },
     enabled: canView && managedProductId > 0,
     staleTime: 2 * 60_000,
+    throwOnError: readErrorExceptNotFoundReachesBoundary,
   });
 }

@@ -11,6 +11,11 @@ describe("createManagedProductSchema", () => {
     expect(createManagedProductSchema.safeParse(BASE).success).toBe(true);
   });
 
+  it("rejects a whitespace-only name before the request is sent", () => {
+    const result = createManagedProductSchema.safeParse({ ...BASE, name: "   " });
+    expect(result.success).toBe(false);
+  });
+
   it("rejects invalid keys before the request is sent", () => {
     const result = createManagedProductSchema.safeParse({ ...BASE, key: "lowercase key" });
     expect(result.success).toBe(false);
