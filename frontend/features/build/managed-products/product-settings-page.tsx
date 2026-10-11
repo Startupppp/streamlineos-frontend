@@ -29,6 +29,7 @@ import {
   toEditManagedProductInput,
 } from "./managed-product-schema";
 import { ManagedProductEditFields } from "./managed-product-edit-fields";
+import { ProductSettingsDangerSection } from "./product-settings-danger-section";
 import { ProductSettingsMembersSection } from "./product-settings-members-section";
 import { ProductSettingsReleasesSection } from "./product-settings-releases-section";
 import {
@@ -173,94 +174,54 @@ function ProductSettingsForm({ managedProductId }: ProductSettingsPageProps) {
     >
       {product ? (
         <div className="flex max-w-2xl flex-col gap-8 pb-12">
-          <TabsContent value="general" forceMount className="mt-0 flex flex-col gap-8 outline-none">
-            {isConflict ? (
-              <div
-                role="alert"
-                className="flex items-center justify-between rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
-              >
-                <span>This product was updated by someone else. Reload to see the latest version.</span>
-                <button
-                  type="button"
-                  className="ml-4 shrink-0 font-medium underline"
-                  onClick={handleDismissConflict}
+          <TabsContent value="general" forceMount>
+            <div className="flex flex-col gap-8">
+              {isConflict ? (
+                <div
+                  role="alert"
+                  className="flex items-center justify-between rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
                 >
-                  Reload
-                </button>
-              </div>
-            ) : null}
-
-            <section aria-labelledby="identity-section-heading" className="flex flex-col gap-4">
-              <h2 id="identity-section-heading" className="text-sm font-semibold text-foreground">
-                Identity, strategy &amp; lifecycle
-              </h2>
-              <ManagedProductEditFields form={form} formId={FORM_ID} onSubmit={handleSubmit} />
-              {canUpdate ? (
-                <div className="flex justify-end pt-2">
-                  <LoadingButton
-                    type="submit"
-                    form={FORM_ID}
-                    size="sm"
-                    isPending={updateProduct.isPending}
-                    loadingText="Saving…"
-                    disabled={!form.formState.isDirty}
+                  <span>This product was updated by someone else. Reload to see the latest version.</span>
+                  <button
+                    type="button"
+                    className="ml-4 shrink-0 font-medium underline"
+                    onClick={handleDismissConflict}
                   >
-                    Save changes
-                  </LoadingButton>
+                    Reload
+                  </button>
                 </div>
               ) : null}
-            </section>
 
-            <section aria-labelledby="danger-section-heading" className="flex flex-col gap-3 border-t border-border pt-8">
-              <h2 id="danger-section-heading" className="text-sm font-semibold text-destructive">
-                Danger zone
-              </h2>
-              <div className="flex items-start justify-between gap-4 rounded-md border border-destructive/30 p-4">
-                {product.status === "archived" ? (
-                  <>
-                    <div>
-                      <p className="text-sm font-medium text-foreground">Restore this product</p>
-                      <p className="mt-0.5 text-xs text-muted-foreground">
-                        Make this product active again.
-                      </p>
-                    </div>
-                    {canUpdate ? (
-                      <LoadingButton
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        isPending={restoreProduct.isPending}
-                        loadingText="Restoring…"
-                        onClick={() => setRestoreOpen(true)}
-                      >
-                        Restore
-                      </LoadingButton>
-                    ) : null}
-                  </>
-                ) : (
-                  <>
-                    <div>
-                      <p className="text-sm font-medium text-foreground">Archive this product</p>
-                      <p className="mt-0.5 text-xs text-muted-foreground">
-                        Hide from active views. Can be restored later.
-                      </p>
-                    </div>
-                    {canUpdate ? (
-                      <LoadingButton
-                        type="button"
-                        variant="destructive"
-                        size="sm"
-                        isPending={archiveProduct.isPending}
-                        loadingText="Archiving…"
-                        onClick={() => setArchiveOpen(true)}
-                      >
-                        Archive
-                      </LoadingButton>
-                    ) : null}
-                  </>
-                )}
-              </div>
-            </section>
+              <section aria-labelledby="identity-section-heading" className="flex flex-col gap-4">
+                <h2 id="identity-section-heading" className="text-sm font-semibold text-foreground">
+                  Identity, strategy &amp; lifecycle
+                </h2>
+                <ManagedProductEditFields form={form} formId={FORM_ID} onSubmit={handleSubmit} />
+                {canUpdate ? (
+                  <div className="flex justify-end pt-2">
+                    <LoadingButton
+                      type="submit"
+                      form={FORM_ID}
+                      size="sm"
+                      isPending={updateProduct.isPending}
+                      loadingText="Saving…"
+                      disabled={!form.formState.isDirty}
+                    >
+                      Save changes
+                    </LoadingButton>
+                  </div>
+                ) : null}
+              </section>
+
+              <ProductSettingsDangerSection
+                archived={product.status === "archived"}
+                canUpdate={canUpdate}
+                archivePending={archiveProduct.isPending}
+                restorePending={restoreProduct.isPending}
+                onArchive={() => setArchiveOpen(true)}
+                onRestore={() => setRestoreOpen(true)}
+              />
+            </div>
           </TabsContent>
 
           <TabsContent value="members" className="mt-0 outline-none">

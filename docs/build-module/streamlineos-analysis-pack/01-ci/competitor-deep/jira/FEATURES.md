@@ -43,25 +43,25 @@ Evidence: `evidence/filters-basic-more-options.png` (Basic picker), `evidence/fi
 
 ## Boards
 
-**UI-VERIFIED** at `/jira/software/projects/KAN/boards/2`. CI Jira provided a Kanban board with To Do, In Progress, In Review, and Done columns, visible work cards, search, Filter, Group, share, and Automation controls. Backlog was not available for this board. Evidence: `evidence/board-kanban.png`.
+**UI-VERIFIED** at `/jira/software/projects/KAN/boards/2`. CI Jira provided a Kanban board with To Do, In Progress, In Review, and Done columns, visible work cards, search, Filter, Group, share, and Automation controls. Backlog was not available for this board.
 
 ## Backlog and Sprints
 
-Backlog was not available: `/jira/software/projects/KAN/boards/2/backlog` redirected to a 404 view. Space settings > Features showed Sprints disabled and explicitly **Requires a backlog**; Estimation was off and Standups in Jira was enabled. Evidence: `evidence/features-settings.png`.
+Backlog was not available: `/jira/software/projects/KAN/boards/2/backlog` redirected to a 404 view. Space settings > Features showed Sprints disabled and explicitly **Requires a backlog**; Estimation was off and Standups in Jira was enabled.
 
 ## Summary, List, and Development
 
-- **Summary — UI-VERIFIED:** KPI cards for completed/updated/created/due-soon work, status overview, Epic progress, Filter, and a Reports promotion. The Reports target returned 404 in this space. Evidence: `evidence/summary.png`.
-- **List — UI-VERIFIED:** Project-scoped list with Search work, Filter, Group, sortable work columns, inline edits, and 3 of 3 results. Evidence: `evidence/list.png`.
-- **Development — UI-VERIFIED:** Beta delivery metrics for cycle time/lead time/overdue/reopened/bugs/PRs/vulnerabilities plus Related work tabs for PRs, repositories, vulnerabilities, deployments, and work suggestions. Values were zero with no provider data. Evidence: `evidence/development.png`.
+- **Summary — UI-VERIFIED:** KPI cards for completed/updated/created/due-soon work, status overview, Epic progress, Filter, and a Reports promotion. The Reports target returned 404 in this space.
+- **List — UI-VERIFIED:** Project-scoped list with Search work, Filter, Group, sortable work columns, inline edits, and 3 of 3 results.
+- **Development — UI-VERIFIED:** Beta delivery metrics for cycle time/lead time/overdue/reopened/bugs/PRs/vulnerabilities plus Related work tabs for PRs, repositories, vulnerabilities, deployments, and work suggestions. Values were zero with no provider data.
 
 ## Roadmaps / Plans
 
-**UI-VERIFIED** at `/jira/plans`: Plans directory said **No plans yet** and offered Create plan plus a getting-started guide. No plan was created. Evidence: `evidence/plans.png`.
+**UI-VERIFIED** at `/jira/plans`: Plans directory said **No plans yet** and offered Create plan plus a getting-started guide. No plan was created.
 
 ## Dashboards
 
-**UI-VERIFIED** at `/jira/dashboards`: Search dashboards, Owner/Space/Group filters, Create dashboard, and a Default dashboard row (My organization viewers, Private editors) were visible. Evidence: `evidence/dashboards.png`.
+**UI-VERIFIED** at `/jira/dashboards`: Search dashboards, Owner/Space/Group filters, Create dashboard, and a Default dashboard row (My organization viewers, Private editors) were visible.
 
 ## Forms
 
@@ -69,7 +69,7 @@ No Forms surface was present in the observed project settings navigation; the vi
 
 ## Automations
 
-**UI-VERIFIED** in Space settings > Automation. Flows, Audit log, Templates, Usage, Global administration, and Create flow were visible. The Templates view included three starter flows and searchable/category-filtered templates. Evidence: `evidence/automation.png`.
+**UI-VERIFIED** in Space settings > Automation. Flows, Audit log, Templates, Usage, Global administration, and Create flow were visible. The Templates view included three starter flows and searchable/category-filtered templates.
 
 ## Releases / Versions and Components
 
@@ -77,19 +77,19 @@ No Releases/Versions or Components navigation was available in this team-managed
 
 ## Apps / Marketplace
 
-**UI-VERIFIED** via Apps > Explore more apps. Marketplace showed over 1,000 apps with search and Pricing, Trust signals, Categories, Use cases, and More filters; no app was installed. Evidence: `evidence/marketplace.png`.
+**UI-VERIFIED** via Apps > Explore more apps. Marketplace showed over 1,000 apps with search and Pricing, Trust signals, Categories, Use cases, and More filters; no app was installed.
 
 ## Project settings
 
-**UI-VERIFIED** at `/jira/software/projects/KAN/settings/details`. Space settings covered Details, Access, Notifications, Automation, Fields, Work types, Features, Custom filters, Timeline, Toolchain, and Apps. Details showed Name `CI Jira`, key `KAN`, Category, and Default assignee controls; nothing was changed. Evidence: `evidence/project-settings.png`.
+**UI-VERIFIED** at `/jira/software/projects/KAN/settings/details`. Space settings covered Details, Access, Notifications, Automation, Fields, Work types, Features, Custom filters, Timeline, Toolchain, and Apps. Details showed Name `CI Jira`, key `KAN`, Category, and Default assignee controls; nothing was changed.
 
 ## Goals
 
-**UI-VERIFIED** through the Jira sidebar's Atlassian Home link. Goal directory showed 23 goals, All goals/My goals/Archived/More views, name search, Tag/Status/Owner/Team/Reporting line filters, and Create your first goal. Evidence: `evidence/goals.png`.
+**UI-VERIFIED** through the Jira sidebar's Atlassian Home link. Goal directory showed 23 goals, All goals/My goals/Archived/More views, name search, Tag/Status/Owner/Team/Reporting line filters, and Create your first goal.
 
 ## Confluence / Docs
 
-**UI-VERIFIED** at `/jira/software/projects/KAN/pages`. The empty state promoted Try Confluence now and Discover Confluence; no connected pages were available. Evidence: `evidence/docs.png`.
+**UI-VERIFIED** at `/jira/software/projects/KAN/pages`. The empty state promoted Try Confluence now and Discover Confluence; no connected pages were available.
 
 ## Free-only notes
 

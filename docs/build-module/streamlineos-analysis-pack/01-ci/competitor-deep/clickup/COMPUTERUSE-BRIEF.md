@@ -25,7 +25,6 @@ Fetch message body for OTP/link.
 - Create one Space + one List + 1–2 tasks so filters have data; cancel destructive actions
 - Open Filters on List, Board, Table, Calendar, Gantt views; document EVERY filter field, operators, AND/OR, nested, save/share, chips
 - Inspect (do not mutate permanently): Templates, Goals, Docs, Whiteboards, Dashboards, Automations, Forms, Guests/sharing, Settings (members, permissions, notifications)
-- Screenshots named `NN-surface-slug.png`
 
 ## Success criteria
 - Signed in OR clear BLOCKED with evidence

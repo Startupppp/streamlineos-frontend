@@ -104,23 +104,6 @@
     "Goals"
   ],
   "result_count": "13 of 13",
-  "evidence": [
-    "evidence/filters-basic-more-options.png",
-    "evidence/filters-jql-functions.png",
-    "evidence/filters-jql-operators.png",
-    "evidence/board-kanban.png",
-    "evidence/features-settings.png",
-    "evidence/summary.png",
-    "evidence/list.png",
-    "evidence/development.png",
-    "evidence/plans.png",
-    "evidence/dashboards.png",
-    "evidence/automation.png",
-    "evidence/marketplace.png",
-    "evidence/project-settings.png",
-    "evidence/goals.png",
-    "evidence/docs.png"
-  ],
   "non_filter_surfaces": [
     {
       "surface": "Boards",

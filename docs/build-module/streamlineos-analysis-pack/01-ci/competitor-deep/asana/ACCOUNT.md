@@ -25,6 +25,6 @@
 
 ## Blocker
 
-The initial job-title field was avoided successfully. After selecting the industry chip and pressing **Continue**, the Chromium renderer again showed **“Aw, Snap! Something went wrong while displaying this webpage. Error code: 9”** during personalization. This is a reproduced blocker even without clicking the job-title text field. Evidence: `evidence/03-industry-chip-selected.png` and `evidence/04-crash-after-industry-chip.png` (prior crash evidence remains in `01`/`02`). Per instruction, stopped after this recurrence.
+The initial job-title field was avoided successfully. After selecting the industry chip and pressing **Continue**, the Chromium renderer again showed **“Aw, Snap! Something went wrong while displaying this webpage. Error code: 9”** during personalization. This is a reproduced blocker even without clicking the job-title text field. Per instruction, stopped after this recurrence.
 
 No captcha/Turnstile was shown. Because onboarding could not finish, no signed-in workspace surfaces could be walked.

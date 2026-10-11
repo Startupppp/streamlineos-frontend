@@ -10,18 +10,18 @@
     "team_invites": "skipped with Remind me later"
   },
   "email_verification": "monday new-device email code completed from disposable mailbox",
-  "auth_modalities_observed": ["email+password", "Google", "Microsoft", "Email Code"],
+  "auth_modalities_observed": [
+    "email+password",
+    "Google",
+    "Microsoft",
+    "Email Code"
+  ],
   "board_created": false,
   "items_created": 0,
   "filters_reached": false,
   "blocker": {
     "url": "https://pxc-ci-monday-20261001.monday.com/boards",
-    "description": "Chrome repeatedly displayed 'Aw, Snap! Something went wrong while displaying this webpage.' Error code: 9 after reloads. The signed-in workspace did not render.",
-    "evidence": [
-      "evidence/onboarding-team.png",
-      "evidence/crash-after-onboarding.png",
-      "evidence/app-crash.png"
-    ]
+    "description": "Chrome repeatedly displayed 'Aw, Snap! Something went wrong while displaying this webpage.' Error code: 9 after reloads. The signed-in workspace did not render."
   },
   "files": [
     "ACCOUNT.md",

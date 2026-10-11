@@ -18,8 +18,6 @@ The Add filter menu visibly exposes:
 
 AI filter opens a searchable prompt menu with suggestions `assigned to me`, `completed in the last month`, and `due in the next 2 weeks`; no paid action was taken.
 
-Evidence: `evidence/filters-field-menu.png`, `evidence/filters-ai-suggestions.png`.
-
 ### Field values and visible operators
 
 | Field | UI-verified values / next step | Operator behavior visible in UI |
@@ -50,8 +48,6 @@ The Dates submenu exposes: Due date, Created date, Updated date, Started date, C
 
 Custom date/timeframe visibly uses operator **in**, a free-form input (example placeholder `Try: May 2027, Q4, 05/20/2027`), unit choices Day / Month / Quarter / Half-year / Year, year-quarter choices, and Cancel / Apply.
 
-Evidence: `evidence/filters-date-custom.png`.
-
 ### Advanced AND/OR and nested groups
 
 - Selecting **Advanced filter** opens a builder with **+ Filter**.
@@ -61,15 +57,11 @@ Evidence: `evidence/filters-date-custom.png`.
 - Adding a filter group from inside a clause creates a nested group; nested groups have their own independent `and`/`or` toggle and delete control.
 - Empty advanced builder and both flat AND and nested group states were visibly verified.
 
-Evidence: `evidence/filters-advanced-empty.png`, `evidence/filters-advanced-and.png`, `evidence/filters-advanced-nested.png`.
-
 ### Filter UX
 
 - Searchable menus show `Filter…` / `Add Filter…` search boxes.
 - Multi-value fields use checkboxes/value rows.
 - Active filters expose an add-another-filter control and a clear-all control.
-
-Evidence: `evidence/filters-active.png`, `evidence/filters-field-menu.png`.
 
 ## Custom Views — UI-VERIFIED
 
@@ -78,23 +70,17 @@ Evidence: `evidence/filters-active.png`, `evidence/filters-field-menu.png`.
 - The new-view builder exposes name, optional description, Save to Tarunchintakunta, Cancel, and Create view.
 - The builder was opened for inspection and cancelled; no view was created or shared.
 
-Evidence: `evidence/custom-views-empty.png`, `evidence/custom-view-builder.png`.
-
 ## Projects — UI-VERIFIED
 
 - Workspace Projects is reachable at `/tarunchintakunta/projects/all`.
 - The workspace was empty and showed **All projects**, **New project**, **Create new project**, and **Documentation**.
 - No project was created. A team Overview also links to Projects.
 
-Evidence: `evidence/projects.png`, `evidence/team-overview.png`.
-
 ## Cycles — UI-VERIFIED
 
 - `/tarunchintakunta/team/TAR/cycles` is a dedicated team Cycles route.
 - The UI explicitly states: **This team has no cycles.**
 - No cycle creation or settings mutation was attempted.
-
-Evidence: `evidence/cycles.png`.
 
 ## Initiatives — UI-VERIFIED
 
@@ -103,35 +89,25 @@ Evidence: `evidence/cycles.png`.
 - Initiative updates and schedules are presented but inactive while the feature is disabled.
 - This is a feature-availability state, not an enabled initiative record.
 
-Evidence: `evidence/initiatives.png`.
-
 ## Triage — UI-VERIFIED route outcome
 
 - The direct team Triage route probe (`/team/TAR/triage`) redirected to All issues (`/team/TAR/all`).
 - All issues showed Active / Backlog / All issues tabs and the four starter issues; no separate Triage queue or triage controls were exposed in this walk.
-
-Evidence: `evidence/triage-redirect-all-issues.png`.
 
 ## Inbox — UI-VERIFIED
 
 - Workspace Inbox is reachable at `/tarunchintakunta/inbox`.
 - It showed one unread notification, a notification list/detail split, and an empty detail illustration until a notification is selected.
 
-Evidence: `evidence/inbox.png`.
-
 ## My Issues — UI-VERIFIED
 
 - `/tarunchintakunta/my-issues/assigned` exposes Assigned, Created, Subscribed, and Activity tabs.
 - Assigned was empty in this workspace and offered Create new issue.
 
-Evidence: `evidence/my-issues.png`.
-
 ## Views / Custom Views — UI-VERIFIED
 
 - Workspace Views (`/tarunchintakunta/views`) exposes Issues and Projects tabs, New view, and an empty-state explanation for custom views.
 - Team Views and the new-view builder remain documented in the earlier Filters walk; no view was saved or shared.
-
-Evidence: `evidence/views.png`, `evidence/custom-views-empty.png`, `evidence/custom-view-builder.png`.
 
 ## Roadmap — UI-VERIFIED route outcome
 
@@ -139,15 +115,11 @@ Evidence: `evidence/views.png`, `evidence/custom-views-empty.png`, `evidence/cus
 - `/tarunchintakunta/roadmap` redirected to workspace Projects rather than exposing a dedicated roadmap page.
 - No roadmap artifact or roadmap-specific controls were visible in this workspace.
 
-Evidence: `evidence/not-found-insights-roadmap.png`, `evidence/projects.png`.
-
 ## Insights / Dashboards — UI-VERIFIED route outcome
 
 - `/tarunchintakunta/insights` rendered Not found.
 - No native Insights or Dashboards surface was exposed in the signed-in navigation.
 - The Integrations catalog does list analytics integrations, including Google Sheets and other dashboard/reporting tools; these are add-ons, not a native Insights page.
-
-Evidence: `evidence/not-found-insights-roadmap.png`, `evidence/integrations-catalog.png`.
 
 ## Docs / Asks — UI-VERIFIED
 
@@ -155,15 +127,11 @@ Evidence: `evidence/not-found-insights-roadmap.png`, `evidence/integrations-cata
 - Team Overview provides Team resources with add documents/links and section affordances.
 - Asks settings describes structured intake from Slack or email but explicitly states availability on Business or Enterprise plans; only the Start free trial CTA was visible.
 
-Evidence: `evidence/team-documents.png`, `evidence/team-overview.png`, `evidence/asks.png`.
-
 ## Automations / SLA — UI-VERIFIED
 
 - Integrations catalog includes an **Automations** category with entries such as Zapier, Create issues via email (Pre-installed), Jira, Raycast, Fivetran, Fillout, and Jotform.
 - SLA settings describes automatic deadlines and automation rules, but explicitly says SLAs are available on Business and Enterprise; Add rule was disabled and only Start free trial was offered.
 - No paid CTA was activated.
-
-Evidence: `evidence/integrations-catalog.png`, `evidence/slas.png`.
 
 ## Integrations / GitHub — UI-VERIFIED
 
@@ -171,19 +139,13 @@ Evidence: `evidence/integrations-catalog.png`, `evidence/slas.png`.
 - GitHub has a dedicated integration detail page describing PR workflows, review in Linear, issue sync, and codebase understanding with Linear Agent.
 - An Enable button is visible; it was not clicked.
 
-Evidence: `evidence/integrations-catalog.png`, `evidence/github-settings.png`.
-
 ## Templates — UI-VERIFIED
 
 - Issue Templates settings is reachable and shows **No issue templates** plus New template.
 - Project Templates is also exposed in the settings navigation; no template was created.
-
-Evidence: `evidence/issue-templates.png`.
 
 ## Agent — UI-VERIFIED
 
 - `/tarunchintakunta/agent` opens a New chat surface with Ask Linear, a Skills selector, and examples for creating a project, researching a topic, and setting up a team.
 - AI & Agents settings shows Linear Agent as Enabled and Usage at `$0.00 remaining`.
 - Coding sessions are labeled Available on Basic; Code Intelligence is labeled Available on Business; no paid action was taken.
-
-Evidence: `evidence/agent.png`, `evidence/ai-agents.png`.

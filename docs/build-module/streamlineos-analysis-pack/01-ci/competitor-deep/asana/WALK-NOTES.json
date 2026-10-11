@@ -53,13 +53,7 @@
     "message": "Aw, Snap! Something went wrong while displaying this webpage.",
     "error_code": "9",
     "reproduced": true,
-    "step": "industry-chip personalization transition",
-    "evidence": [
-      "evidence/01-account-setup-job-title.png",
-      "evidence/02-account-setup-crash-error9.png",
-      "evidence/03-industry-chip-selected.png",
-      "evidence/04-crash-after-industry-chip.png"
-    ]
+    "step": "industry-chip personalization transition"
   },
   "captcha_or_turnstile": false,
   "notes": "Job-title field was not clicked on resume; Continue with it empty worked. Selecting Technology & software reproduced the renderer crash during personalization. Per instruction, stopped; no filter grammar or signed-in feature claims were invented.",

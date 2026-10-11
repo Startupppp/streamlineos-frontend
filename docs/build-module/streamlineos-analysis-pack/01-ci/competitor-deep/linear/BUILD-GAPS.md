@@ -63,4 +63,3 @@
 - Roadmap and Insights were Not found in this workspace; do not market their absence as a universal Linear limitation without checking workspace plan/configuration.
 - Paid CTAs (Start free trial / Enable) were observed only; no upgrade, enablement, invitation, connection, or purchase was performed.
 
-Evidence: see the beyond-Filters inventory and the referenced files under `evidence/`.

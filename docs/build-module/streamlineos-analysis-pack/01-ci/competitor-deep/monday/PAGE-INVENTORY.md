@@ -15,5 +15,3 @@
 ## Signed-in navigation inventory
 
 Not reached. After the team-invite step, the signed-in workspace/boards route repeatedly crashed the Chrome renderer (error code 9). Therefore My Work, Boards, Dashboards, Docs, Workload, Forms, Automations, Integrations, and Admin/settings were not walk-confirmed and are intentionally not claimed here.
-
-Evidence: `evidence/onboarding-team.png`, `evidence/auth-modalities.png`, `evidence/crash-after-onboarding.png`.

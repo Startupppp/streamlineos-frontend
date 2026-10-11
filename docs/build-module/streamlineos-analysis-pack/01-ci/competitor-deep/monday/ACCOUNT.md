@@ -7,6 +7,6 @@
 - **Email:** Disposable mail.tm mailbox; domain type only: `uberip.com`. The monday email login verification challenge was completed from the mailbox.
 - **Auth modalities observed:** email + password; Google; Microsoft; Email Code. No SSO control was observed on the login surface.
 - **Board mutation:** Not reached; no board/items were created.
-- **Blocker:** Signed-in workspace at `https://pxc-ci-monday-20261001.monday.com/boards` repeatedly ended in Chrome “Aw, Snap! Something went wrong while displaying this webpage. Error code: 9” after reloads. Evidence: `evidence/crash-after-onboarding.png`, `evidence/app-crash.png`.
+- **Blocker:** Signed-in workspace at `https://pxc-ci-monday-20261001.monday.com/boards` repeatedly ended in Chrome “Aw, Snap! Something went wrong while displaying this webpage. Error code: 9” after reloads.
 
 Credentials are stored only in `.account-secrets.json` (mode 600).

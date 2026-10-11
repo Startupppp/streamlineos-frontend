@@ -191,13 +191,13 @@ describe("ProductSettingsPage — sections render", () => {
   it("renders the members section heading", () => {
     mockSearch = "tab=members";
     render(<ProductSettingsPage managedProductId={7} />);
-    expect(screen.getByText("Members")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Members" })).toBeInTheDocument();
   });
 
   it("renders the releases section heading", () => {
     mockSearch = "tab=releases";
     render(<ProductSettingsPage managedProductId={7} />);
-    expect(screen.getByText("Releases")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Releases" })).toBeInTheDocument();
   });
 
   it("renders the danger zone section heading", () => {
@@ -346,7 +346,7 @@ describe("ProductSettingsPage — section tabs", () => {
 
   it("writes the members tab into the url", () => {
     render(<ProductSettingsPage managedProductId={7} />);
-    fireEvent.click(screen.getByRole("tab", { name: "Members" }));
+    fireEvent.mouseDown(screen.getByRole("tab", { name: "Members" }));
     expect(mockReplace).toHaveBeenCalledWith(
       "/build/managed-products/7/settings?tab=members",
       { scroll: false },

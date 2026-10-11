@@ -6,7 +6,7 @@ Account creation and initial onboarding were completed. No paid path was entered
 
 ## Filters
 
-**BLOCKED — not reached.** No filter fields, operators, saved-view controls, search grammar, or query examples are recorded because no board/list/table/timeline/calendar surface rendered. Do not treat this section as an inferred monday capability. Evidence: `evidence/crash-after-onboarding.png`, `evidence/app-crash.png`.
+**BLOCKED — not reached.** No filter fields, operators, saved-view controls, search grammar, or query examples are recorded because no board/list/table/timeline/calendar surface rendered. Do not treat this section as an inferred monday capability.
 
 ## Walk-confirmed product observations
 
