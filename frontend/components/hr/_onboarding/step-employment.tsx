@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback } from "react";
 import { type UseFormReturn } from "react-hook-form";
 import { z } from "zod";
 import { onboardEmployeeInputSchema } from "@/lib/validation/hr";
@@ -34,6 +35,13 @@ const NO_LOCATION = "__none__";
 
 export function StepEmployment({ form, departments, locations }: StepEmploymentProps) {
   const canCreateDept = useCan("hr:employees:manage");
+
+  function handleJoiningDateChange(onChange: (value: Date) => void) {
+    return (value: string) => {
+      const parsed = parseDateOnly(value);
+      if (parsed) onChange(parsed);
+    };
+  }
 
   return (
     <div className="grid gap-4 sm:grid-cols-2">
@@ -106,10 +114,7 @@ export function StepEmployment({ form, departments, locations }: StepEmploymentP
             <FormControl>
               <DatePicker
                 value={field.value ? format(field.value, "yyyy-MM-dd") : ""}
-                onChange={(value) => {
-                  const parsed = parseDateOnly(value);
-                  if (parsed) field.onChange(parsed);
-                }}
+                onChange={handleJoiningDateChange(field.onChange)}
                 placeholder="Pick a date"
                 dateFormat="PPP"
                 ariaLabel="Joining Date"

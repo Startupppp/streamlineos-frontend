@@ -95,10 +95,9 @@ function FieldSelect({
   testId,
   onChangeSideEffect,
 }: FieldSelectProps) {
-  const value = form.watch(name) as number | undefined;
   const handleChange = useCallback(
     (v: string) => {
-      form.setValue(name, v ? Number(v) : undefined);
+      form.setValue(name, v ? Number(v) : undefined, { shouldValidate: true });
       onChangeSideEffect?.();
     },
     [form, name, onChangeSideEffect],
@@ -107,10 +106,10 @@ function FieldSelect({
     <FormField
       control={form.control}
       name={name}
-      render={() => (
+      render={({ field }) => (
         <FormItem>
           <FormLabel>{label}</FormLabel>
-          <Select value={idSelectValue(value)} onValueChange={handleChange}>
+          <Select value={idSelectValue(field.value)} onValueChange={handleChange}>
             <SelectTrigger className={FIELD_CONTROL_CLASS} data-testid={testId}>
               <SelectValue placeholder={placeholder} />
             </SelectTrigger>

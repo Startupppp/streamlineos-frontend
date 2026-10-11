@@ -193,6 +193,12 @@ const ResponsivePopoverContent = React.forwardRef<
       className={className}
       {...props}
     >
+      {showHeader ? (
+        <div className="shrink-0 border-b border-border px-4 py-3 text-left">
+          <h2 className="text-base font-semibold">{title}</h2>
+          <p className="mt-1 text-label text-muted-foreground">{description}</p>
+        </div>
+      ) : null}
       {children}
     </PopoverContent>
   );

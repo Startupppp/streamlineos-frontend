@@ -355,7 +355,7 @@ export function RecordForm<T extends Record<string, unknown> = Record<string, un
                               ariaLabel={field.label}
                               placeholder="Pick a date"
                               dateFormat="dd MMM yyyy"
-                              clearable
+                              clearable={!field.required}
                               disabled={isSubmitting}
                             />
                           </FormControl>

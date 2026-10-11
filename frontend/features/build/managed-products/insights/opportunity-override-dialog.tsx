@@ -36,7 +36,7 @@ export function OpportunityOverrideDialog({
       title="Override RICE score"
       description="Provide an override score and a mandatory reason for the change."
       resolver={zodResolver(overrideFormSchema)}
-      defaultValues={{ expectedScoreVersion } as OverrideFormValues}
+      defaultValues={{ overrideScore: 0, reason: "", expectedScoreVersion }}
       onSubmit={onOverride}
       isSubmitting={isSubmitting}
       submitLabel="Save override"
