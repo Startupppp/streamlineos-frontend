@@ -93,6 +93,7 @@ const pageState = usePageState({ permission: "build:view", isLoading, isError, e
 - a constant that only aliases another constant.
 
 Feature `index.ts` barrels sanctioned by FE-65 are the only exception. **The exemption that matters:** a function wrapping a *module-private* `Set`/`Map`/regex/array (`isPlanGatedModule` → `PLAN_GATED_MODULES.has`) is encapsulation, not indirection — it keeps the data structure unexported. Keep those.
+**FE-140.** **Never create a component for a single button.** A component whose body is a `Button`, `LoadingButton`, `<button>`, `Link` or menu item with an icon and a label — optionally plus `useAnimatedIcon()` — is written inline at its call site. An animated-icon button is `<AnimatedIconButton icon={PlusIcon} …>Label</AnimatedIconButton>`; it calls the hook itself, so it works inside `.map` too. A component earns its keep only with real behaviour (a mutation, confirm state, clipboard or download logic), as a memoised list item or DataTable cell that binds its own handler, or as styling shared by 3+ files. *Why:* on 2026-10-11 the Build module carried dozens of `NewXButton`/`RemoveButton` components, several in files of their own, that existed only to call `useAnimatedIcon` for one button.
 **FE-61.** Never import feature → feature. (gate: check:import-direction, check:feature-cycles)
 **FE-62.** Add a row to [UI-KIT.md](./UI-KIT.md#import-index) in the same change that adds or extends a shared component.
 **FE-63.** Deep-import `ErrorState`/`LoadingState`/`NoPermissionState` from the leaf in `app/**` route files, not the barrel. *Why:* the barrel drags `react-hook-form` across the client boundary — ~10–11 KB gzipped for nothing.
@@ -200,7 +201,7 @@ Feature `index.ts` barrels sanctioned by FE-65 are the only exception. **The exe
 9. **FE-92** — no raw hex or arbitrary visual value.
 10. No `any`, no `as X`, no `@ts-ignore`. (gate: check:type-assertions — hard zero)
 11. **FE-125** — no "Load more" button. Numbered pagination when there is a total, infinite scroll when there is not.
-12. **FE-126** — no pass-through wrapper. A function that only forwards to another exported function is deleted, not reviewed.
+12. **FE-126 / FE-140** — no pass-through wrapper, and no component that only renders one button. A function that only forwards to another exported function is deleted, not reviewed; a single button is written inline.
 13. **FE-137 / FE-138** — no state or ref update during render, no props/query/URL mirrored into state in an effect, and no `useEffectEvent` or ref trick to hide one.
 14. **FE-133** — mutations patch the cache from the response; no broad invalidation or refetch of data the mutation already knows.
 15. **FE-134 / FE-135** — no export without an importer, no unused code, no orphaned or duplicated file after a split.
