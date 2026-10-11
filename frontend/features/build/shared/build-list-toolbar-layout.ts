@@ -31,9 +31,8 @@ export const BUILD_TOOLBAR_TRAILING_CLASS =
   "flex min-w-0 shrink-0 items-center gap-2 md:ml-auto";
 
 const BUILD_TOOLBAR_MOBILE_SLOTS = 2;
-/** Selects kept on the toolbar. Tablet and desktop share the wider count. */
-const MOBILE_INLINE_FILTERS = 2;
-const WIDE_INLINE_FILTERS = 3;
+/** Field filters kept on the toolbar at every width. The rest stay in Filters. */
+export const BUILD_TOOLBAR_OUTSIDE_FILTERS = 4;
 
 interface BuildToolbarLayoutEntry {
   filter: BuildToolbarFilter;
@@ -115,8 +114,7 @@ export function toolbarInlineVisibility(
   _collapsed: boolean,
   _fieldFilterCount: number,
 ): string {
-  if (index < MOBILE_INLINE_FILTERS) return "";
-  if (index < WIDE_INLINE_FILTERS) return "max-md:hidden";
+  if (index < BUILD_TOOLBAR_OUTSIDE_FILTERS) return "";
   return "hidden";
 }
 
@@ -125,8 +123,7 @@ export function toolbarDrawerVisibility(
   _collapsed: boolean,
   _fieldFilterCount: number,
 ): string {
-  if (index < MOBILE_INLINE_FILTERS) return "hidden";
-  if (index < WIDE_INLINE_FILTERS) return "md:hidden";
+  if (index < BUILD_TOOLBAR_OUTSIDE_FILTERS) return "hidden";
   return "";
 }
 
@@ -134,7 +131,6 @@ export function toolbarMoreButtonClass(
   filterCount: number,
   _collapse: boolean,
 ): string {
-  if (filterCount <= MOBILE_INLINE_FILTERS) return "hidden";
-  if (filterCount <= WIDE_INLINE_FILTERS) return "inline-flex shrink-0 md:hidden";
+  if (filterCount <= BUILD_TOOLBAR_OUTSIDE_FILTERS) return "hidden";
   return "inline-flex shrink-0";
 }

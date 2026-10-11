@@ -1,6 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -22,6 +28,7 @@ import {
   BUILD_TOOLBAR_CLEAR_LABEL,
   BUILD_TOOLBAR_DRAWER_DESCRIPTION,
   BUILD_TOOLBAR_FILTERS_LABEL,
+  BUILD_TOOLBAR_OUTSIDE_FILTERS,
   BUILD_TOOLBAR_ROOT_CLASS,
   BUILD_TOOLBAR_TRAILING_CLASS,
   buildToolbarLayout,
@@ -65,13 +72,14 @@ function ToolbarFilterSlot({
       data-filter-id={filter.id}
       className={cn(
         "min-w-0 w-auto shrink-0 basis-auto transition-[flex-basis,width] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]",
-        searchCollapsed && "flex-1 basis-0 [&_[data-slot=select-trigger]]:!w-full [&_[data-slot=select-trigger]]:!min-w-0 [&_[data-slot=select-trigger]]:!max-w-none",
+        searchCollapsed &&
+          "flex-1 basis-0 [&_[data-slot=select-trigger]]:!w-full [&_[data-slot=select-trigger]]:!min-w-0 [&_[data-slot=select-trigger]]:!max-w-none",
         fieldIndex === null
           ? "max-md:min-w-0 max-md:shrink-0"
           : cn(
               toolbarInlineVisibility(fieldIndex, collapsed, fieldFilterCount),
-              fieldIndex < 2 &&
-                "max-md:[&_[data-slot=select-trigger]]:w-auto max-md:[&_[data-slot=select-trigger]]:max-w-40",
+              fieldIndex < BUILD_TOOLBAR_OUTSIDE_FILTERS &&
+                "max-md:[&_[data-slot=select-trigger]]:w-auto max-md:[&_[data-slot=select-trigger]]:max-w-none",
             ),
       )}
     >
@@ -86,7 +94,9 @@ function ToolbarOverflowField({ filter }: { filter: BuildToolbarFilter }) {
       data-slot="build-toolbar-drawer-field"
       className="flex w-full min-w-0 flex-col gap-1.5"
     >
-      <span className="text-sm font-normal text-foreground">{filter.label}</span>
+      <span className="text-sm font-normal text-foreground">
+        {filter.label}
+      </span>
       <div className="w-full min-w-0 [&>*]:w-full [&>*]:max-w-none [&_[data-slot=select-trigger]]:w-full">
         {filter.control}
       </div>
@@ -103,7 +113,7 @@ export function BuildListToolbar({
   className,
   collapseActionsOnSearchFocus = false,
   fillMobileActions = false,
-  showFilterPanelHeader = true,
+  showFilterPanelHeader = false,
 }: BuildListToolbarProps) {
   const {
     value: searchValue,
@@ -126,8 +136,6 @@ export function BuildListToolbar({
   });
   const searchCollapsed =
     collapseActionsOnSearchFocus && !searchFocused && !searchValue;
-  // Tablet/desktop search expansion must not make filters unreachable. Only the
-  // true mobile full-width search state temporarily hides the action row.
   const showActions = !searchExpanded;
 
   useEffect(() => {
@@ -152,9 +160,7 @@ export function BuildListToolbar({
   }, []);
 
   const showClear = Boolean(onClearAll) && layout.anyActive;
-  const actionTransition = shouldReduceMotion
-    ? { duration: 0 }
-    : pmSnappy;
+  const actionTransition = shouldReduceMotion ? { duration: 0 } : pmSnappy;
   const actionInitial = shouldReduceMotion
     ? { opacity: 0 }
     : { opacity: 0, x: 8 };
@@ -186,10 +192,16 @@ export function BuildListToolbar({
                 className={cn(
                   "justify-center",
                   RESPONSIVE_ICON_LABEL_TRIGGER_CLASS,
-                  toolbarMoreButtonClass(layout.fieldFilterCount, layout.collapse),
+                  toolbarMoreButtonClass(
+                    layout.fieldFilterCount,
+                    layout.collapse,
+                  ),
                 )}
               >
-                <SlidersHorizontal className="h-4 w-4 shrink-0" aria-hidden="true" />
+                <SlidersHorizontal
+                  className="h-4 w-4 shrink-0"
+                  aria-hidden="true"
+                />
                 <ResponsiveIconLabelText className="truncate">
                   {BUILD_TOOLBAR_FILTERS_LABEL}
                 </ResponsiveIconLabelText>
@@ -235,7 +247,12 @@ export function BuildListToolbar({
               </div>
               {showClear ? (
                 <div className="shrink-0 border-t border-border p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
-                  <Button type="button" variant="outline" onClick={handleClearAll} className="w-full">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleClearAll}
+                    className="w-full"
+                  >
                     {BUILD_TOOLBAR_CLEAR_LABEL}
                   </Button>
                 </div>
@@ -282,9 +299,11 @@ export function BuildListToolbar({
             key="build-toolbar-actions"
             data-slot="build-toolbar-actions"
             className={cn(
-              "flex shrink-0 flex-nowrap items-center gap-2 transition-[flex-basis,width] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]",
+              "flex min-w-0 items-center gap-2 transition-[flex-basis,width] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]",
+              "max-md:w-full max-md:flex-nowrap max-md:overflow-x-auto",
+              "md:flex-wrap",
               searchCollapsed && "flex-1",
-              fillMobileActions && "max-md:w-full max-md:justify-between",
+              fillMobileActions && "max-md:justify-between",
             )}
             initial={actionInitial}
             animate={actionAnimate}
