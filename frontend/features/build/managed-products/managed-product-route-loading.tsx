@@ -19,6 +19,7 @@ import {
 } from "./managed-product-page-skeletons";
 import { FEEDBACK_SKELETON_HEADERS } from "./product-feedback-columns";
 import { INSIGHT_TABS } from "./product-insights-tabs";
+import { PRODUCT_SETTINGS_TABS } from "./product-settings-tabs";
 
 function RouteToolbar({
   search = false,
@@ -198,9 +199,31 @@ export function ProductProjectsRouteLoading() {
   );
 }
 
+function SettingsTabStrip() {
+  return (
+    <div className="box-border flex h-9 w-full min-w-0 items-center gap-1 overflow-x-auto rounded-lg border border-input bg-card p-1 text-muted-foreground md:w-fit">
+      {PRODUCT_SETTINGS_TABS.map((tab) => (
+        <span
+          key={tab.id}
+          className={cn(
+            "inline-flex h-7 min-w-fit flex-1 items-center justify-center whitespace-nowrap rounded-md px-2 text-sm font-medium sm:px-3 md:flex-none",
+            tab.id === "general" && "bg-foreground text-background shadow-sm",
+          )}
+        >
+          {tab.label}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 export function ProductSettingsRouteLoading() {
   return (
-    <ProductRouteLoading title="Settings" subtitle="Configure this product">
+    <ProductRouteLoading
+      title="Settings"
+      subtitle="Configure this product"
+      filters={<SettingsTabStrip />}
+    >
       <ProductSettingsSkeleton />
     </ProductRouteLoading>
   );

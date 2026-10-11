@@ -159,19 +159,7 @@ export function ProductSettingsSkeleton() {
           </div>
         ))}
       </section>
-      <div className="border-t border-border" />
-      <section className="flex flex-col gap-3">
-        <h2 className="text-sm font-semibold text-foreground">Members</h2>
-        <Skeleton className="h-10 w-full rounded-md" />
-        <Skeleton className="h-10 w-full rounded-md" />
-      </section>
-      <div className="border-t border-border" />
-      <section className="flex flex-col gap-3">
-        <h2 className="text-sm font-semibold text-foreground">Releases</h2>
-        <Skeleton className="h-10 w-full rounded-md" />
-      </section>
-      <div className="border-t border-border" />
-      <section className="flex flex-col gap-3">
+      <section className="flex flex-col gap-3 border-t border-border pt-8">
         <h2 className="text-sm font-semibold text-destructive">Danger zone</h2>
         <Skeleton className="h-16 w-full rounded-md" />
       </section>

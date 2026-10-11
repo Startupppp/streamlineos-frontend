@@ -6,10 +6,13 @@ import {
   editManagedProductSchema,
 } from "./managed-product-schema";
 
+const mockReplace = jest.fn();
+let mockSearch = "";
+
 jest.mock("next/navigation", () => ({
-  useRouter: () => ({ replace: jest.fn(), push: jest.fn() }),
+  useRouter: () => ({ replace: mockReplace, push: jest.fn() }),
   usePathname: () => "/build/managed-products/7/settings",
-  useSearchParams: () => new URLSearchParams(),
+  useSearchParams: () => new URLSearchParams(mockSearch),
 }));
 
 jest.mock("@/hooks/api/access", () => ({
@@ -104,11 +107,14 @@ jest.mock("@/components/ui/page-wrapper", () => ({
   PageWrapper: ({
     children,
     title,
+    filters,
   }: {
     children: React.ReactNode;
     title: string;
+    filters?: React.ReactNode;
   }) => (
     <div data-testid="page-wrapper" data-title={title}>
+      {filters}
       {children}
     </div>
   ),
@@ -171,6 +177,7 @@ function setupDefaultMocks() {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockSearch = "";
   mockUseCan.mockReturnValue(true);
   setupDefaultMocks();
 });
@@ -182,11 +189,13 @@ describe("ProductSettingsPage — sections render", () => {
   });
 
   it("renders the members section heading", () => {
+    mockSearch = "tab=members";
     render(<ProductSettingsPage managedProductId={7} />);
     expect(screen.getByText("Members")).toBeInTheDocument();
   });
 
   it("renders the releases section heading", () => {
+    mockSearch = "tab=releases";
     render(<ProductSettingsPage managedProductId={7} />);
     expect(screen.getByText("Releases")).toBeInTheDocument();
   });
@@ -229,12 +238,14 @@ describe("ProductSettingsPage — denied / read-only", () => {
   });
 
   it("hides Add member button when canUpdate is false", () => {
+    mockSearch = "tab=members";
     mockUseCan.mockImplementation((key: string) => key !== "build:managed-products:update");
     render(<ProductSettingsPage managedProductId={7} />);
     expect(screen.queryByRole("button", { name: /add member/i })).not.toBeInTheDocument();
   });
 
   it("hides Add release button when canUpdate is false", () => {
+    mockSearch = "tab=releases";
     mockUseCan.mockImplementation((key: string) => key !== "build:managed-products:update");
     render(<ProductSettingsPage managedProductId={7} />);
     expect(screen.queryByRole("button", { name: /add release/i })).not.toBeInTheDocument();
@@ -248,6 +259,10 @@ describe("ProductSettingsPage — denied / read-only", () => {
 });
 
 describe("ProductSettingsPage — members", () => {
+  beforeEach(() => {
+    mockSearch = "tab=members";
+  });
+
   it("renders existing members", () => {
     mockUseManagedProductMembers.mockReturnValue({
       data: {
@@ -277,6 +292,10 @@ describe("ProductSettingsPage — members", () => {
 });
 
 describe("ProductSettingsPage — releases", () => {
+  beforeEach(() => {
+    mockSearch = "tab=releases";
+  });
+
   it("renders existing releases", () => {
     mockUseManagedProductReleases.mockReturnValue({
       data: {
@@ -306,6 +325,32 @@ describe("ProductSettingsPage — releases", () => {
   it("shows Add release button when canUpdate is true", () => {
     render(<ProductSettingsPage managedProductId={7} />);
     expect(screen.getByRole("button", { name: /add release/i })).toBeInTheDocument();
+  });
+});
+
+describe("ProductSettingsPage — section tabs", () => {
+  it("shows General by default and hides members and releases", () => {
+    render(<ProductSettingsPage managedProductId={7} />);
+    expect(screen.getByRole("tab", { name: "General", selected: true })).toBeInTheDocument();
+    expect(screen.getByText("Identity, strategy & lifecycle")).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Members" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Releases" })).not.toBeInTheDocument();
+  });
+
+  it("falls back to General when the tab param is unknown", () => {
+    mockSearch = "tab=nope";
+    render(<ProductSettingsPage managedProductId={7} />);
+    expect(screen.getByRole("tab", { name: "General", selected: true })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Members" })).not.toBeInTheDocument();
+  });
+
+  it("writes the members tab into the url", () => {
+    render(<ProductSettingsPage managedProductId={7} />);
+    fireEvent.click(screen.getByRole("tab", { name: "Members" }));
+    expect(mockReplace).toHaveBeenCalledWith(
+      "/build/managed-products/7/settings?tab=members",
+      { scroll: false },
+    );
   });
 });
 
