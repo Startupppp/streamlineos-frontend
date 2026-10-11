@@ -9,17 +9,22 @@ import { cn } from "@/lib/utils";
 import { isTransientNetworkError } from "@/lib/query-error-policy";
 import { signInPathForMissingSession } from "@/lib/auth-session-cookies";
 import { ErrorState } from "./error-state";
-import { NoPermissionState } from "./no-permission-state";
-import { DeniedView, FeatureLockedView, QuotaExceededView } from "./page-state-views";
+import {
+  DeniedView,
+  FeatureLockedView,
+  NotFoundView,
+  QuotaExceededView,
+} from "./page-state-views";
 import type { GateStateProps } from "./page-state-shared";
 
-const PAGE_STATE_CONTAINER =
-  "flex min-h-0 min-w-0 w-full flex-1 flex-col";
+const PAGE_STATE_CONTAINER = "flex min-h-0 min-w-0 w-full flex-1 flex-col";
 
 function SessionExpiredState({ compact = false, className }: GateStateProps) {
   function handleSignInAgain() {
     window.location.assign(
-      signInPathForMissingSession(window.location.pathname + window.location.search),
+      signInPathForMissingSession(
+        window.location.pathname + window.location.search,
+      ),
     );
   }
 
@@ -39,9 +44,13 @@ function SessionExpiredState({ compact = false, className }: GateStateProps) {
           compact ? "h-10 w-10" : "h-14 w-14",
         )}
       >
-        <LogIn className={cn("text-muted-foreground", compact ? "w-5" : "w-7")} />
+        <LogIn
+          className={cn("text-muted-foreground", compact ? "w-5" : "w-7")}
+        />
       </div>
-      <h2 className={cn("font-semibold mb-1", compact ? "text-sm" : "text-base")}>
+      <h2
+        className={cn("font-semibold mb-1", compact ? "text-sm" : "text-base")}
+      >
         Your session expired
       </h2>
       <p
@@ -50,13 +59,10 @@ function SessionExpiredState({ compact = false, className }: GateStateProps) {
           compact ? "text-xs" : "text-sm",
         )}
       >
-        You were signed out after a period of inactivity. Signing in again will bring you
-        straight back here.
+        You were signed out after a period of inactivity. Signing in again will
+        bring you straight back here.
       </p>
-      <Button
-        size={compact ? "sm" : "default"}
-        onClick={handleSignInAgain}
-      >
+      <Button size={compact ? "sm" : "default"} onClick={handleSignInAgain}>
         Sign in again
       </Button>
     </div>
@@ -67,6 +73,7 @@ export interface PageStateProps {
   resolution: PageStateResolution;
   loading: ReactNode;
   empty?: ReactNode;
+  notFound?: ReactNode;
   onRetry?: () => void;
   className?: string;
   compact?: boolean;
@@ -77,6 +84,7 @@ export function PageState({
   resolution,
   loading,
   empty,
+  notFound,
   onRetry,
   className,
   compact = false,
@@ -85,16 +93,18 @@ export function PageState({
   switch (resolution.kind) {
     case "loading":
       return (
-        <div className={cn(PAGE_STATE_CONTAINER, className)}>
-          {loading}
-        </div>
+        <div className={cn(PAGE_STATE_CONTAINER, className)}>{loading}</div>
       );
     case "denied":
     case "module-disabled":
     case "module-denied":
     case "plan-required":
       return (
-        <DeniedView resolution={resolution} className={className} compact={compact} />
+        <DeniedView
+          resolution={resolution}
+          className={className}
+          compact={compact}
+        />
       );
     case "quota-exceeded":
       return (
@@ -121,14 +131,12 @@ export function PageState({
     case "session-expired":
       return <SessionExpiredState className={className} compact={compact} />;
     case "not-found":
-      return (
-        <NoPermissionState
-          title="Not found"
-          description="This doesn't exist, or you don't have access to it."
-          className={className}
-          compact={compact}
-        />
-      );
+      if (notFound)
+        return (
+          <div className={cn(PAGE_STATE_CONTAINER, className)}>{notFound}</div>
+        );
+
+      return <NotFoundView className={className} compact={compact} />;
     case "error":
       return (
         <ErrorState
@@ -152,9 +160,7 @@ export function PageState({
       );
     case "ready":
       return (
-        <div className={cn(PAGE_STATE_CONTAINER, className)}>
-          {children}
-        </div>
+        <div className={cn(PAGE_STATE_CONTAINER, className)}>{children}</div>
       );
   }
 }

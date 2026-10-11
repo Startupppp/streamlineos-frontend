@@ -495,7 +495,7 @@ describe("ProductFeedbackPage — feedback pane deep link (BSN-01-FB-PANE)", () 
     });
     useFeedbucketSubmissions.mockReturnValue(EMPTY_FEEDBUCKET_RESULT);
     render(<ProductFeedbackPage managedProductId={999999999} />);
-    expect(screen.getByText("This product doesn't exist, or you don't have access to it.")).toBeInTheDocument();
+    expect(screen.getByTestId("page-state-not-found")).toBeInTheDocument();
     expect(screen.queryByText("No feedback submissions")).not.toBeInTheDocument();
     useManagedProduct.mockReturnValue({
       data: { id: 7, name: "QA" },

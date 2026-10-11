@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { Lock, Zap, ToggleLeft } from "lucide-react";
+import { StateIllustration } from "@/components/illustrations/state-illustration";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
@@ -174,6 +176,51 @@ export function FeatureLockedView({
           </Button>
         )}
       </div>
+    </div>
+  );
+}
+
+interface NotFoundViewProps {
+  title?: string;
+  description?: string;
+  action?: ReactNode;
+  compact?: boolean;
+  className?: string;
+}
+
+export function NotFoundView({
+  title = "Not found",
+  description = "This doesn't exist, or you don't have access to it.",
+  action,
+  compact = false,
+  className,
+}: NotFoundViewProps) {
+  return (
+    <div
+      className={cn(
+        "flex flex-col items-center justify-center text-center",
+        compact ? "py-6 px-4" : "min-h-full w-full flex-1 py-16 px-6",
+        className,
+      )}
+      role="status"
+      aria-label={title}
+    >
+      <StateIllustration
+        preset="search"
+        className={cn("opacity-80", compact ? "h-16 w-16 mb-3" : "h-28 w-28 mb-5")}
+      />
+      <h2 className={cn("font-semibold text-foreground", compact ? "text-sm" : "text-base")}>
+        {title}
+      </h2>
+      <p
+        className={cn(
+          "text-muted-foreground mt-1.5 max-w-sm leading-relaxed",
+          compact ? "text-xs" : "text-sm",
+        )}
+      >
+        {description}
+      </p>
+      {action ? <div className={compact ? "mt-4" : "mt-6"}>{action}</div> : null}
     </div>
   );
 }
