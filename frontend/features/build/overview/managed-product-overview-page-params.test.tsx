@@ -51,6 +51,10 @@ jest.mock("@/features/build/managed-products/managed-product-form-sheet", () => 
   ManagedProductFormSheet: () => null,
 }));
 
+jest.mock("@/features/build/managed-products/insights/opportunity-create-sheet", () => ({
+  OpportunityCreateSheet: () => null,
+}));
+
 beforeEach(() => {
   jest.clearAllMocks();
   usePageState.mockReturnValue({ kind: "ready" });

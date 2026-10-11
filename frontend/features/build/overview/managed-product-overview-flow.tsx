@@ -14,7 +14,13 @@ interface FlowProps {
   summary: ManagedProductSummary;
 }
 
-function StageLink({ stage, isLast }: { stage: ValueStreamStage; isLast: boolean }) {
+function StageLink({
+  stage,
+  isLast,
+}: {
+  stage: ValueStreamStage;
+  isLast: boolean;
+}) {
   return (
     <div className="relative flex min-w-0">
       <Link
@@ -24,8 +30,12 @@ function StageLink({ stage, isLast }: { stage: ValueStreamStage; isLast: boolean
         <span className="text-xs font-medium text-muted-foreground group-hover:text-foreground">
           {stage.label}
         </span>
-        <span className="font-mono text-lg font-semibold tabular-nums text-foreground">{stage.value}</span>
-        <span className="truncate text-xs text-muted-foreground">{stage.hint}</span>
+        <span className="font-mono text-lg font-semibold tabular-nums text-foreground">
+          {stage.value}
+        </span>
+        <span className="truncate text-xs text-muted-foreground">
+          {stage.hint}
+        </span>
       </Link>
       {isLast ? null : (
         <ChevronRight
@@ -37,7 +47,10 @@ function StageLink({ stage, isLast }: { stage: ValueStreamStage; isLast: boolean
   );
 }
 
-export function ManagedProductOverviewFlow({ managedProductId, summary }: FlowProps) {
+export function ManagedProductOverviewFlow({
+  managedProductId,
+  summary,
+}: FlowProps) {
   const { staggerContainer, fadeUp } = useMotionVariants();
   const stages = deriveValueStream(summary, managedProductId);
   return (
@@ -46,11 +59,11 @@ export function ManagedProductOverviewFlow({ managedProductId, summary }: FlowPr
       description="How customer evidence travels through discovery, delivery and measurement."
     >
       <motion.ol
-        aria-label="Signal to outcome"
-        className="grid grid-cols-2 gap-1 sm:grid-cols-3 lg:grid-cols-6 lg:gap-4"
-        variants={staggerContainer}
         initial="hidden"
         animate="visible"
+        variants={staggerContainer}
+        aria-label="Signal to outcome"
+        className="grid grid-cols-2 gap-1 rounded-lg bg-muted/40 p-1 sm:grid-cols-3 lg:grid-cols-6 lg:gap-0 lg:p-1.5"
       >
         {stages.map((stage, index) => (
           <motion.li key={stage.id} variants={fadeUp} className="min-w-0">

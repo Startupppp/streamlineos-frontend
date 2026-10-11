@@ -5,6 +5,7 @@ import { useMemo } from "react";
 import { motion } from "framer-motion";
 import { useMotionVariants } from "@/lib/motion-variants";
 import { ManagedProductFormSheet } from "@/features/build/managed-products/managed-product-form-sheet";
+import { OpportunityCreateSheet } from "@/features/build/managed-products/insights/opportunity-create-sheet";
 import { BuildHeaderActions } from "@/features/build/shared/build-header-actions";
 import { PageState } from "@/components/shared/page-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -39,6 +40,8 @@ export function ManagedProductOverviewPage({ managedProductId }: ManagedProductO
     product,
     editOpen,
     setEditOpen,
+    createOpen,
+    setCreateOpen,
     resolution,
     overviewSubtitle,
     now,
@@ -129,6 +132,11 @@ export function ManagedProductOverviewPage({ managedProductId }: ManagedProductO
           defaultValues={product}
         />
       ) : null}
+      <OpportunityCreateSheet
+        managedProductId={managedProductId}
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+      />
       <PageState
         resolution={resolution}
         loading={<ManagedProductOverviewSkeleton />}

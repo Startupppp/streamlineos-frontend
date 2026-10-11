@@ -40,16 +40,22 @@ const TEXT_FIELDS: ReadonlyArray<{
 
 const DEFAULT_VALUES: CreateOpportunityFormValues = { title: "" };
 
+interface OpportunityCreateSheetProps {
+  managedProductId: number;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
 interface OpportunityCreateButtonProps {
   managedProductId: number;
 }
 
-export function OpportunityCreateButton({ managedProductId }: OpportunityCreateButtonProps) {
-  const canWrite = useCan("build:managed-products:update");
-  const [open, setOpen] = useState(false);
+export function OpportunityCreateSheet({
+  managedProductId,
+  open,
+  onOpenChange,
+}: OpportunityCreateSheetProps) {
   const createMutation = useCreateOpportunity(managedProductId);
-
-  const handleOpen = useCallback(() => setOpen(true), []);
 
   const handleSubmit = useCallback(
     (values: CreateOpportunityFormValues) => {
@@ -64,13 +70,13 @@ export function OpportunityCreateButton({ managedProductId }: OpportunityCreateB
         {
           onSuccess: () => {
             toast.success("Opportunity created.");
-            setOpen(false);
+            onOpenChange(false);
           },
           onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     },
-    [createMutation],
+    [createMutation, onOpenChange],
   );
 
   function renderFields(form: UseFormReturn<CreateOpportunityFormValues>) {
@@ -89,6 +95,29 @@ export function OpportunityCreateButton({ managedProductId }: OpportunityCreateB
     );
   }
 
+  return (
+    <EntityFormSheet<CreateOpportunityFormValues>
+      open={open}
+      onOpenChange={onOpenChange}
+      title="New opportunity"
+      description="Capture a customer problem worth solving. Score it and link evidence once it is created."
+      resolver={zodResolver(createOpportunityFormSchema)}
+      defaultValues={DEFAULT_VALUES}
+      onSubmit={handleSubmit}
+      isSubmitting={createMutation.isPending}
+      submitLabel="Create opportunity"
+      resetOnOpen
+    >
+      {renderFields}
+    </EntityFormSheet>
+  );
+}
+
+export function OpportunityCreateButton({ managedProductId }: OpportunityCreateButtonProps) {
+  const canWrite = useCan("build:managed-products:update");
+  const [open, setOpen] = useState(false);
+  const handleOpen = useCallback(() => setOpen(true), []);
+
   if (!canWrite) return null;
 
   return (
@@ -97,20 +126,7 @@ export function OpportunityCreateButton({ managedProductId }: OpportunityCreateB
         <Plus className="size-3.5" aria-hidden />
         New opportunity
       </Button>
-      <EntityFormSheet<CreateOpportunityFormValues>
-        open={open}
-        onOpenChange={setOpen}
-        title="New opportunity"
-        description="Capture a customer problem worth solving. Score it and link evidence once it is created."
-        resolver={zodResolver(createOpportunityFormSchema)}
-        defaultValues={DEFAULT_VALUES}
-        onSubmit={handleSubmit}
-        isSubmitting={createMutation.isPending}
-        submitLabel="Create opportunity"
-        resetOnOpen
-      >
-        {renderFields}
-      </EntityFormSheet>
+      <OpportunityCreateSheet managedProductId={managedProductId} open={open} onOpenChange={setOpen} />
     </>
   );
 }

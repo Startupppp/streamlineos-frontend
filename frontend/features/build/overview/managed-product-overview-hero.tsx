@@ -1,10 +1,12 @@
 "use client";
 
-import { CalendarClock, Flag } from "lucide-react";
+import { CalendarClock, Flag, UserRound } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import type { ManagedProductSummary } from "@/hooks/api/build/managed-product-summary";
 import { statusToneClasses } from "@/lib/design-tokens";
 import { formatShortDate } from "@/lib/date-utils";
+import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
 import { cn } from "@/lib/utils";
 import {
   HEALTH_PRESENTATION,
@@ -88,15 +90,42 @@ function LaunchFact({ targetLaunchDate, now }: { targetLaunchDate: string | null
   );
 }
 
+function OwnerFact({ owner }: { owner: ManagedProductSummary["product"]["owner"] }) {
+  if (!owner) {
+    return (
+      <span className="flex items-center gap-2 text-sm text-muted-foreground">
+        <span
+          aria-hidden
+          className="flex size-7 items-center justify-center rounded-full bg-muted text-muted-foreground"
+        >
+          <UserRound className="size-3.5" />
+        </span>
+        Unassigned
+      </span>
+    );
+  }
+  const name = getUserDisplayName(owner);
+  return (
+    <span className="flex items-center gap-2">
+      <Avatar className="size-7">
+        {owner.image ? <AvatarImage src={owner.image} alt="" /> : null}
+        <AvatarFallback className="text-micro">{getUserInitials(owner)}</AvatarFallback>
+      </Avatar>
+      <span className="truncate text-sm font-medium text-foreground">{name}</span>
+    </span>
+  );
+}
+
 export function ManagedProductOverviewHero({ product, now }: HeroProps) {
   const labels = [...product.segments, ...product.tags];
+  const lead = product.vision ?? product.description;
   return (
     <section
       aria-label="Product identity"
       className="flex min-w-0 flex-col gap-5 rounded-xl border border-border bg-card p-4 sm:p-5"
     >
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-        <div className="flex min-w-0 max-w-prose flex-col gap-2">
+        <div className="flex min-w-0 max-w-prose flex-col gap-3">
           <div className="flex flex-wrap items-center gap-2">
             <HealthPill health={product.health} />
             {product.status === "archived" ? (
@@ -105,11 +134,25 @@ export function ManagedProductOverviewHero({ product, now }: HeroProps) {
               </Badge>
             ) : null}
           </div>
-          <p className={cn("text-pretty text-sm", product.description ? "text-foreground" : "text-muted-foreground")}>
-            {product.description ?? "No description yet. Explain what this product is for in product settings."}
+          <p
+            className={cn(
+              "text-pretty text-balance text-base leading-snug",
+              lead ? "font-medium text-foreground" : "text-sm text-muted-foreground",
+            )}
+          >
+            {lead ?? "No description yet. Explain what this product is for in product settings."}
           </p>
+          {product.vision && product.description ? (
+            <p className="text-pretty text-sm text-muted-foreground">{product.description}</p>
+          ) : null}
         </div>
-        <dl className="grid shrink-0 grid-cols-1 gap-3 sm:grid-cols-2 lg:w-80">
+        <dl className="grid shrink-0 grid-cols-1 gap-4 sm:grid-cols-3 lg:w-[22rem] lg:grid-cols-1">
+          <div className="flex items-start justify-between gap-3 sm:flex-col sm:justify-start sm:gap-1">
+            <dt className="text-xs text-muted-foreground">Owner</dt>
+            <dd>
+              <OwnerFact owner={product.owner} />
+            </dd>
+          </div>
           <div className="flex items-start justify-between gap-3 sm:flex-col sm:justify-start sm:gap-1">
             <dt className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <CalendarClock aria-hidden className="size-3.5" />

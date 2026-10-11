@@ -56,6 +56,11 @@ jest.mock("@/features/build/managed-products/managed-product-form-sheet", () => 
     open ? <div data-testid="managed-product-edit-sheet" /> : null,
 }));
 
+jest.mock("@/features/build/managed-products/insights/opportunity-create-sheet", () => ({
+  OpportunityCreateSheet: ({ open }: { open: boolean }) =>
+    open ? <div data-testid="opportunity-create-sheet" /> : null,
+}));
+
 beforeEach(() => {
   jest.clearAllMocks();
   usePageState.mockReturnValue({ kind: "ready" });
@@ -185,6 +190,23 @@ describe("ManagedProductOverviewPage — error handling", () => {
     usePageState.mockReturnValue({ kind: "error", error: new Error("network") });
     render(<ManagedProductOverviewPage managedProductId={42} />);
     expect(screen.getByRole("alert")).toBeInTheDocument();
+  });
+});
+
+describe("ManagedProductOverviewPage — record opportunity", () => {
+  it("opens the create sheet from the primary header action", () => {
+    const { useCan } = jest.requireMock("@/hooks/api/access");
+    (useCan as jest.Mock).mockReturnValue(true);
+    render(<ManagedProductOverviewPage managedProductId={42} />);
+    fireEvent.click(screen.getAllByRole("button", { name: /Record opportunity/i })[0]!);
+    expect(screen.getByTestId("opportunity-create-sheet")).toBeInTheDocument();
+  });
+
+  it("offers no record action to a viewer without update permission", () => {
+    const { useCan } = jest.requireMock("@/hooks/api/access");
+    (useCan as jest.Mock).mockReturnValue(false);
+    render(<ManagedProductOverviewPage managedProductId={42} />);
+    expect(screen.queryAllByRole("button", { name: /Record opportunity/i })).toHaveLength(0);
   });
 });
 

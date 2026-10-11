@@ -30,11 +30,23 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsContent, TabsList, TabsTrigger, TABS_CONTENT_PAGE_BODY_CLASS } from "@/components/ui/tabs";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+  TABS_CONTENT_PAGE_BODY_CLASS,
+} from "@/components/ui/tabs";
+import { TablePagination } from "@/components/ui/table-pagination";
 import { Plus, ExternalLink, ListChecks } from "lucide-react";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
-import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
+import {
+  BUILD_FILTER_ALL,
+  useBuildListFilters,
+} from "@/features/build/shared/use-build-list-filters";
+import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
+import { useBuildCursorPager } from "@/features/build/shared/use-build-cursor-pager";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -47,12 +59,47 @@ import {
   createIntakeSchema,
   type CreateIntakeForm,
 } from "@/features/build/intake/intake-schema";
+import type {
+  IntakeSource,
+  IntakeStatus,
+  IntakeStatusCounts,
+} from "@/types/projects";
 
-const INTAKE_TAB_OPTIONS = ["pending", "accepted", "declined", "all"] as const;
+const PAGE_SIZE = 50;
+const EMPTY_STATUS_COUNTS: IntakeStatusCounts = {
+  pending: 0,
+  accepted: 0,
+  declined: 0,
+  duplicate: 0,
+};
+const INTAKE_TAB_OPTIONS = [
+  "pending",
+  "accepted",
+  "declined",
+  "duplicate",
+  "all",
+] as const;
 const INTAKE_MODE_OPTIONS = ["triage"] as const;
+const INTAKE_SOURCE_OPTIONS = [
+  "manual",
+  "web_form",
+  "email",
+  "feedbucket",
+  "portal_client",
+] as const;
+const INTAKE_SOURCE_FILTERS = [
+  { value: BUILD_FILTER_ALL, label: "All sources" },
+  { value: "manual", label: "Manual" },
+  { value: "web_form", label: "Form" },
+  { value: "email", label: "Email" },
+  { value: "feedbucket", label: "Feedbucket" },
+  { value: "portal_client", label: "Portal" },
+] as const;
 const INTAKE_FILTER_DEFINITIONS = [
   { param: "tab", all: "pending", options: INTAKE_TAB_OPTIONS },
   { param: "mode", all: "list", options: INTAKE_MODE_OPTIONS },
+  { param: "source", options: INTAKE_SOURCE_OPTIONS },
+  { param: "view", options: ["bug-reports"] as const },
 ] as const;
 
 export function IntakePage({
@@ -70,8 +117,31 @@ export function IntakePage({
     filters: INTAKE_FILTER_DEFINITIONS,
     withSearch: false,
   });
-  const activeTab = listFilters.value("tab");
+  const pager = useBuildCursorPager(listFilters.resetKey);
+  const urlTab = listFilters.value("tab");
   const triageMode = listFilters.value("mode") === "triage";
+  const sourceValue = listFilters.value("source");
+  const bugReportsView = listFilters.value("view") === "bug-reports";
+  const widenForHighlight = Boolean(
+    highlightRequested && urlTab === "pending" && !triageMode,
+  );
+  const activeTab = widenForHighlight ? "all" : urlTab;
+  const sourceParam: IntakeSource | undefined =
+    sourceValue !== BUILD_FILTER_ALL
+      ? (INTAKE_SOURCE_OPTIONS.find((source) => source === sourceValue) ??
+        (bugReportsView ? "feedbucket" : undefined))
+      : bugReportsView
+        ? "feedbucket"
+        : undefined;
+  const statusParam: IntakeStatus | undefined = triageMode
+    ? "pending"
+    : activeTab === "all"
+      ? undefined
+      : INTAKE_TAB_OPTIONS.includes(
+            activeTab as (typeof INTAKE_TAB_OPTIONS)[number],
+          ) && activeTab !== "all"
+        ? (activeTab as IntakeStatus)
+        : undefined;
 
   const {
     data: intakeData,
@@ -79,7 +149,12 @@ export function IntakePage({
     isError,
     error,
     refetch,
-  } = useIntakeRequests(projectId);
+  } = useIntakeRequests(projectId, {
+    status: statusParam,
+    source: sourceParam,
+    cursor: pager.cursor,
+    limit: PAGE_SIZE,
+  });
   const createMutation = useCreateIntakeRequest();
 
   const createForm = useForm<CreateIntakeForm>({
@@ -134,27 +209,26 @@ export function IntakePage({
   function handleExitTriage(): void {
     listFilters.setValue("mode", "list");
   }
-  const allItems = intakeData?.data ?? [];
+  function handleTabChange(value: string): void {
+    listFilters.setValue("tab", value);
+  }
+  function handleSourceChange(value: string): void {
+    listFilters.setValue("source", value);
+  }
+  function handleNextPage(): void {
+    pager.goNext(intakeData?.pagination.nextCursor);
+  }
+  const items = intakeData?.data ?? [];
+  const statusCounts = intakeData?.statusCounts ?? EMPTY_STATUS_COUNTS;
 
   const highlightedItem =
     highlightId !== undefined
-      ? (allItems.find((i) => i.id === highlightId) ?? null)
+      ? (items.find((i) => i.id === highlightId) ?? null)
       : null;
   const highlightFound = highlightedItem !== null;
   const listSettled = !isLoading && intakeData !== undefined;
   const highlightNotFound =
     highlightRequested && listSettled && highlightedItem === null;
-
-  useEffect(() => {
-    if (
-      highlightFound &&
-      highlightedItem !== null &&
-      activeTab !== "all" &&
-      highlightedItem.status !== activeTab
-    ) {
-      listFilters.setValue("tab", "all");
-    }
-  }, [highlightFound, highlightedItem, activeTab, listFilters]);
 
   useEffect(() => {
     if (highlightRef.current) {
@@ -165,11 +239,9 @@ export function IntakePage({
     }
   }, [highlightFound]);
 
-  const filteredItems = allItems.filter(
-    (item) => activeTab === "all" || item.status === activeTab,
-  );
-  const pendingItems = allItems.filter((i) => i.status === "pending");
-  const pendingCount = pendingItems.length;
+  const pendingItems = items.filter((i) => i.status === "pending");
+  const pendingCount = statusCounts.pending;
+  const sourceFiltered = sourceValue !== BUILD_FILTER_ALL || bugReportsView;
 
   if (
     pageState.kind !== "ready" &&
@@ -214,7 +286,21 @@ export function IntakePage({
       {({ onAccept, onDecline, onDuplicate }) => (
         <PageWrapper
           title="Intake"
-          subtitle="Collect and triage incoming requests from your team or clients"
+          subtitle={
+            bugReportsView
+              ? "Bug reports captured through Feedbucket and other intake sources"
+              : "Collect and triage incoming requests from your team or clients"
+          }
+          filters={
+            triageMode ? undefined : (
+              <BuildFilterSelect
+                label="Source"
+                value={sourceValue}
+                onValueChange={handleSourceChange}
+                options={INTAKE_SOURCE_FILTERS}
+              />
+            )
+          }
           actions={
             <div className="flex w-full flex-wrap items-center gap-2">
               {canManage && !triageMode ? (
@@ -230,7 +316,11 @@ export function IntakePage({
               {canManage && !triageMode ? (
                 <Sheet open={createOpen} onOpenChange={setCreateOpen}>
                   <SheetTrigger asChild>
-                    <Button size="sm" aria-label="New Item" className="shrink-0">
+                    <Button
+                      size="sm"
+                      aria-label="New Item"
+                      className="shrink-0"
+                    >
                       <Plus className="h-4 w-4 mr-1" /> New Item
                     </Button>
                   </SheetTrigger>
@@ -311,106 +401,153 @@ export function IntakePage({
                 onExit={handleExitTriage}
               />
             ) : null}
-            {(!triageMode || !canManage) ? (
-            <Tabs
-              value={activeTab}
-              onValueChange={(value) => listFilters.setValue("tab", value)}
-              className="flex min-h-0 flex-1 flex-col gap-0"
-            >
-              <PmSection index={0} className="shrink-0">
-                <TabsList>
-                  <TabsTrigger value="pending">
-                    Pending
-                    {pendingCount > 0 ? (
-                      <Badge
-                        variant="secondary"
-                        className="ml-1.5 h-5 px-1.5 text-xs"
-                      >
-                        {pendingCount}
-                      </Badge>
-                    ) : null}
-                  </TabsTrigger>
-                  <TabsTrigger value="accepted">Accepted</TabsTrigger>
-                  <TabsTrigger value="declined">Declined</TabsTrigger>
-                  <TabsTrigger value="all">All</TabsTrigger>
-                </TabsList>
-              </PmSection>
-
-              <TabsContent
+            {!triageMode || !canManage ? (
+              <Tabs
                 value={activeTab}
-                className={`${TABS_CONTENT_PAGE_BODY_CLASS} mt-4 min-h-0 flex-1 max-md:pb-[calc(6.5rem+env(safe-area-inset-bottom,0px))]`}
+                onValueChange={handleTabChange}
+                className="flex min-h-0 flex-1 flex-col gap-0"
               >
-                {highlightNotFound ? (
-                  <p
-                    className="mb-3 shrink-0 rounded-lg border border-warning/40 bg-warning/10 px-4 py-2.5 text-sm text-warning-foreground"
-                    role="status"
-                    data-testid="intake-item-not-found"
-                  >
-                    The linked item is not in this view. It may have been
-                    deleted or moved to a different status.
-                  </p>
-                ) : null}
-                {filteredItems.length === 0 ? (
-                  <div
-                    data-testid="intake-empty-panel"
-                    className={`${CONTENT_FILL_PANEL} ${PAGE_BODY_EMPTY_CLASS}`}
-                  >
-                    <EmptyState
-                      illustration={<EmptyInboxIllustration />}
-                      title={
-                        activeTab === "pending"
-                          ? "No pending items"
-                          : `No ${activeTab} items`
-                      }
-                      description={
-                        activeTab === "pending"
-                          ? "Share the form URL to start receiving submissions."
-                          : "Items will appear here once triaged."
-                      }
-                      action={
-                        activeTab === "pending"
-                          ? {
-                              label: "Create First Item",
-                              onClick: handleOpenCreate,
-                            }
-                          : undefined
-                      }
+                <PmSection index={0} className="shrink-0">
+                  <TabsList>
+                    <TabsTrigger value="pending">
+                      Pending
+                      {pendingCount > 0 ? (
+                        <Badge
+                          variant="secondary"
+                          className="ml-1.5 h-5 px-1.5 text-xs tabular-nums"
+                        >
+                          {pendingCount}
+                        </Badge>
+                      ) : null}
+                    </TabsTrigger>
+                    <TabsTrigger value="accepted">
+                      Accepted
+                      {statusCounts.accepted > 0 ? (
+                        <Badge
+                          variant="secondary"
+                          className="ml-1.5 h-5 px-1.5 text-xs tabular-nums"
+                        >
+                          {statusCounts.accepted}
+                        </Badge>
+                      ) : null}
+                    </TabsTrigger>
+                    <TabsTrigger value="declined">
+                      Declined
+                      {statusCounts.declined > 0 ? (
+                        <Badge
+                          variant="secondary"
+                          className="ml-1.5 h-5 px-1.5 text-xs tabular-nums"
+                        >
+                          {statusCounts.declined}
+                        </Badge>
+                      ) : null}
+                    </TabsTrigger>
+                    <TabsTrigger value="duplicate">
+                      Duplicate
+                      {statusCounts.duplicate > 0 ? (
+                        <Badge
+                          variant="secondary"
+                          className="ml-1.5 h-5 px-1.5 text-xs tabular-nums"
+                        >
+                          {statusCounts.duplicate}
+                        </Badge>
+                      ) : null}
+                    </TabsTrigger>
+                    <TabsTrigger value="all">All</TabsTrigger>
+                  </TabsList>
+                </PmSection>
+
+                <TabsContent
+                  value={activeTab}
+                  className={`${TABS_CONTENT_PAGE_BODY_CLASS} mt-4 min-h-0 flex-1 max-md:pb-[calc(6.5rem+env(safe-area-inset-bottom,0px))]`}
+                >
+                  {highlightNotFound ? (
+                    <p
+                      className="mb-3 shrink-0 rounded-lg border border-warning/40 bg-warning/10 px-4 py-2.5 text-sm text-warning-foreground"
+                      role="status"
+                      data-testid="intake-item-not-found"
+                    >
+                      The linked item is not in this view. It may have been
+                      deleted or moved to a different status.
+                    </p>
+                  ) : null}
+                  {items.length === 0 ? (
+                    <div
+                      data-testid="intake-empty-panel"
                       className={`${CONTENT_FILL_PANEL} ${PAGE_BODY_EMPTY_CLASS}`}
-                    />
-                  </div>
-                ) : (
-                  <PmSection index={1} className="min-h-0 flex-1">
-                    <PmStaggerList className="space-y-2.5 pb-2">
-                      {filteredItems.map((item) => {
-                        const isHighlighted = item.id === highlightId;
-                        return (
-                          <div
-                            key={item.id}
-                            ref={isHighlighted ? highlightRef : undefined}
-                            className={
-                              isHighlighted
-                                ? "ring-2 ring-primary ring-offset-2 rounded-xl"
-                                : undefined
-                            }
-                            data-highlighted={
-                              isHighlighted ? "true" : undefined
-                            }
-                          >
-                            <IntakeItemCard
-                              item={item}
-                              canManage={canManage}
-                              onAccept={onAccept}
-                              onDecline={onDecline}
-                              onDuplicate={onDuplicate}
-                            />
-                          </div>
-                        );
-                      })}
-                    </PmStaggerList>
-                  </PmSection>
-                )}
-              </TabsContent>
-            </Tabs>
+                    >
+                      <EmptyState
+                        illustration={<EmptyInboxIllustration />}
+                        title={
+                          sourceFiltered
+                            ? "No items match this source"
+                            : activeTab === "pending"
+                              ? "No pending items"
+                              : `No ${activeTab} items`
+                        }
+                        description={
+                          sourceFiltered
+                            ? "Try another source or clear the filter to see more requests."
+                            : activeTab === "pending"
+                              ? "Share the form URL to start receiving submissions."
+                              : "Items will appear here once triaged."
+                        }
+                        action={
+                          activeTab === "pending" && !sourceFiltered
+                            ? {
+                                label: "Create First Item",
+                                onClick: handleOpenCreate,
+                              }
+                            : undefined
+                        }
+                        className={`${CONTENT_FILL_PANEL} ${PAGE_BODY_EMPTY_CLASS}`}
+                      />
+                    </div>
+                  ) : (
+                    <PmSection index={1} className="min-h-0 flex-1">
+                      <PmStaggerList className="space-y-2.5 pb-2">
+                        {items.map((item) => {
+                          const isHighlighted = item.id === highlightId;
+                          return (
+                            <div
+                              key={item.id}
+                              ref={isHighlighted ? highlightRef : undefined}
+                              className={
+                                isHighlighted
+                                  ? "ring-2 ring-primary ring-offset-2 rounded-xl"
+                                  : undefined
+                              }
+                              data-highlighted={
+                                isHighlighted ? "true" : undefined
+                              }
+                            >
+                              <IntakeItemCard
+                                item={item}
+                                canManage={canManage}
+                                onAccept={onAccept}
+                                onDecline={onDecline}
+                                onDuplicate={onDuplicate}
+                              />
+                            </div>
+                          );
+                        })}
+                      </PmStaggerList>
+                      {items.length > 0 || pager.hasPrevious ? (
+                        <TablePagination
+                          mode="cursor"
+                          rowCount={items.length}
+                          pageNumber={pager.pageNumber}
+                          hasMore={Boolean(intakeData?.pagination.hasMore)}
+                          hasPrevious={pager.hasPrevious}
+                          onNext={handleNextPage}
+                          onPrevious={pager.goPrevious}
+                          hideOnSinglePage
+                        />
+                      ) : null}
+                    </PmSection>
+                  )}
+                </TabsContent>
+              </Tabs>
             ) : null}
           </PmPageShell>
         </PageWrapper>

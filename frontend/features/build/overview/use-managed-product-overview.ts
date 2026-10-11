@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
-import { CalendarCheck, Pencil } from "lucide-react";
+import { CalendarCheck, Lightbulb, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { useCan } from "@/hooks/api/access";
 import { useUpdateManagedProduct } from "@/hooks/api/build/managed-product-mutations";
@@ -38,7 +38,13 @@ export const INITIATIVE_STATUS_OPTIONS = [
   { value: "cancelled", label: "Cancelled" },
 ];
 
-const EDIT_ACTION_BASE = { id: "edit", label: "Edit product", icon: Pencil, primary: true as const };
+const CREATE_ACTION_BASE = {
+  id: "record-opportunity",
+  label: "Record opportunity",
+  icon: Lightbulb,
+  primary: true as const,
+};
+const EDIT_ACTION_BASE = { id: "edit", label: "Edit product", icon: Pencil };
 const REVIEW_ACTION_BASE = {
   id: "mark-reviewed",
   label: "Mark reviewed",
@@ -64,6 +70,7 @@ function readableToken(value: string): string {
 
 export function useManagedProductOverview(managedProductId: number) {
   const [editOpen, setEditOpen] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
   const listFilters = useBuildListFilters({ filters: OVERVIEW_FILTER_DEFINITIONS });
   const rawPeriod = listFilters.value("period");
   const rawTeamId = listFilters.value("teamId");
@@ -146,6 +153,7 @@ export function useManagedProductOverview(managedProductId: number) {
   );
 
   const handleOpenEdit = useCallback(() => setEditOpen(true), []);
+  const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
 
   const updateProduct = useUpdateManagedProduct();
   const { mutate: mutateProduct, isPending: isMarkingReviewed } = updateProduct;
@@ -164,11 +172,12 @@ export function useManagedProductOverview(managedProductId: number) {
     () =>
       canEdit && !!product
         ? [
+            { ...CREATE_ACTION_BASE, onSelect: handleOpenCreate },
             { ...REVIEW_ACTION_BASE, onSelect: handleMarkReviewed, isPending: isMarkingReviewed },
             { ...EDIT_ACTION_BASE, onSelect: handleOpenEdit },
           ]
         : [],
-    [canEdit, product, handleMarkReviewed, isMarkingReviewed, handleOpenEdit],
+    [canEdit, product, handleOpenCreate, handleMarkReviewed, isMarkingReviewed, handleOpenEdit],
   );
 
   const overviewSubtitle = useMemo(() => {
@@ -193,6 +202,8 @@ export function useManagedProductOverview(managedProductId: number) {
     product,
     editOpen,
     setEditOpen,
+    createOpen,
+    setCreateOpen,
     resolution,
     editActions,
     summaryData: summaryQuery.data ?? null,
