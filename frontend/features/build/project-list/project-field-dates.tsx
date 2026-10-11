@@ -8,8 +8,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Calendar as CalendarComponent } from "@/components/ui/calendar";
-import { Button } from "@/components/ui/button";
+import { DatePicker } from "@/components/ui/date-picker";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -56,16 +55,6 @@ export const InlineProjectDates = memo(function InlineProjectDates({
   );
   const yearBounds = useMemo(() => resolveDatePickerYearBounds({ fromDate: startParsed }), [startParsed]);
 
-  function handleStartSelect(date: Date | undefined) {
-    if (!date) return;
-    updateProject.mutate({ projectId, startDate: format(date, "yyyy-MM-dd") });
-  }
-
-  function handleEndSelect(date: Date | undefined) {
-    if (!date) return;
-    updateProject.mutate({ projectId, endDate: format(date, "yyyy-MM-dd") });
-  }
-
   function handleClearStart() {
     updateProject.mutate({ projectId, startDate: null });
   }
@@ -94,55 +83,34 @@ export const InlineProjectDates = memo(function InlineProjectDates({
             {triggerLabel}
           </button>
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align="end">
-          <div className="flex divide-x divide-border">
-            <div className="p-2">
-              <p className="mb-1.5 px-1 text-micro font-normal text-muted-foreground">
-                Start
-              </p>
-              <CalendarComponent
-                mode="single"
-                selected={startParsed}
-                onSelect={handleStartSelect}
-                fromYear={yearBounds.fromYear}
-                toYear={yearBounds.toYear}
-                compact
-              />
-              {startParsed && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="mt-1 h-7 w-full text-xs text-muted-foreground"
-                  onClick={handleClearStart}
-                >
-                  Clear
-                </Button>
-              )}
-            </div>
-            <div className="p-2">
-              <p className="mb-1.5 px-1 text-micro font-normal text-muted-foreground">
-                End
-              </p>
-              <CalendarComponent
-                mode="single"
-                selected={endParsed}
-                onSelect={handleEndSelect}
-                fromYear={yearBounds.fromYear}
-                toYear={yearBounds.toYear}
-                compact
-              />
-              {endParsed && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="mt-1 h-7 w-full text-xs text-muted-foreground"
-                  onClick={handleClearEnd}
-                >
-                  Clear
-                </Button>
-              )}
-            </div>
-          </div>
+        <PopoverContent className="w-72 space-y-3 p-3" align="end">
+          <DatePicker
+            ariaLabel="Project start date"
+            value={startParsed ? format(startParsed, "yyyy-MM-dd") : ""}
+            onChange={(value) => {
+              if (!value) handleClearStart();
+              else updateProject.mutate({ projectId, startDate: value });
+            }}
+            placeholder="Start"
+            dateFormat="dd MMM yyyy"
+            clearable
+            fromYear={yearBounds.fromYear}
+            toYear={yearBounds.toYear}
+          />
+          <DatePicker
+            ariaLabel="Project end date"
+            value={endParsed ? format(endParsed, "yyyy-MM-dd") : ""}
+            onChange={(value) => {
+              if (!value) handleClearEnd();
+              else updateProject.mutate({ projectId, endDate: value });
+            }}
+            placeholder="End"
+            dateFormat="dd MMM yyyy"
+            clearable
+            fromDate={startParsed}
+            fromYear={yearBounds.fromYear}
+            toYear={yearBounds.toYear}
+          />
         </PopoverContent>
       </Popover>
     </InlineFieldWrapper>

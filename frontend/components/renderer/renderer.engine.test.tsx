@@ -120,7 +120,7 @@ describe("the engine, driven by a description it has never seen", () => {
     expect(container.querySelector('input[type="tel"]')).not.toBeNull();
     expect(container.querySelector('input[type="url"]')).not.toBeNull();
     expect(container.querySelector('input[type="number"]')).not.toBeNull();
-    expect(container.querySelector('input[type="date"]')).not.toBeNull();
+    expect(screen.getByRole("button", { name: "Opened" })).toBeInTheDocument();
     expect(container.querySelector("textarea")).not.toBeNull();
   });
 

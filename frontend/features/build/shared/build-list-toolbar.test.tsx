@@ -112,29 +112,22 @@ describe("BuildListToolbar", () => {
     expect(slots[1]?.getAttribute("data-filter-id")).toBe("status");
   });
 
-  it("keeps a lone desktop dropdown mounted and adds the mobile drawer trigger", () => {
+  it("keeps a lone filter on the toolbar at every width", () => {
     render(<BuildListToolbar filters={[statusFilter()]} />);
     expect(screen.getByLabelText("Status")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /^Filters/ })).toHaveClass(
-      "md:hidden",
-    );
+    expect(screen.getByRole("button", { name: /^Filters/ })).toHaveClass("hidden");
   });
 
-  it("routes a lone mobile field filter through the responsive drawer while preserving its desktop dropdown", async () => {
+  it("keeps a lone mobile field filter inline instead of moving it into the drawer", () => {
     useIsMobile.mockReturnValue(true);
     const { container } = render(
       <BuildListToolbar filters={[statusFilter()]} />,
     );
 
-    expect(container.querySelector('[data-filter-id="status"]')).toHaveClass(
+    expect(container.querySelector('[data-filter-id="status"]')).not.toHaveClass(
       "max-md:hidden",
     );
-    const trigger = screen.getByRole("button", { name: /^Filters/ });
-    expect(trigger).toHaveClass("md:hidden");
-
-    fireEvent.click(trigger);
-    const dialog = await screen.findByRole("dialog");
-    expect(within(dialog).getByRole("combobox", { name: "Status" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^Filters/ })).toHaveClass("hidden");
   });
 
   it("opens desktop overflow filters in a popover instead of a drawer", async () => {
@@ -149,6 +142,11 @@ describe("BuildListToolbar", () => {
             label: "Owner",
             control: <button type="button">Owner</button>,
           },
+          {
+            id: "segment",
+            label: "Segment",
+            control: <button type="button">Segment</button>,
+          },
         ]}
       />,
     );
@@ -159,7 +157,8 @@ describe("BuildListToolbar", () => {
     expect(overlay).not.toHaveAttribute("data-slot", "drawer-content");
     expect(overlay).toHaveAttribute("aria-label", "Filters");
     expect(document.querySelector('[data-slot="drawer-content"]')).toBeNull();
-    expect(within(overlay).getByRole("combobox", { name: "Status" })).toBeInTheDocument();
+    expect(within(overlay).getByRole("button", { name: "Segment" })).toBeInTheDocument();
+    expect(within(overlay).queryByRole("combobox", { name: "Status" })).toBeNull();
   });
 
   it("gives the mobile drawer and every filter field the full available width", async () => {
@@ -189,14 +188,12 @@ describe("BuildListToolbar", () => {
     const { container } = render(
       <BuildListToolbar search={search} filters={[statusFilter()]} />,
     );
-    expect(screen.getByRole("button", { name: /^Filters/ })).toHaveClass(
-      "md:hidden",
-    );
+    expect(screen.getByRole("button", { name: /^Filters/ })).toHaveClass("hidden");
     const root = container.querySelector("[data-slot=build-list-toolbar]");
     expect(root?.className).toContain("flex");
     expect(root?.className).not.toContain("grid-cols-");
     const slot = container.querySelector("[data-filter-id=status]");
-    expect(slot?.className).toContain("max-md:hidden");
+    expect(slot?.className).not.toContain("max-md:hidden");
     expect(slot?.className).not.toContain("max-md:w-full");
   });
 
@@ -223,19 +220,26 @@ describe("BuildListToolbar", () => {
     expect(filtersTriggerBtn.className).not.toContain("w-full");
   });
 
-  it("collapses a third control into the mobile filters drawer", () => {
+  it("keeps the first two filters inline and parks the third in the mobile drawer", () => {
     const { container } = render(
       <BuildListToolbar
         search={search}
-        filters={[statusFilter(), severityFilter()]}
+        filters={[
+          statusFilter(),
+          severityFilter(),
+          { id: "owner", label: "Owner", control: <button type="button">Owner</button> },
+        ]}
       />,
     );
-    expect(screen.getByRole("button", { name: /^Filters/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^Filters/ })).toHaveClass("md:hidden");
     for (const id of ["status", "severity"]) {
-      expect(
-        container.querySelector(`[data-filter-id=${id}]`)?.className,
-      ).toContain("max-md:hidden");
+      expect(container.querySelector(`[data-filter-id=${id}]`)?.className).not.toContain(
+        "max-md:hidden",
+      );
     }
+    expect(container.querySelector("[data-filter-id=owner]")?.className).toContain(
+      "max-md:hidden",
+    );
   });
 
   it("counts the active filters the drawer hides", () => {
@@ -260,12 +264,17 @@ describe("BuildListToolbar", () => {
     expect(within(trigger).queryByText("0")).toBeNull();
   });
 
-  it("opens a titled, described drawer holding every collapsed filter", async () => {
+  it("opens a titled, described drawer holding the overflow filters", async () => {
     useIsMobile.mockReturnValue(true);
     render(
       <BuildListToolbar
         search={search}
-        filters={[statusFilter(), severityFilter()]}
+        filters={[
+          statusFilter(),
+          severityFilter(),
+          { id: "owner", label: "Owner", control: <button type="button">Owner</button> },
+          { id: "segment", label: "Segment", control: <button type="button">Segment</button> },
+        ]}
         drawerTitle="Filter bugs"
       />,
     );
@@ -276,8 +285,10 @@ describe("BuildListToolbar", () => {
     expect(
       within(dialog).getByText(/Changes apply immediately/),
     ).toBeInTheDocument();
-    expect(within(dialog).getByText("Status")).toBeInTheDocument();
-    expect(within(dialog).getByText("Severity")).toBeInTheDocument();
+    expect(within(dialog).queryByText("Status")).toBeNull();
+    expect(within(dialog).queryByText("Severity")).toBeNull();
+    expect(within(dialog).getByRole("button", { name: "Owner" })).toBeInTheDocument();
+    expect(within(dialog).getByRole("button", { name: "Segment" })).toBeInTheDocument();
     expect(within(dialog).queryByRole("button", { name: "Done" })).toBeNull();
   });
 
@@ -392,7 +403,7 @@ describe("BuildListToolbar", () => {
     useIsMobile.mockReturnValue(true);
     function SearchToolbar() {
       const [value, setValue] = useState("");
-      return <BuildListToolbar search={{ ...search, value, onValueChange: setValue }} filters={[statusFilter(), severityFilter()]} trailing={<button type="button">Grid view</button>} />;
+      return <BuildListToolbar search={{ ...search, value, onValueChange: setValue }} filters={[statusFilter(), severityFilter(), { id: "owner", label: "Owner", control: <button type="button">Owner</button> }]} trailing={<button type="button">Grid view</button>} />;
     }
     render(<SearchToolbar />);
     const input = screen.getByLabelText("Search bugs");
@@ -408,7 +419,7 @@ describe("BuildListToolbar", () => {
     expect(screen.getByRole("button", { name: "Grid view" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /^Filters/ }));
     const dialog = await screen.findByRole("dialog");
-    expect(within(dialog).getByRole("combobox", { name: "Status" })).toBeInTheDocument();
+    expect(within(dialog).getByRole("button", { name: "Owner" })).toBeInTheDocument();
     expect(input).toHaveValue("QA-094");
     fireEvent.keyDown(dialog, { key: "Escape" });
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());

@@ -1,5 +1,7 @@
 "use client";
 
+import { DatePicker } from "@/components/ui/date-picker";
+
 import { useState, useCallback } from "react";
 import {
   Dialog,
@@ -8,7 +10,6 @@ import {
   DialogTitle,
   DialogBody,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -40,8 +41,8 @@ export function PolicyPreviewDialog({ policyId, open, onOpenChange }: Props) {
     setQueryParams({ employeeId: employeeId.trim(), date });
   }, [employeeId, date]);
 
-  function handleDateChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setDate(e.target.value);
+  function handleDateChange(value: string) {
+    setDate(value);
   }
 
   return (
@@ -67,10 +68,12 @@ export function PolicyPreviewDialog({ policyId, open, onOpenChange }: Props) {
               <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Date
               </Label>
-              <Input
-                type="date"
+              <DatePicker
                 value={date}
                 onChange={handleDateChange}
+                ariaLabel="Date"
+                placeholder="Pick a date"
+                dateFormat="dd MMM yyyy"
               />
             </div>
           </div>

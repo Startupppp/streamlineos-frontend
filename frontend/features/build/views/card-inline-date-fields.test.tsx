@@ -15,7 +15,7 @@ it("shows the fallback placeholder when currentDueDate is null and no fallbackDa
     />,
   );
 
-  expect(screen.getByRole("button", { name: "Set due date" })).toHaveTextContent(
+  expect(screen.getByRole("button", { name: "Set due date", exact: true })).toHaveTextContent(
     "Due date",
   );
 });
@@ -30,7 +30,7 @@ it("shows the due date string when currentDueDate is set", () => {
     />,
   );
 
-  expect(screen.getByRole("button", { name: "Set due date" })).toHaveTextContent(
+  expect(screen.getByRole("button", { name: "Set due date", exact: true })).toHaveTextContent(
     "Nov 1, 2026",
   );
 });

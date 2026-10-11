@@ -1,5 +1,7 @@
 "use client";
 
+import { DatePicker } from "@/components/ui/date-picker";
+
 import { useMemo, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -201,14 +203,14 @@ export function AttendanceRegularizationDialog({
                 <FormItem>
                   <FormLabel>Date</FormLabel>
                   <FormControl>
-                    <Input
-                      type="date"
-                      min={shiftDays(
-                        getTodayString(),
-                        -REGULARIZATION_WINDOW_DAYS,
-                      )}
-                      max={getTodayString()}
-                      {...field}
+                    <DatePicker
+                      value={field.value ?? ""}
+                      onChange={field.onChange}
+                      ariaLabel="Date"
+                      placeholder="Pick a date"
+                      dateFormat="dd MMM yyyy"
+                      fromDate={new Date(`${shiftDays(getTodayString(), -REGULARIZATION_WINDOW_DAYS)}T00:00:00`)}
+                      toDate={new Date(`${getTodayString()}T00:00:00`)}
                     />
                   </FormControl>
                   <FormMessage />

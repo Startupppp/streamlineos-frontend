@@ -4,9 +4,6 @@ import { type UseFormReturn } from "react-hook-form";
 import { z } from "zod";
 import { onboardEmployeeInputSchema } from "@/lib/validation/hr";
 import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage,
@@ -14,8 +11,8 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { DatePicker } from "@/components/ui/date-picker";
+import { parseDateOnly } from "@/lib/date-constraints";
 import { DepartmentCombobox } from "@/components/hr/department-combobox";
 import { StepEmploymentReporting } from "./step-employment-reporting";
 import { useCan } from "@/hooks/api/access";
@@ -106,29 +103,20 @@ export function StepEmployment({ form, departments, locations }: StepEmploymentP
         render={({ field }) => (
           <FormItem className="flex flex-col">
             <FormLabel>Joining Date <span className="text-destructive">*</span></FormLabel>
-            <Popover modal>
-              <PopoverTrigger asChild>
-                <FormControl>
-                  <Button
-                    variant="outline"
-                    className={cn("w-full pl-3 text-left font-normal", !field.value && "text-muted-foreground")}
-                  >
-                    {field.value ? format(field.value, "PPP") : "Pick a date"}
-                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                  </Button>
-                </FormControl>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={field.value}
-                  onSelect={field.onChange}
-                  fromYear={new Date().getFullYear() - 5}
-                  toYear={new Date().getFullYear() + 10}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
+            <FormControl>
+              <DatePicker
+                value={field.value ? format(field.value, "yyyy-MM-dd") : ""}
+                onChange={(value) => {
+                  const parsed = parseDateOnly(value);
+                  if (parsed) field.onChange(parsed);
+                }}
+                placeholder="Pick a date"
+                dateFormat="PPP"
+                ariaLabel="Joining Date"
+                fromYear={new Date().getFullYear() - 5}
+                toYear={new Date().getFullYear() + 10}
+              />
+            </FormControl>
             <FormMessage />
           </FormItem>
         )}

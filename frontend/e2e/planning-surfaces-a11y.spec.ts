@@ -162,12 +162,12 @@ test.describe("Planning surfaces responsive contract", () => {
       }
     });
 
-    test("filters collapse into a drawer trigger at mobile width", async ({ page }) => {
+    test("two filters stay on the row at mobile width", async ({ page }) => {
       for (const caseId of ["milestones-ready", "releases-ready"] as const) {
         const scope = frame(page, caseId);
-        await expect(scope.getByRole("button", { name: /^Filters/ })).toBeVisible();
-        await expect(scope.locator("[data-filter-id=status]")).toBeHidden();
-        await expect(scope.locator("[data-filter-id=date-range]")).toBeHidden();
+        await expect(scope.locator("[data-filter-id=status]")).toBeVisible();
+        await expect(scope.locator("[data-filter-id=date-range]")).toBeVisible();
+        await expect(scope.getByRole("button", { name: /^Filters/ })).toBeHidden();
       }
     });
 
@@ -556,29 +556,19 @@ test.describe("Planning surfaces responsive contract", () => {
       });
     });
 
-    test.describe("at 375 × 812 — filters drawer opens and closes with keyboard", () => {
+    test.describe("at 375 × 812 — two filters stay on the row", () => {
       test.beforeEach(async ({ page }) => {
         await page.setViewportSize({ width: 375, height: 812 });
         await page.goto(GALLERY);
       });
 
-      test("Filters drawer opens on Enter, drawer body receives focus, Escape closes and trigger regains focus", async ({
+      test("status and date range stay inline and Filters stays hidden", async ({
         page,
       }) => {
         const scope = frame(page, "milestones-ready");
-        const trigger = scope.getByRole("button", { name: /^Filters/ });
-        await trigger.focus();
-        await expect(trigger).toBeFocused();
-        await page.keyboard.press("Enter");
-        await expect(
-          page.locator('[data-slot="drawer-content"]'),
-        ).toBeVisible();
-        await expect(
-          page.locator('[data-slot="drawer-content"]:focus-within'),
-        ).toBeVisible();
-        await page.keyboard.press("Escape");
-        await expect(page.getByRole("dialog")).not.toBeVisible();
-        await expect(trigger).toBeFocused();
+        await expect(scope.locator("[data-filter-id=status]")).toBeVisible();
+        await expect(scope.locator("[data-filter-id=date-range]")).toBeVisible();
+        await expect(scope.getByRole("button", { name: /^Filters/ })).toBeHidden();
       });
     });
 

@@ -31,6 +31,9 @@ export const BUILD_TOOLBAR_TRAILING_CLASS =
   "flex min-w-0 shrink-0 items-center gap-2 md:ml-auto";
 
 const BUILD_TOOLBAR_MOBILE_SLOTS = 2;
+/** Selects kept on the toolbar. Tablet and desktop share the wider count. */
+const MOBILE_INLINE_FILTERS = 2;
+const WIDE_INLINE_FILTERS = 3;
 
 interface BuildToolbarLayoutEntry {
   filter: BuildToolbarFilter;
@@ -109,50 +112,21 @@ export function buildToolbarLayout({
 
 export function toolbarInlineVisibility(
   index: number,
-  collapsed: boolean,
-  fieldFilterCount: number,
+  _collapsed: boolean,
+  _fieldFilterCount: number,
 ): string {
-  const mobile = "max-md:hidden";
-  const desktop =
-    index <= 0
-      ? ""
-      : index === 1
-        ? fieldFilterCount === 2
-          ? ""
-          : "md:hidden lg:block"
-        : index === 2
-          ? fieldFilterCount === 3
-            ? "md:hidden lg:block"
-            : "md:hidden xl:block"
-          : index === 3
-            ? fieldFilterCount === 4
-              ? "md:hidden xl:block"
-              : "md:hidden 2xl:block"
-            : index === 4 && fieldFilterCount === 5
-              ? "md:hidden 2xl:block"
-              : "md:hidden";
-  return [mobile, desktop].filter(Boolean).join(" ");
+  if (index < MOBILE_INLINE_FILTERS) return "";
+  if (index < WIDE_INLINE_FILTERS) return "max-md:hidden";
+  return "hidden";
 }
 
 export function toolbarDrawerVisibility(
   index: number,
-  collapsed: boolean,
-  fieldFilterCount: number,
+  _collapsed: boolean,
+  _fieldFilterCount: number,
 ): string {
-  if (index <= 0) return "md:hidden";
-  if (index === 1 && fieldFilterCount === 2) return "md:hidden";
-  if (index === 2 && fieldFilterCount === 3) return "lg:hidden";
-  if (index === 3 && fieldFilterCount === 4) return "xl:hidden";
-  if (index === 4 && fieldFilterCount === 5) return "2xl:hidden";
-  if (!collapsed) {
-    if (index === 1) return "hidden md:block lg:hidden";
-    if (index === 2) return "hidden md:block xl:hidden";
-    if (index === 3) return "hidden md:block 2xl:hidden";
-    return "hidden md:block";
-  }
-  if (index === 1) return "lg:hidden";
-  if (index === 2) return "xl:hidden";
-  if (index === 3) return "2xl:hidden";
+  if (index < MOBILE_INLINE_FILTERS) return "hidden";
+  if (index < WIDE_INLINE_FILTERS) return "md:hidden";
   return "";
 }
 
@@ -160,10 +134,7 @@ export function toolbarMoreButtonClass(
   filterCount: number,
   _collapse: boolean,
 ): string {
-  const mobile = filterCount > 0 ? "inline-flex shrink-0" : "hidden";
-  if (filterCount <= 2) return `${mobile} md:hidden`;
-  if (filterCount === 3) return `${mobile} md:inline-flex lg:hidden`;
-  if (filterCount === 4) return `${mobile} md:inline-flex xl:hidden`;
-  if (filterCount === 5) return `${mobile} md:inline-flex 2xl:hidden`;
-  return `${mobile} md:inline-flex`;
+  if (filterCount <= MOBILE_INLINE_FILTERS) return "hidden";
+  if (filterCount <= WIDE_INLINE_FILTERS) return "inline-flex shrink-0 md:hidden";
+  return "inline-flex shrink-0";
 }

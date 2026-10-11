@@ -109,14 +109,15 @@ test.describe("Managed Products responsive contract", () => {
         }
       });
 
-      test("search is always visible; at mobile filters collapse into a drawer trigger", async ({ page }) => {
+      test("search stays visible and up to two filters stay on the row", async ({ page }) => {
         const scope = frame(page, "ready");
         const search = scope.locator("[data-slot=search-input]");
         await expect(search).toBeVisible();
 
         if (viewport.width < 768) {
-          await expect(scope.getByRole("button", { name: /^Filters/ })).toBeVisible();
-          await expect(scope.locator("[data-filter-id=status]")).toBeHidden();
+          await expect(scope.locator("[data-filter-id=status]")).toBeVisible();
+          await expect(scope.locator("[data-filter-id=sort]")).toBeVisible();
+          await expect(scope.getByRole("button", { name: /^Filters/ })).toBeHidden();
         } else {
           const status = scope.locator("[data-filter-id=status]");
           await expect(status).toBeVisible();
@@ -172,37 +173,13 @@ test.describe("Managed Products responsive contract", () => {
       expect(Math.round(first?.y ?? 0)).toBe(Math.round(second?.y ?? -1));
     });
 
-    test("status and sort filters collapse behind one labelled drawer trigger", async ({
+    test("status and sort stay on the row when there are only two filters", async ({
       page,
     }) => {
       const scope = frame(page, "ready");
-      await expect(scope.locator("[data-filter-id=status]")).toBeHidden();
-      await expect(scope.locator("[data-filter-id=sort]")).toBeHidden();
-      await expect(scope.getByRole("button", { name: /^Filters/ })).toBeVisible();
-    });
-
-    test("the filters drawer takes focus, shows every filter and gives it back", async ({
-      page,
-    }) => {
-      const scope = frame(page, "ready");
-      const trigger = scope.getByRole("button", { name: /^Filters/ });
-      await trigger.click();
-
-      const dialog = page.getByRole("dialog");
-      await expect(dialog).toBeVisible();
-      for (const label of ["Status", "Sort"]) {
-        await expect(dialog.getByLabel(label)).toBeVisible();
-      }
-      await expect(dialog.getByRole("button", { name: "Done" })).toBeVisible();
-
-      const focusInside = await dialog.evaluate(
-        (node: HTMLElement) => node.contains(document.activeElement),
-      );
-      expect(focusInside).toBe(true);
-
-      await page.keyboard.press("Escape");
-      await expect(dialog).toBeHidden();
-      await expect(trigger).toBeFocused();
+      await expect(scope.locator("[data-filter-id=status]")).toBeVisible();
+      await expect(scope.locator("[data-filter-id=sort]")).toBeVisible();
+      await expect(scope.getByRole("button", { name: /^Filters/ })).toBeHidden();
     });
 
     test("pagination stays reachable without sideways scrolling", async ({ page }) => {

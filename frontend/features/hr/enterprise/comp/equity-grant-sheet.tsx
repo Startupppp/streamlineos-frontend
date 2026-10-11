@@ -1,5 +1,7 @@
 "use client";
 
+import { DatePicker } from "@/components/ui/date-picker";
+
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -182,7 +184,7 @@ export function EquityGrantSheet({ open, onOpenChange }: Props) {
               <FormItem>
                 <FormLabel>Grant Date</FormLabel>
                 <FormControl>
-                  <Input type="date" {...field} />
+                  <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" dateFormat="dd MMM yyyy" clearable />
                 </FormControl>
                 <FormMessage />
               </FormItem>

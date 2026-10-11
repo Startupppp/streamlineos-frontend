@@ -1,5 +1,7 @@
 "use client";
 
+import { DatePicker } from "@/components/ui/date-picker";
+
 import Link from "next/link";
 import { useState } from "react";
 import { useSearchParams } from "next/navigation";
@@ -318,8 +320,8 @@ function AssignPopover({ pageId, kind }: AssignPopoverProps) {
     setSelectedUserId(userId);
   }
 
-  function handleDueAtChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setDueAt(e.target.value);
+  function handleDueAtChange(value: string) {
+    setDueAt(value);
   }
 
   function handleAssign() {
@@ -358,12 +360,14 @@ function AssignPopover({ pageId, kind }: AssignPopoverProps) {
           onChange={handleUserChange}
           placeholder="Select member…"
         />
-        <input
-          type="date"
+        <DatePicker
           value={dueAt}
           onChange={handleDueAtChange}
-          className="w-full h-8 rounded-md border border-border bg-background px-2 text-xs focus:outline-none focus:ring-2 focus:ring-ring"
-          aria-label="Due date"
+          ariaLabel="Due date"
+          placeholder="Due date"
+          dateFormat="dd MMM yyyy"
+          clearable
+          className="w-full"
         />
         <LoadingButton
           type="button"

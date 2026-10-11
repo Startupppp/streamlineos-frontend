@@ -1,5 +1,7 @@
 "use client";
 
+import { DatePicker } from "@/components/ui/date-picker";
+
 import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -122,7 +124,7 @@ export function ReportIssueDialog({ open, onOpenChange, currentManagerName, onDu
                 <FormItem>
                   <FormLabel>From which date? (optional)</FormLabel>
                   <FormControl>
-                    <Input type="date" {...field} />
+                    <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" dateFormat="dd MMM yyyy" clearable ariaLabel="From which date" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

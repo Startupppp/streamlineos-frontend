@@ -151,33 +151,26 @@ describe("isToolbarMobileSearchExpanded", () => {
 });
 
 describe("toolbar viewport visibility", () => {
-  it("hides every direct field trigger on mobile while preserving desktop breakpoints", () => {
-    expect(toolbarInlineVisibility(0, false, 1)).toContain("max-md:hidden");
-    expect(toolbarInlineVisibility(1, false, 2)).toContain("max-md:hidden");
-    expect(toolbarInlineVisibility(2, true, 3)).toContain("lg:block");
-    expect(toolbarInlineVisibility(3, true, 4)).toContain("xl:block");
-    expect(toolbarInlineVisibility(4, true, 5)).toContain("2xl:block");
+  it("keeps two filters inline on mobile and a third from tablet up", () => {
+    expect(toolbarInlineVisibility(0, false, 4)).toBe("");
+    expect(toolbarInlineVisibility(1, false, 4)).toBe("");
+    expect(toolbarInlineVisibility(2, true, 4)).toBe("max-md:hidden");
+    expect(toolbarInlineVisibility(3, true, 4)).toBe("hidden");
+    expect(toolbarInlineVisibility(4, true, 5)).toBe("hidden");
   });
 
-  it("keeps two or more overflow filters in the drawer until their wide breakpoint", () => {
-    expect(toolbarInlineVisibility(1, true, 3)).toContain("lg:block");
-    expect(toolbarInlineVisibility(2, true, 4)).toContain("xl:block");
-    expect(toolbarInlineVisibility(3, true, 5)).toContain("2xl:block");
+  it("puts only the overflow filters in the drawer", () => {
+    expect(toolbarDrawerVisibility(0, false, 4)).toBe("hidden");
+    expect(toolbarDrawerVisibility(1, false, 4)).toBe("hidden");
+    expect(toolbarDrawerVisibility(2, true, 4)).toBe("md:hidden");
+    expect(toolbarDrawerVisibility(3, true, 4)).toBe("");
   });
 
-  it("shows drawer fields on mobile and hides them wherever direct desktop controls are visible", () => {
-    expect(toolbarDrawerVisibility(0, false, 2)).toBe("md:hidden");
-    expect(toolbarDrawerVisibility(0, true, 3)).toBe("md:hidden");
-    expect(toolbarDrawerVisibility(1, false, 2)).toBe("md:hidden");
-    expect(toolbarDrawerVisibility(2, true, 3)).toBe("lg:hidden");
-  });
-
-  it("shows Filters for every mobile field filter and retains wider overflow breakpoints", () => {
-    expect(toolbarMoreButtonClass(1, false)).toContain("md:hidden");
-    expect(toolbarMoreButtonClass(2, false)).toContain("md:hidden");
-    expect(toolbarMoreButtonClass(3, true)).toContain("lg:hidden");
-    expect(toolbarMoreButtonClass(4, true)).toContain("xl:hidden");
-    expect(toolbarMoreButtonClass(5, true)).toContain("2xl:hidden");
-    expect(toolbarMoreButtonClass(6, true)).not.toContain("2xl:hidden");
+  it("shows Filters only when a breakpoint still has overflow", () => {
+    expect(toolbarMoreButtonClass(1, false)).toBe("hidden");
+    expect(toolbarMoreButtonClass(2, false)).toBe("hidden");
+    expect(toolbarMoreButtonClass(3, true)).toBe("inline-flex shrink-0 md:hidden");
+    expect(toolbarMoreButtonClass(4, true)).toBe("inline-flex shrink-0");
+    expect(toolbarMoreButtonClass(6, true)).toBe("inline-flex shrink-0");
   });
 });

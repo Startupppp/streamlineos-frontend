@@ -1,5 +1,7 @@
 "use client";
 
+import { DatePicker } from "@/components/ui/date-picker";
+
 import { useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -184,7 +186,7 @@ export function DelegationSettings({ open, onOpenChange }: Props) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-xs">Starts At</FormLabel>
-                    <FormControl><Input type="date" {...field} /></FormControl>
+                    <FormControl><DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" dateFormat="dd MMM yyyy" clearable /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -195,7 +197,7 @@ export function DelegationSettings({ open, onOpenChange }: Props) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-xs">Ends At</FormLabel>
-                    <FormControl><Input type="date" {...field} /></FormControl>
+                    <FormControl><DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" dateFormat="dd MMM yyyy" clearable /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )}

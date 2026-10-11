@@ -1,5 +1,7 @@
 "use client";
 
+import { DatePicker } from "@/components/ui/date-picker";
+
 import { useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -227,14 +229,29 @@ export function PlanUpsertSheet({ open, onOpenChange, plan }: Props) {
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
           <Label htmlFor="effectiveFrom">Effective From <span className="text-destructive">*</span></Label>
-          <Input id="effectiveFrom" type="date" {...form.register("effectiveFrom")} />
+          <DatePicker
+            id="effectiveFrom"
+            ariaLabel="Effective From"
+            value={form.watch("effectiveFrom") ?? ""}
+            onChange={(value) => form.setValue("effectiveFrom", value, { shouldDirty: true, shouldValidate: true })}
+            placeholder="Pick a date"
+            dateFormat="dd MMM yyyy"
+          />
           {form.formState.errors.effectiveFrom && (
             <p className="text-xs text-destructive">{form.formState.errors.effectiveFrom.message}</p>
           )}
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="effectiveTo">Effective To</Label>
-          <Input id="effectiveTo" type="date" {...form.register("effectiveTo")} />
+          <DatePicker
+            id="effectiveTo"
+            ariaLabel="Effective To"
+            value={form.watch("effectiveTo") ?? ""}
+            onChange={(value) => form.setValue("effectiveTo", value, { shouldDirty: true, shouldValidate: true })}
+            placeholder="Pick a date"
+            dateFormat="dd MMM yyyy"
+            clearable
+          />
         </div>
       </div>
     </HrSheet>

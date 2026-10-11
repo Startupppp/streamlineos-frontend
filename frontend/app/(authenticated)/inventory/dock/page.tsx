@@ -1,5 +1,7 @@
 "use client";
 
+import { DatePicker } from "@/components/ui/date-picker";
+
 import { Suspense, useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { CalendarClock } from "lucide-react";
@@ -216,12 +218,13 @@ function DockContent() {
       title="Dock"
       subtitle="Which vehicle is at which door, and when"
       actions={
-        <Input
-          type="date"
-          aria-label="Day"
+        <DatePicker
+          ariaLabel="Day"
           className="w-40"
           value={day}
-          onChange={(e) => setDay(e.target.value)}
+          onChange={setDay}
+          placeholder="Pick a date"
+          dateFormat="dd MMM yyyy"
         />
       }
     >

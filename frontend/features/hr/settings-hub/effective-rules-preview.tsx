@@ -1,10 +1,11 @@
 "use client";
 
+import { DatePicker } from "@/components/ui/date-picker";
+
 import { useState } from "react";
 import { ChevronRight } from "lucide-react";
 import { getTodayString } from "@/lib/date-utils";
 import { UserCombobox } from "@/components/ui/user-combobox";
-import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -86,8 +87,8 @@ export function EffectiveRulesPreview() {
 
   const { data, isLoading, isError, error, refetch } = useEffectiveRules(params);
 
-  function handleDateChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setDate(e.target.value);
+  function handleDateChange(value: string) {
+    setDate(value);
   }
 
   function handleRetry() {
@@ -104,11 +105,12 @@ export function EffectiveRulesPreview() {
             placeholder="Select employee"
           />
         </div>
-        <Input
-          type="date"
+        <DatePicker
           value={date}
           onChange={handleDateChange}
-          aria-label="Effective date"
+          ariaLabel="Effective date"
+          placeholder="Pick a date"
+          dateFormat="dd MMM yyyy"
           className="w-40"
         />
         <span className="text-xs text-muted-foreground">

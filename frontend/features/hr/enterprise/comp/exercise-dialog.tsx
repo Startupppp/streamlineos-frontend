@@ -1,5 +1,7 @@
 "use client";
 
+import { DatePicker } from "@/components/ui/date-picker";
+
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -56,7 +58,7 @@ export function ExerciseDialog({ open, onOpenChange, grantId }: Props) {
             <FormField control={form.control} name="exerciseDate" render={({ field }) => (
               <FormItem>
                 <FormLabel>Exercise Date</FormLabel>
-                <FormControl><Input type="date" {...field} /></FormControl>
+                <FormControl><DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" dateFormat="dd MMM yyyy" clearable /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />

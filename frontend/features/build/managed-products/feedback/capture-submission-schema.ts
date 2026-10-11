@@ -34,7 +34,7 @@ export const SENTIMENT_OPTIONS = [
 ] as const;
 
 export const captureSubmissionSchema = z.object({
-  message: z.string().min(1, "Message is required").max(5000, "Message too long"),
+  message: z.string().trim().min(1, "Message is required").max(5000, "Message too long"),
   sourceChannel: z.enum(["email", "support", "sales", "interview", "survey", "public_portal", "manual", "import"], {
     error: "Source channel is required",
   }),

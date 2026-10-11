@@ -1,5 +1,7 @@
 "use client";
 
+import { DatePicker } from "@/components/ui/date-picker";
+
 import { useState, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -383,7 +385,7 @@ export function LaborTabs() {
                     <FormItem><FormLabel>Union Name</FormLabel><FormControl><Input placeholder="Union name" {...field} /></FormControl><FormMessage /></FormItem>
                   )} />
                   <FormField control={membershipForm.control} name="memberSince" render={({ field }) => (
-                    <FormItem><FormLabel>Member Since</FormLabel><FormControl><Input type="date" {...field} /></FormControl><FormMessage /></FormItem>
+                    <FormItem><FormLabel>Member Since</FormLabel><FormControl><DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" dateFormat="dd MMM yyyy" clearable ariaLabel="Member Since" /></FormControl><FormMessage /></FormItem>
                   )} />
                   <FormField control={membershipForm.control} name="status" render={({ field }) => (
                     <FormItem><FormLabel>Status</FormLabel>
@@ -418,10 +420,10 @@ export function LaborTabs() {
                     <FormItem><FormLabel>Agreement Title</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                   )} />
                   <FormField control={agreementForm.control} name="effectiveFrom" render={({ field }) => (
-                    <FormItem><FormLabel>Effective From</FormLabel><FormControl><Input type="date" {...field} /></FormControl><FormMessage /></FormItem>
+                    <FormItem><FormLabel>Effective From</FormLabel><FormControl><DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" dateFormat="dd MMM yyyy" clearable ariaLabel="Effective From" /></FormControl><FormMessage /></FormItem>
                   )} />
                   <FormField control={agreementForm.control} name="expiresAt" render={({ field }) => (
-                    <FormItem><FormLabel>Expires At (optional)</FormLabel><FormControl><Input type="date" {...field} /></FormControl><FormMessage /></FormItem>
+                    <FormItem><FormLabel>Expires At (optional)</FormLabel><FormControl><DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" dateFormat="dd MMM yyyy" clearable ariaLabel="Expires At" /></FormControl><FormMessage /></FormItem>
                   )} />
                   <FormField control={agreementForm.control} name="status" render={({ field }) => (
                     <FormItem><FormLabel>Status</FormLabel>

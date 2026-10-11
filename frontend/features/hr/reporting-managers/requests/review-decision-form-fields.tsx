@@ -1,5 +1,7 @@
 "use client";
 
+import { DatePicker } from "@/components/ui/date-picker";
+
 import { useState } from "react";
 import type { UseFormReturn } from "react-hook-form";
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -101,7 +103,7 @@ export function ReviewDecisionFormFields({ form, request }: ReviewDecisionFormFi
               <FormItem>
                 <FormLabel>Effective from</FormLabel>
                 <FormControl>
-                  <Input type="date" {...field} />
+                  <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" dateFormat="dd MMM yyyy" clearable ariaLabel="Effective from" />
                 </FormControl>
                 <FormDescription className="text-xs">Leave blank to apply from today in your organisation.</FormDescription>
                 <FormMessage />

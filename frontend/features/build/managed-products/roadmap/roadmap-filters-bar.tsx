@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, type RefObject } from "react";
+import { DatePicker } from "@/components/ui/date-picker";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
 import { BUILD_FILTER_ALL, type BuildListFiltersState } from "@/features/build/shared/use-build-list-filters";
@@ -66,8 +67,16 @@ export function RoadmapFiltersBar({ managedProductId, listFilters, searchInputRe
   const handleTeamChange = useCallback((v: string) => listFilters.setValue("teamId", v), [listFilters]);
   const handleGoalChange = useCallback((v: string) => listFilters.setValue("goalId", v), [listFilters]);
   const handleSegmentChange = useCallback((v: string) => listFilters.setValue("segment", v), [listFilters]);
-  const handleTargetFromChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => listFilters.setValue("targetFrom", e.target.value), [listFilters]);
-  const handleTargetToChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => listFilters.setValue("targetTo", e.target.value), [listFilters]);
+  const handleTargetFromChange = useCallback(
+    (value: string) => listFilters.setValue("targetFrom", value || BUILD_FILTER_ALL),
+    [listFilters],
+  );
+  const handleTargetToChange = useCallback(
+    (value: string) => listFilters.setValue("targetTo", value || BUILD_FILTER_ALL),
+    [listFilters],
+  );
+  const targetFromDate = targetFromValue === BUILD_FILTER_ALL ? "" : targetFromValue;
+  const targetToDate = targetToValue === BUILD_FILTER_ALL ? "" : targetToValue;
 
   return (
     <BuildListToolbar
@@ -120,10 +129,16 @@ export function RoadmapFiltersBar({ managedProductId, listFilters, searchInputRe
           label: "From",
           active: listFilters.isActive("targetFrom"),
           control: (
-            <div className="flex flex-col gap-1 px-1">
-              <label className="text-xs text-muted-foreground">Target from</label>
-              <input type="date" value={targetFromValue === BUILD_FILTER_ALL ? "" : targetFromValue} onChange={handleTargetFromChange} className="h-9 rounded-md border border-input bg-background px-3 text-sm" />
-            </div>
+            <DatePicker
+              ariaLabel="Target from"
+              clearable
+              value={targetFromDate}
+              onChange={handleTargetFromChange}
+              placeholder="From"
+              dateFormat="dd MMM yyyy"
+              toDate={targetToDate ? new Date(`${targetToDate}T00:00:00`) : undefined}
+              className="w-full min-w-0 max-w-none"
+            />
           ),
         },
         {
@@ -131,10 +146,16 @@ export function RoadmapFiltersBar({ managedProductId, listFilters, searchInputRe
           label: "To",
           active: listFilters.isActive("targetTo"),
           control: (
-            <div className="flex flex-col gap-1 px-1">
-              <label className="text-xs text-muted-foreground">Target to</label>
-              <input type="date" value={targetToValue === BUILD_FILTER_ALL ? "" : targetToValue} onChange={handleTargetToChange} className="h-9 rounded-md border border-input bg-background px-3 text-sm" />
-            </div>
+            <DatePicker
+              ariaLabel="Target to"
+              clearable
+              value={targetToDate}
+              onChange={handleTargetToChange}
+              placeholder="To"
+              dateFormat="dd MMM yyyy"
+              fromDate={targetFromDate ? new Date(`${targetFromDate}T00:00:00`) : undefined}
+              className="w-full min-w-0 max-w-none"
+            />
           ),
         },
         {

@@ -1,5 +1,7 @@
 "use client";
 
+import { DatePicker } from "@/components/ui/date-picker";
+
 import { useCallback } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -117,11 +119,14 @@ export function AssignRosterEntrySheet({
                 <FormItem>
                   <FormLabel>Date</FormLabel>
                   <FormControl>
-                    <Input
-                      type="date"
-                      min={weekStart}
-                      max={weekEnd}
-                      {...field}
+                    <DatePicker
+                      value={field.value ?? ""}
+                      onChange={field.onChange}
+                      ariaLabel="Date"
+                      placeholder="Pick a date"
+                      dateFormat="dd MMM yyyy"
+                      fromDate={weekStart ? new Date(`${weekStart}T00:00:00`) : undefined}
+                      toDate={weekEnd ? new Date(`${weekEnd}T00:00:00`) : undefined}
                     />
                   </FormControl>
                   <FormMessage />

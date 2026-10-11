@@ -13,6 +13,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -346,6 +347,18 @@ export function RecordForm<T extends Record<string, unknown> = Record<string, un
                               ))}
                             </SelectContent>
                           </Select>
+                        ) : field.kind === "date" ? (
+                          <FormControl>
+                            <DatePicker
+                              value={control.value ?? ""}
+                              onChange={control.onChange}
+                              ariaLabel={field.label}
+                              placeholder="Pick a date"
+                              dateFormat="dd MMM yyyy"
+                              clearable
+                              disabled={isSubmitting}
+                            />
+                          </FormControl>
                         ) : (
                           <FormControl>
                             {field.kind === "longText" ? (

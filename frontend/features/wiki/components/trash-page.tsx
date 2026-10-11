@@ -1,5 +1,7 @@
 "use client";
 
+import { DatePicker } from "@/components/ui/date-picker";
+
 import { useState, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
@@ -140,16 +142,14 @@ export default function TrashPage() {
     updateFilters({ spaceId: value === ALL_SPACES_VALUE ? null : value });
   }
 
-  function handleDeletedFromChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const raw = e.target.value;
+  function handleDeletedFromChange(value: string) {
     cursorState.reset();
-    updateFilters({ deletedFrom: raw ? new Date(raw).toISOString() : null });
+    updateFilters({ deletedFrom: value ? new Date(value).toISOString() : null });
   }
 
-  function handleDeletedBeforeChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const raw = e.target.value;
+  function handleDeletedBeforeChange(value: string) {
     cursorState.reset();
-    updateFilters({ deletedBefore: raw ? new Date(raw).toISOString() : null });
+    updateFilters({ deletedBefore: value ? new Date(value).toISOString() : null });
   }
 
   function handleClearFilters() {
@@ -341,18 +341,22 @@ export default function TrashPage() {
                 ))}
               </SelectContent>
             </Select>
-            <Input
-              type="date"
-              aria-label="Deleted from"
+            <DatePicker
+              ariaLabel="Deleted from"
               value={deletedFrom ? deletedFrom.slice(0, 10) : ""}
               onChange={handleDeletedFromChange}
+              placeholder="From"
+              dateFormat="dd MMM yyyy"
+              clearable
               className="w-40"
             />
-            <Input
-              type="date"
-              aria-label="Deleted before"
+            <DatePicker
+              ariaLabel="Deleted before"
               value={deletedBefore ? deletedBefore.slice(0, 10) : ""}
               onChange={handleDeletedBeforeChange}
+              placeholder="Before"
+              dateFormat="dd MMM yyyy"
+              clearable
               className="w-40"
             />
           </div>

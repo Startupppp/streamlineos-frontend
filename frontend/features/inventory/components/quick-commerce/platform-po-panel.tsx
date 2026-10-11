@@ -1,5 +1,7 @@
 "use client";
 
+import { DatePicker } from "@/components/ui/date-picker";
+
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { AppSheet, ErrorState, NoPermissionState } from "@/components/shared";
@@ -241,11 +243,13 @@ export function PlatformPoPanel({ open, onOpenChange, platformPoId }: PlatformPo
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="qc-date">Order date</Label>
-                  <Input
+                  <DatePicker
                     id="qc-date"
-                    type="date"
+                    ariaLabel="Order date"
                     value={orderDate}
-                    onChange={(e) => setOrderDate(e.target.value)}
+                    onChange={setOrderDate}
+                    placeholder="Pick a date"
+                    dateFormat="dd MMM yyyy"
                   />
                 </div>
               </div>

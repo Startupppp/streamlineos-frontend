@@ -1,5 +1,7 @@
 "use client";
 
+import { DatePicker } from "@/components/ui/date-picker";
+
 import { useFieldArray, type UseFormReturn } from "react-hook-form";
 import { Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -196,7 +198,7 @@ export function ReportingLineEditorFields({ form, employeeUserId, maxSecondaryMa
           <FormItem>
             <FormLabel>Effective from (optional)</FormLabel>
             <FormControl>
-              <Input type="date" {...field} className="w-full sm:w-48" />
+              <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" dateFormat="dd MMM yyyy" clearable ariaLabel="Effective from" className="w-full sm:w-48" />
             </FormControl>
             <FormDescription>Leave blank for today in your organisation&apos;s time zone. A future date schedules the change.</FormDescription>
             <FormMessage />

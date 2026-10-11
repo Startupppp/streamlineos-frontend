@@ -1,5 +1,7 @@
 "use client";
 
+import { DatePicker } from "@/components/ui/date-picker";
+
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -130,12 +132,14 @@ export function FormRenderer({ fields, onSubmit, isPending, readOnly = false, in
               />
             )}
             {field.type === "date" && (
-              <Input
-                type="date"
+              <DatePicker
                 value={strVal}
-                onChange={handleInputChange(field.key)}
-                className="text-sm"
-                readOnly={readOnly}
+                onChange={(value) => setValue(field.key, value)}
+                ariaLabel={field.label}
+                placeholder="Pick a date"
+                dateFormat="dd MMM yyyy"
+                clearable
+                disabled={readOnly}
               />
             )}
             {field.type === "select" && !readOnly && (

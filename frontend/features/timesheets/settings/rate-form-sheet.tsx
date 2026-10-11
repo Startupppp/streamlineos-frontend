@@ -1,5 +1,7 @@
 "use client";
 
+import { DatePicker } from "@/components/ui/date-picker";
+
 import { useCallback, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -275,18 +277,36 @@ export function RateFormSheet({ open, onOpenChange, rate }: RateFormSheetProps) 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <Label className="text-xs font-medium">Effective from</Label>
-                    <Input
-                      type="date"
-                      className="h-9 text-sm"
-                      {...register("effectiveFrom")}
+                    <Controller
+                      control={control}
+                      name="effectiveFrom"
+                      render={({ field }) => (
+                        <DatePicker
+                          value={field.value ?? ""}
+                          onChange={field.onChange}
+                          ariaLabel="Effective from"
+                          placeholder="Pick a date"
+                          dateFormat="dd MMM yyyy"
+                          clearable
+                        />
+                      )}
                     />
                   </div>
                   <div className="space-y-1.5">
                     <Label className="text-xs font-medium">Effective to</Label>
-                    <Input
-                      type="date"
-                      className="h-9 text-sm"
-                      {...register("effectiveTo")}
+                    <Controller
+                      control={control}
+                      name="effectiveTo"
+                      render={({ field }) => (
+                        <DatePicker
+                          value={field.value ?? ""}
+                          onChange={field.onChange}
+                          ariaLabel="Effective to"
+                          placeholder="Pick a date"
+                          dateFormat="dd MMM yyyy"
+                          clearable
+                        />
+                      )}
                     />
                   </div>
                 </div>

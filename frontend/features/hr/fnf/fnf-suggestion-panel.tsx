@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { format } from "date-fns";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useOrgDisplay } from "@/hooks/api/org-display";
 import { formatMoney } from "@/lib/format-utils";
@@ -21,8 +21,8 @@ export function FnfSuggestionPanel({ userId, onApply }: FnfSuggestionPanelProps)
   const [lastWorkingDay, setLastWorkingDay] = useState(() => format(new Date(), "yyyy-MM-dd"));
   const { data, isLoading, isError, error } = useFnfSuggestion(userId, lastWorkingDay);
 
-  function handleDateChange(event: React.ChangeEvent<HTMLInputElement>) {
-    setLastWorkingDay(event.target.value);
+  function handleDateChange(value: string) {
+    setLastWorkingDay(value);
   }
 
   function handleApply() {
@@ -38,7 +38,7 @@ export function FnfSuggestionPanel({ userId, onApply }: FnfSuggestionPanelProps)
           <label htmlFor="fnf-last-working-day" className="text-sm font-medium text-foreground">
             Last working day
           </label>
-          <Input id="fnf-last-working-day" type="date" value={lastWorkingDay} onChange={handleDateChange} />
+          <DatePicker id="fnf-last-working-day" ariaLabel="Last working day" value={lastWorkingDay} onChange={handleDateChange} placeholder="Pick a date" dateFormat="dd MMM yyyy" />
         </div>
         <Button type="button" size="sm" variant="outline" onClick={handleApply} disabled={!data}>
           Fill suggested amounts

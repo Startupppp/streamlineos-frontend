@@ -1,5 +1,7 @@
 "use client";
 
+import { DatePicker } from "@/components/ui/date-picker";
+
 import { useEffect, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -186,10 +188,10 @@ export function WorkAuthSheet({ open, onOpenChange, existing, defaultEmploymentI
             />
             <div className="grid grid-cols-2 gap-3">
               <FormField control={form.control} name="validFrom" render={({ field }) => (
-                <FormItem><FormLabel>Valid From</FormLabel><FormControl><Input {...field} type="date" /></FormControl><FormMessage /></FormItem>
+                <FormItem><FormLabel>Valid From</FormLabel><FormControl><DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" dateFormat="dd MMM yyyy" clearable ariaLabel="Valid From" /></FormControl><FormMessage /></FormItem>
               )} />
               <FormField control={form.control} name="validUntil" render={({ field }) => (
-                <FormItem><FormLabel>Valid Until</FormLabel><FormControl><Input {...field} type="date" /></FormControl><FormMessage /></FormItem>
+                <FormItem><FormLabel>Valid Until</FormLabel><FormControl><DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" dateFormat="dd MMM yyyy" clearable ariaLabel="Valid Until" /></FormControl><FormMessage /></FormItem>
               )} />
             </div>
             <FormField

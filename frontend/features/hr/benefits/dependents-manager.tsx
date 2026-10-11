@@ -1,5 +1,7 @@
 "use client";
 
+import { DatePicker } from "@/components/ui/date-picker";
+
 import { useCallback, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -223,7 +225,15 @@ export function DependentsManager() {
 
         <div className="space-y-1.5">
           <Label htmlFor="dateOfBirth">Date of Birth</Label>
-          <Input id="dateOfBirth" type="date" {...form.register("dateOfBirth")} />
+          <DatePicker
+            id="dateOfBirth"
+            ariaLabel="Date of Birth"
+            value={form.watch("dateOfBirth") ?? ""}
+            onChange={(value) => form.setValue("dateOfBirth", value, { shouldDirty: true, shouldValidate: true })}
+            placeholder="Pick a date"
+            dateFormat="dd MMM yyyy"
+            clearable
+          />
         </div>
       </HrSheet>
 

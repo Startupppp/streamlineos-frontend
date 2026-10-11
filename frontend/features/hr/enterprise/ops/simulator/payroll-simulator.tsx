@@ -1,5 +1,7 @@
 "use client";
 
+import { DatePicker } from "@/components/ui/date-picker";
+
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -90,7 +92,7 @@ export function PayrollSimulator() {
             <FormField control={form.control} name="effectiveDate" render={({ field }) => (
               <FormItem>
                 <FormLabel>Effective Date</FormLabel>
-                <FormControl><Input type="date" {...field} /></FormControl>
+                <FormControl><DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" dateFormat="dd MMM yyyy" clearable /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />

@@ -21,6 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -173,7 +174,14 @@ export function ProductReleaseFormSheet({
                   <FormItem>
                     <FormLabel>Release date (optional)</FormLabel>
                     <FormControl>
-                      <Input {...field} type="date" value={field.value ?? ""} />
+                      <DatePicker
+                        value={field.value ?? ""}
+                        onChange={field.onChange}
+                        placeholder="Pick a date"
+                        dateFormat="dd MMM yyyy"
+                        clearable
+                        ariaLabel="Release date"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

@@ -85,18 +85,18 @@ export function ProductFeedbackPage({
     statusValue,
     linkedValue,
     duplicateValue,
-    sourceChannelValue,
-    themeValue,
-    sentimentValue,
-    consentStatusValue,
     linkedToOpportunityValue,
-    segmentValue,
-    crmOrgIdValue,
     typedFrom,
     typedTo,
     typedAssigneeId,
     paneSubmissionId,
     isFiltered,
+    appliedSegment,
+    appliedTheme,
+    appliedCrmOrgId,
+    appliedSourceChannel,
+    appliedSentiment,
+    appliedConsentStatus,
     handleTypeChange,
     handleStatusChange,
     handleLinkedChange,
@@ -132,35 +132,53 @@ export function ProductFeedbackPage({
   const selectionEnabled = canUpdateSubmission || canDeleteSubmission;
 
   const themeOptions = useMemo(
-    () => [
-      { value: "all", label: "All themes" },
-      { value: "untagged", label: "Untagged" },
-      ...(facetsData?.themes ?? [])
-        .filter((t): t is { value: string; count: number } => t.value !== null)
-        .map((t) => ({ value: t.value, label: t.value })),
-    ],
-    [facetsData?.themes],
+    () => {
+      const options = [
+        { value: "all", label: "All themes" },
+        { value: "untagged", label: "Untagged" },
+        ...(facetsData?.themes ?? [])
+          .filter((t): t is { value: string; count: number } => t.value !== null)
+          .map((t) => ({ value: t.value, label: t.value })),
+      ];
+      if (appliedTheme && !options.some((option) => option.value === appliedTheme)) {
+        options.push({ value: appliedTheme, label: appliedTheme });
+      }
+      return options;
+    },
+    [appliedTheme, facetsData?.themes],
   );
 
   const segmentOptions = useMemo(
-    () => [
-      { value: "all", label: "All segments" },
-      ...(facetsData?.segments ?? [])
-        .filter((s): s is { value: string; count: number } => s.value !== null)
-        .map((s) => ({ value: s.value, label: s.value })),
-    ],
-    [facetsData?.segments],
+    () => {
+      const options = [
+        { value: "all", label: "All segments" },
+        ...(facetsData?.segments ?? [])
+          .filter((s): s is { value: string; count: number } => s.value !== null)
+          .map((s) => ({ value: s.value, label: s.value })),
+      ];
+      if (appliedSegment && !options.some((option) => option.value === appliedSegment)) {
+        options.push({ value: appliedSegment, label: appliedSegment });
+      }
+      return options;
+    },
+    [appliedSegment, facetsData?.segments],
   );
 
   const customerOptions = useMemo(
-    () => [
-      { value: "all", label: "All customers" },
-      ...(crmOrgsData?.organizations ?? []).map((o) => ({
-        value: String(o.id),
-        label: o.name,
-      })),
-    ],
-    [crmOrgsData?.organizations],
+    () => {
+      const options = [
+        { value: "all", label: "All customers" },
+        ...(crmOrgsData?.organizations ?? []).map((o) => ({
+          value: String(o.id),
+          label: o.name,
+        })),
+      ];
+      if (appliedCrmOrgId && !options.some((option) => option.value === appliedCrmOrgId)) {
+        options.push({ value: appliedCrmOrgId, label: `Customer ${appliedCrmOrgId}` });
+      }
+      return options;
+    },
+    [appliedCrmOrgId, crmOrgsData?.organizations],
   );
 
   const handleOpenFocused = useCallback(
@@ -346,11 +364,11 @@ export function ProductFeedbackPage({
               {
                 id: "sourceChannel",
                 label: "Channel",
-                active: listFilters.isActive("sourceChannel"),
+                active: appliedSourceChannel !== undefined,
                 control: (
                   <BuildFilterSelect
                     label="Channel"
-                    value={sourceChannelValue}
+                    value={appliedSourceChannel ?? "all"}
                     onValueChange={handleSourceChannelChange}
                     options={SOURCE_CHANNEL_FILTER_OPTIONS}
                   />
@@ -359,11 +377,11 @@ export function ProductFeedbackPage({
               {
                 id: "theme",
                 label: "Theme",
-                active: listFilters.isActive("theme"),
+                active: appliedTheme !== undefined,
                 control: (
                   <BuildFilterSelect
                     label="Theme"
-                    value={themeValue}
+                    value={appliedTheme ?? "all"}
                     onValueChange={handleThemeChange}
                     options={themeOptions}
                   />
@@ -372,11 +390,11 @@ export function ProductFeedbackPage({
               {
                 id: "segment",
                 label: "Segment",
-                active: listFilters.isActive("segment"),
+                active: appliedSegment !== undefined,
                 control: (
                   <BuildFilterSelect
                     label="Segment"
-                    value={segmentValue}
+                    value={appliedSegment ?? "all"}
                     onValueChange={handleSegmentChange}
                     options={segmentOptions}
                   />
@@ -385,11 +403,11 @@ export function ProductFeedbackPage({
               {
                 id: "customer",
                 label: "Customer",
-                active: listFilters.isActive("crmOrganizationId"),
+                active: appliedCrmOrgId !== undefined,
                 control: (
                   <BuildFilterSelect
                     label="Customer"
-                    value={crmOrgIdValue}
+                    value={appliedCrmOrgId ?? "all"}
                     onValueChange={handleCrmOrgChange}
                     options={customerOptions}
                   />
@@ -398,11 +416,11 @@ export function ProductFeedbackPage({
               {
                 id: "sentiment",
                 label: "Sentiment",
-                active: listFilters.isActive("sentiment"),
+                active: appliedSentiment !== undefined,
                 control: (
                   <BuildFilterSelect
                     label="Sentiment"
-                    value={sentimentValue}
+                    value={appliedSentiment ?? "all"}
                     onValueChange={handleSentimentChange}
                     options={SENTIMENT_FILTER_OPTIONS}
                   />
@@ -411,11 +429,11 @@ export function ProductFeedbackPage({
               {
                 id: "consentStatus",
                 label: "Consent",
-                active: listFilters.isActive("consentStatus"),
+                active: appliedConsentStatus !== undefined,
                 control: (
                   <BuildFilterSelect
                     label="Consent"
-                    value={consentStatusValue}
+                    value={appliedConsentStatus ?? "all"}
                     onValueChange={handleConsentStatusChange}
                     options={CONSENT_FILTER_OPTIONS}
                   />
@@ -463,19 +481,19 @@ export function ProductFeedbackPage({
               {
                 id: "assignee",
                 label: "Assignee",
-                active: listFilters.isActive("assigneeId"),
+                active: typedAssigneeId !== undefined,
                 control: (
                   <UserCombobox
                     value={typedAssigneeId ?? ""}
                     onChange={handleAssigneeChange}
+                    placeholder={typedAssigneeId ?? "Select member…"}
                   />
                 ),
               },
               {
                 id: "date-range",
                 label: "Date range",
-                active:
-                  listFilters.isActive("from") || listFilters.isActive("to"),
+                active: Boolean(typedFrom || typedTo),
                 control: (
                   <DateRangePicker
                     from={typedFrom}

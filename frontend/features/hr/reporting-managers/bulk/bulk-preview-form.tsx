@@ -1,5 +1,7 @@
 "use client";
 
+import { DatePicker } from "@/components/ui/date-picker";
+
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -75,7 +77,7 @@ export function BulkPreviewForm({ source, onPreviewed }: BulkPreviewFormProps) {
             <FormItem className="sm:max-w-xs">
               <FormLabel>Effective from</FormLabel>
               <FormControl>
-                <Input type="date" {...field} />
+                <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" dateFormat="dd MMM yyyy" clearable ariaLabel="Effective from" />
               </FormControl>
               <FormDescription>Leave blank for today in your organisation.</FormDescription>
               <FormMessage />

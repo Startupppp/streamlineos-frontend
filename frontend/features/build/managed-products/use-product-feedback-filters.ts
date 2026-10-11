@@ -22,6 +22,25 @@ import {
   CONSENT_FILTER_OPTIONS,
 } from "./product-feedback-columns";
 
+function wireDateTime(value: string, bound: "from" | "to"): string {
+  if (value.includes("T")) return value;
+  return bound === "from" ? `${value}T00:00:00.000Z` : `${value}T23:59:59.999Z`;
+}
+
+function isoDateParam(value: string | undefined, active: boolean): string | undefined {
+  if (!active || !value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return undefined;
+  const [year, month, day] = value.split("-").map(Number);
+  const parsed = new Date(Date.UTC(year, month - 1, day));
+  if (
+    parsed.getUTCFullYear() !== year ||
+    parsed.getUTCMonth() !== month - 1 ||
+    parsed.getUTCDate() !== day
+  ) {
+    return undefined;
+  }
+  return value;
+}
+
 const SOURCE_CHANNEL_VALUES = SOURCE_CHANNEL_FILTER_OPTIONS
   .map((o) => o.value)
   .filter((v) => v !== BUILD_FILTER_ALL) as FeedbucketSourceChannel[];
@@ -62,16 +81,16 @@ export function useProductFeedbackFilters(managedProductId: number) {
     () => linkedValue === "linked" || linkedValue === "unlinked" ? linkedValue : undefined,
     [linkedValue],
   );
-  const typedAssigneeId = useMemo(
-    () => (assigneeIdValue !== BUILD_FILTER_ALL ? assigneeIdValue : undefined),
-    [assigneeIdValue],
-  );
+  const typedAssigneeId = useMemo(() => {
+    const trimmed = assigneeIdValue.trim();
+    return trimmed && trimmed !== BUILD_FILTER_ALL ? trimmed : undefined;
+  }, [assigneeIdValue]);
   const typedDuplicate = useMemo(
     () => duplicateValue === "true" || duplicateValue === "false" ? duplicateValue : undefined,
     [duplicateValue],
   );
-  const typedFrom = listFilters.isActive("from") ? fromValue : undefined;
-  const typedTo = listFilters.isActive("to") ? toValue : undefined;
+  const typedFrom = isoDateParam(fromValue, listFilters.isActive("from"));
+  const typedTo = isoDateParam(toValue, listFilters.isActive("to"));
   const typedSourceChannel = useMemo(
     () => SOURCE_CHANNEL_VALUES.includes(sourceChannelValue as FeedbucketSourceChannel)
       ? [sourceChannelValue as FeedbucketSourceChannel]
@@ -102,10 +121,10 @@ export function useProductFeedbackFilters(managedProductId: number) {
       : undefined,
     [linkedToOpportunityValue],
   );
-  const typedSegment = useMemo(
-    () => segmentValue && segmentValue !== BUILD_FILTER_ALL ? [segmentValue] : undefined,
-    [segmentValue],
-  );
+  const typedSegment = useMemo(() => {
+    const trimmed = segmentValue?.trim();
+    return trimmed && trimmed !== BUILD_FILTER_ALL ? [trimmed] : undefined;
+  }, [segmentValue]);
   const typedCrmOrgId = useMemo(() => {
     const n = crmOrgIdValue ? parseInt(crmOrgIdValue, 10) : NaN;
     return Number.isFinite(n) && n > 0 ? [n] : undefined;
@@ -140,8 +159,8 @@ export function useProductFeedbackFilters(managedProductId: number) {
     ...(typedLinked && { linked: typedLinked }),
     ...(typedAssigneeId && { assigneeId: typedAssigneeId }),
     ...(typedDuplicate && { duplicate: typedDuplicate }),
-    ...(typedFrom && { from: typedFrom }),
-    ...(typedTo && { to: typedTo }),
+    ...(typedFrom && { from: wireDateTime(typedFrom, "from") }),
+    ...(typedTo && { to: wireDateTime(typedTo, "to") }),
     ...(typedSourceChannel && { sourceChannel: typedSourceChannel }),
     ...(typedTheme && { theme: typedTheme }),
     ...(typedSentiment && { sentiment: typedSentiment }),
@@ -206,6 +225,14 @@ export function useProductFeedbackFilters(managedProductId: number) {
     typedAssigneeId,
     paneSubmissionId,
     isFiltered,
+    appliedSegment: typedSegment?.[0],
+    appliedTheme: typedTheme
+      ? typedTheme[0] === "" ? "untagged" : typedTheme[0]
+      : undefined,
+    appliedCrmOrgId: typedCrmOrgId ? String(typedCrmOrgId[0]) : undefined,
+    appliedSourceChannel: typedSourceChannel?.[0],
+    appliedSentiment: typedSentiment?.[0],
+    appliedConsentStatus: typedConsentStatus?.[0],
     handleTypeChange,
     handleStatusChange,
     handleLinkedChange,

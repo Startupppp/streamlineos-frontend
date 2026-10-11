@@ -1,5 +1,7 @@
 "use client";
 
+import { DatePicker } from "@/components/ui/date-picker";
+
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { AppSheet } from "@/components/shared";
@@ -135,11 +137,13 @@ export function PayoutUploadSheet({ open, onOpenChange }: PayoutUploadSheetProps
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="payout-date">Settled on</Label>
-            <Input
+            <DatePicker
               id="payout-date"
-              type="date"
+              ariaLabel="Settled on"
               value={settledOn}
-              onChange={(e) => setSettledOn(e.target.value)}
+              onChange={setSettledOn}
+              placeholder="Pick a date"
+              dateFormat="dd MMM yyyy"
             />
           </div>
         </div>

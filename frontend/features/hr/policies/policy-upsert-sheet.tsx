@@ -1,5 +1,7 @@
 "use client";
 
+import { DatePicker } from "@/components/ui/date-picker";
+
 import { useCallback, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -234,7 +236,7 @@ export function PolicyUpsertSheet({ open, onOpenChange, policy }: Props) {
                   <FormItem>
                     <FormLabel className={LABEL_CLASS}>Effective From</FormLabel>
                     <FormControl>
-                      <Input type="date" className="text-sm" {...field} disabled={isActive} />
+                      <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" dateFormat="dd MMM yyyy" clearable disabled={isActive} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -247,7 +249,7 @@ export function PolicyUpsertSheet({ open, onOpenChange, policy }: Props) {
                   <FormItem>
                     <FormLabel className={LABEL_CLASS}>Effective To</FormLabel>
                     <FormControl>
-                      <Input type="date" className="text-sm" {...field} disabled={isActive} />
+                      <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" dateFormat="dd MMM yyyy" clearable disabled={isActive} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

@@ -157,10 +157,10 @@ test.describe("Build list responsive contract", () => {
       expect(Math.round(search?.y ?? 0)).toBe(Math.round(status?.y ?? -1));
     });
 
-    test("three filters collapse behind one labelled drawer trigger", async ({ page }) => {
+    test("two filters stay on the row and the third opens from Filters", async ({ page }) => {
       const scope = frame(page, "four-actions-three-filters");
-      await expect(scope.locator("[data-filter-id=status]")).toBeHidden();
-      await expect(scope.locator("[data-filter-id=health]")).toBeHidden();
+      await expect(scope.locator("[data-filter-id=status]")).toBeVisible();
+      await expect(scope.locator("[data-filter-id=health]")).toBeVisible();
       await expect(scope.locator("[data-filter-id=lead]")).toBeHidden();
       await expect(scope.getByRole("button", { name: /^Filters/ })).toBeVisible();
     });
@@ -172,9 +172,9 @@ test.describe("Build list responsive contract", () => {
 
       const dialog = page.getByRole("dialog");
       await expect(dialog).toBeVisible();
-      for (const label of ["Status", "Health", "Lead"]) {
-        await expect(dialog.getByLabel(label)).toBeVisible();
-      }
+      await expect(dialog.getByLabel("Lead")).toBeVisible();
+      await expect(dialog.getByLabel("Status")).toHaveCount(0);
+      await expect(dialog.getByLabel("Health")).toHaveCount(0);
       await expect(dialog.getByRole("button", { name: "Done" })).toBeVisible();
 
       const focusInside = await dialog.evaluate(
@@ -271,12 +271,12 @@ test.describe("Build list responsive contract", () => {
       await page.goto(GALLERY);
     });
 
-    test("one filter remains direct while two filters use the drawer", async ({ page }) => {
+    test("three filters stay inline and the drawer trigger retires", async ({ page }) => {
       const scope = frame(page, "four-actions-three-filters");
       await expect(scope.locator("[data-filter-id=status]")).toBeVisible();
-      await expect(scope.locator("[data-filter-id=health]")).toBeHidden();
-      await expect(scope.locator("[data-filter-id=lead]")).toBeHidden();
-      await expect(scope.getByRole("button", { name: /^Filters/ })).toBeVisible();
+      await expect(scope.locator("[data-filter-id=health]")).toBeVisible();
+      await expect(scope.locator("[data-filter-id=lead]")).toBeVisible();
+      await expect(scope.getByRole("button", { name: /^Filters/ })).toBeHidden();
     });
 
     test("the desktop table replaces the mobile cards", async ({ page }) => {
@@ -477,14 +477,9 @@ test.describe("Build list responsive contract", () => {
 
       test("each filter select trigger is named by its visual label", async ({ page }) => {
         const scope = frame(page, "four-actions-three-filters");
-        await expect(
-          scope.getByRole("combobox", { name: "Status", exact: true }),
-        ).toBeVisible();
-        await scope.getByRole("button", { name: /^Filters/ }).click();
-        const dialog = page.getByRole("dialog");
-        for (const label of ["Health", "Lead"]) {
+        for (const label of ["Status", "Health", "Lead"]) {
           await expect(
-            dialog.getByRole("combobox", { name: label, exact: true }),
+            scope.getByRole("combobox", { name: label, exact: true }),
           ).toBeVisible();
         }
       });

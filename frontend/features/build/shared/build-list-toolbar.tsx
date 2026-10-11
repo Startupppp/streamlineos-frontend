@@ -68,7 +68,11 @@ function ToolbarFilterSlot({
         searchCollapsed && "flex-1 basis-0 [&_[data-slot=select-trigger]]:!w-full [&_[data-slot=select-trigger]]:!min-w-0 [&_[data-slot=select-trigger]]:!max-w-none",
         fieldIndex === null
           ? "max-md:min-w-0 max-md:shrink-0"
-          : toolbarInlineVisibility(fieldIndex, collapsed, fieldFilterCount),
+          : cn(
+              toolbarInlineVisibility(fieldIndex, collapsed, fieldFilterCount),
+              fieldIndex < 2 &&
+                "max-md:[&_[data-slot=select-trigger]]:w-auto max-md:[&_[data-slot=select-trigger]]:max-w-40",
+            ),
       )}
     >
       {filter.control}

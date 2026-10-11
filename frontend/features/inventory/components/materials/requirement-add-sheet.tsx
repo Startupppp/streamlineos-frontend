@@ -1,5 +1,7 @@
 "use client";
 
+import { DatePicker } from "@/components/ui/date-picker";
+
 import { useMemo, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -161,7 +163,7 @@ export function RequirementAddSheet({
                   <FormItem>
                     <FormLabel>Needed by</FormLabel>
                     <FormControl>
-                      <Input {...field} value={field.value ?? ""} type="date" />
+                      <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" dateFormat="dd MMM yyyy" clearable />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

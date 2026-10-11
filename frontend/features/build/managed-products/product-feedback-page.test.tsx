@@ -219,7 +219,7 @@ describe("ProductFeedbackPage — URL-backed filter params (BSN-01-FB-FILTERS)",
     useFeedbucketSubmissions.mockReturnValue(EMPTY_FEEDBUCKET_RESULT);
     render(<ProductFeedbackPage managedProductId={7} />);
     const [callParams] = useFeedbucketSubmissions.mock.calls[0] as [Record<string, unknown>];
-    expect(callParams).toMatchObject({ from: "2026-01-01" });
+    expect(callParams).toMatchObject({ from: "2026-01-01T00:00:00.000Z" });
   });
 
   it("forwards to bound from URL to useFeedbucketSubmissions so future submissions are excluded server-side", () => {
@@ -227,7 +227,28 @@ describe("ProductFeedbackPage — URL-backed filter params (BSN-01-FB-FILTERS)",
     useFeedbucketSubmissions.mockReturnValue(EMPTY_FEEDBUCKET_RESULT);
     render(<ProductFeedbackPage managedProductId={7} />);
     const [callParams] = useFeedbucketSubmissions.mock.calls[0] as [Record<string, unknown>];
-    expect(callParams).toMatchObject({ to: "2026-06-01" });
+    expect(callParams).toMatchObject({ to: "2026-06-01T23:59:59.999Z" });
+  });
+
+  it("omits whitespace segment, illegal sentiment, and a blank assignee so they do not filter the list", () => {
+    mockUseSearchParams.mockReturnValueOnce(
+      new URLSearchParams("segment=%20%20&sentiment=nope&assigneeId=%20%20&crmOrganizationId=-1"),
+    );
+    useFeedbucketSubmissions.mockReturnValue(EMPTY_FEEDBUCKET_RESULT);
+    render(<ProductFeedbackPage managedProductId={7} />);
+    const [callParams] = useFeedbucketSubmissions.mock.calls[0] as [Record<string, unknown>];
+    expect(callParams).not.toHaveProperty("segment");
+    expect(callParams).not.toHaveProperty("sentiment");
+    expect(callParams).not.toHaveProperty("assigneeId");
+    expect(callParams).not.toHaveProperty("crmOrganizationId");
+  });
+
+  it("omits a non-date from bound so the submissions request is not rejected", () => {
+    mockUseSearchParams.mockReturnValueOnce(new URLSearchParams("from=not-a-date"));
+    useFeedbucketSubmissions.mockReturnValue(EMPTY_FEEDBUCKET_RESULT);
+    render(<ProductFeedbackPage managedProductId={7} />);
+    const [callParams] = useFeedbucketSubmissions.mock.calls[0] as [Record<string, unknown>];
+    expect(callParams).not.toHaveProperty("from");
   });
 
   it("omits from and to from query when URL carries neither so all submission dates are returned", () => {

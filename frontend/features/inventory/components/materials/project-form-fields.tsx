@@ -1,5 +1,7 @@
 "use client";
 
+import { DatePicker } from "@/components/ui/date-picker";
+
 import type { UseFormReturn } from "react-hook-form";
 import {
   FormControl,
@@ -10,19 +12,19 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import type { ProjectFormOutput, ProjectFormValues } from "./project-form-schema";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import type {
+  ProjectFormOutput,
+  ProjectFormValues,
+} from "./project-form-schema";
 import { ZONES } from "./project-form-schema";
 
-/**
- * The project form's fields, grouped the way a site office fills them in:
- * identity, then where it is, then who to ring, then when. A single long column
- * of eleven inputs is the shape people abandon halfway.
- *
- * Extracted from the sheet because the frontend holds a 300-line ratchet per
- * file — and because the grouping is the design decision, which reads better on
- * its own than buried under form plumbing.
- */
 export function ProjectFormFields({
   form,
 }: {
@@ -38,7 +40,11 @@ export function ProjectFormFields({
             <FormItem>
               <FormLabel>Site code</FormLabel>
               <FormControl>
-                <Input {...field} placeholder="HYD-TOWER-04" autoComplete="off" />
+                <Input
+                  {...field}
+                  placeholder="HYD-TOWER-04"
+                  autoComplete="off"
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -75,7 +81,10 @@ export function ProjectFormFields({
           <FormItem>
             <FormLabel>Site name</FormLabel>
             <FormControl>
-              <Input {...field} placeholder="Aparna Sarovar Tower 4 — Structure" />
+              <Input
+                {...field}
+                placeholder="Aparna Sarovar Tower 4 — Structure"
+              />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -114,7 +123,11 @@ export function ProjectFormFields({
             <FormItem>
               <FormLabel>City</FormLabel>
               <FormControl>
-                <Input {...field} value={field.value ?? ""} placeholder="Hyderabad" />
+                <Input
+                  {...field}
+                  value={field.value ?? ""}
+                  placeholder="Hyderabad"
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -129,7 +142,11 @@ export function ProjectFormFields({
           <FormItem>
             <FormLabel>Site address</FormLabel>
             <FormControl>
-              <Input {...field} value={field.value ?? ""} placeholder="Nallagandla, Serilingampally" />
+              <Input
+                {...field}
+                value={field.value ?? ""}
+                placeholder="Nallagandla, Serilingampally"
+              />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -144,7 +161,11 @@ export function ProjectFormFields({
             <FormItem>
               <FormLabel>Site contact</FormLabel>
               <FormControl>
-                <Input {...field} value={field.value ?? ""} placeholder="Mahesh Kumar" />
+                <Input
+                  {...field}
+                  value={field.value ?? ""}
+                  placeholder="Mahesh Kumar"
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -157,7 +178,12 @@ export function ProjectFormFields({
             <FormItem>
               <FormLabel>Contact number</FormLabel>
               <FormControl>
-                <Input {...field} value={field.value ?? ""} inputMode="tel" placeholder="+91 98490 11223" />
+                <Input
+                  {...field}
+                  value={field.value ?? ""}
+                  inputMode="tel"
+                  placeholder="+91 98490 11223"
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -173,7 +199,13 @@ export function ProjectFormFields({
             <FormItem>
               <FormLabel>Starts on</FormLabel>
               <FormControl>
-                <Input {...field} value={field.value ?? ""} type="date" />
+                <DatePicker
+                  value={field.value ?? ""}
+                  onChange={field.onChange}
+                  placeholder="Pick a date"
+                  dateFormat="dd MMM yyyy"
+                  clearable
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -186,7 +218,13 @@ export function ProjectFormFields({
             <FormItem>
               <FormLabel>Target completion</FormLabel>
               <FormControl>
-                <Input {...field} value={field.value ?? ""} type="date" />
+                <DatePicker
+                  value={field.value ?? ""}
+                  onChange={field.onChange}
+                  placeholder="Pick a date"
+                  dateFormat="dd MMM yyyy"
+                  clearable
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
