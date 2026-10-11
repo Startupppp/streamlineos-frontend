@@ -3,7 +3,6 @@
 import { useEffect, useSyncExternalStore } from "react";
 import { isApiError } from "@/lib/api-envelope";
 import { useProject } from "@/hooks/api/build/projects";
-import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import {
   LAST_PROJECT_COOKIE_NAME,
   clearLastProjectId,
@@ -32,7 +31,11 @@ export function useResumeLastProject(): BuildHeaderAction | null {
     getLastProjectId,
     getServerLastProjectId,
   );
-  const { data: project, isError, error } = useProject(projectId ?? 0, INLINE_READ_ERROR);
+  const { data: project, isError, error } = useProject(projectId ?? 0, {
+    throwOnError: false,
+    retry: (failureCount, err) =>
+      failureCount < 3 && !(isApiError(err) && (err.status === 404 || err.status === 403)),
+  });
 
   useEffect(() => {
     const gone =

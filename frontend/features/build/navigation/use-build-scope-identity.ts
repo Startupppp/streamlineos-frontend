@@ -24,7 +24,7 @@ export interface BuildScopeIdentity {
 }
 
 function isMissingAccess(error: unknown): boolean {
-  return isApiError(error) && (error.status === 403 || error.status === 404);
+  return isApiError(error) && error.status === 403;
 }
 
 export function useBuildScopeIdentity(scope: BuildScope): BuildScopeIdentity {
@@ -62,7 +62,7 @@ export function useBuildScopeIdentity(scope: BuildScope): BuildScopeIdentity {
           ref: {
             ...base,
             id: String(scope.projectId ?? ""),
-            name: projectQuery.data?.name ?? (base.name || "Project"),
+            name: projectQuery.data?.name ?? base.name,
             projectKey: projectQuery.data?.key ?? base.projectKey,
           },
           isLoading: projectQuery.isLoading,
@@ -74,7 +74,7 @@ export function useBuildScopeIdentity(scope: BuildScope): BuildScopeIdentity {
           ref: {
             ...base,
             id: String(scope.managedProductId ?? ""),
-            name: productQuery.data?.name ?? (base.name || "Product"),
+            name: productQuery.data?.name ?? base.name,
             projectKey: productQuery.data?.key ?? base.projectKey,
           },
           isLoading: productQuery.isLoading,

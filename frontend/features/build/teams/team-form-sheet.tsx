@@ -50,15 +50,11 @@ interface Props {
   isPending?: boolean;
 }
 
-function toTeamKey(raw: string): string {
-  return raw.toUpperCase().replace(/[^A-Z0-9]/g, "");
-}
-
 function teamKeyChange(
   onChange: (value: string) => void,
 ): (event: React.ChangeEvent<HTMLInputElement>) => void {
   return function handleTeamKeyChange(event) {
-    onChange(toTeamKey(event.target.value));
+    onChange(event.target.value.toUpperCase());
   };
 }
 

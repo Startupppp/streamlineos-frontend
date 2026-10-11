@@ -32,7 +32,7 @@ export default function BuildProjectNotFound() {
           Page Not Found
         </h1>
         <p className="text-muted-foreground text-base leading-relaxed">
-          This Build page does not exist or is no longer available.
+          This project doesn't exist, or you don't have access to it.
         </p>
       </motion.div>
       <motion.div

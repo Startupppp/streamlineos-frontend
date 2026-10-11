@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useCan, useCanState } from "@/hooks/api/access";
+import { useCanState } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import type { Release, CreateReleaseInput, UpdateReleaseInput } from "@/types/projects";
@@ -64,11 +64,11 @@ export function useOrgReleases(filters?: OrgReleaseFilters) {
 }
 
 export function useReleases(projectId: number, query: ReleaseListQuery = {}) {
-  const canView = useCan("build:view");
+  const canViewState = useCanState("build:view");
   return useQuery({
     queryKey: releaseKey(projectId, query),
     queryFn: ({ signal }) => apiClient.get(`/build/${projectId}/releases`, query, signal, projectReleaseListContract),
-    enabled: canView && !!projectId,
+    enabled: canViewState !== "denied" && !!projectId,
     staleTime: 60_000,
   });
 }

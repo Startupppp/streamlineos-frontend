@@ -116,8 +116,14 @@ export function useCreateProjectTeam() {
     mutationKey: [...buildWorkQueryKeys.projects.teams.all, "create"],
     mutationFn: (data: CreateTeamInput) =>
       apiClient.post<ProjectTeam>("/build/teams", data, undefined, teamRowContract),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.teams.all });
+    onSuccess: (newTeam) => {
+      qc.setQueriesData<TeamListResponse>(
+        { queryKey: buildWorkQueryKeys.projects.teams.list() },
+        (prev) => {
+          if (!prev) return prev;
+          return { ...prev, data: [newTeam, ...prev.data] };
+        },
+      );
     },
   });
 }
