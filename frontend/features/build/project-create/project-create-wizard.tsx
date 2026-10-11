@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
@@ -45,7 +45,7 @@ export function ProjectCreateWizard({
   onOpenChange,
   scope,
 }: ProjectCreateWizardProps) {
-  const { step, direction, draft, updateDraft, goNext, goBack, reset } =
+  const { step, direction, draft, updateDraft, goNext, goBack, goToStep1, reset } =
     useProjectCreate();
 
   const isDirty = open && (step > 1 || draft.name.trim() !== "");
@@ -57,7 +57,15 @@ export function ProjectCreateWizard({
   const [discardConfirmOpen, setDiscardConfirmOpen] = useState(false);
 
   const basicsRef = useRef<BasicsHandle>(null);
+  const pendingKeyErrorRef = useRef<string | null>(null);
   const shouldReduceMotion = useReducedMotion();
+
+  useEffect(() => {
+    if (step !== 1 || !pendingKeyErrorRef.current) return;
+    const msg = pendingKeyErrorRef.current;
+    pendingKeyErrorRef.current = null;
+    basicsRef.current?.setKeyError(msg);
+  }, [step]);
 
   const sharedProps: StepSharedProps = { draft, updateDraft };
 
@@ -75,9 +83,15 @@ export function ProjectCreateWizard({
     onOpenChange(false);
   }
 
+  function handleKeyConflict(message: string): void {
+    pendingKeyErrorRef.current = message;
+    goToStep1();
+  }
+
   const { provision, isProvisioning } = useProjectProvisioning(
     handleSuccess,
     scope,
+    { onKeyConflict: handleKeyConflict },
   );
   const isBusyRef = useRef(false);
   useLayoutEffect(() => {
@@ -173,7 +187,7 @@ export function ProjectCreateWizard({
             step === 4 && "flex flex-col overflow-hidden",
           )}
         >
-          <AnimatePresence mode="wait" custom={direction}>
+          <AnimatePresence mode="popLayout" initial={false} custom={direction}>
             <motion.div
               key={step}
               custom={direction}

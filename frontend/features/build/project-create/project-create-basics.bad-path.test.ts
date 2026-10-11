@@ -1,5 +1,13 @@
 import { basicsSchema, PROJECT_NAME_MAX, PROJECT_KEY_MAX } from "./project-create-schema";
 
+function keyErrors(key: string): string[] {
+  const result = basicsSchema.safeParse({ name: "Alpha", key });
+  if (result.success) return [];
+  return result.error.issues
+    .filter((i) => i.path[0] === "key")
+    .map((i) => i.message);
+}
+
 describe("create project basics — bad paths first", () => {
   it("rejects an empty name", () => {
     expect(basicsSchema.safeParse({ name: "", key: "AB" }).success).toBe(false);
@@ -54,5 +62,26 @@ describe("create project basics — bad paths first", () => {
     expect(
       basicsSchema.safeParse({ name: "Alpha", key: "AB" }).success,
     ).toBe(true);
+  });
+});
+
+describe("project key validation messages — BUG-14", () => {
+  it("shows an allowed-characters message when the key is empty (all chars stripped)", () => {
+    const errors = keyErrors("");
+    expect(errors.length).toBeGreaterThan(0);
+    expect(errors[0]).toMatch(/uppercase letters|A.Z/i);
+  });
+
+  it("shows a length message (not an allowed-characters message) for a single valid character", () => {
+    const errors = keyErrors("A");
+    expect(errors.length).toBeGreaterThan(0);
+    expect(errors[0]).toMatch(/at least 2 characters/i);
+    expect(errors[0]).not.toMatch(/uppercase letters|A.Z/i);
+  });
+
+  it("shows a starts-with-letter message when the key begins with a digit", () => {
+    const errors = keyErrors("1AB");
+    expect(errors.length).toBeGreaterThan(0);
+    expect(errors[0]).toMatch(/start with a letter/i);
   });
 });

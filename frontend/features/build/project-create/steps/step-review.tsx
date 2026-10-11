@@ -3,6 +3,7 @@
 import { useMemo, type ReactNode } from "react";
 import { CheckCircle2, FolderKanban, Settings2, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 import { useProjectTemplates } from "@/hooks/api/build/templates";
 import { useSimpleClientsList } from "@/hooks/api/crm/clients";
 import type { WizardDraft } from "../use-project-create";
@@ -157,9 +158,12 @@ function ReviewField({ label, value, muted = false, mono = false, wide = false }
   wide?: boolean;
 }) {
   return (
-    <div className={wide ? "sm:col-span-2" : undefined}>
+    <div className={cn(wide ? "sm:col-span-2" : undefined, "min-w-0")}>
       <p className="text-micro font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
-      <p className={muted ? "mt-1 text-sm text-muted-foreground" : mono ? "mt-1 font-mono text-sm text-foreground" : "mt-1 text-sm font-medium text-foreground"}>{value}</p>
+      <p className={cn(
+        "mt-1 text-sm break-words",
+        muted ? "text-muted-foreground" : mono ? "font-mono text-foreground" : "font-medium text-foreground",
+      )}>{value}</p>
     </div>
   );
 }

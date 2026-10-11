@@ -99,11 +99,16 @@ export function useProjectCreate() {
     setStep((s) => Math.max(s - 1, 1));
   }
 
+  function goToStep1() {
+    setDirection(-1);
+    setStep(1);
+  }
+
   function reset() {
     setStep(1);
     setDirection(1);
     setDraft(buildInitialDraft(creatorId));
   }
 
-  return { step, direction, draft, updateDraft, goNext, goBack, reset };
+  return { step, direction, draft, updateDraft, goNext, goBack, goToStep1, reset };
 }

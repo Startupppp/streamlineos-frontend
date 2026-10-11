@@ -1,8 +1,9 @@
 "use client";
 
-import { forwardRef, useImperativeHandle, useRef } from "react";
+import { forwardRef, useImperativeHandle, useMemo, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { AlertTriangle } from "lucide-react";
 import {
   Form,
   FormControl,
@@ -33,8 +34,9 @@ import {
   BasicsClientField,
   charCounter,
 } from "./step-basics-manager-field";
+import { useProjects } from "@/hooks/api/build/projects";
 
-export type BasicsHandle = { validate: () => Promise<boolean> };
+export type BasicsHandle = { validate: () => Promise<boolean>; setKeyError: (message: string) => void };
 
 export const StepBasics = forwardRef<
   BasicsHandle,
@@ -62,6 +64,15 @@ export const StepBasics = forwardRef<
     const watchedKey = form.watch("key");
     const watchedDescription = form.watch("description");
 
+    const { data: projectsData } = useProjects();
+    const duplicateNameWarning = useMemo(() => {
+      const trimmed = watchedName?.trim().toLowerCase() ?? "";
+      if (trimmed.length < 2) return false;
+      return (projectsData?.data ?? []).some(
+        (p) => p.name.trim().toLowerCase() === trimmed,
+      );
+    }, [watchedName, projectsData]);
+
     useImperativeHandle(ref, () => ({
       async validate(): Promise<boolean> {
         const ok = await form.trigger();
@@ -78,6 +89,9 @@ export const StepBasics = forwardRef<
           });
         }
         return ok;
+      },
+      setKeyError(message: string): void {
+        form.setError("key", { type: "manual", message });
       },
     }));
 
@@ -165,6 +179,12 @@ export const StepBasics = forwardRef<
                   />
                 </FormControl>
                 <FormMessage />
+                {duplicateNameWarning && (
+                  <div className="flex items-start gap-1.5 rounded-md border border-status-warning-rule bg-status-warning-surface px-2.5 py-2 text-xs text-status-warning-ink-strong">
+                    <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                    <span>A project with this name already exists. Project names can repeat—confirm this is intentional.</span>
+                  </div>
+                )}
               </FormItem>
             )}
           />

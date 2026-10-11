@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { useCreateProject, useAddProjectMember } from "@/hooks/api/build/projects";
 import { useApplyProjectTemplate } from "@/hooks/api/build/templates";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { isApiError } from "@/lib/api-envelope";
 import type { WizardDraft } from "./use-project-create";
 
 export interface ProjectCreateScope {
@@ -15,6 +16,7 @@ export interface ProjectCreateScope {
 export function useProjectProvisioning(
   onSuccess: () => void,
   scope?: ProjectCreateScope,
+  options?: { onKeyConflict?: (message: string) => void },
 ) {
   const [isProvisioning, setIsProvisioning] = useState(false);
   const router = useRouter();
@@ -78,7 +80,11 @@ export function useProjectProvisioning(
       onSuccess();
       router.push(`/build/${projectId}`);
     } catch (error) {
-      toast.error(getErrorMessage(error));
+      if (isApiError(error) && error.status === 409 && options?.onKeyConflict) {
+        options.onKeyConflict(getErrorMessage(error));
+      } else {
+        toast.error(getErrorMessage(error));
+      }
     } finally {
       setIsProvisioning(false);
     }

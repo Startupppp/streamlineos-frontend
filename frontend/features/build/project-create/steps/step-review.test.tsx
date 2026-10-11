@@ -131,6 +131,28 @@ describe("StepReview client row — BUG-004", () => {
   });
 });
 
+describe("StepReview description overflow — BUG-16", () => {
+  it("renders a long description without truncating its text content", () => {
+    const longDesc = "A".repeat(2000);
+    const draft: WizardDraft = { ...makeDraft([]), description: longDesc };
+    render(<StepReview draft={draft} />);
+
+    expect(document.body.textContent).toContain(longDesc);
+  });
+
+  it("applies break-words class to the description value paragraph", () => {
+    const longDesc = "B".repeat(500);
+    const draft: WizardDraft = { ...makeDraft([]), description: longDesc };
+    const { container } = render(<StepReview draft={draft} />);
+
+    const descParagraph = Array.from(container.querySelectorAll("p")).find(
+      (p) => p.textContent === longDesc,
+    );
+    expect(descParagraph).toBeDefined();
+    expect(descParagraph?.className).toMatch(/break-words/);
+  });
+});
+
 describe("StepReview team row", () => {
   it("shows the selected member's display name in the team row instead of '1 member(s) added' when one member is chosen", () => {
     render(<StepReview draft={makeDraft(["u1"])} />);

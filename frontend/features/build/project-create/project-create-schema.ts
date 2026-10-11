@@ -17,9 +17,10 @@ export const basicsSchema = z
       }),
     key: z
       .string()
+      .min(1, "Key must contain only uppercase letters (A–Z) and numbers")
       .min(2, "Key must be at least 2 characters")
       .max(PROJECT_KEY_MAX, `Key must be ${PROJECT_KEY_MAX} characters or fewer`)
-      .regex(/^[A-Z][A-Z0-9]*$/, "Key must start with a letter and contain only uppercase letters/numbers"),
+      .regex(/^[A-Z][A-Z0-9]*$/, "Key must start with a letter (A–Z) and contain only uppercase letters and numbers"),
     description: z
       .string()
       .max(PROJECT_DESCRIPTION_MAX, `Description must be ${PROJECT_DESCRIPTION_MAX} characters or fewer`)
