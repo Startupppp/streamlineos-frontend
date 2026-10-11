@@ -8,11 +8,6 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
 import { BuildOfflineNotice } from "@/features/build/shared/build-offline-notice";
-import {
-  MANAGED_PRODUCT_DETAIL_CONTENT_CLASS,
-  ManagedProductDetailPrimarySection,
-  ManagedProductDetailShell,
-} from "@/features/build/managed-products/managed-product-detail-layout";
 import { ManagedProductOverviewSkeleton } from "@/features/build/managed-products/managed-product-page-skeletons";
 import { ManagedProductOverviewStrategyCard } from "./managed-product-overview-strategy-card";
 import { ManagedProductOverviewEvidenceCard } from "./managed-product-overview-evidence-card";
@@ -57,7 +52,7 @@ export function ManagedProductOverviewPage({ managedProductId }: ManagedProductO
       title={product?.name ?? "Product overview"}
       badge={product?.key}
       subtitle={overviewSubtitle}
-      contentClassName={MANAGED_PRODUCT_DETAIL_CONTENT_CLASS}
+      contentClassName="h-auto"
       actions={<BuildHeaderActions actions={editActions} />}
       filters={
         <BuildListToolbar
@@ -127,57 +122,55 @@ export function ManagedProductOverviewPage({ managedProductId }: ManagedProductO
           defaultValues={product}
         />
       ) : null}
-      <ManagedProductDetailShell>
-        <ManagedProductDetailPrimarySection>
-          <PageState
-            resolution={resolution}
-            loading={<ManagedProductOverviewSkeleton />}
-            onRetry={handleRetry}
-            className="flex-1 min-h-0"
-          >
-            <div className="flex flex-1 min-h-0 flex-col gap-6">
-              <BuildOfflineNotice dataUpdatedAt={summaryDataUpdatedAt} />
+      <PageState
+        resolution={resolution}
+        loading={<ManagedProductOverviewSkeleton />}
+        onRetry={handleRetry}
+        className="h-auto flex-none"
+      >
+        <div className="flex w-full min-w-0 flex-col gap-4 pb-8">
+          <BuildOfflineNotice dataUpdatedAt={summaryDataUpdatedAt} />
 
-              {summaryData ? (
-                <>
-                  <ManagedProductOverviewStrategyCard
-                    managedProductId={managedProductId}
-                    product={summaryData.product}
-                  />
-                  <ManagedProductOverviewEvidenceCard
-                    managedProductId={managedProductId}
-                    evidence={summaryData.evidence}
-                    previews={summaryData.previews}
-                  />
-                  <ManagedProductOverviewDeliveryCard
-                    managedProductId={managedProductId}
-                    delivery={summaryData.delivery}
-                    previews={summaryData.previews}
-                  />
-                  <ManagedProductOverviewOutcomesCard
-                    managedProductId={managedProductId}
-                    outcomes={summaryData.outcomes}
-                  />
-                  <ManagedProductOverviewPreviewsCard
-                    managedProductId={managedProductId}
-                    previews={summaryData.previews}
-                  />
-                </>
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  No summary data available.{" "}
-                  <Link
-                    href={`/build/managed-products/${managedProductId}/insights`}
-                    className="text-primary underline-offset-2 hover:underline"
-                  >
-                    Explore insights
-                  </Link>
-                </p>
-              )}
-            </div>
-          </PageState>
-        </ManagedProductDetailPrimarySection>
-      </ManagedProductDetailShell>
+          {summaryData ? (
+            <>
+              <ManagedProductOverviewStrategyCard
+                managedProductId={managedProductId}
+                product={summaryData.product}
+              />
+              <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
+                <ManagedProductOverviewEvidenceCard
+                  managedProductId={managedProductId}
+                  evidence={summaryData.evidence}
+                  previews={summaryData.previews}
+                />
+                <ManagedProductOverviewDeliveryCard
+                  managedProductId={managedProductId}
+                  delivery={summaryData.delivery}
+                  previews={summaryData.previews}
+                />
+              </div>
+              <ManagedProductOverviewOutcomesCard
+                managedProductId={managedProductId}
+                outcomes={summaryData.outcomes}
+              />
+              <ManagedProductOverviewPreviewsCard
+                managedProductId={managedProductId}
+                previews={summaryData.previews}
+              />
+            </>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              No summary data available.{" "}
+              <Link
+                href={`/build/managed-products/${managedProductId}/insights`}
+                className="inline-flex min-h-11 items-center text-primary underline-offset-2 hover:underline"
+              >
+                Explore insights
+              </Link>
+            </p>
+          )}
+        </div>
+      </PageState>
     </PageWrapper>
   );
 }

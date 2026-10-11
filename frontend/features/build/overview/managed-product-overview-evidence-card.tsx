@@ -1,10 +1,9 @@
 "use client";
 
-import Link from "next/link";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { formatRelativeTime } from "@/lib/date-utils";
 import type { ManagedProductSummary } from "@/hooks/api/build/managed-product-summary";
+import { formatRelativeTime } from "@/lib/date-utils";
+import { OverviewFact, OverviewRecordLink, OverviewSectionLink } from "./overview-metric";
 
 interface EvidenceCardProps {
   managedProductId: number;
@@ -28,89 +27,62 @@ export function ManagedProductOverviewEvidenceCard({
       : null;
 
   return (
-    <Card>
-      <CardHeader className="pb-2">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="text-sm font-semibold text-foreground">Evidence strength</h2>
-          <Link
-            href={`/build/managed-products/${managedProductId}/feedback`}
-            className="text-xs text-primary underline-offset-2 hover:underline"
-          >
-            View feedback
-          </Link>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <div className="space-y-0.5">
-            <span className="text-xs text-muted-foreground">Total feedback</span>
-            <p className="font-mono text-lg font-semibold tabular-nums">{evidence.feedbackCount}</p>
-          </div>
-          <div className="space-y-0.5">
-            <span className="text-xs text-muted-foreground">Last 30 days</span>
-            <p className="font-mono text-lg font-semibold tabular-nums">{evidence.feedbackLast30d}</p>
-          </div>
-          <div className="space-y-0.5">
-            <span className="text-xs text-muted-foreground">Themed</span>
-            <p className="font-mono text-lg font-semibold tabular-nums">
-              {themedPct !== null ? `${themedPct}%` : "Unknown"}
-            </p>
-          </div>
-          <div className="space-y-0.5">
-            <span className="text-xs text-muted-foreground">Latest feedback</span>
-            <p className="text-sm">{freshnessLabel(evidence.latestFeedbackAt)}</p>
+    <section className="min-w-0 rounded-xl border border-border bg-card px-4 py-4">
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="text-sm font-semibold text-foreground">Evidence strength</h2>
+        <OverviewSectionLink href={`/build/managed-products/${managedProductId}/feedback`}>
+          View feedback
+        </OverviewSectionLink>
+      </div>
+      <dl className="mt-1">
+        <OverviewFact label="Total feedback">{evidence.feedbackCount}</OverviewFact>
+        <OverviewFact label="Last 30 days">{evidence.feedbackLast30d}</OverviewFact>
+        <OverviewFact label="Themed">{themedPct !== null ? `${themedPct}%` : "Unknown"}</OverviewFact>
+        <OverviewFact label="Latest feedback">{freshnessLabel(evidence.latestFeedbackAt)}</OverviewFact>
+      </dl>
+
+      {Object.keys(evidence.opportunitiesByState).length > 0 ? (
+        <div className="mt-4">
+          <p className="text-xs font-medium text-muted-foreground">Opportunities by state</p>
+          <div className="mt-1.5 flex flex-wrap gap-2">
+            {Object.entries(evidence.opportunitiesByState).map(([state, count]) => (
+              <Badge key={state} variant="secondary" className="text-xs">
+                {state.replaceAll("_", " ")}: <span className="ml-1 font-mono tabular-nums">{count}</span>
+              </Badge>
+            ))}
           </div>
         </div>
+      ) : null}
 
-        {Object.keys(evidence.opportunitiesByState).length > 0 && (
-          <div className="space-y-1">
-            <span className="text-xs font-medium text-muted-foreground">Opportunities by state</span>
-            <div className="flex flex-wrap gap-2">
-              {Object.entries(evidence.opportunitiesByState).map(([state, count]) => (
-                <Badge key={state} variant="secondary" className="text-xs">
-                  {state}: <span className="ml-1 font-mono tabular-nums">{count}</span>
-                </Badge>
-              ))}
-            </div>
-          </div>
-        )}
+      {previews.themes.length > 0 ? (
+        <div className="mt-4">
+          <p className="text-xs font-medium text-muted-foreground">Top themes</p>
+          {previews.themes.map((theme) => (
+            <OverviewRecordLink
+              key={theme.theme}
+              href={`/build/managed-products/${managedProductId}/feedback?theme=${encodeURIComponent(theme.theme)}`}
+              title={theme.theme}
+              trailing={<span className="font-mono tabular-nums text-muted-foreground">{theme.count}</span>}
+            />
+          ))}
+        </div>
+      ) : null}
 
-        {previews.themes.length > 0 && (
-          <div className="space-y-1.5">
-            <span className="text-xs font-medium text-muted-foreground">Top themes</span>
-            <div className="space-y-1">
-              {previews.themes.map((t) => (
-                <Link
-                  key={t.theme}
-                  href={`/build/managed-products/${managedProductId}/feedback?theme=${encodeURIComponent(t.theme)}`}
-                  className="flex items-center justify-between gap-2 rounded-md border border-border bg-muted/30 px-3 py-2 text-sm hover:border-primary/40"
-                >
-                  <span className="truncate">{t.theme}</span>
-                  <span className="font-mono tabular-nums text-muted-foreground">{t.count}</span>
-                </Link>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {previews.opportunities.length > 0 && (
-          <div className="space-y-1.5">
-            <span className="text-xs font-medium text-muted-foreground">Top opportunities</span>
-            <div className="space-y-1">
-              {previews.opportunities.map((opp) => (
-                <Link
-                  key={opp.id}
-                  href={`/build/managed-products/${managedProductId}/insights?opportunity=${opp.id}`}
-                  className="flex items-center justify-between gap-2 rounded-md border border-border bg-muted/30 px-3 py-2 text-sm hover:border-primary/40"
-                >
-                  <span className="truncate">{opp.title}</span>
-                  <span className="font-mono tabular-nums text-muted-foreground">{opp.scoreLabel}</span>
-                </Link>
-              ))}
-            </div>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+      {previews.opportunities.length > 0 ? (
+        <div className="mt-4">
+          <p className="text-xs font-medium text-muted-foreground">Top opportunities</p>
+          {previews.opportunities.map((opportunity) => (
+            <OverviewRecordLink
+              key={opportunity.id}
+              href={`/build/managed-products/${managedProductId}/insights?opportunity=${opportunity.id}`}
+              title={opportunity.title}
+              trailing={
+                <span className="font-mono tabular-nums text-muted-foreground">{opportunity.scoreLabel}</span>
+              }
+            />
+          ))}
+        </div>
+      ) : null}
+    </section>
   );
 }

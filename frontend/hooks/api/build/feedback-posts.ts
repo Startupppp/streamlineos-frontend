@@ -27,6 +27,8 @@ interface CursorPaginated<T> {
   };
 }
 
+type FeedbackPage = CursorPaginated<FeedbackPost>;
+
 interface FeedbackPostFilters {
   status?: FeedbackStatus;
   search?: string;
@@ -41,6 +43,38 @@ interface UpdateFeedbackPostInput {
   category?: string | null;
   crmOrganizationId?: number | null;
   linkedRoadmapItemId?: number | null;
+}
+
+function patchFeedbackPostInAllPages(
+  qc: ReturnType<typeof useQueryClient>,
+  updated: FeedbackPost,
+) {
+  const loaded = qc.getQueriesData<FeedbackPage>({
+    queryKey: knowledgeAndSurveysQueryKeys.roadmap.feedback(),
+  });
+  for (const [key, page] of loaded) {
+    if (!page) continue;
+    qc.setQueryData<FeedbackPage>(key, {
+      ...page,
+      data: page.data.map((p) => (p.id === updated.id ? updated : p)),
+    });
+  }
+}
+
+function removeFeedbackPostFromAllPages(
+  qc: ReturnType<typeof useQueryClient>,
+  postId: number,
+) {
+  const loaded = qc.getQueriesData<FeedbackPage>({
+    queryKey: knowledgeAndSurveysQueryKeys.roadmap.feedback(),
+  });
+  for (const [key, page] of loaded) {
+    if (!page) continue;
+    qc.setQueryData<FeedbackPage>(key, {
+      ...page,
+      data: page.data.filter((p) => p.id !== postId),
+    });
+  }
 }
 
 export function useFeedbackPosts(filters: FeedbackPostFilters = {}) {
@@ -74,15 +108,15 @@ export function useUpdateFeedbackPost() {
         undefined,
         feedbackPostContract,
       ),
-    onSuccess: () => {
-      qc.invalidateQueries({
-        queryKey: knowledgeAndSurveysQueryKeys.roadmap.feedback(),
-      });
+    onSuccess: (updated) => {
+      patchFeedbackPostInAllPages(qc, updated);
       qc.invalidateQueries({
         queryKey: knowledgeAndSurveysQueryKeys.roadmap.items(),
+        refetchType: "none",
       });
       qc.invalidateQueries({
         queryKey: knowledgeAndSurveysQueryKeys.roadmap.itemRoot,
+        refetchType: "none",
       });
     },
   });
@@ -105,15 +139,16 @@ export function useMergeFeedbackPost() {
         undefined,
         feedbackPostContract,
       ),
-    onSuccess: () => {
-      qc.invalidateQueries({
-        queryKey: knowledgeAndSurveysQueryKeys.roadmap.feedback(),
-      });
+    onSuccess: (result, vars) => {
+      removeFeedbackPostFromAllPages(qc, vars.postId);
+      patchFeedbackPostInAllPages(qc, result);
       qc.invalidateQueries({
         queryKey: knowledgeAndSurveysQueryKeys.roadmap.items(),
+        refetchType: "none",
       });
       qc.invalidateQueries({
         queryKey: knowledgeAndSurveysQueryKeys.roadmap.itemRoot,
+        refetchType: "none",
       });
     },
   });
@@ -130,15 +165,15 @@ export function useDeleteFeedbackPost() {
         undefined,
         noContentLazy,
       ),
-    onSuccess: () => {
-      qc.invalidateQueries({
-        queryKey: knowledgeAndSurveysQueryKeys.roadmap.feedback(),
-      });
+    onSuccess: (_data, postId) => {
+      removeFeedbackPostFromAllPages(qc, postId);
       qc.invalidateQueries({
         queryKey: knowledgeAndSurveysQueryKeys.roadmap.items(),
+        refetchType: "none",
       });
       qc.invalidateQueries({
         queryKey: knowledgeAndSurveysQueryKeys.roadmap.itemRoot,
+        refetchType: "none",
       });
     },
   });

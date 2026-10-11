@@ -37,6 +37,10 @@ export const INITIATIVE_STATUS_OPTIONS = [
 
 const EDIT_ACTION_BASE = { id: "edit", label: "Edit product", icon: Pencil, primary: true as const };
 
+function readableToken(value: string): string {
+  return value.replaceAll("_", " ").replace(/\b[a-z]/g, (letter) => letter.toUpperCase());
+}
+
 export function useManagedProductOverview(managedProductId: number) {
   const [editOpen, setEditOpen] = useState(false);
   const listFilters = useBuildListFilters({ filters: OVERVIEW_FILTER_DEFINITIONS });
@@ -126,8 +130,8 @@ export function useManagedProductOverview(managedProductId: number) {
   const overviewSubtitle = useMemo(() => {
     if (!product) return undefined;
     const parts: string[] = [];
-    if (product.lifecycle) parts.push(product.lifecycle);
-    if (product.health) parts.push(product.health);
+    if (product.lifecycle) parts.push(readableToken(product.lifecycle));
+    if (product.health) parts.push(readableToken(product.health));
     parts.push(`Owner ${getUserDisplayName(product.owner)}`);
     if (product.lastReviewedAt) {
       parts.push(`Reviewed ${formatRelativeTime(product.lastReviewedAt)}`);

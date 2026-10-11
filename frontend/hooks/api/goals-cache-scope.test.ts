@@ -20,38 +20,44 @@ const CHECK_IN_WRITES = ["useCheckIn"];
 
 describe("goals cache invalidation is scoped correctly", () => {
   it.each(GOAL_WRITES)(
-    "%s invalidates the goals domain to refresh every rendered list",
+    "%s patches the cache via setQueryData and never does a broad goals.all refetch",
     (hook) => {
-      expect(bodyOf(hook)).toContain("goals.all");
+      expect(bodyOf(hook)).toContain("setQueryData");
+      expect(bodyOf(hook)).not.toContain("goals.all");
     },
   );
 
-  it("useUpdateGoal also invalidates the single detail it touched, so the detail page refreshes immediately", () => {
+  it("useUpdateGoal patches the detail and every loaded list page from the response", () => {
     const body = bodyOf("useUpdateGoal");
     expect(body).toContain("goals.detail(");
+    expect(body).toContain("goals.list()");
+    expect(body).toContain("setQueryData");
   });
 
   it.each(GOAL_WRITES)("%s carries a named mutationKey so concurrent mutations are identifiable", (hook) => {
     expect(bodyOf(hook)).toContain("mutationKey:");
   });
 
-  it("useCheckIn invalidates the detail, the full list, and the stats strip — stats change on every check-in", () => {
+  it("useCheckIn patches the detail and loaded lists from the response; stats are server-side aggregates so they are marked stale only", () => {
     const body = bodyOf("useCheckIn");
     expect(body).toContain("goals.detail(");
-    expect(body).toContain("goals.all");
+    expect(body).toContain("goals.list()");
     expect(body).toContain("goals.stats()");
+    expect(body).not.toContain("goals.all");
   });
 
-  it("useAddGoalLink leaves the goals list alone and only touches the goal detail and links key", () => {
+  it("useAddGoalLink patches the detail links array and list link counts from the response", () => {
     const body = bodyOf("useAddGoalLink");
     expect(body).not.toContain("goals.all");
     expect(body).toContain("goals.detail(");
+    expect(body).toContain("goals.list()");
   });
 
-  it("useRemoveGoalLink scopes invalidation to the detail and links — the list is not affected by a link change", () => {
+  it("useRemoveGoalLink removes the link from the detail cache and decrements list link counts", () => {
     const body = bodyOf("useRemoveGoalLink");
     expect(body).not.toContain("goals.all");
     expect(body).toContain("goals.detail(");
+    expect(body).toContain("goals.list()");
   });
 
   it("useGoals uses the gated query with the build:goals:view permission so a denied read is not a hang", () => {

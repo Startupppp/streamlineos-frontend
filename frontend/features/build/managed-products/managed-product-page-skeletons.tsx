@@ -35,7 +35,7 @@ export function ManagedProductOverviewSkeleton() {
   return (
     <div
       data-testid="managed-product-overview-skeleton"
-      className="flex min-h-0 flex-1 flex-col gap-6"
+      className="flex w-full min-w-0 flex-col gap-4 pb-8"
     >
       <StatCardGridSkeleton cols={3} count={3} />
 

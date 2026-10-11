@@ -87,10 +87,34 @@ export function usePublicVote(orgId: string) {
         undefined,
         publicVoteResultContract,
       ),
-    onSuccess: () =>
-      qc.invalidateQueries({
-        queryKey: knowledgeAndSurveysQueryKeys.roadmap.publicBoard(orgId),
-      }),
+    onSuccess: (result) => {
+      qc.setQueryData<PublicRoadmapBoard>(
+        knowledgeAndSurveysQueryKeys.roadmap.publicBoard(orgId),
+        (prev) => {
+          if (!prev) return prev;
+          if (result.type === "roadmap") {
+            const patchItem = (items: PublicRoadmapItem[]) =>
+              items.map((item) =>
+                item.id === result.id ? { ...item, votes: result.votes } : item,
+              );
+            return {
+              ...prev,
+              roadmap: {
+                planned: patchItem(prev.roadmap.planned),
+                in_progress: patchItem(prev.roadmap.in_progress),
+                completed: patchItem(prev.roadmap.completed),
+              },
+            };
+          }
+          return {
+            ...prev,
+            feedback: prev.feedback.map((post) =>
+              post.id === result.id ? { ...post, votes: result.votes } : post,
+            ),
+          };
+        },
+      );
+    },
   });
 }
 

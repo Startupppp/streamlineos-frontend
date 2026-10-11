@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { useCan } from "@/hooks/api/access";
 import type { ManagedProductSummary } from "@/hooks/api/build/managed-product-summary";
 
@@ -12,9 +11,9 @@ interface StrategyCardProps {
 
 function StrategyRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="space-y-0.5">
-      <span className="text-xs text-muted-foreground">{label}</span>
-      <p className="text-sm">{value}</p>
+    <div className="min-w-0 border-b border-border/80 py-2 sm:border-b-0">
+      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className="mt-0.5 break-words text-sm text-foreground">{value}</p>
     </div>
   );
 }
@@ -33,28 +32,22 @@ export function ManagedProductOverviewStrategyCard({
   if (!hasStrategy) {
     if (!canUpdate) return null;
     return (
-      <Card>
-        <CardContent className="py-4">
-          <p className="text-sm text-muted-foreground">
-            No strategy defined yet.{" "}
-            <Link
-              href={`/build/managed-products/${managedProductId}/settings`}
-              className="text-primary underline-offset-2 hover:underline"
-            >
-              Add strategy
-            </Link>
-          </p>
-        </CardContent>
-      </Card>
+      <p className="text-sm text-muted-foreground">
+        No strategy defined yet.{" "}
+        <Link
+          href={`/build/managed-products/${managedProductId}/settings`}
+          className="inline-flex min-h-11 items-center font-medium text-primary underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:min-h-0"
+        >
+          Add strategy
+        </Link>
+      </p>
     );
   }
 
   return (
-    <Card>
-      <CardHeader className="pb-2">
-        <h2 className="text-sm font-semibold text-foreground">Strategy</h2>
-      </CardHeader>
-      <CardContent className="grid gap-4 sm:grid-cols-2">
+    <section>
+      <h2 className="text-sm font-semibold text-foreground">Strategy</h2>
+      <div className="mt-1 grid gap-x-8 sm:grid-cols-2">
         {product.missionStatement ? (
           <StrategyRow label="Mission" value={product.missionStatement} />
         ) : null}
@@ -64,10 +57,8 @@ export function ManagedProductOverviewStrategyCard({
         {product.northStarMetric ? (
           <StrategyRow label="North-star metric" value={product.northStarMetric} />
         ) : null}
-        {product.vision ? (
-          <StrategyRow label="Vision" value={product.vision} />
-        ) : null}
-      </CardContent>
-    </Card>
+        {product.vision ? <StrategyRow label="Vision" value={product.vision} /> : null}
+      </div>
+    </section>
   );
 }

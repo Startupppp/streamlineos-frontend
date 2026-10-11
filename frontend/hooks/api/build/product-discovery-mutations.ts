@@ -5,10 +5,20 @@ import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import type {
+  DiscoveryListOpportunitiesResponse,
+  DiscoveryGetOpportunityResponse,
+  DiscoveryReviewsListOutcomeReviewsResponse,
+} from "@/contracts/build-contracts.generated";
 
 const opportunityContract = lazyContract(() =>
   import("@/contracts/build-contracts.generated").then(
     (m) => m.discoveryGetOpportunityResponseSchema,
+  ),
+);
+const opportunityCreateContract = lazyContract(() =>
+  import("@/contracts/build-contracts.generated").then(
+    (m) => m.discoveryCreateOpportunityResponseSchema,
   ),
 );
 const acceptContract = lazyContract(() =>
@@ -41,9 +51,49 @@ const outcomeReviewContract = lazyContract(() =>
     (m) => m.discoveryReviewsCreateOutcomeReviewResponseSchema,
   ),
 );
+const outcomeReviewUpdateContract = lazyContract(() =>
+  import("@/contracts/build-contracts.generated").then(
+    (m) => m.discoveryReviewsUpdateOutcomeReviewResponseSchema,
+  ),
+);
 const noContentContract = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
 );
+
+type OpportunityListRow = DiscoveryListOpportunitiesResponse["data"][number];
+type OutcomeReviewListRow = DiscoveryReviewsListOutcomeReviewsResponse["data"][number];
+
+function patchOpportunityInListCache(
+  cache: DiscoveryListOpportunitiesResponse | undefined,
+  updated: OpportunityListRow,
+): DiscoveryListOpportunitiesResponse | undefined {
+  if (cache === undefined) return cache;
+  return { ...cache, data: cache.data.map((row) => (row.id === updated.id ? updated : row)) };
+}
+
+function removeOpportunityFromListCache(
+  cache: DiscoveryListOpportunitiesResponse | undefined,
+  id: number,
+): DiscoveryListOpportunitiesResponse | undefined {
+  if (cache === undefined) return cache;
+  return { ...cache, data: cache.data.filter((row) => row.id !== id) };
+}
+
+function patchOutcomeReviewInListCache(
+  cache: DiscoveryReviewsListOutcomeReviewsResponse | undefined,
+  updated: OutcomeReviewListRow,
+): DiscoveryReviewsListOutcomeReviewsResponse | undefined {
+  if (cache === undefined) return cache;
+  return { ...cache, data: cache.data.map((row) => (row.id === updated.id ? updated : row)) };
+}
+
+function removeOutcomeReviewFromListCache(
+  cache: DiscoveryReviewsListOutcomeReviewsResponse | undefined,
+  id: number,
+): DiscoveryReviewsListOutcomeReviewsResponse | undefined {
+  if (cache === undefined) return cache;
+  return { ...cache, data: cache.data.filter((row) => row.id !== id) };
+}
 
 export interface CreateOpportunityInput {
   title: string;
@@ -86,14 +136,22 @@ export function useCreateOpportunity(managedProductId: number) {
         `/build/managed-products/${managedProductId}/opportunities`,
         data,
         undefined,
-        opportunityContract,
+        opportunityCreateContract,
       ),
-    onSuccess: () => {
-      qc.invalidateQueries({
-        queryKey: buildWorkQueryKeys.projects.managedProducts.opportunities(managedProductId),
-        exact: false,
-        refetchType: "active",
+    onSuccess: (created) => {
+      const defaultKey = buildWorkQueryKeys.projects.managedProducts.opportunities(managedProductId);
+      qc.setQueryData<DiscoveryListOpportunitiesResponse>(defaultKey, (prev) => {
+        if (!prev) return prev;
+        return { ...prev, data: [created, ...prev.data] };
       });
+      const otherKeys = qc
+        .getQueriesData<DiscoveryListOpportunitiesResponse>({
+          queryKey: buildWorkQueryKeys.projects.managedProducts.opportunities(managedProductId),
+        })
+        .filter(([k]) => JSON.stringify(k) !== JSON.stringify(defaultKey));
+      for (const [key] of otherKeys) {
+        qc.invalidateQueries({ queryKey: key, exact: true, refetchType: "none" });
+      }
     },
   });
 }
@@ -114,11 +172,16 @@ export function useUpdateOpportunity(managedProductId: number) {
         buildWorkQueryKeys.projects.managedProducts.opportunity(managedProductId, vars.opportunityId),
         updated,
       );
-      qc.invalidateQueries({
+      const loadedPages = qc.getQueriesData<DiscoveryListOpportunitiesResponse>({
         queryKey: buildWorkQueryKeys.projects.managedProducts.opportunities(managedProductId),
-        exact: false,
-        refetchType: "active",
       });
+      for (const [key, page] of loadedPages) {
+        if (page === undefined) continue;
+        qc.setQueryData<DiscoveryListOpportunitiesResponse>(
+          key,
+          patchOpportunityInListCache(page, updated),
+        );
+      }
     },
   });
 }
@@ -134,11 +197,20 @@ export function useDeleteOpportunity(managedProductId: number) {
         undefined,
         noContentContract,
       ),
-    onSuccess: () => {
-      qc.invalidateQueries({
+    onSuccess: (_data, opportunityId) => {
+      const loadedPages = qc.getQueriesData<DiscoveryListOpportunitiesResponse>({
         queryKey: buildWorkQueryKeys.projects.managedProducts.opportunities(managedProductId),
-        exact: false,
-        refetchType: "active",
+      });
+      for (const [key, page] of loadedPages) {
+        if (page === undefined) continue;
+        qc.setQueryData<DiscoveryListOpportunitiesResponse>(
+          key,
+          removeOpportunityFromListCache(page, opportunityId),
+        );
+      }
+      qc.removeQueries({
+        queryKey: buildWorkQueryKeys.projects.managedProducts.opportunity(managedProductId, opportunityId),
+        exact: true,
       });
     },
   });
@@ -177,7 +249,7 @@ export function useAcceptOpportunity(managedProductId: number) {
       qc.invalidateQueries({
         queryKey: buildWorkQueryKeys.projects.managedProducts.opportunities(managedProductId),
         exact: false,
-        refetchType: "active",
+        refetchType: "none",
       });
     },
   });
@@ -194,17 +266,21 @@ export function useDeclineOpportunity(managedProductId: number) {
         undefined,
         declineContract,
       ),
-    onSuccess: (_result, vars) => {
-      qc.invalidateQueries({
-        queryKey: buildWorkQueryKeys.projects.managedProducts.opportunity(managedProductId, vars.opportunityId),
-        exact: true,
-        refetchType: "none",
-      });
-      qc.invalidateQueries({
+    onSuccess: (result, vars) => {
+      qc.setQueryData<DiscoveryGetOpportunityResponse>(
+        buildWorkQueryKeys.projects.managedProducts.opportunity(managedProductId, vars.opportunityId),
+        (prev) => (prev ? { ...prev, ...result } : prev),
+      );
+      const loadedPages = qc.getQueriesData<DiscoveryListOpportunitiesResponse>({
         queryKey: buildWorkQueryKeys.projects.managedProducts.opportunities(managedProductId),
-        exact: false,
-        refetchType: "active",
       });
+      for (const [key, page] of loadedPages) {
+        if (page === undefined) continue;
+        qc.setQueryData<DiscoveryListOpportunitiesResponse>(
+          key,
+          patchOpportunityInListCache(page, result),
+        );
+      }
     },
   });
 }
@@ -232,15 +308,38 @@ export function useScoreOpportunity(managedProductId: number) {
         addScoreContract,
       ),
     onSuccess: (result, vars) => {
-      qc.setQueryData(
+      qc.setQueryData<DiscoveryGetOpportunityResponse>(
         buildWorkQueryKeys.projects.managedProducts.opportunity(managedProductId, vars.opportunityId),
-        result,
+        (prev) =>
+          prev
+            ? {
+                ...prev,
+                latestScore: result.latestScore,
+                scoreStatus: result.latestScore ? ("scored" as const) : prev.scoreStatus,
+              }
+            : prev,
       );
-      qc.invalidateQueries({
+      const loadedPages = qc.getQueriesData<DiscoveryListOpportunitiesResponse>({
         queryKey: buildWorkQueryKeys.projects.managedProducts.opportunities(managedProductId),
-        exact: false,
-        refetchType: "active",
       });
+      for (const [key, page] of loadedPages) {
+        if (page === undefined) continue;
+        qc.setQueryData<DiscoveryListOpportunitiesResponse>(key, (prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            data: prev.data.map((row) =>
+              row.id === vars.opportunityId
+                ? {
+                    ...row,
+                    latestScore: result.latestScore,
+                    scoreStatus: result.latestScore ? ("scored" as const) : row.scoreStatus,
+                  }
+                : row,
+            ),
+          };
+        });
+      }
     },
   });
 }
@@ -257,10 +356,38 @@ export function useOverrideOpportunityScore(managedProductId: number) {
         overrideContract,
       ),
     onSuccess: (result, vars) => {
-      qc.setQueryData(
+      qc.setQueryData<DiscoveryGetOpportunityResponse>(
         buildWorkQueryKeys.projects.managedProducts.opportunity(managedProductId, vars.opportunityId),
-        result,
+        (prev) =>
+          prev
+            ? {
+                ...prev,
+                latestScore: result.latestScore,
+                scoreStatus: result.latestScore ? ("scored" as const) : prev.scoreStatus,
+              }
+            : prev,
       );
+      const loadedPages = qc.getQueriesData<DiscoveryListOpportunitiesResponse>({
+        queryKey: buildWorkQueryKeys.projects.managedProducts.opportunities(managedProductId),
+      });
+      for (const [key, page] of loadedPages) {
+        if (page === undefined) continue;
+        qc.setQueryData<DiscoveryListOpportunitiesResponse>(key, (prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            data: prev.data.map((row) =>
+              row.id === vars.opportunityId
+                ? {
+                    ...row,
+                    latestScore: result.latestScore,
+                    scoreStatus: result.latestScore ? ("scored" as const) : row.scoreStatus,
+                  }
+                : row,
+            ),
+          };
+        });
+      }
     },
   });
 }
@@ -350,12 +477,20 @@ export function useCreateOutcomeReview(managedProductId: number) {
         undefined,
         outcomeReviewContract,
       ),
-    onSuccess: () => {
-      qc.invalidateQueries({
-        queryKey: buildWorkQueryKeys.projects.managedProducts.outcomeReviews(managedProductId),
-        exact: false,
-        refetchType: "active",
+    onSuccess: (created) => {
+      const defaultKey = buildWorkQueryKeys.projects.managedProducts.outcomeReviews(managedProductId);
+      qc.setQueryData<DiscoveryReviewsListOutcomeReviewsResponse>(defaultKey, (prev) => {
+        if (!prev) return prev;
+        return { ...prev, data: [created, ...prev.data] };
       });
+      const otherKeys = qc
+        .getQueriesData<DiscoveryReviewsListOutcomeReviewsResponse>({
+          queryKey: buildWorkQueryKeys.projects.managedProducts.outcomeReviews(managedProductId),
+        })
+        .filter(([k]) => JSON.stringify(k) !== JSON.stringify(defaultKey));
+      for (const [key] of otherKeys) {
+        qc.invalidateQueries({ queryKey: key, exact: true, refetchType: "none" });
+      }
     },
   });
 }
@@ -369,14 +504,19 @@ export function useUpdateOutcomeReview(managedProductId: number) {
         `/build/managed-products/${managedProductId}/outcome-reviews/${outcomeReviewId}`,
         data,
         undefined,
-        outcomeReviewContract,
+        outcomeReviewUpdateContract,
       ),
-    onSuccess: () => {
-      qc.invalidateQueries({
+    onSuccess: (updated) => {
+      const loadedPages = qc.getQueriesData<DiscoveryReviewsListOutcomeReviewsResponse>({
         queryKey: buildWorkQueryKeys.projects.managedProducts.outcomeReviews(managedProductId),
-        exact: false,
-        refetchType: "active",
       });
+      for (const [key, page] of loadedPages) {
+        if (page === undefined) continue;
+        qc.setQueryData<DiscoveryReviewsListOutcomeReviewsResponse>(
+          key,
+          patchOutcomeReviewInListCache(page, updated),
+        );
+      }
     },
   });
 }
@@ -392,12 +532,17 @@ export function useDeleteOutcomeReview(managedProductId: number) {
         undefined,
         noContentContract,
       ),
-    onSuccess: () => {
-      qc.invalidateQueries({
+    onSuccess: (_data, outcomeReviewId) => {
+      const loadedPages = qc.getQueriesData<DiscoveryReviewsListOutcomeReviewsResponse>({
         queryKey: buildWorkQueryKeys.projects.managedProducts.outcomeReviews(managedProductId),
-        exact: false,
-        refetchType: "active",
       });
+      for (const [key, page] of loadedPages) {
+        if (page === undefined) continue;
+        qc.setQueryData<DiscoveryReviewsListOutcomeReviewsResponse>(
+          key,
+          removeOutcomeReviewFromListCache(page, outcomeReviewId),
+        );
+      }
     },
   });
 }

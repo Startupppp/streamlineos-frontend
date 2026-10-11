@@ -46,6 +46,7 @@ export function useBulkUpdateManagedProducts() {
     onSuccess: () => {
       qc.invalidateQueries({
         queryKey: buildWorkQueryKeys.projects.managedProducts.list(),
+        refetchType: "none",
       });
     },
   });

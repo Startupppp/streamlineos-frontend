@@ -57,7 +57,6 @@ export type { GoalDetail };
 
 export type KeyResult = GoalDetail["keyResults"][number];
 
-
 interface GoalStats {
   total: number;
   byStatus: Record<GoalStatus, number>;
@@ -129,13 +128,42 @@ interface AddGoalLinkInput {
   projectId?: number;
 }
 
-function goalLinksKey(goalId: number) {
-  return [...accountingAndSupportQueryKeys.goals.detail(goalId), "links"] as const;
-}
-
 function toQueryParams(params?: GoalsParams): Record<string, unknown> | undefined {
   if (!params) return undefined;
   return { ...params };
+}
+
+type GoalsListCache = GoalListItem[] | GoalsListPage;
+
+function patchGoalInListItem(ex: GoalListItem, up: GoalDetail): GoalListItem {
+  const { keyResults: _1, updates: _2, links: _3, project: _4, measurementSources: _5, linkedRoadmapItems: _6, ...shared } = up;
+  return { ...ex, ...shared };
+}
+
+function patchGoalsListCache(cache: GoalsListCache | undefined, up: GoalDetail): GoalsListCache | undefined {
+  if (!cache) return cache;
+  const patch = (i: GoalListItem) => i.id === up.id ? patchGoalInListItem(i, up) : i;
+  return Array.isArray(cache) ? cache.map(patch) : { ...cache, items: cache.items.map(patch) };
+}
+
+function removeGoalFromListCache(cache: GoalsListCache | undefined, id: number): GoalsListCache | undefined {
+  if (!cache) return cache;
+  const keep = (i: GoalListItem) => i.id !== id;
+  return Array.isArray(cache)
+    ? cache.filter(keep)
+    : { ...cache, items: cache.items.filter(keep), total: Math.max(0, cache.total - 1) };
+}
+
+function forEachGoalList(
+  qc: QueryClient,
+  fn: (cache: GoalsListCache) => GoalsListCache | undefined,
+): void {
+  for (const [key, cache] of qc.getQueriesData<GoalsListCache>({
+    queryKey: accountingAndSupportQueryKeys.goals.list(),
+  })) {
+    if (cache === undefined) continue;
+    qc.setQueryData<GoalsListCache>(key, fn(cache));
+  }
 }
 
 export function useGoals(params?: GoalsParams) {
@@ -189,8 +217,25 @@ export function useCreateGoal() {
     mutationKey: ["create", "goal"],
     mutationFn: (input: CreateGoalInput) =>
       apiClient.post<GoalRow>("/goals", input, undefined, goalRowContract),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.goals.all });
+    onSuccess: (created, input) => {
+      const newDetail: GoalDetail = {
+        ...created, owner: null, project: null,
+        keyResults: [], updates: [], links: [], measurementSources: [], linkedRoadmapItems: [],
+      };
+      const newItem: GoalListItem = {
+        ...created, target: null, current: null, owner: null,
+        keyResultCount: input.keyResults?.length ?? 0,
+        linkCount: 0, linkedTicketCount: 0, linkedProjectCount: 0,
+        productLinkage: null, linkedRoadmapItemCount: 0, linkedOpportunityCount: 0,
+        outcomeReviews: null, lastCheckInAt: null, checkInFreshness: "none",
+      };
+      qc.setQueryData(accountingAndSupportQueryKeys.goals.detail(created.id), newDetail);
+      forEachGoalList(qc, (cache) =>
+        Array.isArray(cache)
+          ? [newItem, ...cache]
+          : { ...cache, items: [newItem, ...cache.items], total: cache.total + 1 },
+      );
+      qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.goals.stats(), refetchType: "none" });
     },
   });
 }
@@ -201,9 +246,10 @@ export function useUpdateGoal() {
     mutationKey: ["update", "goal"],
     mutationFn: ({ id, ...input }: UpdateGoalInput & { id: number }) =>
       apiClient.patch<GoalDetail>(`/goals/${id}`, input, undefined, goalDetailC),
-    onSuccess: (_, variables) => {
-      qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.goals.all });
-      qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.goals.detail(variables.id) });
+    onSuccess: (updated, variables) => {
+      qc.setQueryData(accountingAndSupportQueryKeys.goals.detail(variables.id), updated);
+      forEachGoalList(qc, (cache) => patchGoalsListCache(cache, updated));
+      qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.goals.stats(), refetchType: "none" });
     },
   });
 }
@@ -214,8 +260,10 @@ export function useDeleteGoal() {
     mutationKey: ["delete", "goal"],
     mutationFn: (id: number) =>
       apiClient.delete<void>(`/goals/${id}`, undefined, undefined, noContentContract),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.goals.all });
+    onSuccess: (_, goalId) => {
+      forEachGoalList(qc, (cache) => removeGoalFromListCache(cache, goalId));
+      qc.removeQueries({ queryKey: accountingAndSupportQueryKeys.goals.detail(goalId), exact: true });
+      qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.goals.stats(), refetchType: "none" });
     },
   });
 }
@@ -226,10 +274,10 @@ export function useCheckIn(goalId: number) {
     mutationKey: ["check", "in"],
     mutationFn: (input: CheckInInput) =>
       apiClient.post<GoalDetail>(`/goals/${goalId}/check-in`, input, undefined, goalDetailC),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.goals.detail(goalId) });
-      qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.goals.all });
-      qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.goals.stats() });
+    onSuccess: (updated) => {
+      qc.setQueryData(accountingAndSupportQueryKeys.goals.detail(goalId), updated);
+      forEachGoalList(qc, (cache) => patchGoalsListCache(cache, updated));
+      qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.goals.stats(), refetchType: "none" });
     },
   });
 }
@@ -240,9 +288,25 @@ export function useAddGoalLink(goalId: number) {
     mutationKey: ["add", "goal", "link"],
     mutationFn: (input: AddGoalLinkInput) =>
       apiClient.post<GoalLinkCreated>(`/goals/${goalId}/links`, input, undefined, goalLinkCreatedContract),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: goalLinksKey(goalId) });
-      qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.goals.detail(goalId) });
+    onSuccess: (created) => {
+      qc.setQueryData<GoalDetail>(accountingAndSupportQueryKeys.goals.detail(goalId), (prev) => {
+        if (!prev) return prev;
+        const newLink = { id: created.id, ticketId: created.ticketId, projectId: created.projectId,
+          createdAt: created.createdAt, ticketTitle: null, ticketProjectId: null, projectName: null, projectKey: null };
+        return { ...prev, links: [...prev.links, newLink] };
+      });
+      const patchItem = (item: GoalListItem): GoalListItem => {
+        if (item.id !== goalId) return item;
+        return {
+          ...item,
+          linkCount: item.linkCount + 1,
+          linkedTicketCount: created.ticketId !== null ? item.linkedTicketCount + 1 : item.linkedTicketCount,
+          linkedProjectCount: created.projectId !== null ? item.linkedProjectCount + 1 : item.linkedProjectCount,
+        };
+      };
+      forEachGoalList(qc, (cache) =>
+        Array.isArray(cache) ? cache.map(patchItem) : { ...cache, items: cache.items.map(patchItem) },
+      );
     },
   });
 }
@@ -253,19 +317,32 @@ export function useRemoveGoalLink(goalId: number) {
     mutationKey: ["remove", "goal", "link"],
     mutationFn: (linkId: number) =>
       apiClient.delete<{ success: boolean }>(`/goals/${goalId}/links?linkId=${linkId}`, undefined, undefined, goalSuccessContract),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: goalLinksKey(goalId) });
-      qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.goals.detail(goalId) });
+    onSuccess: (_, linkId) => {
+      const prev = qc.getQueryData<GoalDetail>(accountingAndSupportQueryKeys.goals.detail(goalId));
+      const removed = prev?.links.find((l) => l.id === linkId);
+      qc.setQueryData<GoalDetail>(accountingAndSupportQueryKeys.goals.detail(goalId), (d) => {
+        if (!d) return d;
+        return { ...d, links: d.links.filter((l) => l.id !== linkId) };
+      });
+      const patchItem = (item: GoalListItem): GoalListItem => {
+        if (item.id !== goalId) return item;
+        return {
+          ...item,
+          linkCount: Math.max(0, item.linkCount - 1),
+          linkedTicketCount: removed?.ticketId != null ? Math.max(0, item.linkedTicketCount - 1) : item.linkedTicketCount,
+          linkedProjectCount: removed?.projectId != null ? Math.max(0, item.linkedProjectCount - 1) : item.linkedProjectCount,
+        };
+      };
+      forEachGoalList(qc, (cache) =>
+        Array.isArray(cache) ? cache.map(patchItem) : { ...cache, items: cache.items.map(patchItem) },
+      );
     },
   });
 }
 
 function isGoalsListPage(v: unknown): v is GoalsListPage {
   return (
-    typeof v === "object" &&
-    v !== null &&
-    "items" in v &&
-    "total" in v &&
+    typeof v === "object" && v !== null && "items" in v && "total" in v &&
     Array.isArray((v as GoalsListPage).items)
   );
 }
@@ -282,15 +359,13 @@ function patchGoalListCacheForProduct(
     const keyArr = key as unknown[];
     const params = (keyArr[listPrefix.length] ?? {}) as GoalsParams;
     const isProductScoped =
-      typeof params === "object" &&
-      "managedProductId" in params &&
+      typeof params === "object" && "managedProductId" in params &&
       params.managedProductId === managedProductId;
 
     if (action === "unlink" && isProductScoped) {
       qc.setQueryData(key, (prev: GoalsListPage | undefined) => {
         if (!prev) return prev;
-        const newItems = prev.items.filter((item) => item.id !== goalId);
-        return { ...prev, items: newItems, total: Math.max(0, prev.total - 1) };
+        return { ...prev, items: prev.items.filter((item) => item.id !== goalId), total: Math.max(0, prev.total - 1) };
       });
     } else if (action === "link" && isProductScoped) {
       qc.invalidateQueries({ queryKey: key as readonly unknown[], exact: true, refetchType: "none" });
@@ -301,13 +376,7 @@ function patchGoalListCacheForProduct(
           ...prev,
           items: prev.items.map((item) =>
             item.id === goalId
-              ? {
-                  ...item,
-                  productLinkage:
-                    action === "link"
-                      ? { managedProductId, linkedAt: new Date().toISOString() }
-                      : null,
-                }
+              ? { ...item, productLinkage: action === "link" ? { managedProductId, linkedAt: new Date().toISOString() } : null }
               : item,
           ),
         };
