@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Users2,
   DollarSign,
@@ -20,6 +20,11 @@ import {
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import {
+  useOrgSetupPreviewMutation,
+  type OrgSetupPreviewPayload,
+} from "@/hooks/api/org-setup";
+import type { OrgSetupPreview } from "@/hooks/api/org-setup-schema";
 import {
   MODULE_CATALOG,
   MODULE_GROUPS,
@@ -129,6 +134,7 @@ function ModuleCard({
   isChecked,
   isAlways,
   answers,
+  questions,
   onToggle,
   onAnswerChange,
 }: {
@@ -136,13 +142,13 @@ function ModuleCard({
   isChecked: boolean;
   isAlways: boolean;
   answers: Record<string, string>;
+  questions: readonly ModuleQuestion[];
   onToggle: (key: OrgModuleKey) => void;
   onAnswerChange: (moduleKey: OrgModuleKey, qKey: string, val: string) => void;
 }) {
   const reduceMotion = useReducedMotion();
   const meta = MODULE_CATALOG[moduleKey];
   const Icon = MODULE_ICONS[moduleKey];
-  const questions = MODULE_QUESTIONS[moduleKey] ?? [];
   const showQuestions = isChecked && !isAlways && questions.length > 0;
 
   const handleToggle = useCallback(() => {
@@ -270,11 +276,72 @@ function AlwaysOnCard({
 
 export function StepProducts({ data, patch, onBack, onNext }: StepProductsProps) {
   const enabledSet = useMemo(() => new Set(data.modules), [data.modules]);
+  const [preview, setPreview] = useState<OrgSetupPreview | null>(null);
+  const [previewError, setPreviewError] = useState<string | null>(null);
+  const previewRequestRef = useRef(0);
+  const { mutateAsync: previewSelection, isPending: previewPending } =
+    useOrgSetupPreviewMutation();
 
   const extraCount = useMemo(
     () => data.modules.filter((m) => !ALWAYS_SET.has(m)).length,
     [data.modules],
   );
+
+  const visibleQuestions = useMemo(() => {
+    const allowed = new Map<OrgModuleKey, ModuleQuestion[]>();
+    let remaining = 2;
+    for (const group of MODULE_GROUPS) {
+      for (const moduleKey of group.keys) {
+        if (!enabledSet.has(moduleKey) || remaining === 0) continue;
+        const questions = MODULE_QUESTIONS[moduleKey] ?? [];
+        const selected = questions.slice(0, remaining);
+        if (selected.length > 0) allowed.set(moduleKey, selected);
+        remaining -= selected.length;
+      }
+    }
+    return allowed;
+  }, [enabledSet]);
+
+  const moduleSelectionKey = useMemo(
+    () => [...data.modules].sort().join(","),
+    [data.modules],
+  );
+
+  useEffect(() => {
+    const requestId = ++previewRequestRef.current;
+    setPreviewError(null);
+    const timer = window.setTimeout(() => {
+      const payload: OrgSetupPreviewPayload = { modules: data.modules };
+      void previewSelection(payload)
+        .then((result) => {
+          if (previewRequestRef.current !== requestId) return;
+          setPreview(result);
+        })
+        .catch(() => {
+          if (previewRequestRef.current !== requestId) return;
+          setPreview(null);
+          setPreviewError(
+            "We couldn't verify product availability. Check your connection and try again.",
+          );
+        });
+    }, 300);
+    return () => window.clearTimeout(timer);
+  }, [data.modules, moduleSelectionKey, previewSelection]);
+
+  const blockedModules = useMemo(
+    () => preview?.modules.filter((module) => !module.eligible) ?? [],
+    [preview],
+  );
+  const previewMatchesSelection =
+    preview !== null &&
+    preview.modules.length === data.modules.length &&
+    preview.modules.every((module) => enabledSet.has(module.moduleKey as OrgModuleKey));
+  const canContinue =
+    extraCount > 0 &&
+    previewMatchesSelection &&
+    blockedModules.length === 0 &&
+    !previewPending &&
+    !previewError;
 
   const handleToggle = useCallback(
     (key: OrgModuleKey) => {
@@ -306,6 +373,7 @@ export function StepProducts({ data, patch, onBack, onNext }: StepProductsProps)
         <NavButtons
           onBack={onBack}
           onNext={onNext}
+          nextDisabled={!canContinue}
         />
       }
     >
@@ -317,6 +385,36 @@ export function StepProducts({ data, patch, onBack, onNext }: StepProductsProps)
           </span>
         )}
       </p>
+
+      {extraCount === 0 ? (
+        <p role="alert" className="text-xs text-status-warning-ink">
+          Select at least one product to continue. Home, Chat, and Knowledge are
+          included with every workspace.
+        </p>
+      ) : null}
+
+      {previewPending || !previewMatchesSelection ? (
+        <p aria-live="polite" className="text-xs text-muted-foreground">
+          Checking product availability…
+        </p>
+      ) : null}
+
+      {previewError ? (
+        <p role="alert" className="text-xs text-destructive">
+          {previewError}
+        </p>
+      ) : null}
+
+      {blockedModules.length > 0 ? (
+        <div role="alert" className="rounded-lg border border-status-warning-rule bg-status-warning-surface p-3 text-xs text-status-warning-ink">
+          {blockedModules.map((module) => (
+            <p key={module.moduleKey}>
+              {MODULE_CATALOG[module.moduleKey as OrgModuleKey]?.label ?? module.moduleKey}:{" "}
+              {module.reason ?? "Unavailable on the current plan"}
+            </p>
+          ))}
+        </div>
+      ) : null}
 
       <div className="min-w-0 space-y-5">
         {MODULE_GROUPS.map((group) => (
@@ -332,6 +430,7 @@ export function StepProducts({ data, patch, onBack, onNext }: StepProductsProps)
                   isChecked={enabledSet.has(key)}
                   isAlways={false}
                   answers={(data.moduleAnswers[key] ?? {}) as Record<string, string>}
+                  questions={visibleQuestions.get(key) ?? []}
                   onToggle={handleToggle}
                   onAnswerChange={handleAnswerChange}
                 />
