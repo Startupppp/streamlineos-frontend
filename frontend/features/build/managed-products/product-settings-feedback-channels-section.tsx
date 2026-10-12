@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { TablePagination } from "@/components/ui/table-pagination";
 import { ErrorState } from "@/components/shared/error-state";
 import { useFeedbucketWidgets } from "@/hooks/api/feedbucket/use-feedbucket-widgets";
 import { FeedbucketCollectDialog } from "./feedback/feedbucket-collect-dialog";
@@ -17,15 +18,28 @@ export function ProductSettingsFeedbackChannelsSection({
   managedProductId,
 }: ProductSettingsFeedbackChannelsSectionProps) {
   const [collectOpen, setCollectOpen] = useState(false);
-  const { data: widgets, isLoading, isError, error, refetch } = useFeedbucketWidgets();
+  const [cursor, setCursor] = useState<string | null>(null);
+  const [pageNumber, setPageNumber] = useState(1);
 
-  const productWidgets = useMemo(
-    () =>
-      (widgets ?? []).filter(
-        (w) => w.managedProductId === managedProductId && !w.deletedAt,
-      ),
-    [widgets, managedProductId],
-  );
+  const { data, isLoading, isError, error, refetch } = useFeedbucketWidgets({
+    managedProductId,
+    cursor: cursor ?? undefined,
+  });
+
+  const productWidgets = data?.data ?? [];
+  const hasMore = data?.pagination.hasMore ?? false;
+
+  const handleNextPage = useCallback(() => {
+    if (data?.pagination.nextCursor) {
+      setCursor(data.pagination.nextCursor);
+      setPageNumber((n) => n + 1);
+    }
+  }, [data?.pagination.nextCursor]);
+
+  const handlePreviousPage = useCallback(() => {
+    setCursor(null);
+    setPageNumber(1);
+  }, []);
 
   const handleOpenCollect = useCallback(() => {
     setCollectOpen(true);
@@ -104,6 +118,20 @@ export function ProductSettingsFeedbackChannelsSection({
           ))}
         </ul>
       )}
+
+      {productWidgets.length > 0 || pageNumber > 1 ? (
+        <TablePagination
+          mode="cursor"
+          rowCount={productWidgets.length}
+          pageNumber={pageNumber}
+          hasMore={hasMore}
+          hasPrevious={pageNumber > 1}
+          onNext={handleNextPage}
+          onPrevious={handlePreviousPage}
+          hideOnSinglePage
+        />
+      ) : null}
+
       <FeedbucketCollectDialog
         managedProductId={managedProductId}
         open={collectOpen}

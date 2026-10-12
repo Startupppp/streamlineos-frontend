@@ -37,7 +37,7 @@ const { TicketDetailPane } = jest.requireMock(
 ) as { TicketDetailPane: jest.Mock };
 
 function makeFilterState(overrides?: Partial<ReturnType<typeof useProductFeedbackFilters>>): ReturnType<typeof useProductFeedbackFilters> {
-  return {
+  const base: ReturnType<typeof useProductFeedbackFilters> = {
     listFilters: { setValue: jest.fn(), setValues: jest.fn(), clearAll: jest.fn(), value: jest.fn(() => "all"), isActive: jest.fn(() => false), activeCount: 0, isFiltered: false, search: "", debouncedSearch: "", setSearch: jest.fn(), cursor: null, setCursor: jest.fn(), resetKey: "", isPending: false, searchParams: new URLSearchParams() },
     searchInputRef: { current: null },
     page: 1,
@@ -84,8 +84,10 @@ function makeFilterState(overrides?: Partial<ReturnType<typeof useProductFeedbac
     handleClearSelection: jest.fn(),
     handleOpenTicket: jest.fn(),
     handleCloseTicketPane: jest.fn(),
-    ...overrides,
+    handleOpenSubmission: jest.fn(),
+    handleCloseSubmissionPane: jest.fn(),
   };
+  return { ...base, ...overrides };
 }
 
 const INTAKE_ROUTING: ReturnType<typeof useRouteToIntake> = {

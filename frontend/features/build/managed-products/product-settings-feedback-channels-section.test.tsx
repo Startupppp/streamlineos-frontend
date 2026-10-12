@@ -55,17 +55,23 @@ const INACTIVE_WIDGET = {
   deletedAt: null,
 };
 
-const OTHER_PRODUCT_WIDGET = {
-  id: 3,
-  managedProductId: 99,
-  name: "Another product",
-  isActive: true,
-  deletedAt: null,
-};
+function page(
+  rows: unknown[],
+  pagination?: { limit?: number; hasMore?: boolean; nextCursor?: string | null },
+) {
+  return {
+    data: rows,
+    pagination: {
+      limit: pagination?.limit ?? 20,
+      hasMore: pagination?.hasMore ?? false,
+      nextCursor: pagination?.nextCursor ?? null,
+    },
+  };
+}
 
 describe("ProductSettingsFeedbackChannelsSection", () => {
   it("renders the section heading", () => {
-    useFeedbucketWidgets.mockReturnValue({ data: [], isLoading: false });
+    useFeedbucketWidgets.mockReturnValue({ data: page([]), isLoading: false });
 
     render(
       <ProductSettingsFeedbackChannelsSection
@@ -92,7 +98,7 @@ describe("ProductSettingsFeedbackChannelsSection", () => {
   });
 
   it("shows empty state when no widgets are linked to this product", () => {
-    useFeedbucketWidgets.mockReturnValue({ data: [OTHER_PRODUCT_WIDGET], isLoading: false });
+    useFeedbucketWidgets.mockReturnValue({ data: page([]), isLoading: false });
 
     render(
       <ProductSettingsFeedbackChannelsSection
@@ -107,7 +113,7 @@ describe("ProductSettingsFeedbackChannelsSection", () => {
 
   it("lists active widgets linked to the product with Active badge", () => {
     useFeedbucketWidgets.mockReturnValue({
-      data: [ACTIVE_WIDGET, OTHER_PRODUCT_WIDGET],
+      data: page([ACTIVE_WIDGET]),
       isLoading: false,
     });
 
@@ -119,12 +125,25 @@ describe("ProductSettingsFeedbackChannelsSection", () => {
 
     expect(screen.getByText("Product feedback")).toBeInTheDocument();
     expect(screen.getByText("Active")).toBeInTheDocument();
-    expect(screen.queryByText("Another product")).not.toBeInTheDocument();
+  });
+
+  it("asks the server for this product's widgets instead of filtering a full list client-side", () => {
+    useFeedbucketWidgets.mockReturnValue({ data: page([]), isLoading: false });
+
+    render(
+      <ProductSettingsFeedbackChannelsSection
+        managedProductId={MANAGED_PRODUCT_ID}
+      />,
+    );
+
+    expect(useFeedbucketWidgets).toHaveBeenCalledWith(
+      expect.objectContaining({ managedProductId: MANAGED_PRODUCT_ID }),
+    );
   });
 
   it("shows Inactive badge for a paused widget", () => {
     useFeedbucketWidgets.mockReturnValue({
-      data: [INACTIVE_WIDGET],
+      data: page([INACTIVE_WIDGET]),
       isLoading: false,
     });
 
@@ -138,9 +157,9 @@ describe("ProductSettingsFeedbackChannelsSection", () => {
     expect(screen.getByText("Inactive")).toBeInTheDocument();
   });
 
-  it("excludes deleted widgets from the list", () => {
+  it("pages forward with the server cursor rather than loading every widget at once", () => {
     useFeedbucketWidgets.mockReturnValue({
-      data: [{ ...ACTIVE_WIDGET, deletedAt: "2026-01-01T00:00:00Z" }],
+      data: page([ACTIVE_WIDGET], { hasMore: true, nextCursor: "cursor-2" }),
       isLoading: false,
     });
 
@@ -150,13 +169,18 @@ describe("ProductSettingsFeedbackChannelsSection", () => {
       />,
     );
 
-    expect(
-      screen.getByText(/No Feedbucket widgets are linked to this product yet/),
-    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /next/i }));
+
+    expect(useFeedbucketWidgets).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        managedProductId: MANAGED_PRODUCT_ID,
+        cursor: "cursor-2",
+      }),
+    );
   });
 
   it("opens the collect dialog when Configure Feedbucket is clicked", () => {
-    useFeedbucketWidgets.mockReturnValue({ data: [], isLoading: false });
+    useFeedbucketWidgets.mockReturnValue({ data: page([]), isLoading: false });
 
     render(
       <ProductSettingsFeedbackChannelsSection
@@ -170,7 +194,7 @@ describe("ProductSettingsFeedbackChannelsSection", () => {
   });
 
   it("closes the collect dialog when it requests close", () => {
-    useFeedbucketWidgets.mockReturnValue({ data: [], isLoading: false });
+    useFeedbucketWidgets.mockReturnValue({ data: page([]), isLoading: false });
 
     render(
       <ProductSettingsFeedbackChannelsSection
