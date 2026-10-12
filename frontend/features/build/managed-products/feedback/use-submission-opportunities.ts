@@ -47,22 +47,27 @@ const addEvidenceC = lazyContract(() => Promise.resolve(addEvidenceContract));
 
 export type OpportunityMinimal = z.infer<typeof opportunityMinimalContract>;
 
+const OPPORTUNITIES_PAGE_SIZE = 25;
+
 export function useProductOpportunitiesSearch(
   managedProductId: number,
   search: string,
   enabled = true,
+  options: { cursor?: string } = {},
 ) {
+  const { cursor } = options;
   return useGatedQuery("build:managed-products:view", {
     queryKey: [
       ...growthAndSignQueryKeys.feedbucket.all,
       "opportunities",
       managedProductId,
       search,
+      cursor ?? null,
     ],
     queryFn: ({ signal }) =>
       apiClient.get<{ data: OpportunityMinimal[]; pagination: { hasMore: boolean; nextCursor: string | null; limit: number } }>(
         `/build/managed-products/${managedProductId}/opportunities`,
-        { search: search.trim() || undefined, limit: 25 },
+        { search: search.trim() || undefined, limit: OPPORTUNITIES_PAGE_SIZE, cursor },
         signal,
         opportunityListC,
       ),

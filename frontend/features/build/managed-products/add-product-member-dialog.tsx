@@ -1,8 +1,7 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
-import { useForm, Controller } from "react-hook-form";
-import type { ControllerRenderProps } from "react-hook-form";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
@@ -20,13 +19,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { useBuildMembers } from "@/hooks/api/build/build-members";
+import { Combobox } from "@/components/ui/combobox";
+import { ErrorState } from "@/components/shared/error-state";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useAddManagedProductMember } from "@/hooks/api/build/managed-product-members";
 import { isWriteConflict } from "@/lib/api-envelope";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useAddProductMemberCandidates } from "./add-product-member-members-query";
 import { toast } from "sonner";
 
 const addMemberSchema = z.object({
@@ -47,10 +48,21 @@ export function AddProductMemberDialog({
   onOpenChange,
 }: AddProductMemberDialogProps) {
   const [search, setSearch] = useState("");
-  const { data: buildMembers } = useBuildMembers(
-    { limit: 50, search: search || undefined },
-    { enabled: open },
-  );
+  const [selectedLabel, setSelectedLabel] = useState("");
+  const debouncedSearch = useDebouncedValue(search, 300);
+  const {
+    data,
+    isLoading,
+    isError,
+    error,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useAddProductMemberCandidates({
+    search: debouncedSearch || undefined,
+    enabled: open,
+  });
   const addMember = useAddManagedProductMember(managedProductId);
 
   const form = useForm<AddMemberFormValues>({
@@ -58,22 +70,59 @@ export function AddProductMemberDialog({
     defaultValues: { membershipId: 0, role: "member" },
   });
 
-  const memberOptions = useMemo(
-    () =>
-      (buildMembers?.data ?? []).map((m) => ({
-        membershipId: m.membershipId,
-        label: m.name ?? m.email,
-      })),
-    [buildMembers],
-  );
+  const membershipId = form.watch("membershipId");
+  const pagesLoaded = data?.pages.length ?? 0;
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el || !hasNextPage) return;
+    const observer = new IntersectionObserver((entries) => {
+      if (entries[0]?.isIntersecting && !isFetchingNextPage) {
+        void fetchNextPage();
+      }
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage, pagesLoaded]);
+
+  const memberOptions = useMemo(() => {
+    const all = (data?.pages ?? []).flatMap((p) => p.data);
+    const opts = all.map((m) => ({
+      value: String(m.membershipId),
+      label: m.name ?? m.email,
+    }));
+    if (membershipId > 0 && !opts.find((o) => o.value === String(membershipId))) {
+      opts.unshift({ value: String(membershipId), label: selectedLabel || String(membershipId) });
+    }
+    return opts;
+  }, [data, membershipId, selectedLabel]);
 
   function handleOpenChange(next: boolean) {
     if (!next && addMember.isPending) return;
     if (!next) {
       form.reset();
       setSearch("");
+      setSelectedLabel("");
     }
     onOpenChange(next);
+  }
+
+  const handleSearchChange = useCallback((v: string) => {
+    setSearch(v);
+  }, []);
+
+  const handleMemberChange = useCallback(
+    (v: string, label?: string) => {
+      const id = v ? Number(v) : 0;
+      form.setValue("membershipId", id, { shouldValidate: true });
+      if (label) setSelectedLabel(label);
+    },
+    [form],
+  );
+
+  function handleRetry() {
+    void refetch();
   }
 
   function handleSubmit(values: AddMemberFormValues) {
@@ -85,6 +134,7 @@ export function AddProductMemberDialog({
           toast.success("Member added.");
           form.reset();
           setSearch("");
+          setSelectedLabel("");
           onOpenChange(false);
         },
         onError: (e) => {
@@ -98,60 +148,16 @@ export function AddProductMemberDialog({
     );
   }
 
-  const renderMemberField = useCallback(
-    ({ field }: { field: ControllerRenderProps<AddMemberFormValues, "membershipId"> }) => (
-      <div className="flex flex-col gap-1.5">
-        <Input
-          placeholder="Search by name or email…"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          disabled={addMember.isPending}
-          className="h-9"
-        />
-        <Select
-          value={field.value > 0 ? String(field.value) : ""}
-          onValueChange={(v) => field.onChange(Number(v))}
-          disabled={addMember.isPending}
-        >
-          <SelectTrigger className="h-9">
-            <SelectValue placeholder="Select a member" />
-          </SelectTrigger>
-          <SelectContent>
-            {memberOptions.map((m) => (
-              <SelectItem key={m.membershipId} value={String(m.membershipId)}>
-                {m.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {form.formState.errors.membershipId ? (
-          <p className="text-xs text-destructive" role="alert">
-            {form.formState.errors.membershipId.message}
-          </p>
-        ) : null}
-      </div>
-    ),
-    [search, addMember.isPending, memberOptions, form.formState.errors.membershipId],
+  const handleRoleChange = useCallback(
+    (v: string) => {
+      if (v === "member" || v === "admin") {
+        form.setValue("role", v, { shouldValidate: true });
+      }
+    },
+    [form],
   );
 
-  const renderRoleField = useCallback(
-    ({ field }: { field: ControllerRenderProps<AddMemberFormValues, "role"> }) => (
-      <Select
-        value={field.value}
-        onValueChange={(v) => v && field.onChange(v)}
-        disabled={addMember.isPending}
-      >
-        <SelectTrigger id="add-product-member-role" className="h-9">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="admin">Admin</SelectItem>
-          <SelectItem value="member">Member</SelectItem>
-        </SelectContent>
-      </Select>
-    ),
-    [addMember.isPending],
-  );
+  const roleValue = form.watch("role");
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -169,7 +175,36 @@ export function AddProductMemberDialog({
         >
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-medium text-foreground">Member</label>
-            <Controller control={form.control} name="membershipId" render={renderMemberField} />
+            {isError ? (
+              <ErrorState
+                compact
+                error={error}
+                description={getErrorMessage(error)}
+                onRetry={handleRetry}
+              />
+            ) : (
+              <Combobox
+                aria-label="Select a member"
+                options={memberOptions}
+                value={membershipId > 0 ? String(membershipId) : ""}
+                onChange={handleMemberChange}
+                onSearchChange={handleSearchChange}
+                placeholder="Select a member"
+                searchPlaceholder="Search by name or email…"
+                emptyText={isLoading ? "Loading…" : "No members found."}
+                disabled={addMember.isPending}
+                footer={
+                  hasNextPage ? (
+                    <div ref={sentinelRef} aria-hidden className="h-px" />
+                  ) : undefined
+                }
+              />
+            )}
+            {form.formState.errors.membershipId ? (
+              <p className="text-xs text-destructive" role="alert">
+                {form.formState.errors.membershipId.message}
+              </p>
+            ) : null}
           </div>
           <div className="flex flex-col gap-1.5">
             <label
@@ -178,7 +213,19 @@ export function AddProductMemberDialog({
             >
               Role
             </label>
-            <Controller control={form.control} name="role" render={renderRoleField} />
+            <Select
+              value={roleValue}
+              onValueChange={handleRoleChange}
+              disabled={addMember.isPending}
+            >
+              <SelectTrigger id="add-product-member-role" className="h-9">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="admin">Admin</SelectItem>
+                <SelectItem value="member">Member</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </form>
         <DialogFooter>

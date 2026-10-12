@@ -6,6 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useFeedbucketSubmission, useUnmarkDuplicate } from "@/hooks/api/feedbucket/use-feedbucket-submissions";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { ErrorState } from "@/components/shared/error-state";
 import { ClassifySubmissionSheet } from "./classify-submission-sheet";
 import { FeedbackPaneDetail } from "./feedback-pane-detail";
 import { MarkDuplicateDialog } from "./mark-duplicate-dialog";
@@ -44,7 +45,7 @@ export function FeedbackPane({ submissionId, managedProductId, open, onOpenChang
   const [duplicateOpen, setDuplicateOpen] = useState(false);
   const [linkOppOpen, setLinkOppOpen] = useState(false);
 
-  const { data: submission, isLoading } = useFeedbucketSubmission(submissionId);
+  const { data: submission, isLoading, isError, error, refetch } = useFeedbucketSubmission(submissionId);
   const unmarkDuplicate = useUnmarkDuplicate();
 
   const handleUnmarkDuplicate = useCallback(() => {
@@ -82,6 +83,13 @@ export function FeedbackPane({ submissionId, managedProductId, open, onOpenChang
           </SheetHeader>
           {isLoading ? (
             <FeedbackPaneSkeleton />
+          ) : isError ? (
+            <ErrorState
+              compact
+              error={error}
+              onRetry={refetch}
+              className="m-6"
+            />
           ) : submission ? (
             <FeedbackPaneDetail
               submission={submission}

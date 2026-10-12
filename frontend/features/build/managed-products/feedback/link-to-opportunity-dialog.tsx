@@ -13,8 +13,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { TablePagination, useCursorPager } from "@/components/ui/table-pagination";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { ErrorState } from "@/components/shared/error-state";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import {
   useProductOpportunitiesSearch,
@@ -51,8 +53,14 @@ export function LinkToOpportunityDialog({
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebouncedValue(search, 350);
   const [selectedId, setSelectedId] = useState<number | null>(null);
+  const pager = useCursorPager(debouncedSearch);
 
-  const { data, isLoading } = useProductOpportunitiesSearch(managedProductId, debouncedSearch);
+  const { data, isLoading, isError, error, refetch } = useProductOpportunitiesSearch(
+    managedProductId,
+    debouncedSearch,
+    true,
+    { cursor: pager.cursor },
+  );
   const opportunities = useMemo(() => data?.data ?? [], [data]);
   const addEvidence = useAddEvidenceToOpportunity();
 
@@ -68,6 +76,14 @@ export function LinkToOpportunityDialog({
   const handleCancel = useCallback(() => {
     onOpenChange(false);
   }, [onOpenChange]);
+
+  const handleNext = useCallback(() => {
+    pager.goNext(data?.pagination.nextCursor);
+  }, [pager, data?.pagination.nextCursor]);
+
+  const handlePrevious = useCallback(() => {
+    pager.goPrevious();
+  }, [pager]);
 
   const handleConfirm = useCallback(() => {
     if (selectedId === null) return;
@@ -101,17 +117,38 @@ export function LinkToOpportunityDialog({
             onChange={handleSearchChange}
             aria-label="Search opportunities"
           />
-          <FeedbackPickList
-            items={opportunities}
-            selectedId={selectedId}
-            onSelect={handleSelect}
-            getId={opportunityId}
-            getLabel={opportunityTitle}
-            getMeta={opportunityState}
-            isLoading={isLoading}
-            loadingText="Loading opportunities…"
-            emptyText="No opportunities found."
-            label="Opportunities"
+          {isError ? (
+            <ErrorState
+              compact
+              error={error}
+              onRetry={refetch}
+            />
+          ) : (
+            <FeedbackPickList
+              items={opportunities}
+              selectedId={selectedId}
+              onSelect={handleSelect}
+              getId={opportunityId}
+              getLabel={opportunityTitle}
+              getMeta={opportunityState}
+              isLoading={isLoading}
+              loadingText="Loading opportunities…"
+              emptyText="No opportunities found."
+              label="Opportunities"
+            />
+          )}
+          <TablePagination
+            mode="cursor"
+            rowCount={opportunities.length}
+            pageNumber={pager.pageNumber}
+            hasMore={data?.pagination.hasMore ?? false}
+            hasPrevious={pager.hasPrevious}
+            onNext={handleNext}
+            onPrevious={handlePrevious}
+            compact
+            showSummary={false}
+            hideOnSinglePage
+            disabled={isLoading || isError}
           />
         </DialogBody>
         <DialogFooter>

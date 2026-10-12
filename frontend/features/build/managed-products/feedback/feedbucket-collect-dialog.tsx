@@ -21,6 +21,7 @@ import { useCan } from "@/hooks/api/access";
 import { buildFeedbucketEmbedSnippet } from "@/lib/feedbucket";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
+import { ErrorState } from "@/components/shared/error-state";
 
 const INTERNAL_CAPTURE_WIDGET_NAME = "Product capture";
 
@@ -35,7 +36,7 @@ export function FeedbucketCollectDialog({
   open,
   onOpenChange,
 }: FeedbucketCollectDialogProps) {
-  const { data: widgetPage, isLoading } = useFeedbucketWidgets({ managedProductId });
+  const { data: widgetPage, isLoading, isError, error, refetch } = useFeedbucketWidgets({ managedProductId });
   const { data: product } = useManagedProduct(managedProductId);
   const canCreate = useCan("feedbucket:widgets:create");
   const canUpdate = useCan("feedbucket:widgets:update");
@@ -117,6 +118,8 @@ export function FeedbucketCollectDialog({
         </DialogHeader>
         {isLoading ? (
           <p className="text-sm text-muted-foreground">Loading widgets…</p>
+        ) : isError ? (
+          <ErrorState compact error={error} onRetry={refetch} />
         ) : firstWidget ? (
           <div className="flex flex-col gap-3">
             <p className="text-sm text-muted-foreground">

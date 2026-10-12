@@ -3,7 +3,7 @@
 import { useState, useCallback } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useOpportunity, useOpportunityTrace } from "@/hooks/api/build/product-discovery";
@@ -14,6 +14,7 @@ import {
   useUpdateOpportunity,
 } from "@/hooks/api/build/opportunity-mutations";
 import { useOverrideOpportunityScore, useScoreOpportunity } from "@/hooks/api/build/opportunity-score-mutations";
+import { ErrorState } from "@/components/shared/error-state";
 import { OpportunityTrace } from "./opportunity-trace";
 import { OpportunityAcceptDialog } from "./opportunity-accept-dialog";
 import { OpportunityDeclineDialog, OpportunityOverrideDialog } from "./opportunity-override-dialog";
@@ -40,7 +41,7 @@ export function OpportunityPane({
   const [declineOpen, setDeclineOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"details" | "trace">("details");
 
-  const { data: opportunity, isLoading, isError, error } = useOpportunity(
+  const { data: opportunity, isLoading, isError, error, refetch } = useOpportunity(
     managedProductId,
     opportunityId ?? 0,
   );
@@ -150,6 +151,7 @@ export function OpportunityPane({
     [opportunityId, overrideMutation],
   );
 
+  const handleRetry = useCallback(() => void refetch(), [refetch]);
   const handleTabDetails = useCallback(() => setActiveTab("details"), []);
   const handleTabTrace = useCallback(() => setActiveTab("trace"), []);
 
@@ -166,6 +168,9 @@ export function OpportunityPane({
             <SheetTitle className="truncate text-base">
               {isLoading ? "Loading…" : (opportunity?.title ?? "Opportunity")}
             </SheetTitle>
+            <SheetDescription>
+              {opportunity?.problem ?? "View and manage this product opportunity."}
+            </SheetDescription>
             <div className="mt-3 inline-flex h-9 items-center gap-1 rounded-lg border border-input bg-card p-1">
               <button
                 type="button"
@@ -192,12 +197,7 @@ export function OpportunityPane({
               <p className="text-sm text-muted-foreground">Loading opportunity…</p>
             )}
 
-            {isError && (
-              <div className="flex flex-col items-center justify-center gap-3 py-8 text-center">
-                <p className="text-sm font-medium text-foreground">Could not load opportunity</p>
-                <p className="text-xs text-muted-foreground">{getErrorMessage(error)}</p>
-              </div>
-            )}
+            {isError && <ErrorState compact onRetry={handleRetry} error={error} />}
 
             {!isLoading && !isError && opportunity && activeTab === "details" && (
               <div className="space-y-4">

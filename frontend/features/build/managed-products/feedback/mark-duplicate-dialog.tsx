@@ -13,12 +13,16 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { TablePagination, useCursorPager } from "@/components/ui/table-pagination";
 import { useFeedbucketSubmissions } from "@/hooks/api/feedbucket/use-feedbucket-submissions";
 import { useMarkDuplicate } from "@/hooks/api/feedbucket/use-feedbucket-submissions";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { ErrorState } from "@/components/shared/error-state";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { FeedbackPickList } from "./feedback-pick-list";
+
+const PICKER_PAGE_SIZE = 25;
 
 interface MarkDuplicateDialogProps {
   managedProductId: number;
@@ -46,12 +50,13 @@ export function MarkDuplicateDialog({
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebouncedValue(search, 350);
   const [selectedId, setSelectedId] = useState<number | null>(null);
+  const pager = useCursorPager(debouncedSearch);
 
-  const { data, isLoading } = useFeedbucketSubmissions({
+  const { data, isLoading, isError, error, refetch } = useFeedbucketSubmissions({
     managedProductId,
     search: debouncedSearch.trim() || undefined,
-    limit: 10,
-    page: 1,
+    limit: PICKER_PAGE_SIZE,
+    cursor: pager.cursor,
   });
 
   const candidates = useMemo(
@@ -73,6 +78,14 @@ export function MarkDuplicateDialog({
   const handleCancel = useCallback(() => {
     onOpenChange(false);
   }, [onOpenChange]);
+
+  const handleNext = useCallback(() => {
+    pager.goNext(data?.pagination.nextCursor);
+  }, [pager, data?.pagination.nextCursor]);
+
+  const handlePrevious = useCallback(() => {
+    pager.goPrevious();
+  }, [pager]);
 
   const handleConfirm = useCallback(() => {
     if (selectedId === null) return;
@@ -106,16 +119,37 @@ export function MarkDuplicateDialog({
             onChange={handleSearchChange}
             aria-label="Search submissions for duplicate"
           />
-          <FeedbackPickList
-            items={candidates}
-            selectedId={selectedId}
-            onSelect={handleSelect}
-            getId={candidateId}
-            getLabel={candidateMessage}
-            isLoading={isLoading}
-            loadingText="Loading submissions…"
-            emptyText="No submissions found."
-            label="Original submission"
+          {isError ? (
+            <ErrorState
+              compact
+              error={error}
+              onRetry={refetch}
+            />
+          ) : (
+            <FeedbackPickList
+              items={candidates}
+              selectedId={selectedId}
+              onSelect={handleSelect}
+              getId={candidateId}
+              getLabel={candidateMessage}
+              isLoading={isLoading}
+              loadingText="Loading submissions…"
+              emptyText="No submissions found."
+              label="Original submission"
+            />
+          )}
+          <TablePagination
+            mode="cursor"
+            rowCount={candidates.length}
+            pageNumber={pager.pageNumber}
+            hasMore={data?.pagination.hasMore ?? false}
+            hasPrevious={pager.hasPrevious}
+            onNext={handleNext}
+            onPrevious={handlePrevious}
+            compact
+            showSummary={false}
+            hideOnSinglePage
+            disabled={isLoading || isError}
           />
         </DialogBody>
         <DialogFooter>

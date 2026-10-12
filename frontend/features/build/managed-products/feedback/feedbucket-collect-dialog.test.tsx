@@ -12,6 +12,15 @@ jest.mock("@/hooks/api/feedbucket/use-feedbucket-widgets", () => ({
   useUpdateFeedbucketWidget: () => ({ mutate: mockUpdate, isPending: false }),
 }));
 
+jest.mock("@/components/shared/error-state", () => ({
+  ErrorState: ({ onRetry }: { onRetry?: () => void }) => (
+    <div role="alert" data-testid="error-state">
+      Error loading data.
+      {onRetry ? <button type="button" onClick={onRetry}>Try again</button> : null}
+    </div>
+  ),
+}));
+
 jest.mock("@/hooks/api/build/managed-products", () => ({
   useManagedProduct: () => ({ data: { id: 39, name: "Build QA Sandbox" } }),
 }));
@@ -87,5 +96,32 @@ describe("FeedbucketCollectDialog", () => {
     mockUseWidgets.mockReturnValue({ data: aPage([]), isLoading: false });
     renderDialog();
     expect(mockUseWidgets).toHaveBeenCalledWith({ managedProductId: 39 });
+  });
+});
+
+describe("FeedbucketCollectDialog — error and retry states (MP-02)", () => {
+  it("renders an error state with retry when the widget list fails, so a failed read is never reported as no widget", () => {
+    const mockRefetch = jest.fn();
+    mockUseWidgets.mockReturnValue({ data: undefined, isLoading: false, isError: true, error: new Error("fail"), refetch: mockRefetch });
+    renderDialog();
+    expect(screen.getByTestId("error-state")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Create product widget" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+    expect(mockRefetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps the dialog open when retrying after a failed widget fetch", () => {
+    mockUseWidgets.mockReturnValue({ data: undefined, isLoading: false, isError: true, error: new Error("fail"), refetch: jest.fn() });
+    const onOpenChange = jest.fn();
+    render(<FeedbucketCollectDialog managedProductId={39} open onOpenChange={onOpenChange} />);
+    fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+    expect(onOpenChange).not.toHaveBeenCalled();
+  });
+
+  it("shows the create-widget state when widgets succeed with an empty list, not the error state", () => {
+    mockUseWidgets.mockReturnValue({ data: aPage([]), isLoading: false, isError: false, error: null, refetch: jest.fn() });
+    renderDialog();
+    expect(screen.queryByTestId("error-state")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Create product widget" })).toBeInTheDocument();
   });
 });

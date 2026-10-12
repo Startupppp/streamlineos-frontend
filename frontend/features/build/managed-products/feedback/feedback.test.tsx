@@ -11,10 +11,11 @@ jest.mock("@/hooks/api/access", () => ({
 
 jest.mock("@/hooks/api/feedbucket/use-feedbucket-submissions", () => ({
   useFeedbucketSubmissions: jest.fn(() => ({
-    data: { data: [], total: 0 },
+    data: { data: [], pagination: { hasMore: false, nextCursor: null, limit: 25 } },
     isLoading: false,
     isError: false,
     error: null,
+    refetch: jest.fn(),
   })),
   useFeedbucketSubmission: jest.fn(() => ({
     data: null,
@@ -63,8 +64,32 @@ jest.mock("./use-submission-opportunities", () => ({
   useProductOpportunitiesSearch: jest.fn(() => ({
     data: { data: [{ id: 10, title: "Speed up checkout", state: "identified" }], pagination: { hasMore: false, nextCursor: null, limit: 25 } },
     isLoading: false,
+    isError: false,
+    error: null,
+    refetch: jest.fn(),
   })),
   useAddEvidenceToOpportunity: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+}));
+
+jest.mock("@/components/ui/table-pagination", () => ({
+  TablePagination: () => null,
+  useCursorPager: jest.fn(() => ({
+    cursor: undefined,
+    pageNumber: 1,
+    hasPrevious: false,
+    goNext: jest.fn(),
+    goPrevious: jest.fn(),
+    reset: jest.fn(),
+  })),
+}));
+
+jest.mock("@/components/shared/error-state", () => ({
+  ErrorState: ({ onRetry }: { onRetry?: () => void }) => (
+    <div role="alert" data-testid="error-state">
+      Error loading data.
+      {onRetry ? <button type="button" onClick={onRetry}>Try again</button> : null}
+    </div>
+  ),
 }));
 
 jest.mock("@/components/shared", () => ({
@@ -176,12 +201,26 @@ const { useFeedbucketSubmissions, useMarkDuplicate } = jest.requireMock("@/hooks
   useFeedbucketSubmissions: jest.Mock;
   useMarkDuplicate: jest.Mock;
 };
-const { useAddEvidenceToOpportunity } = jest.requireMock("./use-submission-opportunities") as {
+const { useProductOpportunitiesSearch, useAddEvidenceToOpportunity } = jest.requireMock("./use-submission-opportunities") as {
+  useProductOpportunitiesSearch: jest.Mock;
   useAddEvidenceToOpportunity: jest.Mock;
+};
+const { useCursorPager: mockUseCursorPager } = jest.requireMock("@/components/ui/table-pagination") as {
+  useCursorPager: jest.Mock;
+};
+
+const DEFAULT_PAGER = {
+  cursor: undefined as string | undefined,
+  pageNumber: 1,
+  hasPrevious: false,
+  goNext: jest.fn(),
+  goPrevious: jest.fn(),
+  reset: jest.fn(),
 };
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockUseCursorPager.mockReturnValue({ ...DEFAULT_PAGER, goNext: jest.fn(), goPrevious: jest.fn(), reset: jest.fn() });
 });
 
 describe("CaptureSubmissionSheet — form validation (FE-73)", () => {
@@ -325,5 +364,137 @@ describe("LinkToOpportunityDialog — opportunity linking (BSN-OPP-01)", () => {
       />,
     );
     expect(screen.getByTestId("loading-btn")).toBeDisabled();
+  });
+});
+
+describe("MarkDuplicateDialog — error and retry states (MP-02)", () => {
+  it("renders an error state with retry when the submission list fails, so a failed read is never reported as no matching submissions", () => {
+    const mockRefetch = jest.fn();
+    useFeedbucketSubmissions.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: true,
+      error: new Error("Network error"),
+      refetch: mockRefetch,
+    });
+    render(<MarkDuplicateDialog managedProductId={7} submissionId={5} open onOpenChange={jest.fn()} />);
+    expect(screen.getByTestId("error-state")).toBeInTheDocument();
+    expect(screen.queryByText(/No submissions found/)).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+    expect(mockRefetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps the dialog open and preserves search text when retrying after a failed submission list fetch", () => {
+    useFeedbucketSubmissions.mockReturnValue({
+      data: undefined, isLoading: false, isError: true, error: new Error("err"), refetch: jest.fn(),
+    });
+    const onOpenChange = jest.fn();
+    render(<MarkDuplicateDialog managedProductId={7} submissionId={5} open onOpenChange={onOpenChange} />);
+    fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+    expect(onOpenChange).not.toHaveBeenCalled();
+  });
+
+  it("shows the empty list when the submission list succeeds with no results, not the error state", () => {
+    useFeedbucketSubmissions.mockReturnValue({
+      data: { data: [], pagination: { hasMore: false, nextCursor: null, limit: 25 } },
+      isLoading: false, isError: false, error: null, refetch: jest.fn(),
+    });
+    render(<MarkDuplicateDialog managedProductId={7} submissionId={5} open onOpenChange={jest.fn()} />);
+    expect(screen.queryByTestId("error-state")).not.toBeInTheDocument();
+    expect(screen.getByText("No submissions found.")).toBeInTheDocument();
+  });
+});
+
+describe("MarkDuplicateDialog — server-side search and cursor pagination (MP-03)", () => {
+  it("sends typed search to the server rather than filtering one local page, so results the server knows about appear", () => {
+    render(<MarkDuplicateDialog managedProductId={7} submissionId={5} open onOpenChange={jest.fn()} />);
+    fireEvent.change(screen.getByRole("textbox"), { target: { value: "crash" } });
+    expect(useFeedbucketSubmissions).toHaveBeenCalledWith(
+      expect.objectContaining({ search: "crash", managedProductId: 7 }),
+    );
+  });
+
+  it("passes the cursor from useCursorPager to the query so submissions beyond the first page are reachable", () => {
+    mockUseCursorPager.mockReturnValue({
+      cursor: "next-page-cursor",
+      pageNumber: 2,
+      hasPrevious: true,
+      goNext: jest.fn(),
+      goPrevious: jest.fn(),
+      reset: jest.fn(),
+    });
+    useFeedbucketSubmissions.mockReturnValue({
+      data: { data: [{ id: 99, message: "Page two submission" }], pagination: { hasMore: false, nextCursor: null, limit: 25 } },
+      isLoading: false, isError: false, error: null, refetch: jest.fn(),
+    });
+    render(<MarkDuplicateDialog managedProductId={7} submissionId={5} open onOpenChange={jest.fn()} />);
+    expect(useFeedbucketSubmissions).toHaveBeenCalledWith(
+      expect.objectContaining({ cursor: "next-page-cursor" }),
+    );
+    expect(screen.getByText("Page two submission")).toBeInTheDocument();
+  });
+});
+
+describe("LinkToOpportunityDialog — error and retry states (MP-02)", () => {
+  it("renders an error state with retry when the opportunity list fails, so a failed read is never reported as no matching opportunities", () => {
+    const mockRefetch = jest.fn();
+    useProductOpportunitiesSearch.mockReturnValue({
+      data: undefined, isLoading: false, isError: true, error: new Error("fail"), refetch: mockRefetch,
+    });
+    render(<LinkToOpportunityDialog managedProductId={7} submissionId={5} open onOpenChange={jest.fn()} />);
+    expect(screen.getByTestId("error-state")).toBeInTheDocument();
+    expect(screen.queryByText(/No opportunities found/)).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+    expect(mockRefetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps the dialog open when retrying after a failed opportunity list fetch", () => {
+    useProductOpportunitiesSearch.mockReturnValue({
+      data: undefined, isLoading: false, isError: true, error: new Error("fail"), refetch: jest.fn(),
+    });
+    const onOpenChange = jest.fn();
+    render(<LinkToOpportunityDialog managedProductId={7} submissionId={5} open onOpenChange={onOpenChange} />);
+    fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+    expect(onOpenChange).not.toHaveBeenCalled();
+  });
+
+  it("shows the empty list when opportunities succeed with no results, not the error state", () => {
+    useProductOpportunitiesSearch.mockReturnValue({
+      data: { data: [], pagination: { hasMore: false, nextCursor: null, limit: 25 } },
+      isLoading: false, isError: false, error: null, refetch: jest.fn(),
+    });
+    render(<LinkToOpportunityDialog managedProductId={7} submissionId={5} open onOpenChange={jest.fn()} />);
+    expect(screen.queryByTestId("error-state")).not.toBeInTheDocument();
+    expect(screen.getByText("No opportunities found.")).toBeInTheDocument();
+  });
+});
+
+describe("LinkToOpportunityDialog — server-side search and cursor pagination (MP-03)", () => {
+  it("sends typed search to the server rather than filtering one local page, so opportunities only the server knows about appear", () => {
+    render(<LinkToOpportunityDialog managedProductId={7} submissionId={5} open onOpenChange={jest.fn()} />);
+    fireEvent.change(screen.getByRole("textbox"), { target: { value: "checkout" } });
+    expect(useProductOpportunitiesSearch).toHaveBeenCalledWith(
+      7, "checkout", true, expect.objectContaining({}),
+    );
+  });
+
+  it("passes cursor from useCursorPager to the query so opportunities beyond the first page are reachable", () => {
+    mockUseCursorPager.mockReturnValue({
+      cursor: "opp-page-2",
+      pageNumber: 2,
+      hasPrevious: true,
+      goNext: jest.fn(),
+      goPrevious: jest.fn(),
+      reset: jest.fn(),
+    });
+    useProductOpportunitiesSearch.mockReturnValue({
+      data: { data: [{ id: 55, title: "Second page opp", state: "validated" }], pagination: { hasMore: false, nextCursor: null, limit: 25 } },
+      isLoading: false, isError: false, error: null, refetch: jest.fn(),
+    });
+    render(<LinkToOpportunityDialog managedProductId={7} submissionId={5} open onOpenChange={jest.fn()} />);
+    expect(useProductOpportunitiesSearch).toHaveBeenCalledWith(
+      7, expect.any(String), true, expect.objectContaining({ cursor: "opp-page-2" }),
+    );
+    expect(screen.getByText("Second page opp")).toBeInTheDocument();
   });
 });

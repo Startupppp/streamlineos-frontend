@@ -6,7 +6,6 @@ import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/comp
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -18,6 +17,7 @@ import { FIELD_CONTROL_CLASS } from "@/components/ui/field-control";
 import { useEpics } from "@/hooks/api/build/epics";
 import type { AcceptFormValues } from "./opportunity-accept-schema";
 import { FieldSelect, type NumericItem } from "./opportunity-accept-field-select";
+import { AcceptRoadmapField } from "./opportunity-accept-roadmap-field";
 
 export interface NamedItem {
   id: number;
@@ -33,17 +33,27 @@ export interface Release {
   version: string;
 }
 
+export interface SelectorProps<T> {
+  items: T[];
+  isError: boolean;
+  error: unknown;
+  onRetry: () => void;
+  onSearchChange?: (search: string) => void;
+  footer?: React.ReactNode;
+}
+
 type FormRef = UseFormReturn<AcceptFormValues>;
 
 interface AcceptFieldsProps {
   form: FormRef;
-  projects: NamedItem[];
-  releases: Release[];
-  goals: TitledItem[];
-  roadmapItems: TitledItem[];
+  managedProductId: number;
+  enabled: boolean;
+  goals: SelectorProps<TitledItem>;
+  projects: SelectorProps<NamedItem>;
+  releases: SelectorProps<Release>;
 }
 
-export function AcceptFields({ form, projects, releases, goals, roadmapItems }: AcceptFieldsProps) {
+export function AcceptFields({ form, managedProductId, enabled, goals, projects, releases }: AcceptFieldsProps) {
   const selectedProjectId = form.watch("projectId");
   const { data: epics } = useEpics(selectedProjectId ?? 0);
 
@@ -52,20 +62,20 @@ export function AcceptFields({ form, projects, releases, goals, roadmapItems }: 
   }, [form]);
 
   const goalItems = useMemo<NumericItem[]>(
-    () => goals.map((g) => ({ id: g.id, label: g.title })),
-    [goals],
+    () => goals.items.map((g) => ({ id: g.id, label: g.title })),
+    [goals.items],
   );
   const projectItems = useMemo<NumericItem[]>(
-    () => projects.map((p) => ({ id: p.id, label: p.name })),
-    [projects],
+    () => projects.items.map((p) => ({ id: p.id, label: p.name })),
+    [projects.items],
   );
   const epicItems = useMemo<NumericItem[]>(
     () => (epics ?? []).map((e) => ({ id: e.id, label: e.title })),
     [epics],
   );
   const releaseItems = useMemo<NumericItem[]>(
-    () => releases.map((r) => ({ id: r.id, label: `${r.name} ${r.version}` })),
-    [releases],
+    () => releases.items.map((r) => ({ id: r.id, label: `${r.name} ${r.version}` })),
+    [releases.items],
   );
 
   return (
@@ -92,7 +102,7 @@ export function AcceptFields({ form, projects, releases, goals, roadmapItems }: 
           </FormItem>
         )}
       />
-      {goalItems.length > 0 && (
+      {(goals.isError || goalItems.length > 0) && (
         <FieldSelect
           form={form}
           name="goalId"
@@ -100,9 +110,13 @@ export function AcceptFields({ form, projects, releases, goals, roadmapItems }: 
           testId="goal-select"
           items={goalItems}
           placeholder="Link to goal"
+          isError={goals.isError}
+          error={goals.error}
+          onRetry={goals.onRetry}
+          onSearchChange={goals.onSearchChange}
         />
       )}
-      {projectItems.length > 0 && (
+      {(projects.isError || projectItems.length > 0) && (
         <FieldSelect
           form={form}
           name="projectId"
@@ -111,6 +125,11 @@ export function AcceptFields({ form, projects, releases, goals, roadmapItems }: 
           items={projectItems}
           placeholder="Select project"
           onChangeSideEffect={clearEpic}
+          isError={projects.isError}
+          error={projects.error}
+          onRetry={projects.onRetry}
+          onSearchChange={projects.onSearchChange}
+          footer={projects.footer}
         />
       )}
       {selectedProjectId != null && epicItems.length > 0 && (
@@ -123,7 +142,7 @@ export function AcceptFields({ form, projects, releases, goals, roadmapItems }: 
           placeholder="Select epic"
         />
       )}
-      {releaseItems.length > 0 && (
+      {(releases.isError || releaseItems.length > 0) && (
         <FieldSelect
           form={form}
           name="releaseId"
@@ -131,9 +150,12 @@ export function AcceptFields({ form, projects, releases, goals, roadmapItems }: 
           testId="release-select"
           items={releaseItems}
           placeholder="Select release"
+          isError={releases.isError}
+          error={releases.error}
+          onRetry={releases.onRetry}
+          footer={releases.footer}
         />
       )}
-
       <FormField
         control={form.control}
         name="isPublic"
@@ -153,46 +175,7 @@ export function AcceptFields({ form, projects, releases, goals, roadmapItems }: 
           </FormItem>
         )}
       />
-
-      {roadmapItems.length > 0 && (
-        <FormField
-          control={form.control}
-          name="dependsOnIds"
-          render={({ field }) => {
-            const selected: number[] = field.value ?? [];
-            const toggle = (id: number) => {
-              const next = selected.includes(id)
-                ? selected.filter((x) => x !== id)
-                : [...selected, id];
-              field.onChange(next.length > 0 ? next : undefined);
-            };
-            return (
-              <FormItem>
-                <FormLabel>Depends on (optional)</FormLabel>
-                <div
-                  className="rounded-md border border-input max-h-36 overflow-y-auto"
-                  data-testid="depends-on-list"
-                >
-                  {roadmapItems.map((item) => (
-                    <label
-                      key={item.id}
-                      className="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer hover:bg-accent"
-                    >
-                      <Checkbox
-                        checked={selected.includes(item.id)}
-                        onCheckedChange={() => toggle(item.id)}
-                      />
-                      {item.title}
-                    </label>
-                  ))}
-                </div>
-                <FormMessage />
-              </FormItem>
-            );
-          }}
-        />
-      )}
-
+      <AcceptRoadmapField form={form} managedProductId={managedProductId} enabled={enabled} />
       <FormField
         control={form.control}
         name="note"
