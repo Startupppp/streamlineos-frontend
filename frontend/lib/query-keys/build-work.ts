@@ -465,6 +465,8 @@ export const buildWorkQueryKeys = {
       projectIntakeForm: (projectId: string) =>
         [...base, "projects", "intake-form", projectId] as const,
     },
+    intakeSettings: (projectId: number) =>
+      [...base, "projects", projectId, "intake-settings"] as const,
     retentionSettings: (projectId: number) =>
       [...base, "projects", projectId, "retention-settings"] as const,
     orgReleases: (params?: QueryKeyParams) =>

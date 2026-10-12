@@ -21,6 +21,11 @@ jest.mock("@/hooks/api/build/intake", () => ({
 jest.mock("@/hooks/api/build/cycles", () => ({ useCycles: () => mockCycles() }));
 jest.mock("@/hooks/api/build/modules", () => ({ useModules: () => mockModules() }));
 jest.mock("@/hooks/api/build/intake-mutations", () => ({ useAcceptIntakeRequest: () => ({ mutate: mockAccept, isPending: false }) }));
+jest.mock("@/hooks/api/build/intake-settings", () => ({
+  useIntakeSettings: () => ({ data: undefined, isLoading: false, isError: false, error: undefined }),
+  usePublishIntake: () => ({ mutate: jest.fn(), isPending: false }),
+  useUnpublishIntake: () => ({ mutate: jest.fn(), isPending: false }),
+}));
 jest.mock("@/hooks/api/build/project-members", () => ({ useProjectMembers: () => mockMembers() }));
 jest.mock("@/hooks/api/build/tickets", () => ({ useTickets: (...args: unknown[]) => mockTickets(...args), useTicket: (...args: unknown[]) => mockTicket(...args) }));
 jest.mock("@/hooks/api/build/projects", () => ({ useProject: () => ({ data: { id: 1, key: "PROJ" } }) }));

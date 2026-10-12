@@ -23,7 +23,7 @@ import {
   TABS_CONTENT_PAGE_BODY_CLASS,
 } from "@/components/ui/tabs";
 import { TablePagination } from "@/components/ui/table-pagination";
-import { ExternalLink, ListChecks } from "lucide-react";
+import { ListChecks } from "lucide-react";
 import {
   BUILD_FILTER_ALL,
   useBuildListFilters,
@@ -31,11 +31,11 @@ import {
 import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
 import { BuildPaginatedContent } from "@/features/build/shared/build-paginated-content";
 import { useBuildCursorPager } from "@/features/build/shared/use-build-cursor-pager";
-import { toast } from "sonner";
 import { IntakeDecisionDialog } from "@/features/build/intake/components/intake-decision-dialog";
 import { IntakeItemCard } from "@/features/build/intake/intake-item-card";
 import { IntakeTriageMode } from "@/features/build/intake/intake-triage-mode";
 import { IntakeCreateSheet } from "@/features/build/intake/components/intake-create-sheet";
+import { IntakeShareControls } from "@/features/build/intake/intake-share-controls";
 import { PmPageShell, PmSection, PmStaggerList } from "@/components/pm-chrome";
 import type {
   IntakeSource,
@@ -138,12 +138,6 @@ export function IntakePage({
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
-
-  const handleCopyFormUrl = useCallback(() => {
-    const formUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/intake/${projectId}`;
-    navigator.clipboard.writeText(formUrl);
-    toast.success("Form URL copied to clipboard");
-  }, [projectId]);
 
   function handleOpenCreate(): void {
     setCreateOpen(true);
@@ -256,11 +250,7 @@ export function IntakePage({
                   <ListChecks className="h-4 w-4 mr-1" /> Triage
                 </Button>
               ) : null}
-              <Button variant="outline" size="sm" onClick={handleCopyFormUrl}>
-                <ExternalLink className="h-4 w-4 mr-1" />
-                <span className="max-[380px]:hidden">Copy Form URL</span>
-                <span className="min-[381px]:hidden">Form URL</span>
-              </Button>
+              <IntakeShareControls projectId={projectId} />
               {canManage && !triageMode ? (
                 <IntakeCreateSheet
                   projectId={projectId}
