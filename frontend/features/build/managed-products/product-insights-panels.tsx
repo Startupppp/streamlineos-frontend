@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import type { ManagedProductInsights } from "@/hooks/api/build/managed-products-schema";
+import { CustomerImpactPanel } from "./customer-impact-panel";
 import { getUserDisplayName } from "@/lib/person-display";
 import { ProductDiscoverySection } from "./insights/product-discovery-section";
 
@@ -238,6 +239,9 @@ export function InsightFeedbackPanel({
           href={productHref(managedProductId, "feedback?status=archived")}
         />
       </StatCardGrid>
+      <div className="mt-4">
+        <CustomerImpactPanel managedProductId={managedProductId} />
+      </div>
     </div>
   );
 }

@@ -113,6 +113,8 @@ export const FILTER_DEFINITIONS = [
   { param: "segment" },
   { param: "crmOrganizationId" },
   { param: "submission" },
+  { param: "ticket" },
+  { param: "ticketProject" },
 ] as const;
 
 export const FEEDBACK_SKELETON_HEADERS = [

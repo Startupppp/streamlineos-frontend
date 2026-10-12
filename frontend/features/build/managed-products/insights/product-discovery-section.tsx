@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useOpportunities, useEvidenceThemes, useOpportunitiesCompare, useOutcomeReviews } from "@/hooks/api/build/product-discovery";
 import {
   useCreateOutcomeReview,
@@ -70,6 +70,7 @@ export function ProductDiscoverySection({ managedProductId }: ProductDiscoverySe
     reviewsPager.cursor ? { cursor: reviewsPager.cursor } : undefined,
   );
 
+  const router = useRouter();
   const searchParams = useSearchParams();
   const [openOpportunityId, setOpenOpportunityId] = useState<number | null>(() => {
     const requested = Number(searchParams.get("opportunity"));
@@ -99,9 +100,17 @@ export function ProductDiscoverySection({ managedProductId }: ProductDiscoverySe
 
   const handleRowClick = useCallback((row: { id: number }) => {
     setOpenOpportunityId(row.id);
-  }, []);
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("opportunity", String(row.id));
+    router.replace(`?${params.toString()}`, { scroll: false });
+  }, [router, searchParams]);
 
-  const handlePaneClose = useCallback(() => setOpenOpportunityId(null), []);
+  const handlePaneClose = useCallback(() => {
+    setOpenOpportunityId(null);
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("opportunity");
+    router.replace(`?${params.toString()}`, { scroll: false });
+  }, [router, searchParams]);
 
   const handleToggleCompare = useCallback((id: number) => {
     setCompareSelected((prev) => {
@@ -207,6 +216,8 @@ export function ProductDiscoverySection({ managedProductId }: ProductDiscoverySe
         suggestedThemes={themesQuery.data?.suggestedThemes ?? []}
         period={themePeriod || "30d"}
         onPeriodChange={handleThemePeriodChange}
+        isError={themesQuery.isError}
+        onRetry={() => void themesQuery.refetch()}
       />
 
       <section aria-labelledby="opportunities-heading">

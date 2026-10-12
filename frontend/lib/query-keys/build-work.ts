@@ -336,6 +336,20 @@ export const buildWorkQueryKeys = {
       members: (managedProductId: number) =>
         [...base, "projects", "managed-products", "members", managedProductId] as const,
       facets: [...base, "projects", "managed-products", "facets"] as const,
+      productUpdates: (managedProductId: number, cursor?: string) =>
+        cursor === undefined
+          ? ([...base, "projects", "managed-products", managedProductId, "product-updates"] as const)
+          : ([...base, "projects", "managed-products", managedProductId, "product-updates", cursor] as const),
+      customerImpact: (managedProductId: number) =>
+        [...base, "projects", "managed-products", managedProductId, "customer-impact"] as const,
+      opportunityImpact: (managedProductId: number) =>
+        [...base, "projects", "managed-products", managedProductId, "opportunity-impact"] as const,
+      roadmapPreview: (managedProductId: number) =>
+        [...base, "projects", "managed-products", managedProductId, "roadmap-preview"] as const,
+      roadmapPublication: (managedProductId: number) =>
+        [...base, "projects", "managed-products", managedProductId, "roadmap-publication"] as const,
+      projectLinkedProducts: (projectId: number) =>
+        [...base, "projects", projectId, "linked-products"] as const,
     },
     workflow: {
       transitions: (projectId: number) =>

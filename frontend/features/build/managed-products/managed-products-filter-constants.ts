@@ -37,6 +37,9 @@ export const ARCHIVED_FILTER_OPTIONS = [
   { value: "true", label: "Archived only" },
 ];
 
+export const VIEW_OPTIONS_VALUES = ["table", "grid"] as const;
+export type ManagedProductViewMode = (typeof VIEW_OPTIONS_VALUES)[number];
+
 export const FILTER_DEFINITIONS = [
   {
     param: "status",

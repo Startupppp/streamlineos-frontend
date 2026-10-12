@@ -1,25 +1,26 @@
 "use client";
 
-import { AlertTriangle, ClipboardCheck, Target, TrendingUp } from "lucide-react";
+import { LayoutList, LayoutGrid, Table2 } from "lucide-react";
 import dynamic from "next/dynamic";
+import { useCallback, useTransition } from "react";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
+import { ProductGoalsStats } from "./product-goals-stats";
 import { TablePagination } from "@/components/ui/table-pagination";
 import { BuildPaginatedContent } from "@/features/build/shared/build-paginated-content";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyTargetIllustration } from "@/components/illustrations";
 import { GoalFormSheet } from "@/features/build/goals/goal-form-sheet";
 import { PageState } from "@/components/shared/page-state";
+import { Button } from "@/components/ui/button";
 import {
   PmSection,
-  PmStaggerList,
   CONTENT_FILL_PANEL,
 } from "@/components/pm-chrome";
 import { BuildHeaderActions } from "@/features/build/shared/build-header-actions";
 import { ShortcutHelpDialog } from "@/components/shared/shortcut-help-dialog";
 import { BuildOfflineNotice } from "@/features/build/shared/build-offline-notice";
-import { GoalCard } from "@/features/build/goals/goals-list-shared";
 import {
   GoalsListToolbar,
 } from "@/features/build/goals/goals-list-toolbar";
@@ -31,6 +32,11 @@ import {
 } from "./managed-product-detail-layout";
 import { ProductGoalsGridSkeleton } from "./managed-product-page-skeletons";
 import { LinkExistingGoalDialog } from "./link-existing-goal-dialog";
+import { ProductGoalsViewBody } from "./product-goals-view-body";
+import type { GoalListItem } from "@/hooks/api/goals";
+
+const VIEW_PARAM = "pg_view";
+type GoalsViewMode = "list" | "tree" | "table";
 
 const CheckInDialog = dynamic(
   () => import("@/features/build/goals/check-in-dialog").then((m) => ({ default: m.CheckInDialog })),
@@ -42,6 +48,27 @@ interface ProductGoalsPageProps {
 }
 
 export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const [, startTransition] = useTransition();
+  const rawView = searchParams.get(VIEW_PARAM);
+  const viewMode: GoalsViewMode =
+    rawView === "table" ? "table" : rawView === "list" ? "list" : "tree";
+
+  const handleViewModeChange = useCallback(
+    (mode: GoalsViewMode) => {
+      const next = new URLSearchParams(searchParams.toString());
+      if (mode === "tree") next.delete(VIEW_PARAM);
+      else next.set(VIEW_PARAM, mode);
+      const query = next.toString();
+      startTransition(() => {
+        router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+      });
+    },
+    [searchParams, pathname, router],
+  );
+
   const {
     listFilters,
     searchInputRef,
@@ -85,53 +112,58 @@ export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
 
   const checkInKeyResults = checkInGoalDetail?.keyResults ?? [];
 
+  const handleGoalRowClick = useCallback(
+    (goal: GoalListItem) => router.push(`/build/goals/${goal.id}`),
+    [router],
+  );
+
+  const handleTreeMode = useCallback(() => handleViewModeChange("tree"), [handleViewModeChange]);
+  const handleListMode = useCallback(() => handleViewModeChange("list"), [handleViewModeChange]);
+  const handleTableMode = useCallback(() => handleViewModeChange("table"), [handleViewModeChange]);
+
+  const viewToggle = (
+    <div className="flex items-center gap-1" role="group" aria-label="View mode">
+      <Button
+        type="button"
+        size="icon-sm"
+        variant={viewMode === "tree" ? "secondary" : "ghost"}
+        aria-label="Grouped view"
+        onClick={handleTreeMode}
+      >
+        <LayoutGrid className="h-4 w-4" />
+      </Button>
+      <Button
+        type="button"
+        size="icon-sm"
+        variant={viewMode === "list" ? "secondary" : "ghost"}
+        aria-label="List view"
+        onClick={handleListMode}
+      >
+        <LayoutList className="h-4 w-4" />
+      </Button>
+      <Button
+        type="button"
+        size="icon-sm"
+        variant={viewMode === "table" ? "secondary" : "ghost"}
+        aria-label="Table view"
+        onClick={handleTableMode}
+      >
+        <Table2 className="h-4 w-4" />
+      </Button>
+    </div>
+  );
+
   return (
     <PageWrapper
       title="Goals & OKRs"
       subtitle="Objectives linked to this product"
       contentClassName={MANAGED_PRODUCT_DETAIL_CONTENT_CLASS}
-      filters={<GoalsListToolbar listFilters={listFilters} searchInputRef={searchInputRef} />}
+      filters={<GoalsListToolbar listFilters={listFilters} searchInputRef={searchInputRef} trailing={viewToggle} />}
       actions={<BuildHeaderActions actions={createActions} />}
     >
       <ManagedProductDetailShell>
         <PmSection index={0} className="shrink-0">
-          <StatCardGrid cols={5}>
-            <StatCard
-              label="Total Goals"
-              value={stats?.total ?? 0}
-              icon={Target}
-              tone="default"
-              isLoading={isLoading}
-            />
-            <StatCard
-              label="On Track"
-              value={stats?.byStatus.on_track ?? 0}
-              icon={TrendingUp}
-              tone="emerald"
-              isLoading={isLoading}
-            />
-            <StatCard
-              label="At Risk"
-              value={stats?.atRisk ?? 0}
-              icon={AlertTriangle}
-              tone="amber"
-              isLoading={isLoading}
-            />
-            <StatCard
-              label="Avg Progress"
-              value={`${stats?.avgProgress ?? 0}%`}
-              icon={TrendingUp}
-              tone="default"
-              isLoading={isLoading}
-            />
-            <StatCard
-              label="Stale Check-ins"
-              value={stats?.staleCheckIns ?? 0}
-              icon={ClipboardCheck}
-              tone={(stats?.staleCheckIns ?? 0) > 0 ? "amber" : "default"}
-              isLoading={isLoading}
-            />
-          </StatCardGrid>
+          <ProductGoalsStats stats={stats} isLoading={isLoading} />
         </PmSection>
 
         <BuildOfflineNotice dataUpdatedAt={dataUpdatedAt} />
@@ -174,24 +206,17 @@ export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
                 />
               ) : null}
             >
-                <div className="flex flex-col gap-4">
-                  <p className="text-sm text-muted-foreground">
-                    <span className="font-medium tabular-nums text-foreground">{totalGoals}</span>
-                    {totalGoals === 1 ? " goal linked to this product" : " goals linked to this product"}
-                  </p>
-                  <PmStaggerList className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    {flatGoals.map((goal) => (
-                      <GoalCard
-                        key={goal.id}
-                        goal={goal}
-                        onEdit={canManage ? handleEditGoalCard : undefined}
-                        onDelete={canManage ? handleDeleteGoalCard : undefined}
-                        onUnlink={canManage ? handleUnlinkGoalCard : undefined}
-                        onCheckIn={handleCheckInGoalCard}
-                      />
-                    ))}
-                  </PmStaggerList>
-                </div>
+                <ProductGoalsViewBody
+                  viewMode={viewMode}
+                  flatGoals={flatGoals}
+                  totalGoals={totalGoals}
+                  canManage={canManage}
+                  onEdit={handleEditGoalCard}
+                  onDelete={handleDeleteGoalCard}
+                  onUnlink={handleUnlinkGoalCard}
+                  onCheckIn={handleCheckInGoalCard}
+                  onRowClick={handleGoalRowClick}
+                />
             </BuildPaginatedContent>
           </PageState>
         </ManagedProductDetailPrimarySection>

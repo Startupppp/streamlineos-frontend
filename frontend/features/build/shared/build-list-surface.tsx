@@ -8,6 +8,7 @@ import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import type { PermissionKey } from "@/lib/rbac/permissions";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 
 interface BuildListSurfaceCursorPagination {
   mode: "cursor";
@@ -67,6 +68,7 @@ export interface BuildListSurfaceProps<TRow> {
   loadingRows?: number;
   loadingHeaders?: readonly string[];
   className?: string;
+  gridMode?: boolean;
 }
 
 export function BuildListSurface<TRow>({
@@ -98,6 +100,7 @@ export function BuildListSurface<TRow>({
   loadingRows = 8,
   loadingHeaders,
   className,
+  gridMode = false,
 }: BuildListSurfaceProps<TRow>) {
   const resolution = usePageState({
     permission,
@@ -130,22 +133,43 @@ export function BuildListSurface<TRow>({
         compact={compact}
         className={className ?? CONTENT_FILL_PANEL}
       >
-        <DataTable<TRow>
-          data={rows}
-          columns={columns}
-          getRowKey={getRowKey}
-          onRowClick={onRowClick}
-          onRowContextMenu={onRowContextMenu}
-          mobileCard={mobileCard}
-          selection={selection}
-          pagination={pagination}
-          isLoading={isFetchingMore}
-          minWidth={minWidth}
-          footer={footer}
-          rowClassName={rowClassName}
-          sortState={sortState}
-          className={tableClassName ?? CONTENT_FILL_PANEL}
-        />
+        {gridMode && mobileCard ? (
+          <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+            <div className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2 lg:grid-cols-3">
+              {rows.map((row, index) => (
+                <div key={getRowKey(row, index)}>{mobileCard(row, index)}</div>
+              ))}
+            </div>
+            {pagination?.mode === "cursor" && (
+              <CursorPageControls
+                page={pagination.pageNumber}
+                hasNext={pagination.hasMore}
+                disabled={isFetchingMore}
+                onPrevious={pagination.onPrevious}
+                onNext={pagination.onNext}
+                pageSize={pagination.pageSize}
+                className="border-t px-4 py-2"
+              />
+            )}
+          </div>
+        ) : (
+          <DataTable<TRow>
+            data={rows}
+            columns={columns}
+            getRowKey={getRowKey}
+            onRowClick={onRowClick}
+            onRowContextMenu={onRowContextMenu}
+            mobileCard={mobileCard}
+            selection={selection}
+            pagination={pagination}
+            isLoading={isFetchingMore}
+            minWidth={minWidth}
+            footer={footer}
+            rowClassName={rowClassName}
+            sortState={sortState}
+            className={tableClassName ?? CONTENT_FILL_PANEL}
+          />
+        )}
       </PageState>
     </div>
   );

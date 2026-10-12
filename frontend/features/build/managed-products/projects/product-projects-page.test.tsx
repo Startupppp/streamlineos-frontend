@@ -1,6 +1,7 @@
 import React from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { ProductProjectsPage } from "./product-projects-page";
+import { PP_PREV_PARAM, STATUS_PARAM } from "./use-product-projects-page";
 
 jest.mock("next/navigation", () => ({
   useRouter: jest.fn(() => ({ replace: jest.fn(), push: jest.fn() })),
@@ -100,9 +101,11 @@ jest.mock("@/components/ui/data-table", () => ({
   DataTable: ({
     data,
     columns,
+    pagination,
   }: {
     data?: Array<Record<string, unknown>>;
     columns?: Array<{ key: string; cell?: (row: Record<string, unknown>) => React.ReactNode }>;
+    pagination?: { mode?: string; hasMore?: boolean; hasPrevious?: boolean; onNext?: () => void; onPrevious?: () => void };
   }) => (
     <div data-testid="data-table">
       {data?.map((row, i) => (
@@ -114,6 +117,8 @@ jest.mock("@/components/ui/data-table", () => ({
           ))}
         </div>
       ))}
+      {pagination?.hasPrevious && <button type="button" data-testid="prev-page" onClick={pagination.onPrevious}>Previous</button>}
+      {pagination?.hasMore && <button type="button" data-testid="next-page" onClick={pagination.onNext}>Next</button>}
     </div>
   ),
   DataTableSkeleton: () => <div data-testid="data-table-skeleton" />,
@@ -397,5 +402,70 @@ describe("ProductProjectsPage — contribution cell (BSN-PROJ-CONTRIBUTION)", ()
     });
     render(<ProductProjectsPage managedProductId={5} />);
     expect(screen.getByText("50%")).toBeInTheDocument();
+  });
+});
+
+describe("ProductProjectsPage — STATUS_PARAM export (BSN-PROJ-STATUS-PARAM)", () => {
+  it("STATUS_PARAM is pp_status so Lane L1 and other callers can import the constant by name", () => {
+    expect(STATUS_PARAM).toBe("pp_status");
+  });
+
+  it("an unknown pp_status value keeps isFiltered true so the filter chip remains visible", () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("pp_status=UNKNOWN_VALUE"));
+    render(<ProductProjectsPage managedProductId={5} />);
+    expect(screen.getByRole("button", { name: /Clear all/i })).toBeInTheDocument();
+  });
+
+  it("passes no status to the API when pp_status is an unrecognised value so the query is not poisoned", () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("pp_status=UNKNOWN_VALUE"));
+    render(<ProductProjectsPage managedProductId={5} />);
+    const [callParams] = mockUseManagedProductProjects.mock.calls[0] as [Record<string, unknown>];
+    expect(callParams).not.toHaveProperty("status");
+  });
+});
+
+describe("ProductProjectsPage — cursor history (BSN-PROJ-CURSOR-HISTORY)", () => {
+  it("PP_PREV_PARAM is pp_prev so the constant is importable", () => {
+    expect(PP_PREV_PARAM).toBe("pp_prev");
+  });
+
+  it("next-page encodes page1 sentinel in pp_prev so previous can recover the exact page (page1→page2)", () => {
+    mockUseManagedProductProjects.mockReturnValue({
+      ...EMPTY_RESULT,
+      data: { data: [], pagination: { hasMore: true, nextCursor: "cursor_p2", limit: 20 } },
+    });
+    render(<ProductProjectsPage managedProductId={5} />);
+    fireEvent.click(screen.getByTestId("next-page"));
+    const call = mockRouterReplace.mock.calls[0][0] as string;
+    const params = new URLSearchParams(call.includes("?") ? call.split("?")[1] : call);
+    expect(params.get("cursor")).toBe("cursor_p2");
+    expect(params.get("pp_prev")).toBe("0");
+  });
+
+  it("previous-page from page2 restores page1 (cursor cleared, pp_prev cleared) (BSN-PROJ-CURSOR-PREV-P1)", () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("cursor=cursor_p2&pp_prev=0"));
+    mockUseManagedProductProjects.mockReturnValue({
+      ...EMPTY_RESULT,
+      data: { data: [], pagination: { hasMore: true, nextCursor: "cursor_p3", limit: 20 } },
+    });
+    render(<ProductProjectsPage managedProductId={5} />);
+    fireEvent.click(screen.getByTestId("prev-page"));
+    const call = mockRouterReplace.mock.calls[0][0] as string;
+    expect(call).not.toContain("cursor=");
+    expect(call).not.toContain("pp_prev=");
+  });
+
+  it("previous-page from page3 restores page2 cursor, not page1 (BSN-PROJ-CURSOR-PREV-P2)", () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("cursor=cursor_p3&pp_prev=0%7Ccursor_p2"));
+    mockUseManagedProductProjects.mockReturnValue({
+      ...EMPTY_RESULT,
+      data: { data: [], pagination: { hasMore: false, nextCursor: null, limit: 20 } },
+    });
+    render(<ProductProjectsPage managedProductId={5} />);
+    fireEvent.click(screen.getByTestId("prev-page"));
+    const call = mockRouterReplace.mock.calls[0][0] as string;
+    const params = new URLSearchParams(call.includes("?") ? call.split("?")[1] : call);
+    expect(params.get("cursor")).toBe("cursor_p2");
+    expect(params.get("pp_prev")).toBe("0");
   });
 });

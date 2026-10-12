@@ -23,6 +23,7 @@ import { FeedbackPickList } from "./feedback-pick-list";
 interface MarkDuplicateDialogProps {
   managedProductId: number;
   submissionId: number;
+  expectedRevision?: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -38,6 +39,7 @@ function candidateId(row: { id: number }): number {
 export function MarkDuplicateDialog({
   managedProductId,
   submissionId,
+  expectedRevision,
   open,
   onOpenChange,
 }: MarkDuplicateDialogProps) {
@@ -75,7 +77,7 @@ export function MarkDuplicateDialog({
   const handleConfirm = useCallback(() => {
     if (selectedId === null) return;
     markDuplicate.mutate(
-      { submissionId, duplicateOfId: selectedId },
+      { submissionId, duplicateOfId: selectedId, expectedRevision },
       {
         onSuccess: () => {
           toast.success("Marked as duplicate");
@@ -86,7 +88,7 @@ export function MarkDuplicateDialog({
         onError: (err) => { toast.error(getErrorMessage(err)); },
       },
     );
-  }, [selectedId, submissionId, markDuplicate, onOpenChange]);
+  }, [selectedId, submissionId, expectedRevision, markDuplicate, onOpenChange]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

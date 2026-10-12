@@ -11,6 +11,9 @@ export const scheduleOutcomeReviewSchema = z.object({
   baseline: z.string().optional(),
   target: z.string().optional(),
   scheduledFor: z.string().optional(),
+  measureKind: z.enum(["self_reported", "measured"]).optional(),
+  metricPeriod: z.string().max(200).optional(),
+  sourceUrl: z.string().url("Enter a valid URL").max(2000).optional().or(z.literal("")),
 });
 
 export type ScheduleOutcomeReviewValues = z.infer<typeof scheduleOutcomeReviewSchema>;

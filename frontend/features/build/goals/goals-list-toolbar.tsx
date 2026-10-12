@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, type RefObject } from "react";
+import { useCallback, useMemo, type ReactNode, type RefObject } from "react";
 import { DatePicker } from "@/components/ui/date-picker";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
@@ -86,12 +86,14 @@ interface GoalsListToolbarProps {
   listFilters: BuildListFiltersState;
   ownerOptions?: readonly BuildFilterOption[];
   searchInputRef?: RefObject<HTMLInputElement | null>;
+  trailing?: ReactNode;
 }
 
 export function GoalsListToolbar({
   listFilters,
   ownerOptions,
   searchInputRef,
+  trailing,
 }: GoalsListToolbarProps) {
   const handleLevelChange = useCallback(
     (value: string) => listFilters.setValue("level", value),
@@ -240,6 +242,7 @@ export function GoalsListToolbar({
       }}
       filters={filters}
       onClearAll={listFilters.clearAll}
+      trailing={trailing}
     />
   );
 }

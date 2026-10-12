@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { DirtyStateProvider, useRegisterDirtyState } from "@/components/shared/dirty-state-context";
@@ -261,6 +262,7 @@ function ProductSettingsForm({ managedProductId }: ProductSettingsPageProps) {
 }
 
 export function ProductSettingsPage({ managedProductId }: ProductSettingsPageProps) {
+  const router = useRouter();
   const { value, setValue } = useBuildListFilters({
     withSearch: false,
     filters: SETTINGS_FILTER_DEFINITIONS,
@@ -270,12 +272,21 @@ export function ProductSettingsPage({ managedProductId }: ProductSettingsPagePro
     setValue("tab", next);
   }, [setValue]);
 
+  const handleBack = useCallback(() => {
+    if (window.history.length > 1) {
+      router.back();
+    } else {
+      router.push(`/build/managed-products/${managedProductId}`);
+    }
+  }, [router, managedProductId]);
+
   return (
     <DirtyStateProvider>
       <Tabs value={tab} onValueChange={handleTabChange} className="h-full min-h-0 min-w-0 flex-1">
         <PageWrapper
           title="Settings"
           subtitle="Configure this product"
+          onBack={handleBack}
           filters={
             <PageTabsToolbar
               tabs={

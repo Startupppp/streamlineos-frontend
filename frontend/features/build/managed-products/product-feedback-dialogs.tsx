@@ -7,6 +7,7 @@ import { CaptureSubmissionSheet } from "./feedback/capture-submission-sheet";
 import { FeedbackPane } from "./feedback/feedback-pane";
 import { FeedbucketCollectDialog } from "./feedback/feedbucket-collect-dialog";
 import { RouteToIntakeDialog } from "./feedback/route-to-intake-dialog";
+import { TicketDetailPane } from "@/features/build/ticket-details/ticket-detail-pane";
 import { resolveProductFeedbackSubmissionHref } from "./product-feedback-model";
 import type { SubmissionRow } from "./product-feedback-columns";
 import type { useProductFeedbackFilters } from "./use-product-feedback-filters";
@@ -39,7 +40,14 @@ export function ProductFeedbackDialogs({
 }: ProductFeedbackDialogsProps) {
   const router = useRouter();
   const requestLeave = useNavigationLeave();
-  const { listFilters, paneSubmissionId } = filterState;
+  const {
+    listFilters,
+    paneSubmissionId,
+    paneTicketId,
+    paneTicketProjectId,
+    handleOpenTicket,
+    handleCloseTicketPane,
+  } = filterState;
 
   const handleCloseFeedbackPane = useCallback(
     (open: boolean) => { if (!open) listFilters.setValue("submission", "all"); },
@@ -83,6 +91,18 @@ export function ProductFeedbackDialogs({
           open={paneSubmissionId !== null}
           onOpenChange={handleCloseFeedbackPane}
           onOpenDetail={paneDetailHref === null ? undefined : handleOpenPaneDetail}
+          onOpenTicket={handleOpenTicket}
+        />
+      )}
+      {paneTicketId !== null && paneTicketProjectId !== null && (
+        <TicketDetailPane
+          ticketId={paneTicketId}
+          projectId={paneTicketProjectId}
+          originHref={
+            paneSubmissionId !== null
+              ? `/build/managed-products/${managedProductId}/feedback?submission=${paneSubmissionId}`
+              : `/build/managed-products/${managedProductId}/feedback`
+          }
         />
       )}
       {intakeRouting.target ? (

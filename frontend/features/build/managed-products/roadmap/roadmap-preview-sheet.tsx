@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import Link from "next/link";
 import { ExternalLink } from "lucide-react";
-import { useRoadmapPublication } from "@/hooks/api/build/roadmap-public";
+import { useRoadmapPublication, useRoadmapPreview } from "@/hooks/api/build/roadmap-public";
 import {
   Sheet,
   SheetContent,
@@ -16,10 +16,9 @@ import {
   ROADMAP_HORIZON_COLUMNS,
   ROADMAP_STATUS_LABEL,
 } from "@/features/build/roadmap/roadmap-constants";
-import type { ScorableRoadmapItem } from "@/features/build/roadmap/roadmap-item-card";
 import { cn } from "@/lib/utils";
 import { statusToneClasses } from "@/lib/design-tokens";
-import type { RoadmapHorizon } from "@/types/projects";
+import type { PublicRoadmapItem, RoadmapHorizon } from "@/types/projects";
 import {
   joinReadableMeta,
   ROADMAP_HORIZON_CAPTION,
@@ -28,12 +27,11 @@ import {
 } from "../product-roadmap-model";
 
 interface RoadmapPreviewSheetProps {
-  items: ScorableRoadmapItem[];
   managedProductId: number;
   onClose: () => void;
 }
 
-function PreviewItem({ item }: { item: ScorableRoadmapItem }) {
+function PreviewItem({ item }: { item: PublicRoadmapItem }) {
   const detail = joinReadableMeta([
     ROADMAP_STATUS_LABEL[String(item.status)] ?? String(item.status),
     item.category,
@@ -58,16 +56,22 @@ function PreviewItem({ item }: { item: ScorableRoadmapItem }) {
   );
 }
 
-export function RoadmapPreviewSheet({ items, managedProductId, onClose }: RoadmapPreviewSheetProps) {
+export function RoadmapPreviewSheet({ managedProductId, onClose }: RoadmapPreviewSheetProps) {
   const { data: publication } = useRoadmapPublication();
+  const { data: publicBoard, isLoading } = useRoadmapPreview(managedProductId);
   const publicPath = publication?.path ? `${publication.path}?product=${String(managedProductId)}` : null;
-  const publicItems = useMemo(
-    () => items.filter((item) => item.isPublic),
-    [items],
-  );
+
+  const publicItems = useMemo(() => {
+    if (!publicBoard) return [];
+    return [
+      ...publicBoard.roadmap.planned,
+      ...publicBoard.roadmap.in_progress,
+      ...publicBoard.roadmap.completed,
+    ];
+  }, [publicBoard]);
 
   const grouped = useMemo(() => {
-    const map: Record<RoadmapHorizon, ScorableRoadmapItem[]> = { now: [], next: [], later: [] };
+    const map: Record<RoadmapHorizon, PublicRoadmapItem[]> = { now: [], next: [], later: [] };
     for (const item of publicItems) {
       map[item.horizon ?? "later"].push(item);
     }
@@ -84,7 +88,7 @@ export function RoadmapPreviewSheet({ items, managedProductId, onClose }: Roadma
       <SheetContent className="w-full gap-0 p-0 sm:max-w-lg">
         <SheetHeader className="gap-1 border-b px-6 py-4 text-left">
           <SheetTitle>Public Roadmap Preview</SheetTitle>
-          <SheetDescription>{countLabel}</SheetDescription>
+          {!isLoading ? <SheetDescription>{countLabel}</SheetDescription> : null}
           {publicPath ? (
             <Link
               href={publicPath}
@@ -100,7 +104,7 @@ export function RoadmapPreviewSheet({ items, managedProductId, onClose }: Roadma
           )}
         </SheetHeader>
         <SheetBody className="px-6 py-5">
-          {publicItems.length === 0 ? (
+          {isLoading ? null : publicItems.length === 0 ? (
             <div className="flex flex-col gap-1">
               <p className="text-sm font-medium text-foreground">Nothing to preview yet</p>
               <p className="text-sm text-pretty text-muted-foreground">

@@ -22,6 +22,13 @@ export interface ManagedProductFeedbackTrend {
   previous30d: number;
 }
 
+export interface ManagedProductGoalHealth {
+  total: number;
+  onTrack: number;
+  atRisk: number;
+  offTrack: number;
+}
+
 export interface ManagedProductSuccessMetric {
   label: string;
   target?: string;
@@ -59,6 +66,8 @@ export interface ManagedProduct {
   linkedProjectCount?: number;
   nextRelease?: ManagedProductNextRelease | null;
   feedbackTrend?: ManagedProductFeedbackTrend;
+  goalHealth?: ManagedProductGoalHealth | null;
+  sourceFreshness?: string | null;
 }
 
 export interface ManagedProductsPage {

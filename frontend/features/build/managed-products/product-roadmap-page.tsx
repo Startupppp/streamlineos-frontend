@@ -39,6 +39,7 @@ import {
 } from "./managed-product-page-skeletons";
 import { RoadmapBoardColumns } from "./roadmap/roadmap-board-columns";
 import { RoadmapTimelineView } from "./roadmap/roadmap-timeline-view";
+import { RoadmapListView } from "./roadmap/roadmap-list-view";
 import { RoadmapFiltersBar } from "./roadmap/roadmap-filters-bar";
 import { RoadmapPreviewSheet } from "./roadmap/roadmap-preview-sheet";
 import type { RoadmapHorizon } from "@/types/projects";
@@ -58,7 +59,8 @@ export function ProductRoadmapPage({ managedProductId }: ProductRoadmapPageProps
   const pathname = usePathname();
 
   const viewParam = searchParams.get("view");
-  const viewMode: RoadmapViewMode = viewParam === "timeline" ? "timeline" : "board";
+  const viewMode: RoadmapViewMode =
+    viewParam === "timeline" ? "timeline" : viewParam === "list" ? "list" : "board";
 
   const statusValue = listFilters.value("status");
   const horizonValue = listFilters.value("horizon");
@@ -69,6 +71,8 @@ export function ProductRoadmapPage({ managedProductId }: ProductRoadmapPageProps
   const teamIdValue = listFilters.value("teamId");
   const goalIdValue = listFilters.value("goalId");
   const segmentValue = listFilters.value("segment");
+  const customerVisibleValue = listFilters.value("customerVisible");
+  const evidenceStateValue = listFilters.value("evidenceState");
 
   const filters = useMemo(
     () => ({
@@ -87,9 +91,13 @@ export function ProductRoadmapPage({ managedProductId }: ProductRoadmapPageProps
       ...(confidenceMinValue && confidenceMinValue !== BUILD_FILTER_ALL ? { confidenceMin: Number(confidenceMinValue) } : {}),
       ...(targetFromValue && targetFromValue !== BUILD_FILTER_ALL ? { targetFrom: targetFromValue } : {}),
       ...(targetToValue && targetToValue !== BUILD_FILTER_ALL ? { targetTo: targetToValue } : {}),
+      ...(customerVisibleValue && customerVisibleValue !== BUILD_FILTER_ALL
+        ? { customerVisible: customerVisibleValue === "true" }
+        : {}),
+      ...(evidenceStateValue && evidenceStateValue !== BUILD_FILTER_ALL ? { evidenceState: evidenceStateValue } : {}),
       cursor: pager.cursor,
     }),
-    [managedProductId, statusValue, horizonValue, sortValue, teamIdValue, goalIdValue, segmentValue, confidenceMinValue, targetFromValue, targetToValue, listFilters.debouncedSearch, pager.cursor],
+    [managedProductId, statusValue, horizonValue, sortValue, teamIdValue, goalIdValue, segmentValue, confidenceMinValue, targetFromValue, targetToValue, customerVisibleValue, evidenceStateValue, listFilters.debouncedSearch, pager.cursor],
   );
 
   const { data, isLoading, isError, error, refetch } = useRoadmapItems(filters);
@@ -179,13 +187,14 @@ export function ProductRoadmapPage({ managedProductId }: ProductRoadmapPageProps
       title="Roadmap"
       subtitle="Product roadmap items"
       contentClassName={MANAGED_PRODUCT_DETAIL_CONTENT_CLASS}
-      noInternalScroll={viewMode === "board"}
+      noInternalScroll={viewMode === "board" || viewMode === "list"}
       actions={
         <div className="flex items-center gap-2">
           <Tabs value={viewMode} onValueChange={handleSetView}>
             <TabsList>
               <TabsTrigger value="board">Board</TabsTrigger>
               <TabsTrigger value="timeline">Timeline</TabsTrigger>
+              <TabsTrigger value="list">List</TabsTrigger>
             </TabsList>
           </Tabs>
           {canManage && resolution.kind !== "denied" ? (
@@ -231,6 +240,19 @@ export function ProductRoadmapPage({ managedProductId }: ProductRoadmapPageProps
                 />
                 <div className="shrink-0">{paginationFooter}</div>
               </>
+            ) : viewMode === "list" ? (
+              <RoadmapListView
+                items={allItems}
+                onEdit={handleEditItem}
+                pagination={{
+                  pageSize: 50,
+                  hasMore: hasNext,
+                  hasPrevious: pager.hasPrevious,
+                  pageNumber: pager.pageNumber,
+                  onNext: handleNext,
+                  onPrevious: handlePrev,
+                }}
+              />
             ) : (
               <BuildPaginatedContent
                 ariaLabel="Product roadmap items"
@@ -258,7 +280,7 @@ export function ProductRoadmapPage({ managedProductId }: ProductRoadmapPageProps
           onClose={handleCloseEdit}
         />
       ) : null}
-      {previewOpen ? <RoadmapPreviewSheet items={allItems} managedProductId={managedProductId} onClose={handleClosePreview} /> : null}
+      {previewOpen ? <RoadmapPreviewSheet managedProductId={managedProductId} onClose={handleClosePreview} /> : null}
 
       <ConfirmDialog
         open={!!deleteTarget}

@@ -57,7 +57,7 @@ export type { GoalDetail };
 
 export type KeyResult = GoalDetail["keyResults"][number];
 
-interface GoalStats {
+export interface GoalStats {
   total: number;
   byStatus: Record<GoalStatus, number>;
   avgProgress: number;

@@ -48,7 +48,7 @@ export function ManagedProductOverviewOutcomesCard({
         />
       ) : null}
       <dl className="grid grid-cols-1 sm:grid-cols-2 sm:gap-x-8">
-        <OverviewFact label="Goals linked">{goalsLinked}</OverviewFact>
+        <OverviewFact label="Goals linked" href={`/build/managed-products/${managedProductId}/goals`}>{goalsLinked}</OverviewFact>
         <OverviewFact label="Reviews scheduled">{outcomeReviews.scheduled}</OverviewFact>
         <OverviewFact label="Completed">{outcomeReviews.completed}</OverviewFact>
         <OverviewFact label="Met / not met">

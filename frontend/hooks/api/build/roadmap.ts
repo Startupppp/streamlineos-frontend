@@ -76,6 +76,8 @@ export interface RoadmapItemFilters {
   targetFrom?: string;
   targetTo?: string;
   segment?: string;
+  customerVisible?: boolean;
+  evidenceState?: string;
 }
 
 export interface CreateRoadmapItemInput {

@@ -71,6 +71,10 @@ const SCHEDULED_REVIEW: ReviewRow = {
   createdBy: null,
   createdAt: "2026-09-01T00:00:00Z",
   updatedAt: "2026-09-01T00:00:00Z",
+  measureKind: "self_reported",
+  metricPeriod: null,
+  sourceUrl: null,
+  measuredAt: null,
 };
 
 const noop = jest.fn();
@@ -153,6 +157,75 @@ describe("OutcomeReviewsSection — result required (BSN-OUTCOME-RESULT)", () =>
     );
 
     expect(screen.getByTestId("outcome-reviews-empty")).toBeInTheDocument();
+  });
+});
+
+describe("OutcomeReviewRow — measure kind and source fields (BSN-OUTCOME-MEASURE)", () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  it("shows a Measured badge when measureKind is measured so the row is visually distinct from self-reported", () => {
+    const review: ReviewRow = { ...SCHEDULED_REVIEW, id: 2, measureKind: "measured" };
+    render(
+      <OutcomeReviewsSection
+        managedProductId={10}
+        reviews={[review]}
+        isLoading={false}
+        onCreate={noop}
+        onComplete={noop}
+        onDelete={noop}
+        isCreating={false}
+        isUpdating={false}
+      />,
+    );
+    expect(screen.getByTestId("measure-kind-badge-2")).toHaveTextContent("Measured");
+  });
+
+  it("shows a source link when sourceUrl is set so users can drill through to the data", () => {
+    const review: ReviewRow = {
+      ...SCHEDULED_REVIEW,
+      id: 3,
+      measureKind: "measured",
+      sourceUrl: "https://example.com/data",
+    };
+    render(
+      <OutcomeReviewsSection
+        managedProductId={10}
+        reviews={[review]}
+        isLoading={false}
+        onCreate={noop}
+        onComplete={noop}
+        onDelete={noop}
+        isCreating={false}
+        isUpdating={false}
+      />,
+    );
+    const link = screen.getByTestId("source-url-link-3");
+    expect(link).toHaveAttribute("href", "https://example.com/data");
+    expect(link).toHaveAttribute("target", "_blank");
+  });
+
+  it("shows measuredAt date when the review has a measurement timestamp", () => {
+    const review: ReviewRow = {
+      ...SCHEDULED_REVIEW,
+      id: 4,
+      state: "completed",
+      result: "met",
+      measureKind: "measured",
+      measuredAt: "2026-03-15T00:00:00Z",
+    };
+    render(
+      <OutcomeReviewsSection
+        managedProductId={10}
+        reviews={[review]}
+        isLoading={false}
+        onCreate={noop}
+        onComplete={noop}
+        onDelete={noop}
+        isCreating={false}
+        isUpdating={false}
+      />,
+    );
+    expect(screen.getByTestId("measured-at-4")).toBeInTheDocument();
   });
 });
 

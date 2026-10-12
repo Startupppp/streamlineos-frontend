@@ -31,11 +31,32 @@ export const ROADMAP_CONFIDENCE_OPTS = [
   { value: "75", label: "≥ 75%" },
 ];
 
-export const ROADMAP_VIEW_OPTS = ["board", "timeline"] as const;
+export const ROADMAP_CUSTOMER_VISIBILITY_OPTS = [
+  { value: BUILD_FILTER_ALL, label: "Any visibility" },
+  { value: "true", label: "Customer visible" },
+  { value: "false", label: "Internal only" },
+] as const;
+
+export const ROADMAP_EVIDENCE_STATE_OPTS = [
+  { value: BUILD_FILTER_ALL, label: "Any evidence state" },
+  { value: "identified", label: "Identified" },
+  { value: "validating", label: "Validating" },
+  { value: "accepted", label: "Accepted" },
+  { value: "declined", label: "Declined" },
+  { value: "delivered", label: "Delivered" },
+  { value: "measured", label: "Measured" },
+] as const;
+
+export const ROADMAP_VIEW_OPTS = ["board", "timeline", "list"] as const;
 export type RoadmapViewMode = (typeof ROADMAP_VIEW_OPTS)[number];
 
 const HORIZON_VALUES: readonly string[] = ["now", "next", "later"];
-const STATUS_VALUES: readonly string[] = ["planned", "in_progress", "completed", "cancelled"];
+const STATUS_VALUES: readonly string[] = [
+  "planned",
+  "in_progress",
+  "completed",
+  "cancelled",
+];
 
 export function isRoadmapHorizon(v: string): v is RoadmapHorizon {
   return HORIZON_VALUES.includes(v);
@@ -58,9 +79,20 @@ export const ROADMAP_FILTER_DEFS = [
   { param: "teamId" },
   { param: "goalId" },
   { param: "segment" },
-  { param: "confidenceMin", options: ROADMAP_CONFIDENCE_OPTS.map((o) => o.value) },
+  {
+    param: "confidenceMin",
+    options: ROADMAP_CONFIDENCE_OPTS.map((o) => o.value),
+  },
   { param: "targetFrom" },
   { param: "targetTo" },
+  {
+    param: "customerVisible",
+    options: ROADMAP_CUSTOMER_VISIBILITY_OPTS.map((o) => o.value),
+  },
+  {
+    param: "evidenceState",
+    options: ROADMAP_EVIDENCE_STATE_OPTS.map((o) => o.value),
+  },
 ] as const;
 
 export const ROADMAP_HORIZON_TONE: Record<RoadmapHorizon, StatusTone> = {
@@ -93,6 +125,10 @@ export function roadmapVoteLabel(votes: number): string {
   return votes === 1 ? "1 vote" : `${votes} votes`;
 }
 
-export function joinReadableMeta(parts: Array<string | null | undefined>): string {
-  return parts.filter((part): part is string => Boolean(part && part.trim())).join(" · ");
+export function joinReadableMeta(
+  parts: Array<string | null | undefined>,
+): string {
+  return parts
+    .filter((part): part is string => Boolean(part && part.trim()))
+    .join(" · ");
 }

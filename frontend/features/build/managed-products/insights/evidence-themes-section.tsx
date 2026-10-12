@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Lightbulb, TrendingUp } from "lucide-react";
 import type { DiscoveryReviewsGetEvidenceThemesResponse } from "@/contracts/build-contracts.generated";
 import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
+import { ErrorState } from "@/components/shared/error-state";
 
 const PERIOD_OPTIONS = [
   { label: "Last 30 days", value: "30d" },
@@ -53,6 +54,8 @@ interface EvidenceThemesSectionProps {
   suggestedThemes: SuggestedTheme[];
   period: string;
   onPeriodChange: (value: string) => void;
+  isError?: boolean;
+  onRetry?: () => void;
 }
 
 export function EvidenceThemesSection({
@@ -61,6 +64,8 @@ export function EvidenceThemesSection({
   suggestedThemes,
   period,
   onPeriodChange,
+  isError,
+  onRetry,
 }: EvidenceThemesSectionProps) {
   const sortedThemes = useMemo(
     () => [...themes].sort((a, b) => b.count - a.count),
@@ -84,7 +89,11 @@ export function EvidenceThemesSection({
         />
       </div>
 
-      {sortedThemes.length > 0 && (
+      {isError && onRetry && (
+        <ErrorState title="Could not load evidence themes" onRetry={onRetry} compact />
+      )}
+
+      {!isError && sortedThemes.length > 0 && (
         <div className="overflow-x-auto rounded-xl border border-border bg-card shadow-sm">
           <table className="w-full min-w-[40rem] text-sm">
             <thead>
@@ -117,14 +126,14 @@ export function EvidenceThemesSection({
         </div>
       )}
 
-      {sortedThemes.length === 0 && (
+      {!isError && sortedThemes.length === 0 && (
         <div className="rounded-xl border border-dashed border-border bg-card px-4 py-6">
           <p className="text-sm font-medium text-foreground">No evidence themes</p>
           <p className="mt-1 text-sm text-muted-foreground">Nothing is grouped for this period.</p>
         </div>
       )}
 
-      {suggestedThemes.length > 0 && (
+      {!isError && suggestedThemes.length > 0 && (
         <div className="rounded-xl border border-border bg-muted/30 p-4 space-y-3">
           <div className="flex items-center gap-1.5">
             <Lightbulb className="size-4 text-status-warning-ink" aria-hidden />

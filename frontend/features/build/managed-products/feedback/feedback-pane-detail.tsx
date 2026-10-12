@@ -35,27 +35,25 @@ function FactRow({ label, children }: FactRowProps) {
 interface FeedbackPaneDetailProps {
   submission: FeedbucketSubmission;
   managedProductId: number;
-  canUpdate: boolean;
-  canManage: boolean;
   unmarkPending: boolean;
   onClassify: () => void;
   onDuplicate: () => void;
   onUnmark: () => void;
   onLinkOpp: () => void;
   onOpenDetail?: () => void;
+  onOpenTicket?: (ticketId: number, projectId: number) => void;
 }
 
 export function FeedbackPaneDetail({
   submission,
   managedProductId,
-  canUpdate,
-  canManage,
   unmarkPending,
   onClassify,
   onDuplicate,
   onUnmark,
   onLinkOpp,
   onOpenDetail,
+  onOpenTicket,
 }: FeedbackPaneDetailProps) {
   const consentDenied = submission.consentStatus === "denied";
   const reporter = consentDenied
@@ -98,6 +96,9 @@ export function FeedbackPaneDetail({
             <FactRow label="Page">{submission.pageUrl}</FactRow>
           ) : null}
           {reporter ? <FactRow label="From">{reporter}</FactRow> : null}
+          {submission.assignee ? (
+            <FactRow label="Owner">{submission.assignee.name}</FactRow>
+          ) : null}
           <FactRow label="Consent">
             <ConsentBadge status={submission.consentStatus} />
           </FactRow>
@@ -106,7 +107,32 @@ export function FeedbackPaneDetail({
               {formatShortDate(submission.consentRecordedAt)}
             </FactRow>
           ) : null}
-          {ticketTitle ? <FactRow label="Ticket">{ticketTitle}</FactRow> : null}
+          {submission.accountValueSnapshot ? (
+            <FactRow label="Account value">{submission.accountValueSnapshot}</FactRow>
+          ) : null}
+          {ticketTitle ? (
+            <FactRow label="Ticket">
+              {submission.linkedTicket?.projectId && submission.linkedTicket?.id && onOpenTicket ? (
+                <Button
+                  type="button"
+                  variant="link"
+                  className="h-auto p-0 text-sm font-normal text-primary hover:underline"
+                  onClick={() => onOpenTicket(submission.linkedTicket!.id, submission.linkedTicket!.projectId)}
+                >
+                  {ticketTitle}
+                </Button>
+              ) : submission.linkedTicket?.projectId && submission.linkedTicketKey ? (
+                <Link
+                  href={`/build/${submission.linkedTicket.projectId}/tickets/${submission.linkedTicketKey}`}
+                  className="text-primary hover:underline"
+                >
+                  {ticketTitle}
+                </Link>
+              ) : (
+                ticketTitle
+              )}
+            </FactRow>
+          ) : null}
         </dl>
 
         <div className="flex flex-col gap-2">
@@ -122,7 +148,15 @@ export function FeedbackPaneDetail({
               </p>
             ) : null}
           </div>
-          {canUpdate ? (
+          {submission.aiType && submission.aiModel ? (
+            <p className="text-xs text-muted-foreground" data-testid="ai-suggestion-label">
+              AI suggestion · model: {submission.aiModel}
+              {typeof submission.aiConfidence === "number"
+                ? ` · confidence: ${Math.round(submission.aiConfidence * 100)}%`
+                : ""}
+            </p>
+          ) : null}
+          {submission.allowedActions.includes("classify") ? (
             <Button
               type="button"
               variant="outline"
@@ -141,7 +175,7 @@ export function FeedbackPaneDetail({
             {submission.duplicateOfId ? (
               <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
                 <span>Marked as a duplicate of another submission.</span>
-                {canUpdate ? (
+                {submission.allowedActions.includes("unmarkDuplicate") ? (
                   <Button
                     type="button"
                     variant="ghost"
@@ -187,7 +221,7 @@ export function FeedbackPaneDetail({
       </div>
 
       <div className="flex shrink-0 flex-wrap gap-2 border-t border-border px-6 py-4">
-        {canUpdate && !submission.duplicateOfId ? (
+        {submission.allowedActions.includes("markDuplicate") ? (
           <Button
             type="button"
             variant="outline"
@@ -197,7 +231,7 @@ export function FeedbackPaneDetail({
             Mark duplicate
           </Button>
         ) : null}
-        {canManage ? (
+        {submission.allowedActions.includes("linkOpportunity") ? (
           <Button type="button" variant="outline" size="sm" onClick={onLinkOpp}>
             Link to opportunity
           </Button>

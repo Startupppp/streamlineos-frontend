@@ -3,7 +3,7 @@
 import { useState, useCallback, useMemo } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Plus } from "lucide-react";
+import { Plus, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { OutcomeReviewRow } from "./outcome-review-row";
 import {
@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { EntityFormDialog } from "@/components/shared/entity-form-dialog";
+import { DatePicker } from "@/components/ui/date-picker";
 import { FIELD_CONTROL_CLASS } from "@/components/ui/field-control";
 import { TablePagination } from "@/components/ui/table-pagination";
 import { useCan } from "@/hooks/api/access";
@@ -44,6 +45,11 @@ const RESULT_OPTIONS = [
   { label: "Inconclusive", value: "inconclusive" },
 ];
 
+const MEASURE_KIND_OPTIONS = [
+  { label: "Self-reported", value: "self_reported" },
+  { label: "Measured", value: "measured" },
+] as const;
+
 const completeSchema = z.object({
   actual: z.string().optional(),
   result: z.enum(["met", "partially_met", "not_met", "inconclusive"], {
@@ -51,6 +57,9 @@ const completeSchema = z.object({
   }),
   notes: z.string().optional(),
   version: z.number().int(),
+  measureKind: z.enum(["self_reported", "measured"]).optional(),
+  sourceUrl: z.string().url("Enter a valid URL").max(2000).optional().or(z.literal("")),
+  measuredAt: z.string().optional(),
 });
 
 type CompleteFormValues = z.infer<typeof completeSchema>;
@@ -101,6 +110,9 @@ function CompleteReviewDialog({
           result: values.result,
           notes: values.notes,
           version: values.version,
+          ...(values.measureKind ? { measureKind: values.measureKind } : {}),
+          ...(values.sourceUrl?.trim() ? { sourceUrl: values.sourceUrl } : {}),
+          ...(values.measuredAt?.trim() ? { measuredAt: values.measuredAt } : {}),
         })
       }
       isSubmitting={isSubmitting}
@@ -172,6 +184,71 @@ function CompleteReviewDialog({
                     rows={3}
                   />
                 </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="measureKind"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Measurement approach</FormLabel>
+                <Select
+                  value={field.value ?? "self_reported"}
+                  onValueChange={(v) => v && field.onChange(v)}
+                >
+                  <FormControl>
+                    <SelectTrigger
+                      className={FIELD_CONTROL_CLASS}
+                      data-testid="complete-measure-kind-select"
+                    >
+                      <SelectValue placeholder="Select approach" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {MEASURE_KIND_OPTIONS.map((o) => (
+                      <SelectItem key={o.value} value={o.value}>
+                        {o.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="sourceUrl"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Source URL (optional)</FormLabel>
+                <FormControl>
+                  <Input
+                    {...field}
+                    value={field.value ?? ""}
+                    className={FIELD_CONTROL_CLASS}
+                    placeholder="https://..."
+                    data-testid="complete-source-url-input"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="measuredAt"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Measured at (optional)</FormLabel>
+                <DatePicker
+                  id="measuredAt"
+                  value={field.value ?? ""}
+                  onChange={field.onChange}
+                  clearable
+                />
                 <FormMessage />
               </FormItem>
             )}

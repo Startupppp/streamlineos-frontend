@@ -205,18 +205,43 @@ export function ProductUpdatedCell({ product }: { product: ManagedProduct }) {
   );
 }
 
+export function ProductGoalHealthCell({ product }: { product: ManagedProduct }) {
+  const h = product.goalHealth;
+  if (!h || h.total === 0) return null;
+  const allOnTrack = h.onTrack === h.total;
+  const hasOffTrack = h.offTrack > 0;
+  return (
+    <span
+      className={cn(
+        "font-mono text-label tabular-nums",
+        allOnTrack
+          ? "text-status-success-ink-strong"
+          : hasOffTrack
+            ? "text-status-danger-ink-strong"
+            : h.atRisk > 0
+              ? "text-status-warning-ink-strong"
+              : "text-muted-foreground",
+      )}
+      title={`Goals: ${h.onTrack} on track, ${h.atRisk} at risk, ${h.offTrack} off track`}
+    >
+      {h.onTrack}/{h.total}
+    </span>
+  );
+}
+
 export function ProductMobileSignals({ product }: { product: ManagedProduct }) {
   const lifecycle = lifecycleLabel(product.lifecycle);
   const count = product.linkedProjectCount;
   const release = product.nextRelease?.name;
   const updated = formatRelativeTime(product.updatedAt);
+  const freshness = product.sourceFreshness ? formatRelativeTime(product.sourceFreshness) : null;
   const primary = [
     lifecycle,
     count === undefined ? "" : `${count} ${count === 1 ? "project" : "projects"}`,
     release ?? "",
   ].filter(Boolean);
 
-  if (primary.length === 0 && !product.feedbackTrend && !updated) return null;
+  if (primary.length === 0 && !product.feedbackTrend && !product.goalHealth && !updated) return null;
 
   return (
     <div className="flex min-w-0 flex-col gap-1">
@@ -226,7 +251,15 @@ export function ProductMobileSignals({ product }: { product: ManagedProduct }) {
         </p>
       ) : null}
       <div className="flex min-w-0 items-center gap-2">
+        {product.goalHealth && product.goalHealth.total > 0 ? (
+          <ProductGoalHealthCell product={product} />
+        ) : null}
         {product.feedbackTrend ? <ProductFeedbackCell product={product} /> : null}
+        {freshness ? (
+          <span className="text-label text-muted-foreground" title="Last feedback received">
+            {freshness}
+          </span>
+        ) : null}
         {updated ? (
           <time dateTime={product.updatedAt} className="text-label text-muted-foreground">
             {updated}

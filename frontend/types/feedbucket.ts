@@ -208,6 +208,7 @@ export interface ClassifySubmissionInput {
   segment?: string | null;
   sentiment?: FeedbucketSentiment | null;
   consentStatus?: FeedbucketConsentStatus;
+  expectedRevision?: string;
 }
 
 export interface FeedbucketSubmissionFacets {

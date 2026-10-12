@@ -128,7 +128,9 @@ export function ProductSettingsMembersSection({
         title="Remove this member?"
         description={
           removeTarget
-            ? `${memberDisplayName(removeTarget)} will lose access to this product.`
+            ? (data?.data ?? []).length === 1
+              ? `${memberDisplayName(removeTarget)} will lose access. Removing the last member leaves this product with no dedicated team.`
+              : `${memberDisplayName(removeTarget)} will lose access to this product.`
             : ""
         }
         confirmLabel="Remove"

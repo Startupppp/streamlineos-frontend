@@ -45,6 +45,11 @@ export function ManagedProductOverviewEvidenceCard({
 }: EvidenceCardProps) {
   const base = `/build/managed-products/${managedProductId}`;
   const themedPct = percentOf(evidence.themedCount, evidence.feedbackCount);
+  const last30dHref = useMemo(() => {
+    const to = new Date();
+    const from = new Date(to.getTime() - 30 * 24 * 60 * 60 * 1000);
+    return `${base}/feedback?from=${from.toISOString().slice(0, 10)}&to=${to.toISOString().slice(0, 10)}`;
+  }, [base]);
   const stateSegments = useMemo(
     () => Object.entries(evidence.opportunitiesByState).map(([state, count]) => ({
       id: state,
@@ -63,10 +68,11 @@ export function ManagedProductOverviewEvidenceCard({
       action={<OverviewSectionLink href={`${base}/feedback`}>View feedback</OverviewSectionLink>}
     >
       <dl>
-        <OverviewFact label="Total feedback">{evidence.feedbackCount}</OverviewFact>
-        <OverviewFact label="Last 30 days">{evidence.feedbackLast30d}</OverviewFact>
+        <OverviewFact label="Total feedback" href={`${base}/feedback`}>{evidence.feedbackCount}</OverviewFact>
+        <OverviewFact label="Last 30 days" href={last30dHref}>{evidence.feedbackLast30d}</OverviewFact>
         <OverviewFact label="Themed">{themedPct !== null ? `${themedPct}%` : "Unknown"}</OverviewFact>
         <OverviewFact label="Latest feedback">{freshnessLabel(evidence.latestFeedbackAt)}</OverviewFact>
+        <OverviewFact label="Opportunities" href={`${base}/insights`}>{evidence.opportunityCount}</OverviewFact>
       </dl>
 
       {stateSegments.length > 0 ? (

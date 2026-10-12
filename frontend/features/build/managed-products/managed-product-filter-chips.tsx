@@ -1,8 +1,10 @@
 "use client";
 
+import { useCallback } from "react";
 import { FilterChip } from "@/features/build/shared/filter-chip";
 import { BUILD_FILTER_ALL } from "@/features/build/shared/use-build-list-filters";
 import type { BuildListFiltersState } from "@/features/build/shared/use-build-list-filters";
+import { LIFECYCLE_FILTER_OPTIONS, HEALTH_FILTER_OPTIONS } from "./managed-products-filter-constants";
 
 interface ActiveFilter {
   id: string;
@@ -14,37 +16,41 @@ interface ActiveFilter {
 interface ManagedProductFilterChipsProps {
   listFilters: BuildListFiltersState;
   statusValue: string;
-  lifecycleValue: string;
-  healthValue: string;
-  teamIdValue: string;
-  ownerIdValue: string;
-  segmentValue: string;
-  tagValue: string;
+  lifecycleValues: string[];
+  healthValues: string[];
+  teamIdValues: string[];
+  ownerIdValues: string[];
+  segmentValues: string[];
+  tagValues: string[];
   linkedProjectIdValue: string;
   archivedValue: string;
   ownerOptions: { value: string; label: string }[];
   teamOptions: { value: string; label: string }[];
   linkedProjectOptions: { value: string; label: string }[];
   onClearStatus: (v: string) => void;
-  onClearLifecycle: (v: string) => void;
-  onClearHealth: (v: string) => void;
-  onClearTeam: (v: string) => void;
-  onClearOwner: (v: string) => void;
-  onClearSegment: (v: string) => void;
-  onClearTag: (v: string) => void;
+  onClearLifecycle: (values: string[]) => void;
+  onClearHealth: (values: string[]) => void;
+  onClearTeam: (values: string[]) => void;
+  onClearOwner: (values: string[]) => void;
+  onClearSegment: (values: string[]) => void;
+  onClearTag: (values: string[]) => void;
   onClearLinkedProject: (v: string) => void;
   onClearArchived: (v: string) => void;
+}
+
+function removeValue(values: string[], toRemove: string): string[] {
+  return values.filter((v) => v !== toRemove);
 }
 
 export function ManagedProductFilterChips({
   listFilters,
   statusValue,
-  lifecycleValue,
-  healthValue,
-  teamIdValue,
-  ownerIdValue,
-  segmentValue,
-  tagValue,
+  lifecycleValues,
+  healthValues,
+  teamIdValues,
+  ownerIdValues,
+  segmentValues,
+  tagValues,
   linkedProjectIdValue,
   archivedValue,
   ownerOptions,
@@ -71,59 +77,61 @@ export function ManagedProductFilterChips({
     });
   }
 
-  if (lifecycleValue && lifecycleValue !== BUILD_FILTER_ALL) {
+  for (const lc of lifecycleValues) {
+    const label = LIFECYCLE_FILTER_OPTIONS.find((o) => o.value === lc)?.label ?? lc;
     chips.push({
-      id: "lifecycle",
+      id: `lifecycle:${lc}`,
       label: "Lifecycle",
-      value: lifecycleValue,
-      onRemove: () => onClearLifecycle(BUILD_FILTER_ALL),
+      value: label,
+      onRemove: () => onClearLifecycle(removeValue(lifecycleValues, lc)),
     });
   }
 
-  if (healthValue && healthValue !== BUILD_FILTER_ALL) {
+  for (const h of healthValues) {
+    const label = HEALTH_FILTER_OPTIONS.find((o) => o.value === h)?.label ?? h.replace(/_/g, " ");
     chips.push({
-      id: "health",
+      id: `health:${h}`,
       label: "Health",
-      value: healthValue.replace(/_/g, " "),
-      onRemove: () => onClearHealth(BUILD_FILTER_ALL),
+      value: label,
+      onRemove: () => onClearHealth(removeValue(healthValues, h)),
     });
   }
 
-  if (teamIdValue && teamIdValue !== BUILD_FILTER_ALL) {
-    const teamLabel = teamOptions.find((t) => t.value === teamIdValue)?.label ?? teamIdValue;
+  for (const tid of teamIdValues) {
+    const teamLabel = teamOptions.find((t) => t.value === tid)?.label ?? tid;
     chips.push({
-      id: "team",
+      id: `team:${tid}`,
       label: "Team",
       value: teamLabel,
-      onRemove: () => onClearTeam(BUILD_FILTER_ALL),
+      onRemove: () => onClearTeam(removeValue(teamIdValues, tid)),
     });
   }
 
-  if (ownerIdValue && ownerIdValue !== BUILD_FILTER_ALL) {
-    const ownerLabel = ownerOptions.find((o) => o.value === ownerIdValue)?.label ?? ownerIdValue;
+  for (const oid of ownerIdValues) {
+    const ownerLabel = ownerOptions.find((o) => o.value === oid)?.label ?? oid;
     chips.push({
-      id: "owner",
+      id: `owner:${oid}`,
       label: "Owner",
       value: ownerLabel,
-      onRemove: () => onClearOwner(BUILD_FILTER_ALL),
+      onRemove: () => onClearOwner(removeValue(ownerIdValues, oid)),
     });
   }
 
-  if (segmentValue && segmentValue !== BUILD_FILTER_ALL) {
+  for (const seg of segmentValues) {
     chips.push({
-      id: "segment",
+      id: `segment:${seg}`,
       label: "Segment",
-      value: segmentValue,
-      onRemove: () => onClearSegment(BUILD_FILTER_ALL),
+      value: seg,
+      onRemove: () => onClearSegment(removeValue(segmentValues, seg)),
     });
   }
 
-  if (tagValue && tagValue !== BUILD_FILTER_ALL) {
+  for (const t of tagValues) {
     chips.push({
-      id: "tag",
+      id: `tag:${t}`,
       label: "Tag",
-      value: tagValue,
-      onRemove: () => onClearTag(BUILD_FILTER_ALL),
+      value: t,
+      onRemove: () => onClearTag(removeValue(tagValues, t)),
     });
   }
 
@@ -171,4 +179,46 @@ export function ManagedProductFilterChips({
       )}
     </div>
   );
+}
+
+export function useChipHandlers(listFilters: BuildListFiltersState) {
+  const handleClearStatus = useCallback((v: string) => listFilters.setValue("status", v), [listFilters]);
+  const handleClearLifecycle = useCallback(
+    (values: string[]) => listFilters.setValue("lifecycle", values.length > 0 ? values.join(",") : BUILD_FILTER_ALL),
+    [listFilters],
+  );
+  const handleClearHealth = useCallback(
+    (values: string[]) => listFilters.setValue("health", values.length > 0 ? values.join(",") : BUILD_FILTER_ALL),
+    [listFilters],
+  );
+  const handleClearTeam = useCallback(
+    (values: string[]) => listFilters.setValue("teamId", values.length > 0 ? values.join(",") : BUILD_FILTER_ALL),
+    [listFilters],
+  );
+  const handleClearOwner = useCallback(
+    (values: string[]) => listFilters.setValue("ownerId", values.length > 0 ? values.join(",") : BUILD_FILTER_ALL),
+    [listFilters],
+  );
+  const handleClearSegment = useCallback(
+    (values: string[]) => listFilters.setValue("segment", values.length > 0 ? values.join(",") : BUILD_FILTER_ALL),
+    [listFilters],
+  );
+  const handleClearTag = useCallback(
+    (values: string[]) => listFilters.setValue("tag", values.length > 0 ? values.join(",") : BUILD_FILTER_ALL),
+    [listFilters],
+  );
+  const handleClearLinkedProject = useCallback((v: string) => listFilters.setValue("linkedProjectId", v), [listFilters]);
+  const handleClearArchived = useCallback((v: string) => listFilters.setValue("archived", v), [listFilters]);
+
+  return {
+    handleClearStatus,
+    handleClearLifecycle,
+    handleClearHealth,
+    handleClearTeam,
+    handleClearOwner,
+    handleClearSegment,
+    handleClearTag,
+    handleClearLinkedProject,
+    handleClearArchived,
+  };
 }

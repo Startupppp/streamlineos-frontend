@@ -26,12 +26,14 @@ interface LinkExistingProjectDialogProps {
   managedProductId: number;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onPreviewProject?: (project: ProjectListItem) => void;
 }
 
 export function LinkExistingProjectDialog({
   managedProductId,
   open,
   onOpenChange,
+  onPreviewProject,
 }: LinkExistingProjectDialogProps) {
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<ProjectListItem | null>(null);
@@ -70,6 +72,11 @@ export function LinkExistingProjectDialog({
 
   const handleLink = () => {
     if (!selected || mutation.isPending) return;
+    if (onPreviewProject) {
+      onPreviewProject(selected);
+      onOpenChange(false);
+      return;
+    }
     mutation.mutate(
       { project: selected, managedProductId },
       {

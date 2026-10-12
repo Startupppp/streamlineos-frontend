@@ -1,9 +1,13 @@
 "use client";
 
 import { useCallback } from "react";
+import { LayoutGrid, List } from "lucide-react";
+import { BUILD_FILTER_ALL } from "@/features/build/shared/use-build-list-filters";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
+import { BuildMultiFilterSelect } from "@/features/build/shared/build-multi-filter-select";
 import type { BuildListFiltersState } from "@/features/build/shared/use-build-list-filters";
+import { ViewToggle, type ViewOption } from "@/components/ui/view-toggle";
 import { ManagedProductFilterChips } from "./managed-product-filter-chips";
 import {
   STATUS_OPTIONS,
@@ -11,7 +15,13 @@ import {
   LIFECYCLE_FILTER_OPTIONS,
   HEALTH_FILTER_OPTIONS,
   ARCHIVED_FILTER_OPTIONS,
+  type ManagedProductViewMode,
 } from "./managed-products-filter-constants";
+
+const MANAGED_PRODUCTS_VIEW_OPTIONS: ViewOption<ManagedProductViewMode>[] = [
+  { value: "table", icon: List, label: "Table view" },
+  { value: "grid", icon: LayoutGrid, label: "Grid view" },
+];
 
 interface ManagedProductsToolbarProps {
   listFilters: BuildListFiltersState;
@@ -21,6 +31,8 @@ interface ManagedProductsToolbarProps {
   tagOptions: { value: string; label: string }[];
   linkedProjectOptions: { value: string; label: string }[];
   searchInputRef: React.RefObject<HTMLInputElement | null>;
+  viewMode: ManagedProductViewMode;
+  onViewModeChange: (mode: ManagedProductViewMode) => void;
 }
 
 export function ManagedProductsToolbar({
@@ -31,6 +43,8 @@ export function ManagedProductsToolbar({
   tagOptions,
   linkedProjectOptions,
   searchInputRef,
+  viewMode,
+  onViewModeChange,
 }: ManagedProductsToolbarProps) {
   const statusValue = listFilters.value("status");
   const sortValue = listFilters.value("sort");
@@ -43,6 +57,13 @@ export function ManagedProductsToolbar({
   const linkedProjectIdValue = listFilters.value("linkedProjectId");
   const archivedValue = listFilters.value("archived");
 
+  const lifecycleValues = lifecycleValue && lifecycleValue !== BUILD_FILTER_ALL ? lifecycleValue.split(",") : [];
+  const healthValues = healthValue && healthValue !== BUILD_FILTER_ALL ? healthValue.split(",") : [];
+  const teamIdValues = teamIdValue && teamIdValue !== BUILD_FILTER_ALL ? teamIdValue.split(",") : [];
+  const ownerIdValues = ownerIdValue && ownerIdValue !== BUILD_FILTER_ALL ? ownerIdValue.split(",") : [];
+  const segmentValues = segmentValue && segmentValue !== BUILD_FILTER_ALL ? segmentValue.split(",") : [];
+  const tagValues = tagValue && tagValue !== BUILD_FILTER_ALL ? tagValue.split(",") : [];
+
   const handleStatusChange = useCallback(
     (value: string) => listFilters.setValue("status", value),
     [listFilters],
@@ -52,27 +73,27 @@ export function ManagedProductsToolbar({
     [listFilters],
   );
   const handleLifecycleChange = useCallback(
-    (value: string) => listFilters.setValue("lifecycle", value),
+    (values: string[]) => listFilters.setValue("lifecycle", values.length > 0 ? values.join(",") : BUILD_FILTER_ALL),
     [listFilters],
   );
   const handleHealthChange = useCallback(
-    (value: string) => listFilters.setValue("health", value),
+    (values: string[]) => listFilters.setValue("health", values.length > 0 ? values.join(",") : BUILD_FILTER_ALL),
     [listFilters],
   );
   const handleTeamChange = useCallback(
-    (value: string) => listFilters.setValue("teamId", value),
+    (values: string[]) => listFilters.setValue("teamId", values.length > 0 ? values.join(",") : BUILD_FILTER_ALL),
     [listFilters],
   );
   const handleOwnerChange = useCallback(
-    (value: string) => listFilters.setValue("ownerId", value),
+    (values: string[]) => listFilters.setValue("ownerId", values.length > 0 ? values.join(",") : BUILD_FILTER_ALL),
     [listFilters],
   );
   const handleSegmentChange = useCallback(
-    (value: string) => listFilters.setValue("segment", value),
+    (values: string[]) => listFilters.setValue("segment", values.length > 0 ? values.join(",") : BUILD_FILTER_ALL),
     [listFilters],
   );
   const handleTagChange = useCallback(
-    (value: string) => listFilters.setValue("tag", value),
+    (values: string[]) => listFilters.setValue("tag", values.length > 0 ? values.join(",") : BUILD_FILTER_ALL),
     [listFilters],
   );
   const handleLinkedProjectChange = useCallback(
@@ -115,11 +136,11 @@ export function ManagedProductsToolbar({
             label: "Lifecycle",
             active: listFilters.isActive("lifecycle"),
             control: (
-              <BuildFilterSelect
+              <BuildMultiFilterSelect
                 label="Lifecycle"
-                value={lifecycleValue}
-                onValueChange={handleLifecycleChange}
-                options={LIFECYCLE_FILTER_OPTIONS}
+                values={lifecycleValues}
+                onValuesChange={handleLifecycleChange}
+                options={LIFECYCLE_FILTER_OPTIONS.filter((o) => o.value !== BUILD_FILTER_ALL)}
               />
             ),
           },
@@ -128,11 +149,11 @@ export function ManagedProductsToolbar({
             label: "Health",
             active: listFilters.isActive("health"),
             control: (
-              <BuildFilterSelect
+              <BuildMultiFilterSelect
                 label="Health"
-                value={healthValue}
-                onValueChange={handleHealthChange}
-                options={HEALTH_FILTER_OPTIONS}
+                values={healthValues}
+                onValuesChange={handleHealthChange}
+                options={HEALTH_FILTER_OPTIONS.filter((o) => o.value !== BUILD_FILTER_ALL)}
               />
             ),
           },
@@ -141,10 +162,10 @@ export function ManagedProductsToolbar({
             label: "Team",
             active: listFilters.isActive("teamId"),
             control: (
-              <BuildFilterSelect
+              <BuildMultiFilterSelect
                 label="Team"
-                value={teamIdValue}
-                onValueChange={handleTeamChange}
+                values={teamIdValues}
+                onValuesChange={handleTeamChange}
                 options={teamOptions}
               />
             ),
@@ -154,10 +175,10 @@ export function ManagedProductsToolbar({
             label: "Owner",
             active: listFilters.isActive("ownerId"),
             control: (
-              <BuildFilterSelect
+              <BuildMultiFilterSelect
                 label="Owner"
-                value={ownerIdValue}
-                onValueChange={handleOwnerChange}
+                values={ownerIdValues}
+                onValuesChange={handleOwnerChange}
                 options={ownerOptions}
               />
             ),
@@ -167,10 +188,10 @@ export function ManagedProductsToolbar({
             label: "Segment",
             active: listFilters.isActive("segment"),
             control: (
-              <BuildFilterSelect
+              <BuildMultiFilterSelect
                 label="Segment"
-                value={segmentValue}
-                onValueChange={handleSegmentChange}
+                values={segmentValues}
+                onValuesChange={handleSegmentChange}
                 options={segmentOptions}
               />
             ),
@@ -180,10 +201,10 @@ export function ManagedProductsToolbar({
             label: "Tag",
             active: listFilters.isActive("tag"),
             control: (
-              <BuildFilterSelect
+              <BuildMultiFilterSelect
                 label="Tag"
-                value={tagValue}
-                onValueChange={handleTagChange}
+                values={tagValues}
+                onValuesChange={handleTagChange}
                 options={tagOptions}
               />
             ),
@@ -229,16 +250,23 @@ export function ManagedProductsToolbar({
           },
         ]}
         onClearAll={listFilters.clearAll}
+        trailing={
+          <ViewToggle
+            value={viewMode}
+            options={MANAGED_PRODUCTS_VIEW_OPTIONS}
+            onChange={onViewModeChange}
+          />
+        }
       />
       <ManagedProductFilterChips
         listFilters={listFilters}
         statusValue={statusValue}
-        lifecycleValue={lifecycleValue}
-        healthValue={healthValue}
-        teamIdValue={teamIdValue}
-        ownerIdValue={ownerIdValue}
-        segmentValue={segmentValue}
-        tagValue={tagValue}
+        lifecycleValues={lifecycleValues}
+        healthValues={healthValues}
+        teamIdValues={teamIdValues}
+        ownerIdValues={ownerIdValues}
+        segmentValues={segmentValues}
+        tagValues={tagValues}
         linkedProjectIdValue={linkedProjectIdValue}
         archivedValue={archivedValue}
         ownerOptions={ownerOptions}

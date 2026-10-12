@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
 import { useManagedProducts } from "@/hooks/api/build/managed-products";
 import { useCan } from "@/hooks/api/access";
@@ -11,7 +11,7 @@ import {
 } from "@/features/build/shared/use-build-list-filters";
 import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
 import { buildManagedProductColumns } from "./managed-product-table-columns";
-import { PAGE_SIZE, FILTER_DEFINITIONS } from "./managed-products-filter-constants";
+import { PAGE_SIZE, FILTER_DEFINITIONS, type ManagedProductViewMode } from "./managed-products-filter-constants";
 import { useManagedProductFilterOptions } from "./use-managed-product-filter-options";
 import { useManagedProductMutations } from "./use-managed-product-mutations";
 
@@ -26,8 +26,22 @@ function trimmedText(value: string | undefined): string | undefined {
   return trimmed || undefined;
 }
 
+function validMultiTeamId(value: string | undefined): string | undefined {
+  if (!value || value === BUILD_FILTER_ALL) return undefined;
+  const valid = value.split(",").map((v) => v.trim()).filter((v) => /^\d+$/.test(v) && Number(v) > 0);
+  return valid.length > 0 ? valid.join(",") : undefined;
+}
+
+function validMultiText(value: string | undefined): string | undefined {
+  if (!value || value === BUILD_FILTER_ALL) return undefined;
+  const valid = value.split(",").map((v) => v.trim()).filter(Boolean);
+  return valid.length > 0 ? valid.join(",") : undefined;
+}
+
 export function useManagedProductsPage() {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const searchInputRef = useRef<HTMLInputElement | null>(null);
   const canCreate = useCan("build:managed-products:create");
   const canUpdate = useCan("build:managed-products:update");
@@ -55,13 +69,19 @@ export function useManagedProductsPage() {
   const tagValue = listFilters.value("tag");
   const linkedProjectIdValue = listFilters.value("linkedProjectId");
   const archivedValue = listFilters.value("archived");
+  const viewMode = listFilters.value("view") as ManagedProductViewMode;
+
+  const handleViewModeChange = useCallback(
+    (mode: ManagedProductViewMode) => listFilters.setValue("view", mode),
+    [listFilters],
+  );
 
   const { data, isLoading, isError, error, refetch, dataUpdatedAt } = useManagedProducts({
     cursor,
     limit: PAGE_SIZE,
     status: statusValue !== BUILD_FILTER_ALL ? statusValue : undefined,
     search: listFilters.debouncedSearch.trim() || undefined,
-    ownerId: trimmedText(ownerIdValue),
+    ownerId: ownerIdValue && ownerIdValue !== BUILD_FILTER_ALL ? ownerIdValue.trim() || undefined : undefined,
     sort:
       sortValue &&
       sortValue !== BUILD_FILTER_ALL &&
@@ -70,9 +90,9 @@ export function useManagedProductsPage() {
         : undefined,
     lifecycle: lifecycleValue !== BUILD_FILTER_ALL ? lifecycleValue : undefined,
     health: healthValue !== BUILD_FILTER_ALL ? healthValue : undefined,
-    teamId: positiveId(teamIdValue),
-    segment: trimmedText(segmentValue),
-    tag: trimmedText(tagValue),
+    teamId: validMultiTeamId(teamIdValue),
+    segment: validMultiText(segmentValue),
+    tag: validMultiText(tagValue),
     linkedProjectId: positiveId(linkedProjectIdValue),
     archived: archivedValue === "true" ? true : undefined,
   });
@@ -211,6 +231,7 @@ export function useManagedProductsPage() {
     ownerOf,
     selectedIds,
     searchInputRef,
+    viewMode,
     handleCreate,
     handleDeleteConfirm,
     handleArchiveConfirm,
@@ -224,6 +245,7 @@ export function useManagedProductsPage() {
     handleEditRow,
     handleDeleteRow,
     handleArchiveRow,
+    handleViewModeChange,
     columns,
   };
 }

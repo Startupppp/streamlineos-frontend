@@ -17,7 +17,8 @@ export { type LinkedProjectRow };
 
 export const PAGE_SIZE = 20;
 const CURSOR_PARAM = "cursor";
-const STATUS_PARAM = "pp_status";
+export const PP_PREV_PARAM = "pp_prev";
+export const STATUS_PARAM = "pp_status";
 const HEALTH_PARAM = "pp_health";
 const OWNER_PARAM = "pp_owner";
 const TEAM_PARAM = "pp_team";
@@ -80,6 +81,7 @@ export function useProductProjectsPage({ managedProductId }: UseProductProjectsP
   const dateToValue = searchParams.get(DATE_TO_PARAM) ?? "";
   const searchValue = searchParams.get(SEARCH_PARAM) ?? "";
   const cursorValue = searchParams.get(CURSOR_PARAM) ?? undefined;
+  const prevParamValue = searchParams.get(PP_PREV_PARAM);
 
   const debouncedSearch = useDebouncedValue(searchValue, 300);
 
@@ -119,12 +121,12 @@ export function useProductProjectsPage({ managedProductId }: UseProductProjectsP
     [managedProductId, cursorValue, statusValue, healthValue, ownerValue, teamValue, clientValue, contribRange, dateFromValue, dateToValue, debouncedSearch],
   );
 
-  const { data, isLoading, isError, error, refetch } = useManagedProductProjects(params);
+  const { data, isLoading, isError, error, refetch, dataUpdatedAt } = useManagedProductProjects(params);
 
   const rows = useMemo(() => data?.data ?? [], [data]);
   const hasMore = data?.pagination.hasMore ?? false;
   const nextCursor = data?.pagination.nextCursor ?? null;
-  const hasPrevious = Boolean(cursorValue);
+  const hasPrevious = Boolean(prevParamValue);
 
   const resolution = usePageState({
     permission: "build:managed-products:view",
@@ -143,7 +145,10 @@ export function useProductProjectsPage({ managedProductId }: UseProductProjectsP
         if (value === null || value === "") next.delete(key);
         else next.set(key, value);
       }
-      if (resetCursor) next.delete(CURSOR_PARAM);
+      if (resetCursor) {
+        next.delete(CURSOR_PARAM);
+        next.delete(PP_PREV_PARAM);
+      }
       const query = next.toString();
       startTransition(() => {
         router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
@@ -199,7 +204,7 @@ export function useProductProjectsPage({ managedProductId }: UseProductProjectsP
 
   const handleClearFilters = useCallback(() => {
     const next = new URLSearchParams(searchParams.toString());
-    for (const p of [STATUS_PARAM, HEALTH_PARAM, OWNER_PARAM, TEAM_PARAM, CLIENT_PARAM, CONTRIB_PARAM, DATE_FROM_PARAM, DATE_TO_PARAM, SEARCH_PARAM, CURSOR_PARAM]) {
+    for (const p of [STATUS_PARAM, HEALTH_PARAM, OWNER_PARAM, TEAM_PARAM, CLIENT_PARAM, CONTRIB_PARAM, DATE_FROM_PARAM, DATE_TO_PARAM, SEARCH_PARAM, CURSOR_PARAM, PP_PREV_PARAM]) {
       next.delete(p);
     }
     const query = next.toString();
@@ -209,12 +214,20 @@ export function useProductProjectsPage({ managedProductId }: UseProductProjectsP
   }, [searchParams, pathname, router]);
 
   const handleNextPage = useCallback(() => {
-    if (nextCursor) writeParams({ [CURSOR_PARAM]: nextCursor });
-  }, [nextCursor, writeParams]);
+    if (!nextCursor) return;
+    const stack = prevParamValue ? prevParamValue.split("|") : [];
+    stack.push(cursorValue ?? "0");
+    writeParams({ [CURSOR_PARAM]: nextCursor, [PP_PREV_PARAM]: stack.join("|") });
+  }, [nextCursor, cursorValue, prevParamValue, writeParams]);
 
   const handlePreviousPage = useCallback(() => {
-    writeParams({ [CURSOR_PARAM]: null });
-  }, [writeParams]);
+    const stack = prevParamValue ? prevParamValue.split("|") : [];
+    const goToRaw = stack.pop() ?? "0";
+    writeParams({
+      [CURSOR_PARAM]: goToRaw === "0" ? null : goToRaw,
+      [PP_PREV_PARAM]: stack.length > 0 ? stack.join("|") : null,
+    });
+  }, [prevParamValue, writeParams]);
 
   const unlinkMutation = useUnlinkProjectManagedProduct();
 
@@ -258,7 +271,6 @@ export function useProductProjectsPage({ managedProductId }: UseProductProjectsP
     rows,
     hasMore,
     hasPrevious,
-    nextCursor,
     resolution,
     isFiltered,
     isFilteredEmpty,
@@ -296,5 +308,6 @@ export function useProductProjectsPage({ managedProductId }: UseProductProjectsP
     handleUnlinkConfirm,
     handleUnlinkDialogOpenChange,
     handleRetry,
+    dataUpdatedAt,
   };
 }

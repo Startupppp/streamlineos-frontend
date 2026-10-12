@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Trash2 } from "lucide-react";
+import { Check, Trash2, ExternalLink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -33,6 +33,17 @@ function scheduledLabel(value: string | null) {
   });
 }
 
+function measureKindVariant(kind: string | null | undefined) {
+  if (kind === "measured") return "default" as const;
+  return "secondary" as const;
+}
+
+function measureKindLabel(kind: string | null | undefined) {
+  if (kind === "measured") return "Measured";
+  if (kind === "self_reported") return "Self-reported";
+  return null;
+}
+
 export function OutcomeReviewRow({
   review,
   canWrite,
@@ -45,6 +56,8 @@ export function OutcomeReviewRow({
   onDelete: () => void;
 }) {
   const when = scheduledLabel(review.scheduledFor);
+  const measuredAtLabel = scheduledLabel(review.measuredAt ?? null);
+  const mkLabel = measureKindLabel(review.measureKind);
   const open = review.state !== "completed" && review.state !== "cancelled";
 
   return (
@@ -58,8 +71,30 @@ export function OutcomeReviewRow({
           <span className="text-xs text-muted-foreground">{labelize(review.kind)}</span>
           <Badge variant={stateVariant(review.state)}>{labelize(review.state)}</Badge>
           {review.result ? <Badge variant="outline">{labelize(review.result)}</Badge> : null}
+          {mkLabel ? (
+            <Badge variant={measureKindVariant(review.measureKind)} data-testid={`measure-kind-badge-${review.id}`}>
+              {mkLabel}
+            </Badge>
+          ) : null}
           {when ? (
             <span className="text-xs tabular-nums text-muted-foreground">{when}</span>
+          ) : null}
+          {measuredAtLabel ? (
+            <span className="text-xs tabular-nums text-muted-foreground" data-testid={`measured-at-${review.id}`}>
+              Measured {measuredAtLabel}
+            </span>
+          ) : null}
+          {review.sourceUrl ? (
+            <a
+              href={review.sourceUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-xs text-primary underline underline-offset-2"
+              data-testid={`source-url-link-${review.id}`}
+            >
+              <ExternalLink className="size-3" aria-hidden />
+              Source
+            </a>
           ) : null}
         </div>
       </div>

@@ -751,6 +751,14 @@ export const managedProductsListManagedProductsResponseSchema = z.object({
       last30d: z.number().int().gte(-9007199254740991).lte(9007199254740991),
       previous30d: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     }),
+    allowedActions: z.array(z.string()),
+    goalHealth: z.object({
+      total: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      onTrack: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      atRisk: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      offTrack: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    }).nullable(),
+    sourceFreshness: z.string().nullable(),
   })),
   pagination: z.object({
     limit: z.number().int().gte(-9007199254740991).lte(9007199254740991),
@@ -1826,6 +1834,10 @@ export const discoveryReviewsListOutcomeReviewsResponseSchema = z.object({
     createdBy: z.string().nullable(),
     createdAt: z.iso.datetime({ offset: true }),
     updatedAt: z.iso.datetime({ offset: true }),
+    measureKind: z.enum(["self_reported", "measured"]),
+    metricPeriod: z.string().nullable(),
+    sourceUrl: z.string().nullable(),
+    measuredAt: z.iso.datetime({ offset: true }).nullable(),
   })),
   pagination: z.object({
     limit: z.number().int().gte(-9007199254740991).lte(9007199254740991),
@@ -1860,6 +1872,10 @@ export const discoveryReviewsCreateOutcomeReviewResponseSchema = z.object({
   createdBy: z.string().nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
+  measureKind: z.enum(["self_reported", "measured"]),
+  metricPeriod: z.string().nullable(),
+  sourceUrl: z.string().nullable(),
+  measuredAt: z.iso.datetime({ offset: true }).nullable(),
 });
 export type DiscoveryReviewsCreateOutcomeReviewResponse = z.infer<typeof discoveryReviewsCreateOutcomeReviewResponseSchema>;
 
@@ -1877,6 +1893,9 @@ export const discoveryReviewsCreateOutcomeReviewBodySchema = z.strictObject({
   roadmapItemId: z.number().int().gt(0).lte(9007199254740991).optional(),
   goalId: z.number().int().gt(0).lte(9007199254740991).optional(),
   releaseId: z.number().int().gt(0).lte(9007199254740991).optional(),
+  measureKind: z.enum(["self_reported", "measured"]).optional(),
+  metricPeriod: z.string().optional(),
+  sourceUrl: z.string().optional(),
 });
 export type DiscoveryReviewsCreateOutcomeReviewBody = z.input<typeof discoveryReviewsCreateOutcomeReviewBodySchema>;
 
@@ -1905,6 +1924,10 @@ export const discoveryReviewsUpdateOutcomeReviewResponseSchema = z.object({
   createdBy: z.string().nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
+  measureKind: z.enum(["self_reported", "measured"]),
+  metricPeriod: z.string().nullable(),
+  sourceUrl: z.string().nullable(),
+  measuredAt: z.iso.datetime({ offset: true }).nullable(),
 });
 export type DiscoveryReviewsUpdateOutcomeReviewResponse = z.infer<typeof discoveryReviewsUpdateOutcomeReviewResponseSchema>;
 
@@ -1922,6 +1945,10 @@ export const discoveryReviewsUpdateOutcomeReviewBodySchema = z.strictObject({
   state: z.enum(["scheduled", "running", "completed", "cancelled"]).optional(),
   result: z.enum(["met", "partially_met", "not_met", "inconclusive"]).optional(),
   notes: z.string().nullable().optional(),
+  measureKind: z.enum(["self_reported", "measured"]).optional(),
+  metricPeriod: z.string().nullable().optional(),
+  sourceUrl: z.string().nullable().optional(),
+  measuredAt: z.string().nullable().optional(),
 });
 export type DiscoveryReviewsUpdateOutcomeReviewBody = z.input<typeof discoveryReviewsUpdateOutcomeReviewBodySchema>;
 

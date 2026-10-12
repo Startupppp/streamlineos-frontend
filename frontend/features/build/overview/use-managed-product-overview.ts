@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
-import { CalendarCheck, Lightbulb, Pencil } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { CalendarCheck, Link2, Lightbulb, MessageSquare, Pencil, Target } from "lucide-react";
 import { toast } from "sonner";
 import { useCan } from "@/hooks/api/access";
 import { useUpdateManagedProduct } from "@/hooks/api/build/managed-product-mutations";
@@ -51,6 +52,10 @@ const REVIEW_ACTION_BASE = {
   loadingLabel: "Saving…",
   icon: CalendarCheck,
 };
+const POST_UPDATE_ACTION_BASE = { id: "post-update", label: "Post update", icon: MessageSquare };
+const LINK_GOAL_ACTION_BASE = { id: "link-goal", label: "Link goal", icon: Target };
+const LINK_FEEDBACK_ACTION_BASE = { id: "link-feedback", label: "Link feedback", icon: Link2 };
+const LINK_PROJECT_ACTION_BASE = { id: "link-project", label: "Link project", icon: Link2 };
 
 function positiveTeamId(value: string | undefined): number | undefined {
   if (!value || value === BUILD_FILTER_ALL || !/^[1-9]\d*$/.test(value)) return undefined;
@@ -69,8 +74,18 @@ function readableToken(value: string): string {
 }
 
 export function useManagedProductOverview(managedProductId: number) {
+  const router = useRouter();
+  const handleBack = useCallback(() => {
+    if (window.history.length > 1) {
+      router.back();
+    } else {
+      router.push("/build/managed-products");
+    }
+  }, [router]);
   const [editOpen, setEditOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
+  const [linkGoalOpen, setLinkGoalOpen] = useState(false);
+  const [postUpdateOpen, setPostUpdateOpen] = useState(false);
   const listFilters = useBuildListFilters({ filters: OVERVIEW_FILTER_DEFINITIONS });
   const rawPeriod = listFilters.value("period");
   const rawTeamId = listFilters.value("teamId");
@@ -154,6 +169,8 @@ export function useManagedProductOverview(managedProductId: number) {
 
   const handleOpenEdit = useCallback(() => setEditOpen(true), []);
   const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
+  const handleOpenLinkGoal = useCallback(() => setLinkGoalOpen(true), []);
+  const handleOpenPostUpdate = useCallback(() => setPostUpdateOpen(true), []);
 
   const updateProduct = useUpdateManagedProduct();
   const { mutate: mutateProduct, isPending: isMarkingReviewed } = updateProduct;
@@ -168,16 +185,40 @@ export function useManagedProductOverview(managedProductId: number) {
     );
   }, [managedProductId, mutateProduct, product]);
 
+  const canUpdateProduct = useMemo(
+    () => canEdit && !!product && product.allowedActions.includes("update"),
+    [canEdit, product],
+  );
+
   const editActions = useMemo(
     () =>
-      canEdit && !!product
+      !!product
         ? [
-            { ...CREATE_ACTION_BASE, onSelect: handleOpenCreate },
-            { ...REVIEW_ACTION_BASE, onSelect: handleMarkReviewed, isPending: isMarkingReviewed },
-            { ...EDIT_ACTION_BASE, onSelect: handleOpenEdit },
+            ...(canEdit ? [{ ...CREATE_ACTION_BASE, onSelect: handleOpenCreate }] : []),
+            ...(canUpdateProduct
+              ? [
+                  { ...EDIT_ACTION_BASE, onSelect: handleOpenEdit },
+                  { ...POST_UPDATE_ACTION_BASE, onSelect: handleOpenPostUpdate },
+                  { ...LINK_GOAL_ACTION_BASE, onSelect: handleOpenLinkGoal },
+                  { ...REVIEW_ACTION_BASE, onSelect: handleMarkReviewed, isPending: isMarkingReviewed },
+                ]
+              : []),
+            { ...LINK_FEEDBACK_ACTION_BASE, href: `/build/managed-products/${managedProductId}/feedback` },
+            { ...LINK_PROJECT_ACTION_BASE, href: `/build/managed-products/${managedProductId}/projects` },
           ]
         : [],
-    [canEdit, product, handleOpenCreate, handleMarkReviewed, isMarkingReviewed, handleOpenEdit],
+    [
+      canEdit,
+      canUpdateProduct,
+      product,
+      managedProductId,
+      handleOpenCreate,
+      handleOpenPostUpdate,
+      handleOpenLinkGoal,
+      handleMarkReviewed,
+      isMarkingReviewed,
+      handleOpenEdit,
+    ],
   );
 
   const overviewSubtitle = useMemo(() => {
@@ -204,18 +245,25 @@ export function useManagedProductOverview(managedProductId: number) {
     setEditOpen,
     createOpen,
     setCreateOpen,
+    linkGoalOpen,
+    setLinkGoalOpen,
+    postUpdateOpen,
+    setPostUpdateOpen,
     resolution,
     editActions,
     summaryData: summaryQuery.data ?? null,
     summaryDataUpdatedAt: summaryQuery.dataUpdatedAt,
     overviewSubtitle,
     now,
-    markReviewed: canEdit && !!product ? handleMarkReviewed : undefined,
+    markReviewed: canUpdateProduct && !!product ? handleMarkReviewed : undefined,
     isMarkingReviewed,
     teamOptions,
     segmentOptions,
     teamSelectValue: teamIdNum !== undefined ? String(teamIdNum) : BUILD_FILTER_ALL,
     segmentSelectValue: segment ?? BUILD_FILTER_ALL,
+    isFiltered: listFilters.isFiltered,
+    handleClearFilters: listFilters.clearAll,
+    handleBack,
     handleRetry,
     handlePeriodChange,
     handleTeamChange,

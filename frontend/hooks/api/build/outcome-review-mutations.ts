@@ -57,6 +57,9 @@ export interface CreateOutcomeReviewInput {
   roadmapItemId?: number;
   goalId?: number;
   releaseId?: number;
+  measureKind?: "self_reported" | "measured";
+  metricPeriod?: string;
+  sourceUrl?: string;
 }
 
 export interface UpdateOutcomeReviewInput {
@@ -73,6 +76,9 @@ export interface UpdateOutcomeReviewInput {
   result?: "met" | "partially_met" | "not_met" | "inconclusive" | null;
   notes?: string | null;
   version: number;
+  measureKind?: "self_reported" | "measured";
+  sourceUrl?: string | null;
+  measuredAt?: string | null;
 }
 
 export function useCreateOutcomeReview(managedProductId: number) {

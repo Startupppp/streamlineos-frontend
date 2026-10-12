@@ -8,6 +8,7 @@ import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type { IntakeRequest } from "@/types/projects";
 import { patchIntakeListCaches } from "@/hooks/api/build/intake-cache";
+import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
 
 const routeIntakeContract = lazyContract(() =>
   Promise.resolve(z.object({ intakeId: z.number().int(), created: z.boolean() }).strict()),
@@ -21,16 +22,18 @@ interface RouteFeedbucketToIntakeInput {
 
 export function useRouteFeedbucketToIntake() {
   const queryClient = useQueryClient();
+  const operation = useIdempotentOperation();
   return useAuthorizedMutation("feedbucket:submissions:manage", {
     mutationKey: ["feedbucket", "submissions", "route-to-intake"],
     mutationFn: ({ submissionId, projectId, projectChosen }: RouteFeedbucketToIntakeInput) =>
       apiClient.post<{ intakeId: number; created: boolean }>(
         `/feedbucket/submissions/${submissionId}/route-to-intake`,
         projectChosen ? { projectId } : {},
-        undefined,
+        operation.configFor({ submissionId, projectId }),
         routeIntakeContract,
       ),
     onSuccess: (result: { intakeId: number; created: boolean }, variables: RouteFeedbucketToIntakeInput) => {
+      operation.settle();
       if (result.created) {
         void queryClient.invalidateQueries({
           queryKey: buildWorkQueryKeys.projects.intake(variables.projectId),

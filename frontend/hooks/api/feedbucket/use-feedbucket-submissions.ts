@@ -443,13 +443,13 @@ export function useMarkDuplicate() {
   return useAuthorizedMutation<
     FeedbucketMarkDuplicateResult,
     Error,
-    { submissionId: number; duplicateOfId: number }
+    { submissionId: number; duplicateOfId: number; expectedRevision?: string }
   >("feedbucket:submissions:update", {
     mutationKey: ["feedbucket", "submissions", "mark-duplicate"],
-    mutationFn: ({ submissionId, duplicateOfId }) =>
+    mutationFn: ({ submissionId, duplicateOfId, expectedRevision }) =>
       apiClient.post<FeedbucketMarkDuplicateResult>(
         `/feedbucket/submissions/${submissionId}/mark-duplicate`,
-        { duplicateOfId },
+        { duplicateOfId, ...(expectedRevision ? { expectedRevision } : {}) },
         operation.configFor({ submissionId, duplicateOfId }),
         feedbucketMarkDuplicateC,
       ),
@@ -477,20 +477,22 @@ export function useMarkDuplicate() {
 
 export function useUnmarkDuplicate() {
   const qc = useQueryClient();
+  const operation = useIdempotentOperation();
   return useAuthorizedMutation<
     FeedbucketUnmarkDuplicateResult,
     Error,
-    { submissionId: number }
+    { submissionId: number; expectedRevision?: string }
   >("feedbucket:submissions:update", {
     mutationKey: ["feedbucket", "submissions", "unmark-duplicate"],
-    mutationFn: ({ submissionId }) =>
+    mutationFn: ({ submissionId, expectedRevision }) =>
       apiClient.post<FeedbucketUnmarkDuplicateResult>(
         `/feedbucket/submissions/${submissionId}/unmark-duplicate`,
-        undefined,
-        undefined,
+        expectedRevision ? { expectedRevision } : {},
+        operation.configFor({ submissionId }),
         feedbucketUnmarkDuplicateC,
       ),
     onSuccess: (_, { submissionId }) => {
+      operation.settle();
       const previousOriginalId = qc.getQueryData<FeedbucketSubmission>(
         growthAndSignQueryKeys.feedbucket.submission(submissionId),
       )?.duplicateOfId;

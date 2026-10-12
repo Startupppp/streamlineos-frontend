@@ -36,6 +36,7 @@ import { buildCraftedFeedbackColumns } from "./feedback/feedback-inbox-columns";
 import { useRouteToIntake } from "./feedback/route-to-intake-dialog";
 import { ProductFeedbackFilters } from "./product-feedback-filters";
 import { ProductFeedbackDialogs } from "./product-feedback-dialogs";
+import { CustomerImpactPanel } from "./customer-impact-panel";
 
 function resolveRowClassName(): string {
   return "cursor-pointer";
@@ -189,6 +190,7 @@ export function ProductFeedbackPage({
           />
         ) : null}
         <ManagedProductDetailShell>
+          <CustomerImpactPanel managedProductId={managedProductId} />
           <ManagedProductDetailPrimarySection>
             <BuildListSurface<SubmissionRow>
               permission="feedbucket:submissions:view"

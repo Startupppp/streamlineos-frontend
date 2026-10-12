@@ -85,11 +85,13 @@ describe("OutcomeReviewScheduleSheet — opportunity link", () => {
     await user.click(screen.getByRole("button", { name: "Schedule" }));
 
     await waitFor(() =>
-      expect(onSubmit).toHaveBeenCalledWith({
-        kind: "outcome_review",
-        title: "Export adoption review",
-        opportunityId: 1,
-      }),
+      expect(onSubmit).toHaveBeenCalledWith(
+        expect.objectContaining({
+          kind: "outcome_review",
+          title: "Export adoption review",
+          opportunityId: 1,
+        }),
+      ),
     );
   });
 
@@ -134,7 +136,68 @@ describe("OutcomeReviewScheduleSheet — goal link", () => {
     await user.click(screen.getByRole("button", { name: "Schedule" }));
 
     await waitFor(() =>
-      expect(onSubmit).toHaveBeenCalledWith({ kind: "outcome_review", title: "Goal review", goalId: 38 }),
+      expect(onSubmit).toHaveBeenCalledWith(
+        expect.objectContaining({ kind: "outcome_review", title: "Goal review", goalId: 38 }),
+      ),
+    );
+  });
+});
+
+describe("OutcomeReviewScheduleSheet — measurement fields", () => {
+  it("includes measureKind measured and sourceUrl when the user fills them so the API receives the fields", async () => {
+    withOpportunities([]);
+    const onSubmit = jest.fn();
+    const user = userEvent.setup();
+
+    render(
+      <OutcomeReviewScheduleSheet
+        managedProductId={39}
+        open
+        onOpenChange={jest.fn()}
+        onSubmit={onSubmit}
+        isSubmitting={false}
+      />,
+    );
+
+    await user.type(screen.getByLabelText("Title (required)"), "NPS review");
+    await user.type(screen.getByTestId("metric-period-input"), "Q1 2025");
+    await user.type(screen.getByTestId("source-url-input"), "https://example.com/data");
+    await user.click(screen.getByRole("option", { name: "Measured" }));
+    await user.click(screen.getByRole("button", { name: "Schedule" }));
+
+    await waitFor(() =>
+      expect(onSubmit).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: "NPS review",
+          measureKind: "measured",
+          metricPeriod: "Q1 2025",
+          sourceUrl: "https://example.com/data",
+        }),
+      ),
+    );
+  });
+
+  it("omits empty sourceUrl from submission so the API does not receive a blank string", async () => {
+    withOpportunities([]);
+    const onSubmit = jest.fn();
+    const user = userEvent.setup();
+
+    render(
+      <OutcomeReviewScheduleSheet
+        managedProductId={39}
+        open
+        onOpenChange={jest.fn()}
+        onSubmit={onSubmit}
+        isSubmitting={false}
+      />,
+    );
+
+    await user.type(screen.getByLabelText("Title (required)"), "NPS review");
+    await user.click(screen.getByRole("button", { name: "Schedule" }));
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalled());
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.not.objectContaining({ sourceUrl: expect.anything() }),
     );
   });
 });

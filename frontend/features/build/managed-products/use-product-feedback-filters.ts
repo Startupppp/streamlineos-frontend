@@ -74,6 +74,8 @@ export function useProductFeedbackFilters(managedProductId: number) {
   const segmentValue = listFilters.value("segment");
   const crmOrgIdValue = listFilters.value("crmOrganizationId");
   const submissionIdRaw = listFilters.value("submission");
+  const ticketIdRaw = listFilters.value("ticket");
+  const ticketProjectIdRaw = listFilters.value("ticketProject");
 
   const typedType = useMemo(() => TYPE_OPTIONS.find((v) => v === typeValue), [typeValue]);
   const typedStatus = useMemo(() => STATUS_OPTIONS_VALUES.find((v) => v === statusValue), [statusValue]);
@@ -133,6 +135,14 @@ export function useProductFeedbackFilters(managedProductId: number) {
     const n = submissionIdRaw ? parseInt(submissionIdRaw, 10) : NaN;
     return Number.isFinite(n) && n > 0 ? n : null;
   }, [submissionIdRaw]);
+  const paneTicketId = useMemo(() => {
+    const n = ticketIdRaw ? parseInt(ticketIdRaw, 10) : NaN;
+    return Number.isFinite(n) && n > 0 ? n : null;
+  }, [ticketIdRaw]);
+  const paneTicketProjectId = useMemo(() => {
+    const n = ticketProjectIdRaw ? parseInt(ticketProjectIdRaw, 10) : NaN;
+    return Number.isFinite(n) && n > 0 ? n : null;
+  }, [ticketProjectIdRaw]);
 
   const [page, setPage] = useSourceOverride(listFilters.resetKey, 1);
   const [selected, setSelected] = useSourceOverride(listFilters.resetKey, new Set<string | number>());
@@ -199,6 +209,15 @@ export function useProductFeedbackFilters(managedProductId: number) {
   const handleSegmentChange = useCallback((v: string) => listFilters.setValue("segment", v), [listFilters]);
   const handleCrmOrgChange = useCallback((v: string) => listFilters.setValue("crmOrganizationId", v), [listFilters]);
   const handleClearSelection = useCallback(() => setSelected(new Set()), [setSelected]);
+  const handleOpenTicket = useCallback(
+    (ticketId: number, projectId: number) => {
+      listFilters.setValues({ ticket: String(ticketId), ticketProject: String(projectId) });
+    },
+    [listFilters],
+  );
+  const handleCloseTicketPane = useCallback(() => {
+    listFilters.setValues({ ticket: BUILD_FILTER_ALL, ticketProject: BUILD_FILTER_ALL });
+  }, [listFilters]);
 
   return {
     listFilters,
@@ -249,5 +268,9 @@ export function useProductFeedbackFilters(managedProductId: number) {
     handleDateRangeChange: listFilters.setValues,
     handlePageChange: setPage,
     handleClearSelection,
+    paneTicketId,
+    paneTicketProjectId,
+    handleOpenTicket,
+    handleCloseTicketPane,
   };
 }

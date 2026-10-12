@@ -1,11 +1,19 @@
 import type { ManagedProductSummary } from "@/hooks/api/build/managed-product-summary";
 import type { StatusTone } from "@/lib/design-tokens";
-import { CLOSED_OPPORTUNITY_STATES, HEALTH_PRESENTATION, hasStrategy, wholeDaysUntil } from "./overview-signals";
+import {
+  CLOSED_OPPORTUNITY_STATES,
+  HEALTH_PRESENTATION,
+  hasStrategy,
+  wholeDaysUntil,
+} from "./overview-signals";
 
 type SummaryProduct = ManagedProductSummary["product"];
 
 const REVIEW_STALE_DAYS = 90;
-const PRE_LAUNCH_LIFECYCLES: ReadonlySet<SummaryProduct["lifecycle"]> = new Set(["discovery", "build"]);
+const PROJECTION_STALE_HOURS = 6;
+const PRE_LAUNCH_LIFECYCLES: ReadonlySet<SummaryProduct["lifecycle"]> = new Set(
+  ["discovery", "build"],
+);
 const ATTENTION_TONE_RANK: Readonly<Record<StatusTone, number>> = {
   danger: 0,
   warning: 1,
@@ -13,7 +21,6 @@ const ATTENTION_TONE_RANK: Readonly<Record<StatusTone, number>> = {
   neutral: 3,
   success: 4,
 };
-
 
 export interface AttentionSignal {
   id: string;
@@ -25,8 +32,16 @@ export interface AttentionSignal {
   resolvedByReview?: boolean;
 }
 
-function launchSignal(product: SummaryProduct, base: string, now: Date): AttentionSignal | null {
-  if (!product.targetLaunchDate || !PRE_LAUNCH_LIFECYCLES.has(product.lifecycle)) return null;
+function launchSignal(
+  product: SummaryProduct,
+  base: string,
+  now: Date,
+): AttentionSignal | null {
+  if (
+    !product.targetLaunchDate ||
+    !PRE_LAUNCH_LIFECYCLES.has(product.lifecycle)
+  )
+    return null;
   const days = wholeDaysUntil(product.targetLaunchDate, now);
   if (days === null || days >= 0) return null;
   return {
@@ -39,13 +54,18 @@ function launchSignal(product: SummaryProduct, base: string, now: Date): Attenti
   };
 }
 
-function reviewSignal(product: SummaryProduct, base: string, now: Date): AttentionSignal | null {
+function reviewSignal(
+  product: SummaryProduct,
+  base: string,
+  now: Date,
+): AttentionSignal | null {
   if (!product.lastReviewedAt) {
     return {
       id: "never-reviewed",
       tone: "info",
       title: "Product has never been reviewed",
-      detail: "Record a review so the team knows this overview reflects reality.",
+      detail:
+        "Record a review so the team knows this overview reflects reality.",
       href: `${base}/settings`,
       actionLabel: "Mark reviewed",
       resolvedByReview: true,
@@ -64,7 +84,11 @@ function reviewSignal(product: SummaryProduct, base: string, now: Date): Attenti
   };
 }
 
-function releaseSignal(summary: ManagedProductSummary, base: string, now: Date): AttentionSignal | null {
+function releaseSignal(
+  summary: ManagedProductSummary,
+  base: string,
+  now: Date,
+): AttentionSignal | null {
   const release = summary.delivery.nextRelease;
   if (!release?.releaseDate) return null;
   const days = wholeDaysUntil(release.releaseDate, now);
@@ -79,7 +103,10 @@ function releaseSignal(summary: ManagedProductSummary, base: string, now: Date):
   };
 }
 
-function evidenceSignals(summary: ManagedProductSummary, base: string): AttentionSignal[] {
+function evidenceSignals(
+  summary: ManagedProductSummary,
+  base: string,
+): AttentionSignal[] {
   const { evidence } = summary;
   const signals: AttentionSignal[] = [];
   if (evidence.feedbackCount === 0) {
@@ -96,7 +123,8 @@ function evidenceSignals(summary: ManagedProductSummary, base: string): Attentio
       id: "feedback-quiet",
       tone: "warning",
       title: "No new feedback in 30 days",
-      detail: "Evidence is going stale. Check that collection channels are still connected.",
+      detail:
+        "Evidence is going stale. Check that collection channels are still connected.",
       href: `${base}/feedback`,
       actionLabel: "Open feedback",
     });
@@ -113,7 +141,9 @@ function evidenceSignals(summary: ManagedProductSummary, base: string): Attentio
     });
   }
   const unscored = summary.previews.opportunities.filter(
-    (opportunity) => opportunity.score === null && !CLOSED_OPPORTUNITY_STATES.has(opportunity.state),
+    (opportunity) =>
+      opportunity.score === null &&
+      !CLOSED_OPPORTUNITY_STATES.has(opportunity.state),
   ).length;
   if (unscored > 0) {
     signals.push({
@@ -126,6 +156,26 @@ function evidenceSignals(summary: ManagedProductSummary, base: string): Attentio
     });
   }
   return signals;
+}
+
+function projectionFreshnessSignal(
+  summary: ManagedProductSummary,
+  base: string,
+  now: Date,
+): AttentionSignal | null {
+  const generatedAt = summary.generatedAt;
+  if (!generatedAt) return null;
+  const ageMs = now.getTime() - new Date(generatedAt).getTime();
+  const ageHours = ageMs / (1000 * 60 * 60);
+  if (ageHours < PROJECTION_STALE_HOURS) return null;
+  return {
+    id: "projection-stale",
+    tone: "info",
+    title: "Overview data may be stale",
+    detail: `The last projection was computed ${Math.floor(ageHours)} hours ago. Some counts may not reflect the latest activity.`,
+    href: `${base}/insights`,
+    actionLabel: "Refresh insights",
+  };
 }
 
 export function deriveAttentionSignals(
@@ -166,7 +216,8 @@ export function deriveAttentionSignals(
       id: "no-strategy",
       tone: "info",
       title: "Strategy is not defined",
-      detail: "Add a vision and north-star metric so trade-offs have a reference point.",
+      detail:
+        "Add a vision and north-star metric so trade-offs have a reference point.",
       href: `${base}/settings`,
       actionLabel: "Define strategy",
     });
@@ -180,10 +231,35 @@ export function deriveAttentionSignals(
       id: "unmeasured",
       tone: "info",
       title: "Shipped work is not being measured",
-      detail: "Schedule an outcome review to learn whether it moved the metric.",
+      detail:
+        "Schedule an outcome review to learn whether it moved the metric.",
       href: `${base}/insights`,
       actionLabel: "Schedule review",
     });
   }
-  return signals.sort((a, b) => ATTENTION_TONE_RANK[a.tone] - ATTENTION_TONE_RANK[b.tone]);
+  if (delivery.linkedProjects === 0) {
+    signals.push({
+      id: "no-projects",
+      tone: "info",
+      title: "No linked projects",
+      detail: "Delivery progress counts will be zero until at least one project is linked.",
+      href: `${base}/projects`,
+      actionLabel: "Link projects",
+    });
+  }
+  if (outcomes.goalsLinked === 0) {
+    signals.push({
+      id: "no-goals",
+      tone: "info",
+      title: "No linked goals",
+      detail: "Outcome reviews can't run until this product is connected to a goal.",
+      href: `${base}/goals`,
+      actionLabel: "Link goals",
+    });
+  }
+  const staleness = projectionFreshnessSignal(summary, base, now);
+  if (staleness) signals.push(staleness);
+  return signals.sort(
+    (a, b) => ATTENTION_TONE_RANK[a.tone] - ATTENTION_TONE_RANK[b.tone],
+  );
 }

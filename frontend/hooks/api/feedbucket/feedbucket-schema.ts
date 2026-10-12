@@ -77,6 +77,9 @@ const feedbucketSubmissionRowContract = z.object({
   crmOrganizationId: z.number().nullable(),
   accountValueSnapshot: z.string().nullable(),
   assigneeMembershipId: z.number().nullable(),
+  assignee: z
+    .object({ id: z.number(), name: z.string(), avatarUrl: z.string().nullable() })
+    .nullable(),
   linkedTicketId: z.number().nullable(),
   linkedTicketKey: z.string().nullable(),
   aiType: z.string().nullable(),
@@ -110,6 +113,9 @@ const feedbucketSubmissionRowContract = z.object({
   customer: z
     .object({ crmOrganizationId: z.number(), name: z.string().nullable() })
     .nullable(),
+  revision: z.string(),
+  sourceFreshness: z.string(),
+  allowedActions: z.array(z.string()),
 });
 
 export const feedbucketSubmissionListContract = z.object({
@@ -250,3 +256,35 @@ export const feedbucketSubmissionFacetsContract = z.object({
 export type FeedbucketSubmissionRow = z.infer<
   typeof feedbucketSubmissionRowContract
 >;
+
+export const feedbucketCustomerImpactContract = z.object({
+  rows: z.array(
+    z.object({
+      crmOrganizationId: z.number().int(),
+      customerName: z.string().nullable(),
+      submissionCount: z.number().int(),
+      opportunityCount: z.number().int(),
+      accountValue: z.string().nullable(),
+    }),
+  ),
+});
+
+export type FeedbucketCustomerImpactRow = z.infer<
+  typeof feedbucketCustomerImpactContract
+>["rows"][number];
+
+export const feedbucketOpportunityImpactContract = z.object({
+  rows: z.array(
+    z.object({
+      opportunityId: z.number().int(),
+      distinctCustomers: z.number().int(),
+      segments: z.array(z.string()),
+      requestCount: z.number().int(),
+      summedAccountValue: z.string().nullable(),
+    }),
+  ),
+});
+
+export type FeedbucketOpportunityImpactRow = z.infer<
+  typeof feedbucketOpportunityImpactContract
+>["rows"][number];

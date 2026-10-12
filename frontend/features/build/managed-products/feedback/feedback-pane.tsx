@@ -4,7 +4,6 @@ import { useCallback, useState } from "react";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useFeedbucketSubmission, useUnmarkDuplicate } from "@/hooks/api/feedbucket/use-feedbucket-submissions";
-import { useCan } from "@/hooks/api/access";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { ClassifySubmissionSheet } from "./classify-submission-sheet";
@@ -19,6 +18,7 @@ interface FeedbackPaneProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onOpenDetail?: () => void;
+  onOpenTicket?: (ticketId: number, projectId: number) => void;
 }
 
 function FeedbackPaneSkeleton() {
@@ -39,9 +39,7 @@ function FeedbackPaneSkeleton() {
   );
 }
 
-export function FeedbackPane({ submissionId, managedProductId, open, onOpenChange, onOpenDetail }: FeedbackPaneProps) {
-  const canUpdate = useCan("feedbucket:submissions:update");
-  const canManage = useCan("feedbucket:submissions:manage");
+export function FeedbackPane({ submissionId, managedProductId, open, onOpenChange, onOpenDetail, onOpenTicket }: FeedbackPaneProps) {
   const [classifyOpen, setClassifyOpen] = useState(false);
   const [duplicateOpen, setDuplicateOpen] = useState(false);
   const [linkOppOpen, setLinkOppOpen] = useState(false);
@@ -51,13 +49,13 @@ export function FeedbackPane({ submissionId, managedProductId, open, onOpenChang
 
   const handleUnmarkDuplicate = useCallback(() => {
     unmarkDuplicate.mutate(
-      { submissionId },
+      { submissionId, expectedRevision: submission?.revision },
       {
         onSuccess: () => { toast.success("Duplicate mark removed"); },
         onError: (err) => { toast.error(getErrorMessage(err)); },
       },
     );
-  }, [submissionId, unmarkDuplicate]);
+  }, [submissionId, submission?.revision, unmarkDuplicate]);
 
   const handleOpenClassify = useCallback(() => setClassifyOpen(true), []);
   const handleOpenDuplicate = useCallback(() => setDuplicateOpen(true), []);
@@ -88,14 +86,13 @@ export function FeedbackPane({ submissionId, managedProductId, open, onOpenChang
             <FeedbackPaneDetail
               submission={submission}
               managedProductId={managedProductId}
-              canUpdate={canUpdate}
-              canManage={canManage}
               unmarkPending={unmarkDuplicate.isPending}
               onClassify={handleOpenClassify}
               onDuplicate={handleOpenDuplicate}
               onUnmark={handleUnmarkDuplicate}
               onLinkOpp={handleOpenLinkOpp}
               onOpenDetail={onOpenDetail}
+              onOpenTicket={onOpenTicket}
             />
           ) : (
             <div className="flex flex-1 items-center justify-center px-6 py-8">
@@ -111,6 +108,7 @@ export function FeedbackPane({ submissionId, managedProductId, open, onOpenChang
           currentSegment={submission.segment}
           currentSentiment={submission.sentiment}
           currentConsentStatus={submission.consentStatus}
+          expectedRevision={submission.revision}
           open={classifyOpen}
           onOpenChange={setClassifyOpen}
         />
@@ -119,6 +117,7 @@ export function FeedbackPane({ submissionId, managedProductId, open, onOpenChang
         <MarkDuplicateDialog
           managedProductId={managedProductId}
           submissionId={submissionId}
+          expectedRevision={submission?.revision}
           open={duplicateOpen}
           onOpenChange={setDuplicateOpen}
         />

@@ -61,6 +61,16 @@ jest.mock("@/features/build/managed-products/insights/opportunity-create-sheet",
     open ? <div data-testid="opportunity-create-sheet" /> : null,
 }));
 
+jest.mock("@/features/build/managed-products/link-existing-goal-dialog", () => ({
+  LinkExistingGoalDialog: ({ open }: { open: boolean }) =>
+    open ? <div data-testid="link-goal-dialog" /> : null,
+}));
+
+jest.mock("./managed-product-update-sheet", () => ({
+  ManagedProductUpdateSheet: ({ open }: { open: boolean }) =>
+    open ? <div data-testid="post-update-sheet" /> : null,
+}));
+
 beforeEach(() => {
   jest.clearAllMocks();
   usePageState.mockReturnValue({ kind: "ready" });
@@ -247,6 +257,62 @@ describe("ManagedProductOverviewPage — mark reviewed", () => {
   });
 });
 
+describe("ManagedProductOverviewPage — link goal action (audit #14)", () => {
+  it("exposes the More actions overflow button so link-goal is reachable when the user can edit", () => {
+    const { useCan } = jest.requireMock("@/hooks/api/access");
+    (useCan as jest.Mock).mockReturnValue(true);
+    render(<ManagedProductOverviewPage managedProductId={42} />);
+    expect(screen.getAllByRole("button", { name: /More actions/i }).length).toBeGreaterThan(0);
+  });
+
+  it("offers no actions at all to a viewer without update permission so link-goal is also absent", () => {
+    const { useCan } = jest.requireMock("@/hooks/api/access");
+    (useCan as jest.Mock).mockReturnValue(false);
+    render(<ManagedProductOverviewPage managedProductId={42} />);
+    expect(screen.queryAllByRole("button", { name: /More actions/i })).toHaveLength(0);
+    expect(screen.queryByTestId("link-goal-dialog")).not.toBeInTheDocument();
+  });
+});
+
+describe("ManagedProductOverviewPage — post product update action (audit #14)", () => {
+  it("opens the post-update sheet when the Post update action is triggered", () => {
+    const { useCan } = jest.requireMock("@/hooks/api/access");
+    (useCan as jest.Mock).mockReturnValue(true);
+    render(<ManagedProductOverviewPage managedProductId={42} />);
+    fireEvent.click(screen.getAllByRole("button", { name: /Post update/i })[0]!);
+    expect(screen.getByTestId("post-update-sheet")).toBeInTheDocument();
+  });
+
+  it("offers no post-update action to a viewer without update permission", () => {
+    const { useCan } = jest.requireMock("@/hooks/api/access");
+    (useCan as jest.Mock).mockReturnValue(false);
+    render(<ManagedProductOverviewPage managedProductId={42} />);
+    expect(screen.queryAllByRole("button", { name: /Post update/i })).toHaveLength(0);
+  });
+
+  it("hides edit/post-update when server allowedActions does not include update (archived product)", () => {
+    const { useManagedProductSummary } = jest.requireMock(
+      "@/hooks/api/build/managed-product-summary",
+    );
+    (useManagedProductSummary as jest.Mock).mockReturnValue({
+      data: {
+        ...OVERVIEW_SUMMARY,
+        product: { ...OVERVIEW_SUMMARY.product, status: "archived", allowedActions: ["view", "restore", "delete"] },
+      },
+      isLoading: false,
+      isError: false,
+      error: null,
+      dataUpdatedAt: 0,
+      refetch: jest.fn(),
+    });
+    const { useCan } = jest.requireMock("@/hooks/api/access");
+    (useCan as jest.Mock).mockReturnValue(true);
+    render(<ManagedProductOverviewPage managedProductId={42} />);
+    expect(screen.queryAllByRole("button", { name: /Post update/i })).toHaveLength(0);
+    expect(screen.queryAllByRole("button", { name: /Edit product/i })).toHaveLength(0);
+  });
+});
+
 describe("ManagedProductOverviewPage — needs attention", () => {
   it("flags the missing owner and the unreviewed product with links to fix them", () => {
     render(<ManagedProductOverviewPage managedProductId={42} />);
@@ -270,5 +336,73 @@ describe("ManagedProductOverviewPage — needs attention", () => {
       expect.stringContaining("Shipped4"),
       expect.stringContaining("Measured1"),
     ]);
+  });
+});
+
+describe("ManagedProductOverviewPage — overview href params match destination filter keys", () => {
+  it("last-30-days feedback link uses from/to date params, not period, so the feedback page filter hook reads it", () => {
+    render(<ManagedProductOverviewPage managedProductId={42} />);
+    const allLinks = screen.getAllByRole("link");
+    const last30dLink = allLinks.find((l) => {
+      const href = l.getAttribute("href") ?? "";
+      return href.startsWith("/build/managed-products/42/feedback?");
+    });
+    expect(last30dLink).toBeDefined();
+    const href = last30dLink!.getAttribute("href") ?? "";
+    const url = new URL(href, "http://localhost");
+    expect(url.searchParams.has("from")).toBe(true);
+    expect(url.searchParams.has("to")).toBe(true);
+    expect(url.searchParams.has("period")).toBe(false);
+    expect(url.searchParams.get("from")).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(url.searchParams.get("to")).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+
+  it("opportunities fact links to the insights page so the insights filter hook is the authority", () => {
+    render(<ManagedProductOverviewPage managedProductId={42} />);
+    const allLinks = screen.getAllByRole("link");
+    const opportunityLink = allLinks.find((l) => {
+      const url = new URL(l.getAttribute("href") ?? "", "http://localhost");
+      return url.pathname === "/build/managed-products/42/insights" && url.search === "";
+    });
+    expect(opportunityLink).toBeDefined();
+  });
+
+  it("goals linked fact links to the goals page with no unrecognised filter params", () => {
+    render(<ManagedProductOverviewPage managedProductId={42} />);
+    const allLinks = screen.getAllByRole("link");
+    const goalsLink = allLinks.find((l) => {
+      const url = new URL(l.getAttribute("href") ?? "", "http://localhost");
+      return url.pathname === "/build/managed-products/42/goals" && url.search === "";
+    });
+    expect(goalsLink).toBeDefined();
+  });
+
+  it("theme links from the evidence card use the theme param that the feedback filter hook reads", () => {
+    const { useManagedProductSummary } = jest.requireMock(
+      "@/hooks/api/build/managed-product-summary",
+    );
+    (useManagedProductSummary as jest.Mock).mockReturnValue({
+      data: {
+        ...OVERVIEW_SUMMARY,
+        previews: {
+          ...OVERVIEW_SUMMARY.previews,
+          themes: [{ theme: "Performance", count: 4 }],
+        },
+      },
+      isLoading: false,
+      isError: false,
+      error: null,
+      dataUpdatedAt: 0,
+      refetch: jest.fn(),
+    });
+    render(<ManagedProductOverviewPage managedProductId={42} />);
+    const themeLinks = screen
+      .getAllByRole("link")
+      .filter((l) => (l.getAttribute("href") ?? "").includes("/feedback?theme="));
+    expect(themeLinks.length).toBeGreaterThan(0);
+    themeLinks.forEach((link) => {
+      const url = new URL(link.getAttribute("href") ?? "", "http://localhost");
+      expect(url.searchParams.has("theme")).toBe(true);
+    });
   });
 });

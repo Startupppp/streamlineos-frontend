@@ -97,6 +97,41 @@ function toQueryParams(
   );
 }
 
+const projectLinkedProductRowContract = z.object({
+  managedProductId: z.number().int(),
+  name: z.string(),
+  key: z.string(),
+  status: z.string(),
+  isPrimary: z.boolean(),
+});
+const projectLinkedProductsListContract = z.object({
+  data: z.array(projectLinkedProductRowContract),
+});
+export type ProjectLinkedProductRow = z.infer<typeof projectLinkedProductRowContract>;
+
+const projectLinkedProductsC = lazyContract(() =>
+  Promise.resolve(projectLinkedProductsListContract),
+);
+
+export function useProjectLinkedProducts(
+  projectId: number,
+  options?: { enabled?: boolean },
+) {
+  return useGatedQuery("build:managed-products:view", {
+    queryKey: buildWorkQueryKeys.projects.managedProducts.projectLinkedProducts(projectId),
+    queryFn: ({ signal }) =>
+      apiClient.get(
+        `/build/managed-products/projects/${projectId}/products`,
+        {},
+        signal,
+        projectLinkedProductsC,
+      ),
+    staleTime: 30_000,
+    enabled: options?.enabled,
+    ...INLINE_READ_ERROR,
+  });
+}
+
 export function useManagedProductProjects(params: ManagedProductProjectsParams) {
   const { managedProductId, ...filters } = params;
   const filterKey = Object.keys(filters).length > 0 ? filters : undefined;

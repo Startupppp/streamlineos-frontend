@@ -32,6 +32,7 @@ interface ClassifySubmissionSheetProps {
   currentSegment?: string | null;
   currentSentiment?: string | null;
   currentConsentStatus?: string;
+  expectedRevision?: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -42,6 +43,7 @@ export function ClassifySubmissionSheet({
   currentSegment,
   currentSentiment,
   currentConsentStatus,
+  expectedRevision,
   open,
   onOpenChange,
 }: ClassifySubmissionSheetProps) {
@@ -63,6 +65,7 @@ export function ClassifySubmissionSheet({
           segment: values.segment?.trim() || null,
           ...(values.sentiment ? { sentiment: values.sentiment } : { sentiment: null }),
           ...(values.consentStatus ? { consentStatus: values.consentStatus } : {}),
+          ...(expectedRevision ? { expectedRevision } : {}),
         },
       },
       {

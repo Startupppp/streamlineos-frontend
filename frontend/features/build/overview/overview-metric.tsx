@@ -48,11 +48,32 @@ export function OverviewFact({
   label,
   children,
   className,
+  href,
 }: {
   label: string;
   children: ReactNode;
   className?: string;
+  href?: string;
 }) {
+  const inner = (
+    <>
+      <dt className="text-sm text-muted-foreground">{label}</dt>
+      <dd className="text-right font-mono text-sm tabular-nums text-foreground">{children}</dd>
+    </>
+  );
+  if (href) {
+    return (
+      <Link
+        href={href}
+        className={cn(
+          "flex min-h-11 items-center justify-between gap-4 border-b border-border/80 py-2 transition-colors last:border-b-0 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+          className,
+        )}
+      >
+        {inner}
+      </Link>
+    );
+  }
   return (
     <div
       className={cn(
@@ -60,8 +81,7 @@ export function OverviewFact({
         className,
       )}
     >
-      <dt className="text-sm text-muted-foreground">{label}</dt>
-      <dd className="text-right font-mono text-sm tabular-nums text-foreground">{children}</dd>
+      {inner}
     </div>
   );
 }

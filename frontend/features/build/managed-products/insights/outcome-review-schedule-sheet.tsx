@@ -34,6 +34,11 @@ const KIND_OPTIONS = [
   { label: "Experiment", value: "experiment" },
 ] as const;
 
+const MEASURE_KIND_OPTIONS = [
+  { label: "Self-reported", value: "self_reported" },
+  { label: "Measured", value: "measured" },
+] as const;
+
 const DEFAULT_VALUES: ScheduleOutcomeReviewValues = {
   kind: "outcome_review",
   title: "",
@@ -42,6 +47,9 @@ const DEFAULT_VALUES: ScheduleOutcomeReviewValues = {
   unit: "",
   baseline: "",
   target: "",
+  measureKind: "self_reported",
+  metricPeriod: "",
+  sourceUrl: "",
 };
 
 interface OutcomeReviewScheduleSheetProps {
@@ -77,6 +85,9 @@ export function OutcomeReviewScheduleSheet({
       ...(values.baseline?.trim() ? { baseline: values.baseline } : {}),
       ...(values.target?.trim() ? { target: values.target } : {}),
       ...(values.scheduledFor?.trim() ? { scheduledFor: values.scheduledFor } : {}),
+      ...(values.measureKind ? { measureKind: values.measureKind } : {}),
+      ...(values.metricPeriod?.trim() ? { metricPeriod: values.metricPeriod } : {}),
+      ...(values.sourceUrl?.trim() ? { sourceUrl: values.sourceUrl } : {}),
     };
     onSubmit(data);
   }
@@ -249,6 +260,74 @@ export function OutcomeReviewScheduleSheet({
                   onChange={field.onChange}
                   clearable
                 />
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="measureKind"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Measurement approach</FormLabel>
+                <Select
+                  value={field.value ?? "self_reported"}
+                  onValueChange={(v) => v && field.onChange(v)}
+                >
+                  <FormControl>
+                    <SelectTrigger
+                      className={FIELD_CONTROL_CLASS}
+                      data-testid="measure-kind-select"
+                    >
+                      <SelectValue placeholder="Select approach" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {MEASURE_KIND_OPTIONS.map((o) => (
+                      <SelectItem key={o.value} value={o.value}>
+                        {o.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="metricPeriod"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Metric period</FormLabel>
+                <FormControl>
+                  <Input
+                    {...field}
+                    value={field.value ?? ""}
+                    className={FIELD_CONTROL_CLASS}
+                    placeholder="e.g. Q1 2025, Last 30 days"
+                    data-testid="metric-period-input"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="sourceUrl"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Source URL</FormLabel>
+                <FormControl>
+                  <Input
+                    {...field}
+                    value={field.value ?? ""}
+                    className={FIELD_CONTROL_CLASS}
+                    placeholder="https://..."
+                    data-testid="source-url-input"
+                  />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}

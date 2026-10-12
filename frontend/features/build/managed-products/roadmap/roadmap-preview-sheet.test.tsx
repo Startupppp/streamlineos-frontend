@@ -1,6 +1,6 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
-import type { ScorableRoadmapItem } from "@/features/build/roadmap/roadmap-item-card";
+import type { PublicRoadmapItem } from "@/types/projects";
 import type { RoadmapHorizon } from "@/types/projects";
 
 jest.mock("@/features/build/roadmap/roadmap-constants", () => ({
@@ -28,23 +28,31 @@ jest.mock("@/components/ui/badge", () => ({
 }));
 
 let mockPublication: { path: string } | null = null;
+let mockPublicBoard: { orgName: string | null; roadmap: { planned: PublicRoadmapItem[]; in_progress: PublicRoadmapItem[]; completed: PublicRoadmapItem[] }; feedback: []; changelog: [] } | null = null;
+let mockIsLoading = false;
+
 jest.mock("@/hooks/api/build/roadmap-public", () => ({
   useRoadmapPublication: () => ({ data: mockPublication }),
+  useRoadmapPreview: () => ({ data: mockPublicBoard, isLoading: mockIsLoading }),
 }));
 
 import { RoadmapPreviewSheet } from "./roadmap-preview-sheet";
 
-function makeItem(id: number, horizon: RoadmapHorizon, isPublic: boolean): ScorableRoadmapItem {
+function makePublicItem(id: number, horizon: RoadmapHorizon, status: "planned" | "in_progress" | "completed" = "planned"): PublicRoadmapItem {
   return {
     id,
     title: `Item ${id}`,
-    status: "planned",
-    isPublic,
-    sortOrder: id,
-    votes: 0,
-    version: 1,
+    status,
+    description: null,
+    category: null,
+    targetQuarter: null,
     horizon,
-  } as ScorableRoadmapItem;
+    votes: 0,
+  };
+}
+
+function makeBoard(planned: PublicRoadmapItem[], in_progress: PublicRoadmapItem[], completed: PublicRoadmapItem[]) {
+  return { orgName: "Acme", roadmap: { planned, in_progress, completed }, feedback: [] as [], changelog: [] as [] };
 }
 
 const onClose = jest.fn();
@@ -52,67 +60,99 @@ const onClose = jest.fn();
 beforeEach(() => {
   jest.clearAllMocks();
   mockPublication = null;
+  mockPublicBoard = null;
+  mockIsLoading = false;
 });
 
 describe("RoadmapPreviewSheet — public page link", () => {
   it("links to the published board filtered to this product", () => {
     mockPublication = { path: "/roadmap/org-1" };
-    render(<RoadmapPreviewSheet items={[]} managedProductId={39} onClose={onClose} />);
+    render(<RoadmapPreviewSheet managedProductId={39} onClose={onClose} />);
     expect(screen.getByRole("link", { name: /Open public page/ })).toHaveAttribute("href", "/roadmap/org-1?product=39");
   });
 
   it("says the board is unpublished instead of linking when there is no publication", () => {
-    render(<RoadmapPreviewSheet items={[]} managedProductId={39} onClose={onClose} />);
+    render(<RoadmapPreviewSheet managedProductId={39} onClose={onClose} />);
     expect(screen.queryByRole("link", { name: /Open public page/ })).not.toBeInTheDocument();
     expect(screen.getByText("The public board is not published yet.")).toBeInTheDocument();
   });
 });
 
-describe("RoadmapPreviewSheet — renders public items only (BSN-RM-PREVIEW)", () => {
-  it("shows only items marked isPublic in the preview", () => {
-    const items = [
-      makeItem(1, "now", true),
-      makeItem(2, "next", false),
-      makeItem(3, "later", true),
-    ];
-    render(<RoadmapPreviewSheet items={items} managedProductId={39} onClose={onClose} />);
+describe("RoadmapPreviewSheet — authoritative public projection (BSN-RM-PREVIEW)", () => {
+  it("renders items returned by the public projection", () => {
+    mockPublicBoard = makeBoard([makePublicItem(1, "now")], [], [makePublicItem(3, "later")]);
+    render(<RoadmapPreviewSheet managedProductId={39} onClose={onClose} />);
     expect(screen.getByText("Item 1")).toBeInTheDocument();
-    expect(screen.queryByText("Item 2")).not.toBeInTheDocument();
     expect(screen.getByText("Item 3")).toBeInTheDocument();
   });
 
-  it("shows a message when no items are public", () => {
-    const items = [makeItem(1, "now", false)];
-    render(<RoadmapPreviewSheet items={items} managedProductId={39} onClose={onClose} />);
+  it("does not render items that the public projection omits", () => {
+    mockPublicBoard = makeBoard([makePublicItem(1, "now")], [], []);
+    render(<RoadmapPreviewSheet managedProductId={39} onClose={onClose} />);
+    expect(screen.queryByText("Item 2")).not.toBeInTheDocument();
+  });
+
+  it("shows a message when the public projection is empty", () => {
+    mockPublicBoard = makeBoard([], [], []);
+    render(<RoadmapPreviewSheet managedProductId={39} onClose={onClose} />);
     expect(screen.getByText(/Nothing to preview/i)).toBeInTheDocument();
-    expect(screen.queryByText("Item 1")).not.toBeInTheDocument();
   });
 
-  it("shows the correct public item count in the description", () => {
-    const items = [makeItem(1, "now", true), makeItem(2, "next", true)];
-    render(<RoadmapPreviewSheet items={items} managedProductId={39} onClose={onClose} />);
-    expect(screen.getByText(/2 items visible to the public/i)).toBeInTheDocument();
+  it("shows a message when there is no public projection yet", () => {
+    render(<RoadmapPreviewSheet managedProductId={39} onClose={onClose} />);
+    expect(screen.getByText(/Nothing to preview/i)).toBeInTheDocument();
   });
 
-  it("shows a singular count when exactly one item is public", () => {
-    const items = [makeItem(1, "now", true)];
-    render(<RoadmapPreviewSheet items={items} managedProductId={39} onClose={onClose} />);
+  it("shows the correct public item count spanning all status groups", () => {
+    mockPublicBoard = makeBoard(
+      [makePublicItem(1, "now", "planned")],
+      [makePublicItem(2, "next", "in_progress")],
+      [makePublicItem(3, "later", "completed")],
+    );
+    render(<RoadmapPreviewSheet managedProductId={39} onClose={onClose} />);
+    expect(screen.getByText(/3 items visible to the public/i)).toBeInTheDocument();
+  });
+
+  it("shows a singular count when exactly one item is in the public projection", () => {
+    mockPublicBoard = makeBoard([makePublicItem(1, "now")], [], []);
+    render(<RoadmapPreviewSheet managedProductId={39} onClose={onClose} />);
     expect(screen.getByText(/1 item visible to the public/i)).toBeInTheDocument();
   });
 
-  it("groups items by horizon and renders Now, Next, Later columns", () => {
-    const items = [
-      makeItem(1, "now", true),
-      makeItem(2, "later", true),
-    ];
-    render(<RoadmapPreviewSheet items={items} managedProductId={39} onClose={onClose} />);
+  it("groups items by horizon: planned and in_progress items land in their horizon column", () => {
+    mockPublicBoard = makeBoard(
+      [makePublicItem(1, "now", "planned")],
+      [makePublicItem(2, "next", "in_progress")],
+      [makePublicItem(3, "later", "completed")],
+    );
+    render(<RoadmapPreviewSheet managedProductId={39} onClose={onClose} />);
     expect(screen.getByText("Now")).toBeInTheDocument();
     expect(screen.getByText("Next")).toBeInTheDocument();
     expect(screen.getByText("Later")).toBeInTheDocument();
+    expect(screen.getByText("Item 1")).toBeInTheDocument();
+    expect(screen.getByText("Item 2")).toBeInTheDocument();
+    expect(screen.getByText("Item 3")).toBeInTheDocument();
   });
 
   it("shows the Public Roadmap Preview title", () => {
-    render(<RoadmapPreviewSheet items={[]} managedProductId={39} onClose={onClose} />);
+    render(<RoadmapPreviewSheet managedProductId={39} onClose={onClose} />);
     expect(screen.getByText("Public Roadmap Preview")).toBeInTheDocument();
+  });
+
+  it("hides the count description while loading", () => {
+    mockIsLoading = true;
+    render(<RoadmapPreviewSheet managedProductId={39} onClose={onClose} />);
+    expect(screen.queryByText(/visible to the public/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/No items are marked/i)).not.toBeInTheDocument();
+  });
+
+  it("counts items from all three status buckets (multi-bucket coverage)", () => {
+    mockPublicBoard = makeBoard(
+      [makePublicItem(10, "now", "planned"), makePublicItem(11, "now", "planned")],
+      [makePublicItem(20, "next", "in_progress")],
+      [makePublicItem(30, "later", "completed"), makePublicItem(31, "later", "completed"), makePublicItem(32, "later", "completed")],
+    );
+    render(<RoadmapPreviewSheet managedProductId={39} onClose={onClose} />);
+    expect(screen.getByText(/6 items visible to the public/i)).toBeInTheDocument();
   });
 });

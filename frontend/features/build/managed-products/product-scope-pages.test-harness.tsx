@@ -441,6 +441,13 @@ jest.mock("@/hooks/api/crm/organizations", () => ({
   })),
 }));
 
+jest.mock(
+  "@/features/build/managed-products/customer-impact-panel",
+  () => ({
+    CustomerImpactPanel: () => null,
+  }),
+);
+
 export const {
   useGoals,
   useGoalsPage,

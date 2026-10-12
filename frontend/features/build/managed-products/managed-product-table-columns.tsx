@@ -29,6 +29,7 @@ import type { ManagedProduct } from "@/types/projects";
 import { ManagedProductStatusBadge } from "./managed-product-status-badge";
 import {
   ProductFeedbackCell,
+  ProductGoalHealthCell,
   ProductLifecycleCell,
   ProductNameCell,
   ProductOwnerCell,
@@ -41,6 +42,7 @@ export const MANAGED_PRODUCT_TABLE_HEADERS = [
   "Name",
   "Lifecycle",
   "Health",
+  "Goals",
   "Owner",
   "Projects",
   "Next release",
@@ -208,6 +210,9 @@ export function buildManagedProductColumns({
   function renderHealth(row: ManagedProduct) {
     return <ManagedProductStatusBadge status={row.health ?? row.status} />;
   }
+  function renderGoalHealth(row: ManagedProduct) {
+    return <ProductGoalHealthCell product={row} />;
+  }
   function renderOwner(row: ManagedProduct) {
     return <ProductOwnerCell product={row} ownerOf={ownerOf} />;
   }
@@ -253,6 +258,12 @@ export function buildManagedProductColumns({
       key: "health",
       header: "Health",
       cell: renderHealth,
+    },
+    {
+      key: "goalHealth",
+      header: "Goals",
+      className: "w-16",
+      cell: renderGoalHealth,
     },
     {
       key: "ownerId",

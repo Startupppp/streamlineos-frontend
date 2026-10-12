@@ -2,13 +2,14 @@
 
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import { useMemo, useCallback } from "react";
+import { useMemo, useCallback, useState } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { PageState } from "@/components/shared/page-state";
 import { BuildHeaderActions } from "@/features/build/shared/build-header-actions";
+import { BuildOfflineNotice } from "@/features/build/shared/build-offline-notice";
 import { EmptyProjectsIllustration } from "@/components/illustrations";
 import {
   MANAGED_PRODUCT_DETAIL_CONTENT_CLASS,
@@ -19,11 +20,20 @@ import { PRODUCT_PROJECT_SKELETON_HEADERS } from "@/features/build/managed-produ
 import { useProductProjectsPage, type LinkedProjectRow } from "./use-product-projects-page";
 import { buildProductProjectsColumns, ProductProjectMobileCard } from "./product-projects-table";
 import { ProductProjectsToolbar } from "./product-projects-toolbar";
+import type { ProjectListItem } from "@/types/projects";
 
 const LinkExistingProjectDialog = dynamic(
   () =>
     import("@/features/build/project-list/link-existing-project-dialog").then(
       (m) => ({ default: m.LinkExistingProjectDialog }),
+    ),
+  { ssr: false },
+);
+
+const ProjectLinkPreviewSheet = dynamic(
+  () =>
+    import("./project-link-preview-sheet").then(
+      (m) => ({ default: m.ProjectLinkPreviewSheet }),
     ),
   { ssr: false },
 );
@@ -35,6 +45,19 @@ interface ProductProjectsPageProps {
 export function ProductProjectsPage({ managedProductId }: ProductProjectsPageProps) {
   const router = useRouter();
   const page = useProductProjectsPage({ managedProductId });
+  const [previewProject, setPreviewProject] = useState<{ id: number; name: string } | null>(null);
+
+  const handlePreviewProject = useCallback((project: ProjectListItem) => {
+    setPreviewProject({ id: project.id, name: project.name });
+  }, []);
+
+  const handlePreviewSheetOpenChange = useCallback((open: boolean) => {
+    if (!open) setPreviewProject(null);
+  }, []);
+
+  const handlePreviewLinked = useCallback(() => {
+    setPreviewProject(null);
+  }, []);
   const {
     canManage,
     rows,
@@ -54,6 +77,7 @@ export function ProductProjectsPage({ managedProductId }: ProductProjectsPagePro
     handleUnlinkConfirm,
     handleUnlinkDialogOpenChange,
     handleRetry,
+    dataUpdatedAt,
   } = page;
 
   const handleRowClick = useCallback(
@@ -84,6 +108,7 @@ export function ProductProjectsPage({ managedProductId }: ProductProjectsPagePro
       actions={<BuildHeaderActions actions={headerActions} />}
     >
       <ManagedProductDetailShell>
+        <BuildOfflineNotice dataUpdatedAt={dataUpdatedAt} />
         <ManagedProductDetailPrimarySection index={0}>
           <PageState
             resolution={resolution}
@@ -150,7 +175,18 @@ export function ProductProjectsPage({ managedProductId }: ProductProjectsPagePro
         managedProductId={managedProductId}
         open={linkDialogOpen}
         onOpenChange={setLinkDialogOpen}
+        onPreviewProject={handlePreviewProject}
       />
+      {previewProject !== null && (
+        <ProjectLinkPreviewSheet
+          open={previewProject !== null}
+          onOpenChange={handlePreviewSheetOpenChange}
+          managedProductId={managedProductId}
+          projectId={previewProject.id}
+          projectName={previewProject.name}
+          onLinked={handlePreviewLinked}
+        />
+      )}
     </PageWrapper>
   );
 }

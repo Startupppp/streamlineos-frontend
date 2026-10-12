@@ -61,6 +61,8 @@ export function ManagedProductsPage() {
     handleEditRow,
     handleDeleteRow,
     handleArchiveRow,
+    handleViewModeChange,
+    viewMode,
     columns,
   } = useManagedProductsPage();
 
@@ -95,6 +97,8 @@ export function ManagedProductsPage() {
           tagOptions={tagOptions}
           linkedProjectOptions={linkedProjectOptions}
           searchInputRef={searchInputRef}
+          viewMode={viewMode}
+          onViewModeChange={handleViewModeChange}
         />
       }
       actions={
@@ -135,6 +139,7 @@ export function ManagedProductsPage() {
             getRowKey={getProductRowKey}
             minWidth="900px"
             mobileCard={renderMobileCard}
+            gridMode={viewMode === "grid"}
             selection={
               canUpdate
                 ? {
