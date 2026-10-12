@@ -44,8 +44,9 @@ export function ProjectCreateWizard({
   onOpenChange,
   scope,
 }: ProjectCreateWizardProps) {
-  const { step, direction, draft, updateDraft, goNext, goBack, goToStep1, reset } =
+  const { step, direction, draft, updateDraft, goNext, goBack, reset } =
     useProjectCreate();
+  const [keyConflictMessage, setKeyConflictMessage] = useState<string | null>(null);
 
   const isDirty = open && (step > 1 || draft.name.trim() !== "");
   useRegisterDirtyState(isDirty);
@@ -78,13 +79,15 @@ export function ProjectCreateWizard({
   };
 
   function handleSuccess() {
+    setKeyConflictMessage(null);
+    pendingKeyErrorRef.current = null;
     reset();
     onOpenChange(false);
   }
 
   function handleKeyConflict(message: string): void {
     pendingKeyErrorRef.current = message;
-    goToStep1();
+    setKeyConflictMessage(message);
   }
 
   const { provision, isProvisioning } = useProjectProvisioning(
@@ -103,6 +106,8 @@ export function ProjectCreateWizard({
       setDiscardConfirmOpen(true);
       return;
     }
+    setKeyConflictMessage(null);
+    pendingKeyErrorRef.current = null;
     reset();
     onOpenChange(false);
   }, [reset, onOpenChange]);
@@ -116,6 +121,8 @@ export function ProjectCreateWizard({
   }
 
   function handleDiscardConfirm() {
+    setKeyConflictMessage(null);
+    pendingKeyErrorRef.current = null;
     setDiscardConfirmOpen(false);
     reset();
     onOpenChange(false);
@@ -140,7 +147,16 @@ export function ProjectCreateWizard({
     });
   }
 
+  function handleBack(): void {
+    if (step === 7) {
+      setKeyConflictMessage(null);
+    }
+    goBack();
+  }
+
   function handleCreate(): void {
+    setKeyConflictMessage(null);
+    pendingKeyErrorRef.current = null;
     void provision(draft);
   }
 
@@ -205,7 +221,7 @@ export function ProjectCreateWizard({
               {step === 4 && <StepToggles {...sharedProps} />}
               {step === 5 && <StepWorkflow {...sharedProps} />}
               {step === 6 && <StepTeam {...sharedProps} />}
-              {step === 7 && <StepReview draft={draft} />}
+              {step === 7 && <StepReview draft={draft} keyConflictMessage={keyConflictMessage} />}
             </motion.div>
           </AnimatePresence>
         </SheetBody>
@@ -215,7 +231,7 @@ export function ProjectCreateWizard({
           isProvisioning={isProvisioning}
           onCancel={requestClose}
           onNextFromBasics={handleNextFromBasics}
-          onBack={goBack}
+          onBack={handleBack}
           onNext={goNext}
           onCreate={handleCreate}
         />

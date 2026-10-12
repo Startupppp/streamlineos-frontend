@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, type ReactNode } from "react";
-import { CheckCircle2, FolderKanban, Settings2, Users } from "lucide-react";
+import { AlertTriangle, CheckCircle2, FolderKanban, Settings2, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useProjectTemplates } from "@/hooks/api/build/templates";
@@ -12,6 +12,7 @@ import { resolveWizardMemberLabel } from "../resolve-wizard-member-label";
 
 interface StepReviewProps {
   draft: WizardDraft;
+  keyConflictMessage?: string | null;
 }
 
 const WORKFLOW_LABELS: Record<string, string> = {
@@ -43,7 +44,7 @@ const FEATURE_LABELS: Record<string, string> = {
   ai: "AI Assistant",
 };
 
-export function StepReview({ draft }: StepReviewProps) {
+export function StepReview({ draft, keyConflictMessage }: StepReviewProps) {
   const sessionUser = useWizardSessionUser();
   const { data: templatePages } = useProjectTemplates();
   const members = useWizardMembers(100);
@@ -75,15 +76,27 @@ export function StepReview({ draft }: StepReviewProps) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-start gap-3 rounded-xl border border-status-success-rule bg-status-success-surface p-3">
-        <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-status-success-fill text-primary-foreground">
-          <CheckCircle2 className="size-4" aria-hidden="true" />
-        </span>
-        <div>
-          <p className="text-sm font-medium text-foreground">Ready to create</p>
-          <p className="text-xs text-muted-foreground">Review the project scope, delivery setup, and Build members below.</p>
+      {keyConflictMessage ? (
+        <div className="flex items-start gap-3 rounded-xl border border-status-warning-rule bg-status-warning-surface p-3">
+          <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-status-warning-fill text-foreground">
+            <AlertTriangle className="size-4" aria-hidden="true" />
+          </span>
+          <div>
+            <p className="text-sm font-medium text-foreground">Project key already taken</p>
+            <p className="text-xs text-muted-foreground">{keyConflictMessage} Go back to step 1 to change the key.</p>
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="flex items-start gap-3 rounded-xl border border-status-success-rule bg-status-success-surface p-3">
+          <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-status-success-fill text-primary-foreground">
+            <CheckCircle2 className="size-4" aria-hidden="true" />
+          </span>
+          <div>
+            <p className="text-sm font-medium text-foreground">Ready to create</p>
+            <p className="text-xs text-muted-foreground">Review the project scope, delivery setup, and Build members below.</p>
+          </div>
+        </div>
+      )}
 
       <ReviewSection icon={<FolderKanban className="size-4" />} title="Project">
         <ReviewGrid>

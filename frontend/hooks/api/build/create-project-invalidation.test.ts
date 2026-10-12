@@ -46,7 +46,7 @@ function wrap(client: QueryClient) {
   };
 }
 
-describe("useCreateProject — list invalidation after create", () => {
+describe("useCreateProject — the list cache carries the new project without a refetch", () => {
   let client: QueryClient;
   let invalidateSpy: jest.SpyInstance;
 
@@ -56,7 +56,12 @@ describe("useCreateProject — list invalidation after create", () => {
     invalidateSpy = jest.spyOn(client, "invalidateQueries");
   });
 
-  it("invalidates the projects list with refetchType all so an empty list cache refreshes after navigate-away create", async () => {
+  it("prepends the created project to a seeded list cache, so the list shows it before any network round-trip", async () => {
+    client.setQueryData(buildWorkQueryKeys.projects.list(undefined), {
+      data: [{ id: 7, name: "Existing project", key: "EX" }],
+      total: 1,
+    });
+
     const { result } = renderHook(() => useCreateProject(), {
       wrapper: wrap(client),
     });
@@ -65,15 +70,17 @@ describe("useCreateProject — list invalidation after create", () => {
       await result.current.mutateAsync({ name: "Smoke Project", key: "SP" });
     });
 
-    expect(invalidateSpy).toHaveBeenCalledWith(
-      expect.objectContaining({
-        queryKey: buildWorkQueryKeys.projects.list(),
-        refetchType: "all",
-      }),
+    const list = client.getQueryData<{
+      data: { id: number; name: string; key: string }[];
+    }>(buildWorkQueryKeys.projects.list(undefined));
+
+    expect(list?.data.map((p) => p.id)).toEqual([42, 7]);
+    expect(list?.data[0]).toEqual(
+      expect.objectContaining({ id: 42, name: "Smoke Project", key: "SP" }),
     );
   });
 
-  it("does not rely on default active-only invalidation of projects.all for the list refresh", async () => {
+  it("never invalidates or refetches the projects list, because the create response already carries the new row", async () => {
     const { result } = renderHook(() => useCreateProject(), {
       wrapper: wrap(client),
     });
@@ -83,13 +90,10 @@ describe("useCreateProject — list invalidation after create", () => {
     });
 
     const listKey = JSON.stringify(buildWorkQueryKeys.projects.list());
-    const activeOnlyListCalls = invalidateSpy.mock.calls.filter((call) => {
-      const opts = call[0] as { queryKey?: unknown; refetchType?: string };
-      return (
-        JSON.stringify(opts.queryKey) === listKey &&
-        (opts.refetchType === undefined || opts.refetchType === "active")
-      );
+    const listInvalidations = invalidateSpy.mock.calls.filter((call) => {
+      const opts = call[0] as { queryKey?: unknown };
+      return JSON.stringify(opts.queryKey) === listKey;
     });
-    expect(activeOnlyListCalls).toHaveLength(0);
+    expect(listInvalidations).toHaveLength(0);
   });
 });

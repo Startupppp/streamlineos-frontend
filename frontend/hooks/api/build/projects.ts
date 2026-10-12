@@ -28,6 +28,7 @@ import type {
 } from "@/hooks/api/build/project-cache-patch";
 import type {
   Project,
+  ProjectListItem,
   ProjectWithDetails,
   TicketLabel,
   ProjectFilters,
@@ -167,10 +168,51 @@ export function useCreateProject(
       mutationFn: (data: CreateProjectInput) =>
         apiClient.post<Project>("/build", data, undefined, projectRowLazy),
       onSuccess: (data, variables, context, mutationContext) => {
-        void queryClient.invalidateQueries({
-          queryKey: buildWorkQueryKeys.projects.list(),
-          refetchType: "all",
-        });
+        const workspaceUsers = getWorkspaceUsersFromCache(queryClient);
+        const managerRaw = data.managerId
+          ? (workspaceUsers.find((u) => u.id === data.managerId) ?? null)
+          : null;
+        const newItem: ProjectListItem = {
+          id: data.id,
+          name: data.name,
+          description: data.description,
+          key: data.key,
+          status: data.status,
+          priority: null,
+          health: "on_track",
+          managedProductId: data.managedProductId,
+          startDate: data.startDate,
+          endDate: data.endDate,
+          manager: managerRaw
+            ? {
+                id: managerRaw.id,
+                firstName: managerRaw.firstName ?? null,
+                lastName: managerRaw.lastName ?? null,
+                image: managerRaw.image,
+              }
+            : null,
+          progress: { total: 0, done: 0, percentage: 0 },
+          members: [],
+          teams: [],
+        };
+        queryClient.setQueriesData<ProjectListCache>(
+          { queryKey: buildWorkQueryKeys.projects.list() },
+          (old) => {
+            if (!old) return old;
+            if ("pages" in old) {
+              const [firstPage, ...rest] = old.pages;
+              if (!firstPage) return old;
+              return {
+                ...old,
+                pages: [
+                  { ...firstPage, data: [newItem, ...firstPage.data] },
+                  ...rest,
+                ],
+              };
+            }
+            return { ...old, data: [newItem, ...old.data] };
+          },
+        );
         options?.onSuccess?.(data, variables, context, mutationContext);
       },
     },
