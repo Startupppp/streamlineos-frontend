@@ -5,7 +5,7 @@ export const DRAFT_KEY = "org-setup-draft";
 export type StepId = "welcome" | "basics" | "workspace" | "products" | "invite";
 
 export function getStepSequence(): StepId[] {
-  return ["welcome", "workspace", "products", "invite"];
+  return ["workspace", "products", "invite"];
 }
 
 export function resolveStepIndex(

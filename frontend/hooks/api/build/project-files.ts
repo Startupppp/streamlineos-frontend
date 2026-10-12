@@ -41,6 +41,27 @@ interface ProjectFilePage {
 
 export const MAX_PROJECT_FILE_BYTES = 2 * 1024 * 1024;
 
+export const PROJECT_FILE_MIME_TYPES = [
+  "application/pdf",
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+  "text/plain",
+  "text/csv",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.ms-excel",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+];
+
+export const PROJECT_FILE_TYPES_LABEL =
+  "PDF, JPG, PNG, GIF, WEBP, TXT, CSV, DOC, DOCX, XLS, XLSX";
+
+export function isAllowedProjectFileType(mimeType: string): boolean {
+  return PROJECT_FILE_MIME_TYPES.includes(mimeType);
+}
+
 function readFileAsBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();

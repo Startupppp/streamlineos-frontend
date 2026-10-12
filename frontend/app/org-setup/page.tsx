@@ -7,16 +7,11 @@ import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { clearBackendTokenCache, setAutoSignOutSuppressed } from "@/lib/api-client";
-import { clearGateCookie, completeOnboardingGate } from "@/lib/onboarding-gate";
-import { signInWithMagicToken } from "@/hooks/common/auth-hooks";
+import { setAutoSignOutSuppressed } from "@/lib/api-client";
 import {
-  SESSION_CLAIMS_UNCONFIRMED_MESSAGE,
-  useConfirmedSessionClaimsRefresh,
-} from "@/hooks/common/use-confirmed-session-claims-refresh";
-import {
-  useSkipOrgSetupMutation,
   useOrgSetupSessionQuery,
+  useOrgSetupDraftQuery,
+  useOrgSetupDraftSaveMutation,
 } from "@/hooks/api/org-setup";
 import {
   STEP_TITLES,
@@ -33,16 +28,15 @@ import {
   saveStep,
   clampStep,
   reachableStep,
-  hasDraftProgress,
   hasCompletionMarker,
   getCompletionDestination,
+  type SyncStatus,
 } from "@/features/org-setup/lib/draft";
 import {
   parseWizardDraft,
   type WizardData,
 } from "@/features/org-setup/lib/wizard-data-schema";
 import { OrgSetupShell } from "@/features/org-setup/components/org-setup-shell";
-import { StepWelcome } from "@/features/org-setup/components/step-welcome";
 import { StepWorkspace } from "@/features/org-setup/components/step-workspace";
 import { StepProducts } from "@/features/org-setup/components/step-products";
 import { StepInviteLaunch } from "@/features/org-setup/components/step-invite-launch";
@@ -50,12 +44,10 @@ import { ArchivedOrgsRestore } from "@/components/organization/archived-orgs-res
 
 export default function OrgSetupPage() {
   const { data: session } = useSession();
-  const beginClaimsRefresh = useConfirmedSessionClaimsRefresh();
   const userId = session?.user?.id ?? "";
 
   const [step, setStep] = useState(1);
   const [mounted, setMounted] = useState(false);
-  const [isSkipping, setIsSkipping] = useState(false);
   const [direction, setDirection] = useState(1);
   const [data, setData] = useState<WizardData>({ ...DEFAULT_DATA });
 
@@ -68,97 +60,123 @@ export default function OrgSetupPage() {
     );
   }, [mounted, session?.user?.name]);
   const [saveState, setSaveState] = useState<"idle" | "saved">("idle");
-  const [shouldLoadServerSession, setShouldLoadServerSession] = useState(false);
-  const hydratedFromServerRef = useRef(false);
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>("synced");
   const mountedOnceRef = useRef(false);
-  const skipPendingRef = useRef(false);
+  const draftRevisionRef = useRef(0);
+  const draftSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const draftSaveChainRef = useRef<Promise<void>>(Promise.resolve());
 
-  const { data: serverSession } = useOrgSetupSessionQuery(
-    shouldLoadServerSession,
-  );
-  const { mutateAsync: skipOrgSetup } = useSkipOrgSetupMutation();
+  const { data: serverSession, isFetched: isServerSessionFetched } =
+    useOrgSetupSessionQuery(Boolean(userId));
+  const { data: serverDraft, isFetched: isServerDraftFetched } =
+    useOrgSetupDraftQuery(Boolean(userId));
+  const { mutateAsync: saveOrgSetupDraft } = useOrgSetupDraftSaveMutation();
 
   const sequence = useMemo(() => getStepSequence(), []);
   const totalSteps = sequence.length;
   const currentStepId: StepId = sequence[step - 1] ?? "welcome";
 
-  const firstName =
-    session?.user?.name?.split(" ")[0] ??
-    session?.user?.email?.split("@")[0] ??
-    "";
-
   const markDraftSaved = useCallback(() => {
     setSaveState("saved");
   }, []);
+
+  const saveServerDraft = useCallback(
+    (nextData: WizardData, nextStepId: StepId): Promise<void> => {
+      if (!userId) return Promise.resolve();
+      setSyncStatus("saving");
+      const save = draftSaveChainRef.current
+        .catch(() => undefined)
+        .then(async () => {
+          const result = await saveOrgSetupDraft({
+            revision: draftRevisionRef.current,
+            stepData: {
+              ...nextData,
+              __schemaVersion: 1,
+              __currentStep: nextStepId,
+            },
+            expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+          });
+          draftRevisionRef.current = result.revision;
+          setSyncStatus("synced");
+        })
+        .catch((error: unknown) => {
+          setSyncStatus("error");
+          throw error;
+        });
+      draftSaveChainRef.current = save;
+      return save;
+    },
+    [saveOrgSetupDraft, userId],
+  );
+
+  const scheduleServerDraftSave = useCallback(
+    (nextData: WizardData, nextStepId: StepId) => {
+      if (draftSaveTimerRef.current) clearTimeout(draftSaveTimerRef.current);
+      setSyncStatus("unsynced");
+      draftSaveTimerRef.current = setTimeout(() => {
+        draftSaveTimerRef.current = null;
+        void saveServerDraft(nextData, nextStepId).catch(() => undefined);
+      }, 500);
+    },
+    [saveServerDraft],
+  );
 
   const patch = useCallback(
     (updates: Partial<WizardData>) => {
       setData((prev) => {
         const next = { ...prev, ...updates };
         saveDraft(next, userId);
+        scheduleServerDraftSave(next, currentStepId);
         return next;
       });
       markDraftSaved();
     },
-    [markDraftSaved, userId],
+    [currentStepId, markDraftSaved, scheduleServerDraftSave, userId],
   );
 
-  const goNext = useCallback(() => {
-    setDirection(1);
-    setStep((s) => Math.min(s + 1, totalSteps));
-    markDraftSaved();
-  }, [totalSteps, markDraftSaved]);
-
-  const goBack = useCallback(() => {
-    setDirection(-1);
-    setStep((s) => Math.max(s - 1, 1));
-  }, []);
-
-  const handleStepSelect = useCallback((index: number) => {
-    setDirection(-1);
-    setStep(index + 1);
-  }, []);
-
-  const handleSkipToDashboard = useCallback(async () => {
-    if (skipPendingRef.current) return;
-    skipPendingRef.current = true;
-    setIsSkipping(true);
-    const claimsRun = beginClaimsRefresh();
-    let createdOrgId: string | null = null;
-    try {
-      const res = await skipOrgSetup({});
-      createdOrgId = res.orgId;
-      clearBackendTokenCache();
-      const claimsOutcome = await completeOnboardingGate(
-        "org-setup-done",
-        res.orgId,
-        claimsRun.confirm,
-        { orgId: res.orgId },
-      );
-      if (claimsOutcome.status === "superseded") {
-        skipPendingRef.current = false;
-        setIsSkipping(false);
-        return;
-      }
-      if (claimsOutcome.status !== "confirmed" && res.autoLoginToken) {
-        const outcome = await signInWithMagicToken(res.autoLoginToken);
-        if (outcome.status === "indeterminate")
-          throw new Error(
-            "We could not confirm your sign-in. Please sign in again.",
-          );
-        if (outcome.status !== "signed-in")
-          throw new Error("Sign-in failed. Please retry.");
-      } else if (claimsOutcome.status !== "confirmed")
-        throw new Error(SESSION_CLAIMS_UNCONFIRMED_MESSAGE);
-      clearAll(userId);
-      window.location.replace("/dashboard");
-    } catch (err) {
-      if (createdOrgId) clearGateCookie("org-setup-done", createdOrgId);
-      skipPendingRef.current = false;
-      setIsSkipping(false);
-      toast.error(getErrorMessage(err));
+  const goNext = useCallback(async () => {
+    const nextStep = Math.min(step + 1, totalSteps);
+    const nextStepId = sequence[nextStep - 1] ?? currentStepId;
+    if (draftSaveTimerRef.current) {
+      clearTimeout(draftSaveTimerRef.current);
+      draftSaveTimerRef.current = null;
     }
-  }, [skipOrgSetup, beginClaimsRefresh, userId]);
+    try {
+      await saveServerDraft(data, nextStepId);
+    } catch (error) {
+      toast.error(`We couldn't save your setup. ${getErrorMessage(error)}`);
+      return;
+    }
+    setDirection(1);
+    setStep(nextStep);
+    markDraftSaved();
+  }, [currentStepId, data, markDraftSaved, saveServerDraft, sequence, step, totalSteps]);
+
+  const goBack = useCallback(async () => {
+    const nextStep = Math.max(step - 1, 1);
+    const nextStepId = sequence[nextStep - 1] ?? currentStepId;
+    try {
+      await saveServerDraft(data, nextStepId);
+    } catch (error) {
+      toast.error(`We couldn't save your setup. ${getErrorMessage(error)}`);
+      return;
+    }
+    setDirection(-1);
+    setStep(nextStep);
+  }, [currentStepId, data, saveServerDraft, sequence, step]);
+
+  const handleStepSelect = useCallback(async (index: number) => {
+    const nextStep = index + 1;
+    const nextStepId = sequence[index] ?? currentStepId;
+    try {
+      await saveServerDraft(data, nextStepId);
+    } catch (error) {
+      toast.error(`We couldn't save your setup. ${getErrorMessage(error)}`);
+      return;
+    }
+    setDirection(-1);
+    setStep(nextStep);
+  }, [currentStepId, data, saveServerDraft, sequence]);
 
   useEffect(() => {
     setAutoSignOutSuppressed(true);
@@ -174,58 +192,66 @@ export default function OrgSetupPage() {
   }, [userId, session?.orgId]);
 
   useEffect(() => {
-    if (!userId || mountedOnceRef.current) return;
+    if (
+      !userId ||
+      mountedOnceRef.current ||
+      !isServerDraftFetched ||
+      !isServerSessionFetched
+    )
+      return;
     mountedOnceRef.current = true;
     if (hasCompletionMarker(userId, session?.orgId ?? "")) return;
     const savedDraft = loadDraft(userId);
+    const rawServerData = serverDraft?.stepData;
+    const parsedServerDraft = rawServerData
+      ? parseWizardDraft(rawServerData)
+      : null;
+    const legacyServerDraft =
+      !parsedServerDraft &&
+      serverSession?.status === "in_progress" &&
+      serverSession.data
+        ? parseWizardDraft(serverSession.data)
+        : null;
+    const authoritativeDraft = parsedServerDraft ?? legacyServerDraft;
     const sessionName = session?.user?.name?.trim();
+    const baseDraft = authoritativeDraft ?? savedDraft;
     const hydrated =
-      sessionName && !savedDraft.fullName.trim()
-        ? { ...savedDraft, fullName: sessionName }
-        : savedDraft;
+      sessionName && !baseDraft.fullName.trim()
+        ? { ...baseDraft, fullName: sessionName }
+        : baseDraft;
     const savedSequence = getStepSequence();
+    const serverStepId =
+      rawServerData && typeof rawServerData.__currentStep === "string"
+        ? rawServerData.__currentStep
+        : serverSession?.currentStep;
+    const serverStep = resolveStepIndex(serverStepId, savedSequence);
     const restoredStep = reachableStep(
-      clampStep(loadStep(userId), savedSequence.length),
+      clampStep(serverStep || loadStep(userId), savedSequence.length),
       hydrated,
       savedSequence,
     );
+    draftRevisionRef.current = serverDraft?.revision ?? 0;
     setData(hydrated);
     saveDraft(hydrated, userId);
     setStep(restoredStep);
     saveStep(restoredStep, userId);
-    setShouldLoadServerSession(!hasDraftProgress(hydrated));
     setMounted(true);
-  }, [userId, session?.orgId, session?.user?.name]);
+  }, [
+    isServerDraftFetched,
+    isServerSessionFetched,
+    serverDraft,
+    serverSession,
+    session?.orgId,
+    session?.user?.name,
+    userId,
+  ]);
 
-  useEffect(() => {
-    if (!mounted || hydratedFromServerRef.current || !serverSession) return;
-    hydratedFromServerRef.current = true;
-
-    const localDraft = loadDraft(userId);
-    if (hasDraftProgress(localDraft)) return;
-    if (serverSession.status !== "in_progress" || !serverSession.data) return;
-
-    const merged = parseWizardDraft(serverSession.data);
-    if (!hasDraftProgress(merged)) return;
-
-    const mergedSequence = getStepSequence();
-    const stepFromServer = resolveStepIndex(
-      serverSession.currentStep,
-      mergedSequence,
-    );
-    const restoredStep = reachableStep(
-      stepFromServer >= 1
-        ? clampStep(stepFromServer, mergedSequence.length)
-        : clampStep(loadStep(userId), mergedSequence.length),
-      merged,
-      mergedSequence,
-    );
-
-    setData(merged);
-    saveDraft(merged, userId);
-    setStep(restoredStep);
-    saveStep(restoredStep, userId);
-  }, [mounted, serverSession, userId]);
+  useEffect(
+    () => () => {
+      if (draftSaveTimerRef.current) clearTimeout(draftSaveTimerRef.current);
+    },
+    [],
+  );
 
   useEffect(() => {
     if (!mounted) return;
@@ -257,10 +283,7 @@ export default function OrgSetupPage() {
       </div>
     );
 
-  const stepTitle =
-    currentStepId === "welcome"
-      ? `Welcome${firstName ? `, ${firstName}` : ""}`
-      : STEP_TITLES[currentStepId];
+  const stepTitle = STEP_TITLES[currentStepId];
 
   return (
     <OrgSetupShell
@@ -269,24 +292,18 @@ export default function OrgSetupPage() {
       title={stepTitle}
       direction={direction}
       saveState={saveState}
+      syncStatus={syncStatus}
       data={data}
       onStepSelect={handleStepSelect}
     >
-      {currentStepId === "welcome" && (
-        <StepWelcome
-          onNext={goNext}
-          onSkip={handleSkipToDashboard}
-          isSkipping={isSkipping}
-          firstName={firstName}
-          restoreSlot={<ArchivedOrgsRestore />}
-        />
-      )}
       {currentStepId === "workspace" && (
         <StepWorkspace
           data={data}
           patch={patch}
           onBack={goBack}
           onNext={goNext}
+          isFirstStep
+          restoreSlot={<ArchivedOrgsRestore />}
         />
       )}
       {currentStepId === "products" && (

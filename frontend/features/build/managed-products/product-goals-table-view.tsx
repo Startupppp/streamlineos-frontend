@@ -2,9 +2,9 @@
 
 import { useMemo } from "react";
 import { DataTable } from "@/components/ui/data-table";
+import type { DataTableColumn } from "@/components/ui/data-table";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import type { ColumnDef } from "@tanstack/react-table";
 import type { GoalListItem } from "@/hooks/api/goals";
 import { LEVEL_LABEL } from "@/features/build/goals/constants";
 import { getUserDisplayName } from "@/lib/person-display";
@@ -20,38 +20,35 @@ function GoalProgressCell({ goal }: { goal: GoalListItem }) {
   );
 }
 
-const COLUMNS: ColumnDef<GoalListItem>[] = [
+const COLUMNS: DataTableColumn<GoalListItem>[] = [
   {
-    id: "title",
-    accessorKey: "title",
+    key: "title",
     header: "Title",
-    cell: ({ row }) => (
-      <span className="font-medium line-clamp-1">{row.original.title}</span>
+    cell: (row) => (
+      <span className="font-medium line-clamp-1">{row.title}</span>
     ),
   },
   {
-    id: "level",
-    accessorKey: "level",
+    key: "level",
     header: "Level",
-    cell: ({ row }) => (
+    cell: (row) => (
       <Badge variant="outline" className="text-xs">
-        {LEVEL_LABEL[row.original.level as keyof typeof LEVEL_LABEL] ?? row.original.level}
+        {LEVEL_LABEL[row.level as keyof typeof LEVEL_LABEL] ?? row.level}
       </Badge>
     ),
   },
   {
-    id: "status",
-    accessorKey: "status",
+    key: "status",
     header: "Status",
-    cell: ({ row }) => (
-      <Badge variant="secondary" className="text-xs">{row.original.status}</Badge>
+    cell: (row) => (
+      <Badge variant="secondary" className="text-xs">{row.status}</Badge>
     ),
   },
   {
-    id: "owner",
+    key: "owner",
     header: "Owner",
-    cell: ({ row }) => {
-      const owner = row.original.owner;
+    cell: (row) => {
+      const owner = row.owner;
       if (!owner) return <span className="text-xs text-muted-foreground">—</span>;
       return (
         <span className="text-xs">{getUserDisplayName(owner)}</span>
@@ -59,15 +56,15 @@ const COLUMNS: ColumnDef<GoalListItem>[] = [
     },
   },
   {
-    id: "progress",
+    key: "progress",
     header: "Progress",
-    cell: ({ row }) => <GoalProgressCell goal={row.original} />,
+    cell: (row) => <GoalProgressCell goal={row} />,
   },
   {
-    id: "keyResults",
+    key: "keyResults",
     header: "KRs",
-    cell: ({ row }) => (
-      <span className="font-mono tabular-nums text-xs">{row.original.keyResultCount}</span>
+    cell: (row) => (
+      <span className="font-mono tabular-nums text-xs">{row.keyResultCount}</span>
     ),
   },
 ];

@@ -117,6 +117,7 @@ function baseGoal(overrides: Partial<GoalListItem> = {}): GoalListItem {
     outcomeReviews: null,
     lastCheckInAt: null,
     checkInFreshness: "none",
+    allowedActions: [],
     ...overrides,
   };
 }

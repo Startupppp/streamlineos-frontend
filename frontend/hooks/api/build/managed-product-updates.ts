@@ -6,39 +6,33 @@ import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useCan } from "@/hooks/api/access";
 
+import type {
+  ManagedProductRelationsCreateProductUpdateResponse,
+  ManagedProductRelationsListProductUpdatesResponse,
+} from "@/contracts/build-contracts.generated";
+
 const productUpdateRowContract = lazyContract(() =>
   import("@/contracts/build-contracts.generated").then(
-    (m) => m.managedProductUpdateRowSchema,
+    (m) => m.managedProductRelationsCreateProductUpdateResponseSchema,
   ),
 );
 
 const productUpdatesPageContract = lazyContract(() =>
   import("@/contracts/build-contracts.generated").then(
-    (m) => m.managedProductUpdatesPageSchema,
+    (m) => m.managedProductRelationsListProductUpdatesResponseSchema,
   ),
 );
 
-interface ProductUpdateRow {
-  id: number;
-  orgId: string;
-  managedProductId: number;
-  body: string;
-  version: number;
-  authorMembershipId: number | null;
-  authorName: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-interface ProductUpdatesPage {
-  data: ProductUpdateRow[];
-  pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
-}
+type ProductUpdateRow = ManagedProductRelationsCreateProductUpdateResponse;
+type ProductUpdatesPage = ManagedProductRelationsListProductUpdatesResponse;
 
 export function useProductUpdates(managedProductId: number, enabled = true) {
   const canView = useCan("build:managed-products:view");
   return useQuery<ProductUpdatesPage>({
-    queryKey: buildWorkQueryKeys.projects.managedProducts.productUpdates(managedProductId),
+    queryKey:
+      buildWorkQueryKeys.projects.managedProducts.productUpdates(
+        managedProductId,
+      ),
     queryFn: ({ signal }) =>
       apiClient.get(
         `/build/managed-products/${managedProductId}/updates`,
@@ -54,7 +48,13 @@ export function useProductUpdates(managedProductId: number, enabled = true) {
 export function useCreateProductUpdate(managedProductId: number) {
   const qc = useQueryClient();
   return useMutation({
-    mutationKey: ["build", "managed-products", managedProductId, "product-updates", "create"],
+    mutationKey: [
+      "build",
+      "managed-products",
+      managedProductId,
+      "product-updates",
+      "create",
+    ],
     mutationFn: (input: { body: string }) =>
       apiClient.post<ProductUpdateRow>(
         `/build/managed-products/${managedProductId}/updates`,
@@ -63,7 +63,10 @@ export function useCreateProductUpdate(managedProductId: number) {
         productUpdateRowContract,
       ),
     onSuccess: (newRow) => {
-      const key = buildWorkQueryKeys.projects.managedProducts.productUpdates(managedProductId);
+      const key =
+        buildWorkQueryKeys.projects.managedProducts.productUpdates(
+          managedProductId,
+        );
       qc.setQueryData<ProductUpdatesPage>(key, (old) => {
         if (!old) return old;
         return { ...old, data: [newRow, ...old.data] };

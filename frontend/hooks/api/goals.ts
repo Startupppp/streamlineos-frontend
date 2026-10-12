@@ -245,7 +245,7 @@ export function useCreateGoal() {
         keyResultCount: input.keyResults?.length ?? 0,
         linkCount: 0, linkedTicketCount: 0, linkedProjectCount: 0,
         productLinkage: null, linkedRoadmapItemCount: 0, linkedOpportunityCount: 0,
-        outcomeReviews: null, lastCheckInAt: null, checkInFreshness: "none",
+        outcomeReviews: null, lastCheckInAt: null, checkInFreshness: "none", allowedActions: [],
       };
       qc.setQueryData(accountingAndSupportQueryKeys.goals.detail(created.id), newDetail);
       forEachGoalList(qc, (cache) =>

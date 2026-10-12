@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState, type ReactNode } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -28,6 +28,8 @@ type StepWorkspaceProps = {
   patch: (updates: Partial<WizardData>) => void;
   onBack: () => void;
   onNext: () => void;
+  isFirstStep?: boolean;
+  restoreSlot?: ReactNode;
 };
 
 function fieldError(
@@ -65,7 +67,14 @@ function inferRegion(): string {
   }
 }
 
-export function StepWorkspace({ data, patch, onBack, onNext }: StepWorkspaceProps) {
+export function StepWorkspace({
+  data,
+  patch,
+  onBack,
+  onNext,
+  isFirstStep = false,
+  restoreSlot,
+}: StepWorkspaceProps) {
   const [attempted, setAttempted] = useState(false);
   const [advancedOpen, setAdvancedOpen] = useState(false);
 
@@ -143,7 +152,15 @@ export function StepWorkspace({ data, patch, onBack, onNext }: StepWorkspaceProp
   }
 
   return (
-    <StepBody footer={<NavButtons onBack={onBack} onNext={handleNext} />}>
+    <StepBody
+      footer={
+        <NavButtons
+          onBack={isFirstStep ? undefined : onBack}
+          onNext={handleNext}
+        />
+      }
+    >
+      {restoreSlot}
       <section className="min-w-0 space-y-3">
         <div className="min-w-0 space-y-1">
           <Label htmlFor="workspace-display-name" className="text-label font-semibold text-foreground">

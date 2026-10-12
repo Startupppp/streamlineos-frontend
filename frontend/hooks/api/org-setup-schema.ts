@@ -133,7 +133,9 @@ export const orgSetupSkipContract = z.union([
   z.object({ success: z.literal(true), orgId: z.string() }),
 ]);
 
-export const orgSetupDraftSaveContract = z.object({ success: z.literal(true) });
+export const orgSetupDraftSaveContract = z
+  .object({ success: z.literal(true), revision: z.number().int().nonnegative() })
+  .strict();
 
 export const orgSetupDraftContract = z
   .object({

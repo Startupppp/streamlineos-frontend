@@ -35,9 +35,9 @@ interface UseRoadmapTabParams {
   createOpen?: boolean;
   onCreateOpenChange?: (open: boolean) => void;
   status?: string;
-  goalId?: number;
+  goalId?: string;
   releaseId?: number;
-  teamId?: number;
+  teamId?: string;
   managedProductId?: number;
   sort?: string;
   projectId?: number;

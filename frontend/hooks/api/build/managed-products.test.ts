@@ -71,6 +71,7 @@ function makeProduct(overrides: Partial<ManagedProduct> = {}): ManagedProduct {
     segments: [],
     tags: [],
     northStarMetric: null,
+    roadmapDefaultHorizon: null,
     lastReviewedAt: null,
     ownerMembershipId: null,
     version: 1,

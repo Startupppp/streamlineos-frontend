@@ -60,6 +60,7 @@ const STUB_PRODUCT: ManagedProduct = {
   segments: [],
   tags: [],
   northStarMetric: null,
+  roadmapDefaultHorizon: null,
   lastReviewedAt: null,
   version: 1,
   deletedAt: null,

@@ -133,6 +133,16 @@ const SCHEDULED_REVIEW: ReviewRow = {
 
 const noop = jest.fn();
 
+const PAGINATION_PROPS = {
+  isError: false,
+  onRetry: noop,
+  hasMore: false,
+  hasPreviousPage: false,
+  pageNumber: 1,
+  onNextPage: noop,
+  onPreviousPage: noop,
+} as const;
+
 describe("OutcomeReviewsSection — result required (BSN-OUTCOME-RESULT)", () => {
   beforeEach(() => jest.clearAllMocks());
 
@@ -142,6 +152,7 @@ describe("OutcomeReviewsSection — result required (BSN-OUTCOME-RESULT)", () =>
         managedProductId={10}
         reviews={[SCHEDULED_REVIEW]}
         isLoading={false}
+        {...PAGINATION_PROPS}
         onCreate={noop}
         onComplete={noop}
         onDelete={noop}
@@ -159,6 +170,7 @@ describe("OutcomeReviewsSection — result required (BSN-OUTCOME-RESULT)", () =>
         managedProductId={10}
         reviews={[SCHEDULED_REVIEW]}
         isLoading={false}
+        {...PAGINATION_PROPS}
         onCreate={noop}
         onComplete={noop}
         onDelete={noop}
@@ -182,6 +194,7 @@ describe("OutcomeReviewsSection — result required (BSN-OUTCOME-RESULT)", () =>
         managedProductId={10}
         reviews={[SCHEDULED_REVIEW]}
         isLoading={false}
+        {...PAGINATION_PROPS}
         onCreate={noop}
         onComplete={noop}
         onDelete={noop}
@@ -202,6 +215,7 @@ describe("OutcomeReviewsSection — result required (BSN-OUTCOME-RESULT)", () =>
         managedProductId={10}
         reviews={[]}
         isLoading={false}
+        {...PAGINATION_PROPS}
         onCreate={noop}
         onComplete={noop}
         onDelete={noop}
@@ -224,6 +238,7 @@ describe("OutcomeReviewRow — measure kind and source fields (BSN-OUTCOME-MEASU
         managedProductId={10}
         reviews={[review]}
         isLoading={false}
+        {...PAGINATION_PROPS}
         onCreate={noop}
         onComplete={noop}
         onDelete={noop}
@@ -246,6 +261,7 @@ describe("OutcomeReviewRow — measure kind and source fields (BSN-OUTCOME-MEASU
         managedProductId={10}
         reviews={[review]}
         isLoading={false}
+        {...PAGINATION_PROPS}
         onCreate={noop}
         onComplete={noop}
         onDelete={noop}
@@ -272,6 +288,7 @@ describe("OutcomeReviewRow — measure kind and source fields (BSN-OUTCOME-MEASU
         managedProductId={10}
         reviews={[review]}
         isLoading={false}
+        {...PAGINATION_PROPS}
         onCreate={noop}
         onComplete={noop}
         onDelete={noop}
@@ -294,6 +311,7 @@ describe("CompleteReviewDialog — measuredAt ISO conversion (BSN-OUTCOME-MEASUR
         managedProductId={10}
         reviews={[SCHEDULED_REVIEW]}
         isLoading={false}
+        {...PAGINATION_PROPS}
         onCreate={noop}
         onComplete={onComplete}
         onDelete={noop}
@@ -329,6 +347,7 @@ describe("OutcomeReviewsSection — schedule form (BSN-SCHEDULE-FORM)", () => {
         managedProductId={10}
         reviews={[]}
         isLoading={false}
+        {...PAGINATION_PROPS}
         onCreate={onCreate}
         onComplete={noop}
         onDelete={noop}
@@ -350,6 +369,7 @@ describe("OutcomeReviewsSection — schedule form (BSN-SCHEDULE-FORM)", () => {
         managedProductId={10}
         reviews={[]}
         isLoading={false}
+        {...PAGINATION_PROPS}
         onCreate={onCreate}
         onComplete={noop}
         onDelete={noop}

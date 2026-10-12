@@ -123,6 +123,10 @@ const linkedRow = (id: number): LinkedProjectRow => ({
   linkedGoals: [],
   contribution: { totalTickets: 0, doneTickets: 0, percent: null },
   linkedRoadmapItemCount: 0,
+  isPrimary: false,
+  revision: 0,
+  sourceFreshness: "",
+  allowedActions: [],
   createdAt: "2026-01-01T00:00:00.000Z",
   updatedAt: "2026-01-01T00:00:00.000Z",
 });

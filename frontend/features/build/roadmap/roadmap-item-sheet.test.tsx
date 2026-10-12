@@ -157,6 +157,8 @@ const BASELINE_ITEM = {
   deletedAt: null,
   prioritization: { method: "rice" as const, score: null, isComplete: false, missingInputs: [], unavailableReason: null },
   tierWeighting: { tierWeighted: false, tier: null, weight: null, weightedScore: null, unweightedReason: "score_unavailable" as const, linkedFeedbackCount: 0, linkedAccountCount: 0, linkedRevenue: null, revenueKnownAccountCount: 0 },
+  allowedActions: [],
+  sourceFreshness: null,
 };
 
 describe("RoadmapItemSheet — 409 conflict surfaces a field-level diff", () => {

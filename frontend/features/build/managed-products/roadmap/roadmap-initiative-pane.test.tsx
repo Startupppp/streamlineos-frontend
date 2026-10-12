@@ -243,7 +243,7 @@ describe("RoadmapInitiativePane — nested opportunity pane", () => {
   });
 
   it("shows opportunity title as a button when item has a linked opportunity", () => {
-    mockItem = makeItem({ opportunity: { id: 5, title: "Reduce churn", problem: null, hypothesis: null, affectedSegment: null, theme: null } });
+    mockItem = makeItem({ opportunity: { id: 5, title: "Reduce churn", state: "open" } });
     render(<RoadmapInitiativePane itemId={42} />);
     expect(screen.getByRole("button", { name: "Reduce churn" })).toBeInTheDocument();
   });

@@ -44,6 +44,7 @@ export function makeManagedProductsPage(
         segments: [],
         tags: [],
         northStarMetric: null,
+        roadmapDefaultHorizon: null,
         lastReviewedAt: null,
         ownerMembershipId: null,
         version: 1,

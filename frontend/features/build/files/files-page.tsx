@@ -29,7 +29,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { CONTENT_PANEL_SOLID } from "@/components/ui/content-fill-panel";
 import { PmPageShell, PmSection } from "@/components/pm-chrome";
 
-const ALLOWED_TYPES = [
+const ALLOWED_MIME_TYPES = [
   "application/pdf",
   "image/jpeg",
   "image/png",
@@ -41,7 +41,11 @@ const ALLOWED_TYPES = [
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   "application/vnd.ms-excel",
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-].join(",");
+];
+
+const ALLOWED_TYPES = ALLOWED_MIME_TYPES.join(",");
+
+const ACCEPTED_TYPES_LABEL = "PDF, JPG, PNG, GIF, WEBP, TXT, CSV, DOC, DOCX, XLS, XLSX";
 
 
 function formatFileSize(bytes: number): string {
@@ -169,6 +173,13 @@ export function FilesPage({ projectId }: FilesPageProps) {
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (!file) return;
+      if (!ALLOWED_MIME_TYPES.includes(file.type)) {
+        toast.error(
+          `${file.name} is not an accepted file type. Accepted: ${ACCEPTED_TYPES_LABEL}.`,
+        );
+        e.target.value = "";
+        return;
+      }
       if (file.size > MAX_PROJECT_FILE_BYTES) {
         toast.error(`File is too large. Maximum size is 2 MB.`);
         return;

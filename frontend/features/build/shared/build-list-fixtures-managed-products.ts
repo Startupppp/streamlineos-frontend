@@ -39,6 +39,7 @@ export const MANAGED_PRODUCT_GALLERY_ROWS: ManagedProduct[] = Array.from({ lengt
   segments: [],
   tags: [],
   northStarMetric: null,
+  roadmapDefaultHorizon: null,
   lastReviewedAt: null,
   version: 1,
   deletedAt: null,

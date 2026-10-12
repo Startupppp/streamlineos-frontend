@@ -94,6 +94,7 @@ const BASE_PRODUCT: ManagedProduct = {
   segments: [],
   tags: [],
   northStarMetric: null,
+  roadmapDefaultHorizon: null,
   lastReviewedAt: null,
   ownerMembershipId: null,
   version: 1,

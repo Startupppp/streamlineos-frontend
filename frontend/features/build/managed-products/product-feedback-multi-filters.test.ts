@@ -24,7 +24,6 @@ jest.mock("@/features/build/shared/use-build-list-filters", () => {
   return {
     ...actual,
     useBuildListFilters: () => ({
-      ...actual.BUILD_FILTER_ALL,
       value: (param: string) => mockParams.get(param) ?? actual.BUILD_FILTER_ALL,
       isActive: (param: string) => {
         const v = mockParams.get(param);

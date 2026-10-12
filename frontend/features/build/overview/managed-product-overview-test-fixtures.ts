@@ -23,6 +23,7 @@ export const OVERVIEW_SUMMARY: ManagedProductSummary = {
     segments: [],
     tags: [],
     northStarMetric: null,
+    roadmapDefaultHorizon: null,
     lastReviewedAt: null,
     owner: null,
     version: 1,
