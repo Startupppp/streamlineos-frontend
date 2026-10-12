@@ -55,6 +55,10 @@ jest.mock("./feedback/capture-submission-sheet", () => ({
     open ? <div data-testid="capture-sheet" /> : null,
 }));
 
+jest.mock("@/hooks/api/build/managed-product-members", () => ({
+  useManagedProductMembers: jest.fn(() => ({ data: null })),
+}));
+
 jest.mock("./feedback/feedback-pane", () => ({
   FeedbackPane: ({
     submissionId,

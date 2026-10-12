@@ -22,7 +22,23 @@ const OVERVIEW_FILTER_DEFINITIONS = [
   { param: "teamId" },
   { param: "segment" },
   { param: "initiativeStatus", options: INITIATIVE_STATUS_VALUES },
+  { param: "from" },
+  { param: "to" },
 ] as const;
+
+function isoDateParam(value: string | undefined, active: boolean): string | undefined {
+  if (!active || !value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return undefined;
+  const [year, month, day] = value.split("-").map(Number);
+  const parsed = new Date(Date.UTC(year, month - 1, day));
+  if (
+    parsed.getUTCFullYear() !== year ||
+    parsed.getUTCMonth() !== month - 1 ||
+    parsed.getUTCDate() !== day
+  ) {
+    return undefined;
+  }
+  return value;
+}
 
 export const PERIOD_OPTIONS = [
   { value: BUILD_FILTER_ALL, label: "All time" },
@@ -96,6 +112,8 @@ export function useManagedProductOverview(managedProductId: number) {
   const rawTeamId = listFilters.value("teamId");
   const rawSegment = listFilters.value("segment");
   const rawInitiativeStatus = listFilters.value("initiativeStatus");
+  const rawFrom = listFilters.value("from");
+  const rawTo = listFilters.value("to");
 
   const period: SummaryPeriod | undefined = PERIOD_VALUES.find((v) => v === rawPeriod);
   const initiativeStatus: InitiativeStatus | undefined = INITIATIVE_STATUS_VALUES.find(
@@ -103,6 +121,8 @@ export function useManagedProductOverview(managedProductId: number) {
   );
   const teamIdNum = positiveTeamId(rawTeamId);
   const segment = activeSegment(rawSegment);
+  const from = isoDateParam(rawFrom, listFilters.isActive("from"));
+  const to = isoDateParam(rawTo, listFilters.isActive("to"));
 
   const isOnline = useOnlineStatus();
   const canEdit = useCan("build:managed-products:update") && isOnline;
@@ -125,6 +145,8 @@ export function useManagedProductOverview(managedProductId: number) {
     teamId: teamIdNum,
     segment,
     initiativeStatus,
+    from,
+    to,
   });
 
   const product = summaryQuery.data?.product ?? null;
@@ -169,6 +191,11 @@ export function useManagedProductOverview(managedProductId: number) {
 
   const handleSegmentChange = useCallback(
     (value: string) => listFilters.setValue("segment", value),
+    [listFilters],
+  );
+
+  const handleDateRangeChange = useCallback(
+    (range: { from: string; to: string }) => listFilters.setValues({ from: range.from, to: range.to }),
     [listFilters],
   );
 
@@ -251,6 +278,10 @@ export function useManagedProductOverview(managedProductId: number) {
     rawPeriod,
     rawTeamId,
     rawSegment,
+    rawFrom,
+    rawTo,
+    from,
+    to,
     product,
     editOpen,
     setEditOpen,
@@ -281,5 +312,6 @@ export function useManagedProductOverview(managedProductId: number) {
     handleTeamChange,
     handleInitiativeStatusChange,
     handleSegmentChange,
+    handleDateRangeChange,
   };
 }

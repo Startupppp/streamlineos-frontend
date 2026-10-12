@@ -139,8 +139,8 @@ export interface FeedbucketSubmissionFilters {
   widgetId?: number;
   managedProductId?: number;
   type?: FeedbucketSubmissionType;
-  status?: FeedbucketSubmissionStatus;
-  assigneeId?: string;
+  status?: FeedbucketSubmissionStatus[];
+  assigneeId?: string[];
   search?: string;
   linked?: "linked" | "unlinked";
   duplicate?: "true" | "false";

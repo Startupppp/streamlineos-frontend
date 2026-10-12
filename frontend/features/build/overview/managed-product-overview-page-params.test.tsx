@@ -14,6 +14,7 @@ jest.mock("@/features/build/shared/use-build-list-filters", () => ({
   useBuildListFilters: jest.fn(() => ({
     value: jest.fn(() => undefined),
     setValue: jest.fn(),
+    setValues: jest.fn(),
     isActive: jest.fn(() => false),
     clearAll: jest.fn(),
     isFiltered: false,
@@ -208,5 +209,65 @@ describe("ManagedProductOverviewPage — period URL param forwarded to summary h
     mockPeriod(undefined);
     render(<ManagedProductOverviewPage managedProductId={42} />);
     expect(screen.getByLabelText("Period")).toBeInTheDocument();
+  });
+});
+
+describe("ManagedProductOverviewPage — from/to date URL params forwarded to summary hook (BSN-OVW-DATE-RANGE)", () => {
+  function mockDateRange(from: string | undefined, to: string | undefined) {
+    const { useBuildListFilters } = jest.requireMock(
+      "@/features/build/shared/use-build-list-filters",
+    );
+    (useBuildListFilters as jest.Mock).mockReturnValue({
+      value: jest.fn((key: string) => {
+        if (key === "from") return from;
+        if (key === "to") return to;
+        return undefined;
+      }),
+      setValue: jest.fn(),
+      setValues: jest.fn(),
+      isActive: jest.fn((key: string) => {
+        if (key === "from") return from !== undefined;
+        if (key === "to") return to !== undefined;
+        return false;
+      }),
+      clearAll: jest.fn(),
+      isFiltered: from !== undefined || to !== undefined,
+    });
+  }
+
+  it("passes from and to to useManagedProductSummary when both URL params are valid ISO dates", () => {
+    mockDateRange("2026-01-01", "2026-12-31");
+    const { useManagedProductSummary } = jest.requireMock(
+      "@/hooks/api/build/managed-product-summary",
+    );
+    render(<ManagedProductOverviewPage managedProductId={42} />);
+    expect(useManagedProductSummary).toHaveBeenCalledWith(
+      42,
+      expect.objectContaining({ from: "2026-01-01", to: "2026-12-31" }),
+    );
+  });
+
+  it("passes undefined from and to when URL params are absent", () => {
+    mockDateRange(undefined, undefined);
+    const { useManagedProductSummary } = jest.requireMock(
+      "@/hooks/api/build/managed-product-summary",
+    );
+    render(<ManagedProductOverviewPage managedProductId={42} />);
+    expect(useManagedProductSummary).toHaveBeenCalledWith(
+      42,
+      expect.objectContaining({ from: undefined, to: undefined }),
+    );
+  });
+
+  it("omits an invalid from date so a non-date string never reaches the backend", () => {
+    mockDateRange("not-a-date", undefined);
+    const { useManagedProductSummary } = jest.requireMock(
+      "@/hooks/api/build/managed-product-summary",
+    );
+    render(<ManagedProductOverviewPage managedProductId={42} />);
+    expect(useManagedProductSummary).toHaveBeenCalledWith(
+      42,
+      expect.objectContaining({ from: undefined }),
+    );
   });
 });

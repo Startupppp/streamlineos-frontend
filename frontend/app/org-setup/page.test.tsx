@@ -48,6 +48,7 @@ jest.mock("@/hooks/common/auth-hooks", () => ({
   signInWithMagicToken: jest.fn((...args: unknown[]) => mockSignIn(...args)),
   useSessionClaimsRefresh: jest.fn(() => mockRefreshSessionClaims),
   useMyPendingInvitations: jest.fn(() => ({ data: [] })),
+  useClaimInvitation: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
 }));
 
 jest.mock("@/hooks/common/use-confirmed-session-claims-refresh", () => ({
@@ -69,6 +70,8 @@ jest.mock("@/hooks/api/org-setup", () => ({
   useOrgSetupSessionQuery: jest.fn((enabled: boolean) =>
     mockUseOrgSetupSessionQuery(enabled),
   ),
+  useOrgSetupDraftQuery: jest.fn(() => ({ data: undefined, isFetched: false })),
+  useOrgSetupDraftSaveMutation: jest.fn(() => ({ mutateAsync: jest.fn() })),
 }));
 
 jest.mock("@/features/org-setup/lib/draft", () => ({

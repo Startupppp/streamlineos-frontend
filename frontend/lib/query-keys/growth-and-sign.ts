@@ -3,7 +3,10 @@ import { queryKeyBase as base, type QueryKeyParams } from "./base";
 export const growthAndSignQueryKeys = {
   feedbucket: {
     all: [...base, "feedbucket"] as const,
-    widgets: () => [...base, "feedbucket", "widgets"] as const,
+    widgets: (params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "feedbucket", "widgets"] as const)
+        : ([...base, "feedbucket", "widgets", params] as const),
     widget: (widgetId: number) =>
       [...base, "feedbucket", "widgets", widgetId] as const,
     submissions: (params?: QueryKeyParams) =>

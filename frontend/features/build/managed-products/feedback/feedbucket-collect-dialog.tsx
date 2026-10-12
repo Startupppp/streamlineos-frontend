@@ -35,7 +35,7 @@ export function FeedbucketCollectDialog({
   open,
   onOpenChange,
 }: FeedbucketCollectDialogProps) {
-  const { data: widgets, isLoading } = useFeedbucketWidgets();
+  const { data: widgetPage, isLoading } = useFeedbucketWidgets({ managedProductId });
   const { data: product } = useManagedProduct(managedProductId);
   const canCreate = useCan("feedbucket:widgets:create");
   const canUpdate = useCan("feedbucket:widgets:update");
@@ -45,13 +45,10 @@ export function FeedbucketCollectDialog({
 
   const productWidgets = useMemo(
     () =>
-      (widgets ?? []).filter(
-        (w) =>
-          w.managedProductId === managedProductId &&
-          !w.deletedAt &&
-          w.name !== INTERNAL_CAPTURE_WIDGET_NAME,
+      (widgetPage?.data ?? []).filter(
+        (w) => !w.deletedAt && w.name !== INTERNAL_CAPTURE_WIDGET_NAME,
       ),
-    [widgets, managedProductId],
+    [widgetPage],
   );
 
   const firstWidget = productWidgets.find((w) => w.isActive) ?? null;

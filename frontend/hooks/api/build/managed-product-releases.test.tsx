@@ -42,6 +42,9 @@ const DRAFT: ManagedProductRelease = {
   createdBy: null,
   createdAt: "2026-01-01T00:00:00Z",
   updatedAt: "2026-01-01T00:00:00Z",
+  projectReleaseId: null,
+  allowedActions: ["view", "update", "archive"],
+  linkedRoadmapItemCount: 0,
 };
 
 function page(rows: ManagedProductRelease[]): ManagedProductReleasesPage {
@@ -76,7 +79,7 @@ it("patches the single page and every timeline cache from the update response wi
   mockPatch.mockResolvedValue(released);
   const { result } = renderHook(() => useUpdateManagedProductRelease(7), { wrapper });
   await act(async () => {
-    await result.current.mutateAsync({ releaseId: 1, status: "released", releaseDate: "2026-10-11" });
+    await result.current.mutateAsync({ releaseId: 1, status: "released", releaseDate: "2026-10-11", expectedRevision: 1 });
   });
   expect(client.getQueryData<ManagedProductReleasesPage>(single)?.data[0]).toEqual(released);
   expect(

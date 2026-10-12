@@ -123,7 +123,7 @@ jest.mock("@/components/ui/select", () => ({
   SelectValue: ({ placeholder }: { placeholder?: string }) => <span>{placeholder}</span>,
 }));
 
-const FILTERS = { widgetId: 7, status: "open" } as const;
+const FILTERS = { widgetId: 7, status: ["open" as const] };
 
 function grantAll(key: string): boolean {
   return (

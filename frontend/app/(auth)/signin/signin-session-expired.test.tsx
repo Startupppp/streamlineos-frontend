@@ -59,14 +59,12 @@ beforeEach(() => {
   jest.clearAllMocks();
 });
 
-describe("SignInPage — session-expired banner", () => {
-  test("renders the session-expired message when ?session=expired is present and no error param", async () => {
+describe("SignInPage — session-expired redirect state", () => {
+  test("does not render a session-expired banner when ?session=expired is present", async () => {
     mockLocation.search = "?session=expired";
     render(<SignInPage />);
     await waitFor(() => {
-      expect(
-        screen.getByText("Your session expired. Sign in again to continue."),
-      ).toBeInTheDocument();
+      expect(screen.queryByText("Your session expired. Sign in again to continue.")).not.toBeInTheDocument();
     });
   });
 
@@ -90,13 +88,11 @@ describe("SignInPage — session-expired banner", () => {
     });
   });
 
-  test("renders the session-expired message even when an error param is also present", async () => {
+  test("does not render a session-expired banner when an error param is also present", async () => {
     mockLocation.search = "?session=expired&error=OAuthCallback";
     render(<SignInPage />);
     await waitFor(() => {
-      expect(
-        screen.getByText("Your session expired. Sign in again to continue."),
-      ).toBeInTheDocument();
+      expect(screen.queryByText("Your session expired. Sign in again to continue.")).not.toBeInTheDocument();
     });
   });
 });

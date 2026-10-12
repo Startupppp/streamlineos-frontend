@@ -106,14 +106,18 @@ export function useProductFeedbackFilters(managedProductId: number) {
   const ticketProjectIdRaw = listFilters.value("ticketProject");
 
   const typedType = useMemo(() => TYPE_OPTIONS.find((v) => v === typeValue), [typeValue]);
-  const typedStatus = useMemo(() => STATUS_OPTIONS_VALUES.find((v) => v === statusValue), [statusValue]);
+  const typedStatuses = useMemo(() => {
+    const vals = splitMulti(statusValue)
+      .filter((v) => (STATUS_OPTIONS_VALUES as readonly string[]).includes(v)) as typeof STATUS_OPTIONS_VALUES[number][];
+    return vals.length > 0 ? vals : undefined;
+  }, [statusValue]);
   const typedLinked = useMemo(
     () => linkedValue === "linked" || linkedValue === "unlinked" ? linkedValue : undefined,
     [linkedValue],
   );
-  const typedAssigneeId = useMemo(() => {
-    const trimmed = assigneeIdValue.trim();
-    return trimmed && trimmed !== BUILD_FILTER_ALL ? trimmed : undefined;
+  const typedAssigneeIds = useMemo(() => {
+    const vals = splitMulti(assigneeIdValue).filter((v) => v !== BUILD_FILTER_ALL);
+    return vals.length > 0 ? vals : undefined;
   }, [assigneeIdValue]);
   const typedDuplicate = useMemo(
     () => duplicateValue === "true" || duplicateValue === "false" ? duplicateValue : undefined,
@@ -183,13 +187,13 @@ export function useProductFeedbackFilters(managedProductId: number) {
 
   const isFiltered = useMemo(
     () => !!(
-      typedType || typedStatus || typedLinked || typedAssigneeId || typedDuplicate ||
+      typedType || typedStatuses || typedLinked || typedAssigneeIds || typedDuplicate ||
       typedFrom || typedTo || typedSourceChannel || typedTheme || typedSentiment ||
       typedConsentStatus || typedLinkedToOpportunity || typedSegment || typedCrmOrgId ||
       listFilters.debouncedSearch.trim()
     ),
     [
-      typedType, typedStatus, typedLinked, typedAssigneeId, typedDuplicate,
+      typedType, typedStatuses, typedLinked, typedAssigneeIds, typedDuplicate,
       typedFrom, typedTo, typedSourceChannel, typedTheme, typedSentiment,
       typedConsentStatus, typedLinkedToOpportunity, typedSegment, typedCrmOrgId,
       listFilters.debouncedSearch,
@@ -199,9 +203,9 @@ export function useProductFeedbackFilters(managedProductId: number) {
   const filterCore = useMemo((): FeedbucketSubmissionFilters => ({
     managedProductId,
     ...(typedType && { type: typedType }),
-    ...(typedStatus && { status: typedStatus }),
+    ...(typedStatuses && { status: typedStatuses }),
     ...(typedLinked && { linked: typedLinked }),
-    ...(typedAssigneeId && { assigneeId: typedAssigneeId }),
+    ...(typedAssigneeIds && { assigneeId: typedAssigneeIds }),
     ...(typedDuplicate && { duplicate: typedDuplicate }),
     ...(!dateRangeReversed && typedFrom && { from: wireDateTime(typedFrom, "from") }),
     ...(!dateRangeReversed && typedTo && { to: wireDateTime(typedTo, "to") }),
@@ -214,7 +218,7 @@ export function useProductFeedbackFilters(managedProductId: number) {
     ...(typedCrmOrgId && { crmOrganizationId: typedCrmOrgId }),
     ...(listFilters.debouncedSearch.trim() && { search: listFilters.debouncedSearch.trim() }),
   }), [
-    managedProductId, typedType, typedStatus, typedLinked, typedAssigneeId, typedDuplicate,
+    managedProductId, typedType, typedStatuses, typedLinked, typedAssigneeIds, typedDuplicate,
     dateRangeReversed, typedFrom, typedTo, typedSourceChannel, typedTheme, typedSentiment,
     typedConsentStatus, typedLinkedToOpportunity, typedSegment, typedCrmOrgId,
     listFilters.debouncedSearch,
@@ -228,10 +232,13 @@ export function useProductFeedbackFilters(managedProductId: number) {
   const bulkFilters = filterCore;
 
   const handleTypeChange = useCallback((v: string) => listFilters.setValue("type", v), [listFilters]);
-  const handleStatusChange = useCallback((v: string) => listFilters.setValue("status", v), [listFilters]);
   const handleLinkedChange = useCallback((v: string) => listFilters.setValue("linked", v), [listFilters]);
-  const handleAssigneeChange = useCallback(
-    (v: string) => listFilters.setValue("assigneeId", v || BUILD_FILTER_ALL),
+  const handleStatusValuesChange = useCallback(
+    (vals: string[]) => listFilters.setValue("status", vals.length > 0 ? vals.join(",") : BUILD_FILTER_ALL),
+    [listFilters],
+  );
+  const handleAssigneeValuesChange = useCallback(
+    (vals: string[]) => listFilters.setValue("assigneeId", vals.length > 0 ? vals.join(",") : BUILD_FILTER_ALL),
     [listFilters],
   );
   const handleDuplicateChange = useCallback((v: string) => listFilters.setValue("duplicate", v), [listFilters]);
@@ -298,8 +305,8 @@ export function useProductFeedbackFilters(managedProductId: number) {
     setSelected,
     queryParams,
     bulkFilters,
+    managedProductId,
     typeValue,
-    statusValue,
     linkedValue,
     assigneeIdValue,
     duplicateValue,
@@ -307,10 +314,11 @@ export function useProductFeedbackFilters(managedProductId: number) {
     linkedToOpportunityValue,
     typedFrom,
     typedTo,
-    typedAssigneeId,
     paneSubmissionId,
     dateRangeReversed,
     isFiltered,
+    appliedStatuses: typedStatuses,
+    appliedAssigneeIds: typedAssigneeIds,
     appliedSourceChannels: typedSourceChannel,
     appliedThemes: typedTheme ? typedTheme.map((v) => (v === "" ? "untagged" : v)) : undefined,
     appliedSentiments: typedSentiment,
@@ -318,12 +326,12 @@ export function useProductFeedbackFilters(managedProductId: number) {
     appliedCrmOrgIds: typedCrmOrgId ? typedCrmOrgId.map(String) : undefined,
     appliedConsentStatus: typedConsentStatus?.[0],
     handleTypeChange,
-    handleStatusChange,
     handleLinkedChange,
-    handleAssigneeChange,
     handleDuplicateChange,
     handleConsentStatusChange,
     handleLinkedToOpportunityChange,
+    handleStatusValuesChange,
+    handleAssigneeValuesChange,
     handleSourceChannelValuesChange,
     handleThemeValuesChange,
     handleSentimentValuesChange,

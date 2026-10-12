@@ -82,12 +82,12 @@ export function useProjectSubmissionsInbox({
   const serverFilters = useMemo<FeedbucketSubmissionFilters>(
     () => ({
       widgetId,
-      ...(filterValues.status ? { status: filterValues.status } : {}),
+      ...(filterValues.status ? { status: [filterValues.status] } : {}),
       ...(filterValues.type ? { type: filterValues.type } : {}),
       ...(filterValues.linked ? { linked: filterValues.linked } : {}),
       ...(filterValues.duplicate ? { duplicate: filterValues.duplicate } : {}),
       ...(filterValues.assigneeId
-        ? { assigneeId: filterValues.assigneeId }
+        ? { assigneeId: [filterValues.assigneeId] }
         : {}),
       ...(filterValues.search ? { search: filterValues.search } : {}),
       ...(filterValues.from ? { from: filterValues.from } : {}),

@@ -41,6 +41,7 @@ jest.mock("@/features/build/shared/use-build-list-filters", () => {
       setCursor: jest.fn(),
       resetKey: mockParams.toString(),
       isPending: false,
+      searchParams: mockParams,
     }),
     BUILD_FILTER_ALL: actual.BUILD_FILTER_ALL,
   };
@@ -121,6 +122,93 @@ describe("useProductFeedbackFilters — multi-value URL round-trip", () => {
 
   it("isFiltered is true when any multi-value filter has values", () => {
     mockParams.set("segment", "Enterprise");
+
+    const { result } = renderFilters();
+    expect(result.current.isFiltered).toBe(true);
+  });
+
+  it("decodes comma-separated status into an array sent to the backend", () => {
+    mockParams.set("status", "open,in_progress");
+
+    const { result } = renderFilters();
+    expect(result.current.queryParams.status).toEqual(["open", "in_progress"]);
+  });
+
+  it("decodes a single status value into a one-element array for backward compatibility", () => {
+    mockParams.set("status", "resolved");
+
+    const { result } = renderFilters();
+    expect(result.current.queryParams.status).toEqual(["resolved"]);
+  });
+
+  it("omits status from query when URL carries an invalid value so no invalid enum reaches the backend", () => {
+    mockParams.set("status", "bogus_status");
+
+    const { result } = renderFilters();
+    expect(result.current.queryParams.status).toBeUndefined();
+  });
+
+  it("decodes comma-separated assigneeId into an array sent to the backend", () => {
+    mockParams.set("assigneeId", "user-a,user-b");
+
+    const { result } = renderFilters();
+    expect(result.current.queryParams.assigneeId).toEqual(["user-a", "user-b"]);
+  });
+
+  it("decodes a single assigneeId value into a one-element array for backward compatibility", () => {
+    mockParams.set("assigneeId", "user-99");
+
+    const { result } = renderFilters();
+    expect(result.current.queryParams.assigneeId).toEqual(["user-99"]);
+  });
+
+  it("handleStatusValuesChange serializes an array as comma-separated", () => {
+    const { result } = renderFilters();
+    result.current.handleStatusValuesChange(["open", "resolved"]);
+
+    expect(mockSetValue).toHaveBeenCalledWith("status", "open,resolved");
+  });
+
+  it("handleStatusValuesChange with empty array writes BUILD_FILTER_ALL to clear the filter", () => {
+    const { result } = renderFilters();
+    result.current.handleStatusValuesChange([]);
+
+    expect(mockSetValue).toHaveBeenCalledWith("status", BUILD_FILTER_ALL);
+  });
+
+  it("handleAssigneeValuesChange serializes an array as comma-separated", () => {
+    const { result } = renderFilters();
+    result.current.handleAssigneeValuesChange(["user-a", "user-b"]);
+
+    expect(mockSetValue).toHaveBeenCalledWith("assigneeId", "user-a,user-b");
+  });
+
+  it("handleAssigneeValuesChange with empty array writes BUILD_FILTER_ALL to clear the filter", () => {
+    const { result } = renderFilters();
+    result.current.handleAssigneeValuesChange([]);
+
+    expect(mockSetValue).toHaveBeenCalledWith("assigneeId", BUILD_FILTER_ALL);
+  });
+
+  it("appliedStatuses is undefined when status param is absent", () => {
+    const { result } = renderFilters();
+    expect(result.current.appliedStatuses).toBeUndefined();
+  });
+
+  it("appliedAssigneeIds is undefined when assigneeId param is absent", () => {
+    const { result } = renderFilters();
+    expect(result.current.appliedAssigneeIds).toBeUndefined();
+  });
+
+  it("isFiltered is true when status filter has values", () => {
+    mockParams.set("status", "open");
+
+    const { result } = renderFilters();
+    expect(result.current.isFiltered).toBe(true);
+  });
+
+  it("isFiltered is true when assigneeId filter has values", () => {
+    mockParams.set("assigneeId", "user-x");
 
     const { result } = renderFilters();
     expect(result.current.isFiltered).toBe(true);

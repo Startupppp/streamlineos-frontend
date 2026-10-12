@@ -22,6 +22,8 @@ export interface SummaryFilters {
   teamId?: number;
   segment?: string;
   initiativeStatus?: InitiativeStatus;
+  from?: string;
+  to?: string;
 }
 
 export type ManagedProductSummary = ManagedProductRelationsGetManagedProductSummaryResponse;
@@ -33,6 +35,8 @@ export function useManagedProductSummary(managedProductId: number, filters?: Sum
   if (filters?.teamId !== undefined) queryParams["teamId"] = String(filters.teamId);
   if (filters?.segment !== undefined) queryParams["segment"] = filters.segment;
   if (filters?.initiativeStatus !== undefined) queryParams["initiativeStatus"] = filters.initiativeStatus;
+  if (filters?.from !== undefined) queryParams["from"] = filters.from;
+  if (filters?.to !== undefined) queryParams["to"] = filters.to;
   const hasParams = Object.keys(queryParams).length > 0;
   const filtersKey: Record<string, string | number | undefined> | undefined = hasParams
     ? queryParams

@@ -106,12 +106,16 @@ jest.mock("@/hooks/api/access", () => ({
   useCan: (permission: string) => mockUseCan(permission),
 }));
 
+function aWidgetPage(rows: { id: number; projectId: number; isActive: boolean; aiAssistEnabled: boolean }[]) {
+  return { data: rows, pagination: { limit: 50, hasMore: false, nextCursor: null } };
+}
+
 beforeEach(() => {
   jest.clearAllMocks();
   mockUseCan.mockReturnValue(true);
   mockUseProject.mockReturnValue({ data: { name: "My Project" } });
   mockUseFeedbucketWidgets.mockReturnValue({
-    data: [],
+    data: aWidgetPage([]),
     isLoading: false,
     isError: false,
     error: undefined,
@@ -194,7 +198,7 @@ describe("ProjectFeedbucketPage — ready and empty states", () => {
   it("renders the submissions inbox when a widget exists for this project", () => {
     const widget = { id: 42, projectId: 1, isActive: true, aiAssistEnabled: false };
     mockUseFeedbucketWidgets.mockReturnValue({
-      data: [widget],
+      data: aWidgetPage([widget]),
       isLoading: false,
       isError: false,
       error: undefined,
@@ -211,7 +215,7 @@ describe("ProjectFeedbucketPage — ready and empty states", () => {
   it("hides widget setup when the actor cannot update or manage widgets", () => {
     const widget = { id: 42, projectId: 1, isActive: true, aiAssistEnabled: false };
     mockUseFeedbucketWidgets.mockReturnValue({
-      data: [widget],
+      data: aWidgetPage([widget]),
       isLoading: false,
       isError: false,
       error: undefined,

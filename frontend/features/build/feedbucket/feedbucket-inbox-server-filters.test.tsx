@@ -98,7 +98,7 @@ describe("ProjectSubmissionsInbox — every filter is sent to the server, none a
 
   it("sends the status param from the URL", () => {
     renderWithParams("status=in_progress", 2);
-    expect(lastQueryArgs()).toMatchObject({ widgetId: 2, status: "in_progress" });
+    expect(lastQueryArgs()).toMatchObject({ widgetId: 2, status: ["in_progress"] });
   });
 
   it("sends the type param from the URL", () => {
@@ -144,7 +144,7 @@ describe("ProjectSubmissionsInbox — every filter is sent to the server, none a
 
   it("sends the assigneeId owner filter to the server rather than filtering loaded rows by owner", () => {
     renderWithParams("assigneeId=user-owner", 6);
-    expect(lastQueryArgs()).toMatchObject({ widgetId: 6, assigneeId: "user-owner" });
+    expect(lastQueryArgs()).toMatchObject({ widgetId: 6, assigneeId: ["user-owner"] });
   });
 
   it("omits assigneeId when no owner is chosen so every owner's submissions are returned", () => {

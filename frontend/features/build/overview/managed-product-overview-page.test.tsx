@@ -16,6 +16,7 @@ jest.mock("@/features/build/shared/use-build-list-filters", () => ({
   useBuildListFilters: jest.fn(() => ({
     value: jest.fn(() => undefined),
     setValue: jest.fn(),
+    setValues: jest.fn(),
     isActive: jest.fn(() => false),
     clearAll: jest.fn(),
     isFiltered: false,

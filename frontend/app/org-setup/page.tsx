@@ -41,26 +41,62 @@ import { StepWorkspace } from "@/features/org-setup/components/step-workspace";
 import { StepProducts } from "@/features/org-setup/components/step-products";
 import { StepInviteLaunch } from "@/features/org-setup/components/step-invite-launch";
 import { ArchivedOrgsRestore } from "@/components/organization/archived-orgs-restore";
-import { useMyPendingInvitations } from "@/hooks/common/auth-hooks";
+import {
+  useMyPendingInvitations,
+  useClaimInvitation,
+  signInWithMagicToken,
+} from "@/hooks/common/auth-hooks";
+import { persistPartialGrants } from "@/features/auth/components/post-invite-transition";
 import type { PendingInvitationItem } from "@/hooks/common/auth-schema";
 
 function PendingInvitationsNotice({ items }: { items: PendingInvitationItem[] }) {
+  const [joiningId, setJoiningId] = useState<string | null>(null);
+  const claimMutation = useClaimInvitation();
   if (items.length === 0) return null;
+
+  const handleJoin = (invitationId: string) => {
+    if (joiningId) return;
+    setJoiningId(invitationId);
+    claimMutation.mutate(invitationId, {
+      onSuccess: async (data) => {
+        persistPartialGrants(data.skippedGrants ?? []);
+        const outcome = await signInWithMagicToken(data.autoLoginToken);
+        if (outcome.status === "signed-in") {
+          window.location.href = "/post-invite";
+        } else {
+          toast.error("Could not complete sign-in. Please try again.");
+          setJoiningId(null);
+        }
+      },
+      onError: (error) => {
+        toast.error(getErrorMessage(error));
+        setJoiningId(null);
+      },
+    });
+  };
+
   return (
-    <div className="flex flex-col gap-2 rounded-lg border border-border bg-muted/40 p-4">
+    <div className="flex flex-col gap-3 rounded-lg border border-border bg-muted/40 p-4">
       <p className="text-sm font-medium text-foreground">
         {items.length === 1
           ? "You have a pending invitation"
           : `You have ${items.length} pending invitations`}
       </p>
       {items.map((item) => (
-        <p key={item.id} className="text-sm text-muted-foreground">
-          {item.organizationName} &mdash; {item.role}
-        </p>
+        <div key={item.id} className="flex items-center justify-between gap-3">
+          <p className="text-sm text-muted-foreground">
+            {item.organizationName} &mdash; {item.role}
+          </p>
+          <button
+            type="button"
+            disabled={!!joiningId}
+            onClick={() => handleJoin(item.id)}
+            className="shrink-0 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+          >
+            {joiningId === item.id ? "Joining…" : "Join"}
+          </button>
+        </div>
       ))}
-      <p className="text-xs text-muted-foreground">
-        Check your email to accept the invitation and join the organization.
-      </p>
     </div>
   );
 }

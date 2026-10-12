@@ -6,7 +6,8 @@ import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
 import { BuildMultiFilterSelect } from "@/features/build/shared/build-multi-filter-select";
 import { FilterChip } from "@/features/build/shared/filter-chip";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
-import { UserCombobox } from "@/components/ui/user-combobox";
+import { useManagedProductMembers } from "@/hooks/api/build/managed-product-members";
+import { getUserDisplayName } from "@/lib/person-display";
 import {
   TYPE_FILTER_OPTIONS,
   STATUS_FILTER_OPTIONS,
@@ -24,6 +25,9 @@ const SOURCE_CHANNEL_OPTIONS_MULTI = SOURCE_CHANNEL_FILTER_OPTIONS.filter(
   (o) => o.value !== BUILD_FILTER_ALL,
 );
 const SENTIMENT_OPTIONS_MULTI = SENTIMENT_FILTER_OPTIONS.filter(
+  (o) => o.value !== BUILD_FILTER_ALL,
+);
+const STATUS_OPTIONS_MULTI = STATUS_FILTER_OPTIONS.filter(
   (o) => o.value !== BUILD_FILTER_ALL,
 );
 
@@ -57,15 +61,16 @@ export function ProductFeedbackFilters({
   const {
     listFilters,
     searchInputRef,
+    managedProductId,
     typeValue,
-    statusValue,
     linkedValue,
     duplicateValue,
     linkedToOpportunityValue,
     consentStatusValue,
     typedFrom,
     typedTo,
-    typedAssigneeId,
+    appliedStatuses,
+    appliedAssigneeIds,
     appliedSourceChannels,
     appliedThemes,
     appliedSentiments,
@@ -73,12 +78,12 @@ export function ProductFeedbackFilters({
     appliedCrmOrgIds,
     appliedConsentStatus,
     handleTypeChange,
-    handleStatusChange,
     handleLinkedChange,
-    handleAssigneeChange,
     handleDuplicateChange,
     handleConsentStatusChange,
     handleLinkedToOpportunityChange,
+    handleStatusValuesChange,
+    handleAssigneeValuesChange,
     handleSourceChannelValuesChange,
     handleThemeValuesChange,
     handleSentimentValuesChange,
@@ -86,6 +91,14 @@ export function ProductFeedbackFilters({
     handleCrmOrgValuesChange,
     handleDateRangeChange,
   } = filterState;
+
+  const { data: membersData } = useManagedProductMembers(managedProductId);
+  const memberOptions = useMemo(
+    () => (membersData?.data ?? []).flatMap((m) =>
+      m.member ? [{ value: m.member.id, label: getUserDisplayName(m.member) }] : [],
+    ),
+    [membersData],
+  );
 
   const themeOptionsMulti = useMemo(() => {
     const opts = [
@@ -131,6 +144,24 @@ export function ProductFeedbackFilters({
 
   const chips = useMemo((): ActiveChip[] => {
     const result: ActiveChip[] = [];
+    for (const st of appliedStatuses ?? []) {
+      const label = STATUS_OPTIONS_MULTI.find((o) => o.value === st)?.label ?? st;
+      result.push({
+        id: `status:${st}`,
+        label: "Status",
+        value: label,
+        onRemove: () => handleStatusValuesChange((appliedStatuses ?? []).filter((v) => v !== st)),
+      });
+    }
+    for (const uid of appliedAssigneeIds ?? []) {
+      const opt = memberOptions.find((o) => o.value === uid);
+      result.push({
+        id: `assignee:${uid}`,
+        label: "Owner",
+        value: opt?.label ?? uid,
+        onRemove: () => handleAssigneeValuesChange((appliedAssigneeIds ?? []).filter((v) => v !== uid)),
+      });
+    }
     for (const ch of appliedSourceChannels ?? []) {
       const label = SOURCE_CHANNEL_OPTIONS_MULTI.find((o) => o.value === ch)?.label ?? ch;
       result.push({
@@ -176,12 +207,17 @@ export function ProductFeedbackFilters({
     }
     return result;
   }, [
+    appliedStatuses,
+    appliedAssigneeIds,
+    memberOptions,
     appliedSourceChannels,
     appliedThemes,
     appliedSentiments,
     appliedSegments,
     appliedCrmOrgIds,
     customerOptionsMulti,
+    handleStatusValuesChange,
+    handleAssigneeValuesChange,
     handleSourceChannelValuesChange,
     handleThemeValuesChange,
     handleSentimentValuesChange,
@@ -216,13 +252,13 @@ export function ProductFeedbackFilters({
           {
             id: "status",
             label: "Status",
-            active: listFilters.isActive("status"),
+            active: (appliedStatuses?.length ?? 0) > 0,
             control: (
-              <BuildFilterSelect
+              <BuildMultiFilterSelect
                 label="Status"
-                value={statusValue}
-                onValueChange={handleStatusChange}
-                options={STATUS_FILTER_OPTIONS}
+                values={appliedStatuses ?? []}
+                onValuesChange={handleStatusValuesChange}
+                options={STATUS_OPTIONS_MULTI}
               />
             ),
           },
@@ -346,12 +382,13 @@ export function ProductFeedbackFilters({
           {
             id: "assignee",
             label: "Assignee",
-            active: typedAssigneeId !== undefined,
+            active: (appliedAssigneeIds?.length ?? 0) > 0,
             control: (
-              <UserCombobox
-                value={typedAssigneeId ?? ""}
-                onChange={handleAssigneeChange}
-                placeholder="Select member…"
+              <BuildMultiFilterSelect
+                label="Assignee"
+                values={appliedAssigneeIds ?? []}
+                onValuesChange={handleAssigneeValuesChange}
+                options={memberOptions}
               />
             ),
           },

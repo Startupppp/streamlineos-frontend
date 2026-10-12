@@ -69,6 +69,11 @@ const pendingInvitationsForMeContract = lazyContract(() =>
     (m) => m.pendingInvitationsForMeContract,
   ),
 );
+const claimInvitationResponseContract = lazyContract(() =>
+  import("@/hooks/common/auth-schema").then(
+    (m) => m.claimInvitationResponseContract,
+  ),
+);
 
 export type MagicLinkSignInOutcome =
   | { status: "signed-in" }
@@ -355,6 +360,19 @@ export function useMyPendingInvitations(enabled = true) {
     staleTime: 60_000,
     enabled: status === "authenticated" && enabled,
     ...INLINE_READ_ERROR,
+  });
+}
+
+export function useClaimInvitation() {
+  return useMutation({
+    mutationKey: ["auth", "claim-invitation"],
+    mutationFn: (invitationId: string) =>
+      apiClient.post(
+        `/organization/invitations/${invitationId}/claim`,
+        {},
+        undefined,
+        claimInvitationResponseContract,
+      ),
   });
 }
 

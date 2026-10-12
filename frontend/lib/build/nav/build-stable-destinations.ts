@@ -32,7 +32,7 @@ export const BUILD_MY_WORK_DESTINATIONS: BuildNavDestination[] = [
 
 export const BUILD_BROWSE_ALL_DESTINATION: BuildNavDestination = {
   id: "browse-all",
-  label: "Browse all Build",
+  label: "All Work",
   href: `${BUILD_ROOT_PATH}/all-work`,
   icon: LayoutList,
   requiredPermission: "build:tickets:view",

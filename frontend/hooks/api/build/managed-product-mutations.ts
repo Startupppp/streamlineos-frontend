@@ -204,10 +204,18 @@ export function useArchiveManagedProduct() {
   const qc = useQueryClient();
   return useAuthorizedMutation("build:managed-products:update", {
     mutationKey: ["projects", "managed-products", "archive"],
-    mutationFn: ({ managedProductId, version }: { managedProductId: number; version: number }) =>
+    mutationFn: ({
+      managedProductId,
+      version,
+      confirmPublicationImpact,
+    }: {
+      managedProductId: number;
+      version: number;
+      confirmPublicationImpact?: boolean;
+    }) =>
       apiClient.post<ManagedProduct>(
         `/build/managed-products/${managedProductId}/archive`,
-        { version },
+        { version, ...(confirmPublicationImpact ? { confirmPublicationImpact } : {}) },
         undefined,
         managedProductArchiveContract,
       ),

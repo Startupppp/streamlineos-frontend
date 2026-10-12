@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const OPENAPI_HASH = "sha256:d57a7c90db24169884723563dfc467afe32f25a0d745095545914d6117ed4a1f" as const;
+export const OPENAPI_HASH = "sha256:2fca2c297bbd5dfa6f4b17b2b8caf6723c9f758d092b02e9780164dcb7a40b8c" as const;
 
 export const agentTokensListResponseSchema = z.array(z.object({
   id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
@@ -1028,6 +1028,7 @@ export type ManagedProductsArchiveManagedProductResponse = z.infer<typeof manage
 
 export const managedProductsArchiveManagedProductBodySchema = z.strictObject({
   version: z.number().int().gte(1).lte(9007199254740991),
+  confirmPublicationImpact: z.boolean().optional(),
 });
 export type ManagedProductsArchiveManagedProductBody = z.input<typeof managedProductsArchiveManagedProductBodySchema>;
 
@@ -1720,6 +1721,7 @@ export const discoveryGetTraceResponseSchema = z.object({
     sourceId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     addedAt: z.iso.datetime({ offset: true }),
   })),
+  nextEvidenceCursor: z.string().nullable(),
   opportunity: z.object({
     id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     title: z.string(),
@@ -2044,8 +2046,9 @@ export const managedProductRelationsListReleasesResponseSchema = z.object({
     releaseDate: z.string().nullable(),
     recordRevision: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     ownerUserId: z.string().nullable(),
-    qaState: z.string().nullable(),
+    qaState: z.enum(["pending", "in_review", "approved", "rejected"]).nullable(),
     deploymentEvidenceUrl: z.string().nullable(),
+    projectReleaseId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
     createdBy: z.string().nullable(),
     createdAt: z.iso.datetime({ offset: true }),
     updatedAt: z.iso.datetime({ offset: true }),
@@ -2071,8 +2074,9 @@ export const managedProductRelationsCreateReleaseResponseSchema = z.object({
   releaseDate: z.string().nullable(),
   recordRevision: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   ownerUserId: z.string().nullable(),
-  qaState: z.string().nullable(),
+  qaState: z.enum(["pending", "in_review", "approved", "rejected"]).nullable(),
   deploymentEvidenceUrl: z.string().nullable(),
+  projectReleaseId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   createdBy: z.string().nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
@@ -2090,6 +2094,7 @@ export const managedProductRelationsCreateReleaseBodySchema = z.strictObject({
   ownerUserId: z.string().optional(),
   qaState: z.enum(["pending", "in_review", "approved", "rejected"]).optional(),
   deploymentEvidenceUrl: z.string().optional(),
+  projectReleaseId: z.number().int().gt(0).lte(9007199254740991).optional(),
 });
 export type ManagedProductRelationsCreateReleaseBody = z.input<typeof managedProductRelationsCreateReleaseBodySchema>;
 
@@ -2104,8 +2109,9 @@ export const managedProductRelationsUpdateReleaseResponseSchema = z.object({
   releaseDate: z.string().nullable(),
   recordRevision: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   ownerUserId: z.string().nullable(),
-  qaState: z.string().nullable(),
+  qaState: z.enum(["pending", "in_review", "approved", "rejected"]).nullable(),
   deploymentEvidenceUrl: z.string().nullable(),
+  projectReleaseId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   createdBy: z.string().nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
@@ -2124,6 +2130,7 @@ export const managedProductRelationsUpdateReleaseBodySchema = z.strictObject({
   ownerUserId: z.string().nullable().optional(),
   qaState: z.enum(["pending", "in_review", "approved", "rejected"]).nullable().optional(),
   deploymentEvidenceUrl: z.string().nullable().optional(),
+  projectReleaseId: z.number().int().gt(0).lte(9007199254740991).nullable().optional(),
 });
 export type ManagedProductRelationsUpdateReleaseBody = z.input<typeof managedProductRelationsUpdateReleaseBodySchema>;
 
@@ -2171,6 +2178,7 @@ export type ManagedProductsRestoreManagedProductResponse = z.infer<typeof manage
 
 export const managedProductsRestoreManagedProductBodySchema = z.strictObject({
   version: z.number().int().gte(1).lte(9007199254740991),
+  confirmPublicationImpact: z.boolean().optional(),
 });
 export type ManagedProductsRestoreManagedProductBody = z.input<typeof managedProductsRestoreManagedProductBodySchema>;
 
@@ -2349,8 +2357,9 @@ export const managedProductRelationsGetManagedProductSummaryResponseSchema = z.o
       releaseDate: z.string().nullable(),
       recordRevision: z.number().int().gte(-9007199254740991).lte(9007199254740991),
       ownerUserId: z.string().nullable(),
-      qaState: z.string().nullable(),
+      qaState: z.enum(["pending", "in_review", "approved", "rejected"]).nullable(),
       deploymentEvidenceUrl: z.string().nullable(),
+      projectReleaseId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
       createdBy: z.string().nullable(),
       createdAt: z.iso.datetime({ offset: true }),
       updatedAt: z.iso.datetime({ offset: true }),

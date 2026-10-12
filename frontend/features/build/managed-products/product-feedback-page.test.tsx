@@ -50,6 +50,10 @@ jest.mock("@/components/shared/submission-bulk-toolbar", () => ({
   BULK_SELECTION_CAP: 100,
 }));
 
+jest.mock("@/hooks/api/build/managed-product-members", () => ({
+  useManagedProductMembers: jest.fn(() => ({ data: null })),
+}));
+
 jest.mock("./feedback/feedback-pane", () => ({
   FeedbackPane: ({
     submissionId,

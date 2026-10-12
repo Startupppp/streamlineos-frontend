@@ -53,9 +53,16 @@ const feedbucketWidgetListItemContract = feedbucketWidgetRowContract.and(
   }),
 );
 
-export const feedbucketWidgetListContract = z.array(
-  feedbucketWidgetListItemContract,
-);
+export const feedbucketWidgetListContract = z.object({
+  data: z.array(feedbucketWidgetListItemContract),
+  pagination: z.object({
+    limit: z.number(),
+    hasMore: z.boolean(),
+    nextCursor: z.string().nullable(),
+  }),
+});
+
+export type FeedbucketWidgetPage = z.infer<typeof feedbucketWidgetListContract>;
 
 export const feedbucketWidgetWithProjectContract =
   feedbucketWidgetRowContract.and(

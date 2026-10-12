@@ -38,7 +38,7 @@ const { TicketDetailPane } = jest.requireMock(
 
 function makeFilterState(overrides?: Partial<ReturnType<typeof useProductFeedbackFilters>>): ReturnType<typeof useProductFeedbackFilters> {
   return {
-    listFilters: { setValue: jest.fn(), setValues: jest.fn(), clearAll: jest.fn(), value: jest.fn(() => "all"), isActive: jest.fn(() => false), activeCount: 0, isFiltered: false, search: "", debouncedSearch: "", setSearch: jest.fn(), cursor: null, setCursor: jest.fn(), resetKey: "", isPending: false },
+    listFilters: { setValue: jest.fn(), setValues: jest.fn(), clearAll: jest.fn(), value: jest.fn(() => "all"), isActive: jest.fn(() => false), activeCount: 0, isFiltered: false, search: "", debouncedSearch: "", setSearch: jest.fn(), cursor: null, setCursor: jest.fn(), resetKey: "", isPending: false, searchParams: new URLSearchParams() },
     searchInputRef: { current: null },
     page: 1,
     selected: new Set(),
@@ -46,7 +46,6 @@ function makeFilterState(overrides?: Partial<ReturnType<typeof useProductFeedbac
     queryParams: { managedProductId: 7, page: 1, limit: 25 },
     bulkFilters: { managedProductId: 7 },
     typeValue: "all",
-    statusValue: "all",
     linkedValue: "all",
     assigneeIdValue: "all",
     duplicateValue: "all",
@@ -54,7 +53,8 @@ function makeFilterState(overrides?: Partial<ReturnType<typeof useProductFeedbac
     linkedToOpportunityValue: "all",
     typedFrom: undefined,
     typedTo: undefined,
-    typedAssigneeId: undefined,
+    appliedStatuses: undefined,
+    appliedAssigneeIds: undefined,
     paneSubmissionId: 41,
     paneTicketId: 9,
     paneTicketProjectId: 6,
@@ -67,9 +67,9 @@ function makeFilterState(overrides?: Partial<ReturnType<typeof useProductFeedbac
     appliedCrmOrgIds: undefined,
     appliedConsentStatus: undefined,
     handleTypeChange: jest.fn(),
-    handleStatusChange: jest.fn(),
+    handleStatusValuesChange: jest.fn(),
     handleLinkedChange: jest.fn(),
-    handleAssigneeChange: jest.fn(),
+    handleAssigneeValuesChange: jest.fn(),
     handleDuplicateChange: jest.fn(),
     handleConsentStatusChange: jest.fn(),
     handleLinkedToOpportunityChange: jest.fn(),

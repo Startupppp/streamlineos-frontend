@@ -132528,6 +132528,14 @@
               "exclusiveMinimum": 0,
               "maximum": 9007199254740991
             }
+          },
+          {
+            "name": "confirmPublicationImpact",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -132990,6 +132998,9 @@
                     "type": "integer",
                     "minimum": 1,
                     "maximum": 9007199254740991
+                  },
+                  "confirmPublicationImpact": {
+                    "type": "boolean"
                   }
                 },
                 "required": [
@@ -133031,6 +133042,36 @@
                 "365d",
                 "all"
               ]
+            }
+          },
+          {
+            "name": "source",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "maxItems": 2,
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "feedbucket_submission",
+                  "feedback_post"
+                ]
+              }
+            }
+          },
+          {
+            "name": "project",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "maxItems": 20,
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "exclusiveMinimum": 0,
+                "maximum": 9007199254740991
+              }
             }
           }
         ],
@@ -133500,6 +133541,461 @@
                         "overrideReason",
                         "overriddenBy",
                         "overriddenAt"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "tags": [
+          "ManagedProducts"
+        ],
+        "x-exposure": "permissioned",
+        "x-permission": "build:managed-products:view",
+        "description": "Exposure: permission — build:managed-products:view"
+      }
+    },
+    "/build/managed-products/{managedProductId}/insights/export": {
+      "post": {
+        "operationId": "ManagedProductsController_createInsightsExport",
+        "parameters": [
+          {
+            "name": "managedProductId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKeyHeader"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        "managedProductId": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "pending",
+                            "running",
+                            "completed",
+                            "failed",
+                            "expired"
+                          ]
+                        },
+                        "filters": {
+                          "type": "object",
+                          "properties": {
+                            "period": {
+                              "type": "string"
+                            },
+                            "source": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            },
+                            "project": {
+                              "type": "array",
+                              "items": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              }
+                            }
+                          }
+                        },
+                        "fileName": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "mimeType": {
+                          "type": "string"
+                        },
+                        "fileSizeBytes": {
+                          "anyOf": [
+                            {
+                              "type": "number"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "rowCount": {
+                          "anyOf": [
+                            {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "errorCode": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "completedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "expiresAt": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "managedProductId",
+                        "status",
+                        "filters",
+                        "fileName",
+                        "mimeType",
+                        "fileSizeBytes",
+                        "rowCount",
+                        "errorCode",
+                        "completedAt",
+                        "expiresAt",
+                        "createdAt"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "tags": [
+          "ManagedProducts"
+        ],
+        "x-exposure": "permissioned",
+        "x-permission": "build:managed-products:view",
+        "description": "Exposure: permission — build:managed-products:view",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "period": {
+                    "type": "string",
+                    "enum": [
+                      "30d",
+                      "90d",
+                      "365d",
+                      "all"
+                    ]
+                  },
+                  "source": {
+                    "maxItems": 2,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "feedbucket_submission",
+                        "feedback_post"
+                      ]
+                    }
+                  },
+                  "project": {
+                    "maxItems": 20,
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "exclusiveMinimum": 0,
+                      "maximum": 9007199254740991
+                    }
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "x-idempotency-command": "build.managed-products.insights.export",
+        "x-idempotent": true
+      }
+    },
+    "/build/managed-products/{managedProductId}/insights/export/{exportJobId}": {
+      "get": {
+        "operationId": "ManagedProductsController_getInsightsExport",
+        "parameters": [
+          {
+            "name": "managedProductId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          {
+            "name": "exportJobId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        "managedProductId": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "pending",
+                            "running",
+                            "completed",
+                            "failed",
+                            "expired"
+                          ]
+                        },
+                        "filters": {
+                          "type": "object",
+                          "properties": {
+                            "period": {
+                              "type": "string"
+                            },
+                            "source": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            },
+                            "project": {
+                              "type": "array",
+                              "items": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              }
+                            }
+                          }
+                        },
+                        "fileName": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "mimeType": {
+                          "type": "string"
+                        },
+                        "fileSizeBytes": {
+                          "anyOf": [
+                            {
+                              "type": "number"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "rowCount": {
+                          "anyOf": [
+                            {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "errorCode": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "completedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "expiresAt": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "managedProductId",
+                        "status",
+                        "filters",
+                        "fileName",
+                        "mimeType",
+                        "fileSizeBytes",
+                        "rowCount",
+                        "errorCode",
+                        "completedAt",
+                        "expiresAt",
+                        "createdAt"
                       ]
                     }
                   },
@@ -134272,6 +134768,36 @@
                 "updated",
                 "evidence"
               ]
+            }
+          },
+          {
+            "name": "source",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "maxItems": 2,
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "feedbucket_submission",
+                  "feedback_post"
+                ]
+              }
+            }
+          },
+          {
+            "name": "project",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "maxItems": 20,
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "exclusiveMinimum": 0,
+                "maximum": 9007199254740991
+              }
             }
           }
         ],
@@ -138955,6 +139481,209 @@
         },
         "x-idempotency-command": "build.discovery.evidence.add",
         "x-idempotent": true
+      },
+      "get": {
+        "operationId": "DiscoveryController_listEvidence",
+        "parameters": [
+          {
+            "name": "managedProductId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          {
+            "name": "opportunityId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "default": 25,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "source",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "maxItems": 2,
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "feedbucket_submission",
+                  "feedback_post"
+                ]
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "sourceKind": {
+                                "type": "string",
+                                "enum": [
+                                  "feedbucket_submission",
+                                  "feedback_post"
+                                ]
+                              },
+                              "sourceId": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "note": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "addedBy": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "addedAt": {
+                                "type": "string",
+                                "format": "date-time"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "sourceKind",
+                              "sourceId",
+                              "note",
+                              "addedBy",
+                              "addedAt"
+                            ]
+                          }
+                        },
+                        "pagination": {
+                          "type": "object",
+                          "properties": {
+                            "limit": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "hasMore": {
+                              "type": "boolean"
+                            },
+                            "nextCursor": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            }
+                          },
+                          "required": [
+                            "limit",
+                            "hasMore",
+                            "nextCursor"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "data",
+                        "pagination"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "tags": [
+          "Discovery"
+        ],
+        "x-exposure": "permissioned",
+        "x-permission": "build:managed-products:view",
+        "description": "Exposure: permission — build:managed-products:view"
       }
     },
     "/build/managed-products/{managedProductId}/opportunities/{opportunityId}/evidence/{evidenceId}": {
@@ -139681,6 +140410,14 @@
               "exclusiveMinimum": 0,
               "maximum": 9007199254740991
             }
+          },
+          {
+            "name": "evidenceCursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -139734,6 +140471,16 @@
                               "addedAt"
                             ]
                           }
+                        },
+                        "nextEvidenceCursor": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
                         },
                         "opportunity": {
                           "type": "object",
@@ -140697,6 +141444,7 @@
                       },
                       "required": [
                         "evidence",
+                        "nextEvidenceCursor",
                         "opportunity",
                         "scores",
                         "decision",
@@ -143437,7 +144185,13 @@
                               "qaState": {
                                 "anyOf": [
                                   {
-                                    "type": "string"
+                                    "type": "string",
+                                    "enum": [
+                                      "pending",
+                                      "in_review",
+                                      "approved",
+                                      "rejected"
+                                    ]
                                   },
                                   {
                                     "type": "null"
@@ -143448,6 +144202,18 @@
                                 "anyOf": [
                                   {
                                     "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "projectReleaseId": {
+                                "anyOf": [
+                                  {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
                                   },
                                   {
                                     "type": "null"
@@ -143497,6 +144263,7 @@
                               "ownerUserId",
                               "qaState",
                               "deploymentEvidenceUrl",
+                              "projectReleaseId",
                               "createdBy",
                               "createdAt",
                               "updatedAt",
@@ -143674,7 +144441,13 @@
                         "qaState": {
                           "anyOf": [
                             {
-                              "type": "string"
+                              "type": "string",
+                              "enum": [
+                                "pending",
+                                "in_review",
+                                "approved",
+                                "rejected"
+                              ]
                             },
                             {
                               "type": "null"
@@ -143685,6 +144458,18 @@
                           "anyOf": [
                             {
                               "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "projectReleaseId": {
+                          "anyOf": [
+                            {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
                             },
                             {
                               "type": "null"
@@ -143734,6 +144519,7 @@
                         "ownerUserId",
                         "qaState",
                         "deploymentEvidenceUrl",
+                        "projectReleaseId",
                         "createdBy",
                         "createdAt",
                         "updatedAt",
@@ -143832,6 +144618,11 @@
                     "type": "string",
                     "maxLength": 2048,
                     "format": "uri"
+                  },
+                  "projectReleaseId": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
                   }
                 },
                 "required": [
@@ -143848,6 +144639,334 @@
       }
     },
     "/build/managed-products/{managedProductId}/releases/{releaseId}": {
+      "get": {
+        "operationId": "ManagedProductRelationsController_getRelease",
+        "parameters": [
+          {
+            "name": "managedProductId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          {
+            "name": "releaseId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "orgId": {
+                          "type": "string"
+                        },
+                        "managedProductId": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "version": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "draft",
+                            "released",
+                            "archived"
+                          ]
+                        },
+                        "releaseDate": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "recordRevision": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "ownerUserId": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "qaState": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": [
+                                "pending",
+                                "in_review",
+                                "approved",
+                                "rejected"
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "deploymentEvidenceUrl": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "projectReleaseId": {
+                          "anyOf": [
+                            {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "createdBy": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "updatedAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "allowedActions": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "linkedRoadmapItemCount": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "evidence": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "ticketCount": {
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991
+                                },
+                                "tickets": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "ticketId": {
+                                        "type": "integer",
+                                        "minimum": -9007199254740991,
+                                        "maximum": 9007199254740991
+                                      },
+                                      "ticketNumber": {
+                                        "type": "integer",
+                                        "minimum": -9007199254740991,
+                                        "maximum": 9007199254740991
+                                      },
+                                      "title": {
+                                        "type": "string"
+                                      },
+                                      "status": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "required": [
+                                      "ticketId",
+                                      "ticketNumber",
+                                      "title",
+                                      "status"
+                                    ]
+                                  }
+                                },
+                                "testRunCount": {
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991
+                                },
+                                "testRuns": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "id": {
+                                        "type": "integer",
+                                        "minimum": -9007199254740991,
+                                        "maximum": 9007199254740991
+                                      },
+                                      "name": {
+                                        "type": "string"
+                                      },
+                                      "status": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "required": [
+                                      "id",
+                                      "name",
+                                      "status"
+                                    ]
+                                  }
+                                },
+                                "incidentCount": {
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991
+                                },
+                                "approvalState": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "ticketCount",
+                                "tickets",
+                                "testRunCount",
+                                "testRuns",
+                                "incidentCount",
+                                "approvalState"
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "orgId",
+                        "managedProductId",
+                        "name",
+                        "version",
+                        "description",
+                        "status",
+                        "releaseDate",
+                        "recordRevision",
+                        "ownerUserId",
+                        "qaState",
+                        "deploymentEvidenceUrl",
+                        "projectReleaseId",
+                        "createdBy",
+                        "createdAt",
+                        "updatedAt",
+                        "allowedActions",
+                        "linkedRoadmapItemCount",
+                        "evidence"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "tags": [
+          "ManagedProductRelations"
+        ],
+        "x-exposure": "permissioned",
+        "x-permission": "build:managed-products:view",
+        "description": "Exposure: permission — build:managed-products:view"
+      },
       "patch": {
         "operationId": "ManagedProductRelationsController_updateRelease",
         "parameters": [
@@ -143957,7 +145076,13 @@
                         "qaState": {
                           "anyOf": [
                             {
-                              "type": "string"
+                              "type": "string",
+                              "enum": [
+                                "pending",
+                                "in_review",
+                                "approved",
+                                "rejected"
+                              ]
                             },
                             {
                               "type": "null"
@@ -143968,6 +145093,18 @@
                           "anyOf": [
                             {
                               "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "projectReleaseId": {
+                          "anyOf": [
+                            {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
                             },
                             {
                               "type": "null"
@@ -144017,6 +145154,7 @@
                         "ownerUserId",
                         "qaState",
                         "deploymentEvidenceUrl",
+                        "projectReleaseId",
                         "createdBy",
                         "createdAt",
                         "updatedAt",
@@ -144150,6 +145288,18 @@
                         "type": "string",
                         "maxLength": 2048,
                         "format": "uri"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "projectReleaseId": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "exclusiveMinimum": 0,
+                        "maximum": 9007199254740991
                       },
                       {
                         "type": "null"
@@ -144591,6 +145741,9 @@
                     "type": "integer",
                     "minimum": 1,
                     "maximum": 9007199254740991
+                  },
+                  "confirmPublicationImpact": {
+                    "type": "boolean"
                   }
                 },
                 "required": [
@@ -145388,6 +146541,26 @@
                 "cancelled"
               ]
             }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+            }
           }
         ],
         "responses": {
@@ -146081,7 +147254,13 @@
                                   "qaState": {
                                     "anyOf": [
                                       {
-                                        "type": "string"
+                                        "type": "string",
+                                        "enum": [
+                                          "pending",
+                                          "in_review",
+                                          "approved",
+                                          "rejected"
+                                        ]
                                       },
                                       {
                                         "type": "null"
@@ -146092,6 +147271,18 @@
                                     "anyOf": [
                                       {
                                         "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "projectReleaseId": {
+                                    "anyOf": [
+                                      {
+                                        "type": "integer",
+                                        "minimum": -9007199254740991,
+                                        "maximum": 9007199254740991
                                       },
                                       {
                                         "type": "null"
@@ -146141,6 +147332,7 @@
                                   "ownerUserId",
                                   "qaState",
                                   "deploymentEvidenceUrl",
+                                  "projectReleaseId",
                                   "createdBy",
                                   "createdAt",
                                   "updatedAt",
@@ -797286,13 +798478,18 @@
             "in": "query",
             "required": false,
             "schema": {
-              "type": "string",
-              "enum": [
-                "open",
-                "in_progress",
-                "resolved",
-                "archived"
-              ]
+              "minItems": 1,
+              "maxItems": 4,
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "open",
+                  "in_progress",
+                  "resolved",
+                  "archived"
+                ]
+              }
             }
           },
           {
@@ -797300,7 +798497,12 @@
             "in": "query",
             "required": false,
             "schema": {
-              "type": "string"
+              "maxItems": 50,
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
             }
           },
           {
@@ -801827,16 +803029,26 @@
                         ]
                       },
                       "status": {
-                        "type": "string",
-                        "enum": [
-                          "open",
-                          "in_progress",
-                          "resolved",
-                          "archived"
-                        ]
+                        "minItems": 1,
+                        "maxItems": 4,
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "enum": [
+                            "open",
+                            "in_progress",
+                            "resolved",
+                            "archived"
+                          ]
+                        }
                       },
                       "assigneeId": {
-                        "type": "string"
+                        "maxItems": 50,
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "minLength": 1
+                        }
                       },
                       "search": {
                         "type": "string"
@@ -802203,13 +803415,18 @@
             "in": "query",
             "required": false,
             "schema": {
-              "type": "string",
-              "enum": [
-                "open",
-                "in_progress",
-                "resolved",
-                "archived"
-              ]
+              "minItems": 1,
+              "maxItems": 4,
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "open",
+                  "in_progress",
+                  "resolved",
+                  "archived"
+                ]
+              }
             }
           },
           {
@@ -802217,7 +803434,12 @@
             "in": "query",
             "required": false,
             "schema": {
-              "type": "string"
+              "maxItems": 50,
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
             }
           },
           {
@@ -802539,7 +803761,38 @@
     "/feedbucket/widgets": {
       "get": {
         "operationId": "FeedbucketController_listWidgets",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "managedProductId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK",
@@ -802555,272 +803808,309 @@
                       ]
                     },
                     "data": {
-                      "type": "array",
-                      "items": {
-                        "allOf": [
-                          {
-                            "type": "object",
-                            "properties": {
-                              "id": {
-                                "type": "integer",
-                                "minimum": -9007199254740991,
-                                "maximum": 9007199254740991
-                              },
-                              "orgId": {
-                                "type": "string"
-                              },
-                              "projectId": {
-                                "anyOf": [
-                                  {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "allOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
                                     "type": "integer",
                                     "minimum": -9007199254740991,
                                     "maximum": 9007199254740991
                                   },
-                                  {
-                                    "type": "null"
-                                  }
-                                ]
-                              },
-                              "managedProductId": {
-                                "anyOf": [
-                                  {
-                                    "type": "integer",
-                                    "minimum": -9007199254740991,
-                                    "maximum": 9007199254740991
-                                  },
-                                  {
-                                    "type": "null"
-                                  }
-                                ]
-                              },
-                              "defaultProjectId": {
-                                "anyOf": [
-                                  {
-                                    "type": "integer",
-                                    "minimum": -9007199254740991,
-                                    "maximum": 9007199254740991
-                                  },
-                                  {
-                                    "type": "null"
-                                  }
-                                ]
-                              },
-                              "defaultAssigneeMembershipId": {
-                                "anyOf": [
-                                  {
-                                    "type": "integer",
-                                    "minimum": -9007199254740991,
-                                    "maximum": 9007199254740991
-                                  },
-                                  {
-                                    "type": "null"
-                                  }
-                                ]
-                              },
-                              "assigneeRules": {
-                                "anyOf": [
-                                  {
-                                    "type": "object",
-                                    "properties": {
-                                      "bug": {
-                                        "type": "integer",
-                                        "minimum": -9007199254740991,
-                                        "maximum": 9007199254740991
-                                      },
-                                      "idea": {
-                                        "type": "integer",
-                                        "minimum": -9007199254740991,
-                                        "maximum": 9007199254740991
-                                      },
-                                      "feature": {
-                                        "type": "integer",
-                                        "minimum": -9007199254740991,
-                                        "maximum": 9007199254740991
-                                      },
-                                      "question": {
-                                        "type": "integer",
-                                        "minimum": -9007199254740991,
-                                        "maximum": 9007199254740991
-                                      },
-                                      "praise": {
-                                        "type": "integer",
-                                        "minimum": -9007199254740991,
-                                        "maximum": 9007199254740991
-                                      },
-                                      "other": {
-                                        "type": "integer",
-                                        "minimum": -9007199254740991,
-                                        "maximum": 9007199254740991
-                                      }
-                                    }
-                                  },
-                                  {
-                                    "type": "null"
-                                  }
-                                ]
-                              },
-                              "name": {
-                                "type": "string"
-                              },
-                              "publicKey": {
-                                "type": "string"
-                              },
-                              "allowedDomains": {
-                                "type": "array",
-                                "items": {
-                                  "type": "string"
-                                }
-                              },
-                              "autoCreateTicket": {
-                                "type": "boolean"
-                              },
-                              "defaultTicketType": {
-                                "type": "string"
-                              },
-                              "isActive": {
-                                "type": "boolean"
-                              },
-                              "aiAssistEnabled": {
-                                "type": "boolean"
-                              },
-                              "theme": {
-                                "anyOf": [
-                                  {
-                                    "type": "object",
-                                    "properties": {
-                                      "color": {
-                                        "type": "string"
-                                      },
-                                      "position": {
-                                        "type": "string",
-                                        "enum": [
-                                          "bottom-right",
-                                          "bottom-left"
-                                        ]
-                                      },
-                                      "label": {
-                                        "type": "string"
-                                      }
-                                    }
-                                  },
-                                  {
-                                    "type": "null"
-                                  }
-                                ]
-                              },
-                              "createdBy": {
-                                "anyOf": [
-                                  {
+                                  "orgId": {
                                     "type": "string"
                                   },
-                                  {
-                                    "type": "null"
-                                  }
-                                ]
-                              },
-                              "createdAt": {
-                                "type": "string",
-                                "format": "date-time"
-                              },
-                              "updatedAt": {
-                                "type": "string",
-                                "format": "date-time"
-                              },
-                              "deletedAt": {
-                                "anyOf": [
-                                  {
+                                  "projectId": {
+                                    "anyOf": [
+                                      {
+                                        "type": "integer",
+                                        "minimum": -9007199254740991,
+                                        "maximum": 9007199254740991
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "managedProductId": {
+                                    "anyOf": [
+                                      {
+                                        "type": "integer",
+                                        "minimum": -9007199254740991,
+                                        "maximum": 9007199254740991
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "defaultProjectId": {
+                                    "anyOf": [
+                                      {
+                                        "type": "integer",
+                                        "minimum": -9007199254740991,
+                                        "maximum": 9007199254740991
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "defaultAssigneeMembershipId": {
+                                    "anyOf": [
+                                      {
+                                        "type": "integer",
+                                        "minimum": -9007199254740991,
+                                        "maximum": 9007199254740991
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "assigneeRules": {
+                                    "anyOf": [
+                                      {
+                                        "type": "object",
+                                        "properties": {
+                                          "bug": {
+                                            "type": "integer",
+                                            "minimum": -9007199254740991,
+                                            "maximum": 9007199254740991
+                                          },
+                                          "idea": {
+                                            "type": "integer",
+                                            "minimum": -9007199254740991,
+                                            "maximum": 9007199254740991
+                                          },
+                                          "feature": {
+                                            "type": "integer",
+                                            "minimum": -9007199254740991,
+                                            "maximum": 9007199254740991
+                                          },
+                                          "question": {
+                                            "type": "integer",
+                                            "minimum": -9007199254740991,
+                                            "maximum": 9007199254740991
+                                          },
+                                          "praise": {
+                                            "type": "integer",
+                                            "minimum": -9007199254740991,
+                                            "maximum": 9007199254740991
+                                          },
+                                          "other": {
+                                            "type": "integer",
+                                            "minimum": -9007199254740991,
+                                            "maximum": 9007199254740991
+                                          }
+                                        }
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "name": {
+                                    "type": "string"
+                                  },
+                                  "publicKey": {
+                                    "type": "string"
+                                  },
+                                  "allowedDomains": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "autoCreateTicket": {
+                                    "type": "boolean"
+                                  },
+                                  "defaultTicketType": {
+                                    "type": "string"
+                                  },
+                                  "isActive": {
+                                    "type": "boolean"
+                                  },
+                                  "aiAssistEnabled": {
+                                    "type": "boolean"
+                                  },
+                                  "theme": {
+                                    "anyOf": [
+                                      {
+                                        "type": "object",
+                                        "properties": {
+                                          "color": {
+                                            "type": "string"
+                                          },
+                                          "position": {
+                                            "type": "string",
+                                            "enum": [
+                                              "bottom-right",
+                                              "bottom-left"
+                                            ]
+                                          },
+                                          "label": {
+                                            "type": "string"
+                                          }
+                                        }
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "createdBy": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "createdAt": {
                                     "type": "string",
                                     "format": "date-time"
                                   },
-                                  {
-                                    "type": "null"
-                                  }
-                                ]
-                              }
-                            },
-                            "required": [
-                              "id",
-                              "orgId",
-                              "projectId",
-                              "managedProductId",
-                              "defaultProjectId",
-                              "defaultAssigneeMembershipId",
-                              "assigneeRules",
-                              "name",
-                              "publicKey",
-                              "allowedDomains",
-                              "autoCreateTicket",
-                              "defaultTicketType",
-                              "isActive",
-                              "aiAssistEnabled",
-                              "theme",
-                              "createdBy",
-                              "createdAt",
-                              "updatedAt",
-                              "deletedAt"
-                            ]
-                          },
-                          {
-                            "type": "object",
-                            "properties": {
-                              "project": {
-                                "anyOf": [
-                                  {
-                                    "type": "object",
-                                    "properties": {
-                                      "id": {
-                                        "type": "integer",
-                                        "minimum": -9007199254740991,
-                                        "maximum": 9007199254740991
-                                      },
-                                      "name": {
-                                        "type": "string"
-                                      },
-                                      "key": {
-                                        "type": "string"
-                                      },
-                                      "orgId": {
-                                        "type": "string"
-                                      }
-                                    },
-                                    "required": [
-                                      "id",
-                                      "name",
-                                      "key",
-                                      "orgId"
-                                    ]
+                                  "updatedAt": {
+                                    "type": "string",
+                                    "format": "date-time"
                                   },
-                                  {
-                                    "type": "null"
+                                  "deletedAt": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string",
+                                        "format": "date-time"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
                                   }
+                                },
+                                "required": [
+                                  "id",
+                                  "orgId",
+                                  "projectId",
+                                  "managedProductId",
+                                  "defaultProjectId",
+                                  "defaultAssigneeMembershipId",
+                                  "assigneeRules",
+                                  "name",
+                                  "publicKey",
+                                  "allowedDomains",
+                                  "autoCreateTicket",
+                                  "defaultTicketType",
+                                  "isActive",
+                                  "aiAssistEnabled",
+                                  "theme",
+                                  "createdBy",
+                                  "createdAt",
+                                  "updatedAt",
+                                  "deletedAt"
+                                ]
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "project": {
+                                    "anyOf": [
+                                      {
+                                        "type": "object",
+                                        "properties": {
+                                          "id": {
+                                            "type": "integer",
+                                            "minimum": -9007199254740991,
+                                            "maximum": 9007199254740991
+                                          },
+                                          "name": {
+                                            "type": "string"
+                                          },
+                                          "key": {
+                                            "type": "string"
+                                          },
+                                          "orgId": {
+                                            "type": "string"
+                                          }
+                                        },
+                                        "required": [
+                                          "id",
+                                          "name",
+                                          "key",
+                                          "orgId"
+                                        ]
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "project"
+                                ]
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "submissionCount": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "openCount": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  }
+                                },
+                                "required": [
+                                  "submissionCount",
+                                  "openCount"
                                 ]
                               }
-                            },
-                            "required": [
-                              "project"
-                            ]
-                          },
-                          {
-                            "type": "object",
-                            "properties": {
-                              "submissionCount": {
-                                "type": "integer",
-                                "minimum": -9007199254740991,
-                                "maximum": 9007199254740991
-                              },
-                              "openCount": {
-                                "type": "integer",
-                                "minimum": -9007199254740991,
-                                "maximum": 9007199254740991
-                              }
-                            },
-                            "required": [
-                              "submissionCount",
-                              "openCount"
                             ]
                           }
-                        ]
-                      }
+                        },
+                        "pagination": {
+                          "type": "object",
+                          "properties": {
+                            "limit": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "hasMore": {
+                              "type": "boolean"
+                            },
+                            "nextCursor": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            }
+                          },
+                          "required": [
+                            "limit",
+                            "hasMore",
+                            "nextCursor"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "data",
+                        "pagination"
+                      ]
                     }
                   },
                   "required": [
@@ -1186878,6 +1188168,112 @@
         "x-exposure": "permissioned",
         "x-permission": "settings:manage",
         "description": "Exposure: permission — settings:manage"
+      }
+    },
+    "/organization/invitations/{invitationId}/claim": {
+      "post": {
+        "operationId": "OrganizationController_claimInvitation",
+        "parameters": [
+          {
+            "name": "invitationId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "ok": {
+                          "type": "boolean",
+                          "const": true
+                        },
+                        "autoLoginToken": {
+                          "type": "string"
+                        },
+                        "skippedGrants": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "module": {
+                                "type": "string"
+                              },
+                              "reason": {
+                                "type": "string",
+                                "enum": [
+                                  "INVITER_AUTHORITY_REVOKED",
+                                  "ROLE_NOT_SEEDED"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "module",
+                              "reason"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "ok",
+                        "autoLoginToken",
+                        "skippedGrants"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "tags": [
+          "Organization"
+        ],
+        "x-exposure": "universal",
+        "description": "Exposure: universal — any authenticated member, subject from the token"
       }
     },
     "/organization/invitations/accept": {

@@ -7,7 +7,7 @@ const mockUseWidgets = jest.fn();
 const mockUseCan = jest.fn();
 
 jest.mock("@/hooks/api/feedbucket/use-feedbucket-widgets", () => ({
-  useFeedbucketWidgets: () => mockUseWidgets(),
+  useFeedbucketWidgets: (...args: unknown[]) => mockUseWidgets(...args),
   useCreateFeedbucketWidget: () => ({ mutate: mockCreate, isPending: false }),
   useUpdateFeedbucketWidget: () => ({ mutate: mockUpdate, isPending: false }),
 }));
@@ -28,6 +28,12 @@ jest.mock("sonner", () => ({
   toast: { success: jest.fn(), error: jest.fn() },
 }));
 
+const PAGINATION = { limit: 50, hasMore: false, nextCursor: null };
+
+function aPage(rows: { id: number; name: string; managedProductId: number; isActive: boolean; deletedAt: null; publicKey: string }[]) {
+  return { data: rows, pagination: PAGINATION };
+}
+
 const INTERNAL = { id: 7, name: "Product capture", managedProductId: 39, isActive: false, deletedAt: null, publicKey: "fb_internal" };
 const PAUSED = { id: 8, name: "Site feedback", managedProductId: 39, isActive: false, deletedAt: null, publicKey: "fb_paused" };
 const ACTIVE = { id: 9, name: "Site feedback", managedProductId: 39, isActive: true, deletedAt: null, publicKey: "fb_active" };
@@ -44,14 +50,14 @@ beforeEach(() => {
 
 describe("FeedbucketCollectDialog", () => {
   it("shows the embed snippet for an active product widget", () => {
-    mockUseWidgets.mockReturnValue({ data: [ACTIVE], isLoading: false });
+    mockUseWidgets.mockReturnValue({ data: aPage([ACTIVE]), isLoading: false });
     renderDialog();
     expect(screen.getByText('<script data-key="fb_active"></script>')).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Create product widget" })).not.toBeInTheDocument();
   });
 
   it("creates a product-linked widget when only the internal capture widget exists", () => {
-    mockUseWidgets.mockReturnValue({ data: [INTERNAL], isLoading: false });
+    mockUseWidgets.mockReturnValue({ data: aPage([INTERNAL]), isLoading: false });
     renderDialog();
     fireEvent.click(screen.getByRole("button", { name: "Create product widget" }));
     expect(mockCreate).toHaveBeenCalledWith(
@@ -62,7 +68,7 @@ describe("FeedbucketCollectDialog", () => {
   });
 
   it("activates a paused product widget instead of creating another", () => {
-    mockUseWidgets.mockReturnValue({ data: [INTERNAL, PAUSED], isLoading: false });
+    mockUseWidgets.mockReturnValue({ data: aPage([INTERNAL, PAUSED]), isLoading: false });
     renderDialog();
     fireEvent.click(screen.getByRole("button", { name: "Activate widget" }));
     expect(mockUpdate).toHaveBeenCalledWith({ widgetId: 8, input: { isActive: true } }, expect.any(Object));
@@ -71,9 +77,15 @@ describe("FeedbucketCollectDialog", () => {
 
   it("hides the create action without widget create permission", () => {
     mockUseCan.mockReturnValue(false);
-    mockUseWidgets.mockReturnValue({ data: [], isLoading: false });
+    mockUseWidgets.mockReturnValue({ data: aPage([]), isLoading: false });
     renderDialog();
     expect(screen.queryByRole("button", { name: "Create product widget" })).not.toBeInTheDocument();
     expect(screen.getByText(/Ask an admin with Feedbucket access to create/)).toBeInTheDocument();
+  });
+
+  it("passes managedProductId to useFeedbucketWidgets so the query is product-scoped", () => {
+    mockUseWidgets.mockReturnValue({ data: aPage([]), isLoading: false });
+    renderDialog();
+    expect(mockUseWidgets).toHaveBeenCalledWith({ managedProductId: 39 });
   });
 });

@@ -19,6 +19,7 @@ export function buildRelease(overrides: Partial<ManagedProductRelease>): Managed
     updatedAt: "2026-01-01T00:00:00Z",
     allowedActions: ["view", "update", "archive"],
     linkedRoadmapItemCount: 0,
+    projectReleaseId: null,
     ...overrides,
   };
 }

@@ -42,6 +42,10 @@ jest.mock("@/components/ui/user-combobox", () => ({
   ),
 }));
 
+jest.mock("@/hooks/api/build/managed-product-members", () => ({
+  useManagedProductMembers: jest.fn(() => ({ data: null })),
+}));
+
 jest.mock("@/components/shared/submission-bulk-toolbar", () => ({
   SubmissionBulkToolbar: ({ selectedIds }: { selectedIds: number[] }) =>
     selectedIds.length > 0 ? <div>{selectedIds.length} selected on this page</div> : null,
@@ -54,7 +58,7 @@ describe("ProductFeedbackPage — URL-backed filter params (BSN-01-FB-FILTERS)",
     useFeedbucketSubmissions.mockReturnValue(EMPTY_FEEDBUCKET_RESULT);
     render(<ProductFeedbackPage managedProductId={7} />);
     const [callParams] = useFeedbucketSubmissions.mock.calls[0] as [Record<string, unknown>];
-    expect(callParams).toMatchObject({ assigneeId: "user-99" });
+    expect(callParams).toMatchObject({ assigneeId: ["user-99"] });
   });
 
   it("omits assigneeId from query when URL carries none so all owners are returned", () => {

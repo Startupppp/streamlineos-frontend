@@ -28,43 +28,65 @@ const deployedWidgetRow = {
   openCount: 0,
 };
 
+const paginationStub = { limit: 50, hasMore: false, nextCursor: null };
+
+function aPage(rows: unknown[]) {
+  return { data: rows, pagination: paginationStub };
+}
+
 describe("the feedbucket widgets list a frontend shipped ahead of the API has to survive", () => {
   it("accepts a widget row without the three routing fields, so /build/:projectId/feedbucket still renders", () => {
-    const result = feedbucketWidgetListContract.safeParse([deployedWidgetRow]);
+    const result = feedbucketWidgetListContract.safeParse(aPage([deployedWidgetRow]));
 
     expect(result.success).toBe(true);
   });
 
   it("still accepts the row once the API sends them, so the fix does not strand the newer backend", () => {
-    const result = feedbucketWidgetListContract.safeParse([
-      {
-        ...deployedWidgetRow,
-        defaultProjectId: 7,
-        defaultAssigneeMembershipId: null,
-        assigneeRules: { bug: 12, idea: 15 },
-      },
-    ]);
+    const result = feedbucketWidgetListContract.safeParse(
+      aPage([
+        {
+          ...deployedWidgetRow,
+          defaultProjectId: 7,
+          defaultAssigneeMembershipId: null,
+          assigneeRules: { bug: 12, idea: 15 },
+        },
+      ]),
+    );
 
     expect(result.success).toBe(true);
   });
 
   it("accepts the explicit nulls the column defaults produce", () => {
-    const result = feedbucketWidgetListContract.safeParse([
-      {
-        ...deployedWidgetRow,
-        defaultProjectId: null,
-        defaultAssigneeMembershipId: null,
-        assigneeRules: null,
-      },
-    ]);
+    const result = feedbucketWidgetListContract.safeParse(
+      aPage([
+        {
+          ...deployedWidgetRow,
+          defaultProjectId: null,
+          defaultAssigneeMembershipId: null,
+          assigneeRules: null,
+        },
+      ]),
+    );
 
     expect(result.success).toBe(true);
   });
 
   it("rejects a wrongly typed routing field, so tolerance for absence is not tolerance for garbage", () => {
-    const result = feedbucketWidgetListContract.safeParse([
-      { ...deployedWidgetRow, defaultProjectId: "seven" },
-    ]);
+    const result = feedbucketWidgetListContract.safeParse(
+      aPage([{ ...deployedWidgetRow, defaultProjectId: "seven" }]),
+    );
+
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects a flat array so the old contract shape does not silently pass", () => {
+    const result = feedbucketWidgetListContract.safeParse([deployedWidgetRow]);
+
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects a page missing the pagination block", () => {
+    const result = feedbucketWidgetListContract.safeParse({ data: [deployedWidgetRow] });
 
     expect(result.success).toBe(false);
   });

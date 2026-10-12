@@ -50,3 +50,12 @@ export const pendingInvitationItemContract = z.object({
 export const pendingInvitationsForMeContract = z.array(pendingInvitationItemContract);
 
 export type PendingInvitationItem = z.infer<typeof pendingInvitationItemContract>;
+
+export const claimInvitationResponseContract = z.object({
+  ok: z.literal(true),
+  autoLoginToken: z.string(),
+  skippedGrants: z.array(z.object({
+    module: z.string(),
+    reason: z.enum(["INVITER_AUTHORITY_REVOKED", "ROLE_NOT_SEEDED"]),
+  })),
+});

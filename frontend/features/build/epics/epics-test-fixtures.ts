@@ -203,6 +203,7 @@ export function installEpicsPageMocks() {
     setCursor: jest.fn(),
     resetKey: "",
     isPending: false,
+    searchParams: new URLSearchParams(),
   });
   mockUseEpicPage.mockReturnValue(epicPageResult([]));
   mockUseOnlineStatus.mockReturnValue(true);
@@ -231,6 +232,7 @@ export function filtersReturning(values: Record<string, string>, isFiltered = tr
     setCursor: jest.fn(),
     resetKey: "",
     isPending: false,
+    searchParams: new URLSearchParams(),
   };
 }
 

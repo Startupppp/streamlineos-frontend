@@ -65,6 +65,7 @@ function makeListFilters(overrides: Partial<BuildListFiltersState> = {}) {
     setCursor: jest.fn(),
     resetKey: "",
     isPending: false,
+    searchParams: new URLSearchParams(),
     ...overrides,
   } satisfies BuildListFiltersState;
 }

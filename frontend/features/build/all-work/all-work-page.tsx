@@ -200,34 +200,35 @@ export function AllWorkPage() {
     [setListParams],
   );
 
-  const subtitleText =
-    pageState.kind === "loading"
-      ? "Loading tickets…"
-      : `${loadedCount} ticket${loadedCount === 1 ? "" : "s"} loaded`;
-
   return (
-    <PageWrapper title="All Work" subtitle={subtitleText} noInternalScroll>
+    <PageWrapper
+      title="All Work"
+      noInternalScroll
+      subtitle="Explore tickets across every project you can access"
+      filtersClassName="flex-col items-stretch gap-0 overflow-visible pb-2 [&>*]:w-full [&>*]:min-w-0 [&>*]:shrink"
+      filters={
+        <AllWorkPageToolbar
+          view={view}
+          grouping={grouping}
+          scopeMine={scopeMine}
+          orgStates={orgStates}
+          teamOptions={teamOptions}
+          buildMembers={buildMembers}
+          teamIdFilter={teamIdFilter}
+          onTeamFilter={handleTeamFilter}
+          projectOptions={projectOptions}
+          productOptions={productOptions}
+          onGroupChange={handleGroupChange}
+          onScopeToggle={handleScopeToggle}
+          productIdFilter={productIdFilter}
+          hasActiveFilters={hasActiveFilters}
+          onProductFilter={handleProductFilter}
+          onViewChange={handleViewChangeWithReset}
+        />
+      }
+    >
       <PmPageShell>
-        <PmSection index={0} className={cn(PM_FILL_SECTION, "gap-3")}>
-          <AllWorkPageToolbar
-            view={view}
-            onViewChange={handleViewChangeWithReset}
-            grouping={grouping}
-            onGroupChange={handleGroupChange}
-            scopeMine={scopeMine}
-            onScopeToggle={handleScopeToggle}
-            buildMembers={buildMembers}
-            projectOptions={projectOptions}
-            orgStates={orgStates}
-            teamOptions={teamOptions}
-            productOptions={productOptions}
-            teamIdFilter={teamIdFilter}
-            productIdFilter={productIdFilter}
-            onTeamFilter={handleTeamFilter}
-            onProductFilter={handleProductFilter}
-            hasActiveFilters={hasActiveFilters}
-          />
-
+        <PmSection index={0} className={cn(PM_FILL_SECTION, "gap-0")}>
           <PageState
             resolution={pageState}
             className={CONTENT_FILL_PANEL}

@@ -66,7 +66,7 @@ describe("ManagedProductsPage — usePageState integration (BSN-01-027)", () => 
     fireEvent.keyDown(document, { key: "j" });
     fireEvent.keyDown(document, { key: "Enter" });
 
-    expect(mockRouterPush).toHaveBeenCalledWith("/build/managed-products/42");
+    expect(mockRouterPush).toHaveBeenCalledWith("/build/managed-products/42?ret=%2Fbuild%2Fmanaged-products");
   });
 
   it("displays hook data without additional client-side filtering (BSN-FE-MP-001)", () => {
@@ -159,7 +159,7 @@ describe("ManagedProductsPage — URL stability (BT-d1f0e28c8509)", () => {
     fireEvent.keyDown(document, { key: "j" });
     fireEvent.keyDown(document, { key: "Enter" });
 
-    expect(mockRouterPush).toHaveBeenCalledWith(`/build/managed-products/${productId}`);
+    expect(mockRouterPush).toHaveBeenCalledWith(`/build/managed-products/${productId}?ret=%2Fbuild%2Fmanaged-products`);
     expect(mockRouterPush).not.toHaveBeenCalledWith(expect.stringContaining("Original Name"));
     expect(mockRouterPush).not.toHaveBeenCalledWith(expect.stringContaining("Renamed Name"));
   });

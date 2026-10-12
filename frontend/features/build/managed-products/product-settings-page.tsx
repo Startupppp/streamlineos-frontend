@@ -26,7 +26,8 @@ import {
   useArchiveManagedProduct,
   useRestoreManagedProduct,
 } from "@/hooks/api/build/managed-product-mutations";
-import { isWriteConflict } from "@/lib/api-envelope";
+import { isWriteConflict, isApiError } from "@/lib/api-envelope";
+import { isRecord } from "@/lib/is-record";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import {
@@ -68,6 +69,10 @@ function ProductSettingsForm({ managedProductId }: ProductSettingsPageProps) {
   const [isConflict, setIsConflict] = useState(false);
   const [archiveOpen, setArchiveOpen] = useState(false);
   const [restoreOpen, setRestoreOpen] = useState(false);
+  const [publicationImpact, setPublicationImpact] = useState<{
+    activeShareTokens: number;
+    publishedRoadmapItems: number;
+  } | null>(null);
 
   const {
     data: product,
@@ -174,13 +179,35 @@ function ProductSettingsForm({ managedProductId }: ProductSettingsPageProps) {
   function handleArchiveConfirm() {
     if (!product) return;
     archiveProduct.mutate(
-      { managedProductId, version: product.version },
+      {
+        managedProductId,
+        version: product.version,
+        confirmPublicationImpact: publicationImpact !== null ? true : undefined,
+      },
       {
         onSuccess: () => {
           toast.success("Product archived.");
           setArchiveOpen(false);
+          setPublicationImpact(null);
         },
-        onError: (e) => toast.error(getErrorMessage(e)),
+        onError: (e) => {
+          if (
+            isApiError(e) &&
+            e.status === 409 &&
+            e.code === "MANAGED_PRODUCT_HAS_PUBLICATION" &&
+            isRecord(e.details)
+          ) {
+            const { activeShareTokens, publishedRoadmapItems } = e.details;
+            if (
+              typeof activeShareTokens === "number" &&
+              typeof publishedRoadmapItems === "number"
+            ) {
+              setPublicationImpact({ activeShareTokens, publishedRoadmapItems });
+              return;
+            }
+          }
+          toast.error(getErrorMessage(e));
+        },
       },
     );
   }
@@ -299,7 +326,10 @@ function ProductSettingsForm({ managedProductId }: ProductSettingsPageProps) {
 
           <ConfirmDialog
             open={archiveOpen}
-            onOpenChange={setArchiveOpen}
+            onOpenChange={(open) => {
+              setArchiveOpen(open);
+              if (!open) setPublicationImpact(null);
+            }}
             title="Archive this product?"
             description={
               <span>
@@ -310,6 +340,15 @@ function ProductSettingsForm({ managedProductId }: ProductSettingsPageProps) {
                     {memberCount} member{memberCount !== 1 ? "s" : ""} and{" "}
                     {linkedProjectCount} linked project
                     {linkedProjectCount !== 1 ? "s" : ""} will remain unchanged.
+                  </span>
+                ) : null}
+                {publicationImpact !== null ? (
+                  <span className="block mt-2 text-destructive">
+                    This product has {publicationImpact.activeShareTokens} active share
+                    link{publicationImpact.activeShareTokens !== 1 ? "s" : ""} and{" "}
+                    {publicationImpact.publishedRoadmapItems} published roadmap item
+                    {publicationImpact.publishedRoadmapItems !== 1 ? "s" : ""}. Archiving
+                    will revoke all active share links. Confirm to proceed.
                   </span>
                 ) : null}
               </span>

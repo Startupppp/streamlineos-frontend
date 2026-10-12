@@ -56,6 +56,7 @@ const mockListFilters: BuildListFiltersState = {
   activeCount: 0,
   isFiltered: false,
   isPending: false,
+  searchParams: new URLSearchParams(),
 };
 
 beforeEach(() => {

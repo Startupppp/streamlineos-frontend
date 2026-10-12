@@ -44,7 +44,7 @@ export function ProjectFeedbucketPage({
   } = useFeedbucketWidgets();
   const { data: project } = useProject(projectId);
 
-  const projectWidget = widgets?.find((w) => w.projectId === projectId) ?? null;
+  const projectWidget = widgets?.data?.find((w) => w.projectId === projectId) ?? null;
   const defaultWidgetName = project?.name?.trim() ?? "";
 
   const pageState = usePageState({

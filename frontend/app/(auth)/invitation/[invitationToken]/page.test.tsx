@@ -216,3 +216,30 @@ describe("InvitationPage — an unusable invitation", () => {
     expect(screen.getByRole("button", { name: /go to sign in/i })).toBeEnabled();
   });
 });
+
+describe("InvitationPage — unauthenticated user accepts inline without a signin redirect", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    acceptMutation.isPending = false;
+    declineMutation.isPending = false;
+    sessionState.data = null;
+    invitation.userExists = true;
+    invitationError.value = null;
+  });
+
+  afterEach(() => {
+    invitation.userExists = false;
+  });
+
+  it("requests OTP directly rather than navigating to the signin page", async () => {
+    const user = userEvent.setup();
+    render(<InvitationPage />);
+
+    await user.click(screen.getByRole("button", { name: /sign in & join/i }));
+
+    expect(requestOtpMutation.mutate).toHaveBeenCalledTimes(1);
+    expect(mockPush).not.toHaveBeenCalledWith(
+      expect.stringContaining("/signin"),
+    );
+  });
+});

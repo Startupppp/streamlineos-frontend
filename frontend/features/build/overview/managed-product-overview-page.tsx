@@ -15,6 +15,7 @@ import { PageState } from "@/components/shared/page-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
 import { BuildInlineFilters } from "@/features/build/shared/build-inline-filters";
+import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { BuildOfflineNotice } from "@/features/build/shared/build-offline-notice";
 import { ManagedProductOverviewSkeleton } from "@/features/build/managed-products/managed-product-page-skeletons";
 import { ManagedProductOverviewStrategyCard } from "./managed-product-overview-strategy-card";
@@ -73,6 +74,9 @@ export function ManagedProductOverviewPage({
     handleTeamChange,
     handleInitiativeStatusChange,
     handleSegmentChange,
+    from,
+    to,
+    handleDateRangeChange,
   } = useManagedProductOverview(managedProductId);
   const { staggerContainer, fadeUp } = useMotionVariants();
   const attentionSignals = useMemo(
@@ -136,6 +140,16 @@ export function ManagedProductOverviewPage({
                     value={segmentSelectValue}
                     onValueChange={handleSegmentChange}
                     options={segmentOptions}
+                  />
+                ),
+              },
+              {
+                id: "dateRange",
+                control: (
+                  <DateRangePicker
+                    from={from}
+                    to={to}
+                    onChange={handleDateRangeChange}
                   />
                 ),
               },

@@ -299,10 +299,6 @@ export default function InvitationPage() {
   const handleExistingUserAccept = useCallback(() => {
     if (acceptingRef.current) return;
     if (!invitationToken) return;
-    if (!session) {
-      router.push(`/signin?callbackUrl=/invitation/${invitationToken}`);
-      return;
-    }
     requestInvitationOtp.mutate(
       { token: invitationToken },
       {
@@ -314,7 +310,7 @@ export default function InvitationPage() {
         },
       },
     );
-  }, [invitationToken, session, router, requestInvitationOtp]);
+  }, [invitationToken, requestInvitationOtp]);
 
   if (isValidating || isCompletingAcceptance) {
     return (
