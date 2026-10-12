@@ -381,6 +381,13 @@ jest.mock(
   }),
 );
 
+jest.mock(
+  "@/features/build/managed-products/roadmap/roadmap-list-view",
+  () => ({
+    RoadmapListView: jest.fn(() => <div data-testid="roadmap-list-view" />),
+  }),
+);
+
 jest.mock("@/components/ui/confirm-dialog", () => ({
   ConfirmDialog: () => null,
 }));
@@ -477,6 +484,11 @@ export const {
 );
 export const { useRoadmapItems }: { useRoadmapItems: jest.Mock } =
   jest.requireMock("@/hooks/api/build/roadmap");
+export const {
+  RoadmapListView: RoadmapListViewMock,
+}: { RoadmapListView: jest.Mock } = jest.requireMock(
+  "@/features/build/managed-products/roadmap/roadmap-list-view",
+);
 export const { useManagedProducts }: { useManagedProducts: jest.Mock } =
   jest.requireMock("@/hooks/api/build/managed-products");
 export const {

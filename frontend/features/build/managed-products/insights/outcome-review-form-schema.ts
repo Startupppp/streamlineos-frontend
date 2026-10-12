@@ -1,5 +1,10 @@
 import { z } from "zod";
 
+export const MEASURE_KIND_OPTIONS = [
+  { label: "Self-reported", value: "self_reported" },
+  { label: "Measured", value: "measured" },
+] as const;
+
 export const scheduleOutcomeReviewSchema = z.object({
   kind: z.enum(["experiment", "outcome_review"]),
   title: z.string().min(1, "Title is required").max(500),

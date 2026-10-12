@@ -1,12 +1,14 @@
 import React from "react";
 
 export const mockRouterPush = jest.fn();
+export const mockRouterReplace = jest.fn();
 export const mockUseBuildListFilters = jest.fn();
+export const mockSearchParams = { string: "" };
 
 jest.mock("next/navigation", () => ({
-  useRouter: () => ({ replace: jest.fn(), push: mockRouterPush }),
+  useRouter: () => ({ replace: mockRouterReplace, push: mockRouterPush }),
   usePathname: () => "/build/managed-products",
-  useSearchParams: () => new URLSearchParams(),
+  useSearchParams: () => new URLSearchParams(mockSearchParams.string),
 }));
 
 jest.mock("@/hooks/api/access", () => ({
@@ -192,6 +194,7 @@ export const EMPTY_RESULT = {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockSearchParams.string = "";
   useCan.mockReturnValue(true);
   usePageState.mockReturnValue({ kind: "ready" });
   useManagedProducts.mockReturnValue(EMPTY_RESULT);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { formatShortDate } from "@/lib/date-utils";
@@ -75,6 +75,12 @@ export function FeedbackPaneDetail({
     return titles;
   }, [opportunitySearch?.data]);
 
+  const handleOpenLinkedTicket = useCallback(() => {
+    if (onOpenTicket && submission.linkedTicket) {
+      onOpenTicket(submission.linkedTicket.id, submission.linkedTicket.projectId);
+    }
+  }, [onOpenTicket, submission.linkedTicket]);
+
   return (
     <>
       <div className="flex flex-1 flex-col gap-6 overflow-y-auto px-6 py-5">
@@ -117,7 +123,7 @@ export function FeedbackPaneDetail({
                   type="button"
                   variant="link"
                   className="h-auto p-0 text-sm font-normal text-primary hover:underline"
-                  onClick={() => onOpenTicket(submission.linkedTicket!.id, submission.linkedTicket!.projectId)}
+                  onClick={handleOpenLinkedTicket}
                 >
                   {ticketTitle}
                 </Button>

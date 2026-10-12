@@ -13,6 +13,7 @@ const linkedProjectRowContract = z.object({
   name: z.string(),
   key: z.string(),
   status: z.string(),
+  isPrimary: z.boolean().catch(false),
   health: z.enum(["on_track", "at_risk", "off_track"]).nullable().catch(null),
   ownerId: z.string().nullable(),
   ownerMembershipId: z.number().int().nullable(),
@@ -50,6 +51,9 @@ const linkedProjectRowContract = z.object({
     percent: z.number().nullable(),
   }),
   linkedRoadmapItemCount: z.number().int(),
+  revision: z.number().int().catch(0),
+  sourceFreshness: z.string().catch(""),
+  allowedActions: z.array(z.string()).catch([]),
   createdAt: z.string(),
   updatedAt: z.string(),
 });
@@ -75,9 +79,9 @@ export interface ManagedProductProjectsParams {
   managedProductId: number;
   cursor?: string;
   limit?: number;
-  status?: string;
-  health?: string;
-  ownerId?: number;
+  status?: string[];
+  health?: string[];
+  ownerId?: number[];
   managerId?: number;
   teamId?: number;
   clientId?: number;
@@ -91,10 +95,14 @@ export interface ManagedProductProjectsParams {
 function toQueryParams(
   params: ManagedProductProjectsParams,
 ): Record<string, unknown> {
-  const { managedProductId: _id, ...rest } = params;
-  return Object.fromEntries(
+  const { managedProductId: _id, status, health, ownerId, ...rest } = params;
+  const result: Record<string, unknown> = Object.fromEntries(
     Object.entries(rest).filter(([, v]) => v !== undefined && v !== ""),
   );
+  if (status && status.length > 0) result["status"] = status.join(",");
+  if (health && health.length > 0) result["health"] = health.join(",");
+  if (ownerId && ownerId.length > 0) result["ownerId"] = ownerId.join(",");
+  return result;
 }
 
 const projectLinkedProductRowContract = z.object({

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useMemo } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useNavigationLeave } from "@/components/shared/dirty-state-context";
 import { CaptureSubmissionSheet } from "./feedback/capture-submission-sheet";
 import { FeedbackPane } from "./feedback/feedback-pane";
@@ -39,6 +39,7 @@ export function ProductFeedbackDialogs({
   intakeRouting,
 }: ProductFeedbackDialogsProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const requestLeave = useNavigationLeave();
   const {
     listFilters,
@@ -46,7 +47,6 @@ export function ProductFeedbackDialogs({
     paneTicketId,
     paneTicketProjectId,
     handleOpenTicket,
-    handleCloseTicketPane,
   } = filterState;
 
   const handleCloseFeedbackPane = useCallback(
@@ -67,6 +67,14 @@ export function ProductFeedbackDialogs({
   const handleOpenPaneDetail = useCallback(() => {
     if (paneDetailHref !== null) requestLeave(() => router.push(paneDetailHref));
   }, [paneDetailHref, requestLeave, router]);
+
+  const ticketPaneOriginHref = useMemo(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("ticket");
+    params.delete("ticketProject");
+    const query = params.toString();
+    return `/build/managed-products/${managedProductId}/feedback${query ? `?${query}` : ""}`;
+  }, [managedProductId, searchParams]);
 
   return (
     <>
@@ -98,11 +106,7 @@ export function ProductFeedbackDialogs({
         <TicketDetailPane
           ticketId={paneTicketId}
           projectId={paneTicketProjectId}
-          originHref={
-            paneSubmissionId !== null
-              ? `/build/managed-products/${managedProductId}/feedback?submission=${paneSubmissionId}`
-              : `/build/managed-products/${managedProductId}/feedback`
-          }
+          originHref={ticketPaneOriginHref}
         />
       )}
       {intakeRouting.target ? (

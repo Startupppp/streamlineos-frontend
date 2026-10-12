@@ -41,6 +41,11 @@ function isoDateParam(value: string | undefined, active: boolean): string | unde
   return value;
 }
 
+function splitMulti(raw: string): string[] {
+  if (!raw || raw === BUILD_FILTER_ALL) return [];
+  return raw.split(",").map((v) => v.trim()).filter(Boolean);
+}
+
 const SOURCE_CHANNEL_VALUES = SOURCE_CHANNEL_FILTER_OPTIONS
   .map((o) => o.value)
   .filter((v) => v !== BUILD_FILTER_ALL) as FeedbucketSourceChannel[];
@@ -66,13 +71,13 @@ export function useProductFeedbackFilters(managedProductId: number) {
   const duplicateValue = listFilters.value("duplicate");
   const fromValue = listFilters.value("from");
   const toValue = listFilters.value("to");
-  const sourceChannelValue = listFilters.value("sourceChannel");
-  const themeValue = listFilters.value("theme");
-  const sentimentValue = listFilters.value("sentiment");
+  const sourceChannelRaw = listFilters.value("sourceChannel");
+  const themeRaw = listFilters.value("theme");
+  const sentimentRaw = listFilters.value("sentiment");
   const consentStatusValue = listFilters.value("consentStatus");
   const linkedToOpportunityValue = listFilters.value("linkedToOpportunity");
-  const segmentValue = listFilters.value("segment");
-  const crmOrgIdValue = listFilters.value("crmOrganizationId");
+  const segmentRaw = listFilters.value("segment");
+  const crmOrgIdRaw = listFilters.value("crmOrganizationId");
   const submissionIdRaw = listFilters.value("submission");
   const ticketIdRaw = listFilters.value("ticket");
   const ticketProjectIdRaw = listFilters.value("ticketProject");
@@ -94,23 +99,25 @@ export function useProductFeedbackFilters(managedProductId: number) {
   const typedFrom = isoDateParam(fromValue, listFilters.isActive("from"));
   const typedTo = isoDateParam(toValue, listFilters.isActive("to"));
   const dateRangeReversed = Boolean(typedFrom && typedTo && typedFrom > typedTo);
-  const typedSourceChannel = useMemo(
-    () => SOURCE_CHANNEL_VALUES.includes(sourceChannelValue as FeedbucketSourceChannel)
-      ? [sourceChannelValue as FeedbucketSourceChannel]
-      : undefined,
-    [sourceChannelValue],
-  );
+
+  const typedSourceChannel = useMemo(() => {
+    const vals = splitMulti(sourceChannelRaw)
+      .filter((v) => SOURCE_CHANNEL_VALUES.includes(v as FeedbucketSourceChannel)) as FeedbucketSourceChannel[];
+    return vals.length > 0 ? vals : undefined;
+  }, [sourceChannelRaw]);
+
   const typedTheme = useMemo(() => {
-    const trimmed = themeValue.trim();
-    if (!trimmed || trimmed === BUILD_FILTER_ALL) return undefined;
-    return trimmed === "untagged" ? [""] : [trimmed];
-  }, [themeValue]);
-  const typedSentiment = useMemo(
-    () => SENTIMENT_VALUES.includes(sentimentValue as FeedbucketSentiment)
-      ? [sentimentValue as FeedbucketSentiment]
-      : undefined,
-    [sentimentValue],
-  );
+    const vals = splitMulti(themeRaw);
+    if (vals.length === 0) return undefined;
+    return vals.map((v) => (v === "untagged" ? "" : v));
+  }, [themeRaw]);
+
+  const typedSentiment = useMemo(() => {
+    const vals = splitMulti(sentimentRaw)
+      .filter((v) => SENTIMENT_VALUES.includes(v as FeedbucketSentiment)) as FeedbucketSentiment[];
+    return vals.length > 0 ? vals : undefined;
+  }, [sentimentRaw]);
+
   const typedConsentStatus = useMemo(
     () => CONSENT_VALUES.includes(consentStatusValue as FeedbucketConsentStatus)
       ? [consentStatusValue as FeedbucketConsentStatus]
@@ -123,14 +130,19 @@ export function useProductFeedbackFilters(managedProductId: number) {
       : undefined,
     [linkedToOpportunityValue],
   );
+
   const typedSegment = useMemo(() => {
-    const trimmed = segmentValue?.trim();
-    return trimmed && trimmed !== BUILD_FILTER_ALL ? [trimmed] : undefined;
-  }, [segmentValue]);
+    const vals = splitMulti(segmentRaw);
+    return vals.length > 0 ? vals : undefined;
+  }, [segmentRaw]);
+
   const typedCrmOrgId = useMemo(() => {
-    const n = crmOrgIdValue ? parseInt(crmOrgIdValue, 10) : NaN;
-    return Number.isFinite(n) && n > 0 ? [n] : undefined;
-  }, [crmOrgIdValue]);
+    const ids = splitMulti(crmOrgIdRaw)
+      .map((v) => parseInt(v, 10))
+      .filter((n) => Number.isFinite(n) && n > 0);
+    return ids.length > 0 ? ids : undefined;
+  }, [crmOrgIdRaw]);
+
   const paneSubmissionId = useMemo(() => {
     const n = submissionIdRaw ? parseInt(submissionIdRaw, 10) : NaN;
     return Number.isFinite(n) && n > 0 ? n : null;
@@ -201,13 +213,8 @@ export function useProductFeedbackFilters(managedProductId: number) {
     [listFilters],
   );
   const handleDuplicateChange = useCallback((v: string) => listFilters.setValue("duplicate", v), [listFilters]);
-  const handleSourceChannelChange = useCallback((v: string) => listFilters.setValue("sourceChannel", v), [listFilters]);
-  const handleThemeChange = useCallback((v: string) => listFilters.setValue("theme", v), [listFilters]);
-  const handleSentimentChange = useCallback((v: string) => listFilters.setValue("sentiment", v), [listFilters]);
   const handleConsentStatusChange = useCallback((v: string) => listFilters.setValue("consentStatus", v), [listFilters]);
   const handleLinkedToOpportunityChange = useCallback((v: string) => listFilters.setValue("linkedToOpportunity", v), [listFilters]);
-  const handleSegmentChange = useCallback((v: string) => listFilters.setValue("segment", v), [listFilters]);
-  const handleCrmOrgChange = useCallback((v: string) => listFilters.setValue("crmOrganizationId", v), [listFilters]);
   const handleClearSelection = useCallback(() => setSelected(new Set()), [setSelected]);
   const handleOpenTicket = useCallback(
     (ticketId: number, projectId: number) => {
@@ -218,6 +225,27 @@ export function useProductFeedbackFilters(managedProductId: number) {
   const handleCloseTicketPane = useCallback(() => {
     listFilters.setValues({ ticket: BUILD_FILTER_ALL, ticketProject: BUILD_FILTER_ALL });
   }, [listFilters]);
+
+  const handleSourceChannelValuesChange = useCallback(
+    (vals: string[]) => listFilters.setValue("sourceChannel", vals.length > 0 ? vals.join(",") : BUILD_FILTER_ALL),
+    [listFilters],
+  );
+  const handleThemeValuesChange = useCallback(
+    (vals: string[]) => listFilters.setValue("theme", vals.length > 0 ? vals.join(",") : BUILD_FILTER_ALL),
+    [listFilters],
+  );
+  const handleSentimentValuesChange = useCallback(
+    (vals: string[]) => listFilters.setValue("sentiment", vals.length > 0 ? vals.join(",") : BUILD_FILTER_ALL),
+    [listFilters],
+  );
+  const handleSegmentValuesChange = useCallback(
+    (vals: string[]) => listFilters.setValue("segment", vals.length > 0 ? vals.join(",") : BUILD_FILTER_ALL),
+    [listFilters],
+  );
+  const handleCrmOrgValuesChange = useCallback(
+    (vals: string[]) => listFilters.setValue("crmOrganizationId", vals.length > 0 ? vals.join(",") : BUILD_FILTER_ALL),
+    [listFilters],
+  );
 
   return {
     listFilters,
@@ -232,39 +260,32 @@ export function useProductFeedbackFilters(managedProductId: number) {
     linkedValue,
     assigneeIdValue,
     duplicateValue,
-    sourceChannelValue,
-    themeValue,
-    sentimentValue,
     consentStatusValue,
     linkedToOpportunityValue,
-    segmentValue,
-    crmOrgIdValue,
     typedFrom,
     typedTo,
     typedAssigneeId,
     paneSubmissionId,
     dateRangeReversed,
     isFiltered,
-    appliedSegment: typedSegment?.[0],
-    appliedTheme: typedTheme
-      ? typedTheme[0] === "" ? "untagged" : typedTheme[0]
-      : undefined,
-    appliedCrmOrgId: typedCrmOrgId ? String(typedCrmOrgId[0]) : undefined,
-    appliedSourceChannel: typedSourceChannel?.[0],
-    appliedSentiment: typedSentiment?.[0],
+    appliedSourceChannels: typedSourceChannel,
+    appliedThemes: typedTheme ? typedTheme.map((v) => (v === "" ? "untagged" : v)) : undefined,
+    appliedSentiments: typedSentiment,
+    appliedSegments: typedSegment,
+    appliedCrmOrgIds: typedCrmOrgId ? typedCrmOrgId.map(String) : undefined,
     appliedConsentStatus: typedConsentStatus?.[0],
     handleTypeChange,
     handleStatusChange,
     handleLinkedChange,
     handleAssigneeChange,
     handleDuplicateChange,
-    handleSourceChannelChange,
-    handleThemeChange,
-    handleSentimentChange,
     handleConsentStatusChange,
     handleLinkedToOpportunityChange,
-    handleSegmentChange,
-    handleCrmOrgChange,
+    handleSourceChannelValuesChange,
+    handleThemeValuesChange,
+    handleSentimentValuesChange,
+    handleSegmentValuesChange,
+    handleCrmOrgValuesChange,
     handleDateRangeChange: listFilters.setValues,
     handlePageChange: setPage,
     handleClearSelection,

@@ -468,4 +468,19 @@ describe("ProductProjectsPage — cursor history (BSN-PROJ-CURSOR-HISTORY)", () 
     expect(params.get("cursor")).toBe("cursor_p2");
     expect(params.get("pp_prev")).toBe("0");
   });
+
+  it("deep-link with cursor but no pp_prev shows Previous and Previous goes to page1 (BSN-PROJ-CURSOR-DEEP-LINK)", () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("cursor=cursor_p2"));
+    mockUseManagedProductProjects.mockReturnValue({
+      ...EMPTY_RESULT,
+      data: { data: [], pagination: { hasMore: false, nextCursor: null, limit: 20 } },
+    });
+    render(<ProductProjectsPage managedProductId={5} />);
+    expect(screen.getByTestId("prev-page")).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId("prev-page"));
+    const call = mockRouterReplace.mock.calls[0][0] as string;
+    const params = new URLSearchParams(call.includes("?") ? call.split("?")[1] : call);
+    expect(params.get("cursor")).toBeNull();
+    expect(params.get("pp_prev")).toBeNull();
+  });
 });

@@ -3,7 +3,7 @@
 import { useState, useCallback, useMemo } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Plus, ExternalLink } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { OutcomeReviewRow } from "./outcome-review-row";
 import {
@@ -33,6 +33,7 @@ import type {
   CreateOutcomeReviewInput,
   UpdateOutcomeReviewInput,
 } from "@/hooks/api/build/outcome-review-mutations";
+import { MEASURE_KIND_OPTIONS } from "./outcome-review-form-schema";
 import { OutcomeReviewScheduleSheet } from "./outcome-review-schedule-sheet";
 
 type OutcomeReviewRow =
@@ -44,11 +45,6 @@ const RESULT_OPTIONS = [
   { label: "Not met", value: "not_met" },
   { label: "Inconclusive", value: "inconclusive" },
 ];
-
-const MEASURE_KIND_OPTIONS = [
-  { label: "Self-reported", value: "self_reported" },
-  { label: "Measured", value: "measured" },
-] as const;
 
 const completeSchema = z.object({
   actual: z.string().optional(),
@@ -102,7 +98,7 @@ function CompleteReviewDialog({
       title="Complete review"
       description={`Record the result for "${review.title}".`}
       resolver={zodResolver(completeSchema)}
-      defaultValues={{ version: review.version }}
+      defaultValues={{ version: review.version, measureKind: review.measureKind ?? "self_reported" }}
       onSubmit={(values) =>
         onComplete({
           state: "completed",
@@ -110,9 +106,9 @@ function CompleteReviewDialog({
           result: values.result,
           notes: values.notes,
           version: values.version,
-          ...(values.measureKind ? { measureKind: values.measureKind } : {}),
+          measureKind: values.measureKind ?? "self_reported",
           ...(values.sourceUrl?.trim() ? { sourceUrl: values.sourceUrl } : {}),
-          ...(values.measuredAt?.trim() ? { measuredAt: values.measuredAt } : {}),
+          ...(values.measuredAt?.trim() ? { measuredAt: new Date(values.measuredAt).toISOString() } : {}),
         })
       }
       isSubmitting={isSubmitting}

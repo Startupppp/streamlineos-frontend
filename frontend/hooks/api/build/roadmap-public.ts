@@ -61,6 +61,22 @@ interface SubmitPublicFeedbackInput {
   email?: string;
 }
 
+export function usePublicRoadmapByToken(shareToken: string) {
+  return useQuery({
+    queryKey: knowledgeAndSurveysQueryKeys.roadmap.byToken(shareToken),
+    queryFn: ({ signal }) =>
+      apiClient.get<PublicRoadmapBoard>(
+        "/public/roadmap/by-token",
+        { shareToken },
+        signal,
+        publicRoadmapBoardContract,
+      ),
+    enabled: Boolean(shareToken),
+    staleTime: 60_000,
+    retry: false,
+  });
+}
+
 export function usePublicRoadmap(orgId: string, managedProductId?: number) {
   return useQuery({
     queryKey: knowledgeAndSurveysQueryKeys.roadmap.publicBoard(orgId, managedProductId),

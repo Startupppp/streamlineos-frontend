@@ -4,6 +4,7 @@ import { ManagedProductsPage } from "./managed-products-page";
 import type { CreateManagedProductInput } from "@/types/projects";
 import {
   mockUseBuildListFilters,
+  mockSearchParams,
   useManagedProducts,
   ManagedProductFormSheet,
   useCreateManagedProduct,
@@ -11,6 +12,7 @@ import {
   toast,
   useQueryParamOpen,
 } from "./managed-products-page.test-fixtures";
+import { FILTER_DEFINITIONS } from "./managed-products-filter-constants";
 
 type MutateCallbacks = { onSuccess?: () => void; onError?: (e: Error) => void };
 
@@ -154,5 +156,41 @@ describe("ManagedProductsPage — owner filter (BSN-MP-OWNER)", () => {
     expect(useManagedProducts).toHaveBeenCalledWith(
       expect.objectContaining({ archived: true }),
     );
+  });
+});
+
+describe("ManagedProductsPage — view mode outside filter definitions (BSN-MP-VIEW)", () => {
+  it("FILTER_DEFINITIONS does not contain a view entry so clearAll cannot reset the layout toggle", () => {
+    const params = FILTER_DEFINITIONS.map((d) => d.param);
+    expect(params).not.toContain("view");
+  });
+
+  it("useManagedProducts is called without a view param when view=grid is in the URL so the toggle is UI-only", () => {
+    mockSearchParams.string = "view=grid";
+    render(<ManagedProductsPage />);
+    const calls = useManagedProducts.mock.calls;
+    for (const [args] of calls) {
+      expect(args).not.toHaveProperty("view");
+    }
+  });
+
+  it("useManagedProducts is called with the same params regardless of view mode so the toggle does not affect server filtering", () => {
+    mockSearchParams.string = "";
+    render(<ManagedProductsPage />);
+    const tableCall = useManagedProducts.mock.calls[0]?.[0] as Record<string, unknown>;
+
+    jest.clearAllMocks();
+    useManagedProducts.mockReturnValue({
+      data: { data: [], pagination: { hasMore: false, nextCursor: null, limit: 20 } },
+      isLoading: false, isError: false, error: null, refetch: jest.fn(),
+    });
+
+    mockSearchParams.string = "view=grid";
+    render(<ManagedProductsPage />);
+    const gridCall = useManagedProducts.mock.calls[0]?.[0] as Record<string, unknown>;
+
+    const { view: _tv, ...tableRest } = tableCall ?? {};
+    const { view: _gv, ...gridRest } = gridCall ?? {};
+    expect(gridRest).toEqual(tableRest);
   });
 });

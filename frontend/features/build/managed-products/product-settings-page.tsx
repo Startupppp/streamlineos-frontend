@@ -32,6 +32,7 @@ import {
 import { ManagedProductEditFields } from "./managed-product-edit-fields";
 import { ProductSettingsDangerSection } from "./product-settings-danger-section";
 import { ProductSettingsMembersSection } from "./product-settings-members-section";
+import { ProductSettingsPublicationSection } from "./product-settings-publication-section";
 import {
   PRODUCT_SETTINGS_TABS,
   productSettingsTabFromParam,
@@ -235,6 +236,10 @@ function ProductSettingsForm({ managedProductId }: ProductSettingsPageProps) {
 
           <TabsContent value="members" className="mt-0 outline-none">
             <ProductSettingsMembersSection managedProductId={managedProductId} />
+          </TabsContent>
+
+          <TabsContent value="publishing" className="mt-0 outline-none">
+            <ProductSettingsPublicationSection managedProductId={managedProductId} />
           </TabsContent>
 
           <ConfirmDialog

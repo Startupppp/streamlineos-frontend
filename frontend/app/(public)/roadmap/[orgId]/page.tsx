@@ -324,7 +324,7 @@ export default function PublicRoadmapPage() {
   const productParam = Number(useSearchParams().get("product"));
   const managedProductId = Number.isInteger(productParam) && productParam > 0 ? productParam : undefined;
   const voterKey = useVoterKey();
-  const { data, isLoading, isError, refetch } = usePublicRoadmap(orgId, managedProductId);
+  const { data, isLoading, isError, refetch } = usePublicRoadmap(orgId);
   const vote = usePublicVote(orgId);
   const [votedIds, setVotedIds] = useState<Set<string>>(new Set());
 
@@ -381,6 +381,19 @@ export default function PublicRoadmapPage() {
     (id: number) => handleVote("feedback", id),
     [handleVote],
   );
+
+  if (managedProductId !== undefined) {
+    return (
+      <main className="min-h-dvh surface-soft flex items-center justify-center">
+        <div className="text-center space-y-3 px-4">
+          <p className="text-2xl font-bold text-foreground">Roadmap not found</p>
+          <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+            This product roadmap requires a share link. Please use the link provided by the product team.
+          </p>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-dvh surface-soft">

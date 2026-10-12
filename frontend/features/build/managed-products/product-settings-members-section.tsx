@@ -12,6 +12,7 @@ import {
 } from "@/hooks/api/build/managed-product-members";
 import type { ManagedProductMember } from "@/hooks/api/build/managed-product-members";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { isApiError } from "@/lib/api-envelope";
 import { toast } from "sonner";
 import { AddProductMemberDialog } from "./add-product-member-dialog";
 
@@ -32,15 +33,22 @@ export function ProductSettingsMembersSection({
   const canUpdate = useCan("build:managed-products:update");
   const [addOpen, setAddOpen] = useState(false);
   const [removeTarget, setRemoveTarget] = useState<ManagedProductMember | null>(null);
+  const [removeBlockedMsg, setRemoveBlockedMsg] = useState<string | null>(null);
 
   const { data, isLoading } = useManagedProductMembers(managedProductId);
   const removeMember = useRemoveManagedProductMember(managedProductId);
 
-  const handleRemoveRow = useCallback((m: ManagedProductMember) => setRemoveTarget(m), []);
+  const handleRemoveRow = useCallback((m: ManagedProductMember) => {
+    setRemoveBlockedMsg(null);
+    setRemoveTarget(m);
+  }, []);
 
   const handleRemoveDialogChange = useCallback(
     (open: boolean) => {
-      if (!open) setRemoveTarget(null);
+      if (!open) {
+        setRemoveTarget(null);
+        setRemoveBlockedMsg(null);
+      }
     },
     [],
   );
@@ -52,7 +60,13 @@ export function ProductSettingsMembersSection({
         toast.success("Member removed.");
         setRemoveTarget(null);
       },
-      onError: (e) => toast.error(getErrorMessage(e)),
+      onError: (e) => {
+        if (isApiError(e) && e.status === 409) {
+          setRemoveBlockedMsg("Cannot remove the last member of a product.");
+        } else {
+          toast.error(getErrorMessage(e));
+        }
+      },
     });
   }
 
@@ -127,11 +141,11 @@ export function ProductSettingsMembersSection({
         onOpenChange={handleRemoveDialogChange}
         title="Remove this member?"
         description={
-          removeTarget
-            ? (data?.data ?? []).length === 1
-              ? `${memberDisplayName(removeTarget)} will lose access. Removing the last member leaves this product with no dedicated team.`
-              : `${memberDisplayName(removeTarget)} will lose access to this product.`
-            : ""
+          removeBlockedMsg
+            ? removeBlockedMsg
+            : removeTarget
+              ? `${memberDisplayName(removeTarget)} will lose access to this product.`
+              : ""
         }
         confirmLabel="Remove"
         destructive

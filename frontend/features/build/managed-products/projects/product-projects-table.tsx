@@ -143,15 +143,14 @@ function LinkedGoalsCell({ row }: { row: LinkedProjectRow }) {
 
 interface ProductProjectMobileCardProps {
   row: LinkedProjectRow;
-  canManage: boolean;
   onUnlink: (row: LinkedProjectRow) => void;
 }
 
 export function ProductProjectMobileCard({
   row,
-  canManage,
   onUnlink,
 }: ProductProjectMobileCardProps) {
+  const canUnlink = row.allowedActions.includes("unlink");
   const handleUnlinkClick = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();
@@ -172,7 +171,7 @@ export function ProductProjectMobileCard({
       {row.nextMilestone ? (
         <p className="text-xs text-muted-foreground truncate">{row.nextMilestone.name}</p>
       ) : null}
-      {canManage ? (
+      {canUnlink ? (
         <Button
           type="button"
           variant="outline"
@@ -189,12 +188,10 @@ export function ProductProjectMobileCard({
 }
 
 interface BuildProductProjectsColumnsProps {
-  canManage: boolean;
   onUnlinkClick: (row: LinkedProjectRow) => void;
 }
 
 export function buildProductProjectsColumns({
-  canManage,
   onUnlinkClick,
 }: BuildProductProjectsColumnsProps): DataTableColumn<LinkedProjectRow>[] {
   return [

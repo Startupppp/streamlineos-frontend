@@ -149,6 +149,8 @@ export const knowledgeAndSurveysQueryKeys = {
         ? ([...base, "roadmap", "publicBoard", orgId] as const)
         : ([...base, "roadmap", "publicBoard", orgId, managedProductId] as const),
     publication: [...base, "roadmap", "publication"] as const,
+    byToken: (shareToken: string) =>
+      [...base, "roadmap", "byToken", shareToken] as const,
   },
 
   automations: {

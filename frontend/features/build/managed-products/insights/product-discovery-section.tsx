@@ -180,6 +180,13 @@ export function ProductDiscoverySection({ managedProductId }: ProductDiscoverySe
   );
 
   const handleOppsRetry = useCallback(() => void oppsQuery.refetch(), [oppsQuery]);
+  const handleThemesRetry = useCallback(() => void themesQuery.refetch(), [themesQuery]);
+  const handleOpenCompare = useCallback(() => setCompareOpen(true), []);
+  const handleReviewsRetry = useCallback(() => void outcomeReviewsQuery.refetch(), [outcomeReviewsQuery]);
+  const handleReviewsNextPage = useCallback(
+    () => reviewsPager.goToNextPage(outcomeReviewsQuery.data?.pagination.nextCursor ?? null),
+    [reviewsPager, outcomeReviewsQuery.data],
+  );
 
   const filterBar = (
     <OpportunitiesFilterBar
@@ -217,7 +224,7 @@ export function ProductDiscoverySection({ managedProductId }: ProductDiscoverySe
         period={themePeriod || "30d"}
         onPeriodChange={handleThemePeriodChange}
         isError={themesQuery.isError}
-        onRetry={() => void themesQuery.refetch()}
+        onRetry={handleThemesRetry}
       />
 
       <section aria-labelledby="opportunities-heading">
@@ -243,7 +250,7 @@ export function ProductDiscoverySection({ managedProductId }: ProductDiscoverySe
           onRowClick={handleRowClick}
           selected={compareSelected}
           onToggleSelect={handleToggleCompare}
-          onOpenCompare={() => setCompareOpen(true)}
+          onOpenCompare={handleOpenCompare}
           onRetry={handleOppsRetry}
         />
       </section>
@@ -253,11 +260,11 @@ export function ProductDiscoverySection({ managedProductId }: ProductDiscoverySe
         reviews={outcomeReviewsQuery.data?.data ?? []}
         isLoading={outcomeReviewsQuery.isLoading}
         isError={outcomeReviewsQuery.isError}
-        onRetry={() => void outcomeReviewsQuery.refetch()}
+        onRetry={handleReviewsRetry}
         hasMore={outcomeReviewsQuery.data?.pagination.hasMore ?? false}
         hasPreviousPage={reviewsPager.hasPrevious}
         pageNumber={reviewsPager.page}
-        onNextPage={() => reviewsPager.goToNextPage(outcomeReviewsQuery.data?.pagination.nextCursor ?? null)}
+        onNextPage={handleReviewsNextPage}
         onPreviousPage={reviewsPager.goToPreviousPage}
         onCreate={handleCreateOutcomeReview}
         onComplete={handleCompleteOutcomeReview}

@@ -42,6 +42,7 @@ import { RoadmapTimelineView } from "./roadmap/roadmap-timeline-view";
 import { RoadmapListView } from "./roadmap/roadmap-list-view";
 import { RoadmapFiltersBar } from "./roadmap/roadmap-filters-bar";
 import { RoadmapPreviewSheet } from "./roadmap/roadmap-preview-sheet";
+import { RoadmapPublicationPanel } from "./roadmap/roadmap-publication-panel";
 import type { RoadmapHorizon } from "@/types/projects";
 
 interface ProductRoadmapPageProps {
@@ -108,6 +109,7 @@ export function ProductRoadmapPage({ managedProductId }: ProductRoadmapPageProps
   const [editTarget, setEditTarget] = useState<ScorableRoadmapItem | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<ScorableRoadmapItem | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [publicationOpen, setPublicationOpen] = useState(false);
 
   const grouped = useMemo(() => {
     const map: Record<RoadmapHorizon, ScorableRoadmapItem[]> = { now: [], next: [], later: [] };
@@ -145,6 +147,8 @@ export function ProductRoadmapPage({ managedProductId }: ProductRoadmapPageProps
   const handleDeleteOpenChange = useCallback((open: boolean) => { if (!open) setDeleteTarget(null); }, []);
   const handleOpenPreview = useCallback(() => { setPreviewOpen(true); }, []);
   const handleClosePreview = useCallback(() => { setPreviewOpen(false); }, []);
+  const handleOpenPublication = useCallback(() => setPublicationOpen(true), []);
+  const handleClosePublication = useCallback(() => setPublicationOpen(false), []);
 
   const handleSetView = useCallback((mode: string) => {
     const next = new URLSearchParams(searchParams.toString());
@@ -197,12 +201,11 @@ export function ProductRoadmapPage({ managedProductId }: ProductRoadmapPageProps
               <TabsTrigger value="list">List</TabsTrigger>
             </TabsList>
           </Tabs>
-          {canManage && resolution.kind !== "denied" ? (
+          {canManage && resolution.kind !== "denied" ? <>
             <Button size="sm" variant="outline" type="button" onClick={handleOpenPreview}>Preview</Button>
-          ) : null}
-          {canManage && resolution.kind !== "denied" ? (
+            <Button size="sm" variant="outline" type="button" onClick={handleOpenPublication}>Publish</Button>
             <Button size="sm" onClick={handleOpenCreate}>New Item</Button>
-          ) : null}
+          </> : null}
         </div>
       }
       filters={
@@ -281,6 +284,7 @@ export function ProductRoadmapPage({ managedProductId }: ProductRoadmapPageProps
         />
       ) : null}
       {previewOpen ? <RoadmapPreviewSheet managedProductId={managedProductId} onClose={handleClosePreview} /> : null}
+      {publicationOpen ? <RoadmapPublicationPanel managedProductId={managedProductId} onClose={handleClosePublication} /> : null}
 
       <ConfirmDialog
         open={!!deleteTarget}

@@ -2,8 +2,12 @@
 
 import Link from "next/link";
 import { Skeleton } from "@/components/ui/skeleton";
+import { statusToneClasses } from "@/lib/design-tokens";
+import { cn } from "@/lib/utils";
 import { useProductCustomerImpact } from "@/hooks/api/feedbucket/use-feedbucket-product-stats";
 import type { FeedbucketCustomerImpactRow } from "@/hooks/api/feedbucket/feedbucket-schema";
+
+const OPP_TONE = statusToneClasses("info");
 
 interface CustomerImpactPanelProps {
   managedProductId: number;
@@ -35,7 +39,7 @@ function CustomerImpactRow({
         {row.submissionCount}
       </span>
       {row.opportunityCount > 0 && (
-        <span className="rounded-full bg-blue-50 px-2 py-0.5 font-mono tabular-nums text-xs text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+        <span className={cn("rounded-full px-2 py-0.5 font-mono tabular-nums text-xs", OPP_TONE.surface, OPP_TONE.ink)}>
           {row.opportunityCount} opp
         </span>
       )}

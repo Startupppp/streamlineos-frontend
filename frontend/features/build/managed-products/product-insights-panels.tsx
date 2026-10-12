@@ -13,6 +13,7 @@ import {
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import type { ManagedProductInsights } from "@/hooks/api/build/managed-products-schema";
 import { CustomerImpactPanel } from "./customer-impact-panel";
+import { OpportunityImpactTable } from "./opportunity-impact-table";
 import { getUserDisplayName } from "@/lib/person-display";
 import { ProductDiscoverySection } from "./insights/product-discovery-section";
 
@@ -239,8 +240,9 @@ export function InsightFeedbackPanel({
           href={productHref(managedProductId, "feedback?status=archived")}
         />
       </StatCardGrid>
-      <div className="mt-4">
+      <div className="mt-4 flex flex-col gap-4">
         <CustomerImpactPanel managedProductId={managedProductId} />
+        <OpportunityImpactTable managedProductId={managedProductId} />
       </div>
     </div>
   );

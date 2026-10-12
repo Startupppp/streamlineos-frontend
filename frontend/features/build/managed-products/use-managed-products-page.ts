@@ -69,11 +69,21 @@ export function useManagedProductsPage() {
   const tagValue = listFilters.value("tag");
   const linkedProjectIdValue = listFilters.value("linkedProjectId");
   const archivedValue = listFilters.value("archived");
-  const viewMode = listFilters.value("view") as ManagedProductViewMode;
+  const rawView = searchParams.get("view");
+  const viewMode: ManagedProductViewMode = rawView === "grid" ? "grid" : "table";
 
   const handleViewModeChange = useCallback(
-    (mode: ManagedProductViewMode) => listFilters.setValue("view", mode),
-    [listFilters],
+    (mode: ManagedProductViewMode) => {
+      const next = new URLSearchParams(searchParams.toString());
+      if (mode === "table") {
+        next.delete("view");
+      } else {
+        next.set("view", mode);
+      }
+      const qs = next.toString();
+      void router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    },
+    [pathname, router, searchParams],
   );
 
   const { data, isLoading, isError, error, refetch, dataUpdatedAt } = useManagedProducts({

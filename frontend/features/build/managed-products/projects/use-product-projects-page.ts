@@ -71,9 +71,21 @@ export function useProductProjectsPage({ managedProductId }: UseProductProjectsP
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
   const [unlinkProjectId, setUnlinkProjectId] = useState<number | null>(null);
 
-  const statusValue = searchParams.get(STATUS_PARAM) ?? "";
-  const healthValue = searchParams.get(HEALTH_PARAM) ?? "";
-  const ownerValue = searchParams.get(OWNER_PARAM) ?? "";
+  const statusRaw = searchParams.get(STATUS_PARAM) ?? "";
+  const healthRaw = searchParams.get(HEALTH_PARAM) ?? "";
+  const ownerRaw = searchParams.get(OWNER_PARAM) ?? "";
+  const statusValue = useMemo(
+    () => (statusRaw ? statusRaw.split(",").filter(Boolean) : []),
+    [statusRaw],
+  );
+  const healthValue = useMemo(
+    () => (healthRaw ? healthRaw.split(",").filter(Boolean) : []),
+    [healthRaw],
+  );
+  const ownerValue = useMemo(
+    () => (ownerRaw ? ownerRaw.split(",").filter(Boolean) : []),
+    [ownerRaw],
+  );
   const teamValue = searchParams.get(TEAM_PARAM) ?? "";
   const clientValue = searchParams.get(CLIENT_PARAM) ?? "";
   const contribValue = searchParams.get(CONTRIB_PARAM) ?? "";
@@ -98,19 +110,32 @@ export function useProductProjectsPage({ managedProductId }: UseProductProjectsP
   );
 
   const isFiltered = Boolean(
-    statusValue || healthValue || ownerValue || teamValue || clientValue || contribValue || dateFromValue || dateToValue || searchValue,
+    statusValue.length || healthValue.length || ownerValue.length || teamValue || clientValue || contribValue || dateFromValue || dateToValue || searchValue,
   );
 
   const contribRange = contribValue ? CONTRIB_BUCKETS[contribValue] : null;
+
+  const validStatuses = useMemo(
+    () => statusValue.filter((s) => s === "ACTIVE" || s === "COMPLETED" || s === "ARCHIVED"),
+    [statusValue],
+  );
+  const validHealthValues = useMemo(
+    () => healthValue.filter((h) => h === "on_track" || h === "at_risk" || h === "off_track"),
+    [healthValue],
+  );
+  const validOwnerIds = useMemo(
+    () => ownerValue.map((v) => positiveQueryId(v)).filter((id): id is number => id !== undefined),
+    [ownerValue],
+  );
 
   const params = useMemo(
     () => ({
       managedProductId,
       limit: PAGE_SIZE,
       cursor: cursorValue,
-      ...(statusValue === "ACTIVE" || statusValue === "COMPLETED" || statusValue === "ARCHIVED" ? { status: statusValue } : {}),
-      ...(healthValue === "on_track" || healthValue === "at_risk" || healthValue === "off_track" ? { health: healthValue } : {}),
-      ...(positiveQueryId(ownerValue) !== undefined ? { ownerId: positiveQueryId(ownerValue) } : {}),
+      ...(validStatuses.length > 0 ? { status: validStatuses } : {}),
+      ...(validHealthValues.length > 0 ? { health: validHealthValues } : {}),
+      ...(validOwnerIds.length > 0 ? { ownerId: validOwnerIds } : {}),
       ...(positiveQueryId(teamValue) !== undefined ? { teamId: positiveQueryId(teamValue) } : {}),
       ...(positiveQueryId(clientValue) !== undefined ? { clientId: positiveQueryId(clientValue) } : {}),
       ...(contribRange ? { minContribution: contribRange.min, maxContribution: contribRange.max } : {}),
@@ -118,7 +143,7 @@ export function useProductProjectsPage({ managedProductId }: UseProductProjectsP
       ...(isoDateTime(dateToValue, true) ? { dateTo: isoDateTime(dateToValue, true) } : {}),
       ...(debouncedSearch.trim() ? { search: debouncedSearch.trim() } : {}),
     }),
-    [managedProductId, cursorValue, statusValue, healthValue, ownerValue, teamValue, clientValue, contribRange, dateFromValue, dateToValue, debouncedSearch],
+    [managedProductId, cursorValue, validStatuses, validHealthValues, validOwnerIds, teamValue, clientValue, contribRange, dateFromValue, dateToValue, debouncedSearch],
   );
 
   const { data, isLoading, isError, error, refetch, dataUpdatedAt } = useManagedProductProjects(params);
@@ -126,7 +151,7 @@ export function useProductProjectsPage({ managedProductId }: UseProductProjectsP
   const rows = useMemo(() => data?.data ?? [], [data]);
   const hasMore = data?.pagination.hasMore ?? false;
   const nextCursor = data?.pagination.nextCursor ?? null;
-  const hasPrevious = Boolean(prevParamValue);
+  const hasPrevious = Boolean(prevParamValue) || Boolean(cursorValue);
 
   const resolution = usePageState({
     permission: "build:managed-products:view",
@@ -158,17 +183,17 @@ export function useProductProjectsPage({ managedProductId }: UseProductProjectsP
   );
 
   const handleStatusChange = useCallback(
-    (value: string) => writeParams({ [STATUS_PARAM]: value || null }, true),
+    (values: string[]) => writeParams({ [STATUS_PARAM]: values.length > 0 ? values.join(",") : null }, true),
     [writeParams],
   );
 
   const handleHealthChange = useCallback(
-    (value: string) => writeParams({ [HEALTH_PARAM]: value || null }, true),
+    (values: string[]) => writeParams({ [HEALTH_PARAM]: values.length > 0 ? values.join(",") : null }, true),
     [writeParams],
   );
 
   const handleOwnerChange = useCallback(
-    (value: string) => writeParams({ [OWNER_PARAM]: value || null }, true),
+    (values: string[]) => writeParams({ [OWNER_PARAM]: values.length > 0 ? values.join(",") : null }, true),
     [writeParams],
   );
 

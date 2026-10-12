@@ -8,6 +8,7 @@ import {
   useCan,
   usePageState,
   useRoadmapItems,
+  RoadmapListViewMock,
 } from "./product-scope-pages.test-harness";
 
 describe("ProductRoadmapPage — usePageState integration (BSN-01-027)", () => {
@@ -193,5 +194,41 @@ describe("ProductRoadmapPage — filters bar (BSN-RM-FILT)", () => {
   it("renders the filters bar component", () => {
     render(<ProductRoadmapPage managedProductId={7} />);
     expect(screen.getByTestId("roadmap-filters-bar")).toBeInTheDocument();
+  });
+});
+
+describe("ProductRoadmapPage — list view pagination (BSN-RM-LIST-NEXT)", () => {
+  it("passes hasMore=true to RoadmapListView when there is a next page", () => {
+    useRoadmapItems.mockReturnValue({
+      data: {
+        data: [],
+        pagination: { hasMore: true, nextCursor: "cursor1", limit: 50 },
+      },
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("view=list"));
+    render(<ProductRoadmapPage managedProductId={7} />);
+    const lastProps = RoadmapListViewMock.mock.lastCall?.[0] as { pagination: { hasMore: boolean } };
+    expect(lastProps.pagination.hasMore).toBe(true);
+  });
+
+  it("passes hasMore=false to RoadmapListView when there is no next page", () => {
+    useRoadmapItems.mockReturnValue({
+      data: {
+        data: [],
+        pagination: { hasMore: false, nextCursor: null, limit: 50 },
+      },
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("view=list"));
+    render(<ProductRoadmapPage managedProductId={7} />);
+    const lastProps = RoadmapListViewMock.mock.lastCall?.[0] as { pagination: { hasMore: boolean } };
+    expect(lastProps.pagination.hasMore).toBe(false);
   });
 });

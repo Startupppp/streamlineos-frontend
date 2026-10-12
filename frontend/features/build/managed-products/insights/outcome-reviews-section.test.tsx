@@ -1,7 +1,61 @@
+import { createContext, forwardRef, useContext, type ReactNode } from "react";
 import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { OutcomeReviewsSection } from "./outcome-reviews-section";
 import type { DiscoveryReviewsListOutcomeReviewsResponse } from "@/contracts/build-contracts.generated";
 import type { CreateOutcomeReviewInput } from "@/hooks/api/build/outcome-review-mutations";
+
+const mockSelectContext = createContext<(value: string) => void>(() => {});
+
+jest.mock("@/components/ui/select", () => ({
+  Select: ({
+    children,
+    onValueChange,
+  }: {
+    children: ReactNode;
+    onValueChange?: (value: string) => void;
+  }) => (
+    <mockSelectContext.Provider value={onValueChange ?? (() => {})}>
+      {children}
+    </mockSelectContext.Provider>
+  ),
+  SelectTrigger: forwardRef<HTMLButtonElement, { children: ReactNode }>(
+    function SelectTrigger({ children, ...props }, ref) {
+      return (
+        <button type="button" ref={ref} {...props}>
+          {children}
+        </button>
+      );
+    },
+  ),
+  SelectValue: ({ placeholder }: { placeholder?: string }) => <span>{placeholder}</span>,
+  SelectContent: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  SelectItem: function SelectItem({ children, value }: { children: ReactNode; value: string }) {
+    const onValueChange = useContext(mockSelectContext);
+    return (
+      <button type="button" role="option" aria-selected={false} onClick={() => onValueChange(value)}>
+        {children}
+      </button>
+    );
+  },
+}));
+
+jest.mock("@/components/ui/date-picker", () => ({
+  DatePicker: ({
+    id,
+    onChange,
+  }: {
+    id: string;
+    value: string;
+    onChange: (value: string) => void;
+    clearable?: boolean;
+  }) => (
+    <input
+      data-testid={`date-picker-${id}`}
+      onChange={(e) => onChange(e.target.value)}
+    />
+  ),
+}));
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn(() => true),
@@ -226,6 +280,42 @@ describe("OutcomeReviewRow — measure kind and source fields (BSN-OUTCOME-MEASU
       />,
     );
     expect(screen.getByTestId("measured-at-4")).toBeInTheDocument();
+  });
+});
+
+describe("CompleteReviewDialog — measuredAt ISO conversion (BSN-OUTCOME-MEASURE-TS)", () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  it("converts YYYY-MM-DD from the DatePicker to an ISO datetime string before calling onComplete", async () => {
+    const onComplete = jest.fn();
+    const user = userEvent.setup();
+    render(
+      <OutcomeReviewsSection
+        managedProductId={10}
+        reviews={[SCHEDULED_REVIEW]}
+        isLoading={false}
+        onCreate={noop}
+        onComplete={onComplete}
+        onDelete={noop}
+        isCreating={false}
+        isUpdating={false}
+      />,
+    );
+
+    fireEvent.click(screen.getByTestId("complete-review-btn-1"));
+    await user.click(screen.getByRole("option", { name: "Met" }));
+    fireEvent.change(screen.getByTestId("date-picker-measuredAt"), {
+      target: { value: "2026-03-15" },
+    });
+    await user.click(screen.getByRole("button", { name: /^complete$/i }));
+
+    await waitFor(() => {
+      expect(onComplete).toHaveBeenCalledWith(
+        1,
+        expect.objectContaining({ measuredAt: "2026-03-15T00:00:00.000Z" }),
+        expect.any(Function),
+      );
+    });
   });
 });
 

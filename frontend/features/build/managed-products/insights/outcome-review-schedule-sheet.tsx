@@ -28,15 +28,11 @@ import type { CreateOutcomeReviewInput } from "@/hooks/api/build/outcome-review-
 import { useOpportunities } from "@/hooks/api/build/product-discovery";
 import { useGoals } from "@/hooks/api/goals";
 import { OutcomeReviewLinkField } from "./outcome-review-link-field";
+import { OutcomeReviewMeasurementFields } from "./outcome-review-measurement-fields";
 
 const KIND_OPTIONS = [
   { label: "Outcome review", value: "outcome_review" },
   { label: "Experiment", value: "experiment" },
-] as const;
-
-const MEASURE_KIND_OPTIONS = [
-  { label: "Self-reported", value: "self_reported" },
-  { label: "Measured", value: "measured" },
 ] as const;
 
 const DEFAULT_VALUES: ScheduleOutcomeReviewValues = {
@@ -264,74 +260,7 @@ export function OutcomeReviewScheduleSheet({
               </FormItem>
             )}
           />
-          <FormField
-            control={form.control}
-            name="measureKind"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Measurement approach</FormLabel>
-                <Select
-                  value={field.value ?? "self_reported"}
-                  onValueChange={(v) => v && field.onChange(v)}
-                >
-                  <FormControl>
-                    <SelectTrigger
-                      className={FIELD_CONTROL_CLASS}
-                      data-testid="measure-kind-select"
-                    >
-                      <SelectValue placeholder="Select approach" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {MEASURE_KIND_OPTIONS.map((o) => (
-                      <SelectItem key={o.value} value={o.value}>
-                        {o.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="metricPeriod"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Metric period</FormLabel>
-                <FormControl>
-                  <Input
-                    {...field}
-                    value={field.value ?? ""}
-                    className={FIELD_CONTROL_CLASS}
-                    placeholder="e.g. Q1 2025, Last 30 days"
-                    data-testid="metric-period-input"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="sourceUrl"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Source URL</FormLabel>
-                <FormControl>
-                  <Input
-                    {...field}
-                    value={field.value ?? ""}
-                    className={FIELD_CONTROL_CLASS}
-                    placeholder="https://..."
-                    data-testid="source-url-input"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          <OutcomeReviewMeasurementFields control={form.control} />
         </div>
       )}
     </EntityFormSheet>
