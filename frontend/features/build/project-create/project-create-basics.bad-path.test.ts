@@ -99,7 +99,7 @@ describe("project key sanitization — NEW-11", () => {
     expect(sanitize("qa-1!")).toBe("QA1");
   });
 
-  it("sanitized value QA1 passes schema validation (stale error should clear)", () => {
+  it("sanitized value QA1 passes schema validation (stale error clears when trigger runs)", () => {
     expect(basicsSchema.safeParse({ name: "Alpha", key: sanitize("qa-1!") }).success).toBe(true);
   });
 
@@ -108,15 +108,19 @@ describe("project key sanitization — NEW-11", () => {
     expect(keyErrors("").length).toBeGreaterThan(0);
   });
 
-  it("detects transformation when sanitized value differs from raw input", () => {
+  it("sanitize produces a different value from the raw input containing special chars", () => {
     const raw = "qa-1!";
     const sanitized = sanitize(raw);
     expect(sanitized).not.toBe(raw);
   });
 
-  it("detects no transformation when raw input is already valid uppercase", () => {
+  it("sanitize is a no-op for already-valid uppercase input", () => {
     const raw = "QA1";
     const sanitized = sanitize(raw);
     expect(sanitized).toBe(raw);
+  });
+
+  it("sanitize applied to a mixed-case key without special chars matches the uppercased form", () => {
+    expect(sanitize("QaB1")).toBe("QAB1");
   });
 });

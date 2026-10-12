@@ -147,6 +147,7 @@ export function useVerifyEmail() {
 }
 
 export interface InvitationValidation {
+  id: string;
   email: string;
   organizationName: string;
   role: string;

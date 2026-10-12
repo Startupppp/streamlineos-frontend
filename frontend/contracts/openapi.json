@@ -144211,6 +144211,62 @@
                                   }
                                 ]
                               },
+                              "projectRelease": {
+                                "anyOf": [
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "id": {
+                                        "type": "integer",
+                                        "minimum": -9007199254740991,
+                                        "maximum": 9007199254740991
+                                      },
+                                      "name": {
+                                        "type": "string"
+                                      },
+                                      "version": {
+                                        "type": "string"
+                                      },
+                                      "projectId": {
+                                        "type": "integer",
+                                        "minimum": -9007199254740991,
+                                        "maximum": 9007199254740991
+                                      },
+                                      "projectName": {
+                                        "anyOf": [
+                                          {
+                                            "type": "string"
+                                          },
+                                          {
+                                            "type": "null"
+                                          }
+                                        ]
+                                      },
+                                      "projectKey": {
+                                        "anyOf": [
+                                          {
+                                            "type": "string"
+                                          },
+                                          {
+                                            "type": "null"
+                                          }
+                                        ]
+                                      }
+                                    },
+                                    "required": [
+                                      "id",
+                                      "name",
+                                      "version",
+                                      "projectId",
+                                      "projectName",
+                                      "projectKey"
+                                    ]
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
                               "createdBy": {
                                 "anyOf": [
                                   {
@@ -144255,6 +144311,7 @@
                               "qaState",
                               "deploymentEvidenceUrl",
                               "projectReleaseId",
+                              "projectRelease",
                               "createdBy",
                               "createdAt",
                               "updatedAt",
@@ -144467,6 +144524,62 @@
                             }
                           ]
                         },
+                        "projectRelease": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991
+                                },
+                                "name": {
+                                  "type": "string"
+                                },
+                                "version": {
+                                  "type": "string"
+                                },
+                                "projectId": {
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991
+                                },
+                                "projectName": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "projectKey": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "id",
+                                "name",
+                                "version",
+                                "projectId",
+                                "projectName",
+                                "projectKey"
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "createdBy": {
                           "anyOf": [
                             {
@@ -144511,6 +144624,7 @@
                         "qaState",
                         "deploymentEvidenceUrl",
                         "projectReleaseId",
+                        "projectRelease",
                         "createdBy",
                         "createdAt",
                         "updatedAt",
@@ -144771,6 +144885,62 @@
                             }
                           ]
                         },
+                        "projectRelease": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991
+                                },
+                                "name": {
+                                  "type": "string"
+                                },
+                                "version": {
+                                  "type": "string"
+                                },
+                                "projectId": {
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991
+                                },
+                                "projectName": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "projectKey": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "id",
+                                "name",
+                                "version",
+                                "projectId",
+                                "projectName",
+                                "projectKey"
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "createdBy": {
                           "anyOf": [
                             {
@@ -144914,6 +145084,7 @@
                         "qaState",
                         "deploymentEvidenceUrl",
                         "projectReleaseId",
+                        "projectRelease",
                         "createdBy",
                         "createdAt",
                         "updatedAt",
@@ -145102,6 +145273,62 @@
                             }
                           ]
                         },
+                        "projectRelease": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991
+                                },
+                                "name": {
+                                  "type": "string"
+                                },
+                                "version": {
+                                  "type": "string"
+                                },
+                                "projectId": {
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991
+                                },
+                                "projectName": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "projectKey": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "id",
+                                "name",
+                                "version",
+                                "projectId",
+                                "projectName",
+                                "projectKey"
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "createdBy": {
                           "anyOf": [
                             {
@@ -145146,6 +145373,7 @@
                         "qaState",
                         "deploymentEvidenceUrl",
                         "projectReleaseId",
+                        "projectRelease",
                         "createdBy",
                         "createdAt",
                         "updatedAt",
@@ -147280,6 +147508,62 @@
                                       }
                                     ]
                                   },
+                                  "projectRelease": {
+                                    "anyOf": [
+                                      {
+                                        "type": "object",
+                                        "properties": {
+                                          "id": {
+                                            "type": "integer",
+                                            "minimum": -9007199254740991,
+                                            "maximum": 9007199254740991
+                                          },
+                                          "name": {
+                                            "type": "string"
+                                          },
+                                          "version": {
+                                            "type": "string"
+                                          },
+                                          "projectId": {
+                                            "type": "integer",
+                                            "minimum": -9007199254740991,
+                                            "maximum": 9007199254740991
+                                          },
+                                          "projectName": {
+                                            "anyOf": [
+                                              {
+                                                "type": "string"
+                                              },
+                                              {
+                                                "type": "null"
+                                              }
+                                            ]
+                                          },
+                                          "projectKey": {
+                                            "anyOf": [
+                                              {
+                                                "type": "string"
+                                              },
+                                              {
+                                                "type": "null"
+                                              }
+                                            ]
+                                          }
+                                        },
+                                        "required": [
+                                          "id",
+                                          "name",
+                                          "version",
+                                          "projectId",
+                                          "projectName",
+                                          "projectKey"
+                                        ]
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
                                   "createdBy": {
                                     "anyOf": [
                                       {
@@ -147324,6 +147608,7 @@
                                   "qaState",
                                   "deploymentEvidenceUrl",
                                   "projectReleaseId",
+                                  "projectRelease",
                                   "createdBy",
                                   "createdAt",
                                   "updatedAt",
@@ -1188660,6 +1188945,9 @@
                     "data": {
                       "type": "object",
                       "properties": {
+                        "id": {
+                          "type": "string"
+                        },
                         "email": {
                           "type": "string"
                         },
@@ -1188674,6 +1188962,7 @@
                         }
                       },
                       "required": [
+                        "id",
                         "email",
                         "organizationName",
                         "role",

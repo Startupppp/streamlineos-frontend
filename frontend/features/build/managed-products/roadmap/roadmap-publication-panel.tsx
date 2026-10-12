@@ -120,6 +120,10 @@ export function RoadmapPublicationPanel({ managedProductId, onClose }: RoadmapPu
                     ? "No items are marked as public. Mark roadmap items public for them to appear."
                     : `${String(publicItemCount)} item${publicItemCount === 1 ? "" : "s"} visible to the public.`}
                 </p>
+                <p className="text-sm text-muted-foreground">
+                  The public board is not a snapshot. It reflects your roadmap as
+                  you change it, so edits appear on the shared link.
+                </p>
                 {shareUrl ? (
                   <div className="flex items-center gap-2 rounded-md border bg-muted/40 px-3 py-2">
                     <p className="min-w-0 flex-1 truncate font-mono text-xs text-foreground">

@@ -11,6 +11,7 @@ export interface ReleaseActions {
   onMarkReleased: (release: ManagedProductRelease) => void;
   onArchive: (release: ManagedProductRelease) => void;
   onRestore: (release: ManagedProductRelease) => void;
+  onViewDetails: (release: ManagedProductRelease) => void;
 }
 
 const ReleaseActionsContext = createContext<ReleaseActions | null>(null);

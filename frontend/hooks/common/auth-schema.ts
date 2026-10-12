@@ -5,6 +5,7 @@ export const verifyEmailContract = z.object({
 });
 
 export const invitationValidateContract = z.object({
+  id: z.string(),
   email: z.string(),
   organizationName: z.string(),
   role: z.string(),

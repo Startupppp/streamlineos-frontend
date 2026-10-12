@@ -27,6 +27,7 @@ import { ReleaseArchivedSection } from "./release-archived-section";
 import { ReleaseShippedTimeline } from "./release-shipped-timeline";
 import { ReleaseUpcomingSection } from "./release-upcoming-section";
 import { useProductReleasesPage } from "./use-product-releases-page";
+import { ProductReleaseEvidenceSheet } from "./product-release-evidence-sheet";
 import { useProductReturn } from "@/features/build/shared/product-return-href";
 
 interface ProductReleasesPageProps {
@@ -41,7 +42,7 @@ const VIEW_OPTIONS = [
 export function ProductReleasesPage({ managedProductId }: ProductReleasesPageProps) {
   const page = useProductReleasesPage(managedProductId);
   const { handleBack } = useProductReturn(`/build/managed-products/${managedProductId}`);
-  const { groups, hasMore, lifecycleTarget, handleCreate } = page;
+  const { groups, hasMore, lifecycleTarget, handleCreate, detailReleaseId, handleDetailOpenChange } = page;
   const now = useMemo(() => new Date(), []);
 
   const headerActions = useMemo<BuildHeaderAction[]>(
@@ -176,6 +177,13 @@ export function ProductReleasesPage({ managedProductId }: ProductReleasesPagePro
           isPending={page.isLifecyclePending}
           keepOpenOnConfirm
           onConfirm={page.handleLifecycleConfirm}
+        />
+
+        <ProductReleaseEvidenceSheet
+          managedProductId={managedProductId}
+          releaseId={detailReleaseId ?? 0}
+          open={detailReleaseId !== null}
+          onOpenChange={handleDetailOpenChange}
         />
       </PageWrapper>
     </DirtyStateProvider>

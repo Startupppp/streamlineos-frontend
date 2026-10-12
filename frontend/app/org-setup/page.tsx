@@ -6,6 +6,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { setAutoSignOutSuppressed } from "@/lib/api-client";
 import {
@@ -107,6 +108,7 @@ export default function OrgSetupPage() {
 
   const [step, setStep] = useState(1);
   const [mounted, setMounted] = useState(false);
+  const [createOwnOrg, setCreateOwnOrg] = useState(false);
   const [direction, setDirection] = useState(1);
   const [data, setData] = useState<WizardData>({ ...DEFAULT_DATA });
 
@@ -125,7 +127,8 @@ export default function OrgSetupPage() {
   const draftSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const draftSaveChainRef = useRef<Promise<void>>(Promise.resolve());
 
-  const { data: pendingInvitations } = useMyPendingInvitations(Boolean(userId));
+  const { data: pendingInvitations, isPending: isInvitationsPending } =
+    useMyPendingInvitations(Boolean(userId));
 
   const { data: serverSession, isFetched: isServerSessionFetched } =
     useOrgSetupSessionQuery(Boolean(userId));
@@ -324,6 +327,23 @@ export default function OrgSetupPage() {
     const timeout = setTimeout(() => setSaveState("idle"), 4000);
     return () => clearTimeout(timeout);
   }, [saveState]);
+
+  if (mounted && !createOwnOrg && !isInvitationsPending && (pendingInvitations?.length ?? 0) > 0) {
+    return (
+      <div className="mx-auto flex w-full max-w-lg flex-1 flex-col gap-6 px-4 py-12 sm:px-8">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-xl font-semibold">You have a pending invitation</h1>
+          <p className="text-sm text-muted-foreground">
+            Join an organization below to get started.
+          </p>
+        </div>
+        <PendingInvitationsNotice items={pendingInvitations ?? []} />
+        <Button variant="ghost" className="self-start" onClick={() => setCreateOwnOrg(true)}>
+          Create my own organization instead
+        </Button>
+      </div>
+    );
+  }
 
   if (!mounted)
     return (

@@ -27,7 +27,6 @@ import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
 import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
 import {
   MAX_PROJECT_FILE_BYTES,
-  PROJECT_FILE_TYPES_LABEL,
   isAllowedProjectFileType,
   useDeleteProjectFile,
   useUploadProjectFile,
@@ -324,8 +323,8 @@ export function useActivityFeed({
           });
           attachedCount += 1;
         } catch (err) {
-          if (isApiError(err) && err.status === 400 && !isAllowedProjectFileType(file.type)) {
-            toast.error(`${file.name} is not an allowed file type.`);
+          if (isApiError(err) && err.status === 400) {
+            toast.error(getErrorMessage(err));
           } else {
             failedNames.push(file.name);
           }

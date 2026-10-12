@@ -29,6 +29,7 @@ export interface ListFilterParams {
   page: number;
   activeFilterCount: number;
   setSearch: (value: string) => void;
+  flushSearch: () => void;
   setPage: (page: number) => void;
   toggle: (categoryKey: string, value: string) => void;
   setAt: (categoryKey: string, index: number, value: string) => void;
@@ -238,6 +239,12 @@ export function useListFilterParams(spec: ListFilterSpec): ListFilterParams {
     [commitSearch, search],
   );
 
+  const flushSearch = useCallback(() => {
+    if (localSearch === search) return;
+    immediateSearchRef.current = localSearch;
+    commitSearch(localSearch);
+  }, [localSearch, search, commitSearch]);
+
   useEffect(() => {
     if (immediateSearchRef.current === debouncedSearch) {
       immediateSearchRef.current = null;
@@ -259,6 +266,7 @@ export function useListFilterParams(spec: ListFilterSpec): ListFilterParams {
       page,
       activeFilterCount,
       setSearch,
+      flushSearch,
       setPage,
       toggle,
       setAt,
@@ -273,6 +281,7 @@ export function useListFilterParams(spec: ListFilterSpec): ListFilterParams {
       page,
       activeFilterCount,
       setSearch,
+      flushSearch,
       setPage,
       toggle,
       setAt,

@@ -11,6 +11,7 @@ export const importIssueKindSchema = z.enum([
   "INVALID",
   "DUPLICATE_IN_FILE",
   "DUPLICATE_EXISTING",
+  "STATUS_DEFAULTED",
 ]);
 
 export const importModeSchema = z.enum(["atomic", "partial"]);

@@ -118,7 +118,7 @@ function KanbanVirtualRow({
   }
 
   return (
-    <Draggable draggableId={String(ticket.id)} index={index} isDragDisabled={!canDragTickets}>
+    <Draggable draggableId={String(ticket.id)} index={index} isDragDisabled={!canDragTickets} disableInteractiveElementBlocking>
       {(provided, snapshot) => (
         <div
           ref={provided.innerRef}

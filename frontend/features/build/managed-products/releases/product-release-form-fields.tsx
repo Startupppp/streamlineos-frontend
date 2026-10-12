@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo, useState } from "react";
 import { useFormContext } from "react-hook-form";
 import {
   FormField,
@@ -18,11 +19,48 @@ import {
 import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
 import { MemberPicker } from "@/components/members/member-picker";
+import { useManagedProductProjects } from "@/hooks/api/build/managed-product-projects";
+import { useReleases } from "@/hooks/api/build/releases";
 import type { ReleaseFormValues } from "./product-release-form-schema";
 
-export function ProductReleaseFormFields() {
+interface ProductReleaseFormFieldsProps {
+  managedProductId: number;
+  initialProjectId?: number | null;
+}
+
+export function ProductReleaseFormFields({ managedProductId, initialProjectId }: ProductReleaseFormFieldsProps) {
   const form = useFormContext<ReleaseFormValues>();
+  const [selectedProjectId, setSelectedProjectId] = useState<number | null>(initialProjectId ?? null);
+
+  const projectsQuery = useManagedProductProjects({ managedProductId });
+  const releasesQuery = useReleases(selectedProjectId ?? 0);
+
+  const projectOptions = useMemo(
+    () => projectsQuery.data?.data.map((p) => ({ value: p.id, label: p.name })) ?? [],
+    [projectsQuery.data],
+  );
+
+  const releaseOptions = useMemo(
+    () => releasesQuery.data?.data.map((r) => ({ value: r.id, label: `${r.name} ${r.version}` })) ?? [],
+    [releasesQuery.data],
+  );
+
+  function handleProjectChange(rawValue: string) {
+    const id = rawValue ? Number(rawValue) : null;
+    setSelectedProjectId(id);
+    form.setValue("projectReleaseId", null, { shouldDirty: true });
+  }
+
+  function handleProjectReleaseChange(rawValue: string) {
+    form.setValue("projectReleaseId", rawValue ? Number(rawValue) : null, { shouldDirty: true });
+  }
+
+  function handleClearLink() {
+    setSelectedProjectId(null);
+    form.setValue("projectReleaseId", null, { shouldDirty: true });
+  }
 
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -148,6 +186,54 @@ export function ProductReleaseFormFields() {
                 type="url"
               />
             </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      <FormField
+        control={form.control}
+        name="projectReleaseId"
+        render={({ field }) => (
+          <FormItem className="sm:col-span-2">
+            <FormLabel>Canonical project release (optional)</FormLabel>
+            <div className="flex flex-col gap-2">
+              <Select
+                value={selectedProjectId !== null ? String(selectedProjectId) : ""}
+                onValueChange={handleProjectChange}
+              >
+                <SelectTrigger aria-label="Project for canonical release">
+                  <SelectValue placeholder="Pick a project…" />
+                </SelectTrigger>
+                <SelectContent>
+                  {projectOptions.map((opt) => (
+                    <SelectItem key={opt.value} value={String(opt.value)}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select
+                value={field.value != null ? String(field.value) : ""}
+                onValueChange={handleProjectReleaseChange}
+                disabled={selectedProjectId === null}
+              >
+                <SelectTrigger aria-label="Canonical release">
+                  <SelectValue placeholder="Pick a release…" />
+                </SelectTrigger>
+                <SelectContent>
+                  {releaseOptions.map((opt) => (
+                    <SelectItem key={opt.value} value={String(opt.value)}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {field.value != null ? (
+                <Button type="button" variant="outline" size="sm" onClick={handleClearLink}>
+                  Clear canonical release link
+                </Button>
+              ) : null}
+            </div>
             <FormMessage />
           </FormItem>
         )}

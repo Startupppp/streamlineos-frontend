@@ -20,7 +20,7 @@ interface ReleaseRowActionsProps {
 }
 
 export function ReleaseRowActions({ release }: ReleaseRowActionsProps) {
-  const { pendingReleaseId, onEdit, onMarkReleased, onArchive, onRestore } = useReleaseActions();
+  const { pendingReleaseId, onEdit, onMarkReleased, onArchive, onRestore, onViewDetails } = useReleaseActions();
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   const isPending = pendingReleaseId === release.id;
 
@@ -32,6 +32,7 @@ export function ReleaseRowActions({ release }: ReleaseRowActionsProps) {
   const handleMarkReleased = useCallback(() => onMarkReleased(release), [onMarkReleased, release]);
   const handleArchive = useCallback(() => onArchive(release), [onArchive, release]);
   const handleRestore = useCallback(() => onRestore(release), [onRestore, release]);
+  const handleViewDetails = useCallback(() => onViewDetails(release), [onViewDetails, release]);
 
   if (!canUpdate && !canArchive && !canRestore) return null;
 
@@ -65,6 +66,7 @@ export function ReleaseRowActions({ release }: ReleaseRowActionsProps) {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
+          <DropdownMenuItem onSelect={handleViewDetails}>View evidence</DropdownMenuItem>
           {canUpdate ? (
             <DropdownMenuItem onSelect={handleEdit}>Edit</DropdownMenuItem>
           ) : null}

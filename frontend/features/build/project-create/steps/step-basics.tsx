@@ -1,12 +1,13 @@
 "use client";
 
-import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AlertTriangle } from "lucide-react";
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -59,7 +60,6 @@ export const StepBasics = forwardRef<
       draft.key.length > 0 && draft.key !== generateProjectKey(draft.name),
     );
     const keyCheckAbortRef = useRef<AbortController | null>(null);
-    const [keyTransformed, setKeyTransformed] = useState(false);
     const checkKeyAvailable = useCheckProjectKeyAvailable();
 
     useEffect(() => () => { keyCheckAbortRef.current?.abort(); }, []);
@@ -140,7 +140,6 @@ export const StepBasics = forwardRef<
         .replace(/[^A-Z0-9]/g, "")
         .slice(0, PROJECT_KEY_MAX);
       onChange(sanitized);
-      setKeyTransformed(sanitized !== value && value.length > 0);
       if (form.getFieldState("key").error) {
         void form.trigger("key");
       }
@@ -254,12 +253,8 @@ export const StepBasics = forwardRef<
                     onBlur={() => void handleKeyBlur(field.onBlur)}
                   />
                 </FormControl>
+                <FormDescription>Letters A–Z and digits only; auto-uppercased.</FormDescription>
                 <FormMessage />
-                {keyTransformed && (
-                  <p className="text-xs text-muted-foreground">
-                    Non-letter and non-digit characters were removed and letters were uppercased.
-                  </p>
-                )}
               </FormItem>
             )}
           />

@@ -21,7 +21,7 @@ const makeStatus = (overrides: Partial<ProjectStatus> = {}): ProjectStatus => ({
 });
 
 describe("filterBoardTickets", () => {
-  it("excludes EPIC type tickets", () => {
+  it("includes EPIC type tickets on the board", () => {
     const tickets = [makeTicket({ type: "EPIC" }), makeTicket({ type: "TASK" })];
     const result = filterBoardTickets({
       allTickets: tickets,
@@ -30,8 +30,7 @@ describe("filterBoardTickets", () => {
       statuses: undefined,
       qaMatchIds: null,
     });
-    expect(result).toHaveLength(1);
-    expect(result[0]?.type).toBe("TASK");
+    expect(result).toHaveLength(2);
   });
 
   it("filters to qaMatchIds when provided", () => {
@@ -82,7 +81,7 @@ describe("computeWipLimits", () => {
 });
 
 describe("computeDoneCount", () => {
-  it("counts non-EPIC tickets in completed statuses", () => {
+  it("counts all ticket types including EPICs in completed statuses", () => {
     const statuses = [makeStatus({ name: "Done", type: "completed" })];
     const tickets = [
       makeTicket({ status: "Done", type: "TASK" }),
@@ -90,6 +89,6 @@ describe("computeDoneCount", () => {
       makeTicket({ status: "TODO", type: "TASK" }),
     ];
     const result = computeDoneCount(tickets, statuses);
-    expect(result).toBe(1);
+    expect(result).toBe(2);
   });
 });

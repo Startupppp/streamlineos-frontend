@@ -2,6 +2,7 @@ import React from "react";
 import { render, screen, act, fireEvent, waitFor } from "@testing-library/react";
 import { ActivityFeed } from "./activity-feed";
 import { PROJECT_FILE_TYPES_LABEL } from "@/hooks/api/build/project-files";
+import { ApiError } from "@/lib/api-envelope";
 import type { StagedCommentDraft } from "@/hooks/api/build/comment-draft-commands";
 
 jest.mock("next-auth/react", () => ({
@@ -268,4 +269,18 @@ it("run() propagates a 402 error so getErrorMessage can surface insufficient-cre
   renderFeed(true);
 
   await expect(capturedActions[0].run()).rejects.toThrow("Insufficient AI credits");
+});
+
+it("shows the server error message when upload returns 400 for an allowed file type", async () => {
+  mockUseCan.mockImplementation((key: string) => key === "build:tickets:update" || key === "build:files:manage");
+  mockToastError.mockClear();
+  mockUploadFile.mockRejectedValueOnce(new ApiError("File content rejected by server", 400));
+  render(<ActivityFeed {...defaultProps} />);
+  const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+  const report = new File(["data"], "report.pdf", { type: "application/pdf" });
+  fireEvent.change(input, { target: { files: [report] } });
+  await waitFor(() =>
+    expect(mockToastError).toHaveBeenCalledWith("File content rejected by server"),
+  );
+  expect(mockToastError).not.toHaveBeenCalledWith(expect.stringContaining("Try again"));
 });

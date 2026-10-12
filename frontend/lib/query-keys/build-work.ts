@@ -333,6 +333,8 @@ export const buildWorkQueryKeys = {
         params === undefined
           ? ([...base, "projects", "managed-products", "releases", managedProductId, "timeline"] as const)
           : ([...base, "projects", "managed-products", "releases", managedProductId, "timeline", params] as const),
+      release: (managedProductId: number, releaseId: number) =>
+        [...base, "projects", "managed-products", "releases", managedProductId, releaseId] as const,
       members: (managedProductId: number) =>
         [...base, "projects", "managed-products", "members", managedProductId] as const,
       facets: [...base, "projects", "managed-products", "facets"] as const,

@@ -21,7 +21,8 @@ const STATE_ORDER: Record<PreviewRowState, number> = {
   INVALID: 0,
   DUPLICATE_IN_FILE: 1,
   DUPLICATE_EXISTING: 2,
-  IMPORTABLE: 3,
+  STATUS_DEFAULTED: 3,
+  IMPORTABLE: 4,
 };
 
 function pluralize(count: number, noun: string): string {

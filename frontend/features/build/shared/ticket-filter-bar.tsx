@@ -74,7 +74,7 @@ export function TicketFilterBar({
   searchExpanded = true,
   onSearchExpandedChange,
 }: TicketFilterBarProps) {
-  const { localSearch, handleSearchChange } = useTicketFilterParams();
+  const { localSearch, handleSearchChange, handleFlushSearch } = useTicketFilterParams();
 
   const searchField = (
     <div
@@ -98,6 +98,7 @@ export function TicketFilterBar({
         placeholder="Search..."
         value={localSearch}
         onValueChange={handleSearchChange}
+        onSubmitSearch={handleFlushSearch}
         fill={fillSearch}
         className="min-w-0 [&_svg]:left-2 [&_svg]:h-3.5 [&_svg]:w-3.5"
         inputClassName="h-9 pl-7 pr-7"

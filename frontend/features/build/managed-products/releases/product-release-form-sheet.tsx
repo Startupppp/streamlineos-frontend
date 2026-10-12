@@ -34,6 +34,7 @@ interface ProductReleaseFormSheetProps {
   onOpenChange: (open: boolean) => void;
 }
 
+
 const FORM_ID = "product-release-form";
 
 function toFormValues(r: ManagedProductRelease): ReleaseFormValues {
@@ -50,6 +51,7 @@ function toFormValues(r: ManagedProductRelease): ReleaseFormValues {
     ownerUserId: r.ownerUserId ?? null,
     qaState,
     deploymentEvidenceUrl: r.deploymentEvidenceUrl ?? null,
+    projectReleaseId: r.projectReleaseId ?? null,
   };
 }
 
@@ -79,6 +81,7 @@ export function ProductReleaseFormSheet({
           ownerUserId: null,
           qaState: null,
           deploymentEvidenceUrl: null,
+          projectReleaseId: null,
         },
     values: editTarget ? toFormValues(editTarget) : undefined,
   });
@@ -116,6 +119,7 @@ export function ProductReleaseFormSheet({
         ownerUserId: values.ownerUserId ?? null,
         qaState: values.qaState ?? null,
         deploymentEvidenceUrl: values.deploymentEvidenceUrl || null,
+        projectReleaseId: values.projectReleaseId ?? null,
       };
       const onSuccess = () => {
         toast.success(isEdit ? "Release updated." : "Release created.");
@@ -164,7 +168,11 @@ export function ProductReleaseFormSheet({
           ) : null}
           <Form {...form}>
             <form id={FORM_ID} onSubmit={form.handleSubmit(handleSubmit)} className="flex flex-col" noValidate>
-              <ProductReleaseFormFields />
+              <ProductReleaseFormFields
+                key={editTarget?.id ?? "new"}
+                managedProductId={managedProductId}
+                initialProjectId={editTarget?.projectRelease?.projectId ?? null}
+              />
             </form>
           </Form>
         </div>

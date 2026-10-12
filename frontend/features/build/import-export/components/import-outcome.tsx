@@ -96,7 +96,7 @@ export function ImportPreviewOutcome({ preview }: ImportPreviewOutcomeProps) {
         ) : null}
       </div>
       <OutcomeList
-        caption="Why it is skipped"
+        caption="Issue"
         rows={attention.map((row) => ({
           rowNumber: row.rowNumber,
           tag: row.state,

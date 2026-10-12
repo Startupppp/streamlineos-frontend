@@ -6,11 +6,13 @@ import {
   getFeedbucketApiBase,
   getFeedbucketProjectId,
 } from "@/lib/feedbucket";
+import { useFeedbucketWidgetReady } from "@/hooks/api/feedbucket/use-feedbucket-widget-ready";
 
 export function FeedbucketEmbed() {
   const apiBase = getFeedbucketApiBase();
   const projectId = getFeedbucketProjectId();
-  if (!apiBase || !projectId) return null;
+  const widgetReady = useFeedbucketWidgetReady();
+  if (!apiBase || !projectId || !widgetReady) return null;
   return (
     <Script
       id="feedbucket-widget"

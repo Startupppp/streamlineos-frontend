@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useState, useCallback, useEffect, memo } from "react";
+import { useState, useCallback, useEffect, memo, useRef } from "react";
 import dynamic from "next/dynamic";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -96,8 +96,10 @@ function CommentItemComponent({
   const showHighlight = isHighlighted && !highlightExpired;
   const [isEditing, setIsEditing] = useState(false);
   const [editText, setEditText] = useState(comment.content);
+  const editOriginalRef = useRef<string | null>(null);
 
   const handleStartEdit = useCallback(() => {
+    editOriginalRef.current = null;
     setEditText(comment.content);
     setIsEditing(true);
   }, [comment.content]);
@@ -105,11 +107,13 @@ function CommentItemComponent({
   const handleCancelEdit = useCallback(() => {
     setIsEditing(false);
     setEditText(comment.content);
+    editOriginalRef.current = null;
   }, [comment.content]);
 
   const handleSaveEdit = useCallback(() => {
     const trimmed = editText.trim();
-    if (!trimmed || trimmed === comment.content) {
+    const initial = editOriginalRef.current ?? comment.content;
+    if (!trimmed || trimmed === comment.content || trimmed === initial) {
       setIsEditing(false);
       return;
     }
@@ -132,6 +136,9 @@ function CommentItemComponent({
   );
 
   const handleEditContentChange = useCallback((html: string) => {
+    if (editOriginalRef.current === null) {
+      editOriginalRef.current = html;
+    }
     setEditText(html);
   }, []);
 

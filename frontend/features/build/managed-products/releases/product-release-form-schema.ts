@@ -19,6 +19,7 @@ export const releaseFormSchema = z.object({
       (v) => !v || /^https?:\/\/.+/.test(v),
       { message: "Must be a valid URL starting with http:// or https://" },
     ),
+  projectReleaseId: z.number().int().positive().nullable().optional(),
 });
 
 export type ReleaseFormValues = z.infer<typeof releaseFormSchema>;

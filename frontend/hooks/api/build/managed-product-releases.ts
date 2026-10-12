@@ -13,12 +13,25 @@ import type {
   ManagedProductRelationsListReleasesResponse,
   ManagedProductRelationsCreateReleaseResponse,
   ManagedProductRelationsUpdateReleaseResponse,
+  ManagedProductRelationsGetReleaseResponse,
 } from "@/contracts/build-contracts.generated";
+
+export interface ProjectReleaseRef {
+  id: number;
+  name: string;
+  version: string;
+  projectId: number;
+  projectName: string | null;
+  projectKey: string | null;
+}
 
 export type ManagedProductRelease = ManagedProductRelationsCreateReleaseResponse & {
   allowedActions: string[];
   linkedRoadmapItemCount: number;
+  projectRelease?: ProjectReleaseRef | null;
 };
+
+export type ManagedProductReleaseDetail = ManagedProductRelationsGetReleaseResponse;
 export type ManagedProductReleasesPage = ManagedProductRelationsListReleasesResponse;
 
 export interface CreateManagedProductReleaseInput {
@@ -30,6 +43,7 @@ export interface CreateManagedProductReleaseInput {
   ownerUserId?: string | null;
   qaState?: string | null;
   deploymentEvidenceUrl?: string | null;
+  projectReleaseId?: number | null;
 }
 
 export interface UpdateManagedProductReleaseInput {
@@ -43,6 +57,7 @@ export interface UpdateManagedProductReleaseInput {
   ownerUserId?: string | null;
   qaState?: string | null;
   deploymentEvidenceUrl?: string | null;
+  projectReleaseId?: number | null;
 }
 
 export interface InfiniteManagedProductReleasesParams {
@@ -169,5 +184,32 @@ export function useUpdateManagedProductRelease(managedProductId: number) {
         data: page.data.map((r) => (r.id === updated.id ? updated : r)),
       }));
     },
+  });
+}
+
+const releaseDetailContract = lazyContract(() =>
+  import("@/contracts/build-contracts.generated").then(
+    (m) => m.managedProductRelationsGetReleaseResponseSchema,
+  ),
+);
+
+export function useManagedProductRelease(
+  managedProductId: number,
+  releaseId: number,
+  options?: Pick<UseQueryOptions<ManagedProductReleaseDetail>, "enabled">,
+) {
+  const canView = useCan("build:managed-products:view");
+  return useQuery<ManagedProductReleaseDetail>({
+    ...options,
+    queryKey: buildWorkQueryKeys.projects.managedProducts.release(managedProductId, releaseId),
+    queryFn: ({ signal }) =>
+      apiClient.get<ManagedProductReleaseDetail>(
+        `/build/managed-products/${managedProductId}/releases/${releaseId}`,
+        undefined,
+        signal,
+        releaseDetailContract,
+      ),
+    enabled: canView && releaseId > 0 && (options?.enabled ?? true),
+    staleTime: 60_000,
   });
 }

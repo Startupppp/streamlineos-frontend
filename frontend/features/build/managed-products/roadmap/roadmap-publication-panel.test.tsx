@@ -174,6 +174,17 @@ describe("RoadmapPublicationPanel — published state (BSN-PUB-PUB)", () => {
     mockPublication = { published: true, publicationVersion: 1, expiresAt: null, issuedAt: "2026-10-12T00:00:00.000Z" };
   });
 
+  it("tells the reader the public board is live rather than a snapshot, because publicationVersion is a link counter and not a frozen projection", () => {
+    render(<RoadmapPublicationPanel managedProductId={5} onClose={onClose} />);
+    expect(screen.getByText(/not a snapshot/i)).toBeInTheDocument();
+    expect(screen.getByText(/reflects your roadmap as\s+you change it/i)).toBeInTheDocument();
+  });
+
+  it("never shows the publication version to the reader, so no copy implies a frozen board", () => {
+    render(<RoadmapPublicationPanel managedProductId={5} onClose={onClose} />);
+    expect(screen.queryByText(/version/i)).not.toBeInTheDocument();
+  });
+
   it("shows Published status when the product has an active publication", () => {
     render(<RoadmapPublicationPanel managedProductId={5} onClose={onClose} />);
     expect(screen.getByText("Published")).toBeInTheDocument();

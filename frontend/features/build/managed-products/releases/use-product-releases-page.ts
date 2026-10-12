@@ -33,34 +33,61 @@ interface LifecycleTarget {
 }
 
 export function useProductReleasesPage(managedProductId: number) {
-  const filters = useBuildListFilters({ withSearch: false, filters: RELEASE_VIEW_FILTERS });
-  const view: ReleaseView = filters.value("view") === "archived" ? "archived" : "active";
+  const filters = useBuildListFilters({
+    withSearch: false,
+    filters: RELEASE_VIEW_FILTERS,
+  });
+  const view: ReleaseView =
+    filters.value("view") === "archived" ? "archived" : "active";
   const { setValue } = filters;
 
-  const query = useInfiniteManagedProductReleases(managedProductId, { limit: RELEASES_PAGE_LIMIT });
-  const { data, isLoading, isError, error, refetch, hasNextPage, isFetchingNextPage, fetchNextPage } =
-    query;
-  const rows = useMemo(() => data?.pages.flatMap((page) => page.data) ?? [], [data]);
-  const groups = useMemo(() => groupReleases(rows, getTodayString()), [rows]);
-
-  const resolution = usePageState({
-    permission: "build:managed-products:view",
+  const query = useInfiniteManagedProductReleases(managedProductId, {
+    limit: RELEASES_PAGE_LIMIT,
+  });
+  const {
+    data,
     isLoading,
     isError,
     error,
+    refetch,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  } = query;
+  const rows = useMemo(
+    () => data?.pages.flatMap((page) => page.data) ?? [],
+    [data],
+  );
+  const groups = useMemo(() => groupReleases(rows, getTodayString()), [rows]);
+
+  const resolution = usePageState({
+    error,
+    isError,
+    isLoading,
     isEmpty: groups.total === 0,
+    permission: "build:managed-products:view",
   });
 
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [editTarget, setEditTarget] = useState<ManagedProductRelease | undefined>(undefined);
-  const [lifecycleTarget, setLifecycleTarget] = useState<LifecycleTarget | null>(null);
+  const [editTarget, setEditTarget] = useState<
+    ManagedProductRelease | undefined
+  >(undefined);
+  const [lifecycleTarget, setLifecycleTarget] =
+    useState<LifecycleTarget | null>(null);
+  const [detailReleaseId, setDetailReleaseId] = useState<number | null>(null);
 
   const updateRelease = useUpdateManagedProductRelease(managedProductId);
   const { mutate: mutateRelease } = updateRelease;
-  const pendingReleaseId = updateRelease.isPending ? (updateRelease.variables?.releaseId ?? null) : null;
+  const pendingReleaseId = updateRelease.isPending
+    ? (updateRelease.variables?.releaseId ?? null)
+    : null;
 
   const runUpdate = useCallback(
-    (input: UpdateManagedProductReleaseInput, successMessage: string, onDone?: () => void) => {
+    (
+      input: UpdateManagedProductReleaseInput,
+      successMessage: string,
+      onDone?: () => void,
+    ) => {
       mutateRelease(input, {
         onSuccess: () => {
           toast.success(successMessage);
@@ -123,20 +150,39 @@ export function useProductReleasesPage(managedProductId: number) {
     const closeDialog = () => setLifecycleTarget(null);
     if (action === "archive") {
       runUpdate(
-        { releaseId: release.id, expectedRevision: release.recordRevision, status: "archived" },
+        {
+          releaseId: release.id,
+          expectedRevision: release.recordRevision,
+          status: "archived",
+        },
         `Archived ${release.name}.`,
         closeDialog,
       );
     } else {
       runUpdate(
-        { releaseId: release.id, expectedRevision: release.recordRevision, status: "draft" },
+        {
+          releaseId: release.id,
+          expectedRevision: release.recordRevision,
+          status: "draft",
+        },
         `Restored ${release.name} as a draft.`,
         closeDialog,
       );
     }
   }, [lifecycleTarget, runUpdate]);
 
-  const handleViewChange = useCallback((next: string) => setValue("view", next), [setValue]);
+  const handleViewDetails = useCallback((release: ManagedProductRelease) => {
+    setDetailReleaseId(release.id);
+  }, []);
+
+  const handleDetailOpenChange = useCallback((open: boolean) => {
+    if (!open) setDetailReleaseId(null);
+  }, []);
+
+  const handleViewChange = useCallback(
+    (next: string) => setValue("view", next),
+    [setValue],
+  );
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
@@ -150,33 +196,45 @@ export function useProductReleasesPage(managedProductId: number) {
     () => ({
       canUpdate,
       pendingReleaseId,
-      onCreate: handleCreate,
       onEdit: handleEdit,
-      onMarkReleased: handleMarkReleased,
+      onCreate: handleCreate,
       onArchive: handleArchive,
       onRestore: handleRestore,
+      onViewDetails: handleViewDetails,
+      onMarkReleased: handleMarkReleased,
     }),
-    [canUpdate, pendingReleaseId, handleCreate, handleEdit, handleMarkReleased, handleArchive, handleRestore],
+    [
+      canUpdate,
+      handleEdit,
+      pendingReleaseId,
+      handleCreate,
+      handleArchive,
+      handleRestore,
+      handleViewDetails,
+      handleMarkReleased,
+    ],
   );
 
   return {
-    canUpdate,
     view,
     groups,
-    hasMore: hasNextPage,
-    isFetchingNextPage,
-    resolution,
     actions,
     sheetOpen,
+    canUpdate,
+    resolution,
     editTarget,
     lifecycleTarget,
+    detailReleaseId,
+    isFetchingNextPage,
+    hasMore: hasNextPage,
     isLifecyclePending: updateRelease.isPending,
-    handleCreate,
-    handleSheetOpenChange,
-    handleLifecycleOpenChange,
-    handleLifecycleConfirm,
-    handleViewChange,
     handleRetry,
+    handleCreate,
     handleLoadMore,
+    handleViewChange,
+    handleSheetOpenChange,
+    handleLifecycleConfirm,
+    handleDetailOpenChange,
+    handleLifecycleOpenChange,
   };
 }

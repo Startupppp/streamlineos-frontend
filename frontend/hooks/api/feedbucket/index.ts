@@ -18,3 +18,5 @@ export {
 
 export { useProductCustomerImpact, useProductOpportunityImpact } from "./use-feedbucket-product-stats";
 export type { CustomerImpactResult, OpportunityImpactResult } from "./use-feedbucket-product-stats";
+
+export { useFeedbucketWidgetReady } from "./use-feedbucket-widget-ready";

@@ -62,6 +62,7 @@ export function useTicketFilterParams() {
       localSearch: filters.localSearch,
       activeFilterCount: Math.max(0, filters.activeFilterCount - invalidCategoryCount),
       handleSearchChange: filters.setSearch,
+      handleFlushSearch: filters.flushSearch,
       handleToggleStatus: (status: string) => toggle("status", status),
       handleTogglePriority: (priority: string) => toggle("priority", priority),
       handleToggleType: (type: string) => toggle("type", type),
