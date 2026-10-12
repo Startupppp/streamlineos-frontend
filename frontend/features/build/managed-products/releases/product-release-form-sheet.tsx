@@ -24,7 +24,7 @@ import { isWriteConflict } from "@/lib/api-envelope";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import { ProductReleaseFormFields } from "./product-release-form-fields";
-import { releaseFormSchema } from "./product-release-form-schema";
+import { releaseFormSchema, QA_STATES } from "./product-release-form-schema";
 import type { ReleaseFormValues } from "./product-release-form-schema";
 
 interface ProductReleaseFormSheetProps {
@@ -37,6 +37,10 @@ interface ProductReleaseFormSheetProps {
 const FORM_ID = "product-release-form";
 
 function toFormValues(r: ManagedProductRelease): ReleaseFormValues {
+  const qaStateRaw = r.qaState;
+  const qaState = qaStateRaw !== null && qaStateRaw !== undefined && (QA_STATES as readonly string[]).includes(qaStateRaw)
+    ? (qaStateRaw as ReleaseFormValues["qaState"])
+    : null;
   return {
     name: r.name,
     version: r.version,
@@ -44,7 +48,7 @@ function toFormValues(r: ManagedProductRelease): ReleaseFormValues {
     releaseDate: r.releaseDate ?? "",
     status: r.status,
     ownerUserId: r.ownerUserId ?? null,
-    qaState: r.qaState ?? null,
+    qaState,
     deploymentEvidenceUrl: r.deploymentEvidenceUrl ?? null,
   };
 }

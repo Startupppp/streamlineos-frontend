@@ -11,6 +11,7 @@ import type {
 } from "@/types/feedbucket";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
 const feedbucketWidgetListC = lazyContract(() =>
   import("@/hooks/api/feedbucket/feedbucket-widget-schema").then((m) => m.feedbucketWidgetListContract),
@@ -27,6 +28,7 @@ export function useFeedbucketWidgets() {
     queryKey: growthAndSignQueryKeys.feedbucket.widgets(),
     queryFn: ({ signal }) => apiClient.get<FeedbucketWidget[]>("/feedbucket/widgets", undefined, signal, feedbucketWidgetListC),
     staleTime: 30_000,
+    ...INLINE_READ_ERROR,
   });
 }
 

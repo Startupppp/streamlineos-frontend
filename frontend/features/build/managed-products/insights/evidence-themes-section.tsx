@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import Link from "next/link";
 import { Lightbulb, TrendingUp } from "lucide-react";
+import { BarChart, Bar, ResponsiveContainer } from "recharts";
 import type { DiscoveryReviewsGetEvidenceThemesResponse } from "@/contracts/build-contracts.generated";
 import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
 import { ErrorState } from "@/components/shared/error-state";
@@ -32,18 +33,32 @@ function SentimentBar({ breakdown }: { breakdown: ThemeRow["sentimentBreakdown"]
   );
 }
 
-function SparklineBar({ trend }: { trend: ThemeRow["trend"] }) {
-  const vals = trend.map((t) => t.count);
-  const max = Math.max(...vals, 1);
+function deriveTrendSummary(trend: ThemeRow["trend"]): string {
+  const mid = Math.ceil(trend.length / 2);
+  const firstHalf = trend.slice(0, mid).reduce((s, t) => s + t.count, 0);
+  const secondHalf = trend.slice(mid).reduce((s, t) => s + t.count, 0);
+  if (secondHalf > firstHalf * 1.1) return "Trending up";
+  if (secondHalf < firstHalf * 0.9) return "Trending down";
+  return "Stable";
+}
+
+function TrendBar({ trend }: { trend: ThemeRow["trend"] }) {
+  const data = useMemo(() => trend.slice(-8).map((t) => ({ count: t.count })), [trend]);
+  if (trend.length === 0) {
+    return <span className="text-xs text-muted-foreground" aria-label="No trend data">—</span>;
+  }
   return (
-    <div className="flex h-6 items-end gap-px" aria-hidden>
-      {vals.slice(-8).map((v, i) => (
-        <div
-          key={i}
-          className="w-1.5 rounded-sm bg-status-info-fill"
-          style={{ height: `${Math.max(4, (v / max) * 24)}px` }}
-        />
-      ))}
+    <div className="flex flex-col gap-0.5">
+      <div className="h-6 w-20" aria-hidden>
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={data} barCategoryGap={2} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+            <Bar dataKey="count" fill="var(--chart-1)" radius={[1, 1, 0, 0]} isAnimationActive={false} />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+      {trend.length >= 2 && (
+        <span className="text-xs text-muted-foreground">{deriveTrendSummary(trend)}</span>
+      )}
     </div>
   );
 }
@@ -117,7 +132,7 @@ export function EvidenceThemesSection({
                   </td>
                   <td className="px-4 py-3 text-right tabular-nums">{row.opportunityCount}</td>
                   <td className="px-4 py-3">
-                    <SparklineBar trend={row.trend} />
+                    <TrendBar trend={row.trend} />
                   </td>
                 </tr>
               ))}

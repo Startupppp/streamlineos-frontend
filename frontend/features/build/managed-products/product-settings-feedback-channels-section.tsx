@@ -4,8 +4,10 @@ import { useState, useMemo, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ErrorState } from "@/components/shared/error-state";
 import { useFeedbucketWidgets } from "@/hooks/api/feedbucket/use-feedbucket-widgets";
 import { FeedbucketCollectDialog } from "./feedback/feedbucket-collect-dialog";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 interface ProductSettingsFeedbackChannelsSectionProps {
   managedProductId: number;
@@ -15,7 +17,7 @@ export function ProductSettingsFeedbackChannelsSection({
   managedProductId,
 }: ProductSettingsFeedbackChannelsSectionProps) {
   const [collectOpen, setCollectOpen] = useState(false);
-  const { data: widgets, isLoading } = useFeedbucketWidgets();
+  const { data: widgets, isLoading, isError, error, refetch } = useFeedbucketWidgets();
 
   const productWidgets = useMemo(
     () =>
@@ -32,6 +34,10 @@ export function ProductSettingsFeedbackChannelsSection({
   const handleCollectOpenChange = useCallback((open: boolean) => {
     setCollectOpen(open);
   }, []);
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   if (isLoading) {
     return (
@@ -71,7 +77,15 @@ export function ProductSettingsFeedbackChannelsSection({
           Configure Feedbucket
         </Button>
       </div>
-      {productWidgets.length === 0 ? (
+      {isError ? (
+        <ErrorState
+          compact
+          title="Could not load feedback channels"
+          description={getErrorMessage(error)}
+          onRetry={handleRetry}
+          error={error}
+        />
+      ) : productWidgets.length === 0 ? (
         <p className="text-sm text-muted-foreground">
           No Feedbucket widgets are linked to this product yet.
         </p>

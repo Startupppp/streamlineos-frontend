@@ -6,7 +6,7 @@ import { formatCalendarDate } from "@/lib/date-utils";
 import { statusToneClasses } from "@/lib/design-tokens";
 import { cn } from "@/lib/utils";
 import { useReleaseActions } from "./release-actions-context";
-import { ReleaseIdentity, ReleaseSection } from "./release-list-parts";
+import { EvidenceLink, OwnerIndicator, QaStateBadge, ReleaseIdentity, ReleaseSection } from "./release-list-parts";
 import { ReleaseRowActions } from "./release-row-actions";
 
 interface ReleaseShippedTimelineProps {
@@ -48,6 +48,13 @@ function ShippedReleaseItem({
           <p className="line-clamp-3 max-w-[65ch] whitespace-pre-line text-sm text-pretty text-muted-foreground">
             {release.description}
           </p>
+        ) : null}
+        {(release.qaState || release.deploymentEvidenceUrl || release.ownerUserId) ? (
+          <div className="flex flex-wrap items-center gap-2 text-dense text-muted-foreground">
+            <QaStateBadge qaState={release.qaState} />
+            <OwnerIndicator ownerUserId={release.ownerUserId} />
+            <EvidenceLink url={release.deploymentEvidenceUrl} />
+          </div>
         ) : null}
       </div>
     </li>

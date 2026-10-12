@@ -8,7 +8,7 @@ import { statusToneClasses } from "@/lib/design-tokens";
 import { cn } from "@/lib/utils";
 import { releaseCountdown } from "./product-releases-model";
 import { useReleaseActions } from "./release-actions-context";
-import { ReleaseIdentity, ReleaseSection } from "./release-list-parts";
+import { OwnerIndicator, QaStateBadge, ReleaseIdentity, ReleaseSection } from "./release-list-parts";
 import { ReleaseRowActions } from "./release-row-actions";
 
 interface ReleaseUpcomingSectionProps {
@@ -41,6 +41,8 @@ function UpcomingReleaseRow({ release, now }: { release: ManagedProductRelease; 
         <ReleaseIdentity release={release} />
         <div className="flex flex-wrap items-center gap-2 text-dense text-muted-foreground">
           <UpcomingSchedule releaseDate={release.releaseDate} now={now} />
+          <QaStateBadge qaState={release.qaState} />
+          <OwnerIndicator ownerUserId={release.ownerUserId} />
         </div>
       </div>
       <ReleaseRowActions release={release} />

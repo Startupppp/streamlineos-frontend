@@ -124,7 +124,7 @@ export function ProductReleaseFormFields() {
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
-                <SelectItem value="not_started">Not started</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
                 <SelectItem value="in_review">In review</SelectItem>
                 <SelectItem value="approved">Approved</SelectItem>
                 <SelectItem value="rejected">Rejected</SelectItem>

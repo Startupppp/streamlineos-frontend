@@ -1,6 +1,10 @@
 import type { ReactNode } from "react";
+import { ExternalLink, User } from "lucide-react";
 import { CONTENT_PANEL_SOLID } from "@/components/ui/content-fill-panel";
+import { Badge } from "@/components/ui/badge";
 import type { ManagedProductRelease } from "@/hooks/api/build/managed-product-releases";
+import type { StatusTone } from "@/lib/design-tokens";
+import { statusToneClasses } from "@/lib/design-tokens";
 import { cn } from "@/lib/utils";
 
 interface ReleaseSectionProps {
@@ -49,5 +53,55 @@ export function ReleaseIdentity({ release }: ReleaseIdentityProps) {
         {release.name}
       </span>
     </div>
+  );
+}
+
+const QA_STATE_TONE: Record<string, StatusTone> = {
+  pending: "neutral",
+  in_review: "info",
+  approved: "success",
+  rejected: "danger",
+};
+
+const QA_STATE_LABEL: Record<string, string> = {
+  pending: "Pending",
+  in_review: "In review",
+  approved: "Approved",
+  rejected: "Rejected",
+};
+
+export function QaStateBadge({ qaState }: { qaState: string | null }) {
+  if (!qaState) return null;
+  const tone = statusToneClasses(QA_STATE_TONE[qaState] ?? "neutral");
+  const label = QA_STATE_LABEL[qaState] ?? qaState;
+  return (
+    <Badge variant="outline" className={cn("h-5 py-0 text-micro", tone.surface, tone.ink, tone.rule)}>
+      {label}
+    </Badge>
+  );
+}
+
+export function EvidenceLink({ url }: { url: string | null }) {
+  if (!url) return null;
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="flex items-center gap-1 text-dense text-primary hover:underline"
+    >
+      <ExternalLink className="h-3 w-3 shrink-0" aria-hidden="true" />
+      <span className="truncate">Evidence</span>
+    </a>
+  );
+}
+
+export function OwnerIndicator({ ownerUserId }: { ownerUserId: string | null }) {
+  if (!ownerUserId) return null;
+  return (
+    <span className="flex items-center gap-1 text-dense text-muted-foreground">
+      <User className="h-3 w-3 shrink-0" aria-hidden="true" />
+      <span>Owner</span>
+    </span>
   );
 }

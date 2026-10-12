@@ -182,4 +182,63 @@ describe("ProductSettingsFeedbackChannelsSection", () => {
     fireEvent.click(screen.getByRole("button", { name: "Close" }));
     expect(screen.queryByTestId("collect-dialog")).not.toBeInTheDocument();
   });
+
+  it("shows an error state when the widgets fetch fails", () => {
+    useFeedbucketWidgets.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: true,
+      error: new Error("Network error"),
+      refetch: jest.fn(),
+    });
+
+    render(
+      <ProductSettingsFeedbackChannelsSection
+        managedProductId={MANAGED_PRODUCT_ID}
+      />,
+    );
+
+    expect(screen.getByRole("alert")).toBeInTheDocument();
+    expect(screen.getByText("Could not load feedback channels")).toBeInTheDocument();
+  });
+
+  it("does not render the empty state when there is a fetch error", () => {
+    useFeedbucketWidgets.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: true,
+      error: new Error("500"),
+      refetch: jest.fn(),
+    });
+
+    render(
+      <ProductSettingsFeedbackChannelsSection
+        managedProductId={MANAGED_PRODUCT_ID}
+      />,
+    );
+
+    expect(
+      screen.queryByText(/No Feedbucket widgets are linked to this product yet/),
+    ).not.toBeInTheDocument();
+  });
+
+  it("calls refetch when the retry button is clicked after an error", () => {
+    const refetch = jest.fn();
+    useFeedbucketWidgets.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: true,
+      error: new Error("fail"),
+      refetch,
+    });
+
+    render(
+      <ProductSettingsFeedbackChannelsSection
+        managedProductId={MANAGED_PRODUCT_ID}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /try again/i }));
+    expect(refetch).toHaveBeenCalled();
+  });
 });

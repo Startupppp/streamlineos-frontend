@@ -1,5 +1,6 @@
 import { groupReleases, releaseCountdown, releasesSubtitle } from "./product-releases-model";
 import { buildRelease as release } from "./product-releases-test-fixtures";
+import { releaseFormSchema, QA_STATES } from "./product-release-form-schema";
 
 describe("groupReleases", () => {
   const rows = [
@@ -56,5 +57,41 @@ describe("releasesSubtitle", () => {
     expect(releasesSubtitle(groupReleases([], "2026-10-11"), false)).toBe(
       "Plan and track what ships for this product",
     );
+  });
+});
+
+describe("releaseFormSchema", () => {
+  const base = {
+    name: "v1",
+    version: "1.0.0",
+    status: "draft" as const,
+  };
+
+  it("accepts every valid qaState value and rejects values outside the enum", () => {
+    for (const state of QA_STATES) {
+      expect(releaseFormSchema.safeParse({ ...base, qaState: state }).success).toBe(true);
+    }
+    expect(releaseFormSchema.safeParse({ ...base, qaState: "not_started" }).success).toBe(false);
+    expect(releaseFormSchema.safeParse({ ...base, qaState: "unknown_state" }).success).toBe(false);
+  });
+
+  it("accepts null and omitted qaState", () => {
+    expect(releaseFormSchema.safeParse({ ...base, qaState: null }).success).toBe(true);
+    expect(releaseFormSchema.safeParse({ ...base }).success).toBe(true);
+  });
+
+  it("rejects a deploymentEvidenceUrl that is not a valid URL", () => {
+    expect(releaseFormSchema.safeParse({ ...base, deploymentEvidenceUrl: "not-a-url" }).success).toBe(false);
+    expect(releaseFormSchema.safeParse({ ...base, deploymentEvidenceUrl: "ftp://example.com" }).success).toBe(false);
+  });
+
+  it("accepts a valid http and https deploymentEvidenceUrl", () => {
+    expect(releaseFormSchema.safeParse({ ...base, deploymentEvidenceUrl: "https://ci.example.com/build/42" }).success).toBe(true);
+    expect(releaseFormSchema.safeParse({ ...base, deploymentEvidenceUrl: "http://localhost:3000/job/1" }).success).toBe(true);
+  });
+
+  it("accepts null and omitted deploymentEvidenceUrl", () => {
+    expect(releaseFormSchema.safeParse({ ...base, deploymentEvidenceUrl: null }).success).toBe(true);
+    expect(releaseFormSchema.safeParse({ ...base }).success).toBe(true);
   });
 });

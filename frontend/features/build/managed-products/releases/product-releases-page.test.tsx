@@ -66,6 +66,27 @@ const ROWS: ManagedProductRelease[] = [
   release({ id: 3, name: "Legacy beta", version: "0.9.0", status: "archived" }),
 ];
 
+const ROWS_WITH_EVIDENCE: ManagedProductRelease[] = [
+  release({
+    id: 4,
+    name: "Evidence release",
+    version: "3.0.0",
+    status: "released",
+    releaseDate: "2026-03-01",
+    qaState: "approved",
+    deploymentEvidenceUrl: "https://ci.example.com/build/99",
+    ownerUserId: "user-abc",
+  }),
+  release({
+    id: 5,
+    name: "Draft with qa",
+    version: "3.1.0",
+    status: "draft",
+    qaState: "in_review",
+    ownerUserId: "user-xyz",
+  }),
+];
+
 const mockMutate = jest.fn();
 
 function setReleases(rows: ManagedProductRelease[]) {
@@ -183,5 +204,41 @@ describe("ProductReleasesPage", () => {
     expect(screen.queryByRole("button", { name: "New release" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Mark released" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Actions for Winter polish" })).not.toBeInTheDocument();
+  });
+
+  it("shows the qaState badge on shipped and draft releases when set", () => {
+    setReleases(ROWS_WITH_EVIDENCE);
+    render(<ProductReleasesPage managedProductId={7} />);
+    const shipped = screen.getByRole("list", { name: "Shipped releases" });
+    expect(within(shipped).getByText("Approved")).toBeInTheDocument();
+    const upcoming = screen.getByRole("list", { name: "Upcoming releases" });
+    expect(within(upcoming).getByText("In review")).toBeInTheDocument();
+  });
+
+  it("renders the deployment evidence URL as an external link in shipped releases", () => {
+    setReleases(ROWS_WITH_EVIDENCE);
+    render(<ProductReleasesPage managedProductId={7} />);
+    const shipped = screen.getByRole("list", { name: "Shipped releases" });
+    const link = within(shipped).getByRole("link", { name: "Evidence" });
+    expect(link).toHaveAttribute("href", "https://ci.example.com/build/99");
+    expect(link).toHaveAttribute("target", "_blank");
+    expect(link).toHaveAttribute("rel", "noopener noreferrer");
+  });
+
+  it("shows the owner indicator on releases that have an ownerUserId", () => {
+    setReleases(ROWS_WITH_EVIDENCE);
+    render(<ProductReleasesPage managedProductId={7} />);
+    const shipped = screen.getByRole("list", { name: "Shipped releases" });
+    expect(within(shipped).getByText("Owner")).toBeInTheDocument();
+    const upcoming = screen.getByRole("list", { name: "Upcoming releases" });
+    expect(within(upcoming).getByText("Owner")).toBeInTheDocument();
+  });
+
+  it("does not show evidence indicators when fields are null", () => {
+    render(<ProductReleasesPage managedProductId={7} />);
+    const shipped = screen.getByRole("list", { name: "Shipped releases" });
+    expect(within(shipped).queryByText("Approved")).not.toBeInTheDocument();
+    expect(within(shipped).queryByRole("link", { name: "Evidence" })).not.toBeInTheDocument();
+    expect(within(shipped).queryByText("Owner")).not.toBeInTheDocument();
   });
 });

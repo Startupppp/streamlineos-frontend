@@ -1,5 +1,8 @@
 import { z } from "zod";
 
+export const QA_STATES = ["pending", "in_review", "approved", "rejected"] as const;
+export type QaState = (typeof QA_STATES)[number];
+
 export const releaseFormSchema = z.object({
   name: z.string().min(1, "Required").max(255),
   version: z.string().min(1, "Required").max(50),
@@ -7,7 +10,7 @@ export const releaseFormSchema = z.object({
   releaseDate: z.string().optional(),
   status: z.enum(["draft", "released", "archived"]),
   ownerUserId: z.string().nullable().optional(),
-  qaState: z.string().nullable().optional(),
+  qaState: z.enum(QA_STATES).nullable().optional(),
   deploymentEvidenceUrl: z
     .string()
     .nullable()
