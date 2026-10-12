@@ -33,6 +33,11 @@ interface DeclineCallbacks {
   onError: (error: unknown) => void;
 }
 
+interface ClaimCallbacks {
+  onSuccess?: (data: { ok: true; autoLoginToken: string; skippedGrants?: unknown[] }) => Promise<void>;
+  onError?: (error: unknown) => void;
+}
+
 interface FakeSession {
   user: { email: string };
 }
@@ -46,6 +51,7 @@ interface NavigationRecorder {
 const routerPush = jest.fn<void, [string]>();
 const acceptMutate =
   jest.fn<void, [AcceptInvitationVariables, AcceptCallbacks]>();
+const claimMutate = jest.fn<void, [string, ClaimCallbacks]>();
 const declineMutate = jest.fn<void, [{ token: string }, DeclineCallbacks]>();
 /**
  * Added when the invitation email OTP landed and never stubbed, so every test in
@@ -64,6 +70,7 @@ const toastSuccess = jest.fn<void, [string]>();
 const toastError = jest.fn<void, [string]>();
 
 const VALID_INVITATION: InvitationValidation = {
+  id: "inv-valid-1",
   email: "new.joiner@acme.test",
   organizationName: "Acme Corp",
   role: "MEMBER",
@@ -123,6 +130,7 @@ jest.mock("@/hooks/common/auth-hooks", () => ({
     error: validation.error,
     isPending: validation.isPending,
   }),
+  useClaimInvitation: () => ({ mutate: claimMutate, isPending: false }),
   useAcceptInvitation: () => ({
     mutate: acceptMutate,
     isPending: pendingState.accept,
@@ -210,6 +218,7 @@ beforeEach(() => {
   pendingState.decline = false;
   pendingState.requestOtp = false;
   acceptMutate.mockImplementation(() => {});
+  claimMutate.mockImplementation(() => {});
   declineMutate.mockImplementation(() => {});
   requestOtpMutate.mockImplementation((_variables, callbacks) => {
     callbacks.onSuccess();
@@ -464,12 +473,10 @@ describe("InvitationPage — the invitation cannot be used", () => {
 async function acceptWithError(error: unknown) {
   validation.data = { ...VALID_INVITATION, userExists: true };
   currentSession = { user: { email: VALID_INVITATION.email } };
-  acceptMutate.mockImplementation((_v, cb) => { cb.onError(error); });
+  claimMutate.mockImplementation((_id, cb) => { cb.onError?.(error); });
   render(<InvitationPage />);
   const u = userEvent.setup();
   await u.click(screen.getByRole("button", { name: /accept & join/i }));
-  await u.type(screen.getByRole("textbox", { name: /verification code/i }), EMAIL_OTP);
-  await u.click(screen.getByRole("button", { name: /verify & create account/i }));
 }
 
 describe("InvitationPage — specific acceptance error states (BT-618d66782f9e)", () => {

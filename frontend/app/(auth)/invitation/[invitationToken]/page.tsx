@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import {
   signInWithMagicToken,
   useAcceptInvitation,
+  useClaimInvitation,
   useDeclineInvitation,
   useRequestInvitationOtp,
   useValidateInvitation,
@@ -51,7 +52,8 @@ type AcceptanceBlocker = "already-member" | "suspended" | "at-capacity";
 function classifyAcceptanceError(error: unknown): AcceptanceBlocker | null {
   if (!isApiError(error)) return null;
   const code = getApiErrorCode(error);
-  if (code === "ALREADY_MEMBER" || code === "MEMBERSHIP_ARCHIVED") return "already-member";
+  if (code === "ALREADY_MEMBER" || code === "MEMBERSHIP_ARCHIVED")
+    return "already-member";
   if (code === "ACCOUNT_SUSPENDED") return "suspended";
   if (code === "ORG_AT_CAPACITY") return "at-capacity";
   if (error.status === 409) return "already-member";
@@ -95,6 +97,7 @@ export default function InvitationPage() {
   } = useValidateInvitation(isCompletingAcceptance ? "" : invitationToken);
 
   const acceptInvitation = useAcceptInvitation();
+  const claimInvitation = useClaimInvitation();
   const declineInvitation = useDeclineInvitation();
   const requestInvitationOtp = useRequestInvitationOtp();
 
@@ -298,6 +301,31 @@ export default function InvitationPage() {
 
   const handleExistingUserAccept = useCallback(() => {
     if (acceptingRef.current) return;
+    const sessionEmail = session?.user?.email;
+    const isSignedInAsInvited =
+      !!session &&
+      !!invitation &&
+      sessionEmail !== undefined &&
+      sessionEmail !== null &&
+      canonicalEmail(sessionEmail) === canonicalEmail(invitation.email);
+    if (isSignedInAsInvited) {
+      acceptingRef.current = true;
+      claimInvitation.mutate(invitation.id, {
+        onSuccess: async (data) => {
+          setIsCompletingAcceptance(true);
+          toast.success(`Joined ${invitation.organizationName}!`);
+          persistPartialGrants(data.skippedGrants ?? []);
+          await autoLoginWithToken(data.autoLoginToken, "/post-invite");
+        },
+        onError: (error) => {
+          acceptingRef.current = false;
+          const blocker = classifyAcceptanceError(error);
+          if (blocker) setAcceptanceBlocker(blocker);
+          else toast.error(getErrorMessage(error));
+        },
+      });
+      return;
+    }
     if (!invitationToken) return;
     requestInvitationOtp.mutate(
       { token: invitationToken },
@@ -310,7 +338,14 @@ export default function InvitationPage() {
         },
       },
     );
-  }, [invitationToken, requestInvitationOtp]);
+  }, [
+    invitationToken,
+    requestInvitationOtp,
+    session,
+    invitation,
+    claimInvitation,
+    autoLoginWithToken,
+  ]);
 
   if (isValidating || isCompletingAcceptance) {
     return (
@@ -389,7 +424,9 @@ export default function InvitationPage() {
         sessionEmail={sessionEmail}
         isSignedIn={!!session}
         signedInAsOtherAccount={signedInAsOtherAccount}
-        isAcceptPending={acceptInvitation.isPending}
+        isAcceptPending={
+          acceptInvitation.isPending || claimInvitation.isPending
+        }
         isDeclinePending={declineInvitation.isPending}
         declineOpen={declineOpen}
         onSetDeclineOpen={setDeclineOpen}

@@ -49,6 +49,13 @@ jest.mock("@/hooks/api/build/managed-product-releases", () => ({
   useInfiniteManagedProductReleases: (...args: unknown[]) => mockUseInfiniteReleases(...args),
   useUpdateManagedProductRelease: (...args: unknown[]) => mockUseUpdateRelease(...args),
   useCreateManagedProductRelease: (...args: unknown[]) => mockUseCreateRelease(...args),
+  useManagedProductRelease: () => ({
+    data: undefined,
+    isLoading: false,
+    isError: false,
+    error: null,
+    refetch: jest.fn(),
+  }),
 }));
 
 jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn() } }));

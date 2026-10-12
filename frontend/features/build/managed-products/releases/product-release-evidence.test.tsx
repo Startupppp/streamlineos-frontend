@@ -118,7 +118,7 @@ describe("ProductReleaseEvidenceSheet", () => {
     expect(screen.getByText("approved")).toBeInTheDocument();
   });
 
-  it("the detail view says no canonical release is linked when evidence is null", () => {
+  it("says no canonical release is linked when evidence is null, instead of showing zeros that read as proven-empty evidence", () => {
     mockUseManagedProductRelease.mockReturnValue({
       data: DETAIL_WITHOUT_EVIDENCE,
       isLoading: false,

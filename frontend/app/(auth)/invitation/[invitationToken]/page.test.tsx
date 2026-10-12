@@ -40,6 +40,7 @@ jest.mock("sonner", () => ({
 }));
 
 const acceptMutation = { mutate: jest.fn(), isPending: false };
+const claimMutation = { mutate: jest.fn(), isPending: false };
 const declineMutation = { mutate: jest.fn(), isPending: false };
 /**
  * Added to the page when the invitation email OTP landed and never stubbed here,
@@ -54,6 +55,7 @@ const requestOtpMutation = {
 };
 
 const invitation = {
+  id: "inv-1",
   email: "new.joiner@acme.test",
   organizationName: "Acme Corp",
   role: "MEMBER",
@@ -68,6 +70,7 @@ jest.mock("@/hooks/common/auth-hooks", () => ({
     error: invitationError.value,
     isPending: false,
   }),
+  useClaimInvitation: () => claimMutation,
   useAcceptInvitation: () => acceptMutation,
   useDeclineInvitation: () => declineMutation,
   useRequestInvitationOtp: () => requestOtpMutation,
@@ -166,25 +169,17 @@ describe("InvitationPage — an existing account opening the invitation", () => 
     expect(screen.getByRole("button", { name: /sign in & join/i })).toBeEnabled();
   });
 
-  it("verifies the invited mailbox once for a signed-in invited account", async () => {
+  it("calls the claim mutation directly for a signed-in invited account without requesting an OTP", async () => {
     const user = userEvent.setup();
     sessionState.data = { user: { email: invitation.email } };
     render(<InvitationPage />);
 
     await user.click(screen.getByRole("button", { name: /accept & join/i }));
 
-    // `accept` is public and requires a code on every path, so a one-click accept
-    // for an existing account could only ever have been refused (BUG-HRMS-010).
-    expect(requestOtpMutation.mutate).toHaveBeenCalledTimes(1);
+    expect(claimMutation.mutate).toHaveBeenCalledTimes(1);
+    expect(claimMutation.mutate).toHaveBeenCalledWith(invitation.id, expect.anything());
+    expect(requestOtpMutation.mutate).not.toHaveBeenCalled();
     expect(acceptMutation.mutate).not.toHaveBeenCalled();
-
-    await user.type(
-      screen.getByRole("textbox", { name: /verification code/i }),
-      "424242",
-    );
-    await user.click(screen.getByRole("button", { name: /verify & create account/i }));
-
-    expect(acceptMutation.mutate).toHaveBeenCalledTimes(1);
   });
 
   it("disables the control while an acceptance is in flight", () => {

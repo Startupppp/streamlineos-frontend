@@ -32,6 +32,7 @@ jest.mock("next/navigation", () => ({
 }));
 
 const invitation = {
+  id: "inv-1",
   email: "new.joiner@acme.test",
   organizationName: "Acme Corp",
   role: "MEMBER",
@@ -39,7 +40,7 @@ const invitation = {
 };
 
 jest.mock("next-auth/react", () => ({
-  useSession: () => ({ data: { user: { email: "new.joiner@acme.test" } } }),
+  useSession: () => ({ data: { user: { email: "existing.user@acme.test" } } }),
 }));
 
 jest.mock("sonner", () => ({
@@ -75,6 +76,7 @@ jest.mock("@/hooks/common/auth-hooks", () => ({
     error: null,
     isPending: false,
   }),
+  useClaimInvitation: () => ({ mutate: jest.fn(), isPending: false }),
   useAcceptInvitation: () => acceptMutation,
   useDeclineInvitation: () => ({ mutate: jest.fn(), isPending: false }),
   useRequestInvitationOtp: () => requestOtpMutation,

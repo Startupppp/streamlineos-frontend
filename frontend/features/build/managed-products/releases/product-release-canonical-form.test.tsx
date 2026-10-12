@@ -94,11 +94,14 @@ function renderEditSheet(editTarget: ManagedProductRelease) {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  Object.defineProperty(Element.prototype, "hasPointerCapture", { value: jest.fn(() => false), writable: true, configurable: true });
+  Object.defineProperty(Element.prototype, "setPointerCapture", { value: jest.fn(), writable: true, configurable: true });
+  Object.defineProperty(Element.prototype, "releasePointerCapture", { value: jest.fn(), writable: true, configurable: true });
   setupDefaults();
 });
 
 describe("ProductReleaseFormSheet — canonical project release", () => {
-  it("the form submits the chosen projectReleaseId", async () => {
+  it("submits the chosen projectReleaseId, so the product release records which canonical delivery release ships it", async () => {
     const user = userEvent.setup();
     renderCreateSheet();
 
@@ -121,7 +124,7 @@ describe("ProductReleaseFormSheet — canonical project release", () => {
     );
   });
 
-  it("the form can clear an existing link (submits null)", async () => {
+  it("submits null to clear the link, so a wrong canonical release can be detached rather than only replaced", async () => {
     const user = userEvent.setup();
     const editTarget: ManagedProductRelease = {
       ...buildRelease({ id: 1, projectReleaseId: 99, recordRevision: 2 }),
@@ -147,7 +150,7 @@ describe("ProductReleaseFormSheet — canonical project release", () => {
     );
   });
 
-  it("the release select offers ONLY releases from projects linked to this product", async () => {
+  it("offers releases only from projects linked to this product, because the backend 404s any other project release", async () => {
     const user = userEvent.setup();
     renderCreateSheet();
 
