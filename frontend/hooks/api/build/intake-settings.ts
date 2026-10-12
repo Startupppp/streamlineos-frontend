@@ -7,7 +7,7 @@ import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
-import type { IntakeSettings } from "@/hooks/api/build/intake-settings-schema";
+import type { ProjectsIntakeSettingsGetSettingsResponse as IntakeSettings } from "@/contracts/build-contracts.generated";
 
 const intakeSettingsContract = lazyContract(() =>
   import("@/hooks/api/build/intake-settings-schema").then(

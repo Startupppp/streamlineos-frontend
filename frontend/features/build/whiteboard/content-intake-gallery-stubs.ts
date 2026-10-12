@@ -1,7 +1,7 @@
 export const VIEW_TOKEN = "gallery-view-stub";
 export const EDIT_TOKEN = "gallery-edit-stub";
 export const FORM_TOKEN = "gallery-form-stub";
-export const INTAKE_PROJECT_ID = "gallery-intake-stub";
+export const INTAKE_TOKEN = "gallery-intake-stub";
 export const BOARD_LOADING_TOKEN = "gallery-board-loading-stub";
 
 export const GALLERY_PROJECT_ID = 1;

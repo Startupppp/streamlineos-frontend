@@ -42,13 +42,6 @@ async function postIntake(
   return parseApiResponse(res, intakeSubmitResponseContract, path);
 }
 
-export function submitIntake(
-  projectId: string,
-  body: IntakeFormOutput,
-): Promise<IntakeSubmitResponse> {
-  return postIntake(`/public/intake/${projectId}`, body);
-}
-
 export function submitIntakeByToken(
   intakeToken: string,
   body: IntakeFormOutput,

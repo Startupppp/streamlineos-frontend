@@ -56,24 +56,18 @@ const overviewWithAllGranted: PortalProjectOverview = {
   capabilities: allGranted,
   milestones: [],
   tasks: [],
-  attachments: [],
-  comments: [],
   deliverables: [],
   approvals: [],
   invoices: [],
-  requests: [],
 };
 
 const overviewWithoutCapabilities: PortalProjectOverview = {
   project: baseProject,
   milestones: [],
   tasks: [],
-  attachments: [],
-  comments: [],
   deliverables: [],
   approvals: [],
   invoices: [],
-  requests: [],
 };
 
 describe("PortalProjectCard — optional capabilities field", () => {

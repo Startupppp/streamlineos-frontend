@@ -8,7 +8,7 @@ import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { PublicBoardView } from "@/features/build/whiteboard/public-board-view";
 import { PublicFormView } from "@/features/build/forms/public-form-view";
-import { PublicIntakeView } from "@/features/build/intake/public-intake-view";
+import { PublicIntakeTokenView } from "@/features/build/intake/public-intake-token-view";
 import PublicRoadmapPage from "@/app/(public)/roadmap/[orgId]/page";
 import { FilesPage } from "@/features/build/files/files-page";
 import { FormsListPage } from "@/features/build/forms/forms-list-page";
@@ -21,7 +21,7 @@ import {
   VIEW_TOKEN,
   EDIT_TOKEN,
   FORM_TOKEN,
-  INTAKE_PROJECT_ID,
+  INTAKE_TOKEN,
   BOARD_LOADING_TOKEN,
   GALLERY_PROJECT_ID,
   GALLERY_FORM_ID,
@@ -52,7 +52,7 @@ function useGalleryQueryClient() {
     );
 
     client.setQueryData(
-      buildWorkQueryKeys.projects.publicForms.projectIntakeForm(INTAKE_PROJECT_ID),
+      buildWorkQueryKeys.projects.publicForms.intakeFormByToken(INTAKE_TOKEN),
       null,
     );
 
@@ -70,7 +70,10 @@ function useBoardLoadingQueryClient() {
   const [client] = useState(() => {
     const c = createAppQueryClient("content-intake-gallery-board-loading");
     void c.prefetchQuery({
-      queryKey: accountingAndSupportQueryKeys.whiteboards.publicLink(BOARD_LOADING_TOKEN),
+      queryKey:
+        accountingAndSupportQueryKeys.whiteboards.publicLink(
+          BOARD_LOADING_TOKEN,
+        ),
       queryFn: (): Promise<unknown> => new Promise(() => {}),
     });
     return c;
@@ -144,18 +147,12 @@ export function ContentIntakeGallery() {
           <PublicBoardView shareToken={EDIT_TOKEN} />
         </CaseFrame>
 
-        <CaseFrame
-          id="public-form"
-          title="Public form"
-        >
+        <CaseFrame id="public-form" title="Public form">
           <PublicFormView formToken={FORM_TOKEN} />
         </CaseFrame>
 
-        <CaseFrame
-          id="public-intake"
-          title="Public intake"
-        >
-          <PublicIntakeView projectId={INTAKE_PROJECT_ID} />
+        <CaseFrame id="public-intake" title="Public intake">
+          <PublicIntakeTokenView intakeToken={INTAKE_TOKEN} />
         </CaseFrame>
 
         <CaseFrame
@@ -195,7 +192,10 @@ export function ContentIntakeGallery() {
           title="Authenticated form detail (loading)"
           height="h-64"
         >
-          <FormDetailPage projectId={GALLERY_PROJECT_ID} formId={GALLERY_FORM_ID} />
+          <FormDetailPage
+            projectId={GALLERY_PROJECT_ID}
+            formId={GALLERY_FORM_ID}
+          />
         </CaseFrame>
 
         <CaseFrame
@@ -219,7 +219,10 @@ export function ContentIntakeGallery() {
           title="Authenticated meeting detail (loading)"
           height="h-64"
         >
-          <MeetingDetailPage projectId={GALLERY_PROJECT_ID} meetingId={GALLERY_MEETING_ID} />
+          <MeetingDetailPage
+            projectId={GALLERY_PROJECT_ID}
+            meetingId={GALLERY_MEETING_ID}
+          />
         </CaseFrame>
 
         <CaseFrame
@@ -227,7 +230,10 @@ export function ContentIntakeGallery() {
           title="Authenticated whiteboard page (loading)"
           height="h-64"
         >
-          <WhiteboardPage projectId={GALLERY_PROJECT_ID} initialBoardId={null} />
+          <WhiteboardPage
+            projectId={GALLERY_PROJECT_ID}
+            initialBoardId={null}
+          />
         </CaseFrame>
       </div>
     </QueryClientProvider>

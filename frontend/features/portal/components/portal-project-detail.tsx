@@ -18,12 +18,14 @@ import {
   MilestonesSection,
   DeliverablesSection,
   TasksSection,
-  AttachmentsSection,
-  CommentsSection,
   ApprovalsSection,
   InvoicesSection,
-  RequestsSection,
 } from "./portal-project-sections";
+import {
+  FilesSection,
+  UpdatesSection,
+  RequestsSection,
+} from "./portal-paged-sections";
 
 function ChangeRequestDialogTrigger({
   projectId,
@@ -38,7 +40,12 @@ function ChangeRequestDialogTrigger({
 
   return (
     <>
-      <Button size="sm" variant="outline" onClick={handleOpen} className="shrink-0 gap-1.5">
+      <Button
+        size="sm"
+        variant="outline"
+        onClick={handleOpen}
+        className="shrink-0 gap-1.5"
+      >
         <FileEdit className="h-3.5 w-3.5" />
         Request change
       </Button>
@@ -85,7 +92,11 @@ export function OverviewSkeleton() {
   );
 }
 
-export function PortalProjectDetailShell({ children }: { children: ReactNode }) {
+export function PortalProjectDetailShell({
+  children,
+}: {
+  children: ReactNode;
+}) {
   return (
     <div className="flex flex-col min-h-dvh bg-background">
       <PortalHeader showProjectsLink />
@@ -109,7 +120,9 @@ interface PortalProjectDetailErrorProps {
   onRetry: () => void;
 }
 
-export function PortalProjectDetailError({ onRetry }: PortalProjectDetailErrorProps) {
+export function PortalProjectDetailError({
+  onRetry,
+}: PortalProjectDetailErrorProps) {
   return (
     <PortalProjectDetailShell>
       <BackToProjects />
@@ -154,7 +167,8 @@ const NO_CAPABILITIES = {
 } as const;
 
 export function PortalProjectDetail({ data }: PortalProjectDetailProps) {
-  const { project, milestones, tasks, attachments, comments, deliverables, approvals, invoices, requests } = data;
+  const { project, milestones, tasks, deliverables, approvals, invoices } =
+    data;
   const capabilities = data.capabilities ?? NO_CAPABILITIES;
   return (
     <>
@@ -170,9 +184,13 @@ export function PortalProjectDetail({ data }: PortalProjectDetailProps) {
               >
                 {formatPortalStatus(project.status)}
               </span>
-              <span className="text-micro font-mono text-muted-foreground">{project.key}</span>
+              <span className="text-micro font-mono text-muted-foreground">
+                {project.key}
+              </span>
             </div>
-            <h1 className="text-lg font-semibold text-foreground">{project.name}</h1>
+            <h1 className="text-lg font-semibold text-foreground">
+              {project.name}
+            </h1>
             {project.description && (
               <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed">
                 {project.description}
@@ -196,22 +214,37 @@ export function PortalProjectDetail({ data }: PortalProjectDetailProps) {
             )}
           </div>
           {capabilities.canSubmitChangeRequests && (
-            <ChangeRequestDialogTrigger projectId={project.id} projectName={project.name} />
+            <ChangeRequestDialogTrigger
+              projectId={project.id}
+              projectName={project.name}
+            />
           )}
         </div>
       </div>
 
       <div className="space-y-8">
-        {capabilities.canViewMilestones && <MilestonesSection milestones={milestones} />}
+        {capabilities.canViewMilestones && (
+          <MilestonesSection milestones={milestones} />
+        )}
         {capabilities.canViewMilestones && deliverables.length > 0 && (
           <DeliverablesSection deliverables={deliverables} />
         )}
         {capabilities.canViewTasks && <TasksSection tasks={tasks} />}
-        {capabilities.canViewAttachments && <AttachmentsSection attachments={attachments} />}
-        {capabilities.canViewComments && <CommentsSection comments={comments} />}
-        {capabilities.canViewApprovals && <ApprovalsSection approvals={approvals} />}
-        {capabilities.canViewInvoices && <InvoicesSection invoices={invoices} />}
-        {capabilities.canViewRequests && <RequestsSection requests={requests} />}
+        {capabilities.canViewAttachments && (
+          <FilesSection projectId={project.id} />
+        )}
+        {capabilities.canViewComments && (
+          <UpdatesSection projectId={project.id} />
+        )}
+        {capabilities.canViewApprovals && (
+          <ApprovalsSection approvals={approvals} />
+        )}
+        {capabilities.canViewInvoices && (
+          <InvoicesSection invoices={invoices} />
+        )}
+        {capabilities.canViewRequests && (
+          <RequestsSection projectId={project.id} />
+        )}
       </div>
     </>
   );

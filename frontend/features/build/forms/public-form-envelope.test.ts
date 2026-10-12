@@ -11,7 +11,7 @@ import {
   fetchPublicForm,
   submitPublicForm,
 } from "@/hooks/api/build/public-form";
-import { submitIntake } from "@/features/build/intake/public-intake-api";
+import { submitIntakeByToken } from "@/features/build/intake/public-intake-api";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 
 
@@ -149,7 +149,7 @@ describe("both submit seams unwrap the envelope, and only the authenticated one 
     const result = await parseApiResponse(
       response({ success: true, data: { id: 9, message: "Request submitted" } }),
       intakeSubmitResponseContract,
-      "/public/intake/1",
+      "/public/intake/t/tok",
     );
 
     expect(result.message).toBe("Request submitted");
@@ -159,7 +159,7 @@ describe("both submit seams unwrap the envelope, and only the authenticated one 
     const intake = await parseApiResponse(
       response({ success: true, data: { id: 9, message: "Request submitted" } }),
       intakeSubmitResponseContract,
-      "/public/intake/1",
+      "/public/intake/t/tok",
     );
     const form = await parseApiResponse(
       response({ success: true, data: { id: 7, message: "Submission received" } }),
@@ -177,7 +177,7 @@ describe("both submit seams unwrap the envelope, and only the authenticated one 
         parseApiResponse(
           response({ success: true, data: { id: 9 } }),
           intakeSubmitResponseContract,
-          "/public/intake/1",
+          "/public/intake/t/tok",
         ),
       ),
     ).resolves.toBe(true);
@@ -247,11 +247,11 @@ describe("the real call sites resolve the payload, not the envelope", () => {
     });
   });
 
-  it("submitIntake resolves to the message alone, withholding the created item id from an unauthenticated caller", async () => {
+  it("submitIntakeByToken resolves to the message alone, withholding the created item id from an unauthenticated caller", async () => {
     stubFetch({ success: true, data: { id: 9, message: "Request submitted" } });
 
     await expect(
-      submitIntake("1", { title: "Broken login", submitterEmail: undefined }),
+      submitIntakeByToken("tok-abc", { title: "Broken login", submitterEmail: undefined }),
     ).resolves.toEqual({ message: "Request submitted" });
   });
 });
@@ -270,19 +270,19 @@ describe("cache partitioning — form tokens produce distinct query keys", () =>
     expect(keyString).toContain(token);
   });
 
-  it("intake-form key for a project is distinct from the form-token key for the same value", () => {
-    const value = "123";
+  it("intake-form-by-token key is distinct from the form-token key for the same value", () => {
+    const value = "tok-123";
     const formKey = buildWorkQueryKeys.projects.publicForms.token(value);
-    const intakeKey = buildWorkQueryKeys.projects.publicForms.projectIntakeForm(value);
+    const intakeKey = buildWorkQueryKeys.projects.publicForms.intakeFormByToken(value);
     expect(formKey).not.toEqual(intakeKey);
   });
 
-  it("intake-form keys for different projectIds do not overlap", () => {
-    const keyA = buildWorkQueryKeys.projects.publicForms.projectIntakeForm("10");
-    const keyB = buildWorkQueryKeys.projects.publicForms.projectIntakeForm("20");
+  it("intake-form-by-token keys for different tokens do not overlap", () => {
+    const keyA = buildWorkQueryKeys.projects.publicForms.intakeFormByToken("tok-aaa");
+    const keyB = buildWorkQueryKeys.projects.publicForms.intakeFormByToken("tok-bbb");
     expect(keyA).not.toEqual(keyB);
-    expect(JSON.stringify(keyA)).toContain("10");
-    expect(JSON.stringify(keyB)).toContain("20");
+    expect(JSON.stringify(keyA)).toContain("tok-aaa");
+    expect(JSON.stringify(keyB)).toContain("tok-bbb");
   });
 });
 
@@ -303,10 +303,10 @@ describe("intake submission idempotency — intentionally non-idempotent by desi
     global.fetch = originalFetch;
   });
 
-  it("submitIntake sends no Idempotency-Key header — each submission is a distinct record by design", async () => {
+  it("submitIntakeByToken sends no Idempotency-Key header — each submission is a distinct record by design", async () => {
     stubFetch({ success: true, data: { id: 1, message: "Request submitted" } });
 
-    await submitIntake("99", { title: "New request", submitterEmail: undefined });
+    await submitIntakeByToken("tok-99", { title: "New request", submitterEmail: undefined });
 
     const [, init] = (global.fetch as jest.Mock).mock.calls[0] as [
       string,
@@ -316,17 +316,17 @@ describe("intake submission idempotency — intentionally non-idempotent by desi
     expect(headers.has("Idempotency-Key")).toBe(false);
   });
 
-  it("two calls to submitIntake each reach the server — no client-side deduplication", async () => {
+  it("two calls to submitIntakeByToken each reach the server — no client-side deduplication", async () => {
     stubFetch({ success: true, data: { id: 1, message: "Request submitted" } });
 
-    await submitIntake("99", { title: "First request", submitterEmail: undefined });
-    await submitIntake("99", { title: "Second request", submitterEmail: undefined });
+    await submitIntakeByToken("tok-99", { title: "First request", submitterEmail: undefined });
+    await submitIntakeByToken("tok-99", { title: "Second request", submitterEmail: undefined });
 
     expect((global.fetch as jest.Mock).mock.calls).toHaveLength(2);
   });
 
-  it("submitIntake does not read or write a cache key — intake submissions are not cached reads", () => {
-    const intakeKey = buildWorkQueryKeys.projects.publicForms.projectIntakeForm("99");
+  it("submitIntakeByToken does not read or write a cache key — intake submissions are not cached reads", () => {
+    const intakeKey = buildWorkQueryKeys.projects.publicForms.intakeFormByToken("tok-99");
     expect(intakeKey).toBeDefined();
     expect(Array.isArray(intakeKey)).toBe(true);
   });

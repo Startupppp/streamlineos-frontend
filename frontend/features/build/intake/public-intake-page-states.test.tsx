@@ -4,25 +4,25 @@ import "@testing-library/jest-dom";
 jest.mock("@/hooks/api/build/public-form", () => ({
   usePublicForm: jest.fn(),
   useSubmitPublicForm: jest.fn(),
-  useProjectIntakeForm: jest.fn(),
+  useIntakeFormByToken: jest.fn(),
 }));
 
 jest.mock("@/hooks/api/build/public-intake", () => ({
-  useSubmitIntake: jest.fn(),
+  useSubmitIntakeByToken: jest.fn(),
 }));
 
 import {
-  useProjectIntakeForm,
+  useIntakeFormByToken,
   useSubmitPublicForm,
 } from "@/hooks/api/build/public-form";
-import { useSubmitIntake } from "@/hooks/api/build/public-intake";
+import { useSubmitIntakeByToken } from "@/hooks/api/build/public-intake";
 import { idleQueryResult, successQueryResult, errorQueryResult } from "@/test-utils/query-result";
-import { PublicIntakeView } from "@/features/build/intake/public-intake-view";
+import { PublicIntakeTokenView } from "@/features/build/intake/public-intake-token-view";
 import { ApiError } from "@/lib/api-envelope";
 
-const mockUseProjectIntakeForm = useProjectIntakeForm as jest.MockedFunction<typeof useProjectIntakeForm>;
+const mockUseIntakeFormByToken = useIntakeFormByToken as jest.MockedFunction<typeof useIntakeFormByToken>;
 const mockUseSubmitPublicForm = useSubmitPublicForm as jest.MockedFunction<typeof useSubmitPublicForm>;
-const mockUseSubmitIntake = useSubmitIntake as jest.MockedFunction<typeof useSubmitIntake>;
+const mockUseSubmitIntakeByToken = useSubmitIntakeByToken as jest.MockedFunction<typeof useSubmitIntakeByToken>;
 
 const idleMutation = {
   mutate: jest.fn(),
@@ -44,7 +44,7 @@ const configuredForm = {
   ],
 };
 
-type IntakeFormResult = ReturnType<typeof useProjectIntakeForm>;
+type IntakeFormResult = ReturnType<typeof useIntakeFormByToken>;
 type IntakeFormData = NonNullable<IntakeFormResult["data"]>;
 
 interface IntakeFormState {
@@ -66,10 +66,10 @@ function setup(
   submitPublicFormOverrides = {},
   submitIntakeOverrides = {},
 ) {
-  mockUseProjectIntakeForm.mockReturnValue(intakeFormResult(intakeFormOverrides));
+  mockUseIntakeFormByToken.mockReturnValue(intakeFormResult(intakeFormOverrides));
   mockUseSubmitPublicForm.mockReturnValue({ ...idleMutation, ...submitPublicFormOverrides } as unknown as ReturnType<typeof useSubmitPublicForm>);
-  mockUseSubmitIntake.mockReturnValue({ ...idleMutation, ...submitIntakeOverrides } as unknown as ReturnType<typeof useSubmitIntake>);
-  return render(<PublicIntakeView projectId="7" />);
+  mockUseSubmitIntakeByToken.mockReturnValue({ ...idleMutation, ...submitIntakeOverrides } as unknown as ReturnType<typeof useSubmitIntakeByToken>);
+  return render(<PublicIntakeTokenView intakeToken="tok-form-xyz" />);
 }
 
 describe("PublicIntakePage — dynamic form surface (project has a configured intake form)", () => {
@@ -270,7 +270,7 @@ describe("PublicIntakePage — dynamic form field validation (claim 70)", () => 
       isIdle: false, isPending: false, isSuccess: false, data: undefined,
       variables, error: new Error("Server error. Please retry."),
     });
-    view.rerender(<PublicIntakeView projectId="7" />);
+    view.rerender(<PublicIntakeTokenView intakeToken="tok-form-xyz" />);
     expect(screen.getByRole("alert")).toHaveTextContent("Server error. Please retry.");
     expect(screen.getByRole("textbox", { name: /Summary/ })).toHaveValue(summary);
     expect(screen.getByRole("textbox", { name: /Details/ })).toHaveValue(details);
@@ -285,7 +285,7 @@ describe("PublicIntakePage — dynamic form field validation (claim 70)", () => 
       isIdle: false, isPending: false, isSuccess: true, error: null,
       variables, data: { id: 17, message: "Submission received" },
     });
-    view.rerender(<PublicIntakeView projectId="7" />);
+    view.rerender(<PublicIntakeTokenView intakeToken="tok-form-xyz" />);
     expect(screen.getByText("Submission received")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /^Submit$/ })).not.toBeInTheDocument();
   });

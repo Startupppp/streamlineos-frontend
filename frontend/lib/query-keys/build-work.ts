@@ -462,8 +462,8 @@ export const buildWorkQueryKeys = {
     publicForms: {
       token: (token: string) =>
         [...base, "projects", "public-form", token] as const,
-      projectIntakeForm: (projectId: string) =>
-        [...base, "projects", "intake-form", projectId] as const,
+      intakeFormByToken: (intakeToken: string) =>
+        [...base, "projects", "intake-form-token", intakeToken] as const,
     },
     intakeSettings: (projectId: number) =>
       [...base, "projects", projectId, "intake-settings"] as const,

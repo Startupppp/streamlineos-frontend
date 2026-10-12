@@ -95,12 +95,29 @@ const mockUsePortalProjects = jest.fn();
 const mockUsePortalProjectOverview = jest.fn();
 const mockUsePortalChangeRequests = jest.fn();
 const mockUseSubmitPortalCR = jest.fn();
+const mockUsePortalPreviewFiles = jest.fn();
+const mockUsePortalPreviewUpdates = jest.fn();
+const mockUsePortalPreviewRequests = jest.fn();
+
+const emptyChildPage = () => ({
+  items: [],
+  isLoading: false,
+  isError: false,
+  error: null,
+  hasMore: false,
+  isFetchingNextPage: false,
+  fetchNextPage: jest.fn(),
+  refetch: jest.fn(),
+});
 const mockUseAccess = jest.fn();
 
 jest.mock("@/hooks/api/build/client-portal", () => ({
   usePortalProjects: () => mockUsePortalProjects(),
   usePortalProjectOverview: () => mockUsePortalProjectOverview(),
   usePortalChangeRequests: () => mockUsePortalChangeRequests(),
+  usePortalPreviewFiles: () => mockUsePortalPreviewFiles(),
+  usePortalPreviewUpdates: () => mockUsePortalPreviewUpdates(),
+  usePortalPreviewRequests: () => mockUsePortalPreviewRequests(),
   useSubmitPortalChangeRequest: () => mockUseSubmitPortalCR(),
 }));
 
@@ -139,6 +156,9 @@ beforeEach(() => {
   mockUsePortalProjects.mockReturnValue(baseQuery({ data: [] }));
   mockUsePortalProjectOverview.mockReturnValue(baseQuery());
   mockUsePortalChangeRequests.mockReturnValue(baseQuery({ data: [] }));
+  mockUsePortalPreviewFiles.mockReturnValue(emptyChildPage());
+  mockUsePortalPreviewUpdates.mockReturnValue(emptyChildPage());
+  mockUsePortalPreviewRequests.mockReturnValue(emptyChildPage());
   mockUseSubmitPortalCR.mockReturnValue({
     mutate: jest.fn(),
     isPending: false,
@@ -227,8 +247,6 @@ describe("SPEC 10 — PortalDashboardPage states (Requirement C3)", () => {
           },
           milestones: [],
           tasks: [],
-          attachments: [],
-          comments: [],
         },
       }),
     );
@@ -257,8 +275,6 @@ describe("SPEC 10 — PortalDashboardPage states (Requirement C3)", () => {
           },
           milestones: [],
           tasks: [],
-          attachments: [],
-          comments: [],
         },
       }),
     );
@@ -289,16 +305,16 @@ describe("SPEC 10 — PortalDashboardPage states (Requirement C3)", () => {
     expect(screen.queryByText("No milestones")).toBeNull();
   });
 
-  it("offline state: renders error state when change-requests fetch fails (network down)", () => {
-    mockUsePortalProjectOverview.mockReturnValue(baseQuery({ data: undefined }));
-    mockUsePortalChangeRequests.mockReturnValue(
-      baseQuery({
-        isError: true,
-        error: new TypeError("Failed to fetch"),
-      }),
-    );
+  it("offline state: renders error state when the paged change-requests read fails (network down) even though the overview loaded", () => {
+    mockUsePortalProjectOverview.mockReturnValue(baseQuery());
+    mockUsePortalPreviewRequests.mockReturnValue({
+      ...emptyChildPage(),
+      isError: true,
+      error: new TypeError("Failed to fetch"),
+    });
     render(<PortalDashboardPage projectId={42} />);
     expect(screen.queryByText("Alpha Project")).toBeNull();
+    expect(screen.getByText("Project Dashboard")).toBeInTheDocument();
   });
 
   it("ANTI-VACUITY: loading and ready states differ — loading shows 'Project Dashboard' not project name", () => {
@@ -339,7 +355,7 @@ describe("SPEC 11 — Portal expired-grant and revoked states (BT-54b19db5799b)"
         data: {
           project: { id: 42, name: "Alpha Project", status: "active", startDate: null, targetEndDate: null },
           capabilities: { canViewMilestones: false, canViewTasks: false, canViewAttachments: false, canViewComments: false, canSubmitChangeRequests: false },
-          milestones: [], tasks: [], attachments: [], comments: [],
+          milestones: [], tasks: [],
         },
       }),
     );
@@ -364,7 +380,7 @@ describe("SPEC 11 — Portal expired-grant and revoked states (BT-54b19db5799b)"
         data: {
           project: { id: 42, name: "Silent Project", status: "active", startDate: null, targetEndDate: null },
           capabilities: { canViewMilestones: false, canViewTasks: false, canViewAttachments: false, canViewComments: false, canSubmitChangeRequests: false },
-          milestones: [], tasks: [], attachments: [], comments: [],
+          milestones: [], tasks: [],
         },
       }),
     );

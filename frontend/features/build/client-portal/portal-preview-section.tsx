@@ -47,11 +47,7 @@ export function PortalPreviewSection({ projectId }: PortalPreviewSectionProps) {
     );
   }
 
-  const isEmpty =
-    data.milestones.length === 0 &&
-    data.tasks.length === 0 &&
-    data.attachments.length === 0 &&
-    data.comments.length === 0;
+  const isEmpty = data.milestones.length === 0 && data.tasks.length === 0;
 
   if (isEmpty) {
     return (

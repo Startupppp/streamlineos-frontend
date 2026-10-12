@@ -19,6 +19,13 @@ import type {
 } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
+import type { ZodType } from "zod";
+import {
+  PORTAL_CHILD_PAGE_SIZE,
+  portalFilesPageSchema,
+  portalRequestsPageSchema,
+  portalUpdatesPageSchema,
+} from "@/features/portal/lib/portal-child-pages";
 
 
 const portalProjectListContract = lazyContract(() =>
@@ -59,6 +66,72 @@ export function usePortalProjectOverview(projectId: number) {
     enabled: canView && !!projectId,
     staleTime: 60_000,
   });
+}
+
+interface PortalChildPage<T> {
+  data: T[];
+  pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
+}
+
+function usePortalPreviewChildPage<T>(
+  projectId: number,
+  segment: "updates" | "files" | "requests",
+  path: string,
+  contract: ZodType<PortalChildPage<T>>,
+) {
+  const canView = useCan("build:portal:view");
+  const query = useInfiniteQuery({
+    queryKey: [
+      ...buildWorkQueryKeys.projects.clientPortal.overview(projectId),
+      segment,
+    ] as const,
+    queryFn: ({ signal, pageParam }) =>
+      apiClient.get<PortalChildPage<T>>(
+        path,
+        pageParam === undefined
+          ? { limit: PORTAL_CHILD_PAGE_SIZE }
+          : { limit: PORTAL_CHILD_PAGE_SIZE, cursor: pageParam },
+        signal,
+        contract,
+      ),
+    initialPageParam: NO_CURSOR_YET,
+    getNextPageParam: (lastPage: PortalChildPage<T>) => lastPage.pagination.nextCursor ?? undefined,
+    enabled: canView && !!projectId,
+    staleTime: 30_000,
+  });
+  const items = useMemo<T[]>(
+    () => query.data?.pages.flatMap((page) => page.data) ?? [],
+    [query.data],
+  );
+  const hasMore = query.data?.pages.at(-1)?.pagination.hasMore ?? false;
+  return { ...query, items, hasMore };
+}
+
+export function usePortalPreviewUpdates(projectId: number) {
+  return usePortalPreviewChildPage(
+    projectId,
+    "updates",
+    `/build/portal/projects/${projectId}/updates`,
+    portalUpdatesPageSchema,
+  );
+}
+
+export function usePortalPreviewFiles(projectId: number) {
+  return usePortalPreviewChildPage(
+    projectId,
+    "files",
+    `/build/portal/projects/${projectId}/files`,
+    portalFilesPageSchema,
+  );
+}
+
+export function usePortalPreviewRequests(projectId: number) {
+  return usePortalPreviewChildPage(
+    projectId,
+    "requests",
+    `/build/portal/projects/${projectId}/requests`,
+    portalRequestsPageSchema,
+  );
 }
 
 export function usePortalChangeRequests(

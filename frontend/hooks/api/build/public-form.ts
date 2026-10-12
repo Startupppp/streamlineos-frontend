@@ -71,12 +71,12 @@ export function useSubmitPublicForm(token: string) {
   });
 }
 
-export function useProjectIntakeForm(projectId: string) {
+export function useIntakeFormByToken(intakeToken: string) {
   return useQuery<PublicFormDefinition>({
-    queryKey: buildWorkQueryKeys.projects.publicForms.projectIntakeForm(projectId),
+    queryKey: buildWorkQueryKeys.projects.publicForms.intakeFormByToken(intakeToken),
     queryFn: ({ signal }) =>
-      fetchPublicFormAtPath(`/public/intake/${projectId}/form`, signal),
-    enabled: !!projectId,
+      fetchPublicFormAtPath(`/public/intake/t/${intakeToken}/form`, signal),
+    enabled: !!intakeToken,
     retry: false,
     staleTime: 60_000,
     ...INLINE_READ_ERROR,

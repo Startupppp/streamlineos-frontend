@@ -23,19 +23,6 @@ export interface ClientPortalTask {
   dueDate: string | null;
 }
 
-export interface ClientPortalFile {
-  id: number;
-  filename: string;
-  url: string;
-}
-
-export interface ClientPortalComment {
-  id: number;
-  body: string;
-  authorName: string | null;
-  createdAt: string;
-}
-
 export interface ClientPortalCapabilities {
   canViewMilestones: boolean;
   canViewTasks: boolean;
@@ -44,6 +31,7 @@ export interface ClientPortalCapabilities {
   canSubmitChangeRequests: boolean;
   canViewApprovals: boolean;
   canViewInvoices: boolean;
+  canViewRequests: boolean;
 }
 
 export interface ClientPortalOverview {
@@ -51,8 +39,6 @@ export interface ClientPortalOverview {
   capabilities?: ClientPortalCapabilities;
   milestones: ClientPortalMilestone[];
   tasks: ClientPortalTask[];
-  attachments: ClientPortalFile[];
-  comments: ClientPortalComment[];
 }
 
 export interface ClientVisibilityTicket {

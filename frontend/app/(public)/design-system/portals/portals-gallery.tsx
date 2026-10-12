@@ -80,19 +80,9 @@ const STUB_OVERVIEW: PortalProjectOverview = {
       assigneeName: null,
     },
   ],
-  attachments: [],
-  comments: [
-    {
-      id: 5,
-      body: "Discovery phase complete — ready for design review.",
-      authorName: "Sam O.",
-      createdAt: "2026-05-10T09:00:00Z",
-    },
-  ],
   deliverables: [],
   approvals: [],
   invoices: [],
-  requests: [],
 };
 
 const STUB_ACCESS: {
@@ -337,7 +327,7 @@ export function PortalsGallery() {
         <GallerySection caseId="portal-detail-not-found" label="portal-detail — not found / denied">
           <PortalProjectDetailNotFound />
         </GallerySection>
-        <GallerySection caseId="portal-detail-ready" label="portal-detail — ready with milestones, tasks, comments">
+        <GallerySection caseId="portal-detail-ready" label="portal-detail — ready with milestones and tasks">
           <PortalProjectDetailShell>
             <PortalProjectDetail data={STUB_OVERVIEW} />
           </PortalProjectDetailShell>
@@ -348,8 +338,6 @@ export function PortalsGallery() {
               ...STUB_OVERVIEW,
               milestones: [],
               tasks: [],
-              attachments: [],
-              comments: [],
             }}
           />
         </GallerySection>

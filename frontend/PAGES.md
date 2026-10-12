@@ -1041,7 +1041,6 @@ PM Workspace is removed from Build entirely (not renamed, not consolidated into 
 - `/help/[orgId]` · **Support (public KB)** · hooks: `→ features/support/kb`
 - `/help/[orgId]/[articleSlug]` · **Support (public KB)** · hooks: `→ features/support/kb`
 - `/forms/[formToken]` · **Build/HR (public forms)** · hooks: `→ features/forms`
-- `/intake/[projectId]` · **Build (public intake)** · hooks: `→ features/build/intake`
 - `/intake/t/[intakeToken]` · **Build (public intake, opaque token)** · hooks: `→ features/build/intake`
 - `/board/[shareToken]` · **Build (public board share)** · hooks: `→ features/build/board`
 - `/wiki/[shareToken]` · **Knowledge (public wiki share)** · hooks: `→ features/wiki`

@@ -139,8 +139,8 @@ describe("every API wrapper propagates correlation context", () => {
   });
 
   it("the public intake submit sends the correlation header", async () => {
-    const { submitIntake } = await import("@/features/build/intake/public-intake-api");
-    await submitIntake("proj-1", {} as never).catch(() => undefined);
+    const { submitIntakeByToken } = await import("@/features/build/intake/public-intake-api");
+    await submitIntakeByToken("tok-abc", {} as never).catch(() => undefined);
     expect(headerOf(fetchStub.calls[0], CORRELATION_HEADER)).toBeTruthy();
   });
 });

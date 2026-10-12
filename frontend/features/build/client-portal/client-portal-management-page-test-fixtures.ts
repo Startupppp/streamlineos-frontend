@@ -73,20 +73,32 @@ export function installClientPortalMocks() {
   mockUseCan.mockReturnValue(true);
   mockUseOnlineStatus.mockReturnValue(true);
   mockUsePageState.mockReturnValue({ kind: "ready" });
-  mockUsePortalSettings.mockReturnValue(baseQuery({ data: UNPUBLISHED_SETTINGS }));
+  mockUsePortalSettings.mockReturnValue(
+    baseQuery({ data: UNPUBLISHED_SETTINGS }),
+  );
   mockUseProjectClientGrants.mockReturnValue(
-    baseQuery({ data: { data: [], pagination: { limit: 50, nextCursor: null, hasMore: false } } }),
+    baseQuery({
+      data: {
+        data: [],
+        pagination: { limit: 50, nextCursor: null, hasMore: false },
+      },
+    }),
   );
   mockUsePublishPortal.mockReturnValue(baseMutation());
   mockUseUnpublishPortal.mockReturnValue(baseMutation());
   mockUsePortalPreview.mockReturnValue(
     baseQuery({
       data: {
-        project: { id: 1, name: "P", key: "P", status: "active", startDate: null, targetEndDate: null },
+        project: {
+          id: 1,
+          name: "P",
+          key: "P",
+          status: "active",
+          startDate: null,
+          targetEndDate: null,
+        },
         milestones: [],
         tasks: [],
-        attachments: [],
-        comments: [],
       },
     }),
   );

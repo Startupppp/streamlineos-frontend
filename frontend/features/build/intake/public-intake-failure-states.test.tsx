@@ -3,35 +3,27 @@ import userEvent from "@testing-library/user-event";
 import "@testing-library/jest-dom";
 
 jest.mock("@/hooks/api/build/public-form", () => ({
-  useProjectIntakeForm: jest.fn(),
+  useIntakeFormByToken: jest.fn(),
   useSubmitPublicForm: jest.fn(),
 }));
 
 jest.mock("@/hooks/api/build/public-intake", () => ({
-  useSubmitIntake: jest.fn(),
   useSubmitIntakeByToken: jest.fn(),
 }));
 
 import {
-  useProjectIntakeForm,
+  useIntakeFormByToken,
   useSubmitPublicForm,
 } from "@/hooks/api/build/public-form";
-import {
-  useSubmitIntake,
-  useSubmitIntakeByToken,
-} from "@/hooks/api/build/public-intake";
+import { useSubmitIntakeByToken } from "@/hooks/api/build/public-intake";
 import { ApiError } from "@/lib/api-envelope";
-import { PublicIntakeView } from "@/features/build/intake/public-intake-view";
 import { PublicIntakeTokenView } from "@/features/build/intake/public-intake-token-view";
 
-const mockUseProjectIntakeForm = useProjectIntakeForm as jest.MockedFunction<
-  typeof useProjectIntakeForm
+const mockUseIntakeFormByToken = useIntakeFormByToken as jest.MockedFunction<
+  typeof useIntakeFormByToken
 >;
 const mockUseSubmitPublicForm = useSubmitPublicForm as jest.MockedFunction<
   typeof useSubmitPublicForm
->;
-const mockUseSubmitIntake = useSubmitIntake as jest.MockedFunction<
-  typeof useSubmitIntake
 >;
 const mockUseSubmitIntakeByToken = useSubmitIntakeByToken as jest.MockedFunction<
   typeof useSubmitIntakeByToken
@@ -55,12 +47,12 @@ const configuredForm = {
   fields: [{ key: "summary", label: "Summary", type: "text", required: true }],
 };
 
-function setupProjectView(
+function setupFormLoadView(
   queryOverrides: Record<string, unknown>,
-  intakeMutationOverrides: Record<string, unknown> = {},
+  submitPublicFormOverrides: Record<string, unknown> = {},
 ) {
   const refetch = jest.fn();
-  mockUseProjectIntakeForm.mockReturnValue({
+  mockUseIntakeFormByToken.mockReturnValue({
     data: undefined,
     isPending: false,
     isLoading: false,
@@ -69,19 +61,31 @@ function setupProjectView(
     error: null,
     refetch,
     ...queryOverrides,
-  } as unknown as ReturnType<typeof useProjectIntakeForm>);
-  mockUseSubmitPublicForm.mockReturnValue(
-    idleMutation as unknown as ReturnType<typeof useSubmitPublicForm>,
-  );
-  mockUseSubmitIntake.mockReturnValue({
+  } as unknown as ReturnType<typeof useIntakeFormByToken>);
+  mockUseSubmitPublicForm.mockReturnValue({
     ...idleMutation,
-    ...intakeMutationOverrides,
-  } as unknown as ReturnType<typeof useSubmitIntake>);
-  render(<PublicIntakeView projectId="7" />);
+    ...submitPublicFormOverrides,
+  } as unknown as ReturnType<typeof useSubmitPublicForm>);
+  mockUseSubmitIntakeByToken.mockReturnValue(
+    idleMutation as unknown as ReturnType<typeof useSubmitIntakeByToken>,
+  );
+  render(<PublicIntakeTokenView intakeToken="tok-form-xyz" />);
   return { refetch };
 }
 
-function setupTokenView(mutationOverrides: Record<string, unknown> = {}) {
+function setupTokenFormView(mutationOverrides: Record<string, unknown> = {}) {
+  mockUseIntakeFormByToken.mockReturnValue({
+    data: undefined,
+    isPending: false,
+    isLoading: false,
+    isError: true,
+    isSuccess: false,
+    error: new ApiError("No active public form for this project", 404),
+    refetch: jest.fn(),
+  } as unknown as ReturnType<typeof useIntakeFormByToken>);
+  mockUseSubmitPublicForm.mockReturnValue(
+    idleMutation as unknown as ReturnType<typeof useSubmitPublicForm>,
+  );
   mockUseSubmitIntakeByToken.mockReturnValue({
     ...idleMutation,
     ...mutationOverrides,
@@ -91,7 +95,7 @@ function setupTokenView(mutationOverrides: Record<string, unknown> = {}) {
 
 describe("a failed intake-form read is never presented as a different form the visitor did not choose", () => {
   it("shows a read failure with a retry instead of the transitional form when the lookup 500s", async () => {
-    const { refetch } = setupProjectView({
+    const { refetch } = setupFormLoadView({
       isError: true,
       error: new ApiError("Internal server error", 500),
     });
@@ -104,7 +108,7 @@ describe("a failed intake-form read is never presented as a different form the v
   });
 
   it("shows a read failure rather than the transitional form when the lookup is rate-limited", () => {
-    setupProjectView({
+    setupFormLoadView({
       isError: true,
       error: new ApiError("Too many requests", 429, "RATE_LIMITED", {
         retryAfterSecs: 20,
@@ -117,7 +121,7 @@ describe("a failed intake-form read is never presented as a different form the v
   });
 
   it("renders the transitional form for the one status that means the project has no published form", () => {
-    setupProjectView({
+    setupFormLoadView({
       isError: true,
       error: new ApiError("No active public form for this project", 404),
     });
@@ -130,7 +134,7 @@ describe("a failed intake-form read is never presented as a different form the v
   });
 
   it("renders the published form when the read succeeds, so the refusal branches are not the only reachable outcome", () => {
-    setupProjectView({ isSuccess: true, data: configuredForm });
+    setupFormLoadView({ isSuccess: true, data: configuredForm });
     expect(screen.getByText("Summary")).toBeInTheDocument();
     expect(
       screen.queryByText("We couldn't load this form"),
@@ -140,7 +144,7 @@ describe("a failed intake-form read is never presented as a different form the v
 
 describe("the published-form branch renders something or says why, never a blank card", () => {
   it("falls back to the transitional form rather than an empty card when a published form carries no usable token", () => {
-    setupProjectView({
+    setupFormLoadView({
       isSuccess: true,
       data: { ...configuredForm, publicToken: null },
     });
@@ -152,7 +156,7 @@ describe("the published-form branch renders something or says why, never a blank
 
 describe("a token-link intake submit says which outcome happened instead of only succeeding", () => {
   it("calls the link dead with no retry when the server refuses the token, since the refusal is the same for invalid and closed", () => {
-    setupTokenView({
+    setupTokenFormView({
       isError: true,
       error: new ApiError("Invalid request", 400, "BAD_REQUEST"),
     });
@@ -165,7 +169,7 @@ describe("a token-link intake submit says which outcome happened instead of only
   });
 
   it("keeps the form and the submit button for a failure a second attempt could survive", () => {
-    setupTokenView({
+    setupTokenFormView({
       isError: true,
       error: new ApiError("Service unavailable", 503),
     });
@@ -178,7 +182,7 @@ describe("a token-link intake submit says which outcome happened instead of only
   });
 
   it("separates a validation refusal from a dead link, because the server codes only that one", () => {
-    setupTokenView({
+    setupTokenFormView({
       isError: true,
       error: new ApiError("Validation failed", 400, "VALIDATION_FAILED", {
         details: [{ path: "title", message: "Request title is required" }],
@@ -193,7 +197,7 @@ describe("a token-link intake submit says which outcome happened instead of only
   });
 
   it("renders the request form with its submit button when nothing has failed yet", () => {
-    setupTokenView();
+    setupTokenFormView();
     expect(
       screen.getByRole("button", { name: /submit request/i }),
     ).toBeInTheDocument();
@@ -203,7 +207,7 @@ describe("a token-link intake submit says which outcome happened instead of only
   });
 
   it("confirms the request once the submit succeeds", () => {
-    setupTokenView({ isSuccess: true });
+    setupTokenFormView({ isSuccess: true });
     expect(screen.getByText("Request submitted")).toBeInTheDocument();
   });
 });

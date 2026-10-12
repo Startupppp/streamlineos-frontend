@@ -23,7 +23,22 @@ import {
   INTAKE_REQUEST_TYPE_OPTIONS,
 } from "@/features/build/intake/public-intake-schema";
 import { useSubmitIntakeByToken } from "@/hooks/api/build/public-intake";
-import { classifyIntakeSubmitFailure } from "@/features/build/forms/public-surface-states";
+import {
+  useIntakeFormByToken,
+  useSubmitPublicForm,
+} from "@/hooks/api/build/public-form";
+import { FieldInput } from "@/features/build/forms/field-input";
+import {
+  buildDynamicSchema,
+  type FormField,
+} from "@/features/build/forms/form-submission-schema";
+import { PublicSurfacePanel } from "@/features/build/forms/public-surface-panel";
+import {
+  classifyIntakeSubmitFailure,
+  classifyPublicFormSubmitFailure,
+  classifyPublicReadFailure,
+  isMissingPublishedForm,
+} from "@/features/build/forms/public-surface-states";
 
 interface IntakeTokenFormProps {
   intakeToken: string;
@@ -210,9 +225,7 @@ function IntakeTokenForm({ intakeToken }: IntakeTokenFormProps) {
           <p className="text-sm font-medium text-destructive">
             {failure.title}
           </p>
-          <p className="text-sm text-muted-foreground">
-            {failure.description}
-          </p>
+          <p className="text-sm text-muted-foreground">{failure.description}</p>
         </div>
       )}
 
@@ -231,6 +244,124 @@ function IntakeTokenForm({ intakeToken }: IntakeTokenFormProps) {
   );
 }
 
+interface DynamicIntakeFormInnerProps {
+  fields: FormField[];
+  token: string;
+}
+
+function DynamicIntakeFormInner({
+  fields,
+  token,
+}: DynamicIntakeFormInnerProps) {
+  const mutation = useSubmitPublicForm(token);
+  const {
+    handleSubmit,
+    control,
+    formState: { errors },
+  } = useForm<Record<string, unknown>>({
+    resolver: zodResolver(buildDynamicSchema(fields)),
+  });
+
+  const failure = useMemo(
+    () =>
+      mutation.isError
+        ? classifyPublicFormSubmitFailure(mutation.error)
+        : undefined,
+    [mutation.isError, mutation.error],
+  );
+
+  function handleFormSubmit(values: Record<string, unknown>) {
+    if (mutation.isPending || mutation.isSuccess) return;
+    mutation.mutate(values);
+  }
+
+  if (mutation.isSuccess) {
+    return (
+      <div className="text-center py-6 space-y-3">
+        <div className="w-16 h-16 rounded-full bg-status-success-surface mx-auto flex items-center justify-center">
+          <CheckCircle2 className="w-8 h-8 text-status-success-ink" />
+        </div>
+        <p className="text-lg font-medium text-foreground">
+          Submission received
+        </p>
+        <p className="text-sm text-muted-foreground">
+          Your response has been recorded. Thank you for taking the time to fill
+          this out.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <form
+      onSubmit={handleSubmit(handleFormSubmit)}
+      className="space-y-5"
+      noValidate
+    >
+      {fields.length === 0 && (
+        <p className="text-sm text-muted-foreground text-center py-4">
+          This form has no fields configured.
+        </p>
+      )}
+      {fields.map((field) => {
+        const error = errors[field.key];
+        const errorMessage =
+          typeof error?.message === "string" ? error.message : undefined;
+        return (
+          <Controller
+            key={field.key}
+            control={control}
+            name={field.key}
+            defaultValue={
+              field.type === "checkbox"
+                ? false
+                : field.type === "multiselect"
+                  ? []
+                  : ""
+            }
+            render={({ field: controllerField }) => {
+              function handleFieldChange(v: unknown) {
+                controllerField.onChange(v);
+              }
+              return (
+                <FieldInput
+                  field={field}
+                  value={
+                    typeof controllerField.value === "string"
+                      ? controllerField.value
+                      : ""
+                  }
+                  onChange={handleFieldChange}
+                  errorMessage={errorMessage}
+                />
+              );
+            }}
+          />
+        );
+      })}
+      {failure && (
+        <div className="space-y-1" role="alert">
+          <p className="text-sm font-medium text-destructive">
+            {failure.title}
+          </p>
+          <p className="text-sm text-muted-foreground">{failure.description}</p>
+        </div>
+      )}
+      {fields.length > 0 && failure?.kind !== "dead-link" && (
+        <LoadingButton
+          type="submit"
+          className="w-full h-11"
+          isPending={mutation.isPending}
+          loadingText="Submitting…"
+        >
+          <Send className="h-4 w-4" />
+          Submit
+        </LoadingButton>
+      )}
+    </form>
+  );
+}
+
 interface PublicIntakeTokenViewProps {
   intakeToken: string;
 }
@@ -238,20 +369,58 @@ interface PublicIntakeTokenViewProps {
 export function PublicIntakeTokenView({
   intakeToken,
 }: PublicIntakeTokenViewProps) {
+  const intakeFormQuery = useIntakeFormByToken(intakeToken);
+
+  const title = intakeFormQuery.data?.name ?? "Submit a request";
+
+  const handleRetryRead = useCallback(() => {
+    void intakeFormQuery.refetch();
+  }, [intakeFormQuery]);
+
+  function renderForm() {
+    if (intakeFormQuery.isPending) {
+      return (
+        <div className="space-y-4">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="space-y-1.5">
+              <div className="h-3 bg-muted rounded animate-pulse w-24" />
+              <div className="h-10 bg-muted rounded animate-pulse" />
+            </div>
+          ))}
+          <div className="h-11 bg-muted rounded animate-pulse" />
+        </div>
+      );
+    }
+    if (intakeFormQuery.isError) {
+      if (isMissingPublishedForm(intakeFormQuery.error))
+        return <IntakeTokenForm intakeToken={intakeToken} />;
+      return (
+        <PublicSurfacePanel
+          failure={classifyPublicReadFailure(intakeFormQuery.error)}
+          onRetry={handleRetryRead}
+        />
+      );
+    }
+    const form = intakeFormQuery.data;
+    if (!form || !form.publicToken)
+      return <IntakeTokenForm intakeToken={intakeToken} />;
+    return (
+      <DynamicIntakeFormInner fields={form.fields} token={form.publicToken} />
+    );
+  }
+
   return (
     <main className="min-h-dvh surface-soft flex items-start justify-center pt-8 sm:pt-12 px-4">
       <div className="w-full max-w-lg">
         <div className="gradient-brand text-white rounded-t-2xl px-6 py-8 text-center shadow-noir">
-          <h1 className="text-2xl font-semibold tracking-tight">
-            Submit a request
-          </h1>
+          <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
           <p className="text-white/80 text-sm mt-1">
             Fill in the details below and we&rsquo;ll review your request.
           </p>
         </div>
 
         <Card className="rounded-t-none border-t-0 px-6 py-6 shadow-noir">
-          <IntakeTokenForm intakeToken={intakeToken} />
+          {renderForm()}
         </Card>
       </div>
     </main>

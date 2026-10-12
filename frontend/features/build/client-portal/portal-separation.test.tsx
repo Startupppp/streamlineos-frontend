@@ -128,6 +128,7 @@ const mockUseUpdateMilestoneVisibility = jest.fn();
 const mockUsePortalProjects = jest.fn();
 const mockUsePortalProjectOverview = jest.fn();
 const mockUsePortalChangeRequests = jest.fn();
+const mockUsePortalPreviewRequests = jest.fn();
 
 const emptyInfiniteResult = () => ({
   items: [],
@@ -148,8 +149,24 @@ jest.mock("@/hooks/api/build/client-portal", () => ({
   usePortalProjects: () => mockUsePortalProjects(),
   usePortalProjectOverview: (...args: [number]) => mockUsePortalProjectOverview(...args),
   usePortalChangeRequests: (...args: [number]) => mockUsePortalChangeRequests(...args),
+  usePortalPreviewFiles: () => emptyChildPage(),
+  usePortalPreviewUpdates: () => emptyChildPage(),
+  usePortalPreviewRequests: (...args: [number]) => mockUsePortalPreviewRequests(...args),
   useSubmitPortalChangeRequest: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
 }));
+
+function emptyChildPage() {
+  return {
+    items: [],
+    isLoading: false,
+    isError: false,
+    error: null,
+    hasMore: false,
+    isFetchingNextPage: false,
+    fetchNextPage: jest.fn(),
+    refetch: jest.fn(),
+  };
+}
 
 jest.mock("@/components/ui/infinite-scroll-sentinel", () => ({
   InfiniteScrollSentinel: () => null,
@@ -321,16 +338,14 @@ describe("BSN-03-052 — internal management and external portal identity separa
       mockUseAccess.mockReturnValue(ACCESS_GRANTED_PORTAL_ONLY);
       mockUseCan.mockImplementation((p: string) => p === "build:portal:view");
       mockUsePortalProjectOverview.mockReturnValue(noData());
-      mockUsePortalChangeRequests.mockReturnValue({
-        data: undefined,
-        isLoading: false,
+      mockUsePortalPreviewRequests.mockReturnValue({
+        ...emptyChildPage(),
         isError: true,
         error: new ApiError("Build module not enabled", 402, "MODULE_NOT_ENABLED", {
           moduleKey: "build",
           reason: "not-in-plan",
           upgradePath: "/settings/billing",
         }),
-        refetch: jest.fn(),
       });
       render(<PortalDashboardPage projectId={1} />);
       expect(screen.queryByText(/Something went wrong/i)).not.toBeInTheDocument();
