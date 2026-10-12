@@ -174,7 +174,7 @@ describe("ManagedProductOverviewPage — preview links carry ids", () => {
     });
     render(<ManagedProductOverviewPage managedProductId={42} />);
     const link = screen.getByRole("link", { name: /Launch checkout/i });
-    expect(link).toHaveAttribute("href", "/build/managed-products/42/roadmap?horizon=now");
+    expect(link).toHaveAttribute("href", "/build/managed-products/42/roadmap?horizon=now&ret=%2Fbuild%2Fmanaged-products%2F42");
   });
 
   it("links an opportunity preview to the insights page with its id", () => {
@@ -197,7 +197,7 @@ describe("ManagedProductOverviewPage — preview links carry ids", () => {
     });
     render(<ManagedProductOverviewPage managedProductId={42} />);
     const link = screen.getByRole("link", { name: /Reduce churn/i });
-    expect(link).toHaveAttribute("href", "/build/managed-products/42/insights?opportunity=99");
+    expect(link).toHaveAttribute("href", "/build/managed-products/42/insights?opportunity=99&ret=%2Fbuild%2Fmanaged-products%2F42");
   });
 
   it("links a theme preview to the feedback page with the theme encoded", () => {

@@ -34,6 +34,7 @@ const BASE_OPPORTUNITY: DiscoveryGetTraceResponse["opportunity"] = {
 };
 
 const FULL_TRACE: DiscoveryGetTraceResponse = {
+  nextEvidenceCursor: null,
   evidence: [
     { id: 1, sourceKind: "feedbucket_submission", sourceId: 101, addedAt: "2026-09-01T00:00:00Z" },
     { id: 2, sourceKind: "feedbucket_submission", sourceId: 102, addedAt: "2026-09-02T00:00:00Z" },
@@ -85,6 +86,7 @@ const FULL_TRACE: DiscoveryGetTraceResponse = {
 
 const MINIMAL_TRACE: DiscoveryGetTraceResponse = {
   evidence: [],
+  nextEvidenceCursor: null,
   opportunity: { ...BASE_OPPORTUNITY, state: "identified", roadmapItemId: null },
   scores: { latest: null, count: 0 },
   decision: null,

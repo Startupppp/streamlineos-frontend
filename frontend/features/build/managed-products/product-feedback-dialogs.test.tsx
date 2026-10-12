@@ -43,6 +43,7 @@ function makeFilterState(overrides?: Partial<ReturnType<typeof useProductFeedbac
     page: 1,
     selected: new Set(),
     setSelected: jest.fn(),
+    managedProductId: 7,
     queryParams: { managedProductId: 7, page: 1, limit: 25 },
     bulkFilters: { managedProductId: 7 },
     typeValue: "all",

@@ -117,14 +117,14 @@ describe("ManagedProductOverviewPage — three distinct sections", () => {
     render(<ManagedProductOverviewPage managedProductId={42} />);
     expect(
       screen.getByRole("link", { name: /view feedback/i }),
-    ).toHaveAttribute("href", "/build/managed-products/42/feedback");
+    ).toHaveAttribute("href", "/build/managed-products/42/feedback?ret=%2Fbuild%2Fmanaged-products%2F42");
   });
 
   it("links delivery section to the roadmap page", () => {
     render(<ManagedProductOverviewPage managedProductId={42} />);
     expect(
       screen.getByRole("link", { name: /view roadmap/i }),
-    ).toHaveAttribute("href", "/build/managed-products/42/roadmap");
+    ).toHaveAttribute("href", "/build/managed-products/42/roadmap?ret=%2Fbuild%2Fmanaged-products%2F42");
   });
 });
 
@@ -346,7 +346,7 @@ describe("ManagedProductOverviewPage — overview href params match destination 
     const allLinks = screen.getAllByRole("link");
     const last30dLink = allLinks.find((l) => {
       const href = l.getAttribute("href") ?? "";
-      return href.startsWith("/build/managed-products/42/feedback?");
+      return href.startsWith("/build/managed-products/42/feedback?") && href.includes("from=");
     });
     expect(last30dLink).toBeDefined();
     const href = last30dLink!.getAttribute("href") ?? "";
