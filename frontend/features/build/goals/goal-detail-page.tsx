@@ -53,9 +53,11 @@ import {
   GoalOutcomesSection,
   GoalUpdatesTimeline,
 } from "./goal-detail-sections";
+import { useProductReturn } from "@/features/build/shared/product-return-href";
 
 export function GoalDetailPage({ goalId }: { goalId: number }) {
   const router = useRouter();
+  const { returnHref } = useProductReturn("/build/goals");
   const canManage = useCan("build:goals:manage");
 
   const { data: goal, isLoading, isError, error, refetch } = useGoal(goalId);
@@ -119,7 +121,7 @@ export function GoalDetailPage({ goalId }: { goalId: number }) {
 
   if (pageState.kind !== "ready") {
     return (
-      <PageWrapper title="Goal" backHref="/build/goals">
+      <PageWrapper title="Goal" backHref={returnHref ?? "/build/goals"}>
         <PageState
           resolution={pageState}
           loading={<GoalDetailSkeleton />}
@@ -154,7 +156,7 @@ export function GoalDetailPage({ goalId }: { goalId: number }) {
   return (
     <PageWrapper
       title={detail.title}
-      backHref="/build/goals"
+      backHref={returnHref ?? "/build/goals"}
       actions={
         canManage ? (
           <GoalDetailActions onEdit={handleOpenEdit} onDelete={handleOpenDelete} />

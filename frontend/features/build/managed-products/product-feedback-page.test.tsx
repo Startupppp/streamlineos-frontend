@@ -146,7 +146,7 @@ describe("ProductFeedbackPage — usePageState integration (BSN-01-012)", () => 
   });
 
   it("opens the registered project-scoped detail route from the pane for a row owned by the active product", () => {
-    mockUseSearchParams.mockReturnValueOnce(new URLSearchParams("submission=41"));
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("submission=41"));
     useFeedbucketSubmissions.mockReturnValue({
       ...EMPTY_FEEDBUCKET_RESULT,
       data: {
@@ -184,7 +184,7 @@ describe("ProductFeedbackPage — usePageState integration (BSN-01-012)", () => 
 
   it("hides the full-details action when the destination route permission is denied", () => {
     useCan.mockImplementation((permission: string) => permission !== "feedbucket:widgets:view");
-    mockUseSearchParams.mockReturnValueOnce(new URLSearchParams("submission=41"));
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("submission=41"));
     useFeedbucketSubmissions.mockReturnValue({
       ...EMPTY_FEEDBUCKET_RESULT,
       data: {

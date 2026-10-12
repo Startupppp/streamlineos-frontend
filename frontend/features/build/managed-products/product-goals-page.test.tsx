@@ -299,28 +299,28 @@ describe("ProductGoalsPage — outcome params are validated before the request (
   });
 
   it("drops a health value the backend list schema does not accept so the read cannot 400", () => {
-    mockUseSearchParams.mockReturnValueOnce(new URLSearchParams("health=urgent"));
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("health=urgent"));
     render(<ProductGoalsPage managedProductId={7} />);
     const [callParams] = useGoalsPage.mock.calls[0] as [Record<string, unknown>];
     expect(callParams).not.toHaveProperty("health");
   });
 
   it("drops a scope value the backend list schema does not accept so the read cannot 400", () => {
-    mockUseSearchParams.mockReturnValueOnce(new URLSearchParams("scope=product"));
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("scope=product"));
     render(<ProductGoalsPage managedProductId={7} />);
     const [callParams] = useGoalsPage.mock.calls[0] as [Record<string, unknown>];
     expect(callParams).not.toHaveProperty("scope");
   });
 
   it("drops a due value that is not an ISO date so the read cannot 400", () => {
-    mockUseSearchParams.mockReturnValueOnce(new URLSearchParams("due=overdue"));
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("due=overdue"));
     render(<ProductGoalsPage managedProductId={7} />);
     const [callParams] = useGoalsPage.mock.calls[0] as [Record<string, unknown>];
     expect(callParams).not.toHaveProperty("due");
   });
 
   it("forwards the scope sentinel as absent so the default all-goals read is unfiltered", () => {
-    mockUseSearchParams.mockReturnValueOnce(new URLSearchParams("scope=all"));
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("scope=all"));
     render(<ProductGoalsPage managedProductId={7} />);
     const [callParams] = useGoalsPage.mock.calls[0] as [Record<string, unknown>];
     expect(callParams).not.toHaveProperty("scope");

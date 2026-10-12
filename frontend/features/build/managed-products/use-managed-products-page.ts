@@ -14,6 +14,7 @@ import { buildManagedProductColumns } from "./managed-product-table-columns";
 import { PAGE_SIZE, FILTER_DEFINITIONS, type ManagedProductViewMode } from "./managed-products-filter-constants";
 import { useManagedProductFilterOptions } from "./use-managed-product-filter-options";
 import { useManagedProductMutations } from "./use-managed-product-mutations";
+import { buildProductReturnParam } from "@/features/build/shared/product-return-href";
 
 function positiveId(value: string | undefined): string | undefined {
   if (!value || value === BUILD_FILTER_ALL || !/^\d+$/.test(value)) return undefined;
@@ -150,7 +151,7 @@ export function useManagedProductsPage() {
 
   const makeProductHref = useCallback(
     (id: number) => {
-      const ret = encodeURIComponent(`${pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ""}`);
+      const ret = buildProductReturnParam(pathname, searchParams.toString());
       return `/build/managed-products/${id}?ret=${ret}`;
     },
     [pathname, searchParams],

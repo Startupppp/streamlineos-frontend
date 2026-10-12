@@ -29,6 +29,7 @@ import {
   insightTabFromParam,
   insightViewFromParam,
 } from "./product-insights-tabs";
+import { useProductReturn } from "@/features/build/shared/product-return-href";
 
 const RANGE_OPTIONS = [
   { label: "All time", value: "all" },
@@ -58,6 +59,7 @@ interface ProductInsightsPageProps {
 export function ProductInsightsPage({
   managedProductId,
 }: ProductInsightsPageProps) {
+  const { handleBack } = useProductReturn(`/build/managed-products/${managedProductId}`);
   const listFilters = useBuildListFilters({
     filters: INSIGHTS_FILTER_DEFINITIONS,
     withSearch: false,
@@ -118,6 +120,7 @@ export function ProductInsightsPage({
       <PageWrapper
         title="Insights"
         subtitle="Customer signals, planned work, and delivery progress"
+        onBack={handleBack}
         contentClassName={MANAGED_PRODUCT_DETAIL_CONTENT_CLASS}
         actions={
           view === "overview" ? (

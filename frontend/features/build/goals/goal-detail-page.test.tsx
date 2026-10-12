@@ -18,7 +18,8 @@ jest.mock("@/hooks/api/entitlements", () => ({
 }));
 
 jest.mock("next/navigation", () => ({
-  useRouter: () => ({ push: jest.fn() }),
+  useRouter: () => ({ push: jest.fn(), back: jest.fn() }),
+  useSearchParams: () => new URLSearchParams(""),
 }));
 
 jest.mock("@/components/ui/page-wrapper", () => ({

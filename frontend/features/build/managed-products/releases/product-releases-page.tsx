@@ -27,6 +27,7 @@ import { ReleaseArchivedSection } from "./release-archived-section";
 import { ReleaseShippedTimeline } from "./release-shipped-timeline";
 import { ReleaseUpcomingSection } from "./release-upcoming-section";
 import { useProductReleasesPage } from "./use-product-releases-page";
+import { useProductReturn } from "@/features/build/shared/product-return-href";
 
 interface ProductReleasesPageProps {
   managedProductId: number;
@@ -39,6 +40,7 @@ const VIEW_OPTIONS = [
 
 export function ProductReleasesPage({ managedProductId }: ProductReleasesPageProps) {
   const page = useProductReleasesPage(managedProductId);
+  const { handleBack } = useProductReturn(`/build/managed-products/${managedProductId}`);
   const { groups, hasMore, lifecycleTarget, handleCreate } = page;
   const now = useMemo(() => new Date(), []);
 
@@ -58,6 +60,7 @@ export function ProductReleasesPage({ managedProductId }: ProductReleasesPagePro
       <PageWrapper
         title="Releases"
         subtitle={releasesSubtitle(groups, hasMore)}
+        onBack={handleBack}
         contentClassName={MANAGED_PRODUCT_DETAIL_CONTENT_CLASS}
         actions={<BuildHeaderActions actions={headerActions} />}
         filters={

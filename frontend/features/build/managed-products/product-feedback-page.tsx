@@ -37,6 +37,7 @@ import { useRouteToIntake } from "./feedback/route-to-intake-dialog";
 import { ProductFeedbackFilters } from "./product-feedback-filters";
 import { ProductFeedbackDialogs } from "./product-feedback-dialogs";
 import { CustomerImpactPanel } from "./customer-impact-panel";
+import { useProductReturn } from "@/features/build/shared/product-return-href";
 
 function resolveRowClassName(): string {
   return "cursor-pointer";
@@ -50,6 +51,7 @@ export function ProductFeedbackPage({
   managedProductId,
 }: ProductFeedbackPageProps) {
   const productQuery = useManagedProduct(managedProductId);
+  const { handleBack } = useProductReturn(`/build/managed-products/${managedProductId}`);
   const canOpenSubmissionDetail = useCan("feedbucket:widgets:view");
   const canUpdateSubmission = useCan("feedbucket:submissions:update");
   const canDeleteSubmission = useCan("feedbucket:submissions:delete");
@@ -161,6 +163,7 @@ export function ProductFeedbackPage({
       <PageWrapper
         title="Feedback"
         subtitle="Inbox for widgets and captures linked to this product"
+        onBack={handleBack}
         contentClassName={MANAGED_PRODUCT_DETAIL_CONTENT_CLASS}
         actions={
           canCapture ? (

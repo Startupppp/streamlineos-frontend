@@ -78,7 +78,7 @@ jest.mock("./feedback/feedback-pane", () => ({
 
 describe("ProductFeedbackPage — new filter params (BSN-01-FB-FILTERS-V2)", () => {
   it("forwards sourceChannel from URL to useFeedbucketSubmissions", () => {
-    mockUseSearchParams.mockReturnValueOnce(new URLSearchParams("sourceChannel=email"));
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("sourceChannel=email"));
     useFeedbucketSubmissions.mockReturnValue(EMPTY_FEEDBUCKET_RESULT);
     render(<ProductFeedbackPage managedProductId={7} />);
     const [callParams] = useFeedbucketSubmissions.mock.calls[0] as [Record<string, unknown>];
@@ -93,7 +93,7 @@ describe("ProductFeedbackPage — new filter params (BSN-01-FB-FILTERS-V2)", () 
   });
 
   it("maps theme=untagged URL param to empty-string theme array for server-side untagged filtering", () => {
-    mockUseSearchParams.mockReturnValueOnce(new URLSearchParams("theme=untagged"));
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("theme=untagged"));
     useFeedbucketSubmissions.mockReturnValue(EMPTY_FEEDBUCKET_RESULT);
     render(<ProductFeedbackPage managedProductId={7} />);
     const [callParams] = useFeedbucketSubmissions.mock.calls[0] as [Record<string, unknown>];
@@ -101,7 +101,7 @@ describe("ProductFeedbackPage — new filter params (BSN-01-FB-FILTERS-V2)", () 
   });
 
   it("forwards sentiment from URL to useFeedbucketSubmissions", () => {
-    mockUseSearchParams.mockReturnValueOnce(new URLSearchParams("sentiment=positive"));
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("sentiment=positive"));
     useFeedbucketSubmissions.mockReturnValue(EMPTY_FEEDBUCKET_RESULT);
     render(<ProductFeedbackPage managedProductId={7} />);
     const [callParams] = useFeedbucketSubmissions.mock.calls[0] as [Record<string, unknown>];
@@ -109,7 +109,7 @@ describe("ProductFeedbackPage — new filter params (BSN-01-FB-FILTERS-V2)", () 
   });
 
   it("forwards consentStatus from URL to useFeedbucketSubmissions", () => {
-    mockUseSearchParams.mockReturnValueOnce(new URLSearchParams("consentStatus=denied"));
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("consentStatus=denied"));
     useFeedbucketSubmissions.mockReturnValue(EMPTY_FEEDBUCKET_RESULT);
     render(<ProductFeedbackPage managedProductId={7} />);
     const [callParams] = useFeedbucketSubmissions.mock.calls[0] as [Record<string, unknown>];
@@ -117,7 +117,7 @@ describe("ProductFeedbackPage — new filter params (BSN-01-FB-FILTERS-V2)", () 
   });
 
   it("forwards linkedToOpportunity from URL to useFeedbucketSubmissions", () => {
-    mockUseSearchParams.mockReturnValueOnce(new URLSearchParams("linkedToOpportunity=true"));
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("linkedToOpportunity=true"));
     useFeedbucketSubmissions.mockReturnValue(EMPTY_FEEDBUCKET_RESULT);
     render(<ProductFeedbackPage managedProductId={7} />);
     const [callParams] = useFeedbucketSubmissions.mock.calls[0] as [Record<string, unknown>];
@@ -127,7 +127,7 @@ describe("ProductFeedbackPage — new filter params (BSN-01-FB-FILTERS-V2)", () 
 
 describe("ProductFeedbackPage — filteredEmpty vs empty (BSN-01-FB-EMPTY)", () => {
   it("shows Clear filters button in empty state when filters are active", () => {
-    mockUseSearchParams.mockReturnValueOnce(new URLSearchParams("type=bug"));
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("type=bug"));
     usePageState.mockReturnValue({ kind: "empty" });
     useFeedbucketSubmissions.mockReturnValue({ ...EMPTY_FEEDBUCKET_RESULT, data: { data: [], total: 0 } });
     render(<ProductFeedbackPage managedProductId={7} />);
@@ -161,7 +161,7 @@ describe("ProductFeedbackPage — capture sheet (BSN-01-FB-CAPTURE)", () => {
 
 describe("ProductFeedbackPage — feedback pane deep link (BSN-01-FB-PANE)", () => {
   it("opens the feedback pane when ?submission=id is in the URL", () => {
-    mockUseSearchParams.mockReturnValueOnce(new URLSearchParams("submission=42"));
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("submission=42"));
     useFeedbucketSubmissions.mockReturnValue(EMPTY_FEEDBUCKET_RESULT);
     render(<ProductFeedbackPage managedProductId={7} />);
     expect(screen.getByTestId("feedback-pane")).toHaveAttribute("data-submission-id", "42");
@@ -198,7 +198,7 @@ describe("ProductFeedbackPage — feedback pane deep link (BSN-01-FB-PANE)", () 
   });
 
   it("closes the pane without dropping the other filters", () => {
-    mockUseSearchParams.mockReturnValueOnce(new URLSearchParams("q=keep-me&submission=42"));
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("q=keep-me&submission=42"));
     useFeedbucketSubmissions.mockReturnValue(EMPTY_FEEDBUCKET_RESULT);
     render(<ProductFeedbackPage managedProductId={7} />);
     fireEvent.click(screen.getByRole("button", { name: "Close pane" }));

@@ -33,6 +33,10 @@ import {
 import { ProductGoalsGridSkeleton } from "./managed-product-page-skeletons";
 import { LinkExistingGoalDialog } from "./link-existing-goal-dialog";
 import { ProductGoalsViewBody } from "./product-goals-view-body";
+import {
+  buildProductReturnParam,
+  useProductReturn,
+} from "@/features/build/shared/product-return-href";
 import type { GoalListItem } from "@/hooks/api/goals";
 
 const VIEW_PARAM = "pg_view";
@@ -51,6 +55,7 @@ export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { handleBack } = useProductReturn(`/build/managed-products/${managedProductId}`);
   const [, startTransition] = useTransition();
   const rawView = searchParams.get(VIEW_PARAM);
   const viewMode: GoalsViewMode =
@@ -114,7 +119,7 @@ export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
 
   const handleGoalRowClick = useCallback(
     (goal: GoalListItem) => {
-      const ret = encodeURIComponent(`${pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ""}`);
+      const ret = buildProductReturnParam(pathname, searchParams.toString());
       router.push(`/build/goals/${goal.id}?ret=${ret}`);
     },
     [router, pathname, searchParams],
@@ -160,6 +165,7 @@ export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
     <PageWrapper
       title="Goals & OKRs"
       subtitle="Objectives linked to this product"
+      onBack={handleBack}
       contentClassName={MANAGED_PRODUCT_DETAIL_CONTENT_CLASS}
       filters={<GoalsListToolbar listFilters={listFilters} searchInputRef={searchInputRef} trailing={viewToggle} />}
       actions={<BuildHeaderActions actions={createActions} />}

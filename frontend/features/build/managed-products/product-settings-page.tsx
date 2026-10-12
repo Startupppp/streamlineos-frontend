@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -45,6 +44,7 @@ import {
   PRODUCT_SETTINGS_TABS,
   productSettingsTabFromParam,
 } from "./product-settings-tabs";
+import { useProductReturn } from "@/features/build/shared/product-return-href";
 
 interface ProductSettingsPageProps {
   managedProductId: number;
@@ -375,7 +375,6 @@ function ProductSettingsForm({ managedProductId }: ProductSettingsPageProps) {
 export function ProductSettingsPage({
   managedProductId,
 }: ProductSettingsPageProps) {
-  const router = useRouter();
   const { value, setValue } = useBuildListFilters({
     withSearch: false,
     filters: SETTINGS_FILTER_DEFINITIONS,
@@ -388,13 +387,7 @@ export function ProductSettingsPage({
     [setValue],
   );
 
-  const handleBack = useCallback(() => {
-    if (window.history.length > 1) {
-      router.back();
-    } else {
-      router.push(`/build/managed-products/${managedProductId}`);
-    }
-  }, [router, managedProductId]);
+  const { handleBack } = useProductReturn(`/build/managed-products/${managedProductId}`);
 
   return (
     <DirtyStateProvider>

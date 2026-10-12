@@ -47,6 +47,7 @@ import { RoadmapListView } from "./roadmap/roadmap-list-view";
 import { RoadmapFiltersBar } from "./roadmap/roadmap-filters-bar";
 import { RoadmapPreviewSheet } from "./roadmap/roadmap-preview-sheet";
 import { RoadmapPublicationPanel } from "./roadmap/roadmap-publication-panel";
+import { useProductReturn } from "@/features/build/shared/product-return-href";
 import type { RoadmapHorizon } from "@/types/projects";
 
 interface ProductRoadmapPageProps {
@@ -57,6 +58,7 @@ export function ProductRoadmapPage({
   managedProductId,
 }: ProductRoadmapPageProps) {
   const canManage = useCan("build:roadmap:manage");
+  const { handleBack } = useProductReturn(`/build/managed-products/${managedProductId}`);
   const listFilters = useBuildListFilters({ filters: ROADMAP_FILTER_DEFS });
   const pager = useBuildCursorPager(listFilters.resetKey);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
@@ -251,6 +253,7 @@ export function ProductRoadmapPage({
     <PageWrapper
       title="Roadmap"
       subtitle="Product roadmap items"
+      onBack={handleBack}
       contentClassName={MANAGED_PRODUCT_DETAIL_CONTENT_CLASS}
       noInternalScroll={viewMode === "board" || viewMode === "list"}
       actions={

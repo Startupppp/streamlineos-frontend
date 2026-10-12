@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { CalendarCheck, Link2, Lightbulb, MessageSquare, Pencil, Target } from "lucide-react";
 import { toast } from "sonner";
 import { useCan } from "@/hooks/api/access";
@@ -7,6 +7,10 @@ import { useUpdateManagedProduct } from "@/hooks/api/build/managed-product-mutat
 import { getErrorMessage } from "@/lib/get-error-message";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { BUILD_FILTER_ALL, useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
+import {
+  buildProductReturnParam,
+  useProductReturn,
+} from "@/features/build/shared/product-return-href";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import { useManagedProductSummary } from "@/hooks/api/build/managed-product-summary";
 import { useProjectTeams } from "@/hooks/api/build/teams";
@@ -90,19 +94,9 @@ function readableToken(value: string): string {
 }
 
 export function useManagedProductOverview(managedProductId: number) {
-  const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const retParam = searchParams.get("ret");
-  const handleBack = useCallback(() => {
-    if (retParam) {
-      router.push(decodeURIComponent(retParam));
-    } else if (window.history.length > 1) {
-      router.back();
-    } else {
-      router.push("/build/managed-products");
-    }
-  }, [router, retParam]);
+  const { handleBack } = useProductReturn("/build/managed-products");
   const [editOpen, setEditOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const [linkGoalOpen, setLinkGoalOpen] = useState(false);
@@ -222,10 +216,10 @@ export function useManagedProductOverview(managedProductId: number) {
     [canEdit, product],
   );
 
-  const overviewRet = useMemo(() => {
-    const qs = searchParams.toString();
-    return encodeURIComponent(`${pathname}${qs ? `?${qs}` : ""}`);
-  }, [pathname, searchParams]);
+  const overviewRet = useMemo(
+    () => buildProductReturnParam(pathname, searchParams.toString()),
+    [pathname, searchParams],
+  );
 
   const editActions = useMemo(
     () =>

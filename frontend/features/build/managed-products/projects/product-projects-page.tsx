@@ -20,6 +20,7 @@ import { PRODUCT_PROJECT_SKELETON_HEADERS } from "@/features/build/managed-produ
 import { useProductProjectsPage, type LinkedProjectRow } from "./use-product-projects-page";
 import { buildProductProjectsColumns, ProductProjectMobileCard } from "./product-projects-table";
 import { ProductProjectsToolbar } from "./product-projects-toolbar";
+import { useProductReturn } from "@/features/build/shared/product-return-href";
 import type { ProjectListItem } from "@/types/projects";
 
 const LinkExistingProjectDialog = dynamic(
@@ -44,6 +45,7 @@ interface ProductProjectsPageProps {
 
 export function ProductProjectsPage({ managedProductId }: ProductProjectsPageProps) {
   const router = useRouter();
+  const { handleBack } = useProductReturn(`/build/managed-products/${managedProductId}`);
   const page = useProductProjectsPage({ managedProductId });
   const [previewProject, setPreviewProject] = useState<{ id: number; name: string } | null>(null);
 
@@ -101,6 +103,7 @@ export function ProductProjectsPage({ managedProductId }: ProductProjectsPagePro
     <PageWrapper
       title="Linked Projects"
       subtitle="Projects contributing to this product"
+      onBack={handleBack}
       contentClassName={MANAGED_PRODUCT_DETAIL_CONTENT_CLASS}
       filters={
         <ProductProjectsToolbar page={page} />

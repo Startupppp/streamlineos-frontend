@@ -54,7 +54,7 @@ jest.mock("@/components/shared/submission-bulk-toolbar", () => ({
 
 describe("ProductFeedbackPage — URL-backed filter params (BSN-01-FB-FILTERS)", () => {
   it("forwards assigneeId from URL to useFeedbucketSubmissions so the query is owner-filtered server-side", () => {
-    mockUseSearchParams.mockReturnValueOnce(new URLSearchParams("assigneeId=user-99"));
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("assigneeId=user-99"));
     useFeedbucketSubmissions.mockReturnValue(EMPTY_FEEDBUCKET_RESULT);
     render(<ProductFeedbackPage managedProductId={7} />);
     const [callParams] = useFeedbucketSubmissions.mock.calls[0] as [Record<string, unknown>];
@@ -69,7 +69,7 @@ describe("ProductFeedbackPage — URL-backed filter params (BSN-01-FB-FILTERS)",
   });
 
   it("forwards duplicate=true from URL to useFeedbucketSubmissions so the computed predicate runs server-side", () => {
-    mockUseSearchParams.mockReturnValueOnce(new URLSearchParams("duplicate=true"));
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("duplicate=true"));
     useFeedbucketSubmissions.mockReturnValue(EMPTY_FEEDBUCKET_RESULT);
     render(<ProductFeedbackPage managedProductId={7} />);
     const [callParams] = useFeedbucketSubmissions.mock.calls[0] as [Record<string, unknown>];
@@ -77,7 +77,7 @@ describe("ProductFeedbackPage — URL-backed filter params (BSN-01-FB-FILTERS)",
   });
 
   it("forwards duplicate=false from URL to useFeedbucketSubmissions so non-duplicate filtering runs server-side", () => {
-    mockUseSearchParams.mockReturnValueOnce(new URLSearchParams("duplicate=false"));
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("duplicate=false"));
     useFeedbucketSubmissions.mockReturnValue(EMPTY_FEEDBUCKET_RESULT);
     render(<ProductFeedbackPage managedProductId={7} />);
     const [callParams] = useFeedbucketSubmissions.mock.calls[0] as [Record<string, unknown>];
@@ -92,7 +92,7 @@ describe("ProductFeedbackPage — URL-backed filter params (BSN-01-FB-FILTERS)",
   });
 
   it("forwards from bound from URL to useFeedbucketSubmissions so old submissions are excluded server-side", () => {
-    mockUseSearchParams.mockReturnValueOnce(new URLSearchParams("from=2026-01-01"));
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("from=2026-01-01"));
     useFeedbucketSubmissions.mockReturnValue(EMPTY_FEEDBUCKET_RESULT);
     render(<ProductFeedbackPage managedProductId={7} />);
     const [callParams] = useFeedbucketSubmissions.mock.calls[0] as [Record<string, unknown>];
@@ -100,7 +100,7 @@ describe("ProductFeedbackPage — URL-backed filter params (BSN-01-FB-FILTERS)",
   });
 
   it("forwards to bound from URL to useFeedbucketSubmissions so future submissions are excluded server-side", () => {
-    mockUseSearchParams.mockReturnValueOnce(new URLSearchParams("to=2026-06-01"));
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("to=2026-06-01"));
     useFeedbucketSubmissions.mockReturnValue(EMPTY_FEEDBUCKET_RESULT);
     render(<ProductFeedbackPage managedProductId={7} />);
     const [callParams] = useFeedbucketSubmissions.mock.calls[0] as [Record<string, unknown>];
@@ -108,7 +108,7 @@ describe("ProductFeedbackPage — URL-backed filter params (BSN-01-FB-FILTERS)",
   });
 
   it("omits whitespace segment, illegal sentiment, and a blank assignee so they do not filter the list", () => {
-    mockUseSearchParams.mockReturnValueOnce(
+    mockUseSearchParams.mockReturnValue(
       new URLSearchParams("segment=%20%20&sentiment=nope&assigneeId=%20%20&crmOrganizationId=-1"),
     );
     useFeedbucketSubmissions.mockReturnValue(EMPTY_FEEDBUCKET_RESULT);
@@ -121,7 +121,7 @@ describe("ProductFeedbackPage — URL-backed filter params (BSN-01-FB-FILTERS)",
   });
 
   it("omits a whitespace theme so the submissions request is not rejected", () => {
-    mockUseSearchParams.mockReturnValueOnce(new URLSearchParams("theme=%20%20"));
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("theme=%20%20"));
     useFeedbucketSubmissions.mockReturnValue(EMPTY_FEEDBUCKET_RESULT);
     render(<ProductFeedbackPage managedProductId={7} />);
     const [callParams] = useFeedbucketSubmissions.mock.calls[0] as [Record<string, unknown>];
@@ -129,7 +129,7 @@ describe("ProductFeedbackPage — URL-backed filter params (BSN-01-FB-FILTERS)",
   });
 
   it("omits a reversed date range and hides unfiltered rows", () => {
-    mockUseSearchParams.mockReturnValueOnce(new URLSearchParams("from=2026-12-31&to=2020-01-01"));
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("from=2026-12-31&to=2020-01-01"));
     useFeedbucketSubmissions.mockReturnValue({
       ...EMPTY_FEEDBUCKET_RESULT,
       data: { data: [{ id: 1, message: "Should stay hidden" }], total: 1 },
@@ -142,7 +142,7 @@ describe("ProductFeedbackPage — URL-backed filter params (BSN-01-FB-FILTERS)",
   });
 
   it("omits a non-date from bound so the submissions request is not rejected", () => {
-    mockUseSearchParams.mockReturnValueOnce(new URLSearchParams("from=not-a-date"));
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("from=not-a-date"));
     useFeedbucketSubmissions.mockReturnValue(EMPTY_FEEDBUCKET_RESULT);
     render(<ProductFeedbackPage managedProductId={7} />);
     const [callParams] = useFeedbucketSubmissions.mock.calls[0] as [Record<string, unknown>];

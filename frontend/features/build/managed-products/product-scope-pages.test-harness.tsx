@@ -517,6 +517,7 @@ export {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockUseSearchParams.mockReturnValue(new URLSearchParams());
   useCan.mockReturnValue(true);
   usePageState.mockReturnValue({ kind: "ready" });
   const { useGoals: mockUseGoals }: { useGoals: jest.Mock } = jest.requireMock("@/hooks/api/goals");
