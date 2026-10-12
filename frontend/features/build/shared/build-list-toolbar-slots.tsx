@@ -22,6 +22,7 @@ export function ToolbarFilterSlot({
     <div
       data-slot="build-toolbar-filter"
       data-filter-id={filter.id}
+      data-active={filter.active ? "true" : undefined}
       className={cn(
         "min-w-0 w-auto basis-auto transition-[flex-basis,width] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]",
         row

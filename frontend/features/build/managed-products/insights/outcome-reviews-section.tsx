@@ -24,7 +24,9 @@ import {
 } from "@/components/ui/select";
 import { EntityFormDialog } from "@/components/shared/entity-form-dialog";
 import { FIELD_CONTROL_CLASS } from "@/components/ui/field-control";
+import { TablePagination } from "@/components/ui/table-pagination";
 import { useCan } from "@/hooks/api/access";
+import { ErrorState } from "@/components/shared/error-state";
 import type { DiscoveryReviewsListOutcomeReviewsResponse } from "@/contracts/build-contracts.generated";
 import type {
   CreateOutcomeReviewInput,
@@ -57,8 +59,15 @@ interface OutcomeReviewsSectionProps {
   managedProductId: number;
   reviews: OutcomeReviewRow[];
   isLoading: boolean;
+  isError: boolean;
+  onRetry: () => void;
+  hasMore: boolean;
+  hasPreviousPage: boolean;
+  pageNumber: number;
+  onNextPage: () => void;
+  onPreviousPage: () => void;
   onCreate: (data: CreateOutcomeReviewInput, onCreated: () => void) => void;
-  onComplete: (reviewId: number, data: UpdateOutcomeReviewInput) => void;
+  onComplete: (reviewId: number, data: UpdateOutcomeReviewInput, onCompleted: () => void) => void;
   onDelete: (reviewId: number) => void;
   isCreating: boolean;
   isUpdating: boolean;
@@ -181,6 +190,13 @@ export function OutcomeReviewsSection({
   managedProductId,
   reviews,
   isLoading,
+  isError,
+  onRetry,
+  hasMore,
+  hasPreviousPage,
+  pageNumber,
+  onNextPage,
+  onPreviousPage,
   onCreate,
   onComplete,
   onDelete,
@@ -206,8 +222,7 @@ export function OutcomeReviewsSection({
   const handleCompleteReview = useCallback(
     (data: UpdateOutcomeReviewInput) => {
       if (completingId === null) return;
-      onComplete(completingId, data);
-      setCompletingId(null);
+      onComplete(completingId, data, () => setCompletingId(null));
     },
     [completingId, onComplete],
   );
@@ -237,7 +252,15 @@ export function OutcomeReviewsSection({
 
       {isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
 
-      {!isLoading && reviews.length === 0 && (
+      {isError && (
+        <ErrorState
+          title="Could not load outcome reviews"
+          onRetry={onRetry}
+          compact
+        />
+      )}
+
+      {!isLoading && !isError && reviews.length === 0 && (
         <div
           className="rounded-xl border border-dashed border-border bg-card px-4 py-6"
           data-testid="outcome-reviews-empty"
@@ -261,6 +284,19 @@ export function OutcomeReviewsSection({
             />
           ))}
         </ul>
+      )}
+
+      {(reviews.length > 0 || hasPreviousPage) && (
+        <TablePagination
+          mode="cursor"
+          rowCount={reviews.length}
+          pageNumber={pageNumber}
+          hasMore={hasMore}
+          hasPrevious={hasPreviousPage}
+          onNext={onNextPage}
+          onPrevious={onPreviousPage}
+          hideOnSinglePage
+        />
       )}
 
       {completingReview !== null && (

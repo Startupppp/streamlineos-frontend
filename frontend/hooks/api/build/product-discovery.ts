@@ -196,6 +196,7 @@ export interface OutcomeReviewsParams {
   releaseId?: string;
   dueBefore?: string;
   dueAfter?: string;
+  cursor?: string;
 }
 
 export function useOutcomeReviews(
@@ -212,6 +213,7 @@ export function useOutcomeReviews(
   if (params?.releaseId) qp["releaseId"] = params.releaseId;
   if (params?.dueBefore) qp["dueBefore"] = params.dueBefore;
   if (params?.dueAfter) qp["dueAfter"] = params.dueAfter;
+  if (params?.cursor) qp["cursor"] = params.cursor;
   const hasFilters = Object.keys(qp).length > 0;
   return useQuery({
     queryKey: buildWorkQueryKeys.projects.managedProducts.outcomeReviews(

@@ -139,7 +139,7 @@ export function InsightDeliveryPanel({
             value={insights?.projectsByStatus.active ?? 0}
             icon={FolderOpen}
             tone="emerald"
-            href={productHref(managedProductId, "projects?filterStatus=ACTIVE")}
+            href={productHref(managedProductId, "projects?pp_status=ACTIVE")}
           />
           <StatCard
             label="Completed"
@@ -148,7 +148,7 @@ export function InsightDeliveryPanel({
             tone="blue"
             href={productHref(
               managedProductId,
-              "projects?filterStatus=COMPLETED",
+              "projects?pp_status=COMPLETED",
             )}
           />
         </StatCardGrid>

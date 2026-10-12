@@ -13,8 +13,13 @@ const ownerOptions = [
   { value: "all", label: "All owners" },
   { value: "7", label: "Ada" },
 ];
+const themeOptions = [
+  { value: "all", label: "All themes" },
+  { value: "Performance", label: "Performance" },
+  { value: "Reliability", label: "Reliability" },
+];
 
-function renderBar() {
+function renderBar(overrides: Partial<React.ComponentProps<typeof OpportunitiesFilterBar>> = {}) {
   return render(
     <OpportunitiesFilterBar
       stateFilter="declined"
@@ -33,6 +38,7 @@ function renderBar() {
       onConfidenceChange={jest.fn()}
       onEvidenceAgeChange={jest.fn()}
       onScoreMinChange={jest.fn()}
+      {...overrides}
     />,
   );
 }
@@ -62,5 +68,69 @@ describe("OpportunitiesFilterBar", () => {
       "md:max-w-40",
     );
     expect(screen.getByRole("button", { name: /^Filters/ })).toHaveClass("inline-flex");
+  });
+
+  it("does not render the theme filter when themeOptions is absent so the bar stays clean with no themes loaded", () => {
+    const { container } = renderBar();
+    expect(container.querySelector("[data-filter-id=oppTheme]")).toBeNull();
+  });
+
+  it("does not render the theme filter when themeOptions has only one entry so the all-themes sentinel is not a useful control", () => {
+    const { container } = renderBar({
+      themeOptions: [{ value: "all", label: "All themes" }],
+      onThemeChange: jest.fn(),
+    });
+    expect(container.querySelector("[data-filter-id=oppTheme]")).toBeNull();
+  });
+
+  it("renders the theme filter when themeOptions has at least two entries and onThemeChange is provided", () => {
+    const { container } = renderBar({
+      themeFilter: "all",
+      themeOptions,
+      onThemeChange: jest.fn(),
+    });
+    expect(container.querySelector("[data-filter-id=oppTheme]")).not.toBeNull();
+  });
+
+  it("marks theme filter active when themeFilter is a non-all value", () => {
+    const { container } = renderBar({
+      themeFilter: "Performance",
+      themeOptions,
+      onThemeChange: jest.fn(),
+    });
+    const themeCell = container.querySelector("[data-filter-id=oppTheme]");
+    expect(themeCell?.getAttribute("data-active")).toBe("true");
+  });
+
+  it("does not render the scoreMax filter when onScoreMaxChange is absent", () => {
+    const { container } = renderBar();
+    expect(container.querySelector("[data-filter-id=oppScoreMax]")).toBeNull();
+  });
+
+  it("renders the scoreMax filter when onScoreMaxChange is provided", () => {
+    const { container } = renderBar({
+      scoreMaxFilter: "all",
+      onScoreMaxChange: jest.fn(),
+    });
+    expect(container.querySelector("[data-filter-id=oppScoreMax]")).not.toBeNull();
+  });
+
+  it("marks scoreMax filter active when scoreMaxFilter is a non-all value", () => {
+    const { container } = renderBar({
+      scoreMaxFilter: "100",
+      onScoreMaxChange: jest.fn(),
+    });
+    const maxCell = container.querySelector("[data-filter-id=oppScoreMax]");
+    expect(maxCell?.getAttribute("data-active")).toBe("true");
+  });
+
+  it("shows both scoreMin and scoreMax filters together when both are provided", () => {
+    const { container } = renderBar({
+      scoreMinFilter: "25",
+      scoreMaxFilter: "100",
+      onScoreMaxChange: jest.fn(),
+    });
+    expect(container.querySelector("[data-filter-id=oppScoreMin]")).not.toBeNull();
+    expect(container.querySelector("[data-filter-id=oppScoreMax]")).not.toBeNull();
   });
 });

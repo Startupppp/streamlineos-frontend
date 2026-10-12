@@ -18,6 +18,7 @@ import { CompareDrawer, COMPARE_MAX } from "./compare-drawer";
 import { OutcomeReviewsSection } from "./outcome-reviews-section";
 import { OpportunityCreateButton } from "./opportunity-create-sheet";
 import { useOpportunityDiscoveryFilters } from "./use-opportunity-discovery-filters";
+import { useCursorPageStack } from "@/hooks/common/use-cursor-page-stack";
 import type { CreateOutcomeReviewInput, UpdateOutcomeReviewInput } from "@/hooks/api/build/outcome-review-mutations";
 
 interface ProductDiscoverySectionProps {
@@ -27,18 +28,22 @@ interface ProductDiscoverySectionProps {
 export function ProductDiscoverySection({ managedProductId }: ProductDiscoverySectionProps) {
   const {
     pageNumber,
-    setPageNumber,
-    setCursor,
+    hasPreviousPage,
+    goToNextPage,
+    goToPreviousPage,
     stateFilter,
     sortFilter,
     themePeriod,
     segmentFilter,
     ownerFilter,
+    themeFilter,
     confidenceFilter,
     evidenceAgeFilter,
     scoreMinFilter,
+    scoreMaxFilter,
     segmentOptions,
     ownerOptions,
+    themeOptions,
     oppQueryParams,
     themeParams,
     isFiltered,
@@ -47,16 +52,23 @@ export function ProductDiscoverySection({ managedProductId }: ProductDiscoverySe
     handleThemePeriodChange,
     handleSegmentChange,
     handleOwnerChange,
+    handleThemeChange,
     handleConfidenceChange,
     handleEvidenceAgeChange,
     handleScoreMinChange,
+    handleScoreMaxChange,
     clearAll,
   } = useOpportunityDiscoveryFilters(managedProductId);
+
+  const reviewsPager = useCursorPageStack();
 
   const hasFilters = Object.keys(oppQueryParams).length > 0;
   const oppsQuery = useOpportunities(managedProductId, hasFilters ? oppQueryParams : undefined);
   const themesQuery = useEvidenceThemes(managedProductId, themeParams);
-  const outcomeReviewsQuery = useOutcomeReviews(managedProductId);
+  const outcomeReviewsQuery = useOutcomeReviews(
+    managedProductId,
+    reviewsPager.cursor ? { cursor: reviewsPager.cursor } : undefined,
+  );
 
   const searchParams = useSearchParams();
   const [openOpportunityId, setOpenOpportunityId] = useState<number | null>(() => {
@@ -78,14 +90,12 @@ export function ProductDiscoverySection({ managedProductId }: ProductDiscoverySe
 
   const handleNext = useCallback(() => {
     const nextCursor = oppsQuery.data?.pagination.nextCursor ?? null;
-    setCursor(nextCursor);
-    setPageNumber((n) => n + 1);
-  }, [oppsQuery.data, setCursor, setPageNumber]);
+    goToNextPage(nextCursor);
+  }, [oppsQuery.data, goToNextPage]);
 
   const handlePrevious = useCallback(() => {
-    setCursor(null);
-    setPageNumber((n) => Math.max(1, n - 1));
-  }, [setCursor, setPageNumber]);
+    goToPreviousPage();
+  }, [goToPreviousPage]);
 
   const handleRowClick = useCallback((row: { id: number }) => {
     setOpenOpportunityId(row.id);
@@ -127,11 +137,14 @@ export function ProductDiscoverySection({ managedProductId }: ProductDiscoverySe
   );
 
   const handleCompleteOutcomeReview = useCallback(
-    (reviewId: number, data: UpdateOutcomeReviewInput) => {
+    (reviewId: number, data: UpdateOutcomeReviewInput, onCompleted: () => void) => {
       updateOutcomeReviewMutation.mutate(
         { outcomeReviewId: reviewId, ...data },
         {
-          onSuccess: () => toast.success("Review completed."),
+          onSuccess: () => {
+            toast.success("Review completed.");
+            onCompleted();
+          },
           onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
@@ -165,24 +178,29 @@ export function ProductDiscoverySection({ managedProductId }: ProductDiscoverySe
       sortFilter={sortFilter}
       segmentFilter={segmentFilter}
       ownerFilter={ownerFilter}
+      themeFilter={themeFilter}
       confidenceFilter={confidenceFilter}
       evidenceAgeFilter={evidenceAgeFilter}
       scoreMinFilter={scoreMinFilter}
+      scoreMaxFilter={scoreMaxFilter}
       segmentOptions={segmentOptions}
       ownerOptions={ownerOptions}
+      themeOptions={themeOptions}
       onStateChange={handleStateChange}
       onSortChange={handleSortChange}
       onSegmentChange={handleSegmentChange}
       onOwnerChange={handleOwnerChange}
+      onThemeChange={handleThemeChange}
       onConfidenceChange={handleConfidenceChange}
       onEvidenceAgeChange={handleEvidenceAgeChange}
       onScoreMinChange={handleScoreMinChange}
+      onScoreMaxChange={handleScoreMaxChange}
       onClearAll={clearAll}
     />
   );
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8" data-testid="product-discovery-section">
       <EvidenceThemesSection
         managedProductId={managedProductId}
         themes={themesQuery.data?.themes ?? []}
@@ -209,7 +227,7 @@ export function ProductDiscoverySection({ managedProductId }: ProductDiscoverySe
           filtersSlot={filterBar}
           onNext={handleNext}
           onPrevious={handlePrevious}
-          hasPrevious={pageNumber > 1}
+          hasPrevious={hasPreviousPage}
           pageNumber={pageNumber}
           onRowClick={handleRowClick}
           selected={compareSelected}
@@ -223,6 +241,13 @@ export function ProductDiscoverySection({ managedProductId }: ProductDiscoverySe
         managedProductId={managedProductId}
         reviews={outcomeReviewsQuery.data?.data ?? []}
         isLoading={outcomeReviewsQuery.isLoading}
+        isError={outcomeReviewsQuery.isError}
+        onRetry={() => void outcomeReviewsQuery.refetch()}
+        hasMore={outcomeReviewsQuery.data?.pagination.hasMore ?? false}
+        hasPreviousPage={reviewsPager.hasPrevious}
+        pageNumber={reviewsPager.page}
+        onNextPage={() => reviewsPager.goToNextPage(outcomeReviewsQuery.data?.pagination.nextCursor ?? null)}
+        onPreviousPage={reviewsPager.goToPreviousPage}
         onCreate={handleCreateOutcomeReview}
         onComplete={handleCompleteOutcomeReview}
         onDelete={handleDeleteOutcomeReview}

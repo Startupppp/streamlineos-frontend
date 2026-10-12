@@ -43,23 +43,36 @@ const SCORE_MIN_OPTIONS = [
   { label: "≥ 100", value: "100" },
 ];
 
+const SCORE_MAX_OPTIONS = [
+  { label: "No max", value: "all" },
+  { label: "≤ 25", value: "25" },
+  { label: "≤ 50", value: "50" },
+  { label: "≤ 100", value: "100" },
+  { label: "≤ 250", value: "250" },
+];
+
 export interface OpportunitiesFilterBarProps {
   stateFilter: string;
   sortFilter: string;
   segmentFilter: string;
   ownerFilter: string;
+  themeFilter?: string;
   confidenceFilter: string;
   evidenceAgeFilter: string;
   scoreMinFilter: string;
+  scoreMaxFilter?: string;
   segmentOptions: Array<{ label: string; value: string }>;
   ownerOptions: Array<{ label: string; value: string }>;
+  themeOptions?: Array<{ label: string; value: string }>;
   onStateChange: (v: string) => void;
   onSortChange: (v: string) => void;
   onSegmentChange: (v: string) => void;
   onOwnerChange: (v: string) => void;
+  onThemeChange?: (v: string) => void;
   onConfidenceChange: (v: string) => void;
   onEvidenceAgeChange: (v: string) => void;
   onScoreMinChange: (v: string) => void;
+  onScoreMaxChange?: (v: string) => void;
   onClearAll?: () => void;
   trailing?: ReactNode;
 }
@@ -69,18 +82,23 @@ export function OpportunitiesFilterBar({
   sortFilter,
   segmentFilter,
   ownerFilter,
+  themeFilter = "all",
   confidenceFilter,
   evidenceAgeFilter,
   scoreMinFilter,
+  scoreMaxFilter = "all",
   segmentOptions,
   ownerOptions,
+  themeOptions,
   onStateChange,
   onSortChange,
   onSegmentChange,
   onOwnerChange,
+  onThemeChange,
   onConfidenceChange,
   onEvidenceAgeChange,
   onScoreMinChange,
+  onScoreMaxChange,
   onClearAll,
   trailing,
 }: OpportunitiesFilterBarProps) {
@@ -142,6 +160,21 @@ export function OpportunitiesFilterBar({
       ),
     });
   }
+  if (themeOptions && themeOptions.length > 1 && onThemeChange) {
+    filters.push({
+      id: "oppTheme",
+      label: "Theme",
+      active: themeFilter !== "all",
+      control: (
+        <BuildFilterSelect
+          label="Theme"
+          value={themeFilter}
+          onValueChange={onThemeChange}
+          options={themeOptions}
+        />
+      ),
+    });
+  }
   filters.push(
     {
       id: "oppConfidence",
@@ -183,6 +216,21 @@ export function OpportunitiesFilterBar({
       ),
     },
   );
+  if (onScoreMaxChange) {
+    filters.push({
+      id: "oppScoreMax",
+      label: "Max score",
+      active: scoreMaxFilter !== "all",
+      control: (
+        <BuildFilterSelect
+          label="Max score"
+          value={scoreMaxFilter}
+          onValueChange={onScoreMaxChange}
+          options={SCORE_MAX_OPTIONS}
+        />
+      ),
+    });
+  }
 
   return (
     <BuildListToolbar
