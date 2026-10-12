@@ -15,6 +15,9 @@ import {
   SheetBody,
 } from "@/components/ui/sheet";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useCopyFeedback } from "@/hooks/common/use-copy-feedback";
+import { ErrorState } from "@/components/shared/error-state";
+import { RoadmapPublicationActive } from "./roadmap-publication-active";
 import {
   useProductRoadmapPublication,
   usePublishProductRoadmap,
@@ -28,15 +31,21 @@ interface RoadmapPublicationPanelProps {
 }
 
 export function RoadmapPublicationPanel({ managedProductId, onClose }: RoadmapPublicationPanelProps) {
-  const { data: publication, isLoading } = useProductRoadmapPublication(managedProductId);
+  const {
+    data: publication,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useProductRoadmapPublication(managedProductId);
   const { data: preview } = useRoadmapPreview(managedProductId);
   const publish = usePublishProductRoadmap(managedProductId);
   const unpublish = useUnpublishProductRoadmap(managedProductId);
 
   const [unpublishDialogOpen, setUnpublishDialogOpen] = useState(false);
   const [rotateDialogOpen, setRotateDialogOpen] = useState(false);
-  const [copied, setCopied] = useState(false);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
+  const { copied, copy } = useCopyFeedback();
 
   const isPublished = publication?.published ?? false;
 
@@ -49,14 +58,13 @@ export function RoadmapPublicationPanel({ managedProductId, onClose }: RoadmapPu
 
   const handleCopy = useCallback(async () => {
     if (!shareUrl) return;
-    try {
-      await navigator.clipboard.writeText(shareUrl);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      toast.error("Could not copy to clipboard");
-    }
-  }, [shareUrl]);
+    const ok = await copy(shareUrl);
+    if (!ok) toast.error("Could not copy to clipboard");
+  }, [shareUrl, copy]);
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   const handlePublish = useCallback(() => {
     publish.mutate(undefined, {
@@ -78,6 +86,23 @@ export function RoadmapPublicationPanel({ managedProductId, onClose }: RoadmapPu
       onError: (e) => toast.error(getErrorMessage(e)),
     });
   }, [publish]);
+
+  const handleRotateAndCopy = useCallback(() => {
+    publish.mutate(undefined, {
+      onSuccess: (issued) => {
+        const url = `${window.location.origin}${issued.path}`;
+        setShareUrl(url);
+        void copy(url).then((ok) => {
+          toast.success(
+            ok
+              ? "Share link rotated and copied"
+              : "Share link rotated. Copy it from the field above.",
+          );
+        });
+      },
+      onError: (e) => toast.error(getErrorMessage(e)),
+    });
+  }, [publish, copy]);
 
   const handleUnpublish = useCallback(() => {
     unpublish.mutate(undefined, {
@@ -109,84 +134,27 @@ export function RoadmapPublicationPanel({ managedProductId, onClose }: RoadmapPu
             <SheetTitle>Public Roadmap</SheetTitle>
           </SheetHeader>
           <SheetBody className="px-6 py-5">
-            {isLoading ? null : isPublished ? (
-              <div className="flex flex-col gap-4">
-                <div className="flex items-center gap-2">
-                  <Globe className="size-4 shrink-0 text-green-600" aria-hidden />
-                  <p className="text-sm font-medium text-foreground">Published</p>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  {publicItemCount === 0
-                    ? "No items are marked as public. Mark roadmap items public for them to appear."
-                    : `${String(publicItemCount)} item${publicItemCount === 1 ? "" : "s"} visible to the public.`}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  The public board is not a snapshot. It reflects your roadmap as
-                  you change it, so edits appear on the shared link.
-                </p>
-                {shareUrl ? (
-                  <div className="flex items-center gap-2 rounded-md border bg-muted/40 px-3 py-2">
-                    <p className="min-w-0 flex-1 truncate font-mono text-xs text-foreground">
-                      {shareUrl}
-                    </p>
-                    <button
-                      type="button"
-                      aria-label="Copy share link"
-                      onClick={handleCopy}
-                      className="shrink-0 rounded p-1 text-muted-foreground transition-colors hover:text-foreground"
-                    >
-                      {copied ? (
-                        <Check className="size-3.5 text-green-600" aria-hidden />
-                      ) : (
-                        <Copy className="size-3.5" aria-hidden />
-                      )}
-                    </button>
-                    <Link
-                      href={shareUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      aria-label="Open public roadmap page"
-                      className="shrink-0 rounded p-1 text-muted-foreground transition-colors hover:text-foreground"
-                    >
-                      <ExternalLink className="size-3.5" aria-hidden />
-                    </Link>
-                  </div>
-                ) : (
-                  <p className="rounded-md border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
-                    A public link is active. For safety the link itself is stored
-                    only as a hash, so it cannot be shown again — rotate it below
-                    to get a new one.
-                  </p>
-                )}
-                {shareUrl ? (
-                  <p className="text-xs text-muted-foreground">
-                    Copy this link now. It is not shown again after you close this
-                    panel.
-                  </p>
-                ) : null}
-                <div className="flex flex-col gap-2 pt-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="w-full justify-start gap-2"
-                    onClick={handleOpenRotate}
-                  >
-                    <RefreshCw className="size-3.5" aria-hidden />
-                    Rotate share link
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="w-full justify-start gap-2 text-destructive hover:text-destructive"
-                    onClick={handleOpenUnpublish}
-                  >
-                    <EyeOff className="size-3.5" aria-hidden />
-                    Unpublish
-                  </Button>
-                </div>
-              </div>
+            {isLoading ? null : isError ? (
+              <ErrorState
+                compact
+                title="Could not load the publication state"
+                description={getErrorMessage(error)}
+                onRetry={handleRetry}
+                error={error}
+              />
+            ) : isPublished ? (
+              <RoadmapPublicationActive
+                publicItemCount={publicItemCount}
+                shareUrl={shareUrl}
+                copied={copied}
+                issuedAt={publication?.issuedAt ?? null}
+                expiresAt={publication?.expiresAt ?? null}
+                isRotating={publish.isPending}
+                onCopy={handleCopy}
+                onRotateAndCopy={handleRotateAndCopy}
+                onOpenRotate={handleOpenRotate}
+                onOpenUnpublish={handleOpenUnpublish}
+              />
             ) : (
               <div className="flex flex-col gap-4">
                 <div className="flex items-center gap-2">
