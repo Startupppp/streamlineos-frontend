@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const OPENAPI_HASH = "sha256:7f93adb56ad2b629723eecc2c14a98bbc1c32b7ca93dafd0a72eca668b74236d" as const;
+export const OPENAPI_HASH = "sha256:634c8aa075a47b6f716a0f3a6ea90c1ed8756ffa3674cf1b887229f9e6e369ea" as const;
 
 export const agentTokensListResponseSchema = z.array(z.object({
   id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
@@ -2141,7 +2141,9 @@ export const managedProductRelationsGetReleaseResponseSchema = z.object({
   allowedActions: z.array(z.string()),
   linkedRoadmapItemCount: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   evidence: z.object({
+    restricted: z.boolean(),
     ticketCount: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    visibleTicketCount: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     tickets: z.array(z.object({
       ticketId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
       ticketNumber: z.number().int().gte(-9007199254740991).lte(9007199254740991),
@@ -2155,6 +2157,12 @@ export const managedProductRelationsGetReleaseResponseSchema = z.object({
       status: z.string(),
     })),
     incidentCount: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    incidents: z.array(z.object({
+      id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      title: z.string(),
+      severity: z.enum(["critical", "high", "medium", "low"]),
+      status: z.enum(["detected", "investigating", "mitigating", "resolved", "postmortem", "closed"]),
+    })),
     approvalState: z.string().nullable(),
   }).nullable(),
 });
@@ -2557,6 +2565,7 @@ export const clientPortalListPortalProjectsResponseSchema = z.array(z.object({
   status: z.enum(["ACTIVE", "COMPLETED", "ARCHIVED"]),
   startDate: z.iso.datetime({ offset: true }).nullable(),
   targetEndDate: z.iso.datetime({ offset: true }).nullable(),
+  portalPublishedAt: z.iso.datetime({ offset: true }).nullable(),
 }));
 export type ClientPortalListPortalProjectsResponse = z.infer<typeof clientPortalListPortalProjectsResponseSchema>;
 
@@ -2633,6 +2642,52 @@ export const clientPortalGetProjectOverviewResponseSchema = z.object({
     authorName: z.string(),
     createdAt: z.iso.datetime({ offset: true }),
   })),
+  deliverables: z.array(z.object({
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    name: z.string(),
+    version: z.string(),
+    releaseDate: z.string().nullable(),
+    status: z.string(),
+  })),
+  approvals: z.array(z.object({
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    title: z.string(),
+    status: z.string(),
+    dueAt: z.iso.datetime({ offset: true }).nullable(),
+  })),
+  invoices: z.array(z.object({
+    id: z.string(),
+    documentNumber: z.string().nullable(),
+    issueDate: z.string(),
+    dueDate: z.string().nullable(),
+    grossMinor: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    currency: z.string(),
+    status: z.string(),
+  })),
+  requests: z.array(z.object({
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    title: z.string(),
+    status: z.string(),
+    decisionComment: z.string().nullable(),
+    createdAt: z.iso.datetime({ offset: true }),
+    updatedAt: z.iso.datetime({ offset: true }),
+  })),
+  capabilities: z.object({
+    canViewMilestones: z.boolean(),
+    canViewTasks: z.boolean(),
+    canViewAttachments: z.boolean(),
+    canViewComments: z.boolean(),
+    canSubmitChangeRequests: z.boolean(),
+    canViewApprovals: z.boolean(),
+    canViewInvoices: z.boolean(),
+    canViewRequests: z.boolean(),
+  }),
+  preview: z.object({
+    portalPublishedAt: z.iso.datetime({ offset: true }).nullable(),
+    projectClientGrantId: z.string().nullable(),
+    portalMembershipId: z.string().nullable(),
+    partyContactId: z.string().nullable(),
+  }),
 });
 export type ClientPortalGetProjectOverviewResponse = z.infer<typeof clientPortalGetProjectOverviewResponseSchema>;
 
@@ -5031,6 +5086,52 @@ export const clientPortalManagementGetPreviewResponseSchema = z.object({
     authorName: z.string(),
     createdAt: z.iso.datetime({ offset: true }),
   })),
+  deliverables: z.array(z.object({
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    name: z.string(),
+    version: z.string(),
+    releaseDate: z.string().nullable(),
+    status: z.string(),
+  })),
+  approvals: z.array(z.object({
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    title: z.string(),
+    status: z.string(),
+    dueAt: z.iso.datetime({ offset: true }).nullable(),
+  })),
+  invoices: z.array(z.object({
+    id: z.string(),
+    documentNumber: z.string().nullable(),
+    issueDate: z.string(),
+    dueDate: z.string().nullable(),
+    grossMinor: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    currency: z.string(),
+    status: z.string(),
+  })),
+  requests: z.array(z.object({
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    title: z.string(),
+    status: z.string(),
+    decisionComment: z.string().nullable(),
+    createdAt: z.iso.datetime({ offset: true }),
+    updatedAt: z.iso.datetime({ offset: true }),
+  })),
+  capabilities: z.object({
+    canViewMilestones: z.boolean(),
+    canViewTasks: z.boolean(),
+    canViewAttachments: z.boolean(),
+    canViewComments: z.boolean(),
+    canSubmitChangeRequests: z.boolean(),
+    canViewApprovals: z.boolean(),
+    canViewInvoices: z.boolean(),
+    canViewRequests: z.boolean(),
+  }),
+  preview: z.object({
+    portalPublishedAt: z.iso.datetime({ offset: true }).nullable(),
+    projectClientGrantId: z.string().nullable(),
+    portalMembershipId: z.string().nullable(),
+    partyContactId: z.string().nullable(),
+  }),
 });
 export type ClientPortalManagementGetPreviewResponse = z.infer<typeof clientPortalManagementGetPreviewResponseSchema>;
 

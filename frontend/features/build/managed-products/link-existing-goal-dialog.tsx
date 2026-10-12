@@ -7,6 +7,7 @@ import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { Button } from "@/components/ui/button";
 import { Combobox } from "@/components/ui/combobox";
+import type { ComboboxOption } from "@/components/ui/combobox";
 import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { ErrorState } from "@/components/shared/error-state";
@@ -41,7 +42,10 @@ export function LinkExistingGoalDialog({
     search: debouncedSearch || undefined,
     enabled: open,
   });
-  const productGoalsQuery = useGoals({ managedProductId, limit: 100 }, { enabled: open });
+  const productGoalsQuery = useGoals(
+    { managedProductId, limit: 100 },
+    { enabled: open },
+  );
   const mutation = useLinkGoalProduct();
 
   const isLoading = goalsQuery.isLoading || productGoalsQuery.isLoading;
@@ -62,15 +66,21 @@ export function LinkExistingGoalDialog({
     return allItems.filter((g) => !linkedIds.has(g.id));
   }, [goalsQuery.data, productGoals]);
 
-  const options = useMemo(() => {
-    const opts = candidates.map((g) => ({
+  const options = useMemo<ComboboxOption[]>(() => {
+    const opts: ComboboxOption[] = candidates.map((g) => ({
       value: String(g.id),
       label: g.title,
       sublabel: g.level,
     }));
-    if (selectedId !== null && !opts.find((o) => o.value === String(selectedId))) {
-      opts.unshift({ value: String(selectedId), label: selectedLabel || String(selectedId), sublabel: "" });
-    }
+    if (
+      selectedId !== null &&
+      !opts.find((o) => o.value === String(selectedId))
+    )
+      opts.unshift({
+        value: String(selectedId),
+        label: selectedLabel || String(selectedId),
+      });
+
     return opts;
   }, [candidates, selectedId, selectedLabel]);
 
@@ -158,8 +168,10 @@ export function LinkExistingGoalDialog({
           )}
           {selectedLabel ? (
             <p className="text-pretty text-sm text-muted-foreground">
-              <span className="font-medium text-foreground">{selectedLabel}</span>
-              {" "}will appear on this product{"'"}s Goals tab.
+              <span className="font-medium text-foreground">
+                {selectedLabel}
+              </span>{" "}
+              will appear on this product{"'"}s Goals tab.
             </p>
           ) : null}
         </DialogBody>

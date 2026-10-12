@@ -75809,6 +75809,271 @@
                               "createdAt"
                             ]
                           }
+                        },
+                        "deliverables": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "name": {
+                                "type": "string"
+                              },
+                              "version": {
+                                "type": "string"
+                              },
+                              "releaseDate": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "status": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "name",
+                              "version",
+                              "releaseDate",
+                              "status"
+                            ]
+                          }
+                        },
+                        "approvals": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "title": {
+                                "type": "string"
+                              },
+                              "status": {
+                                "type": "string"
+                              },
+                              "dueAt": {
+                                "anyOf": [
+                                  {
+                                    "type": "string",
+                                    "format": "date-time"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "title",
+                              "status",
+                              "dueAt"
+                            ]
+                          }
+                        },
+                        "invoices": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "documentNumber": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "issueDate": {
+                                "type": "string"
+                              },
+                              "dueDate": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "grossMinor": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "currency": {
+                                "type": "string"
+                              },
+                              "status": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "documentNumber",
+                              "issueDate",
+                              "dueDate",
+                              "grossMinor",
+                              "currency",
+                              "status"
+                            ]
+                          }
+                        },
+                        "requests": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "title": {
+                                "type": "string"
+                              },
+                              "status": {
+                                "type": "string"
+                              },
+                              "decisionComment": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "createdAt": {
+                                "type": "string",
+                                "format": "date-time"
+                              },
+                              "updatedAt": {
+                                "type": "string",
+                                "format": "date-time"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "title",
+                              "status",
+                              "decisionComment",
+                              "createdAt",
+                              "updatedAt"
+                            ]
+                          }
+                        },
+                        "capabilities": {
+                          "type": "object",
+                          "properties": {
+                            "canViewMilestones": {
+                              "type": "boolean"
+                            },
+                            "canViewTasks": {
+                              "type": "boolean"
+                            },
+                            "canViewAttachments": {
+                              "type": "boolean"
+                            },
+                            "canViewComments": {
+                              "type": "boolean"
+                            },
+                            "canSubmitChangeRequests": {
+                              "type": "boolean"
+                            },
+                            "canViewApprovals": {
+                              "type": "boolean"
+                            },
+                            "canViewInvoices": {
+                              "type": "boolean"
+                            },
+                            "canViewRequests": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": [
+                            "canViewMilestones",
+                            "canViewTasks",
+                            "canViewAttachments",
+                            "canViewComments",
+                            "canSubmitChangeRequests",
+                            "canViewApprovals",
+                            "canViewInvoices",
+                            "canViewRequests"
+                          ]
+                        },
+                        "preview": {
+                          "type": "object",
+                          "properties": {
+                            "portalPublishedAt": {
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "format": "date-time"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "projectClientGrantId": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "portalMembershipId": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "partyContactId": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            }
+                          },
+                          "required": [
+                            "portalPublishedAt",
+                            "projectClientGrantId",
+                            "portalMembershipId",
+                            "partyContactId"
+                          ]
                         }
                       },
                       "required": [
@@ -75816,7 +76081,13 @@
                         "milestones",
                         "tasks",
                         "attachments",
-                        "comments"
+                        "comments",
+                        "deliverables",
+                        "approvals",
+                        "invoices",
+                        "requests",
+                        "capabilities",
+                        "preview"
                       ]
                     }
                   },
@@ -144975,7 +145246,15 @@
                             {
                               "type": "object",
                               "properties": {
+                                "restricted": {
+                                  "type": "boolean"
+                                },
                                 "ticketCount": {
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991
+                                },
+                                "visibleTicketCount": {
                                   "type": "integer",
                                   "minimum": -9007199254740991,
                                   "maximum": 9007199254740991
@@ -145044,6 +145323,48 @@
                                   "minimum": -9007199254740991,
                                   "maximum": 9007199254740991
                                 },
+                                "incidents": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "id": {
+                                        "type": "integer",
+                                        "minimum": -9007199254740991,
+                                        "maximum": 9007199254740991
+                                      },
+                                      "title": {
+                                        "type": "string"
+                                      },
+                                      "severity": {
+                                        "type": "string",
+                                        "enum": [
+                                          "critical",
+                                          "high",
+                                          "medium",
+                                          "low"
+                                        ]
+                                      },
+                                      "status": {
+                                        "type": "string",
+                                        "enum": [
+                                          "detected",
+                                          "investigating",
+                                          "mitigating",
+                                          "resolved",
+                                          "postmortem",
+                                          "closed"
+                                        ]
+                                      }
+                                    },
+                                    "required": [
+                                      "id",
+                                      "title",
+                                      "severity",
+                                      "status"
+                                    ]
+                                  }
+                                },
                                 "approvalState": {
                                   "anyOf": [
                                     {
@@ -145056,11 +145377,14 @@
                                 }
                               },
                               "required": [
+                                "restricted",
                                 "ticketCount",
+                                "visibleTicketCount",
                                 "tickets",
                                 "testRunCount",
                                 "testRuns",
                                 "incidentCount",
+                                "incidents",
                                 "approvalState"
                               ]
                             },
@@ -149104,6 +149428,17 @@
                                 "type": "null"
                               }
                             ]
+                          },
+                          "portalPublishedAt": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "format": "date-time"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
                           }
                         },
                         "required": [
@@ -149112,7 +149447,8 @@
                           "key",
                           "status",
                           "startDate",
-                          "targetEndDate"
+                          "targetEndDate",
+                          "portalPublishedAt"
                         ]
                       }
                     }
@@ -149885,6 +150221,271 @@
                               "createdAt"
                             ]
                           }
+                        },
+                        "deliverables": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "name": {
+                                "type": "string"
+                              },
+                              "version": {
+                                "type": "string"
+                              },
+                              "releaseDate": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "status": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "name",
+                              "version",
+                              "releaseDate",
+                              "status"
+                            ]
+                          }
+                        },
+                        "approvals": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "title": {
+                                "type": "string"
+                              },
+                              "status": {
+                                "type": "string"
+                              },
+                              "dueAt": {
+                                "anyOf": [
+                                  {
+                                    "type": "string",
+                                    "format": "date-time"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "title",
+                              "status",
+                              "dueAt"
+                            ]
+                          }
+                        },
+                        "invoices": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "documentNumber": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "issueDate": {
+                                "type": "string"
+                              },
+                              "dueDate": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "grossMinor": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "currency": {
+                                "type": "string"
+                              },
+                              "status": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "documentNumber",
+                              "issueDate",
+                              "dueDate",
+                              "grossMinor",
+                              "currency",
+                              "status"
+                            ]
+                          }
+                        },
+                        "requests": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "title": {
+                                "type": "string"
+                              },
+                              "status": {
+                                "type": "string"
+                              },
+                              "decisionComment": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "createdAt": {
+                                "type": "string",
+                                "format": "date-time"
+                              },
+                              "updatedAt": {
+                                "type": "string",
+                                "format": "date-time"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "title",
+                              "status",
+                              "decisionComment",
+                              "createdAt",
+                              "updatedAt"
+                            ]
+                          }
+                        },
+                        "capabilities": {
+                          "type": "object",
+                          "properties": {
+                            "canViewMilestones": {
+                              "type": "boolean"
+                            },
+                            "canViewTasks": {
+                              "type": "boolean"
+                            },
+                            "canViewAttachments": {
+                              "type": "boolean"
+                            },
+                            "canViewComments": {
+                              "type": "boolean"
+                            },
+                            "canSubmitChangeRequests": {
+                              "type": "boolean"
+                            },
+                            "canViewApprovals": {
+                              "type": "boolean"
+                            },
+                            "canViewInvoices": {
+                              "type": "boolean"
+                            },
+                            "canViewRequests": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": [
+                            "canViewMilestones",
+                            "canViewTasks",
+                            "canViewAttachments",
+                            "canViewComments",
+                            "canSubmitChangeRequests",
+                            "canViewApprovals",
+                            "canViewInvoices",
+                            "canViewRequests"
+                          ]
+                        },
+                        "preview": {
+                          "type": "object",
+                          "properties": {
+                            "portalPublishedAt": {
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "format": "date-time"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "projectClientGrantId": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "portalMembershipId": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "partyContactId": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            }
+                          },
+                          "required": [
+                            "portalPublishedAt",
+                            "projectClientGrantId",
+                            "portalMembershipId",
+                            "partyContactId"
+                          ]
                         }
                       },
                       "required": [
@@ -149892,7 +150493,13 @@
                         "milestones",
                         "tasks",
                         "attachments",
-                        "comments"
+                        "comments",
+                        "deliverables",
+                        "approvals",
+                        "invoices",
+                        "requests",
+                        "capabilities",
+                        "preview"
                       ]
                     }
                   },
