@@ -69,7 +69,7 @@ describe("the Build projects page with nothing in it", () => {
     );
 
     expect(detailShell).toBeDefined();
-    expect(screen.getByText("No projects yet")).toBeInTheDocument();
+    expect(screen.getByText("No linked projects yet")).toBeInTheDocument();
   });
 
   it("keeps pagination available when client-side visibility removes every row on a page that has more", () => {
