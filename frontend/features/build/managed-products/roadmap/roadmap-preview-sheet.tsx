@@ -1,9 +1,12 @@
 "use client";
 
-import { useMemo } from "react";
-import Link from "next/link";
-import { ExternalLink } from "lucide-react";
-import { useRoadmapPublication, useRoadmapPreview } from "@/hooks/api/build/roadmap-public";
+import { useCallback, useMemo } from "react";
+import {
+  useProductRoadmapPublication,
+  useRoadmapPreview,
+} from "@/hooks/api/build/roadmap-public";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import {
   Sheet,
   SheetContent,
@@ -57,9 +60,19 @@ function PreviewItem({ item }: { item: PublicRoadmapItem }) {
 }
 
 export function RoadmapPreviewSheet({ managedProductId, onClose }: RoadmapPreviewSheetProps) {
-  const { data: publication } = useRoadmapPublication();
-  const { data: publicBoard, isLoading } = useRoadmapPreview(managedProductId);
-  const publicPath = publication?.path ? `${publication.path}?product=${String(managedProductId)}` : null;
+  const { data: publication } = useProductRoadmapPublication(managedProductId);
+  const {
+    data: publicBoard,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useRoadmapPreview(managedProductId);
+  const isPublished = publication?.published ?? false;
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   const publicItems = useMemo(() => {
     if (!publicBoard) return [];
@@ -89,22 +102,25 @@ export function RoadmapPreviewSheet({ managedProductId, onClose }: RoadmapPrevie
         <SheetHeader className="gap-1 border-b px-6 py-4 text-left">
           <SheetTitle>Public Roadmap Preview</SheetTitle>
           {!isLoading ? <SheetDescription>{countLabel}</SheetDescription> : null}
-          {publicPath ? (
-            <Link
-              href={publicPath}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex w-fit items-center gap-1 text-sm font-medium text-primary underline-offset-2 hover:underline"
-            >
-              <ExternalLink className="size-3.5" aria-hidden />
-              Open public page
-            </Link>
+          {isPublished ? (
+            <p className="text-sm text-muted-foreground">
+              This board is published. The share link is stored only as a hash,
+              so open Public Roadmap and rotate it to get a link you can open.
+            </p>
           ) : (
             <p className="text-sm text-muted-foreground">The public board is not published yet.</p>
           )}
         </SheetHeader>
         <SheetBody className="px-6 py-5">
-          {isLoading ? null : publicItems.length === 0 ? (
+          {isLoading ? null : isError ? (
+            <ErrorState
+              compact
+              title="Could not load the preview"
+              description={getErrorMessage(error)}
+              onRetry={handleRetry}
+              error={error}
+            />
+          ) : publicItems.length === 0 ? (
             <div className="flex flex-col gap-1">
               <p className="text-sm font-medium text-foreground">Nothing to preview yet</p>
               <p className="text-sm text-pretty text-muted-foreground">

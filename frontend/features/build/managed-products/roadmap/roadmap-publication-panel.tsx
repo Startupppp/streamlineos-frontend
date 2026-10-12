@@ -1,10 +1,8 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { ExternalLink, Copy, Check, Globe, EyeOff, RefreshCw } from "lucide-react";
-import Link from "next/link";
+import { Globe, EyeOff } from "lucide-react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {

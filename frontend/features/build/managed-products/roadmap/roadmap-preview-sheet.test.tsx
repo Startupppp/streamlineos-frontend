@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import type { PublicRoadmapItem } from "@/types/projects";
 import type { RoadmapHorizon } from "@/types/projects";
 
@@ -27,13 +27,21 @@ jest.mock("@/components/ui/badge", () => ({
   Badge: ({ children }: { children: React.ReactNode }) => <span>{children}</span>,
 }));
 
-let mockPublication: { path: string } | null = null;
+let mockPublication: { published: boolean } | null = null;
 let mockPublicBoard: { orgName: string | null; roadmap: { planned: PublicRoadmapItem[]; in_progress: PublicRoadmapItem[]; completed: PublicRoadmapItem[] }; feedback: []; changelog: [] } | null = null;
 let mockIsLoading = false;
+let mockIsError = false;
+const mockRefetch = jest.fn();
 
 jest.mock("@/hooks/api/build/roadmap-public", () => ({
-  useRoadmapPublication: () => ({ data: mockPublication }),
-  useRoadmapPreview: () => ({ data: mockPublicBoard, isLoading: mockIsLoading }),
+  useProductRoadmapPublication: () => ({ data: mockPublication }),
+  useRoadmapPreview: () => ({
+    data: mockPublicBoard,
+    isLoading: mockIsLoading,
+    isError: mockIsError,
+    error: mockIsError ? new Error("preview unavailable") : null,
+    refetch: mockRefetch,
+  }),
 }));
 
 import { RoadmapPreviewSheet } from "./roadmap-preview-sheet";
@@ -65,16 +73,50 @@ beforeEach(() => {
 });
 
 describe("RoadmapPreviewSheet — public page link", () => {
-  it("links to the published board filtered to this product", () => {
-    mockPublication = { path: "/roadmap/org-1" };
+  it("offers no public link for a published product, because the share token is hashed and the organization slug is a different authority", () => {
+    mockPublication = { published: true };
     render(<RoadmapPreviewSheet managedProductId={39} onClose={onClose} />);
-    expect(screen.getByRole("link", { name: /Open public page/ })).toHaveAttribute("href", "/roadmap/org-1?product=39");
+    expect(screen.queryByRole("link", { name: /Open public page/ })).not.toBeInTheDocument();
+    expect(screen.getByText(/rotate it to get a link you can open/i)).toBeInTheDocument();
   });
 
   it("says the board is unpublished instead of linking when there is no publication", () => {
     render(<RoadmapPreviewSheet managedProductId={39} onClose={onClose} />);
     expect(screen.queryByRole("link", { name: /Open public page/ })).not.toBeInTheDocument();
     expect(screen.getByText("The public board is not published yet.")).toBeInTheDocument();
+  });
+
+  it("reads the product publication rather than the organization publication, so a product-token board is not described by an unrelated org slug", () => {
+    mockPublication = { published: false };
+    render(<RoadmapPreviewSheet managedProductId={39} onClose={onClose} />);
+    expect(screen.getByText("The public board is not published yet.")).toBeInTheDocument();
+  });
+});
+
+describe("RoadmapPreviewSheet — failed preview read", () => {
+  beforeEach(() => {
+    mockIsError = true;
+    mockRefetch.mockClear();
+  });
+
+  afterEach(() => {
+    mockIsError = false;
+  });
+
+  it("renders an error with retry when the preview read fails, so a failed read is never shown as an empty roadmap", () => {
+    mockPublicBoard = null;
+    render(<RoadmapPreviewSheet managedProductId={39} onClose={onClose} />);
+    expect(screen.getByText("Could not load the preview")).toBeInTheDocument();
+    expect(screen.queryByText("Nothing to preview yet")).not.toBeInTheDocument();
+  });
+
+  it("re-issues the preview request from the error state without closing the sheet", () => {
+    mockPublicBoard = null;
+    render(<RoadmapPreviewSheet managedProductId={39} onClose={onClose} />);
+    fireEvent.click(screen.getByRole("button", { name: /retry|try again/i }));
+    expect(mockRefetch).toHaveBeenCalledTimes(1);
+    expect(screen.getByText("Public Roadmap Preview")).toBeInTheDocument();
+    expect(onClose).not.toHaveBeenCalled();
   });
 });
 
