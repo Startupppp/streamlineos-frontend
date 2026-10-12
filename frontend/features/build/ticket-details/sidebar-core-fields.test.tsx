@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { SidebarSelectFields } from "./sidebar-select-fields";
 import { TicketDateFields } from "./ticket-date-fields";
 import { SidebarAssigneeSection } from "./sidebar-assignee-section";
@@ -145,6 +145,53 @@ describe("Issue detail sidebar — the core fields the page contract lists are o
     expect(
       screen.getByRole("button", { name: "Remove Ada Lovelace" }),
     ).toBeInTheDocument();
+  });
+
+  it("calls onPointsChange with the parsed value when the user edits the points input and blurs", () => {
+    const onPointsChange = jest.fn();
+    render(
+      <SidebarSelectFields
+        ticket={TICKET}
+        statuses={[]}
+        epics={[]}
+        modules={[]}
+        cycles={[]}
+        onStatusChange={jest.fn()}
+        onPriorityChange={jest.fn()}
+        onTypeChange={jest.fn()}
+        onPointsChange={onPointsChange}
+        onEpicChange={jest.fn()}
+        onModuleChange={jest.fn()}
+        onCycleChange={jest.fn()}
+      />,
+    );
+    const input = screen.getByRole("spinbutton");
+    fireEvent.change(input, { target: { value: "5" } });
+    fireEvent.blur(input);
+    expect(onPointsChange).toHaveBeenCalledWith(5);
+  });
+
+  it("does not call onPointsChange when the user blurs the points input without changing its value", () => {
+    const onPointsChange = jest.fn();
+    render(
+      <SidebarSelectFields
+        ticket={TICKET}
+        statuses={[]}
+        epics={[]}
+        modules={[]}
+        cycles={[]}
+        onStatusChange={jest.fn()}
+        onPriorityChange={jest.fn()}
+        onTypeChange={jest.fn()}
+        onPointsChange={onPointsChange}
+        onEpicChange={jest.fn()}
+        onModuleChange={jest.fn()}
+        onCycleChange={jest.fn()}
+      />,
+    );
+    const input = screen.getByRole("spinbutton");
+    fireEvent.blur(input);
+    expect(onPointsChange).not.toHaveBeenCalled();
   });
 
   it("hides the add and remove assignee controls from a viewer who cannot assign, while still showing who is assigned", () => {

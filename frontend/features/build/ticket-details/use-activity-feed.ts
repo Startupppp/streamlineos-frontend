@@ -26,6 +26,8 @@ import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
 import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
 import {
   MAX_PROJECT_FILE_BYTES,
+  PROJECT_FILE_TYPES_LABEL,
+  isAllowedProjectFileType,
   useDeleteProjectFile,
   useUploadProjectFile,
 } from "@/hooks/api/build/project-files";
@@ -290,6 +292,15 @@ export function useActivityFeed({
   }, [retryPersistence]);
   const handleAttachFiles = useCallback(
     async (files: File[]) => {
+      const disallowed = files.find(
+        (file) => !isAllowedProjectFileType(file.type),
+      );
+      if (disallowed) {
+        toast.error(
+          `${disallowed.name} is not an accepted file type. Accepted: ${PROJECT_FILE_TYPES_LABEL}.`,
+        );
+        return;
+      }
       const oversized = files.find(
         (file) => file.size > MAX_PROJECT_FILE_BYTES,
       );

@@ -9,6 +9,9 @@ import {
   useProjectFiles,
   useUploadProjectFile,
   MAX_PROJECT_FILE_BYTES,
+  PROJECT_FILE_MIME_TYPES,
+  PROJECT_FILE_TYPES_LABEL,
+  isAllowedProjectFileType,
   useDeleteProjectFile,
   useProjectFileSignedUrl,
   type ProjectFileRow,
@@ -29,23 +32,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { CONTENT_PANEL_SOLID } from "@/components/ui/content-fill-panel";
 import { PmPageShell, PmSection } from "@/components/pm-chrome";
 
-const ALLOWED_MIME_TYPES = [
-  "application/pdf",
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "image/gif",
-  "text/plain",
-  "text/csv",
-  "application/msword",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  "application/vnd.ms-excel",
-  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-];
-
-const ALLOWED_TYPES = ALLOWED_MIME_TYPES.join(",");
-
-const ACCEPTED_TYPES_LABEL = "PDF, JPG, PNG, GIF, WEBP, TXT, CSV, DOC, DOCX, XLS, XLSX";
+const ALLOWED_TYPES = PROJECT_FILE_MIME_TYPES.join(",");
 
 
 function formatFileSize(bytes: number): string {
@@ -173,9 +160,9 @@ export function FilesPage({ projectId }: FilesPageProps) {
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (!file) return;
-      if (!ALLOWED_MIME_TYPES.includes(file.type)) {
+      if (!isAllowedProjectFileType(file.type)) {
         toast.error(
-          `${file.name} is not an accepted file type. Accepted: ${ACCEPTED_TYPES_LABEL}.`,
+          `${file.name} is not an accepted file type. Accepted: ${PROJECT_FILE_TYPES_LABEL}.`,
         );
         e.target.value = "";
         return;

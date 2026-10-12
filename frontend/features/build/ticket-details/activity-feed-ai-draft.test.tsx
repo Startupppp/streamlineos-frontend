@@ -1,6 +1,7 @@
 import React from "react";
 import { render, screen, act, fireEvent, waitFor } from "@testing-library/react";
 import { ActivityFeed } from "./activity-feed";
+import { PROJECT_FILE_TYPES_LABEL } from "@/hooks/api/build/project-files";
 import type { StagedCommentDraft } from "@/hooks/api/build/comment-draft-commands";
 
 jest.mock("next-auth/react", () => ({
@@ -23,6 +24,14 @@ const mockUseCan = jest.fn<boolean, [string]>();
 jest.mock("@/hooks/api/access", () => ({
   useCan: (key: string) => mockUseCan(key),
   useAccess: () => ({ data: null, refetch: jest.fn() }),
+}));
+
+const mockToastError = jest.fn();
+jest.mock("sonner", () => ({
+  toast: {
+    error: (...args: unknown[]) => mockToastError(...args),
+    success: jest.fn(),
+  },
 }));
 
 type ActionLike = {
@@ -64,11 +73,16 @@ jest.mock("@/hooks/api/build/ticket-sub-resources", () => ({
   useAddComment: () => ({ mutate: jest.fn(), isPending: false }),
   useAddAttachment: () => ({ mutateAsync: mockAddAttachment, isPending: false }),
 }));
-jest.mock("@/hooks/api/build/project-files", () => ({
-  MAX_PROJECT_FILE_BYTES: 2 * 1024 * 1024,
-  useUploadProjectFile: () => ({ mutateAsync: mockUploadFile, isPending: false }),
-  useDeleteProjectFile: () => ({ mutateAsync: mockDeleteFile, isPending: false }),
-}));
+jest.mock("@/hooks/api/build/project-files", () => {
+  const actual = jest.requireActual("@/hooks/api/build/project-files");
+  return {
+    MAX_PROJECT_FILE_BYTES: actual.MAX_PROJECT_FILE_BYTES,
+    PROJECT_FILE_TYPES_LABEL: actual.PROJECT_FILE_TYPES_LABEL,
+    isAllowedProjectFileType: actual.isAllowedProjectFileType,
+    useUploadProjectFile: () => ({ mutateAsync: mockUploadFile, isPending: false }),
+    useDeleteProjectFile: () => ({ mutateAsync: mockDeleteFile, isPending: false }),
+  };
+});
 jest.mock("@/hooks/api/build/tickets", () => ({
   useCreateTicket: () => ({ mutate: jest.fn(), isPending: false }),
 }));
@@ -143,13 +157,13 @@ it("offers a file picker without restricting MIME types when file management is 
   expect(input).not.toHaveAttribute("accept");
 });
 
-it("uploads a video through the project file owner and attaches it to the current ticket", async () => {
+it("uploads an accepted file through the project file owner and attaches it to the current ticket", async () => {
   mockUseCan.mockImplementation((key: string) => key === "build:tickets:update" || key === "build:files:manage");
   render(<ActivityFeed {...defaultProps} />);
   const input = document.querySelector('input[type="file"]') as HTMLInputElement;
-  const video = new File(["video"], "walkthrough.mp4", { type: "video/mp4" });
-  fireEvent.change(input, { target: { files: [video] } });
-  await waitFor(() => expect(mockUploadFile).toHaveBeenCalledWith(video));
+  const screenshot = new File(["png"], "walkthrough.png", { type: "image/png" });
+  fireEvent.change(input, { target: { files: [screenshot] } });
+  await waitFor(() => expect(mockUploadFile).toHaveBeenCalledWith(screenshot));
   expect(mockAddAttachment).toHaveBeenCalledWith({ ticketId: 1, projectId: 1, fileId: 91 });
 });
 
@@ -158,9 +172,26 @@ it("removes an uploaded project file when creating its ticket attachment fails",
   mockAddAttachment.mockRejectedValueOnce(new Error("Attachment unavailable"));
   render(<ActivityFeed {...defaultProps} />);
   const input = document.querySelector('input[type="file"]') as HTMLInputElement;
-  const file = new File(["data"], "evidence.zip", { type: "application/zip" });
+  const file = new File(["data"], "evidence.pdf", { type: "application/pdf" });
   fireEvent.change(input, { target: { files: [file] } });
   await waitFor(() => expect(mockDeleteFile).toHaveBeenCalledWith(91));
+});
+
+it("names the rejected file and the accepted types instead of uploading a type the server refuses", async () => {
+  mockUseCan.mockImplementation((key: string) => key === "build:tickets:update" || key === "build:files:manage");
+  mockToastError.mockClear();
+  mockUploadFile.mockClear();
+  render(<ActivityFeed {...defaultProps} />);
+  const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+  const installer = new File(["MZ"], "setup.exe", { type: "application/x-msdownload" });
+  fireEvent.change(input, { target: { files: [installer] } });
+  await waitFor(() =>
+    expect(mockToastError).toHaveBeenCalledWith(
+      `setup.exe is not an accepted file type. Accepted: ${PROJECT_FILE_TYPES_LABEL}.`,
+    ),
+  );
+  expect(PROJECT_FILE_TYPES_LABEL).toContain("PDF");
+  expect(mockUploadFile).not.toHaveBeenCalled();
 });
 
 it("replaces saved status with an inline failure and retries through a native button", async () => {

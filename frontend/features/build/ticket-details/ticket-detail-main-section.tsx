@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useState, useCallback, useRef , useEffect} from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { motion, useReducedMotion } from "framer-motion";
 import { Textarea } from "@/components/ui/textarea";
@@ -32,7 +32,10 @@ import type { Ticket } from "@/types/projects";
 import { TICKET_TITLE_MAX } from "@/lib/validation/projects";
 
 const TiptapEditorDynamic = dynamic(
-  () => import("@/components/editor/tiptap-editor").then((m) => ({ default: m.TiptapEditor })),
+  () =>
+    import("@/components/editor/tiptap-editor").then((m) => ({
+      default: m.TiptapEditor,
+    })),
   {
     ssr: false,
     loading: () => (
@@ -72,7 +75,10 @@ interface AttachmentContextMenuProps {
   children: React.ReactNode;
 }
 
-function AttachmentContextMenu({ attachment, children }: AttachmentContextMenuProps) {
+function AttachmentContextMenu({
+  attachment,
+  children,
+}: AttachmentContextMenuProps) {
   function handleView() {
     void viewFile(attachment.fileUrl);
   }
@@ -87,20 +93,12 @@ function AttachmentContextMenu({ attachment, children }: AttachmentContextMenuPr
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        {children}
-      </DropdownMenuTrigger>
+      <DropdownMenuTrigger asChild>{children}</DropdownMenuTrigger>
       <DropdownMenuContent align="start">
-        <DropdownMenuItem onSelect={handleView}>
-          View image
-        </DropdownMenuItem>
-        <DropdownMenuItem onSelect={handleDownload}>
-          Download
-        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={handleView}>View image</DropdownMenuItem>
+        <DropdownMenuItem onSelect={handleDownload}>Download</DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onSelect={handleCopyLink}>
-          Copy link
-        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={handleCopyLink}>Copy link</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -185,6 +183,17 @@ export function TicketDetailMainSection({
     onApplyDescription,
   });
 
+  useEffect(() => {
+    if (!editingTitle) return;
+    function handleBeforeUnload(e: BeforeUnloadEvent) {
+      if (localTitle !== titleAtEditStartRef.current) {
+        e.preventDefault();
+      }
+    }
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [editingTitle, localTitle]);
+
   return (
     <motion.div
       className={`mx-auto flex min-h-full w-full min-w-0 flex-col gap-5 ${
@@ -228,7 +237,9 @@ export function TicketDetailMainSection({
             rows={2}
             maxLength={TICKET_TITLE_MAX}
             aria-invalid={titleError ? true : undefined}
-            aria-describedby={titleError ? `ticket-title-error-${ticketId}` : undefined}
+            aria-describedby={
+              titleError ? `ticket-title-error-${ticketId}` : undefined
+            }
             className="h-auto min-h-12 w-full max-w-full resize-none break-words rounded-md border-border bg-card px-3 py-2 text-base font-medium leading-snug shadow-none transition-colors duration-200 [overflow-wrap:anywhere] [word-break:break-word] hover:border-foreground/30 focus-visible:ring-1"
             placeholder="Ticket title"
             onKeyDown={handleTitleKeyDown}
@@ -238,7 +249,10 @@ export function TicketDetailMainSection({
                 return;
               }
               const next = event.relatedTarget;
-              if (next instanceof Node && event.currentTarget.parentElement?.contains(next)) {
+              if (
+                next instanceof Node &&
+                event.currentTarget.parentElement?.contains(next)
+              ) {
                 return;
               }
               if (localTitle === titleAtEditStartRef.current) {
@@ -328,7 +342,10 @@ export function TicketDetailMainSection({
                           type="button"
                           className="group relative aspect-video rounded-md overflow-hidden bg-muted border hover:border-foreground/40 transition-all text-left"
                         >
-                          <AttachmentImage fileUrl={att.fileUrl} fileName={att.fileName} />
+                          <AttachmentImage
+                            fileUrl={att.fileUrl}
+                            fileName={att.fileName}
+                          />
                           <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none" />
                         </button>
                       </AttachmentContextMenu>
@@ -355,7 +372,9 @@ export function TicketDetailMainSection({
               projectId={projectId}
               ticketId={ticketId}
               canUseAI={ticketDetailAi.canUseAI}
-              generateChecklistDisabledReason={ticketDetailAi.generateChecklistDisabledReason}
+              generateChecklistDisabledReason={
+                ticketDetailAi.generateChecklistDisabledReason
+              }
             />
           </div>
           <TicketQaEvidence
@@ -374,14 +393,20 @@ export function TicketDetailMainSection({
         projectKey={projectKey}
         ticketNumber={ticket.ticketNumber}
         comments={ticket.comments || []}
-        members={members.map((m) => ({ id: m.id, name: m.name, email: m.email }))}
+        members={members.map((m) => ({
+          id: m.id,
+          name: m.name,
+          email: m.email,
+        }))}
         highlightCommentId={highlightCommentId}
         resumeDraft={resumeDraft}
         activityAiActions={
           !isPreview ? (
             <TicketDetailAiActivityActions
               canUseAI={ticketDetailAi.canUseAI}
-              summarizeCommentsDisabledReason={ticketDetailAi.summarizeCommentsDisabledReason}
+              summarizeCommentsDisabledReason={
+                ticketDetailAi.summarizeCommentsDisabledReason
+              }
               runSummarizeComments={ticketDetailAi.runSummarizeComments}
               runHandoff={ticketDetailAi.runHandoff}
             />

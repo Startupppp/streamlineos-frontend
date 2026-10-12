@@ -1,27 +1,33 @@
 "use client";
 
-import { useCallback, useEffect, useEffectEvent, useRef, useState } from "react";
+import {
+  useRef,
+  useState,
+  useEffect,
+  useCallback,
+  useEffectEvent,
+} from "react";
 import { useSourceOverride } from "@/hooks/common/use-source-override";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   useTicket,
+  useSubtasks,
   useUpdateTicket,
   useDeleteTicket,
-  useSubtasks,
 } from "@/hooks/api/build/tickets";
+import { useCan } from "@/hooks/api/access";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { TICKET_TITLE_MAX } from "@/lib/validation/projects";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { isApiError, getApiErrorCode } from "@/lib/api-envelope";
-import { getErrorMessage } from "@/lib/get-error-message";
-import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
-import { useCan } from "@/hooks/api/access";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import {
   diffTicketConflictFields,
   type TicketConflictFieldDiff,
 } from "./ticket-conflict-diff";
 import { useTicketDetailProjectData } from "./use-ticket-detail-project-data";
-import { TICKET_TITLE_MAX } from "@/lib/validation/projects";
 
 interface UseTicketDetailOptions {
   projectId: number;
@@ -36,23 +42,29 @@ interface TicketConflictState {
   serverVersion: number | undefined;
 }
 
-export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDetailOptions) {
-  const canUpdate = useCan("build:tickets:update");
-  const queryClient = useQueryClient();
+export function useTicketDetail({
+  projectId,
+  ticketId,
+  onDeleted,
+}: UseTicketDetailOptions) {
   const isOnline = useOnlineStatus();
+  const queryClient = useQueryClient();
+  const canUpdate = useCan("build:tickets:update");
+
   const [saving, setSaving] = useState(false);
-  const [offlineDraftFields, setOfflineDraftFields] = useState<string[]>([]);
-  const offlineDraftRef = useRef<Record<string, unknown>>({});
   const [conflict, setConflict] = useState<TicketConflictState | null>(null);
-  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const pendingSaveRef = useRef<Record<string, unknown> | null>(null);
-  const lastSavedAtRef = useRef<string | undefined>(undefined);
-  const lastSavedVersionRef = useRef<number | undefined>(undefined);
-  const saveQueueRef = useRef<Promise<void>>(Promise.resolve());
+  const [offlineDraftFields, setOfflineDraftFields] = useState<string[]>([]);
+
   const saveSequenceRef = useRef(0);
+  const offlineDraftRef = useRef<Record<string, unknown>>({});
   const enqueueSaveRef = useRef<
     ((field: Record<string, unknown>) => void) | null
   >(null);
+  const lastSavedAtRef = useRef<string | undefined>(undefined);
+  const saveQueueRef = useRef<Promise<void>>(Promise.resolve());
+  const lastSavedVersionRef = useRef<number | undefined>(undefined);
+  const pendingSaveRef = useRef<Record<string, unknown> | null>(null);
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const {
     data: ticket,
@@ -61,11 +73,16 @@ export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDet
     refetch: refetchTicket,
     dataUpdatedAt: ticketUpdatedAt,
   } = useTicket(projectId, ticketId ?? 0, INLINE_READ_ERROR);
-  const { projectData, members, statuses } = useTicketDetailProjectData(projectId);
+  const { projectData, members, statuses } =
+    useTicketDetailProjectData(projectId);
   const { data: subtasks } = useSubtasks(ticketId ?? 0, projectId);
 
   const titleVersion = ticket ? `${ticket.id}:${ticket.title}` : null;
-  const [localTitle, setLocalTitle] = useSourceOverride(titleVersion, ticket?.title ?? "");
+
+  const [localTitle, setLocalTitle] = useSourceOverride(
+    titleVersion,
+    ticket?.title ?? "",
+  );
 
   const updateTicketMutation = useUpdateTicket(projectId, {
     onSuccess: (data) => {
@@ -73,7 +90,10 @@ export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDet
       lastSavedVersionRef.current = data.version;
     },
     onError: (error, variables) => {
-      if (isApiError(error) && getApiErrorCode(error) === "PROJECTS_TICKET_CONFLICT") {
+      if (
+        isApiError(error) &&
+        getApiErrorCode(error) === "PROJECTS_TICKET_CONFLICT"
+      ) {
         if (ticketId !== null) {
           void queryClient.invalidateQueries({
             queryKey: buildWorkQueryKeys.projects.ticket(projectId, ticketId),
@@ -81,7 +101,11 @@ export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDet
         }
         const patch: Record<string, unknown> = {};
         for (const [key, value] of Object.entries(variables)) {
-          if (key !== "ticketId" && key !== "expectedUpdatedAt" && key !== "version") {
+          if (
+            key !== "ticketId" &&
+            key !== "expectedUpdatedAt" &&
+            key !== "version"
+          ) {
             patch[key] = value;
           }
         }
@@ -91,9 +115,15 @@ export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDet
           if (!current?.updatedAt) return;
           const fields = diffTicketConflictFields(patch, current, {
             members,
-            epics: queryClient.getQueryData(buildWorkQueryKeys.projects.epics(projectId)),
-            modules: queryClient.getQueryData(buildWorkQueryKeys.projects.modules(projectId)),
-            cycles: queryClient.getQueryData(buildWorkQueryKeys.projects.cycles(projectId)),
+            epics: queryClient.getQueryData(
+              buildWorkQueryKeys.projects.epics(projectId),
+            ),
+            modules: queryClient.getQueryData(
+              buildWorkQueryKeys.projects.modules(projectId),
+            ),
+            cycles: queryClient.getQueryData(
+              buildWorkQueryKeys.projects.cycles(projectId),
+            ),
           });
           if (fields.length === 0) return;
           setConflict({
@@ -114,7 +144,9 @@ export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDet
             );
             return;
           }
-          lastSavedAtRef.current = new Date(latest.data.updatedAt).toISOString();
+          lastSavedAtRef.current = new Date(
+            latest.data.updatedAt,
+          ).toISOString();
           lastSavedVersionRef.current = latest.data.version;
           enqueueSaveRef.current?.(patch);
         }
@@ -129,8 +161,14 @@ export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDet
         );
         return;
       }
-      if (!isApiError(error) || error.status === 0 || (error.status !== undefined && error.status >= 500)) {
-        toast.warning("This save may have succeeded. Check the ticket before retrying.");
+      if (
+        !isApiError(error) ||
+        error.status === 0 ||
+        (error.status !== undefined && error.status >= 500)
+      ) {
+        toast.warning(
+          "This save may have succeeded. Check the ticket before retrying.",
+        );
         return;
       }
       toast.error(getErrorMessage(error));
@@ -168,8 +206,14 @@ export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDet
       const sequence = ++saveSequenceRef.current;
       setSaving(true);
       const task = saveQueueRef.current.then(() => {
-        const version = lastSavedVersionRef.current;
-        if (version === undefined) return undefined;
+        const cached = queryClient.getQueryData<{ version?: number }>(
+          buildWorkQueryKeys.projects.ticket(projectId, ticketId),
+        );
+        const version = lastSavedVersionRef.current ?? cached?.version;
+        if (version === undefined) {
+          toast.error("Could not save — reload the ticket and try again.");
+          return undefined;
+        }
         return updateTicketMutation.mutateAsync({
           ticketId,
           expectedUpdatedAt: lastSavedAtRef.current,
@@ -187,7 +231,14 @@ export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDet
         })
         .catch(() => undefined);
     },
-    [ticketId, canUpdate, isOnline, updateTicketMutation],
+    [
+      ticketId,
+      isOnline,
+      canUpdate,
+      projectId,
+      queryClient,
+      updateTicketMutation,
+    ],
   );
 
   useEffect(() => {
