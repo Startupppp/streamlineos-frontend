@@ -39,6 +39,7 @@ import { ProductSettingsDangerSection } from "./product-settings-danger-section"
 import { ProductSettingsMembersSection } from "./product-settings-members-section";
 import { ProductSettingsPublicationSection } from "./product-settings-publication-section";
 import { ProductSettingsProjectsSection } from "./product-settings-projects-section";
+import { ProductSettingsFeedbackChannelsSection } from "./product-settings-feedback-channels-section";
 import {
   PRODUCT_SETTINGS_TABS,
   productSettingsTabFromParam,
@@ -284,6 +285,12 @@ function ProductSettingsForm({ managedProductId }: ProductSettingsPageProps) {
 
           <TabsContent value="publishing" className="mt-0 outline-none">
             <ProductSettingsPublicationSection
+              managedProductId={managedProductId}
+            />
+          </TabsContent>
+
+          <TabsContent value="feedback-channels" className="mt-0 outline-none">
+            <ProductSettingsFeedbackChannelsSection
               managedProductId={managedProductId}
             />
           </TabsContent>

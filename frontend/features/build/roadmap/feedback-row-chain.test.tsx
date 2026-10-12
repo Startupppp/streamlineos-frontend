@@ -151,7 +151,7 @@ function makePost(overrides: Partial<FeedbackPost> = {}): FeedbackPost {
   };
 }
 
-function makeItem(overrides: Partial<RoadmapItem> = {}): RoadmapItem {
+function makeItem(overrides: Partial<RoadmapItem> = {}): RoadmapItem & { allowedActions: string[]; sourceFreshness: string | null } {
   return {
     id: 10,
     orgId: "org-1",
@@ -179,6 +179,8 @@ function makeItem(overrides: Partial<RoadmapItem> = {}): RoadmapItem {
     createdAt: "2026-01-01T00:00:00Z",
     updatedAt: "2026-01-01T00:00:00Z",
     deletedAt: null,
+    allowedActions: [],
+    sourceFreshness: null,
     ...overrides,
   };
 }

@@ -74,6 +74,8 @@ function baseRoadmapItem(status: string) {
     prioritization: UNSCORED_PRIORITIZATION,
     tierWeighting: UNWEIGHTED_TIER,
     delivery: { source: "none" as const, total: 0, done: 0, percent: null },
+    allowedActions: [],
+    sourceFreshness: null,
   };
 }
 

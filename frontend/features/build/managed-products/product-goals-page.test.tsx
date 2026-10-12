@@ -60,6 +60,10 @@ describe("ProductGoalsPage — usePageState integration (BSN-01-027)", () => {
     useGoalsPage.mockReturnValue(EMPTY_GOALS_PAGE_RESULT);
   });
 
+  afterEach(() => {
+    mockUseSearchParams.mockImplementation(() => new URLSearchParams());
+  });
+
   it("calls usePageState with build:goals:view permission so 402 errors get classified correctly", () => {
     render(<ProductGoalsPage managedProductId={7} />);
     expect(usePageState).toHaveBeenCalledWith(
@@ -101,10 +105,10 @@ describe("ProductGoalsPage — usePageState integration (BSN-01-027)", () => {
   });
 
   it("forwards ownerId URL param to useGoalsPage so owner-filtered queries run server-side (BSN-01-028)", () => {
-    mockUseSearchParams.mockReturnValueOnce(new URLSearchParams("ownerId=user-abc"));
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("ownerId=user-abc"));
     render(<ProductGoalsPage managedProductId={7} />);
     const [callParams] = useGoalsPage.mock.calls[0] as [Record<string, unknown>];
-    expect(callParams).toMatchObject({ ownerId: "user-abc" });
+    expect(callParams).toMatchObject({ ownerId: ["user-abc"] });
   });
 
   it("omits ownerId from useGoalsPage params when the URL param is absent (BSN-01-029)", () => {
@@ -189,11 +193,15 @@ describe("ProductGoalsPage — health/due/scope URL params forwarded (BSN-FILTER
     useGoalsPage.mockReturnValue(EMPTY_GOALS_PAGE_RESULT);
   });
 
+  afterEach(() => {
+    mockUseSearchParams.mockImplementation(() => new URLSearchParams());
+  });
+
   it("forwards health URL param to useGoalsPage so health-filtered queries run server-side", () => {
-    mockUseSearchParams.mockReturnValueOnce(new URLSearchParams("health=at_risk"));
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("health=at_risk"));
     render(<ProductGoalsPage managedProductId={7} />);
     const [callParams] = useGoalsPage.mock.calls[0] as [Record<string, unknown>];
-    expect(callParams).toMatchObject({ health: "at_risk" });
+    expect(callParams).toMatchObject({ health: ["at_risk"] });
   });
 
   it("omits health from useGoalsPage params when the URL param is absent", () => {
@@ -203,7 +211,7 @@ describe("ProductGoalsPage — health/due/scope URL params forwarded (BSN-FILTER
   });
 
   it("forwards due URL param to useGoalsPage so due-date-filtered queries run server-side", () => {
-    mockUseSearchParams.mockReturnValueOnce(new URLSearchParams("due=2026-12-31"));
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("due=2026-12-31"));
     render(<ProductGoalsPage managedProductId={7} />);
     const [callParams] = useGoalsPage.mock.calls[0] as [Record<string, unknown>];
     expect(callParams).toMatchObject({ due: "2026-12-31" });
@@ -216,7 +224,7 @@ describe("ProductGoalsPage — health/due/scope URL params forwarded (BSN-FILTER
   });
 
   it("forwards scope URL param to useGoalsPage so scope-filtered queries run server-side", () => {
-    mockUseSearchParams.mockReturnValueOnce(new URLSearchParams("scope=own"));
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("scope=own"));
     render(<ProductGoalsPage managedProductId={7} />);
     const [callParams] = useGoalsPage.mock.calls[0] as [Record<string, unknown>];
     expect(callParams).toMatchObject({ scope: "own" });

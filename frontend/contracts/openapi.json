@@ -130362,9 +130362,7 @@
             "in": "query",
             "required": false,
             "schema": {
-              "type": "integer",
-              "exclusiveMinimum": 0,
-              "maximum": 9007199254740991
+              "type": "string"
             }
           },
           {
@@ -130373,7 +130371,7 @@
             "required": false,
             "schema": {
               "type": "string",
-              "maxLength": 40
+              "maxLength": 200
             }
           },
           {
@@ -130382,7 +130380,7 @@
             "required": false,
             "schema": {
               "type": "string",
-              "maxLength": 40
+              "maxLength": 200
             }
           },
           {
@@ -130628,6 +130626,21 @@
                                   }
                                 ]
                               },
+                              "roadmapDefaultHorizon": {
+                                "anyOf": [
+                                  {
+                                    "type": "string",
+                                    "enum": [
+                                      "now",
+                                      "next",
+                                      "later"
+                                    ]
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
                               "owner": {
                                 "anyOf": [
                                   {
@@ -130707,6 +130720,12 @@
                                 "type": "string",
                                 "format": "date-time"
                               },
+                              "allowedActions": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
                               "linkedProjectCount": {
                                 "type": "integer",
                                 "minimum": -9007199254740991,
@@ -130769,6 +130788,55 @@
                                   "last30d",
                                   "previous30d"
                                 ]
+                              },
+                              "goalHealth": {
+                                "anyOf": [
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "total": {
+                                        "type": "integer",
+                                        "minimum": -9007199254740991,
+                                        "maximum": 9007199254740991
+                                      },
+                                      "onTrack": {
+                                        "type": "integer",
+                                        "minimum": -9007199254740991,
+                                        "maximum": 9007199254740991
+                                      },
+                                      "atRisk": {
+                                        "type": "integer",
+                                        "minimum": -9007199254740991,
+                                        "maximum": 9007199254740991
+                                      },
+                                      "offTrack": {
+                                        "type": "integer",
+                                        "minimum": -9007199254740991,
+                                        "maximum": 9007199254740991
+                                      }
+                                    },
+                                    "required": [
+                                      "total",
+                                      "onTrack",
+                                      "atRisk",
+                                      "offTrack"
+                                    ]
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "sourceFreshness": {
+                                "anyOf": [
+                                  {
+                                    "type": "string",
+                                    "format": "date-time"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
                               }
                             },
                             "required": [
@@ -130794,14 +130862,18 @@
                               "tags",
                               "northStarMetric",
                               "lastReviewedAt",
+                              "roadmapDefaultHorizon",
                               "owner",
                               "version",
                               "deletedAt",
                               "createdAt",
                               "updatedAt",
+                              "allowedActions",
                               "linkedProjectCount",
                               "nextRelease",
-                              "feedbackTrend"
+                              "feedbackTrend",
+                              "goalHealth",
+                              "sourceFreshness"
                             ]
                           }
                         },
@@ -131098,6 +131170,21 @@
                             }
                           ]
                         },
+                        "roadmapDefaultHorizon": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": [
+                                "now",
+                                "next",
+                                "later"
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "owner": {
                           "anyOf": [
                             {
@@ -131176,6 +131263,12 @@
                         "updatedAt": {
                           "type": "string",
                           "format": "date-time"
+                        },
+                        "allowedActions": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
                         }
                       },
                       "required": [
@@ -131201,11 +131294,13 @@
                         "tags",
                         "northStarMetric",
                         "lastReviewedAt",
+                        "roadmapDefaultHorizon",
                         "owner",
                         "version",
                         "deletedAt",
                         "createdAt",
-                        "updatedAt"
+                        "updatedAt",
+                        "allowedActions"
                       ]
                     }
                   },
@@ -131617,6 +131712,21 @@
                             }
                           ]
                         },
+                        "roadmapDefaultHorizon": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": [
+                                "now",
+                                "next",
+                                "later"
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "owner": {
                           "anyOf": [
                             {
@@ -131695,6 +131805,12 @@
                         "updatedAt": {
                           "type": "string",
                           "format": "date-time"
+                        },
+                        "allowedActions": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
                         }
                       },
                       "required": [
@@ -131720,11 +131836,13 @@
                         "tags",
                         "northStarMetric",
                         "lastReviewedAt",
+                        "roadmapDefaultHorizon",
                         "owner",
                         "version",
                         "deletedAt",
                         "createdAt",
-                        "updatedAt"
+                        "updatedAt",
+                        "allowedActions"
                       ]
                     }
                   },
@@ -131999,6 +132117,21 @@
                             }
                           ]
                         },
+                        "roadmapDefaultHorizon": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": [
+                                "now",
+                                "next",
+                                "later"
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "owner": {
                           "anyOf": [
                             {
@@ -132077,6 +132210,12 @@
                         "updatedAt": {
                           "type": "string",
                           "format": "date-time"
+                        },
+                        "allowedActions": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
                         }
                       },
                       "required": [
@@ -132102,11 +132241,13 @@
                         "tags",
                         "northStarMetric",
                         "lastReviewedAt",
+                        "roadmapDefaultHorizon",
                         "owner",
                         "version",
                         "deletedAt",
                         "createdAt",
-                        "updatedAt"
+                        "updatedAt",
+                        "allowedActions"
                       ]
                     }
                   },
@@ -132342,6 +132483,21 @@
                         "type": "string",
                         "format": "date-time",
                         "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "roadmapDefaultHorizon": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "now",
+                          "next",
+                          "later"
+                        ]
                       },
                       {
                         "type": "null"
@@ -132649,6 +132805,21 @@
                             }
                           ]
                         },
+                        "roadmapDefaultHorizon": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": [
+                                "now",
+                                "next",
+                                "later"
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "owner": {
                           "anyOf": [
                             {
@@ -132727,6 +132898,12 @@
                         "updatedAt": {
                           "type": "string",
                           "format": "date-time"
+                        },
+                        "allowedActions": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
                         }
                       },
                       "required": [
@@ -132752,11 +132929,13 @@
                         "tags",
                         "northStarMetric",
                         "lastReviewedAt",
+                        "roadmapDefaultHorizon",
                         "owner",
                         "version",
                         "deletedAt",
                         "createdAt",
-                        "updatedAt"
+                        "updatedAt",
+                        "allowedActions"
                       ]
                     }
                   },
@@ -137887,6 +138066,22 @@
                                 "done",
                                 "percent"
                               ]
+                            },
+                            "allowedActions": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            },
+                            "sourceFreshness": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
                             }
                           },
                           "required": [
@@ -137929,7 +138124,9 @@
                             "deletedAt",
                             "prioritization",
                             "tierWeighting",
-                            "delivery"
+                            "delivery",
+                            "allowedActions",
+                            "sourceFreshness"
                           ]
                         }
                       },
@@ -141066,6 +141263,44 @@
                                   }
                                 ]
                               },
+                              "measureKind": {
+                                "type": "string",
+                                "enum": [
+                                  "self_reported",
+                                  "measured"
+                                ]
+                              },
+                              "metricPeriod": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "sourceUrl": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "measuredAt": {
+                                "anyOf": [
+                                  {
+                                    "type": "string",
+                                    "format": "date-time"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
                               "state": {
                                 "type": "string",
                                 "enum": [
@@ -141154,6 +141389,10 @@
                               "actual",
                               "scheduledFor",
                               "completedAt",
+                              "measureKind",
+                              "metricPeriod",
+                              "sourceUrl",
+                              "measuredAt",
                               "state",
                               "result",
                               "notes",
@@ -141418,6 +141657,44 @@
                             }
                           ]
                         },
+                        "measureKind": {
+                          "type": "string",
+                          "enum": [
+                            "self_reported",
+                            "measured"
+                          ]
+                        },
+                        "metricPeriod": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "sourceUrl": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "measuredAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "state": {
                           "type": "string",
                           "enum": [
@@ -141506,6 +141783,10 @@
                         "actual",
                         "scheduledFor",
                         "completedAt",
+                        "measureKind",
+                        "metricPeriod",
+                        "sourceUrl",
+                        "measuredAt",
                         "state",
                         "result",
                         "notes",
@@ -141621,6 +141902,27 @@
                     "type": "integer",
                     "exclusiveMinimum": 0,
                     "maximum": 9007199254740991
+                  },
+                  "measureKind": {
+                    "type": "string",
+                    "enum": [
+                      "self_reported",
+                      "measured"
+                    ]
+                  },
+                  "metricPeriod": {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  "sourceUrl": {
+                    "type": "string",
+                    "maxLength": 2000,
+                    "format": "uri"
+                  },
+                  "measuredAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
                   }
                 },
                 "required": [
@@ -141827,6 +142129,44 @@
                             }
                           ]
                         },
+                        "measureKind": {
+                          "type": "string",
+                          "enum": [
+                            "self_reported",
+                            "measured"
+                          ]
+                        },
+                        "metricPeriod": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "sourceUrl": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "measuredAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "state": {
                           "type": "string",
                           "enum": [
@@ -141915,6 +142255,10 @@
                         "actual",
                         "scheduledFor",
                         "completedAt",
+                        "measureKind",
+                        "metricPeriod",
+                        "sourceUrl",
+                        "measuredAt",
                         "state",
                         "result",
                         "notes",
@@ -142096,6 +142440,48 @@
                         "type": "null"
                       }
                     ]
+                  },
+                  "measureKind": {
+                    "type": "string",
+                    "enum": [
+                      "self_reported",
+                      "measured"
+                    ]
+                  },
+                  "metricPeriod": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 200
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "sourceUrl": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 2000,
+                        "format": "uri"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "measuredAt": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "format": "date-time",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
                   }
                 },
                 "required": [
@@ -142207,12 +142593,15 @@
             "in": "query",
             "required": false,
             "schema": {
-              "type": "string",
-              "enum": [
-                "ACTIVE",
-                "ARCHIVED",
-                "COMPLETED"
-              ]
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "ACTIVE",
+                  "ARCHIVED",
+                  "COMPLETED"
+                ]
+              }
             }
           },
           {
@@ -142220,12 +142609,15 @@
             "in": "query",
             "required": false,
             "schema": {
-              "type": "string",
-              "enum": [
-                "on_track",
-                "at_risk",
-                "off_track"
-              ]
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "on_track",
+                  "at_risk",
+                  "off_track"
+                ]
+              }
             }
           },
           {
@@ -142233,9 +142625,12 @@
             "in": "query",
             "required": false,
             "schema": {
-              "type": "integer",
-              "exclusiveMinimum": 0,
-              "maximum": 9007199254740991
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "exclusiveMinimum": 0,
+                "maximum": 9007199254740991
+              }
             }
           },
           {
@@ -142352,6 +142747,9 @@
                               },
                               "status": {
                                 "type": "string"
+                              },
+                              "isPrimary": {
+                                "type": "boolean"
                               },
                               "ownerId": {
                                 "anyOf": [
@@ -142472,6 +142870,21 @@
                                 "minimum": -9007199254740991,
                                 "maximum": 9007199254740991
                               },
+                              "revision": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "sourceFreshness": {
+                                "type": "string",
+                                "format": "date-time"
+                              },
+                              "allowedActions": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
                               "createdAt": {
                                 "type": "string",
                                 "format": "date-time"
@@ -142486,6 +142899,7 @@
                               "name",
                               "key",
                               "status",
+                              "isPrimary",
                               "ownerId",
                               "ownerMembershipId",
                               "managerMembershipId",
@@ -142494,6 +142908,9 @@
                               "nextMilestone",
                               "contribution",
                               "linkedRoadmapItemCount",
+                              "revision",
+                              "sourceFreshness",
+                              "allowedActions",
                               "createdAt",
                               "updatedAt"
                             ]
@@ -142568,6 +142985,287 @@
         "x-exposure": "permissioned",
         "x-permission": "build:managed-products:view",
         "description": "Exposure: permission — build:managed-products:view"
+      }
+    },
+    "/build/managed-products/{managedProductId}/projects/{projectId}": {
+      "post": {
+        "operationId": "ManagedProductRelationsController_linkProjectSecondary",
+        "parameters": [
+          {
+            "name": "managedProductId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          {
+            "name": "projectId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKeyHeader"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "projectId": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "managedProductId": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "isPrimary": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "projectId",
+                        "managedProductId",
+                        "isPrimary"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "tags": [
+          "ManagedProductRelations"
+        ],
+        "x-exposure": "permissioned",
+        "x-permission": "build:managed-products:update",
+        "description": "Exposure: permission — build:managed-products:update",
+        "x-idempotency-command": "build.managed-products.project-link.add",
+        "x-idempotent": true
+      },
+      "delete": {
+        "operationId": "ManagedProductRelationsController_unlinkProject",
+        "parameters": [
+          {
+            "name": "managedProductId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          {
+            "name": "projectId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content",
+            "x-no-content": true
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "tags": [
+          "ManagedProductRelations"
+        ],
+        "x-exposure": "permissioned",
+        "x-permission": "build:managed-products:update",
+        "description": "Exposure: permission — build:managed-products:update"
+      }
+    },
+    "/build/managed-products/{managedProductId}/projects/{projectId}/primary": {
+      "patch": {
+        "operationId": "ManagedProductRelationsController_setPrimaryProject",
+        "parameters": [
+          {
+            "name": "managedProductId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          {
+            "name": "projectId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKeyHeader"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "projectId": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "managedProductId": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "isPrimary": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "projectId",
+                        "managedProductId",
+                        "isPrimary"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "tags": [
+          "ManagedProductRelations"
+        ],
+        "x-exposure": "permissioned",
+        "x-permission": "build:managed-products:update",
+        "description": "Exposure: permission — build:managed-products:update",
+        "x-idempotency-command": "build.managed-products.project-link.set-primary",
+        "x-idempotent": true
       }
     },
     "/build/managed-products/{managedProductId}/releases": {
@@ -142673,6 +143371,41 @@
                                   }
                                 ]
                               },
+                              "recordRevision": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "ownerUserId": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "qaState": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "deploymentEvidenceUrl": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
                               "createdBy": {
                                 "anyOf": [
                                   {
@@ -142701,6 +143434,10 @@
                               "description",
                               "status",
                               "releaseDate",
+                              "recordRevision",
+                              "ownerUserId",
+                              "qaState",
+                              "deploymentEvidenceUrl",
                               "createdBy",
                               "createdAt",
                               "updatedAt"
@@ -142858,6 +143595,41 @@
                             }
                           ]
                         },
+                        "recordRevision": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "ownerUserId": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "qaState": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "deploymentEvidenceUrl": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "createdBy": {
                           "anyOf": [
                             {
@@ -142886,6 +143658,10 @@
                         "description",
                         "status",
                         "releaseDate",
+                        "recordRevision",
+                        "ownerUserId",
+                        "qaState",
+                        "deploymentEvidenceUrl",
                         "createdBy",
                         "createdAt",
                         "updatedAt"
@@ -142964,6 +143740,24 @@
                       "released",
                       "archived"
                     ]
+                  },
+                  "ownerUserId": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "qaState": {
+                    "type": "string",
+                    "enum": [
+                      "pending",
+                      "in_review",
+                      "approved",
+                      "rejected"
+                    ]
+                  },
+                  "deploymentEvidenceUrl": {
+                    "type": "string",
+                    "maxLength": 2048,
+                    "format": "uri"
                   }
                 },
                 "required": [
@@ -143071,6 +143865,41 @@
                             }
                           ]
                         },
+                        "recordRevision": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "ownerUserId": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "qaState": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "deploymentEvidenceUrl": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "createdBy": {
                           "anyOf": [
                             {
@@ -143099,6 +143928,10 @@
                         "description",
                         "status",
                         "releaseDate",
+                        "recordRevision",
+                        "ownerUserId",
+                        "qaState",
+                        "deploymentEvidenceUrl",
                         "createdBy",
                         "createdAt",
                         "updatedAt"
@@ -143152,6 +143985,11 @@
               "schema": {
                 "type": "object",
                 "properties": {
+                  "expectedRevision": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
+                  },
                   "name": {
                     "type": "string",
                     "minLength": 1,
@@ -143191,8 +144029,50 @@
                       "released",
                       "archived"
                     ]
+                  },
+                  "ownerUserId": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "qaState": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "pending",
+                          "in_review",
+                          "approved",
+                          "rejected"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "deploymentEvidenceUrl": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 2048,
+                        "format": "uri"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
                   }
                 },
+                "required": [
+                  "expectedRevision"
+                ],
                 "additionalProperties": false
               }
             }
@@ -143439,6 +144319,21 @@
                             }
                           ]
                         },
+                        "roadmapDefaultHorizon": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": [
+                                "now",
+                                "next",
+                                "later"
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "owner": {
                           "anyOf": [
                             {
@@ -143517,6 +144412,12 @@
                         "updatedAt": {
                           "type": "string",
                           "format": "date-time"
+                        },
+                        "allowedActions": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
                         }
                       },
                       "required": [
@@ -143542,11 +144443,13 @@
                         "tags",
                         "northStarMetric",
                         "lastReviewedAt",
+                        "roadmapDefaultHorizon",
                         "owner",
                         "version",
                         "deletedAt",
                         "createdAt",
-                        "updatedAt"
+                        "updatedAt",
+                        "allowedActions"
                       ]
                     }
                   },
@@ -143613,6 +144516,687 @@
         },
         "x-idempotency-command": "build.managed-products.restore",
         "x-idempotent": true
+      }
+    },
+    "/build/managed-products/{managedProductId}/roadmap-preview": {
+      "get": {
+        "operationId": "ManagedProductRelationsController_getRoadmapPreview",
+        "parameters": [
+          {
+            "name": "managedProductId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "orgName": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "roadmap": {
+                          "type": "object",
+                          "properties": {
+                            "planned": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "title": {
+                                    "type": "string"
+                                  },
+                                  "description": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "status": {
+                                    "type": "string"
+                                  },
+                                  "category": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "targetQuarter": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "horizon": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "votes": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "title",
+                                  "description",
+                                  "status",
+                                  "category",
+                                  "targetQuarter",
+                                  "horizon",
+                                  "votes"
+                                ]
+                              }
+                            },
+                            "in_progress": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "title": {
+                                    "type": "string"
+                                  },
+                                  "description": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "status": {
+                                    "type": "string"
+                                  },
+                                  "category": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "targetQuarter": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "horizon": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "votes": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "title",
+                                  "description",
+                                  "status",
+                                  "category",
+                                  "targetQuarter",
+                                  "horizon",
+                                  "votes"
+                                ]
+                              }
+                            },
+                            "completed": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "title": {
+                                    "type": "string"
+                                  },
+                                  "description": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "status": {
+                                    "type": "string"
+                                  },
+                                  "category": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "targetQuarter": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "horizon": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "votes": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "title",
+                                  "description",
+                                  "status",
+                                  "category",
+                                  "targetQuarter",
+                                  "horizon",
+                                  "votes"
+                                ]
+                              }
+                            }
+                          },
+                          "required": [
+                            "planned",
+                            "in_progress",
+                            "completed"
+                          ]
+                        },
+                        "feedback": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "title": {
+                                "type": "string"
+                              },
+                              "description": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "category": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "votes": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "createdAt": {}
+                            },
+                            "required": [
+                              "id",
+                              "title",
+                              "description",
+                              "category",
+                              "votes",
+                              "createdAt"
+                            ]
+                          }
+                        },
+                        "changelog": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "title": {
+                                "type": "string"
+                              },
+                              "content": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "version": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "type": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "publishedAt": {
+                                "anyOf": [
+                                  {},
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "title",
+                              "content",
+                              "version",
+                              "type",
+                              "publishedAt"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "orgName",
+                        "roadmap",
+                        "feedback",
+                        "changelog"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "tags": [
+          "ManagedProductRelations"
+        ],
+        "x-exposure": "permissioned",
+        "x-permission": "build:roadmap:view",
+        "description": "Exposure: permission — build:roadmap:view"
+      }
+    },
+    "/build/managed-products/{managedProductId}/roadmap-publication": {
+      "get": {
+        "operationId": "ManagedProductRelationsController_getRoadmapPublication",
+        "parameters": [
+          {
+            "name": "managedProductId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "token": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "path": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "token",
+                        "path"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "tags": [
+          "ManagedProductRelations"
+        ],
+        "x-exposure": "permissioned",
+        "x-permission": "build:roadmap:view",
+        "description": "Exposure: permission — build:roadmap:view"
+      },
+      "post": {
+        "operationId": "ManagedProductRelationsController_issueRoadmapPublicationToken",
+        "parameters": [
+          {
+            "name": "managedProductId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKeyHeader"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "token": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "path": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "token",
+                        "path"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "tags": [
+          "ManagedProductRelations"
+        ],
+        "x-exposure": "permissioned",
+        "x-permission": "build:roadmap:manage",
+        "description": "Exposure: permission — build:roadmap:manage",
+        "x-idempotency-command": "build.managed-products.roadmap-publication.issue",
+        "x-idempotent": true
+      },
+      "delete": {
+        "operationId": "ManagedProductRelationsController_revokeRoadmapPublication",
+        "parameters": [
+          {
+            "name": "managedProductId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content",
+            "x-no-content": true
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "tags": [
+          "ManagedProductRelations"
+        ],
+        "x-exposure": "permissioned",
+        "x-permission": "build:roadmap:manage",
+        "description": "Exposure: permission — build:roadmap:manage"
       }
     },
     "/build/managed-products/{managedProductId}/summary": {
@@ -143899,6 +145483,21 @@
                                 }
                               ]
                             },
+                            "roadmapDefaultHorizon": {
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "enum": [
+                                    "now",
+                                    "next",
+                                    "later"
+                                  ]
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
                             "owner": {
                               "anyOf": [
                                 {
@@ -143977,6 +145576,12 @@
                             "updatedAt": {
                               "type": "string",
                               "format": "date-time"
+                            },
+                            "allowedActions": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
                             }
                           },
                           "required": [
@@ -144002,11 +145607,13 @@
                             "tags",
                             "northStarMetric",
                             "lastReviewedAt",
+                            "roadmapDefaultHorizon",
                             "owner",
                             "version",
                             "deletedAt",
                             "createdAt",
-                            "updatedAt"
+                            "updatedAt",
+                            "allowedActions"
                           ]
                         },
                         "evidence": {
@@ -144327,6 +145934,41 @@
                                       }
                                     ]
                                   },
+                                  "recordRevision": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "ownerUserId": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "qaState": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "deploymentEvidenceUrl": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
                                   "createdBy": {
                                     "anyOf": [
                                       {
@@ -144355,6 +145997,10 @@
                                   "description",
                                   "status",
                                   "releaseDate",
+                                  "recordRevision",
+                                  "ownerUserId",
+                                  "qaState",
+                                  "deploymentEvidenceUrl",
                                   "createdBy",
                                   "createdAt",
                                   "updatedAt"
@@ -144536,6 +146182,347 @@
         "x-exposure": "permissioned",
         "x-permission": "build:managed-products:view",
         "description": "Exposure: permission — build:managed-products:view"
+      }
+    },
+    "/build/managed-products/{managedProductId}/updates": {
+      "get": {
+        "operationId": "ManagedProductRelationsController_listProductUpdates",
+        "parameters": [
+          {
+            "name": "managedProductId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "default": 25,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "orgId": {
+                                "type": "string"
+                              },
+                              "managedProductId": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "body": {
+                                "type": "string"
+                              },
+                              "version": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "authorMembershipId": {
+                                "anyOf": [
+                                  {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "authorName": {
+                                "type": "string"
+                              },
+                              "createdAt": {
+                                "type": "string",
+                                "format": "date-time"
+                              },
+                              "updatedAt": {
+                                "type": "string",
+                                "format": "date-time"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "orgId",
+                              "managedProductId",
+                              "body",
+                              "version",
+                              "authorMembershipId",
+                              "authorName",
+                              "createdAt",
+                              "updatedAt"
+                            ]
+                          }
+                        },
+                        "pagination": {
+                          "type": "object",
+                          "properties": {
+                            "limit": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "hasMore": {
+                              "type": "boolean"
+                            },
+                            "nextCursor": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            }
+                          },
+                          "required": [
+                            "limit",
+                            "hasMore",
+                            "nextCursor"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "data",
+                        "pagination"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "tags": [
+          "ManagedProductRelations"
+        ],
+        "x-exposure": "permissioned",
+        "x-permission": "build:managed-products:view",
+        "description": "Exposure: permission — build:managed-products:view"
+      },
+      "post": {
+        "operationId": "ManagedProductRelationsController_createProductUpdate",
+        "parameters": [
+          {
+            "name": "managedProductId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKeyHeader"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "orgId": {
+                          "type": "string"
+                        },
+                        "managedProductId": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "body": {
+                          "type": "string"
+                        },
+                        "version": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "authorMembershipId": {
+                          "anyOf": [
+                            {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "authorName": {
+                          "type": "string"
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "updatedAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "orgId",
+                        "managedProductId",
+                        "body",
+                        "version",
+                        "authorMembershipId",
+                        "authorName",
+                        "createdAt",
+                        "updatedAt"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "tags": [
+          "ManagedProductRelations"
+        ],
+        "x-exposure": "permissioned",
+        "x-permission": "build:managed-products:update",
+        "description": "Exposure: permission — build:managed-products:update",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "body": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 10000
+                  }
+                },
+                "required": [
+                  "body"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "x-idempotency-command": "build.managed-products.product-update.create",
+        "x-idempotent": true
       }
     },
     "/build/managed-products/bulk": {
@@ -144764,6 +146751,112 @@
         },
         "tags": [
           "ManagedProducts"
+        ],
+        "x-exposure": "permissioned",
+        "x-permission": "build:managed-products:view",
+        "description": "Exposure: permission — build:managed-products:view"
+      }
+    },
+    "/build/managed-products/projects/{projectId}/products": {
+      "get": {
+        "operationId": "ManagedProductRelationsController_listProjectProducts",
+        "parameters": [
+          {
+            "name": "projectId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "managedProductId": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "name": {
+                                "type": "string"
+                              },
+                              "key": {
+                                "type": "string"
+                              },
+                              "status": {
+                                "type": "string"
+                              },
+                              "isPrimary": {
+                                "type": "boolean"
+                              }
+                            },
+                            "required": [
+                              "managedProductId",
+                              "name",
+                              "key",
+                              "status",
+                              "isPrimary"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "data"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "tags": [
+          "ManagedProductRelations"
         ],
         "x-exposure": "permissioned",
         "x-permission": "build:managed-products:view",
@@ -149412,13 +151505,16 @@
             "in": "query",
             "required": false,
             "schema": {
-              "type": "string",
-              "enum": [
-                "planned",
-                "in_progress",
-                "completed",
-                "cancelled"
-              ]
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "planned",
+                  "in_progress",
+                  "completed",
+                  "cancelled"
+                ]
+              }
             }
           },
           {
@@ -149488,8 +151584,15 @@
             "in": "query",
             "required": false,
             "schema": {
-              "type": "string",
-              "maxLength": 60
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "now",
+                  "next",
+                  "later"
+                ]
+              }
             }
           },
           {
@@ -149515,9 +151618,12 @@
             "in": "query",
             "required": false,
             "schema": {
-              "type": "integer",
-              "exclusiveMinimum": 0,
-              "maximum": 9007199254740991
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "exclusiveMinimum": 0,
+                "maximum": 9007199254740991
+              }
             }
           },
           {
@@ -149535,9 +151641,12 @@
             "in": "query",
             "required": false,
             "schema": {
-              "type": "integer",
-              "exclusiveMinimum": 0,
-              "maximum": 9007199254740991
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "exclusiveMinimum": 0,
+                "maximum": 9007199254740991
+              }
             }
           },
           {
@@ -149610,6 +151719,37 @@
             "schema": {
               "type": "string",
               "maxLength": 200
+            }
+          },
+          {
+            "name": "customerVisible",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          {
+            "name": "evidenceState",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "identified",
+                "validating",
+                "accepted",
+                "declined",
+                "delivered",
+                "measured"
+              ]
             }
           }
         ],
@@ -150295,6 +152435,22 @@
                                   "done",
                                   "percent"
                                 ]
+                              },
+                              "allowedActions": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              "sourceFreshness": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
                               }
                             },
                             "required": [
@@ -150337,7 +152493,9 @@
                               "deletedAt",
                               "prioritization",
                               "tierWeighting",
-                              "delivery"
+                              "delivery",
+                              "allowedActions",
+                              "sourceFreshness"
                             ]
                           }
                         },
@@ -151097,6 +153255,22 @@
                             "done",
                             "percent"
                           ]
+                        },
+                        "allowedActions": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "sourceFreshness": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
                         }
                       },
                       "required": [
@@ -151139,7 +153313,9 @@
                         "deletedAt",
                         "prioritization",
                         "tierWeighting",
-                        "delivery"
+                        "delivery",
+                        "allowedActions",
+                        "sourceFreshness"
                       ]
                     }
                   },
@@ -152057,6 +154233,22 @@
                             "done",
                             "percent"
                           ]
+                        },
+                        "allowedActions": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "sourceFreshness": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
                         }
                       },
                       "required": [
@@ -152099,7 +154291,9 @@
                         "deletedAt",
                         "prioritization",
                         "tierWeighting",
-                        "delivery"
+                        "delivery",
+                        "allowedActions",
+                        "sourceFreshness"
                       ]
                     }
                   },
@@ -152886,6 +155080,22 @@
                             "done",
                             "percent"
                           ]
+                        },
+                        "allowedActions": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "sourceFreshness": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
                         }
                       },
                       "required": [
@@ -152928,7 +155138,9 @@
                         "deletedAt",
                         "prioritization",
                         "tierWeighting",
-                        "delivery"
+                        "delivery",
+                        "allowedActions",
+                        "sourceFreshness"
                       ]
                     }
                   },
@@ -153306,6 +155518,796 @@
       }
     },
     "/build/roadmap/{itemId}": {
+      "get": {
+        "operationId": "ProjectsRoadmapController_getRoadmapItem",
+        "parameters": [
+          {
+            "name": "itemId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "orgId": {
+                          "type": "string"
+                        },
+                        "title": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "outcome": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "planned",
+                            "in_progress",
+                            "completed",
+                            "cancelled"
+                          ]
+                        },
+                        "category": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "isPublic": {
+                          "type": "boolean"
+                        },
+                        "projectId": {
+                          "anyOf": [
+                            {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "managedProductId": {
+                          "anyOf": [
+                            {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "epicTicketId": {
+                          "anyOf": [
+                            {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "targetQuarter": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "sortOrder": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "votes": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "reach": {
+                          "anyOf": [
+                            {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "impact": {
+                          "anyOf": [
+                            {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "confidence": {
+                          "anyOf": [
+                            {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "effort": {
+                          "anyOf": [
+                            {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "ownerMembershipId": {
+                          "anyOf": [
+                            {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "owner": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "name": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "firstName": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "lastName": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "email": {
+                                  "type": "string"
+                                },
+                                "image": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "name",
+                                "firstName",
+                                "lastName",
+                                "email",
+                                "image"
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "horizon": {
+                          "type": "string",
+                          "enum": [
+                            "now",
+                            "next",
+                            "later"
+                          ]
+                        },
+                        "goalId": {
+                          "anyOf": [
+                            {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "releaseId": {
+                          "anyOf": [
+                            {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "teamId": {
+                          "anyOf": [
+                            {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "opportunityId": {
+                          "anyOf": [
+                            {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "targetStart": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "targetEnd": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "decisionSnapshot": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "propertyNames": {
+                                "type": "string"
+                              },
+                              "additionalProperties": {}
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "goal": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991
+                                },
+                                "title": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "id",
+                                "title"
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "release": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991
+                                },
+                                "name": {
+                                  "type": "string"
+                                },
+                                "version": {
+                                  "type": "string"
+                                },
+                                "releaseDate": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "id",
+                                "name",
+                                "version",
+                                "releaseDate"
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "team": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991
+                                },
+                                "name": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "id",
+                                "name"
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "opportunity": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991
+                                },
+                                "title": {
+                                  "type": "string"
+                                },
+                                "state": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "id",
+                                "title",
+                                "state"
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "version": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "createdBy": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "updatedAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "deletedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "prioritization": {
+                          "type": "object",
+                          "properties": {
+                            "method": {
+                              "type": "string",
+                              "const": "rice"
+                            },
+                            "score": {
+                              "anyOf": [
+                                {
+                                  "type": "number"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "isComplete": {
+                              "type": "boolean"
+                            },
+                            "missingInputs": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "enum": [
+                                  "reach",
+                                  "impact",
+                                  "confidence",
+                                  "effort"
+                                ]
+                              }
+                            },
+                            "unavailableReason": {
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "enum": [
+                                    "missing_inputs",
+                                    "non_positive_effort"
+                                  ]
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            }
+                          },
+                          "required": [
+                            "method",
+                            "score",
+                            "isComplete",
+                            "missingInputs",
+                            "unavailableReason"
+                          ]
+                        },
+                        "tierWeighting": {
+                          "type": "object",
+                          "properties": {
+                            "tierWeighted": {
+                              "type": "boolean"
+                            },
+                            "tier": {
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "enum": [
+                                    "free",
+                                    "pro",
+                                    "enterprise"
+                                  ]
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "weight": {
+                              "anyOf": [
+                                {
+                                  "type": "number"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "weightedScore": {
+                              "anyOf": [
+                                {
+                                  "type": "number"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "unweightedReason": {
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "enum": [
+                                    "no_linked_feedback",
+                                    "no_linked_account",
+                                    "account_tier_unset",
+                                    "score_unavailable"
+                                  ]
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "linkedFeedbackCount": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "linkedAccountCount": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "linkedRevenue": {
+                              "anyOf": [
+                                {
+                                  "type": "number"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "revenueKnownAccountCount": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            }
+                          },
+                          "required": [
+                            "tierWeighted",
+                            "tier",
+                            "weight",
+                            "weightedScore",
+                            "unweightedReason",
+                            "linkedFeedbackCount",
+                            "linkedAccountCount",
+                            "linkedRevenue",
+                            "revenueKnownAccountCount"
+                          ]
+                        },
+                        "delivery": {
+                          "type": "object",
+                          "properties": {
+                            "source": {
+                              "type": "string",
+                              "enum": [
+                                "epic_ticket",
+                                "project",
+                                "none"
+                              ]
+                            },
+                            "total": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "done": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "percent": {
+                              "anyOf": [
+                                {
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            }
+                          },
+                          "required": [
+                            "source",
+                            "total",
+                            "done",
+                            "percent"
+                          ]
+                        },
+                        "allowedActions": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "sourceFreshness": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "orgId",
+                        "title",
+                        "description",
+                        "outcome",
+                        "status",
+                        "category",
+                        "isPublic",
+                        "projectId",
+                        "managedProductId",
+                        "epicTicketId",
+                        "targetQuarter",
+                        "sortOrder",
+                        "votes",
+                        "reach",
+                        "impact",
+                        "confidence",
+                        "effort",
+                        "ownerMembershipId",
+                        "owner",
+                        "horizon",
+                        "goalId",
+                        "releaseId",
+                        "teamId",
+                        "opportunityId",
+                        "targetStart",
+                        "targetEnd",
+                        "decisionSnapshot",
+                        "goal",
+                        "release",
+                        "team",
+                        "opportunity",
+                        "version",
+                        "createdBy",
+                        "createdAt",
+                        "updatedAt",
+                        "deletedAt",
+                        "prioritization",
+                        "tierWeighting",
+                        "delivery",
+                        "allowedActions",
+                        "sourceFreshness"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "tags": [
+          "ProjectsRoadmap"
+        ],
+        "x-exposure": "permissioned",
+        "x-permission": "build:roadmap:view",
+        "description": "Exposure: permission — build:roadmap:view"
+      },
       "patch": {
         "operationId": "ProjectsRoadmapController_updateRoadmap",
         "parameters": [
@@ -154000,6 +157002,22 @@
                             "done",
                             "percent"
                           ]
+                        },
+                        "allowedActions": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "sourceFreshness": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
                         }
                       },
                       "required": [
@@ -154042,7 +157060,9 @@
                         "deletedAt",
                         "prioritization",
                         "tierWeighting",
-                        "delivery"
+                        "delivery",
+                        "allowedActions",
+                        "sourceFreshness"
                       ]
                     }
                   },
@@ -793662,6 +796682,250 @@
         }
       }
     },
+    "/feedbucket/managed-products/{managedProductId}/customer-impact": {
+      "get": {
+        "operationId": "FeedbucketDiscoveryController_getCustomerImpact",
+        "parameters": [
+          {
+            "name": "managedProductId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "rows": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "crmOrganizationId": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "customerName": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "submissionCount": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "opportunityCount": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "accountValue": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              }
+                            },
+                            "required": [
+                              "crmOrganizationId",
+                              "customerName",
+                              "submissionCount",
+                              "opportunityCount",
+                              "accountValue"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "rows"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "tags": [
+          "FeedbucketDiscovery"
+        ],
+        "x-exposure": "permissioned",
+        "x-permission": "feedbucket:submissions:view",
+        "description": "Exposure: permission — feedbucket:submissions:view"
+      }
+    },
+    "/feedbucket/managed-products/{managedProductId}/opportunity-impact": {
+      "get": {
+        "operationId": "FeedbucketDiscoveryController_getOpportunityImpact",
+        "parameters": [
+          {
+            "name": "managedProductId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "rows": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "opportunityId": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "distinctCustomers": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "segments": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              "requestCount": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "summedAccountValue": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              }
+                            },
+                            "required": [
+                              "opportunityId",
+                              "distinctCustomers",
+                              "segments",
+                              "requestCount",
+                              "summedAccountValue"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "rows"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "tags": [
+          "FeedbucketDiscovery"
+        ],
+        "x-exposure": "permissioned",
+        "x-permission": "feedbucket:submissions:view",
+        "description": "Exposure: permission — feedbucket:submissions:view"
+      }
+    },
     "/feedbucket/stats": {
       "get": {
         "operationId": "FeedbucketController_getStats",
@@ -794319,6 +797583,41 @@
                                       }
                                     ]
                                   },
+                                  "assignee": {
+                                    "anyOf": [
+                                      {
+                                        "type": "object",
+                                        "properties": {
+                                          "id": {
+                                            "type": "integer",
+                                            "minimum": -9007199254740991,
+                                            "maximum": 9007199254740991
+                                          },
+                                          "name": {
+                                            "type": "string"
+                                          },
+                                          "avatarUrl": {
+                                            "anyOf": [
+                                              {
+                                                "type": "string"
+                                              },
+                                              {
+                                                "type": "null"
+                                              }
+                                            ]
+                                          }
+                                        },
+                                        "required": [
+                                          "id",
+                                          "name",
+                                          "avatarUrl"
+                                        ]
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
                                   "linkedTicketId": {
                                     "anyOf": [
                                       {
@@ -794619,6 +797918,20 @@
                                         "type": "null"
                                       }
                                     ]
+                                  },
+                                  "revision": {
+                                    "type": "string",
+                                    "format": "date-time"
+                                  },
+                                  "sourceFreshness": {
+                                    "type": "string",
+                                    "format": "date-time"
+                                  },
+                                  "allowedActions": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string"
+                                    }
                                   }
                                 },
                                 "required": [
@@ -794639,6 +797952,7 @@
                                   "crmOrganizationId",
                                   "accountValueSnapshot",
                                   "assigneeMembershipId",
+                                  "assignee",
                                   "linkedTicketId",
                                   "linkedTicketKey",
                                   "aiType",
@@ -794658,7 +797972,10 @@
                                   "duplicateOfId",
                                   "duplicateCount",
                                   "opportunityIds",
-                                  "customer"
+                                  "customer",
+                                  "revision",
+                                  "sourceFreshness",
+                                  "allowedActions"
                                 ]
                               },
                               {
@@ -795275,6 +798592,41 @@
                                 }
                               ]
                             },
+                            "assignee": {
+                              "anyOf": [
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "id": {
+                                      "type": "integer",
+                                      "minimum": -9007199254740991,
+                                      "maximum": 9007199254740991
+                                    },
+                                    "name": {
+                                      "type": "string"
+                                    },
+                                    "avatarUrl": {
+                                      "anyOf": [
+                                        {
+                                          "type": "string"
+                                        },
+                                        {
+                                          "type": "null"
+                                        }
+                                      ]
+                                    }
+                                  },
+                                  "required": [
+                                    "id",
+                                    "name",
+                                    "avatarUrl"
+                                  ]
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
                             "linkedTicketId": {
                               "anyOf": [
                                 {
@@ -795575,6 +798927,20 @@
                                   "type": "null"
                                 }
                               ]
+                            },
+                            "revision": {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            "sourceFreshness": {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            "allowedActions": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
                             }
                           },
                           "required": [
@@ -795595,6 +798961,7 @@
                             "crmOrganizationId",
                             "accountValueSnapshot",
                             "assigneeMembershipId",
+                            "assignee",
                             "linkedTicketId",
                             "linkedTicketKey",
                             "aiType",
@@ -795614,7 +798981,10 @@
                             "duplicateOfId",
                             "duplicateCount",
                             "opportunityIds",
-                            "customer"
+                            "customer",
+                            "revision",
+                            "sourceFreshness",
+                            "allowedActions"
                           ]
                         },
                         {
@@ -796294,6 +799664,41 @@
                             }
                           ]
                         },
+                        "assignee": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991
+                                },
+                                "name": {
+                                  "type": "string"
+                                },
+                                "avatarUrl": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "id",
+                                "name",
+                                "avatarUrl"
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "linkedTicketId": {
                           "anyOf": [
                             {
@@ -796594,6 +799999,20 @@
                               "type": "null"
                             }
                           ]
+                        },
+                        "revision": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "sourceFreshness": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "allowedActions": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
                         }
                       },
                       "required": [
@@ -796614,6 +800033,7 @@
                         "crmOrganizationId",
                         "accountValueSnapshot",
                         "assigneeMembershipId",
+                        "assignee",
                         "linkedTicketId",
                         "linkedTicketKey",
                         "aiType",
@@ -796633,7 +800053,10 @@
                         "duplicateOfId",
                         "duplicateCount",
                         "opportunityIds",
-                        "customer"
+                        "customer",
+                        "revision",
+                        "sourceFreshness",
+                        "allowedActions"
                       ]
                     }
                   },
@@ -797317,6 +800740,11 @@
                       "denied",
                       "unknown"
                     ]
+                  },
+                  "expectedRevision": {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
                   }
                 },
                 "additionalProperties": false
@@ -797538,6 +800966,11 @@
                     "type": "integer",
                     "exclusiveMinimum": 0,
                     "maximum": 9007199254740991
+                  },
+                  "expectedRevision": {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
                   }
                 },
                 "required": [
@@ -797757,6 +801190,9 @@
               "exclusiveMinimum": 0,
               "maximum": 9007199254740991
             }
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKeyHeader"
           }
         ],
         "responses": {
@@ -797827,7 +801263,26 @@
         "x-exposure": "permissioned",
         "x-permission": "feedbucket:submissions:update",
         "description": "Exposure: permission — feedbucket:submissions:update",
-        "x-bodyless": true
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "expectedRevision": {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "x-idempotency-command": "feedbucket.submissions.unmark-duplicate",
+        "x-idempotent": true
       }
     },
     "/feedbucket/submissions/bulk": {
@@ -802054,14 +805509,17 @@
             "in": "query",
             "required": false,
             "schema": {
-              "type": "string",
-              "enum": [
-                "not_started",
-                "on_track",
-                "at_risk",
-                "off_track",
-                "completed"
-              ]
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "not_started",
+                  "on_track",
+                  "at_risk",
+                  "off_track",
+                  "completed"
+                ]
+              }
             }
           },
           {
@@ -802082,7 +805540,10 @@
             "in": "query",
             "required": false,
             "schema": {
-              "type": "string"
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           },
           {
@@ -802162,12 +805623,15 @@
             "in": "query",
             "required": false,
             "schema": {
-              "type": "string",
-              "enum": [
-                "on_track",
-                "at_risk",
-                "off_track"
-              ]
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "on_track",
+                  "at_risk",
+                  "off_track"
+                ]
+              }
             }
           },
           {
@@ -802531,6 +805995,13 @@
                                   "stale",
                                   "none"
                                 ]
+                              },
+                              "allowedActions": {
+                                "default": [],
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
                               }
                             },
                             "required": [
@@ -1241281,6 +1244752,450 @@
               "type": "integer",
               "exclusiveMinimum": 0,
               "maximum": 9007199254740991
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "orgName": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "roadmap": {
+                          "type": "object",
+                          "properties": {
+                            "planned": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "title": {
+                                    "type": "string"
+                                  },
+                                  "description": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "status": {
+                                    "type": "string",
+                                    "enum": [
+                                      "planned",
+                                      "in_progress",
+                                      "completed",
+                                      "cancelled"
+                                    ]
+                                  },
+                                  "category": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "targetQuarter": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "horizon": {
+                                    "type": "string",
+                                    "enum": [
+                                      "now",
+                                      "next",
+                                      "later"
+                                    ]
+                                  },
+                                  "votes": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "title",
+                                  "description",
+                                  "status",
+                                  "category",
+                                  "targetQuarter",
+                                  "horizon",
+                                  "votes"
+                                ]
+                              }
+                            },
+                            "in_progress": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "title": {
+                                    "type": "string"
+                                  },
+                                  "description": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "status": {
+                                    "type": "string",
+                                    "enum": [
+                                      "planned",
+                                      "in_progress",
+                                      "completed",
+                                      "cancelled"
+                                    ]
+                                  },
+                                  "category": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "targetQuarter": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "horizon": {
+                                    "type": "string",
+                                    "enum": [
+                                      "now",
+                                      "next",
+                                      "later"
+                                    ]
+                                  },
+                                  "votes": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "title",
+                                  "description",
+                                  "status",
+                                  "category",
+                                  "targetQuarter",
+                                  "horizon",
+                                  "votes"
+                                ]
+                              }
+                            },
+                            "completed": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "title": {
+                                    "type": "string"
+                                  },
+                                  "description": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "status": {
+                                    "type": "string",
+                                    "enum": [
+                                      "planned",
+                                      "in_progress",
+                                      "completed",
+                                      "cancelled"
+                                    ]
+                                  },
+                                  "category": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "targetQuarter": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "horizon": {
+                                    "type": "string",
+                                    "enum": [
+                                      "now",
+                                      "next",
+                                      "later"
+                                    ]
+                                  },
+                                  "votes": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "title",
+                                  "description",
+                                  "status",
+                                  "category",
+                                  "targetQuarter",
+                                  "horizon",
+                                  "votes"
+                                ]
+                              }
+                            }
+                          },
+                          "required": [
+                            "planned",
+                            "in_progress",
+                            "completed"
+                          ]
+                        },
+                        "feedback": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "title": {
+                                "type": "string"
+                              },
+                              "description": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "category": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "votes": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "createdAt": {
+                                "type": "string",
+                                "format": "date-time"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "title",
+                              "description",
+                              "category",
+                              "votes",
+                              "createdAt"
+                            ]
+                          }
+                        },
+                        "changelog": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "title": {
+                                "type": "string"
+                              },
+                              "content": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "version": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "type": {
+                                "anyOf": [
+                                  {
+                                    "type": "string",
+                                    "enum": [
+                                      "feature",
+                                      "improvement",
+                                      "fix"
+                                    ]
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "publishedAt": {
+                                "anyOf": [
+                                  {
+                                    "type": "string",
+                                    "format": "date-time"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "title",
+                              "content",
+                              "version",
+                              "type",
+                              "publishedAt"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "orgName",
+                        "roadmap",
+                        "feedback",
+                        "changelog"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "tags": [
+          "PublicRoadmap"
+        ],
+        "x-exposure": "public",
+        "description": "Exposure: public — unauthenticated"
+      }
+    },
+    "/public/roadmap/by-token": {
+      "get": {
+        "operationId": "PublicRoadmapController_getProductBoardByShareToken",
+        "parameters": [
+          {
+            "name": "shareToken",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 20,
+              "maxLength": 60
             }
           }
         ],

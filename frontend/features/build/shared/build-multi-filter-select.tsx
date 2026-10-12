@@ -53,7 +53,7 @@ export function BuildMultiFilterSelect({
           type="button"
           variant="outline"
           size="sm"
-          aria-label={`${label} filter`}
+          aria-label={label}
           disabled={disabled}
           className={cn(BUILD_FILTER_TRIGGER_CLASS, "justify-between gap-2", className)}
         >

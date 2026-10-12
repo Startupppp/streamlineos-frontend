@@ -147,6 +147,7 @@ jest.mock("@/hooks/api/build/roadmap", () => ({
   useDeleteRoadmapItem: jest.fn(() => ({ mutate: jest.fn() })),
   usePositionRoadmapItem: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   usePublishRoadmapItem: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+  useRoadmapItem: jest.fn(() => ({ data: undefined, isLoading: false })),
 }));
 
 jest.mock("@/components/ui/page-wrapper", () => ({

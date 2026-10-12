@@ -7,7 +7,7 @@ const mockSetCreateOpen = jest.fn();
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ replace: jest.fn(), push: jest.fn() }),
   usePathname: () => "/build/managed-products/7/goals",
-  useSearchParams: () => new URLSearchParams(),
+  useSearchParams: () => new URLSearchParams("pg_view=list"),
 }));
 
 jest.mock("@/hooks/api/access", () => ({

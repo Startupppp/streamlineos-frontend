@@ -112,7 +112,7 @@ describe("ProductRoadmapPage — sort URL param (BSN-RM-SORT)", () => {
     mockUseSearchParams.mockReturnValue(new URLSearchParams());
     render(<ProductRoadmapPage managedProductId={7} />);
     const [callParams] = useRoadmapItems.mock.calls[0] as [Record<string, unknown>];
-    expect(callParams).not.toHaveProperty("sort");
+    expect(callParams.sort).toBeUndefined();
   });
 });
 
@@ -129,7 +129,7 @@ describe("ProductRoadmapPage — status URL param (BSN-RM-STATUS)", () => {
     mockUseSearchParams.mockReturnValue(new URLSearchParams());
     render(<ProductRoadmapPage managedProductId={7} />);
     const [callParams] = useRoadmapItems.mock.calls[0] as [Record<string, unknown>];
-    expect(callParams).not.toHaveProperty("status");
+    expect(callParams.status).toBeUndefined();
   });
 });
 
@@ -146,7 +146,7 @@ describe("ProductRoadmapPage — confidenceMin URL param (BSN-RM-CONF)", () => {
     mockUseSearchParams.mockReturnValue(new URLSearchParams());
     render(<ProductRoadmapPage managedProductId={7} />);
     const [callParams] = useRoadmapItems.mock.calls[0] as [Record<string, unknown>];
-    expect(callParams).not.toHaveProperty("confidenceMin");
+    expect(callParams.confidenceMin).toBeUndefined();
   });
 });
 

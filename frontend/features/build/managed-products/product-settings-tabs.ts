@@ -3,6 +3,7 @@ export const PRODUCT_SETTINGS_TABS = [
   { id: "members", label: "Members" },
   { id: "projects", label: "Projects" },
   { id: "publishing", label: "Publishing" },
+  { id: "feedback-channels", label: "Feedback channels" },
 ] as const;
 
 type ProductSettingsTabId = (typeof PRODUCT_SETTINGS_TABS)[number]["id"];

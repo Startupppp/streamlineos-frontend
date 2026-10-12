@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const OPENAPI_HASH = "sha256:9ade892b589c5bd49d50cf16a46e0607c931ee16e456f8f812074126c9dd82b2" as const;
+export const OPENAPI_HASH = "sha256:a4b30ea545da9b4966c236239724b8f2fbfe9acea43297a033c845ed11ae2bae" as const;
 
 export const agentTokensListResponseSchema = z.array(z.object({
   id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
@@ -728,8 +728,8 @@ export const managedProductsListManagedProductsResponseSchema = z.object({
     segments: z.array(z.string()),
     tags: z.array(z.string()),
     northStarMetric: z.string().nullable(),
-    roadmapDefaultHorizon: z.enum(["now", "next", "later"]).nullable(),
     lastReviewedAt: z.iso.datetime({ offset: true }).nullable(),
+    roadmapDefaultHorizon: z.enum(["now", "next", "later"]).nullable(),
     owner: z.object({
       id: z.string(),
       firstName: z.string().nullable(),
@@ -741,6 +741,7 @@ export const managedProductsListManagedProductsResponseSchema = z.object({
     deletedAt: z.iso.datetime({ offset: true }).nullable(),
     createdAt: z.iso.datetime({ offset: true }),
     updatedAt: z.iso.datetime({ offset: true }),
+    allowedActions: z.array(z.string()),
     linkedProjectCount: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     nextRelease: z.object({
       id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
@@ -752,14 +753,13 @@ export const managedProductsListManagedProductsResponseSchema = z.object({
       last30d: z.number().int().gte(-9007199254740991).lte(9007199254740991),
       previous30d: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     }),
-    allowedActions: z.array(z.string()),
     goalHealth: z.object({
       total: z.number().int().gte(-9007199254740991).lte(9007199254740991),
       onTrack: z.number().int().gte(-9007199254740991).lte(9007199254740991),
       atRisk: z.number().int().gte(-9007199254740991).lte(9007199254740991),
       offTrack: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     }).nullable(),
-    sourceFreshness: z.string().nullable(),
+    sourceFreshness: z.iso.datetime({ offset: true }).nullable(),
   })),
   pagination: z.object({
     limit: z.number().int().gte(-9007199254740991).lte(9007199254740991),
@@ -794,8 +794,8 @@ export const managedProductsCreateManagedProductResponseSchema = z.object({
   segments: z.array(z.string()),
   tags: z.array(z.string()),
   northStarMetric: z.string().nullable(),
-  roadmapDefaultHorizon: z.enum(["now", "next", "later"]).nullable(),
   lastReviewedAt: z.iso.datetime({ offset: true }).nullable(),
+  roadmapDefaultHorizon: z.enum(["now", "next", "later"]).nullable(),
   owner: z.object({
     id: z.string(),
     firstName: z.string().nullable(),
@@ -807,6 +807,7 @@ export const managedProductsCreateManagedProductResponseSchema = z.object({
   deletedAt: z.iso.datetime({ offset: true }).nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
+  allowedActions: z.array(z.string()),
 });
 export type ManagedProductsCreateManagedProductResponse = z.infer<typeof managedProductsCreateManagedProductResponseSchema>;
 
@@ -861,6 +862,17 @@ export const managedProductsGetManagedProductFacetsResponseSchema = z.object({
 });
 export type ManagedProductsGetManagedProductFacetsResponse = z.infer<typeof managedProductsGetManagedProductFacetsResponseSchema>;
 
+export const managedProductRelationsListProjectProductsResponseSchema = z.object({
+  data: z.array(z.object({
+    managedProductId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    name: z.string(),
+    key: z.string(),
+    status: z.string(),
+    isPrimary: z.boolean(),
+  })),
+});
+export type ManagedProductRelationsListProjectProductsResponse = z.infer<typeof managedProductRelationsListProjectProductsResponseSchema>;
+
 export const managedProductsGetManagedProductResponseSchema = z.object({
   id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   orgId: z.string(),
@@ -886,8 +898,8 @@ export const managedProductsGetManagedProductResponseSchema = z.object({
   segments: z.array(z.string()),
   tags: z.array(z.string()),
   northStarMetric: z.string().nullable(),
-  roadmapDefaultHorizon: z.enum(["now", "next", "later"]).nullable(),
   lastReviewedAt: z.iso.datetime({ offset: true }).nullable(),
+  roadmapDefaultHorizon: z.enum(["now", "next", "later"]).nullable(),
   owner: z.object({
     id: z.string(),
     firstName: z.string().nullable(),
@@ -899,6 +911,7 @@ export const managedProductsGetManagedProductResponseSchema = z.object({
   deletedAt: z.iso.datetime({ offset: true }).nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
+  allowedActions: z.array(z.string()),
 });
 export type ManagedProductsGetManagedProductResponse = z.infer<typeof managedProductsGetManagedProductResponseSchema>;
 
@@ -927,8 +940,8 @@ export const managedProductsUpdateManagedProductResponseSchema = z.object({
   segments: z.array(z.string()),
   tags: z.array(z.string()),
   northStarMetric: z.string().nullable(),
-  roadmapDefaultHorizon: z.enum(["now", "next", "later"]).nullable(),
   lastReviewedAt: z.iso.datetime({ offset: true }).nullable(),
+  roadmapDefaultHorizon: z.enum(["now", "next", "later"]).nullable(),
   owner: z.object({
     id: z.string(),
     firstName: z.string().nullable(),
@@ -940,6 +953,7 @@ export const managedProductsUpdateManagedProductResponseSchema = z.object({
   deletedAt: z.iso.datetime({ offset: true }).nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
+  allowedActions: z.array(z.string()),
 });
 export type ManagedProductsUpdateManagedProductResponse = z.infer<typeof managedProductsUpdateManagedProductResponseSchema>;
 
@@ -995,8 +1009,8 @@ export const managedProductsArchiveManagedProductResponseSchema = z.object({
   segments: z.array(z.string()),
   tags: z.array(z.string()),
   northStarMetric: z.string().nullable(),
-  roadmapDefaultHorizon: z.enum(["now", "next", "later"]).nullable(),
   lastReviewedAt: z.iso.datetime({ offset: true }).nullable(),
+  roadmapDefaultHorizon: z.enum(["now", "next", "later"]).nullable(),
   owner: z.object({
     id: z.string(),
     firstName: z.string().nullable(),
@@ -1008,6 +1022,7 @@ export const managedProductsArchiveManagedProductResponseSchema = z.object({
   deletedAt: z.iso.datetime({ offset: true }).nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
+  allowedActions: z.array(z.string()),
 });
 export type ManagedProductsArchiveManagedProductResponse = z.infer<typeof managedProductsArchiveManagedProductResponseSchema>;
 
@@ -1559,6 +1574,8 @@ export const discoveryAcceptOpportunityResponseSchema = z.object({
       done: z.number().int().gte(-9007199254740991).lte(9007199254740991),
       percent: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
     }),
+    allowedActions: z.array(z.string()),
+    sourceFreshness: z.string().nullable(),
   }),
 });
 export type DiscoveryAcceptOpportunityResponse = z.infer<typeof discoveryAcceptOpportunityResponseSchema>;
@@ -1832,6 +1849,10 @@ export const discoveryReviewsListOutcomeReviewsResponseSchema = z.object({
     actual: z.string().nullable(),
     scheduledFor: z.string().nullable(),
     completedAt: z.iso.datetime({ offset: true }).nullable(),
+    measureKind: z.enum(["self_reported", "measured"]),
+    metricPeriod: z.string().nullable(),
+    sourceUrl: z.string().nullable(),
+    measuredAt: z.iso.datetime({ offset: true }).nullable(),
     state: z.enum(["scheduled", "running", "completed", "cancelled"]),
     result: z.enum(["met", "partially_met", "not_met", "inconclusive"]).nullable(),
     notes: z.string().nullable(),
@@ -1840,10 +1861,6 @@ export const discoveryReviewsListOutcomeReviewsResponseSchema = z.object({
     createdBy: z.string().nullable(),
     createdAt: z.iso.datetime({ offset: true }),
     updatedAt: z.iso.datetime({ offset: true }),
-    measureKind: z.enum(["self_reported", "measured"]),
-    metricPeriod: z.string().nullable(),
-    sourceUrl: z.string().nullable(),
-    measuredAt: z.iso.datetime({ offset: true }).nullable(),
   })),
   pagination: z.object({
     limit: z.number().int().gte(-9007199254740991).lte(9007199254740991),
@@ -1870,6 +1887,10 @@ export const discoveryReviewsCreateOutcomeReviewResponseSchema = z.object({
   actual: z.string().nullable(),
   scheduledFor: z.string().nullable(),
   completedAt: z.iso.datetime({ offset: true }).nullable(),
+  measureKind: z.enum(["self_reported", "measured"]),
+  metricPeriod: z.string().nullable(),
+  sourceUrl: z.string().nullable(),
+  measuredAt: z.iso.datetime({ offset: true }).nullable(),
   state: z.enum(["scheduled", "running", "completed", "cancelled"]),
   result: z.enum(["met", "partially_met", "not_met", "inconclusive"]).nullable(),
   notes: z.string().nullable(),
@@ -1878,10 +1899,6 @@ export const discoveryReviewsCreateOutcomeReviewResponseSchema = z.object({
   createdBy: z.string().nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
-  measureKind: z.enum(["self_reported", "measured"]),
-  metricPeriod: z.string().nullable(),
-  sourceUrl: z.string().nullable(),
-  measuredAt: z.iso.datetime({ offset: true }).nullable(),
 });
 export type DiscoveryReviewsCreateOutcomeReviewResponse = z.infer<typeof discoveryReviewsCreateOutcomeReviewResponseSchema>;
 
@@ -1902,6 +1919,7 @@ export const discoveryReviewsCreateOutcomeReviewBodySchema = z.strictObject({
   measureKind: z.enum(["self_reported", "measured"]).optional(),
   metricPeriod: z.string().optional(),
   sourceUrl: z.string().optional(),
+  measuredAt: z.iso.datetime({ offset: true }).optional(),
 });
 export type DiscoveryReviewsCreateOutcomeReviewBody = z.input<typeof discoveryReviewsCreateOutcomeReviewBodySchema>;
 
@@ -1922,6 +1940,10 @@ export const discoveryReviewsUpdateOutcomeReviewResponseSchema = z.object({
   actual: z.string().nullable(),
   scheduledFor: z.string().nullable(),
   completedAt: z.iso.datetime({ offset: true }).nullable(),
+  measureKind: z.enum(["self_reported", "measured"]),
+  metricPeriod: z.string().nullable(),
+  sourceUrl: z.string().nullable(),
+  measuredAt: z.iso.datetime({ offset: true }).nullable(),
   state: z.enum(["scheduled", "running", "completed", "cancelled"]),
   result: z.enum(["met", "partially_met", "not_met", "inconclusive"]).nullable(),
   notes: z.string().nullable(),
@@ -1930,10 +1952,6 @@ export const discoveryReviewsUpdateOutcomeReviewResponseSchema = z.object({
   createdBy: z.string().nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
-  measureKind: z.enum(["self_reported", "measured"]),
-  metricPeriod: z.string().nullable(),
-  sourceUrl: z.string().nullable(),
-  measuredAt: z.iso.datetime({ offset: true }).nullable(),
 });
 export type DiscoveryReviewsUpdateOutcomeReviewResponse = z.infer<typeof discoveryReviewsUpdateOutcomeReviewResponseSchema>;
 
@@ -1954,7 +1972,7 @@ export const discoveryReviewsUpdateOutcomeReviewBodySchema = z.strictObject({
   measureKind: z.enum(["self_reported", "measured"]).optional(),
   metricPeriod: z.string().nullable().optional(),
   sourceUrl: z.string().nullable().optional(),
-  measuredAt: z.string().nullable().optional(),
+  measuredAt: z.iso.datetime({ offset: true }).nullable().optional(),
 });
 export type DiscoveryReviewsUpdateOutcomeReviewBody = z.input<typeof discoveryReviewsUpdateOutcomeReviewBodySchema>;
 
@@ -1964,6 +1982,7 @@ export const managedProductRelationsListLinkedProjectsResponseSchema = z.object(
     name: z.string(),
     key: z.string(),
     status: z.string(),
+    isPrimary: z.boolean(),
     ownerId: z.string().nullable(),
     ownerMembershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
     managerMembershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
@@ -1980,6 +1999,9 @@ export const managedProductRelationsListLinkedProjectsResponseSchema = z.object(
       percent: z.number().nullable(),
     }),
     linkedRoadmapItemCount: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    revision: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    sourceFreshness: z.iso.datetime({ offset: true }),
+    allowedActions: z.array(z.string()),
     createdAt: z.iso.datetime({ offset: true }),
     updatedAt: z.iso.datetime({ offset: true }),
   })),
@@ -1991,6 +2013,20 @@ export const managedProductRelationsListLinkedProjectsResponseSchema = z.object(
 });
 export type ManagedProductRelationsListLinkedProjectsResponse = z.infer<typeof managedProductRelationsListLinkedProjectsResponseSchema>;
 
+export const managedProductRelationsLinkProjectSecondaryResponseSchema = z.object({
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  managedProductId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  isPrimary: z.boolean(),
+});
+export type ManagedProductRelationsLinkProjectSecondaryResponse = z.infer<typeof managedProductRelationsLinkProjectSecondaryResponseSchema>;
+
+export const managedProductRelationsSetPrimaryProjectResponseSchema = z.object({
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  managedProductId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  isPrimary: z.boolean(),
+});
+export type ManagedProductRelationsSetPrimaryProjectResponse = z.infer<typeof managedProductRelationsSetPrimaryProjectResponseSchema>;
+
 export const managedProductRelationsListReleasesResponseSchema = z.object({
   data: z.array(z.object({
     id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
@@ -2001,6 +2037,10 @@ export const managedProductRelationsListReleasesResponseSchema = z.object({
     description: z.string().nullable(),
     status: z.enum(["draft", "released", "archived"]),
     releaseDate: z.string().nullable(),
+    recordRevision: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    ownerUserId: z.string().nullable(),
+    qaState: z.string().nullable(),
+    deploymentEvidenceUrl: z.string().nullable(),
     createdBy: z.string().nullable(),
     createdAt: z.iso.datetime({ offset: true }),
     updatedAt: z.iso.datetime({ offset: true }),
@@ -2022,6 +2062,10 @@ export const managedProductRelationsCreateReleaseResponseSchema = z.object({
   description: z.string().nullable(),
   status: z.enum(["draft", "released", "archived"]),
   releaseDate: z.string().nullable(),
+  recordRevision: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  ownerUserId: z.string().nullable(),
+  qaState: z.string().nullable(),
+  deploymentEvidenceUrl: z.string().nullable(),
   createdBy: z.string().nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
@@ -2034,6 +2078,9 @@ export const managedProductRelationsCreateReleaseBodySchema = z.strictObject({
   description: z.string().optional(),
   releaseDate: z.iso.date().optional(),
   status: z.enum(["draft", "released", "archived"]).optional(),
+  ownerUserId: z.string().optional(),
+  qaState: z.enum(["pending", "in_review", "approved", "rejected"]).optional(),
+  deploymentEvidenceUrl: z.string().optional(),
 });
 export type ManagedProductRelationsCreateReleaseBody = z.input<typeof managedProductRelationsCreateReleaseBodySchema>;
 
@@ -2046,6 +2093,10 @@ export const managedProductRelationsUpdateReleaseResponseSchema = z.object({
   description: z.string().nullable(),
   status: z.enum(["draft", "released", "archived"]),
   releaseDate: z.string().nullable(),
+  recordRevision: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  ownerUserId: z.string().nullable(),
+  qaState: z.string().nullable(),
+  deploymentEvidenceUrl: z.string().nullable(),
   createdBy: z.string().nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
@@ -2053,11 +2104,15 @@ export const managedProductRelationsUpdateReleaseResponseSchema = z.object({
 export type ManagedProductRelationsUpdateReleaseResponse = z.infer<typeof managedProductRelationsUpdateReleaseResponseSchema>;
 
 export const managedProductRelationsUpdateReleaseBodySchema = z.strictObject({
+  expectedRevision: z.number().int().gt(0).lte(9007199254740991),
   name: z.string().optional(),
   version: z.string().optional(),
   description: z.string().nullable().optional(),
   releaseDate: z.iso.date().nullable().optional(),
   status: z.enum(["draft", "released", "archived"]).optional(),
+  ownerUserId: z.string().nullable().optional(),
+  qaState: z.enum(["pending", "in_review", "approved", "rejected"]).nullable().optional(),
+  deploymentEvidenceUrl: z.string().nullable().optional(),
 });
 export type ManagedProductRelationsUpdateReleaseBody = z.input<typeof managedProductRelationsUpdateReleaseBodySchema>;
 
@@ -2086,8 +2141,8 @@ export const managedProductsRestoreManagedProductResponseSchema = z.object({
   segments: z.array(z.string()),
   tags: z.array(z.string()),
   northStarMetric: z.string().nullable(),
-  roadmapDefaultHorizon: z.enum(["now", "next", "later"]).nullable(),
   lastReviewedAt: z.iso.datetime({ offset: true }).nullable(),
+  roadmapDefaultHorizon: z.enum(["now", "next", "later"]).nullable(),
   owner: z.object({
     id: z.string(),
     firstName: z.string().nullable(),
@@ -2099,6 +2154,7 @@ export const managedProductsRestoreManagedProductResponseSchema = z.object({
   deletedAt: z.iso.datetime({ offset: true }).nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
+  allowedActions: z.array(z.string()),
 });
 export type ManagedProductsRestoreManagedProductResponse = z.infer<typeof managedProductsRestoreManagedProductResponseSchema>;
 
@@ -2106,6 +2162,71 @@ export const managedProductsRestoreManagedProductBodySchema = z.strictObject({
   version: z.number().int().gte(1).lte(9007199254740991),
 });
 export type ManagedProductsRestoreManagedProductBody = z.input<typeof managedProductsRestoreManagedProductBodySchema>;
+
+export const managedProductRelationsGetRoadmapPreviewResponseSchema = z.object({
+  orgName: z.string().nullable(),
+  roadmap: z.object({
+    planned: z.array(z.object({
+      id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      title: z.string(),
+      description: z.string().nullable(),
+      status: z.string(),
+      category: z.string().nullable(),
+      targetQuarter: z.string().nullable(),
+      horizon: z.string().nullable(),
+      votes: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    })),
+    in_progress: z.array(z.object({
+      id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      title: z.string(),
+      description: z.string().nullable(),
+      status: z.string(),
+      category: z.string().nullable(),
+      targetQuarter: z.string().nullable(),
+      horizon: z.string().nullable(),
+      votes: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    })),
+    completed: z.array(z.object({
+      id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      title: z.string(),
+      description: z.string().nullable(),
+      status: z.string(),
+      category: z.string().nullable(),
+      targetQuarter: z.string().nullable(),
+      horizon: z.string().nullable(),
+      votes: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    })),
+  }),
+  feedback: z.array(z.object({
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    title: z.string(),
+    description: z.string().nullable(),
+    category: z.string().nullable(),
+    votes: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    createdAt: z.unknown(),
+  })),
+  changelog: z.array(z.object({
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    title: z.string(),
+    content: z.string().nullable(),
+    version: z.string().nullable(),
+    type: z.string().nullable(),
+    publishedAt: z.unknown().nullable(),
+  })),
+});
+export type ManagedProductRelationsGetRoadmapPreviewResponse = z.infer<typeof managedProductRelationsGetRoadmapPreviewResponseSchema>;
+
+export const managedProductRelationsGetRoadmapPublicationResponseSchema = z.object({
+  token: z.string().nullable(),
+  path: z.string().nullable(),
+});
+export type ManagedProductRelationsGetRoadmapPublicationResponse = z.infer<typeof managedProductRelationsGetRoadmapPublicationResponseSchema>;
+
+export const managedProductRelationsIssueRoadmapPublicationTokenResponseSchema = z.object({
+  token: z.string().nullable(),
+  path: z.string().nullable(),
+});
+export type ManagedProductRelationsIssueRoadmapPublicationTokenResponse = z.infer<typeof managedProductRelationsIssueRoadmapPublicationTokenResponseSchema>;
 
 export const managedProductRelationsGetManagedProductSummaryResponseSchema = z.object({
   product: z.object({
@@ -2133,8 +2254,8 @@ export const managedProductRelationsGetManagedProductSummaryResponseSchema = z.o
     segments: z.array(z.string()),
     tags: z.array(z.string()),
     northStarMetric: z.string().nullable(),
-    roadmapDefaultHorizon: z.enum(["now", "next", "later"]).nullable(),
     lastReviewedAt: z.iso.datetime({ offset: true }).nullable(),
+    roadmapDefaultHorizon: z.enum(["now", "next", "later"]).nullable(),
     owner: z.object({
       id: z.string(),
       firstName: z.string().nullable(),
@@ -2146,6 +2267,7 @@ export const managedProductRelationsGetManagedProductSummaryResponseSchema = z.o
     deletedAt: z.iso.datetime({ offset: true }).nullable(),
     createdAt: z.iso.datetime({ offset: true }),
     updatedAt: z.iso.datetime({ offset: true }),
+    allowedActions: z.array(z.string()),
   }),
   evidence: z.object({
     feedbackCount: z.number().int().gte(-9007199254740991).lte(9007199254740991),
@@ -2204,6 +2326,10 @@ export const managedProductRelationsGetManagedProductSummaryResponseSchema = z.o
       description: z.string().nullable(),
       status: z.enum(["draft", "released", "archived"]),
       releaseDate: z.string().nullable(),
+      recordRevision: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      ownerUserId: z.string().nullable(),
+      qaState: z.string().nullable(),
+      deploymentEvidenceUrl: z.string().nullable(),
       createdBy: z.string().nullable(),
       createdAt: z.iso.datetime({ offset: true }),
       updatedAt: z.iso.datetime({ offset: true }),
@@ -2232,6 +2358,44 @@ export const managedProductRelationsGetManagedProductSummaryResponseSchema = z.o
   generatedAt: z.string(),
 });
 export type ManagedProductRelationsGetManagedProductSummaryResponse = z.infer<typeof managedProductRelationsGetManagedProductSummaryResponseSchema>;
+
+export const managedProductRelationsListProductUpdatesResponseSchema = z.object({
+  data: z.array(z.object({
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    orgId: z.string(),
+    managedProductId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    body: z.string(),
+    version: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    authorMembershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+    authorName: z.string(),
+    createdAt: z.iso.datetime({ offset: true }),
+    updatedAt: z.iso.datetime({ offset: true }),
+  })),
+  pagination: z.object({
+    limit: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    hasMore: z.boolean(),
+    nextCursor: z.string().nullable(),
+  }),
+});
+export type ManagedProductRelationsListProductUpdatesResponse = z.infer<typeof managedProductRelationsListProductUpdatesResponseSchema>;
+
+export const managedProductRelationsCreateProductUpdateResponseSchema = z.object({
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  orgId: z.string(),
+  managedProductId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  body: z.string(),
+  version: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  authorMembershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  authorName: z.string(),
+  createdAt: z.iso.datetime({ offset: true }),
+  updatedAt: z.iso.datetime({ offset: true }),
+});
+export type ManagedProductRelationsCreateProductUpdateResponse = z.infer<typeof managedProductRelationsCreateProductUpdateResponseSchema>;
+
+export const managedProductRelationsCreateProductUpdateBodySchema = z.strictObject({
+  body: z.string(),
+});
+export type ManagedProductRelationsCreateProductUpdateBody = z.input<typeof managedProductRelationsCreateProductUpdateBodySchema>;
 
 export const buildMembersListResponseSchema = z.object({
   data: z.array(z.object({
@@ -2736,6 +2900,8 @@ export const projectsRoadmapListRoadmapResponseSchema = z.object({
       done: z.number().int().gte(-9007199254740991).lte(9007199254740991),
       percent: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
     }),
+    allowedActions: z.array(z.string()),
+    sourceFreshness: z.string().nullable(),
   })),
   pagination: z.object({
     limit: z.number().int().gte(-9007199254740991).lte(9007199254740991),
@@ -2829,6 +2995,8 @@ export const projectsRoadmapCreateRoadmapResponseSchema = z.object({
     done: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     percent: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   }),
+  allowedActions: z.array(z.string()),
+  sourceFreshness: z.string().nullable(),
 });
 export type ProjectsRoadmapCreateRoadmapResponse = z.infer<typeof projectsRoadmapCreateRoadmapResponseSchema>;
 
@@ -2941,6 +3109,8 @@ export const projectsRoadmapMoveRoadmapItemResponseSchema = z.object({
     done: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     percent: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   }),
+  allowedActions: z.array(z.string()),
+  sourceFreshness: z.string().nullable(),
 });
 export type ProjectsRoadmapMoveRoadmapItemResponse = z.infer<typeof projectsRoadmapMoveRoadmapItemResponseSchema>;
 
@@ -3036,6 +3206,8 @@ export const projectsRoadmapPublishRoadmapItemResponseSchema = z.object({
     done: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     percent: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   }),
+  allowedActions: z.array(z.string()),
+  sourceFreshness: z.string().nullable(),
 });
 export type ProjectsRoadmapPublishRoadmapItemResponse = z.infer<typeof projectsRoadmapPublishRoadmapItemResponseSchema>;
 
@@ -3056,6 +3228,94 @@ export const projectsRoadmapPublishRoadmapResponseSchema = z.object({
   path: z.string().nullable(),
 });
 export type ProjectsRoadmapPublishRoadmapResponse = z.infer<typeof projectsRoadmapPublishRoadmapResponseSchema>;
+
+export const projectsRoadmapGetRoadmapItemResponseSchema = z.object({
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  orgId: z.string(),
+  title: z.string(),
+  description: z.string().nullable(),
+  outcome: z.string().nullable(),
+  status: z.enum(["planned", "in_progress", "completed", "cancelled"]),
+  category: z.string().nullable(),
+  isPublic: z.boolean(),
+  projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  managedProductId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  epicTicketId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  targetQuarter: z.string().nullable(),
+  sortOrder: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  votes: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  reach: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  impact: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  confidence: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  effort: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  ownerMembershipId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  owner: z.object({
+    name: z.string().nullable(),
+    firstName: z.string().nullable(),
+    lastName: z.string().nullable(),
+    email: z.string(),
+    image: z.string().nullable(),
+  }).nullable(),
+  horizon: z.enum(["now", "next", "later"]),
+  goalId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  releaseId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  teamId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  opportunityId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  targetStart: z.string().nullable(),
+  targetEnd: z.string().nullable(),
+  decisionSnapshot: z.record(z.string(), z.unknown()).nullable(),
+  goal: z.object({
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    title: z.string(),
+  }).nullable(),
+  release: z.object({
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    name: z.string(),
+    version: z.string(),
+    releaseDate: z.string().nullable(),
+  }).nullable(),
+  team: z.object({
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    name: z.string(),
+  }).nullable(),
+  opportunity: z.object({
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    title: z.string(),
+    state: z.string(),
+  }).nullable(),
+  version: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  createdBy: z.string().nullable(),
+  createdAt: z.iso.datetime({ offset: true }),
+  updatedAt: z.iso.datetime({ offset: true }),
+  deletedAt: z.iso.datetime({ offset: true }).nullable(),
+  prioritization: z.object({
+    method: z.literal("rice"),
+    score: z.number().nullable(),
+    isComplete: z.boolean(),
+    missingInputs: z.array(z.enum(["reach", "impact", "confidence", "effort"])),
+    unavailableReason: z.enum(["missing_inputs", "non_positive_effort"]).nullable(),
+  }),
+  tierWeighting: z.object({
+    tierWeighted: z.boolean(),
+    tier: z.enum(["free", "pro", "enterprise"]).nullable(),
+    weight: z.number().nullable(),
+    weightedScore: z.number().nullable(),
+    unweightedReason: z.enum(["no_linked_feedback", "no_linked_account", "account_tier_unset", "score_unavailable"]).nullable(),
+    linkedFeedbackCount: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    linkedAccountCount: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    linkedRevenue: z.number().nullable(),
+    revenueKnownAccountCount: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  }),
+  delivery: z.object({
+    source: z.enum(["epic_ticket", "project", "none"]),
+    total: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    done: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    percent: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  }),
+  allowedActions: z.array(z.string()),
+  sourceFreshness: z.string().nullable(),
+});
+export type ProjectsRoadmapGetRoadmapItemResponse = z.infer<typeof projectsRoadmapGetRoadmapItemResponseSchema>;
 
 export const projectsRoadmapUpdateRoadmapResponseSchema = z.object({
   id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
@@ -3140,6 +3400,8 @@ export const projectsRoadmapUpdateRoadmapResponseSchema = z.object({
     done: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     percent: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
   }),
+  allowedActions: z.array(z.string()),
+  sourceFreshness: z.string().nullable(),
 });
 export type ProjectsRoadmapUpdateRoadmapResponse = z.infer<typeof projectsRoadmapUpdateRoadmapResponseSchema>;
 
@@ -8788,6 +9050,59 @@ export const publicRoadmapGetRoadmapResponseSchema = z.object({
 });
 export type PublicRoadmapGetRoadmapResponse = z.infer<typeof publicRoadmapGetRoadmapResponseSchema>;
 
+export const publicRoadmapGetProductBoardByShareTokenResponseSchema = z.object({
+  orgName: z.string().nullable(),
+  roadmap: z.object({
+    planned: z.array(z.object({
+      id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      title: z.string(),
+      description: z.string().nullable(),
+      status: z.enum(["planned", "in_progress", "completed", "cancelled"]),
+      category: z.string().nullable(),
+      targetQuarter: z.string().nullable(),
+      horizon: z.enum(["now", "next", "later"]),
+      votes: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    })),
+    in_progress: z.array(z.object({
+      id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      title: z.string(),
+      description: z.string().nullable(),
+      status: z.enum(["planned", "in_progress", "completed", "cancelled"]),
+      category: z.string().nullable(),
+      targetQuarter: z.string().nullable(),
+      horizon: z.enum(["now", "next", "later"]),
+      votes: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    })),
+    completed: z.array(z.object({
+      id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+      title: z.string(),
+      description: z.string().nullable(),
+      status: z.enum(["planned", "in_progress", "completed", "cancelled"]),
+      category: z.string().nullable(),
+      targetQuarter: z.string().nullable(),
+      horizon: z.enum(["now", "next", "later"]),
+      votes: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    })),
+  }),
+  feedback: z.array(z.object({
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    title: z.string(),
+    description: z.string().nullable(),
+    category: z.string().nullable(),
+    votes: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    createdAt: z.iso.datetime({ offset: true }),
+  })),
+  changelog: z.array(z.object({
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    title: z.string(),
+    content: z.string().nullable(),
+    version: z.string().nullable(),
+    type: z.enum(["feature", "improvement", "fix"]).nullable(),
+    publishedAt: z.iso.datetime({ offset: true }).nullable(),
+  })),
+});
+export type PublicRoadmapGetProductBoardByShareTokenResponse = z.infer<typeof publicRoadmapGetProductBoardByShareTokenResponseSchema>;
+
 export const publicRoadmapSubmitRoadmapFeedbackResponseSchema = z.object({
   id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   message: z.string(),
@@ -8894,6 +9209,7 @@ export const BUILD_CONTRACT_OPERATIONS = [
   { operationId: "ManagedProductsController_createManagedProduct", method: "POST", path: "/build/managed-products", response: "managedProductsCreateManagedProductResponseSchema", body: "managedProductsCreateManagedProductBodySchema" },
   { operationId: "ManagedProductsController_bulkUpdateManagedProducts", method: "POST", path: "/build/managed-products/bulk", response: "managedProductsBulkUpdateManagedProductsResponseSchema", body: "managedProductsBulkUpdateManagedProductsBodySchema" },
   { operationId: "ManagedProductsController_getManagedProductFacets", method: "GET", path: "/build/managed-products/facets", response: "managedProductsGetManagedProductFacetsResponseSchema" },
+  { operationId: "ManagedProductRelationsController_listProjectProducts", method: "GET", path: "/build/managed-products/projects/{projectId}/products", response: "managedProductRelationsListProjectProductsResponseSchema" },
   { operationId: "ManagedProductsController_getManagedProduct", method: "GET", path: "/build/managed-products/{managedProductId}", response: "managedProductsGetManagedProductResponseSchema" },
   { operationId: "ManagedProductsController_updateManagedProduct", method: "PATCH", path: "/build/managed-products/{managedProductId}", response: "managedProductsUpdateManagedProductResponseSchema", body: "managedProductsUpdateManagedProductBodySchema" },
   { operationId: "ManagedProductsController_deleteManagedProduct", method: "DELETE", path: "/build/managed-products/{managedProductId}" },
@@ -8918,11 +9234,20 @@ export const BUILD_CONTRACT_OPERATIONS = [
   { operationId: "DiscoveryReviewsController_updateOutcomeReview", method: "PATCH", path: "/build/managed-products/{managedProductId}/outcome-reviews/{outcomeReviewId}", response: "discoveryReviewsUpdateOutcomeReviewResponseSchema", body: "discoveryReviewsUpdateOutcomeReviewBodySchema" },
   { operationId: "DiscoveryReviewsController_deleteOutcomeReview", method: "DELETE", path: "/build/managed-products/{managedProductId}/outcome-reviews/{outcomeReviewId}" },
   { operationId: "ManagedProductRelationsController_listLinkedProjects", method: "GET", path: "/build/managed-products/{managedProductId}/projects", response: "managedProductRelationsListLinkedProjectsResponseSchema" },
+  { operationId: "ManagedProductRelationsController_linkProjectSecondary", method: "POST", path: "/build/managed-products/{managedProductId}/projects/{projectId}", response: "managedProductRelationsLinkProjectSecondaryResponseSchema" },
+  { operationId: "ManagedProductRelationsController_unlinkProject", method: "DELETE", path: "/build/managed-products/{managedProductId}/projects/{projectId}" },
+  { operationId: "ManagedProductRelationsController_setPrimaryProject", method: "PATCH", path: "/build/managed-products/{managedProductId}/projects/{projectId}/primary", response: "managedProductRelationsSetPrimaryProjectResponseSchema" },
   { operationId: "ManagedProductRelationsController_listReleases", method: "GET", path: "/build/managed-products/{managedProductId}/releases", response: "managedProductRelationsListReleasesResponseSchema" },
   { operationId: "ManagedProductRelationsController_createRelease", method: "POST", path: "/build/managed-products/{managedProductId}/releases", response: "managedProductRelationsCreateReleaseResponseSchema", body: "managedProductRelationsCreateReleaseBodySchema" },
   { operationId: "ManagedProductRelationsController_updateRelease", method: "PATCH", path: "/build/managed-products/{managedProductId}/releases/{releaseId}", response: "managedProductRelationsUpdateReleaseResponseSchema", body: "managedProductRelationsUpdateReleaseBodySchema" },
   { operationId: "ManagedProductsController_restoreManagedProduct", method: "POST", path: "/build/managed-products/{managedProductId}/restore", response: "managedProductsRestoreManagedProductResponseSchema", body: "managedProductsRestoreManagedProductBodySchema" },
+  { operationId: "ManagedProductRelationsController_getRoadmapPreview", method: "GET", path: "/build/managed-products/{managedProductId}/roadmap-preview", response: "managedProductRelationsGetRoadmapPreviewResponseSchema" },
+  { operationId: "ManagedProductRelationsController_getRoadmapPublication", method: "GET", path: "/build/managed-products/{managedProductId}/roadmap-publication", response: "managedProductRelationsGetRoadmapPublicationResponseSchema" },
+  { operationId: "ManagedProductRelationsController_issueRoadmapPublicationToken", method: "POST", path: "/build/managed-products/{managedProductId}/roadmap-publication", response: "managedProductRelationsIssueRoadmapPublicationTokenResponseSchema" },
+  { operationId: "ManagedProductRelationsController_revokeRoadmapPublication", method: "DELETE", path: "/build/managed-products/{managedProductId}/roadmap-publication" },
   { operationId: "ManagedProductRelationsController_getManagedProductSummary", method: "GET", path: "/build/managed-products/{managedProductId}/summary", response: "managedProductRelationsGetManagedProductSummaryResponseSchema" },
+  { operationId: "ManagedProductRelationsController_listProductUpdates", method: "GET", path: "/build/managed-products/{managedProductId}/updates", response: "managedProductRelationsListProductUpdatesResponseSchema" },
+  { operationId: "ManagedProductRelationsController_createProductUpdate", method: "POST", path: "/build/managed-products/{managedProductId}/updates", response: "managedProductRelationsCreateProductUpdateResponseSchema", body: "managedProductRelationsCreateProductUpdateBodySchema" },
   { operationId: "BuildMembersController_list", method: "GET", path: "/build/members", response: "buildMembersListResponseSchema" },
   { operationId: "BuildMembersController_add", method: "POST", path: "/build/members", response: "buildMembersAddResponseSchema", body: "buildMembersAddBodySchema" },
   { operationId: "BuildMembersController_remove", method: "DELETE", path: "/build/members/{userId}" },
@@ -8952,6 +9277,7 @@ export const BUILD_CONTRACT_OPERATIONS = [
   { operationId: "ProjectsRoadmapController_readRoadmapPublication", method: "GET", path: "/build/roadmap-publication", response: "projectsRoadmapReadRoadmapPublicationResponseSchema" },
   { operationId: "ProjectsRoadmapController_publishRoadmap", method: "POST", path: "/build/roadmap-publication", response: "projectsRoadmapPublishRoadmapResponseSchema" },
   { operationId: "ProjectsRoadmapController_unpublishRoadmap", method: "DELETE", path: "/build/roadmap-publication" },
+  { operationId: "ProjectsRoadmapController_getRoadmapItem", method: "GET", path: "/build/roadmap/{itemId}", response: "projectsRoadmapGetRoadmapItemResponseSchema" },
   { operationId: "ProjectsRoadmapController_updateRoadmap", method: "PATCH", path: "/build/roadmap/{itemId}", response: "projectsRoadmapUpdateRoadmapResponseSchema", body: "projectsRoadmapUpdateRoadmapBodySchema" },
   { operationId: "ProjectsRoadmapController_deleteRoadmap", method: "DELETE", path: "/build/roadmap/{itemId}" },
   { operationId: "ProjectsRoadmapController_getRoadmapSignals", method: "GET", path: "/build/roadmap/{itemId}/signals", response: "projectsRoadmapGetRoadmapSignalsResponseSchema" },
@@ -9203,6 +9529,7 @@ export const BUILD_CONTRACT_OPERATIONS = [
   { operationId: "PublicController_submitPublicForm", method: "POST", path: "/public/forms/{token}/submit", response: "publicSubmitPublicFormResponseSchema", body: "publicSubmitPublicFormBodySchema" },
   { operationId: "PublicController_getProjectIntakeForm", method: "GET", path: "/public/intake/{projectId}/form", response: "publicGetProjectIntakeFormResponseSchema" },
   { operationId: "PublicRoadmapController_getRoadmap", method: "GET", path: "/public/roadmap", response: "publicRoadmapGetRoadmapResponseSchema" },
+  { operationId: "PublicRoadmapController_getProductBoardByShareToken", method: "GET", path: "/public/roadmap/by-token", response: "publicRoadmapGetProductBoardByShareTokenResponseSchema" },
   { operationId: "PublicRoadmapController_submitRoadmapFeedback", method: "POST", path: "/public/roadmap/feedback", response: "publicRoadmapSubmitRoadmapFeedbackResponseSchema", body: "publicRoadmapSubmitRoadmapFeedbackBodySchema" },
   { operationId: "PublicRoadmapController_voteRoadmap", method: "POST", path: "/public/roadmap/vote", response: "publicRoadmapVoteRoadmapResponseSchema", body: "publicRoadmapVoteRoadmapBodySchema" },
   { operationId: "PublicWhiteboardLinksController_getByToken", method: "GET", path: "/public/whiteboard-links/{token}", response: "publicWhiteboardLinksGetByTokenResponseSchema" },

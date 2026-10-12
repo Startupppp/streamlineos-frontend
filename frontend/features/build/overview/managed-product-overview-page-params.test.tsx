@@ -47,6 +47,14 @@ jest.mock("@/hooks/api/build/teams", () => ({
   useProjectTeams: jest.fn(() => ({ data: undefined })),
 }));
 
+jest.mock("@/features/build/managed-products/link-existing-goal-dialog", () => ({
+  LinkExistingGoalDialog: () => null,
+}));
+
+jest.mock("./managed-product-update-sheet", () => ({
+  ManagedProductUpdateSheet: () => null,
+}));
+
 jest.mock("@/features/build/managed-products/managed-product-form-sheet", () => ({
   ManagedProductFormSheet: () => null,
 }));
