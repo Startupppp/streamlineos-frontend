@@ -164,3 +164,31 @@ served and accepted anonymous writes for an unpublished board whenever the URL
 handle happened to equal the organization id; and the shared-board RLS policy
 compared a hashed column against a raw token, so its public-token arm could
 never match.
+
+## Follow-up pass — 2026-10-12, later
+
+Four more defects, found while closing BLD-02D and regenerating the contracts.
+None was on any list; each was reachable in production.
+
+| Defect | Why it mattered |
+|---|---|
+| `useRoadmapPreview` parsed `/build/managed-products/:id/roadmap-preview` with `publicRoadmapGetRoadmapResponseSchema`, the schema of a different operation | The preview declares `horizon` nullable and the public board does not, so one initiative with no horizon threw inside the contract and took the whole preview sheet down. The vendored `openapi.json` had been stale long enough to hide it; regenerating it is what surfaced the mismatch. |
+| Neither public KB wiki GET set `X-Robots-Tag` | A shared wiki page was indexable, and revoking a share never reaches a crawler's stored copy. |
+| The KB attachment broker declared no cache policy while redirecting to a URL signed for 300s | A stored 302 outlives its own signature, so the cached redirect serves a dead link. |
+| The projectId intake address was a working anonymous write endpoint for every project | Migration 1300 published every existing project, so a small integer was a live submit address. Retired — see the decision in [BLD-02D](../acceptance/module/02d-scope-public-page-contracts-prd.md). |
+
+Six endpoints were removed as unreachable or duplicated: the three
+`/kb/wiki/analytics/*` routes on a controller no module registers, the
+`/build/:projectId/export/tickets` alias of the canonical import-export path,
+and the two `BuildStandingController` reads whose page was deleted and whose
+`getMemberStanding` answered a `:userId` query with the caller's own role and a
+hard-coded zero. `TimeEntriesController` and `BillingSummaryController` were
+deliberately kept: they have no caller but are a complete feature behind real
+service logic, which is unwired rather than dead.
+
+`check:contract-parity` remains red, and was red before this pass — the same 12
+nullability findings, 8 db-column findings and 66 stale baseline entries
+reproduce against the previously committed `openapi.json`. The 12 are the
+checker flattening a union whose persisted branch does accept null; the 8 are
+`roadmapPublicTokenHash` and its expiry, which must not appear in any response.
+Neither was baselined, because a gate is not fixed by recording its output.
