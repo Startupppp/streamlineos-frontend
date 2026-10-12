@@ -13,6 +13,8 @@ import {
   useUnpublishProductRoadmap,
 } from "@/hooks/api/build/roadmap-public";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useCopyFeedback } from "@/hooks/common/use-copy-feedback";
+import { ErrorState } from "@/components/shared/error-state";
 import { toast } from "sonner";
 
 interface ProductSettingsPublicationSectionProps {
@@ -24,13 +26,14 @@ export function ProductSettingsPublicationSection({
 }: ProductSettingsPublicationSectionProps) {
   const canManage = useCan("build:roadmap:manage");
 
-  const [copied, setCopied] = useState(false);
   const [revokeOpen, setRevokeOpen] = useState(false);
   const [publicUrl, setPublicUrl] = useState<string | null>(null);
 
   const publish = usePublishProductRoadmap(managedProductId);
   const unpublish = useUnpublishProductRoadmap(managedProductId);
-  const { data, isLoading } = useProductRoadmapPublication(managedProductId);
+  const { data, isLoading, isError, error, refetch } =
+    useProductRoadmapPublication(managedProductId);
+  const { copied, copy } = useCopyFeedback();
 
   const isPublished = data?.published ?? false;
 
@@ -56,11 +59,18 @@ export function ProductSettingsPublicationSection({
 
   const handleCopy = useCallback(() => {
     if (!publicUrl) return;
-    void navigator.clipboard.writeText(publicUrl).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+    void copy(publicUrl).then((ok) => {
+      if (!ok) toast.error("Could not copy to clipboard");
     });
-  }, [publicUrl]);
+  }, [publicUrl, copy]);
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+
+  const handleOpenRevoke = useCallback(() => {
+    setRevokeOpen(true);
+  }, []);
 
   if (isLoading) {
     return (
@@ -75,6 +85,29 @@ export function ProductSettingsPublicationSection({
           Client publication
         </h2>
         <Skeleton className="h-16 w-full" />
+      </section>
+    );
+  }
+
+  if (isError) {
+    return (
+      <section
+        aria-labelledby="publication-section-heading"
+        className="flex flex-col gap-3"
+      >
+        <h2
+          id="publication-section-heading"
+          className="text-sm font-semibold text-foreground"
+        >
+          Client publication
+        </h2>
+        <ErrorState
+          compact
+          title="Could not load the publication state"
+          description={getErrorMessage(error)}
+          onRetry={handleRetry}
+          error={error}
+        />
       </section>
     );
   }
@@ -109,7 +142,7 @@ export function ProductSettingsPublicationSection({
             type="button"
             variant="outline"
             size="sm"
-            onClick={() => setRevokeOpen(true)}
+            onClick={handleOpenRevoke}
           >
             Unpublish
           </Button>
