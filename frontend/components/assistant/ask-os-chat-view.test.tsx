@@ -42,6 +42,12 @@ const viewProps = {
   reduce: true,
   scrollRef,
   topSentinelRef,
+  speech: {
+    activeKey: null,
+    speak: jest.fn(),
+    stop: jest.fn(),
+    supported: false,
+  },
 };
 
 describe("AskOsChatView — first send", () => {
