@@ -10,6 +10,7 @@ import type { ManagedProduct } from "@/types/projects";
 import { PmPageShell, PmSection, CONTENT_FILL_PANEL } from "@/components/pm-chrome";
 import { BuildHeaderActions } from "@/features/build/shared/build-header-actions";
 import { BuildListSurface } from "@/features/build/shared/build-list-surface";
+import { BuildOfflineNotice } from "@/features/build/shared/build-offline-notice";
 import { MANAGED_PRODUCT_TABLE_HEADERS } from "./managed-product-table-columns";
 import { ManagedProductMobileCard } from "./managed-product-mobile-card";
 import { ManagedProductBulkToolbar } from "./managed-product-bulk-toolbar";
@@ -42,6 +43,7 @@ export function ManagedProductsPage() {
     isLoading,
     isError,
     error,
+    dataUpdatedAt,
     createProductIsPending,
     ownerOf,
     selectedIds,
@@ -115,6 +117,7 @@ export function ManagedProductsPage() {
     >
       <PmPageShell>
         <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
+          <BuildOfflineNotice dataUpdatedAt={dataUpdatedAt} />
           {canUpdate && selectedIds.length > 0 && (
             <ManagedProductBulkToolbar
               selectedIds={selectedIds}

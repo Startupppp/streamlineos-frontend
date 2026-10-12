@@ -56,7 +56,7 @@ export function useManagedProductsPage() {
   const linkedProjectIdValue = listFilters.value("linkedProjectId");
   const archivedValue = listFilters.value("archived");
 
-  const { data, isLoading, isError, error, refetch } = useManagedProducts({
+  const { data, isLoading, isError, error, refetch, dataUpdatedAt } = useManagedProducts({
     cursor,
     limit: PAGE_SIZE,
     status: statusValue !== BUILD_FILTER_ALL ? statusValue : undefined,
@@ -206,6 +206,7 @@ export function useManagedProductsPage() {
     isLoading,
     isError,
     error,
+    dataUpdatedAt,
     createProductIsPending,
     ownerOf,
     selectedIds,

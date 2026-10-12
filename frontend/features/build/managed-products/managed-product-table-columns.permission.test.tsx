@@ -68,6 +68,69 @@ describe("managed product row action permissions", () => {
   });
 });
 
+describe("managed product row actions — allowedActions gating", () => {
+  function renderWithAllowedActions(allowedActions: string[], isArchived = false) {
+    render(
+      <ProductRowActions
+        product={{ ...product, status: isArchived ? "archived" : "active", allowedActions }}
+        canUpdate
+        canDelete
+        onEdit={jest.fn()}
+        onDelete={jest.fn()}
+        onArchive={jest.fn()}
+        onRestore={jest.fn()}
+      />,
+    );
+  }
+
+  it("hides Edit when server allowedActions excludes update", () => {
+    renderWithAllowedActions(["view", "archive", "delete"]);
+
+    expect(screen.queryByText("Edit")).not.toBeInTheDocument();
+    expect(screen.getByText("Archive")).toBeInTheDocument();
+    expect(screen.getByText("Delete")).toBeInTheDocument();
+  });
+
+  it("hides Archive when server allowedActions excludes archive", () => {
+    renderWithAllowedActions(["view", "update", "delete"]);
+
+    expect(screen.getByText("Edit")).toBeInTheDocument();
+    expect(screen.queryByText("Archive")).not.toBeInTheDocument();
+  });
+
+  it("hides Delete when server allowedActions excludes delete", () => {
+    renderWithAllowedActions(["view", "update", "archive"]);
+
+    expect(screen.getByText("Edit")).toBeInTheDocument();
+    expect(screen.queryByText("Delete")).not.toBeInTheDocument();
+  });
+
+  it("shows Restore and not Archive for an archived product with restore in allowedActions", () => {
+    renderWithAllowedActions(["view", "restore", "delete"], true);
+
+    expect(screen.getByText("Restore")).toBeInTheDocument();
+    expect(screen.queryByText("Archive")).not.toBeInTheDocument();
+  });
+
+  it("shows all actions when allowedActions is undefined (no server restriction)", () => {
+    render(
+      <ProductRowActions
+        product={{ ...product, allowedActions: undefined }}
+        canUpdate
+        canDelete
+        onEdit={jest.fn()}
+        onDelete={jest.fn()}
+        onArchive={jest.fn()}
+        onRestore={jest.fn()}
+      />,
+    );
+
+    expect(screen.getByText("Edit")).toBeInTheDocument();
+    expect(screen.getByText("Archive")).toBeInTheDocument();
+    expect(screen.getByText("Delete")).toBeInTheDocument();
+  });
+});
+
 describe("managed product name column", () => {
   function renderName(row: ManagedProduct) {
     const [nameColumn] = buildManagedProductColumns({

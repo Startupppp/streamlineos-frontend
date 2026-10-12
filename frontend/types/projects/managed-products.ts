@@ -55,6 +55,7 @@ export interface ManagedProduct {
   deletedAt: string | null;
   createdAt: string;
   updatedAt: string;
+  allowedActions?: string[];
   linkedProjectCount?: number;
   nextRelease?: ManagedProductNextRelease | null;
   feedbackTrend?: ManagedProductFeedbackTrend;

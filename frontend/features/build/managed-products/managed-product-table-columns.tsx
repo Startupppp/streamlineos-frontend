@@ -3,7 +3,15 @@
 import { useCallback } from "react";
 import Link from "next/link";
 import { EllipsisIcon } from "@animateicons/react/lucide";
-import { Archive, ArrowRight, ArrowUpFromLine, Copy, Link2, Pencil, Trash2 } from "lucide-react";
+import {
+  Archive,
+  ArrowRight,
+  ArrowUpFromLine,
+  Copy,
+  Link2,
+  Pencil,
+  Trash2,
+} from "lucide-react";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { Button } from "@/components/ui/button";
 import type { DataTableColumn } from "@/components/ui/data-table";
@@ -71,15 +79,30 @@ export function ProductRowActions({
   onRestore?: (row: ManagedProduct) => void;
 }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
+
   const handleEdit = useCallback(() => onEdit(product), [product, onEdit]);
-  const handleDelete = useCallback(() => onDelete(product), [product, onDelete]);
-  const handleArchive = useCallback(() => onArchive?.(product), [product, onArchive]);
-  const handleRestore = useCallback(() => onRestore?.(product), [product, onRestore]);
+
+  const handleDelete = useCallback(
+    () => onDelete(product),
+    [product, onDelete],
+  );
+
+  const handleArchive = useCallback(
+    () => onArchive?.(product),
+    [product, onArchive],
+  );
+
+  const handleRestore = useCallback(
+    () => onRestore?.(product),
+    [product, onRestore],
+  );
+
   const handleCopyKey = useCallback(() => {
     void navigator.clipboard.writeText(product.key).then(() => {
       toast.success(`Copied key ${product.key}`);
     });
   }, [product.key]);
+
   const handleCopyLink = useCallback(() => {
     const href = `${window.location.origin}/build/managed-products/${product.id}`;
     void navigator.clipboard.writeText(href).then(() => {
@@ -88,6 +111,16 @@ export function ProductRowActions({
   }, [product.id]);
 
   const isArchived = product.status === "archived";
+
+  const serverAllows = (action: string) =>
+    !product.allowedActions || product.allowedActions.includes(action);
+
+  const canEditRecord = canUpdate && serverAllows("update");
+  const canArchiveRecord =
+    canUpdate && !isArchived && serverAllows("archive") && !!onArchive;
+  const canRestoreRecord =
+    canUpdate && isArchived && serverAllows("restore") && !!onRestore;
+  const canDeleteRecord = canDelete && serverAllows("delete");
 
   return (
     <DropdownMenu>
@@ -117,28 +150,35 @@ export function ProductRowActions({
           <Copy aria-hidden="true" />
           Copy key
         </DropdownMenuItem>
-        {(canUpdate || canDelete) ? <DropdownMenuSeparator /> : null}
-        {canUpdate ? (
+        {canEditRecord ||
+        canArchiveRecord ||
+        canRestoreRecord ||
+        canDeleteRecord ? (
+          <DropdownMenuSeparator />
+        ) : null}
+        {canEditRecord ? (
           <DropdownMenuItem onClick={handleEdit}>
             <Pencil aria-hidden="true" />
             Edit
           </DropdownMenuItem>
         ) : null}
-        {canUpdate && !isArchived && onArchive ? (
+        {canArchiveRecord ? (
           <DropdownMenuItem onClick={handleArchive}>
             <Archive aria-hidden="true" />
             Archive
           </DropdownMenuItem>
         ) : null}
-        {canUpdate && isArchived && onRestore ? (
+        {canRestoreRecord ? (
           <DropdownMenuItem onClick={handleRestore}>
             <ArrowUpFromLine aria-hidden="true" />
             Restore
           </DropdownMenuItem>
         ) : null}
-        {canDelete ? (
+        {canDeleteRecord ? (
           <>
-            {canUpdate ? <DropdownMenuSeparator /> : null}
+            {canEditRecord || canArchiveRecord || canRestoreRecord ? (
+              <DropdownMenuSeparator />
+            ) : null}
             <DropdownMenuItem variant="destructive" onClick={handleDelete}>
               <Trash2 aria-hidden="true" />
               Delete
