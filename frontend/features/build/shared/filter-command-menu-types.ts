@@ -14,6 +14,8 @@ export interface FilterCommandMenuProps {
   presentation?: "default" | "all-work";
   simplifySingleOptionCategories?: boolean;
   triggerLabel?: string;
+  /** Render the trigger as an icon in both its closed and open states. */
+  iconOnly?: boolean;
   desktopIconOnly?: boolean;
   statusItems: StatusFilterOption[];
   statusConfig: Record<string, StatusConfigEntry>;

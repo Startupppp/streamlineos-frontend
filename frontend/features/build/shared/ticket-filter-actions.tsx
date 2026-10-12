@@ -122,6 +122,7 @@ export function TicketFilterActions({
     presentation,
     simplifySingleOptionCategories: true,
     triggerLabel: presentation === "all-work" ? "Filters" : "Add filter",
+    iconOnly,
     desktopIconOnly,
     statusItems,
     statusConfig,

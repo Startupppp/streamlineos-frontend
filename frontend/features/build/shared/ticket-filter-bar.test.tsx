@@ -87,6 +87,7 @@ describe("ticket filter bar", () => {
     const filters = screen.getByRole("button", { name: "Filters (1 active)" });
     expect(filters).toHaveClass("size-9", "p-0");
     expect(filters).not.toHaveTextContent("Filters");
+    expect(filters.querySelector("span")).toHaveClass("-right-1", "-top-1");
     expect(screen.queryByRole("searchbox")).not.toBeInTheDocument();
     expect(screen.queryByLabelText(/remove .* filter/i)).not.toBeInTheDocument();
   });
