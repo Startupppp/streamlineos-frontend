@@ -20,7 +20,7 @@ jest.mock("@/hooks/api/build/managed-product-releases", () => ({
   })),
 }));
 
-jest.mock("./use-infinite-selector", () => ({
+jest.mock("../use-infinite-selector", () => ({
   useInfiniteSelectorProjects: jest.fn(() => ({
     data: undefined,
     isError: false,
@@ -45,7 +45,7 @@ import { OpportunityAcceptDialog } from "./opportunity-accept-dialog";
 import { useGoals } from "@/hooks/api/goals";
 import { useEpics } from "@/hooks/api/build/epics";
 import { useInfiniteManagedProductReleases } from "@/hooks/api/build/managed-product-releases";
-import { useInfiniteSelectorProjects, useInfiniteSelectorRoadmapItems } from "./use-infinite-selector";
+import { useInfiniteSelectorProjects, useInfiniteSelectorRoadmapItems } from "../use-infinite-selector";
 
 const mockUseGoals = useGoals as jest.MockedFunction<typeof useGoals>;
 const mockUseEpics = useEpics as jest.MockedFunction<typeof useEpics>;

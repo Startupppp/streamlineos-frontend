@@ -4,11 +4,17 @@ import { useCallback, useMemo } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Loader2, CheckCircle2, Send } from "lucide-react";
+import { LoadingButton } from "@/components/ui/loading-button";
+import { CheckCircle2, Send } from "lucide-react";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { buildDynamicSchema } from "@/features/build/forms/form-submission-schema";
 import { usePublicForm, useSubmitPublicForm } from "@/hooks/api/build/public-form";
 import { FieldInput } from "@/features/build/forms/field-input";
+import { PublicSurfacePanel } from "@/features/build/forms/public-surface-panel";
+import {
+  classifyPublicFormSubmitFailure,
+  classifyPublicReadFailure,
+} from "@/features/build/forms/public-surface-states";
 
 interface PublicFormViewProps {
   formToken: string;
@@ -38,9 +44,27 @@ export function PublicFormView({ formToken }: PublicFormViewProps) {
 
   const form = formQuery.data;
 
+  const readFailure = useMemo(
+    () => (formQuery.isError ? classifyPublicReadFailure(formQuery.error) : undefined),
+    [formQuery.isError, formQuery.error],
+  );
+
+  const submitFailure = useMemo(
+    () => (mutation.isError ? classifyPublicFormSubmitFailure(mutation.error) : undefined),
+    [mutation.isError, mutation.error],
+  );
+
+  const reference = mutation.data?.id;
+
+  const refetchForm = formQuery.refetch;
+
+  const handleRetryRead = useCallback(() => {
+    void refetchForm();
+  }, [refetchForm]);
+
   const handleFormSubmit = useCallback(
     (values: Record<string, unknown>) => {
-      if (!form) return;
+      if (!form || mutation.isPending || mutation.isSuccess) return;
       const payload: Record<string, unknown> = {};
       for (const field of form.fields) {
         const val = values[field.key];
@@ -76,14 +100,11 @@ export function PublicFormView({ formToken }: PublicFormViewProps) {
             </div>
           )}
 
-          {formQuery.isError && (
-            <div className="text-center py-8">
-              <p className="text-lg font-medium text-foreground">Form unavailable</p>
-              <p className="text-sm text-muted-foreground mt-2">
-                This form is not currently active or the link is invalid. Please contact the team for an
-                up-to-date link.
-              </p>
-            </div>
+          {readFailure && (
+            <PublicSurfacePanel
+              failure={readFailure}
+              onRetry={handleRetryRead}
+            />
           )}
 
           {mutation.isSuccess && (
@@ -95,6 +116,15 @@ export function PublicFormView({ formToken }: PublicFormViewProps) {
               <p className="text-sm text-muted-foreground">
                 Your response has been recorded. Thank you for taking the time to fill this out.
               </p>
+              {reference !== undefined && (
+                <p className="text-sm text-muted-foreground">
+                  Your reference is{" "}
+                  <span className="font-mono tabular-nums font-medium text-foreground">
+                    #{reference}
+                  </span>
+                  . Quote it if you need to follow this up.
+                </p>
+              )}
             </div>
           )}
 
@@ -127,28 +157,27 @@ export function PublicFormView({ formToken }: PublicFormViewProps) {
                 );
               })}
 
-              {mutation.isError && (
-                <p className="text-sm text-destructive" role="alert">
-                  {mutation.error instanceof Error
-                    ? mutation.error.message
-                    : "Failed to submit. Please try again."}
-                </p>
+              {submitFailure && (
+                <div className="space-y-1" role="alert">
+                  <p className="text-sm font-medium text-destructive">
+                    {submitFailure.title}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {submitFailure.description}
+                  </p>
+                </div>
               )}
 
-              {form.fields.length > 0 && (
-                <Button type="submit" className="w-full h-11" disabled={mutation.isPending}>
-                  {mutation.isPending ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      Submitting…
-                    </>
-                  ) : (
-                    <>
-                      <Send className="h-4 w-4" />
-                      Submit
-                    </>
-                  )}
-                </Button>
+              {form.fields.length > 0 && submitFailure?.kind !== "dead-link" && (
+                <LoadingButton
+                  type="submit"
+                  className="w-full h-11"
+                  isPending={mutation.isPending}
+                  loadingText="Submitting…"
+                >
+                  <Send className="h-4 w-4" />
+                  Submit
+                </LoadingButton>
               )}
             </form>
           )}

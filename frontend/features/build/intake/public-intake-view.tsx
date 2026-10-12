@@ -11,7 +11,9 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Loader2, CheckCircle2, Send } from "lucide-react";
+import { CheckCircle2, Send } from "lucide-react";
+import { LoadingButton } from "@/components/ui/loading-button";
+import { getErrorMessage } from "@/lib/get-error-message";
 import {
   intakeFormSchema,
   type IntakeFormValues,
@@ -22,6 +24,12 @@ import { useSubmitIntake } from "@/hooks/api/build/public-intake";
 import { useProjectIntakeForm, useSubmitPublicForm } from "@/hooks/api/build/public-form";
 import { FieldInput } from "@/features/build/forms/field-input";
 import { buildDynamicSchema, type FormField } from "@/features/build/forms/form-submission-schema";
+import { PublicSurfacePanel } from "@/features/build/forms/public-surface-panel";
+import {
+  classifyIntakeSubmitFailure,
+  classifyPublicReadFailure,
+  isMissingPublishedForm,
+} from "@/features/build/forms/public-surface-states";
 
 function LegacyIntakeForm({ projectId }: { projectId: string }) {
   const {
@@ -35,8 +43,14 @@ function LegacyIntakeForm({ projectId }: { projectId: string }) {
 
   const mutation = useSubmitIntake(projectId);
 
+  const failure = useMemo(
+    () => (mutation.isError ? classifyIntakeSubmitFailure(mutation.error) : undefined),
+    [mutation.isError, mutation.error],
+  );
+
   const handleFormSubmit = useCallback(
     (values: IntakeFormValues) => {
+      if (mutation.isPending || mutation.isSuccess) return;
       const output = intakeFormSchema.parse(values);
       mutation.mutate(output);
     },
@@ -165,27 +179,24 @@ function LegacyIntakeForm({ projectId }: { projectId: string }) {
         )}
       </div>
 
-      {mutation.isError && (
-        <p className="text-sm text-destructive" role="alert">
-          {mutation.error instanceof Error
-            ? mutation.error.message
-            : "Failed to submit. Please try again."}
-        </p>
+      {failure && (
+        <div className="space-y-1" role="alert">
+          <p className="text-sm font-medium text-destructive">{failure.title}</p>
+          <p className="text-sm text-muted-foreground">{failure.description}</p>
+        </div>
       )}
 
-      <Button type="submit" className="w-full h-11" disabled={mutation.isPending}>
-        {mutation.isPending ? (
-          <>
-            <Loader2 className="h-4 w-4 animate-spin" />
-            Submitting…
-          </>
-        ) : (
-          <>
-            <Send className="h-4 w-4" />
-            Submit Request
-          </>
-        )}
-      </Button>
+      {failure?.kind !== "dead-link" && (
+        <LoadingButton
+          type="submit"
+          className="w-full h-11"
+          isPending={mutation.isPending}
+          loadingText="Submitting…"
+        >
+          <Send className="h-4 w-4" />
+          Submit Request
+        </LoadingButton>
+      )}
     </form>
   );
 }

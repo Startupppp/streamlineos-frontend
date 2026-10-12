@@ -65,7 +65,7 @@ jest.mock("@/components/ui/combobox", () => ({
   },
 }));
 
-jest.mock("./use-infinite-selector", () => ({
+jest.mock("../use-infinite-selector", () => ({
   useInfiniteSelectorOpportunities: jest.fn(),
 }));
 
@@ -75,7 +75,7 @@ jest.mock("@/hooks/api/goals", () => ({
 }));
 
 import { OutcomeReviewScheduleSheet } from "./outcome-review-schedule-sheet";
-import { useInfiniteSelectorOpportunities } from "./use-infinite-selector";
+import { useInfiniteSelectorOpportunities } from "../use-infinite-selector";
 
 const mockUseInfiniteOps = useInfiniteSelectorOpportunities as jest.MockedFunction<
   typeof useInfiniteSelectorOpportunities

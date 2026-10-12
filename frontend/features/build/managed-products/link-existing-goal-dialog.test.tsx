@@ -31,7 +31,7 @@ function defaultCandidatesResult(overrides = {}) {
   };
 }
 
-jest.mock("./link-existing-goal-goals-query", () => ({
+jest.mock("./use-infinite-selector", () => ({
   useLinkGoalCandidates: jest.fn(),
 }));
 
@@ -53,7 +53,7 @@ jest.mock("@/hooks/api/access", () => ({
 jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn() } }));
 
 const { useLinkGoalCandidates } = jest.requireMock(
-  "./link-existing-goal-goals-query",
+  "./use-infinite-selector",
 ) as { useLinkGoalCandidates: jest.Mock };
 
 beforeEach(() => {

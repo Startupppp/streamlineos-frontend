@@ -16,8 +16,8 @@ import {
   type TitledItem,
   type SelectorProps,
 } from "./opportunity-accept-fields";
-import { useInfiniteSelectorProjects } from "./use-infinite-selector";
-import { IntersectSentinel } from "./intersect-sentinel";
+import { useInfiniteSelectorProjects } from "../use-infinite-selector";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 
 interface OpportunityAcceptDialogProps {
   open: boolean;
@@ -106,9 +106,14 @@ export function OpportunityAcceptDialog({
     error: projectsError,
     onRetry: handleRetryProjects,
     onSearchChange: handleProjectsSearch,
-    footer: hasProjectsNextPage ? (
-      <IntersectSentinel onVisible={handleFetchProjectsNext} />
-    ) : undefined,
+    footer: (
+      <InfiniteScrollSentinel
+        hasNextPage={hasProjectsNextPage}
+        isFetchingNextPage={isFetchingProjectsNextPage}
+        onLoadMore={handleFetchProjectsNext}
+        label="Load more projects"
+      />
+    ),
   };
 
   const releasesSelectorProps: SelectorProps<Release> = {
@@ -116,9 +121,14 @@ export function OpportunityAcceptDialog({
     isError: isReleasesError,
     error: releasesError,
     onRetry: handleRetryReleases,
-    footer: hasReleasesNextPage ? (
-      <IntersectSentinel onVisible={handleFetchReleasesNext} />
-    ) : undefined,
+    footer: (
+      <InfiniteScrollSentinel
+        hasNextPage={hasReleasesNextPage}
+        isFetchingNextPage={isFetchingReleasesNextPage}
+        onLoadMore={handleFetchReleasesNext}
+        label="Load more releases"
+      />
+    ),
   };
 
   return (

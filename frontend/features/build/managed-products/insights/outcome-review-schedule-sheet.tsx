@@ -30,8 +30,8 @@ import type { CreateOutcomeReviewInput } from "@/hooks/api/build/outcome-review-
 import { useGoals } from "@/hooks/api/goals";
 import { OutcomeReviewLinkField } from "./outcome-review-link-field";
 import { OutcomeReviewMeasurementFields } from "./outcome-review-measurement-fields";
-import { useInfiniteSelectorOpportunities } from "./use-infinite-selector";
-import { IntersectSentinel } from "./intersect-sentinel";
+import { useInfiniteSelectorOpportunities } from "../use-infinite-selector";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 
 const KIND_OPTIONS = [
   { label: "Outcome review", value: "outcome_review" },
@@ -176,7 +176,8 @@ export function OutcomeReviewScheduleSheet({
             error={opsQ.error}
             onRetry={handleRetryOps}
             onSearchChange={handleOpSearch}
-            footer={opsQ.hasNextPage ? <IntersectSentinel onVisible={handleFetchOpsNext} /> : undefined}
+            footer={<InfiniteScrollSentinel hasNextPage={opsQ.hasNextPage} isFetchingNextPage={opsQ.isFetchingNextPage}
+              onLoadMore={handleFetchOpsNext} label="Load more opportunities" />}
           />
           <OutcomeReviewLinkField
             control={form.control}

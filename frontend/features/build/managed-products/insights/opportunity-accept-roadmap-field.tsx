@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useRef } from "react";
+import { useCallback, useMemo } from "react";
 import type { UseFormReturn } from "react-hook-form";
 import { FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -10,8 +10,8 @@ import { ErrorState } from "@/components/shared/error-state";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useState } from "react";
 import type { AcceptFormValues } from "./opportunity-accept-schema";
-import { IntersectSentinel } from "./intersect-sentinel";
-import { useInfiniteSelectorRoadmapItems } from "./use-infinite-selector";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
+import { useInfiniteSelectorRoadmapItems } from "../use-infinite-selector";
 
 interface AcceptRoadmapFieldProps {
   form: UseFormReturn<AcceptFormValues>;
@@ -22,7 +22,6 @@ interface AcceptRoadmapFieldProps {
 export function AcceptRoadmapField({ form, managedProductId, enabled }: AcceptRoadmapFieldProps) {
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebouncedValue(search, 300);
-  const containerRef = useRef<HTMLDivElement>(null);
 
   const {
     data: pages,
@@ -83,7 +82,6 @@ export function AcceptRoadmapField({ form, managedProductId, enabled }: AcceptRo
               data-testid="roadmap-search-input"
             />
             <div
-              ref={containerRef}
               className="rounded-md border border-input max-h-36 overflow-y-auto"
               data-testid="depends-on-list"
             >
@@ -99,12 +97,12 @@ export function AcceptRoadmapField({ form, managedProductId, enabled }: AcceptRo
                   {item.title}
                 </label>
               ))}
-              {hasNextPage && (
-                <IntersectSentinel
-                  onVisible={handleFetchNext}
-                  root={containerRef.current}
-                />
-              )}
+              <InfiniteScrollSentinel
+                hasNextPage={hasNextPage}
+                isFetchingNextPage={isFetchingNextPage}
+                onLoadMore={handleFetchNext}
+                label="Load more roadmap items"
+              />
             </div>
             <FormMessage />
           </FormItem>

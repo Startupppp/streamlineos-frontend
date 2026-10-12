@@ -1,4 +1,5 @@
 ﻿import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
+import { resolveProductReturnHref } from "@/features/build/shared/product-return-href";
 
 interface TicketNavRef {
   id: number;
@@ -143,12 +144,12 @@ export function resolveTicketBackHref(
   } catch {
     return fallback;
   }
-  if (
-    candidate.origin !== origin ||
-    candidate.hash ||
-    !ticketCollectionPaths(projectId).includes(candidate.pathname)
-  ) {
+  if (candidate.origin !== origin || candidate.hash) {
     return fallback;
+  }
+
+  if (!ticketCollectionPaths(projectId).includes(candidate.pathname)) {
+    return resolveProductReturnHref(returnTo) ?? fallback;
   }
 
   for (const key of candidate.searchParams.keys()) {

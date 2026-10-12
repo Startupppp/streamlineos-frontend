@@ -34,7 +34,7 @@ function defaultQueryResult() {
   };
 }
 
-jest.mock("./add-product-member-members-query", () => ({
+jest.mock("./use-infinite-selector", () => ({
   useAddProductMemberCandidates: jest.fn(),
 }));
 
@@ -52,7 +52,7 @@ jest.mock("@/hooks/api/access", () => ({
 jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn() } }));
 
 const { useAddProductMemberCandidates } = jest.requireMock(
-  "./add-product-member-members-query",
+  "./use-infinite-selector",
 ) as { useAddProductMemberCandidates: jest.Mock };
 
 beforeEach(() => {
