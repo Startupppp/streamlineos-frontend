@@ -12,6 +12,8 @@ import { TicketDetailPane } from "@/features/build/ticket-details/ticket-detail-
 import { OpportunityPane } from "@/features/build/managed-products/insights/opportunity-pane";
 import { ROADMAP_HORIZON_LABEL, ROADMAP_STATUS_BADGE_VARIANT, ROADMAP_STATUS_LABEL } from "@/features/build/roadmap/roadmap-constants";
 
+const FOCUS_RESTORE_DELAY_MS = 50;
+
 interface RoadmapInitiativePaneProps {
   itemId: number | null;
 }
@@ -21,6 +23,7 @@ export function RoadmapInitiativePane({ itemId }: RoadmapInitiativePaneProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const focusReturnRef = useRef<Element | null>(null);
+  const focusTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const { data: item, isLoading } = useRoadmapItem(itemId);
 
@@ -32,13 +35,29 @@ export function RoadmapInitiativePane({ itemId }: RoadmapInitiativePaneProps) {
     if (itemId !== null) { focusReturnRef.current = document.activeElement; }
   }, [itemId]);
 
+  useEffect(
+    () => () => {
+      if (focusTimerRef.current !== null) {
+        clearTimeout(focusTimerRef.current);
+        focusTimerRef.current = null;
+      }
+    },
+    [],
+  );
+
   const handleClose = useCallback(() => {
     const next = new URLSearchParams(searchParams.toString());
     next.delete("item"); next.delete("ticket"); next.delete("ticketProject"); next.delete("opportunity");
     const qs = next.toString();
     router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
     const el = focusReturnRef.current;
-    if (el instanceof HTMLElement) { setTimeout(() => { el.focus(); }, 50); }
+    if (el instanceof HTMLElement) {
+      if (focusTimerRef.current !== null) { clearTimeout(focusTimerRef.current); }
+      focusTimerRef.current = setTimeout(() => {
+        focusTimerRef.current = null;
+        if (el.isConnected) { el.focus(); }
+      }, FOCUS_RESTORE_DELAY_MS);
+    }
   }, [router, pathname, searchParams]);
 
   const handleOpenTicket = useCallback(() => {

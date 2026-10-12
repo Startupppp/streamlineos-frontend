@@ -134,3 +134,33 @@ Record one authorized persisted drill-down for feedback traceability, customer i
 - No authenticated browser, persisted end-to-end database or deployed-environment verification was completed.
 
 Manage Product can be called complete when MP-01 through MP-13 are closed against the same code and schema revision.
+
+## Resolution status — 2026-10-12
+
+Source and focused-test tier only. No browser, persisted-database or deployed
+evidence was produced, so MP-09 through MP-13 are untouched by this pass.
+
+| Item | Status |
+|---|---|
+| MP-01 | Closed. Live-link contract chosen and recorded in [BLD-02D](../acceptance/module/02d-scope-public-page-contracts-prd.md); preview sheet repointed from the organization publication to the product share token; `getPreview` now applies the public page's own active/not-deleted predicate. |
+| MP-02 | Closed for every surface the audit named, plus the release form's two selectors. Each failed read renders a distinct error with a retry that leaves the dialog open. |
+| MP-03 | Closed except two server-side limits: `GET /goals` pages by offset, not cursor, so goal selectors got server search and page continuation but no cursor; the managed-product releases endpoint exposes no search parameter, so that selector got cursor continuation only. |
+| MP-04 | Closed. `useCopyFeedback` owns the copy timer; the roadmap initiative pane's focus restore now cancels on unmount and refuses a detached element. |
+| MP-05 | Closed. Dialog descriptions added and the interaction tests wait on the transitions users see; the focused suites run warning-free. |
+| MP-06 | Closed. One shared published-state component shows issued time and expiry and offers "Rotate and copy new link". It deliberately shows no version: the token is hashed, so `publicationVersion` is a rotation counter and not a projection identity. |
+| MP-07 | Closed. Linked-project and project-release reads have error and retry; both selectors search server-side and page by cursor; tickets, test runs, incidents and approval link to their owning records and carry return context back to the product release; inaccessible evidence is withheld with its real count rather than a zero. |
+| MP-08 | Closed for the five listed proofs. Widget update/delete/rotate-key denial, settings paging 1→2→3→2→1, selector continuation past page 1, per-surface error and retry, and publication preview/link/revoke against the MP-01 contract all have tests. |
+| MP-09 | Open — browser acceptance. Not closeable from a test runner. |
+| MP-10 | Open — and blocked on data, not code: production holds no managed products, so this must seed the whole lifecycle. |
+| MP-11 | Open — deliberately not run. Those five tests are `*.seeded-e2e-spec.ts`; that tier has previously written to production and sent real email. |
+| MP-12 | Open — operational proof for one released revision. |
+| MP-13 | Open — needs customer and market evidence, which code cannot supply. |
+
+Three defects outside the original list were found and fixed while closing the
+above, each one a disclosure rather than a cosmetic: `GET /build/{projectId}`
+shipped `projects.intake_token` — a public write capability — plus every
+member's hourly rate to any holder of `build:view`; the organization roadmap
+served and accepted anonymous writes for an unpublished board whenever the URL
+handle happened to equal the organization id; and the shared-board RLS policy
+compared a hashed column against a raw token, so its public-token arm could
+never match.
