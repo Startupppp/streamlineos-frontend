@@ -62,8 +62,38 @@ the existence/count of hidden records.
 | `/forms/{formToken}` · KEEP | Branded published form; accessible field renderer; progress for multi-section form; success/closed/expired states | No internal filters/views; conditional fields deterministic; options bounded/searchable | Opaque revocable token; publish-version schema; rate limit/bot/file controls; idempotent submit; no tenant metadata leakage; submit confirmation/reference |
 | `/intake/{projectId}` · CONSOLIDATE into published Forms | Transitional minimal intake form with title/description and safe success state | None | Replace guessable project-ID exposure with opaque published form token; migrate requests/history before route deletion |
 | `/board/{shareToken}` · KEEP deny-by-default sharing | Read-only board identity; visible columns/cards/fields; freshness; revoke/expired state | Allowlisted public filter only; no saved views; per-column bounded paging | Opaque hashed token, expiry/revocation, field projection, rate limit, no mutation; public cache keyed by share version and purged immediately |
-| `/roadmap/{orgId}` · REPLACE raw org selector with share identity | Branded public roadmap; approved outcomes/releases; timeline/list; last updated | Approved status/date/product filters; timeline/list; bounded date window | Opaque share/grant or deliberately public slug; no raw organization ID as authority; publication snapshot/version; immediate unpublish purge |
+| `/roadmap/{orgId}` · REPLACE raw org selector with share identity | Branded public roadmap, reflecting the roadmap as it changes; approved outcomes/releases; timeline/list | Approved status/date/product filters; timeline/list; bounded date window | Opaque share/grant or deliberately public slug; no raw organization ID as authority; hashed token with expiry and rotation; revocation takes effect on the next request |
 | `/wiki/{shareToken}` · KB-owned integration | Read-only shared page/tree; accessible document; freshness/owner contact where approved | Page tree/search only within share grant; bounded tree/content | KB share token and ACL authoritative; Build only links; revoke, expiry, CSP, sanitization, and attachment projection |
+
+### Decision 2026-10-12 — the product roadmap share link is live, not a snapshot
+
+The `/roadmap/{orgId}` row above previously asked for a "publication
+snapshot/version" and an "immediate unpublish purge". That has been narrowed to a
+live, revocable share link. **Reverse this row if a frozen board is actually
+wanted; the rest of this file does not depend on the choice.**
+
+Why it was narrowed rather than implemented:
+
+- The same row also required "last updated", which only means something for a
+  board that changes. The row contradicted itself, so it could not be read as an
+  accepted immutability requirement.
+- No other sentence in `docs/build-module/` states that a published roadmap is
+  frozen, and none of the ~22 user-visible strings in
+  `roadmap-publication-panel.tsx` mentions a version or a point in time. The copy
+  is entirely about a *link* that can be rotated or stopped.
+- Nothing is stored or cached to purge: there is no snapshot table in
+  `src/db/schema/build/`, and the public roadmap read path holds no cache entry.
+  `revokeByProduct` sets `revoked_at`, which is the whole of unpublishing.
+- Public voting writes `roadmap_items.votes`, and the published board projects
+  that column. Freezing the board would require a rule for whether frozen vote
+  counts keep counting. No document answers that, which is the strongest
+  evidence a frozen board was never designed.
+
+What publishing does guarantee, and is implemented: the token is stored only as a
+hash, supports expiry and rotation, is revocable, serialises its version
+increment under a parent-row lock, and refuses an archived or deleted product.
+`publicationVersion` is a link-rotation counter and is not a projection
+identity — it is deliberately not rendered anywhere.
 
 ## Public and Portal Safety
 
