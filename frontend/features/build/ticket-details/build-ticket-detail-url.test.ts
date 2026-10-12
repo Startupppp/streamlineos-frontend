@@ -67,6 +67,28 @@ describe("ticket detail return navigation", () => {
     expect(resolveTicketBackHref(12, null)).toBe("/build/12/issues");
   });
 
+  it("returns to the managed product a release evidence handoff came from, not to the ticket's own project", () => {
+    expect(
+      resolveTicketBackHref(12, "/build/managed-products/7/releases"),
+    ).toBe("/build/managed-products/7/releases");
+    expect(
+      resolveTicketBackHref(12, "/build/managed-products/7/roadmap?view=board"),
+    ).toBe("/build/managed-products/7/roadmap?view=board");
+  });
+
+  it("still refuses an off-site or unknown return aimed through the product allowlist", () => {
+    expect(resolveTicketBackHref(12, "//evil.example/build/managed-products/7")).toBe(
+      "/build/12/issues",
+    );
+    expect(resolveTicketBackHref(12, "/build/managed-products/7/unknown-tab")).toBe(
+      "/build/12/issues",
+    );
+    expect(resolveTicketBackHref(12, "/settings/billing")).toBe("/build/12/issues");
+    expect(
+      resolveTicketBackHref(12, "/build/managed-products/7/releases?impersonate=9"),
+    ).toBe("/build/12/issues");
+  });
+
   it("preserves allowlisted My Work state in canonical ticket links", () => {
     const source = new URLSearchParams(
       "section=drafts&relation=created&q=review&projectId=12&sort=updated&dir=desc&cursor=c5&returnTo=//outside.example",

@@ -11,17 +11,14 @@ jest.mock("@/hooks/api/build/public-intake", () => ({
   useSubmitIntake: jest.fn(),
 }));
 
-jest.mock("next/navigation", () => ({
-  useParams: () => ({ projectId: "7" }),
-}));
-
 import {
   useProjectIntakeForm,
   useSubmitPublicForm,
 } from "@/hooks/api/build/public-form";
 import { useSubmitIntake } from "@/hooks/api/build/public-intake";
 import { idleQueryResult, successQueryResult, errorQueryResult } from "@/test-utils/query-result";
-import PublicIntakePage from "@/app/(public)/intake/[projectId]/page";
+import { PublicIntakeView } from "@/features/build/intake/public-intake-view";
+import { ApiError } from "@/lib/api-envelope";
 
 const mockUseProjectIntakeForm = useProjectIntakeForm as jest.MockedFunction<typeof useProjectIntakeForm>;
 const mockUseSubmitPublicForm = useSubmitPublicForm as jest.MockedFunction<typeof useSubmitPublicForm>;
@@ -72,7 +69,7 @@ function setup(
   mockUseProjectIntakeForm.mockReturnValue(intakeFormResult(intakeFormOverrides));
   mockUseSubmitPublicForm.mockReturnValue({ ...idleMutation, ...submitPublicFormOverrides } as unknown as ReturnType<typeof useSubmitPublicForm>);
   mockUseSubmitIntake.mockReturnValue({ ...idleMutation, ...submitIntakeOverrides } as unknown as ReturnType<typeof useSubmitIntake>);
-  return render(<PublicIntakePage />);
+  return render(<PublicIntakeView projectId="7" />);
 }
 
 describe("PublicIntakePage — dynamic form surface (project has a configured intake form)", () => {
@@ -101,18 +98,18 @@ describe("PublicIntakePage — dynamic form surface (project has a configured in
 
 describe("PublicIntakePage — legacy intake fallback (no configured form for this project)", () => {
   it("renders the legacy intake form when the project has no configured form (404)", () => {
-    setup({ isError: true, error: new Error("No active public form for this project") });
+    setup({ isError: true, error: new ApiError("No active public form for this project", 404) });
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Submit a request");
   });
 
   it("shows the request title field from the legacy form", () => {
-    setup({ isError: true, error: new Error("No active public form for this project") });
+    setup({ isError: true, error: new ApiError("No active public form for this project", 404) });
     expect(screen.getByPlaceholderText(/briefly describe your request/i)).toBeInTheDocument();
   });
 
   it("shows 'Request submitted' after a successful legacy intake submission", () => {
     setup(
-      { isError: true, error: new Error("Not found") },
+      { isError: true, error: new ApiError("No active public form for this project", 404) },
       {},
       { isSuccess: true },
     );
@@ -120,7 +117,7 @@ describe("PublicIntakePage — legacy intake fallback (no configured form for th
   });
 
   it("still shows the submit button on error (URL never dead-ends)", () => {
-    setup({ isError: true, error: new Error("No form") });
+    setup({ isError: true, error: new ApiError("No active public form for this project", 404) });
     expect(screen.getByRole("button", { name: /submit request/i })).toBeInTheDocument();
   });
 });
@@ -128,7 +125,7 @@ describe("PublicIntakePage — legacy intake fallback (no configured form for th
 describe("PublicIntakePage — submission error state", () => {
   it("shows an alert when the legacy submission fails", () => {
     setup(
-      { isError: true, error: new Error("Not found") },
+      { isError: true, error: new ApiError("No active public form for this project", 404) },
       {},
       { isError: true, error: new Error("Failed to submit. Please try again.") },
     );
@@ -273,7 +270,7 @@ describe("PublicIntakePage — dynamic form field validation (claim 70)", () => 
       isIdle: false, isPending: false, isSuccess: false, data: undefined,
       variables, error: new Error("Server error. Please retry."),
     });
-    view.rerender(<PublicIntakePage />);
+    view.rerender(<PublicIntakeView projectId="7" />);
     expect(screen.getByRole("alert")).toHaveTextContent("Server error. Please retry.");
     expect(screen.getByRole("textbox", { name: /Summary/ })).toHaveValue(summary);
     expect(screen.getByRole("textbox", { name: /Details/ })).toHaveValue(details);
@@ -288,7 +285,7 @@ describe("PublicIntakePage — dynamic form field validation (claim 70)", () => 
       isIdle: false, isPending: false, isSuccess: true, error: null,
       variables, data: { id: 17, message: "Submission received" },
     });
-    view.rerender(<PublicIntakePage />);
+    view.rerender(<PublicIntakeView projectId="7" />);
     expect(screen.getByText("Submission received")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /^Submit$/ })).not.toBeInTheDocument();
   });

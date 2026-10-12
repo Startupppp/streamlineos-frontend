@@ -33,10 +33,8 @@ import {
 import { ProductGoalsGridSkeleton } from "./managed-product-page-skeletons";
 import { LinkExistingGoalDialog } from "./link-existing-goal-dialog";
 import { ProductGoalsViewBody } from "./product-goals-view-body";
-import {
-  buildProductReturnParam,
-  useProductReturn,
-} from "@/features/build/shared/product-return-href";
+import { buildProductReturnParam } from "@/features/build/shared/product-return-href";
+import { useProductReturn } from "@/features/build/shared/use-product-return";
 import type { GoalListItem } from "@/hooks/api/goals";
 
 const VIEW_PARAM = "pg_view";

@@ -1,9 +1,15 @@
-"use client";
-
-import { useParams } from "next/navigation";
+import type { Metadata } from "next";
 import { PublicIntakeView } from "@/features/build/intake/public-intake-view";
 
-export default function PublicIntakePage() {
-  const params = useParams<{ projectId: string }>();
-  return <PublicIntakeView projectId={params.projectId} />;
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+};
+
+export default async function PublicIntakePage({
+  params,
+}: {
+  params: Promise<{ projectId: string }>;
+}) {
+  const { projectId } = await params;
+  return <PublicIntakeView projectId={projectId} />;
 }

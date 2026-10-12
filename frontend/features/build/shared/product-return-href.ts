@@ -1,8 +1,3 @@
-"use client";
-
-import { useCallback } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-
 const PRODUCT_RETURN_PATHNAME =
   /^\/build\/managed-products(\/[1-9]\d*(\/(feedback|goals|insights|projects|releases|roadmap|settings))?)?$/;
 
@@ -117,22 +112,3 @@ export function buildProductReturnParam(
   return encodeURIComponent(`${pathname}${search ? `?${search}` : ""}`);
 }
 
-export function useProductReturn(fallbackHref: string) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const returnHref = resolveProductReturnHref(
-    searchParams.get(PRODUCT_RETURN_PARAM),
-  );
-
-  const handleBack = useCallback(() => {
-    if (returnHref) {
-      router.push(returnHref);
-    } else if (window.history.length > 1) {
-      router.back();
-    } else {
-      router.push(fallbackHref);
-    }
-  }, [router, returnHref, fallbackHref]);
-
-  return { returnHref, handleBack };
-}

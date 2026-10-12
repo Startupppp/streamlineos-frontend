@@ -20,7 +20,7 @@ import { PRODUCT_PROJECT_SKELETON_HEADERS } from "@/features/build/managed-produ
 import { useProductProjectsPage, type LinkedProjectRow } from "./use-product-projects-page";
 import { buildProductProjectsColumns, ProductProjectMobileCard } from "./product-projects-table";
 import { ProductProjectsToolbar } from "./product-projects-toolbar";
-import { useProductReturn } from "@/features/build/shared/product-return-href";
+import { useProductReturn } from "@/features/build/shared/use-product-return";
 import type { ProjectListItem } from "@/types/projects";
 
 const LinkExistingProjectDialog = dynamic(

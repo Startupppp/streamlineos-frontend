@@ -1,9 +1,15 @@
-"use client";
-
-import { useParams } from "next/navigation";
+import type { Metadata } from "next";
 import { PublicFormView } from "@/features/build/forms/public-form-view";
 
-export default function PublicFormPage() {
-  const params = useParams<{ formToken: string }>();
-  return <PublicFormView formToken={params.formToken} />;
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+};
+
+export default async function PublicFormPage({
+  params,
+}: {
+  params: Promise<{ formToken: string }>;
+}) {
+  const { formToken } = await params;
+  return <PublicFormView formToken={formToken} />;
 }

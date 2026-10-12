@@ -29,7 +29,7 @@ import {
   insightTabFromParam,
   insightViewFromParam,
 } from "./product-insights-tabs";
-import { useProductReturn } from "@/features/build/shared/product-return-href";
+import { useProductReturn } from "@/features/build/shared/use-product-return";
 
 const RANGE_OPTIONS = [
   { label: "All time", value: "all" },

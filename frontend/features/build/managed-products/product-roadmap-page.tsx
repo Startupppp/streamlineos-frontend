@@ -47,7 +47,7 @@ import { RoadmapListView } from "./roadmap/roadmap-list-view";
 import { RoadmapFiltersBar } from "./roadmap/roadmap-filters-bar";
 import { RoadmapPreviewSheet } from "./roadmap/roadmap-preview-sheet";
 import { RoadmapPublicationPanel } from "./roadmap/roadmap-publication-panel";
-import { useProductReturn } from "@/features/build/shared/product-return-href";
+import { useProductReturn } from "@/features/build/shared/use-product-return";
 import type { RoadmapHorizon } from "@/types/projects";
 
 interface ProductRoadmapPageProps {

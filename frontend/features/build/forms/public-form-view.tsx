@@ -6,7 +6,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Card } from "@/components/ui/card";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { CheckCircle2, Send } from "lucide-react";
-import { getErrorMessage } from "@/lib/get-error-message";
 import { buildDynamicSchema } from "@/features/build/forms/form-submission-schema";
 import { usePublicForm, useSubmitPublicForm } from "@/hooks/api/build/public-form";
 import { FieldInput } from "@/features/build/forms/field-input";

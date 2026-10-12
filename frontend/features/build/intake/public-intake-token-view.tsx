@@ -1,17 +1,21 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
-import { Loader2, CheckCircle2, Send } from "lucide-react";
+import { CheckCircle2, Send } from "lucide-react";
+import { LoadingButton } from "@/components/ui/loading-button";
 import {
   intakeFormSchema,
   type IntakeFormValues,
@@ -19,7 +23,7 @@ import {
   INTAKE_REQUEST_TYPE_OPTIONS,
 } from "@/features/build/intake/public-intake-schema";
 import { useSubmitIntakeByToken } from "@/hooks/api/build/public-intake";
-import { getErrorMessage } from "@/lib/get-error-message";
+import { classifyIntakeSubmitFailure } from "@/features/build/forms/public-surface-states";
 
 interface IntakeTokenFormProps {
   intakeToken: string;
@@ -37,8 +41,17 @@ function IntakeTokenForm({ intakeToken }: IntakeTokenFormProps) {
 
   const mutation = useSubmitIntakeByToken(intakeToken);
 
+  const failure = useMemo(
+    () =>
+      mutation.isError
+        ? classifyIntakeSubmitFailure(mutation.error)
+        : undefined,
+    [mutation.isError, mutation.error],
+  );
+
   const handleFormSubmit = useCallback(
     (values: IntakeFormValues) => {
+      if (mutation.isPending || mutation.isSuccess) return;
       const output = intakeFormSchema.parse(values);
       mutation.mutate(output);
     },
@@ -53,14 +66,19 @@ function IntakeTokenForm({ intakeToken }: IntakeTokenFormProps) {
         </div>
         <p className="text-lg font-medium text-foreground">Request submitted</p>
         <p className="text-sm text-muted-foreground">
-          Your request has been received and will be reviewed by the team. Thank you for reaching out.
+          Your request has been received and will be reviewed by the team. Thank
+          you for reaching out.
         </p>
       </div>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-5" noValidate>
+    <form
+      onSubmit={handleSubmit(handleFormSubmit)}
+      className="space-y-5"
+      noValidate
+    >
       <div className="space-y-1.5">
         <Label htmlFor="intake-title" className="text-xs">
           Request title <span className="text-destructive">*</span>
@@ -80,18 +98,25 @@ function IntakeTokenForm({ intakeToken }: IntakeTokenFormProps) {
 
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
-          <Label htmlFor="intake-type" className="text-xs">Type</Label>
+          <Label htmlFor="intake-type" className="text-xs">
+            Type
+          </Label>
           <Controller
             control={control}
             name="requestType"
             render={({ field }) => (
-              <Select value={field.value ?? ""} onValueChange={(v) => field.onChange(v || undefined)}>
+              <Select
+                value={field.value ?? ""}
+                onValueChange={(v) => field.onChange(v || undefined)}
+              >
                 <SelectTrigger id="intake-type" className="text-sm">
                   <SelectValue placeholder="Select type…" />
                 </SelectTrigger>
                 <SelectContent>
                   {INTAKE_REQUEST_TYPE_OPTIONS.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -100,18 +125,25 @@ function IntakeTokenForm({ intakeToken }: IntakeTokenFormProps) {
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor="intake-priority" className="text-xs">Priority</Label>
+          <Label htmlFor="intake-priority" className="text-xs">
+            Priority
+          </Label>
           <Controller
             control={control}
             name="priority"
             render={({ field }) => (
-              <Select value={field.value ?? ""} onValueChange={(v) => field.onChange(v || undefined)}>
+              <Select
+                value={field.value ?? ""}
+                onValueChange={(v) => field.onChange(v || undefined)}
+              >
                 <SelectTrigger id="intake-priority" className="text-sm">
                   <SelectValue placeholder="Select priority…" />
                 </SelectTrigger>
                 <SelectContent>
                   {INTAKE_PRIORITY_OPTIONS.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -121,7 +153,9 @@ function IntakeTokenForm({ intakeToken }: IntakeTokenFormProps) {
       </div>
 
       <div className="space-y-1.5">
-        <Label htmlFor="intake-description" className="text-xs">Details</Label>
+        <Label htmlFor="intake-description" className="text-xs">
+          Details
+        </Label>
         <Textarea
           id="intake-description"
           rows={4}
@@ -137,7 +171,9 @@ function IntakeTokenForm({ intakeToken }: IntakeTokenFormProps) {
       </div>
 
       <div className="space-y-1.5">
-        <Label htmlFor="intake-name" className="text-xs">Your name</Label>
+        <Label htmlFor="intake-name" className="text-xs">
+          Your name
+        </Label>
         <Input
           id="intake-name"
           placeholder="Jane Smith (optional)"
@@ -152,7 +188,9 @@ function IntakeTokenForm({ intakeToken }: IntakeTokenFormProps) {
       </div>
 
       <div className="space-y-1.5">
-        <Label htmlFor="intake-email" className="text-xs">Your email</Label>
+        <Label htmlFor="intake-email" className="text-xs">
+          Your email
+        </Label>
         <Input
           id="intake-email"
           type="email"
@@ -167,25 +205,28 @@ function IntakeTokenForm({ intakeToken }: IntakeTokenFormProps) {
         )}
       </div>
 
-      {mutation.isError && (
-        <p className="text-sm text-destructive" role="alert">
-          {getErrorMessage(mutation.error)}
-        </p>
+      {failure && (
+        <div className="space-y-1" role="alert">
+          <p className="text-sm font-medium text-destructive">
+            {failure.title}
+          </p>
+          <p className="text-sm text-muted-foreground">
+            {failure.description}
+          </p>
+        </div>
       )}
 
-      <Button type="submit" className="w-full h-11" disabled={mutation.isPending}>
-        {mutation.isPending ? (
-          <>
-            <Loader2 className="h-4 w-4 animate-spin" />
-            Submitting…
-          </>
-        ) : (
-          <>
-            <Send className="h-4 w-4" />
-            Submit Request
-          </>
-        )}
-      </Button>
+      {failure?.kind !== "dead-link" && (
+        <LoadingButton
+          type="submit"
+          className="w-full h-11"
+          isPending={mutation.isPending}
+          loadingText="Submitting…"
+        >
+          <Send className="h-4 w-4" />
+          Submit Request
+        </LoadingButton>
+      )}
     </form>
   );
 }
@@ -194,12 +235,16 @@ interface PublicIntakeTokenViewProps {
   intakeToken: string;
 }
 
-export function PublicIntakeTokenView({ intakeToken }: PublicIntakeTokenViewProps) {
+export function PublicIntakeTokenView({
+  intakeToken,
+}: PublicIntakeTokenViewProps) {
   return (
     <main className="min-h-dvh surface-soft flex items-start justify-center pt-8 sm:pt-12 px-4">
       <div className="w-full max-w-lg">
         <div className="gradient-brand text-white rounded-t-2xl px-6 py-8 text-center shadow-noir">
-          <h1 className="text-2xl font-semibold tracking-tight">Submit a request</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">
+            Submit a request
+          </h1>
           <p className="text-white/80 text-sm mt-1">
             Fill in the details below and we&rsquo;ll review your request.
           </p>

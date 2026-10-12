@@ -7,10 +7,8 @@ import { useUpdateManagedProduct } from "@/hooks/api/build/managed-product-mutat
 import { getErrorMessage } from "@/lib/get-error-message";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { BUILD_FILTER_ALL, useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
-import {
-  buildProductReturnParam,
-  useProductReturn,
-} from "@/features/build/shared/product-return-href";
+import { buildProductReturnParam } from "@/features/build/shared/product-return-href";
+import { useProductReturn } from "@/features/build/shared/use-product-return";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import { useManagedProductSummary } from "@/hooks/api/build/managed-product-summary";
 import { useProjectTeams } from "@/hooks/api/build/teams";

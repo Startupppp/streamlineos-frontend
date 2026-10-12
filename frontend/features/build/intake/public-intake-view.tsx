@@ -1,10 +1,9 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,7 +12,6 @@ import {
 } from "@/components/ui/select";
 import { CheckCircle2, Send } from "lucide-react";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { getErrorMessage } from "@/lib/get-error-message";
 import {
   intakeFormSchema,
   type IntakeFormValues,
@@ -27,6 +25,7 @@ import { buildDynamicSchema, type FormField } from "@/features/build/forms/form-
 import { PublicSurfacePanel } from "@/features/build/forms/public-surface-panel";
 import {
   classifyIntakeSubmitFailure,
+  classifyPublicFormSubmitFailure,
   classifyPublicReadFailure,
   isMissingPublishedForm,
 } from "@/features/build/forms/public-surface-states";
@@ -212,7 +211,13 @@ function DynamicIntakeFormInner({ fields, token }: DynamicIntakeFormInnerProps) 
     resolver: zodResolver(buildDynamicSchema(fields)),
   });
 
+  const failure = useMemo(
+    () => (mutation.isError ? classifyPublicFormSubmitFailure(mutation.error) : undefined),
+    [mutation.isError, mutation.error],
+  );
+
   function handleFormSubmit(values: Record<string, unknown>) {
+    if (mutation.isPending || mutation.isSuccess) return;
     mutation.mutate(values);
   }
 
@@ -264,59 +269,24 @@ function DynamicIntakeFormInner({ fields, token }: DynamicIntakeFormInnerProps) 
           />
         );
       })}
-      {mutation.isError && (
-        <p className="text-sm text-destructive" role="alert">
-          {mutation.error instanceof Error
-            ? mutation.error.message
-            : "Failed to submit. Please try again."}
-        </p>
+      {failure && (
+        <div className="space-y-1" role="alert">
+          <p className="text-sm font-medium text-destructive">{failure.title}</p>
+          <p className="text-sm text-muted-foreground">{failure.description}</p>
+        </div>
       )}
-      {fields.length > 0 && (
-        <Button type="submit" className="w-full h-11" disabled={mutation.isPending}>
-          {mutation.isPending ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Submitting…
-            </>
-          ) : (
-            <>
-              <Send className="h-4 w-4" />
-              Submit
-            </>
-          )}
-        </Button>
+      {fields.length > 0 && failure?.kind !== "dead-link" && (
+        <LoadingButton
+          type="submit"
+          className="w-full h-11"
+          isPending={mutation.isPending}
+          loadingText="Submitting…"
+        >
+          <Send className="h-4 w-4" />
+          Submit
+        </LoadingButton>
       )}
     </form>
-  );
-}
-
-function DynamicIntakeForm({ projectId }: { projectId: string }) {
-  const formQuery = useProjectIntakeForm(projectId);
-  const form = formQuery.data;
-
-  if (formQuery.isPending) {
-    return (
-      <div className="space-y-4">
-        {[1, 2, 3].map((i) => (
-          <div key={i} className="space-y-1.5">
-            <div className="h-3 bg-muted rounded animate-pulse w-24" />
-            <div className="h-10 bg-muted rounded animate-pulse" />
-          </div>
-        ))}
-        <div className="h-11 bg-muted rounded animate-pulse" />
-      </div>
-    );
-  }
-
-  if (formQuery.isError || !form) {
-    return null;
-  }
-
-  return (
-    <DynamicIntakeFormInner
-      fields={form.fields}
-      token={form.publicToken ?? ""}
-    />
   );
 }
 
@@ -328,6 +298,12 @@ export function PublicIntakeView({ projectId }: PublicIntakeViewProps) {
   const intakeFormQuery = useProjectIntakeForm(projectId);
 
   const title = intakeFormQuery.data?.name ?? "Submit a request";
+
+  const refetchForm = intakeFormQuery.refetch;
+
+  const handleRetryRead = useCallback(() => {
+    void refetchForm();
+  }, [refetchForm]);
 
   function renderForm() {
     if (intakeFormQuery.isPending) {
@@ -343,10 +319,22 @@ export function PublicIntakeView({ projectId }: PublicIntakeViewProps) {
         </div>
       );
     }
-    if (intakeFormQuery.isSuccess && intakeFormQuery.data) {
-      return <DynamicIntakeForm projectId={projectId} />;
+    if (intakeFormQuery.isError) {
+      if (isMissingPublishedForm(intakeFormQuery.error))
+        return <LegacyIntakeForm projectId={projectId} />;
+      return (
+        <PublicSurfacePanel
+          failure={classifyPublicReadFailure(intakeFormQuery.error)}
+          onRetry={handleRetryRead}
+        />
+      );
     }
-    return <LegacyIntakeForm projectId={projectId} />;
+    const form = intakeFormQuery.data;
+    if (!form || !form.publicToken)
+      return <LegacyIntakeForm projectId={projectId} />;
+    return (
+      <DynamicIntakeFormInner fields={form.fields} token={form.publicToken} />
+    );
   }
 
   return (

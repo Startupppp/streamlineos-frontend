@@ -28,7 +28,7 @@ import { ReleaseShippedTimeline } from "./release-shipped-timeline";
 import { ReleaseUpcomingSection } from "./release-upcoming-section";
 import { useProductReleasesPage } from "./use-product-releases-page";
 import { ProductReleaseEvidenceSheet } from "./product-release-evidence-sheet";
-import { useProductReturn } from "@/features/build/shared/product-return-href";
+import { useProductReturn } from "@/features/build/shared/use-product-return";
 
 interface ProductReleasesPageProps {
   managedProductId: number;

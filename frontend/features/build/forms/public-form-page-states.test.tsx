@@ -7,12 +7,9 @@ jest.mock("@/hooks/api/build/public-form", () => ({
   useSubmitPublicForm: jest.fn(),
 }));
 
-jest.mock("next/navigation", () => ({
-  useParams: () => ({ formToken: "tok-abc123" }),
-}));
-
 import { usePublicForm, useSubmitPublicForm } from "@/hooks/api/build/public-form";
-import PublicFormPage from "@/app/(public)/forms/[formToken]/page";
+import { PublicFormView } from "@/features/build/forms/public-form-view";
+import { ApiError } from "@/lib/api-envelope";
 
 const mockUsePublicForm = usePublicForm as jest.MockedFunction<typeof usePublicForm>;
 const mockUseSubmitPublicForm = useSubmitPublicForm as jest.MockedFunction<typeof useSubmitPublicForm>;
@@ -57,7 +54,7 @@ function setup(queryOverrides: Partial<ReturnType<typeof usePublicForm>>, mutati
     ...queryOverrides,
   } as ReturnType<typeof usePublicForm>);
   mockUseSubmitPublicForm.mockReturnValue({ ...idleMutation, ...mutationOverrides } as unknown as ReturnType<typeof useSubmitPublicForm>);
-  return render(<PublicFormPage />);
+  return render(<PublicFormView formToken="tok-abc123" />);
 }
 
 describe("PublicFormPage — loading state", () => {
@@ -69,24 +66,37 @@ describe("PublicFormPage — loading state", () => {
 
   it("does not show the form or the error message while loading", () => {
     setup({ isLoading: true });
-    expect(screen.queryByText("Form unavailable")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("This form is no longer available"),
+    ).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /submit/i })).not.toBeInTheDocument();
   });
 });
 
 describe("PublicFormPage — invalid / expired / revoked / not-found state (formQuery.isError)", () => {
-  it("shows 'Form unavailable' when the token resolves to an error", () => {
-    setup({ isError: true, error: new Error("Not Found") });
-    expect(screen.getByText("Form unavailable")).toBeInTheDocument();
+  it("says the form is no longer available when the server refuses the token", () => {
+    setup({
+      isError: true,
+      error: new ApiError("Form not found or no longer active", 404),
+    });
+    expect(
+      screen.getByText("This form is no longer available"),
+    ).toBeInTheDocument();
   });
 
-  it("shows explanatory text directing the user to get an updated link", () => {
-    setup({ isError: true, error: new Error("Gone") });
-    expect(screen.getByText(/link is invalid/i)).toBeInTheDocument();
+  it("directs the user to ask for an up-to-date link, because the server does not say whether the link was revoked or the form closed", () => {
+    setup({
+      isError: true,
+      error: new ApiError("Form not found or no longer active", 404),
+    });
+    expect(screen.getByText(/up-to-date link/i)).toBeInTheDocument();
   });
 
-  it("does not show the submission form when the token is invalid", () => {
-    setup({ isError: true, error: new Error("Not Found") });
+  it("does not show the submission form when the token is refused", () => {
+    setup({
+      isError: true,
+      error: new ApiError("Form not found or no longer active", 404),
+    });
     expect(screen.queryByRole("button", { name: /submit/i })).not.toBeInTheDocument();
   });
 });
@@ -190,7 +200,7 @@ describe("PublicFormPage canonical builder fields", () => {
       isIdle: false, isPending: false, isSuccess: false, data: undefined,
       variables: { severity: "Urgent", notes: "Kept\ndraft" }, error: new Error("Try again"),
     });
-    view.rerender(<PublicFormPage />);
+    view.rerender(<PublicFormView formToken="tok-abc123" />);
     expect(screen.getByRole("alert")).toBeInTheDocument();
     expect(screen.getByRole("combobox", { name: /Severity/ })).toHaveTextContent("Urgent");
     expect(screen.getByRole("textbox", { name: /Notes/ })).toHaveValue("Kept\ndraft");

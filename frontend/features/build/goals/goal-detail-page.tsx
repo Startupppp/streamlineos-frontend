@@ -53,7 +53,7 @@ import {
   GoalOutcomesSection,
   GoalUpdatesTimeline,
 } from "./goal-detail-sections";
-import { useProductReturn } from "@/features/build/shared/product-return-href";
+import { useProductReturn } from "@/features/build/shared/use-product-return";
 
 export function GoalDetailPage({ goalId }: { goalId: number }) {
   const router = useRouter();
@@ -70,20 +70,39 @@ export function GoalDetailPage({ goalId }: { goalId: number }) {
   const [checkInTarget, setCheckInTarget] = useState<KeyResult | null>(null);
   const [addLinkOpen, setAddLinkOpen] = useState(false);
 
-  function handleOpenEdit() { setEditOpen(true); }
-  function handleOpenDelete() { setDeleteOpen(true); }
-  function handleOpenAddLink() { setAddLinkOpen(true); }
-  function handleCloseAddLink() { setAddLinkOpen(false); }
-  function handleCloseCheckIn() { setCheckInTarget(null); }
-  function handleCheckIn(kr: KeyResult) { setCheckInTarget(kr); }
-  function handleRetry() { void refetch(); }
+  function handleOpenEdit() {
+    setEditOpen(true);
+  }
+  function handleOpenDelete() {
+    setDeleteOpen(true);
+  }
+  function handleOpenAddLink() {
+    setAddLinkOpen(true);
+  }
+  function handleCloseAddLink() {
+    setAddLinkOpen(false);
+  }
+  function handleCloseCheckIn() {
+    setCheckInTarget(null);
+  }
+  function handleCheckIn(kr: KeyResult) {
+    setCheckInTarget(kr);
+  }
+  function handleRetry() {
+    void refetch();
+  }
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
       if (event.metaKey || event.ctrlKey || event.altKey) return;
       if (event.target instanceof HTMLElement) {
         const tag = event.target.tagName;
-        if (tag === "INPUT" || tag === "TEXTAREA" || event.target.isContentEditable) return;
+        if (
+          tag === "INPUT" ||
+          tag === "TEXTAREA" ||
+          event.target.isContentEditable
+        )
+          return;
       }
       if (event.key === "e" && canManage) {
         event.preventDefault();
@@ -159,7 +178,10 @@ export function GoalDetailPage({ goalId }: { goalId: number }) {
       backHref={returnHref ?? "/build/goals"}
       actions={
         canManage ? (
-          <GoalDetailActions onEdit={handleOpenEdit} onDelete={handleOpenDelete} />
+          <GoalDetailActions
+            onEdit={handleOpenEdit}
+            onDelete={handleOpenDelete}
+          />
         ) : undefined
       }
     >
@@ -174,14 +196,21 @@ export function GoalDetailPage({ goalId }: { goalId: number }) {
               </div>
             </div>
             {detail.description ? (
-              <p className={cn(TEXT_BODY, "text-sm leading-relaxed text-muted-foreground")}>
+              <p
+                className={cn(
+                  TEXT_BODY,
+                  "text-sm leading-relaxed text-muted-foreground",
+                )}
+              >
                 {detail.description}
               </p>
             ) : null}
             <div className="rounded-lg border border-border bg-muted/40 p-3">
               <div className="mb-2 flex items-center justify-between text-sm">
                 <span className="font-medium">Overall progress</span>
-                <span className="font-semibold tabular-nums">{detail.progress}%</span>
+                <span className="font-semibold tabular-nums">
+                  {detail.progress}%
+                </span>
               </div>
               <Progress value={detail.progress} className="h-2" />
             </div>
@@ -210,7 +239,9 @@ export function GoalDetailPage({ goalId }: { goalId: number }) {
                   className="flex min-w-0 items-center gap-1.5 hover:text-foreground hover:underline"
                 >
                   <GitBranch className="h-3.5 w-3.5 shrink-0" />
-                  <TruncatedText text={`Parent: ${parentGoal?.title ?? `Goal #${detail.parentGoalId}`}`} />
+                  <TruncatedText
+                    text={`Parent: ${parentGoal?.title ?? `Goal #${detail.parentGoalId}`}`}
+                  />
                 </Link>
               ) : null}
             </div>
@@ -234,7 +265,8 @@ export function GoalDetailPage({ goalId }: { goalId: number }) {
             <TabsTrigger value="outcomes">
               <Gauge aria-hidden="true" /> Outcomes
               <span className="tabular-nums">
-                {detail.measurementSources.length + detail.linkedRoadmapItems.length}
+                {detail.measurementSources.length +
+                  detail.linkedRoadmapItems.length}
               </span>
             </TabsTrigger>
           </TabsList>
@@ -265,7 +297,13 @@ export function GoalDetailPage({ goalId }: { goalId: number }) {
         </Tabs>
       </PmPageShell>
 
-      {editOpen ? <GoalFormSheet open={editOpen} onOpenChange={setEditOpen} goal={detail} /> : null}
+      {editOpen ? (
+        <GoalFormSheet
+          open={editOpen}
+          onOpenChange={setEditOpen}
+          goal={detail}
+        />
+      ) : null}
       {checkInTarget && canManage ? (
         <CheckInDialog
           goalId={goalId}
@@ -273,7 +311,9 @@ export function GoalDetailPage({ goalId }: { goalId: number }) {
           onClose={handleCloseCheckIn}
         />
       ) : null}
-      {addLinkOpen ? <AddLinkDialog goalId={goalId} onClose={handleCloseAddLink} /> : null}
+      {addLinkOpen ? (
+        <AddLinkDialog goalId={goalId} onClose={handleCloseAddLink} />
+      ) : null}
 
       <ConfirmDialog
         open={deleteOpen}

@@ -44,7 +44,7 @@ import {
   PRODUCT_SETTINGS_TABS,
   productSettingsTabFromParam,
 } from "./product-settings-tabs";
-import { useProductReturn } from "@/features/build/shared/product-return-href";
+import { useProductReturn } from "@/features/build/shared/use-product-return";
 
 interface ProductSettingsPageProps {
   managedProductId: number;

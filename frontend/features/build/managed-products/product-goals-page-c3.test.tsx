@@ -10,6 +10,31 @@ jest.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams("pg_view=list"),
 }));
 
+jest.mock("./use-infinite-selector", () => ({
+  useAddProductMemberCandidates: () => ({
+    data: { pages: [] },
+    isLoading: false,
+    isFetching: false,
+    isError: false,
+    error: null,
+    refetch: jest.fn(),
+    hasNextPage: false,
+    isFetchingNextPage: false,
+    fetchNextPage: jest.fn(),
+  }),
+  useLinkGoalCandidates: () => ({
+    data: { pages: [] },
+    isLoading: false,
+    isFetching: false,
+    isError: false,
+    error: null,
+    refetch: jest.fn(),
+    hasNextPage: false,
+    isFetchingNextPage: false,
+    fetchNextPage: jest.fn(),
+  }),
+}));
+
 jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn(() => true),
 }));

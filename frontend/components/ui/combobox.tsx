@@ -205,9 +205,10 @@ export function Combobox({
                   </CommandItem>
                 ))}
               </CommandGroup>
+              {footer}
             </CommandList>
           )}
-          {footer}
+          {filtered.length === 0 ? footer : null}
         </Command>
       </PopoverContent>
     </Popover>

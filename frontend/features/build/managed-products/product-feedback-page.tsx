@@ -37,7 +37,7 @@ import { useRouteToIntake } from "./feedback/route-to-intake-dialog";
 import { ProductFeedbackFilters } from "./product-feedback-filters";
 import { ProductFeedbackDialogs } from "./product-feedback-dialogs";
 import { CustomerImpactPanel } from "./customer-impact-panel";
-import { useProductReturn } from "@/features/build/shared/product-return-href";
+import { useProductReturn } from "@/features/build/shared/use-product-return";
 
 function resolveRowClassName(): string {
   return "cursor-pointer";

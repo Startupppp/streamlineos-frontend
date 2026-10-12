@@ -8,13 +8,13 @@ import { isApiError } from "@/lib/api-envelope";
 const originalFetch = global.fetch;
 
 function stubFetch(body: unknown, status = 200) {
-  global.fetch = jest.fn(
-    async () =>
-      new Response(JSON.stringify(body), {
-        status,
-        headers: { "Content-Type": "application/json" },
-      }),
-  ) as unknown as typeof fetch;
+  global.fetch = jest.fn(async () => ({
+    ok: status >= 200 && status < 300,
+    status,
+    statusText: status === 200 ? "OK" : "Error",
+    headers: new Headers(),
+    json: async () => body,
+  })) as unknown as typeof fetch;
 }
 
 function sentKeys(): (string | null)[] {
