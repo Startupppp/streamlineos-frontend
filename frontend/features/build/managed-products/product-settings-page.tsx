@@ -4,7 +4,10 @@ import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { DirtyStateProvider, useRegisterDirtyState } from "@/components/shared/dirty-state-context";
+import {
+  DirtyStateProvider,
+  useRegisterDirtyState,
+} from "@/components/shared/dirty-state-context";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { PageTabsToolbar } from "@/components/ui/page-tabs-toolbar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -16,6 +19,8 @@ import { ProductSettingsSkeleton } from "./managed-product-page-skeletons";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { useManagedProduct } from "@/hooks/api/build/managed-products";
+import { useManagedProductMembers } from "@/hooks/api/build/managed-product-members";
+import { useManagedProductProjects } from "@/hooks/api/build/managed-product-projects";
 import {
   useUpdateManagedProduct,
   useArchiveManagedProduct,
@@ -33,6 +38,7 @@ import { ManagedProductEditFields } from "./managed-product-edit-fields";
 import { ProductSettingsDangerSection } from "./product-settings-danger-section";
 import { ProductSettingsMembersSection } from "./product-settings-members-section";
 import { ProductSettingsPublicationSection } from "./product-settings-publication-section";
+import { ProductSettingsProjectsSection } from "./product-settings-projects-section";
 import {
   PRODUCT_SETTINGS_TABS,
   productSettingsTabFromParam,
@@ -74,6 +80,16 @@ function ProductSettingsForm({ managedProductId }: ProductSettingsPageProps) {
   const archiveProduct = useArchiveManagedProduct();
   const restoreProduct = useRestoreManagedProduct();
 
+  const members = useManagedProductMembers(managedProductId, {
+    enabled: archiveOpen,
+  });
+  const linkedProjects = useManagedProductProjects({
+    managedProductId,
+    limit: 100,
+  });
+  const memberCount = members.data?.data.length ?? 0;
+  const linkedProjectCount = linkedProjects.data?.data.length ?? 0;
+
   const form = useForm<EditManagedProductFormValues>({
     resolver: zodResolver(editManagedProductSchema),
     defaultValues: {
@@ -110,7 +126,8 @@ function ProductSettingsForm({ managedProductId }: ProductSettingsPageProps) {
 
   const isDirty = form.formState.isDirty;
   const [baseVersion, setBaseVersion] = useState<number | null>(null);
-  if (product && !isDirty && baseVersion !== product.version) setBaseVersion(product.version);
+  if (product && !isDirty && baseVersion !== product.version)
+    setBaseVersion(product.version);
   useRegisterDirtyState(isDirty);
 
   const pageState = usePageState({
@@ -121,7 +138,9 @@ function ProductSettingsForm({ managedProductId }: ProductSettingsPageProps) {
     isEmpty: product === null,
   });
 
-  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
   const handleDismissConflict = useCallback(() => {
     setIsConflict(false);
     form.reset();
@@ -132,7 +151,10 @@ function ProductSettingsForm({ managedProductId }: ProductSettingsPageProps) {
     (values: EditManagedProductFormValues) => {
       if (!product) return;
       updateProduct.mutate(
-        { managedProductId, ...toEditManagedProductInput(values, baseVersion ?? product.version) },
+        {
+          managedProductId,
+          ...toEditManagedProductInput(values, baseVersion ?? product.version),
+        },
         {
           onSuccess: () => {
             toast.success("Settings saved.");
@@ -192,7 +214,10 @@ function ProductSettingsForm({ managedProductId }: ProductSettingsPageProps) {
                   role="alert"
                   className="flex items-center justify-between rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
                 >
-                  <span>This product was updated by someone else. Reload to see the latest version.</span>
+                  <span>
+                    This product was updated by someone else. Reload to see the
+                    latest version.
+                  </span>
                   <button
                     type="button"
                     className="ml-4 shrink-0 font-medium underline"
@@ -203,11 +228,21 @@ function ProductSettingsForm({ managedProductId }: ProductSettingsPageProps) {
                 </div>
               ) : null}
 
-              <section aria-labelledby="identity-section-heading" className="flex flex-col gap-4">
-                <h2 id="identity-section-heading" className="text-sm font-semibold text-foreground">
+              <section
+                aria-labelledby="identity-section-heading"
+                className="flex flex-col gap-4"
+              >
+                <h2
+                  id="identity-section-heading"
+                  className="text-sm font-semibold text-foreground"
+                >
                   Identity, strategy &amp; lifecycle
                 </h2>
-                <ManagedProductEditFields form={form} formId={FORM_ID} onSubmit={handleSubmit} />
+                <ManagedProductEditFields
+                  form={form}
+                  formId={FORM_ID}
+                  onSubmit={handleSubmit}
+                />
                 {canUpdate ? (
                   <div className="flex justify-end pt-2">
                     <LoadingButton
@@ -236,18 +271,40 @@ function ProductSettingsForm({ managedProductId }: ProductSettingsPageProps) {
           </TabsContent>
 
           <TabsContent value="members" className="mt-0 outline-none">
-            <ProductSettingsMembersSection managedProductId={managedProductId} />
+            <ProductSettingsMembersSection
+              managedProductId={managedProductId}
+            />
+          </TabsContent>
+
+          <TabsContent value="projects" className="mt-0 outline-none">
+            <ProductSettingsProjectsSection
+              managedProductId={managedProductId}
+            />
           </TabsContent>
 
           <TabsContent value="publishing" className="mt-0 outline-none">
-            <ProductSettingsPublicationSection managedProductId={managedProductId} />
+            <ProductSettingsPublicationSection
+              managedProductId={managedProductId}
+            />
           </TabsContent>
 
           <ConfirmDialog
             open={archiveOpen}
             onOpenChange={setArchiveOpen}
             title="Archive this product?"
-            description="The product will be hidden from active views. You can restore it later."
+            description={
+              <span>
+                The product will be hidden from active views. You can restore it
+                later.
+                {archiveOpen ? (
+                  <span className="block mt-1 text-muted-foreground">
+                    {memberCount} member{memberCount !== 1 ? "s" : ""} and{" "}
+                    {linkedProjectCount} linked project
+                    {linkedProjectCount !== 1 ? "s" : ""} will remain unchanged.
+                  </span>
+                ) : null}
+              </span>
+            }
             confirmLabel="Archive"
             destructive
             onConfirm={handleArchiveConfirm}
@@ -267,16 +324,21 @@ function ProductSettingsForm({ managedProductId }: ProductSettingsPageProps) {
   );
 }
 
-export function ProductSettingsPage({ managedProductId }: ProductSettingsPageProps) {
+export function ProductSettingsPage({
+  managedProductId,
+}: ProductSettingsPageProps) {
   const router = useRouter();
   const { value, setValue } = useBuildListFilters({
     withSearch: false,
     filters: SETTINGS_FILTER_DEFINITIONS,
   });
   const tab = productSettingsTabFromParam(value("tab"));
-  const handleTabChange = useCallback((next: string) => {
-    setValue("tab", next);
-  }, [setValue]);
+  const handleTabChange = useCallback(
+    (next: string) => {
+      setValue("tab", next);
+    },
+    [setValue],
+  );
 
   const handleBack = useCallback(() => {
     if (window.history.length > 1) {
@@ -288,7 +350,11 @@ export function ProductSettingsPage({ managedProductId }: ProductSettingsPagePro
 
   return (
     <DirtyStateProvider>
-      <Tabs value={tab} onValueChange={handleTabChange} className="h-full min-h-0 min-w-0 flex-1">
+      <Tabs
+        value={tab}
+        onValueChange={handleTabChange}
+        className="h-full min-h-0 min-w-0 flex-1"
+      >
         <PageWrapper
           title="Settings"
           subtitle="Configure this product"
@@ -298,7 +364,11 @@ export function ProductSettingsPage({ managedProductId }: ProductSettingsPagePro
               tabs={
                 <TabsList aria-label="Settings sections">
                   {PRODUCT_SETTINGS_TABS.map((item) => (
-                    <TabsTrigger key={item.id} value={item.id} className="px-2 sm:px-3">
+                    <TabsTrigger
+                      key={item.id}
+                      value={item.id}
+                      className="px-2 sm:px-3"
+                    >
                       {item.label}
                     </TabsTrigger>
                   ))}

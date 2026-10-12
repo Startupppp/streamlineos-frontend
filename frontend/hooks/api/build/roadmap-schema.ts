@@ -1,4 +1,4 @@
-import type { z } from "zod";
+import { z } from "zod";
 import {
   projectsRoadmapGetRoadmapSignalsResponseSchema,
   projectsRoadmapCreateRoadmapResponseSchema,
@@ -47,8 +47,13 @@ export type RoadmapTeam = z.infer<typeof roadmapTeamContract>;
 export type RoadmapOpportunity = z.infer<typeof roadmapOpportunityContract>;
 export type RoadmapDelivery = z.infer<typeof roadmapDeliveryContract>;
 
-export const roadmapItemContract = projectsRoadmapCreateRoadmapResponseSchema;
-export const roadmapPageContract = projectsRoadmapListRoadmapResponseSchema;
+export const roadmapItemContract = projectsRoadmapCreateRoadmapResponseSchema.extend({
+  allowedActions: z.array(z.string()),
+  sourceFreshness: z.string().nullable(),
+});
+export const roadmapPageContract = projectsRoadmapListRoadmapResponseSchema.extend({
+  data: z.array(roadmapItemContract),
+});
 
 export const feedbackPostContract = projectsFeedbackChangelogUpdateFeedbackResponseSchema;
 export const feedbackPageContract = projectsFeedbackChangelogListFeedbackResponseSchema;

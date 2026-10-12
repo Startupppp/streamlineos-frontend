@@ -4,6 +4,7 @@ import { useMemo, type RefObject } from "react";
 import { DatePicker } from "@/components/ui/date-picker";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
+import { BuildMultiFilterSelect } from "@/features/build/shared/build-multi-filter-select";
 import {
   BUILD_FILTER_ALL,
   type BuildListFiltersState,
@@ -36,49 +37,50 @@ export function RoadmapFiltersBar({
   const { data: goals } = useGoals({ managedProductId });
   const { data: product } = useManagedProduct(managedProductId);
 
-  const teamOpts = useMemo(() => {
-    const teams = teamsPage?.data ?? [];
-    return [
-      { value: BUILD_FILTER_ALL, label: "All teams" },
-      ...teams.map((t) => ({ value: String(t.id), label: t.name })),
-    ];
-  }, [teamsPage]);
+  const teamOpts = useMemo(
+    () => (teamsPage?.data ?? []).map((t) => ({ value: String(t.id), label: t.name })),
+    [teamsPage],
+  );
 
-  const goalOpts = useMemo(() => {
-    const items = goals ?? [];
-    return [
-      { value: BUILD_FILTER_ALL, label: "All goals" },
-      ...items.map((g) => ({ value: String(g.id), label: g.title })),
-    ];
-  }, [goals]);
+  const goalOpts = useMemo(
+    () => (goals ?? []).map((g) => ({ value: String(g.id), label: g.title })),
+    [goals],
+  );
 
-  const segmentOpts = useMemo(() => {
-    const segs = product?.segments ?? [];
-    return [
-      { value: BUILD_FILTER_ALL, label: "All segments" },
-      ...segs.map((s) => ({ value: s, label: s })),
-    ];
-  }, [product]);
+  const segmentOpts = useMemo(
+    () => (product?.segments ?? []).map((s) => ({ value: s, label: s })),
+    [product],
+  );
+
+  const statusMultiOpts = useMemo(
+    () => ROADMAP_STATUS_OPTS.filter((o) => o.value !== BUILD_FILTER_ALL),
+    [],
+  );
+
+  const horizonMultiOpts = useMemo(
+    () => ROADMAP_HORIZON_OPTS.filter((o) => o.value !== BUILD_FILTER_ALL),
+    [],
+  );
 
   const {
-    horizonValue,
-    statusValue,
+    horizonValues,
+    statusValues,
+    teamIdValues,
+    goalIdValues,
+    segmentValues,
     sortValue,
     confidenceMinValue,
-    teamIdValue,
-    goalIdValue,
-    segmentValue,
     targetFromDate,
     targetToDate,
     customerVisibleValue,
     evidenceStateValue,
-    handleHorizonChange,
-    handleStatusChange,
+    handleHorizonValuesChange,
+    handleStatusValuesChange,
     handleSortChange,
     handleConfidenceChange,
-    handleTeamChange,
-    handleGoalChange,
-    handleSegmentChange,
+    handleTeamValuesChange,
+    handleGoalValuesChange,
+    handleSegmentValuesChange,
     handleTargetFromChange,
     handleTargetToChange,
     handleCustomerVisibleChange,
@@ -100,11 +102,11 @@ export function RoadmapFiltersBar({
           label: "Horizon",
           active: listFilters.isActive("horizon"),
           control: (
-            <BuildFilterSelect
+            <BuildMultiFilterSelect
               label="Horizon"
-              value={horizonValue}
-              onValueChange={handleHorizonChange}
-              options={ROADMAP_HORIZON_OPTS}
+              values={horizonValues}
+              onValuesChange={handleHorizonValuesChange}
+              options={horizonMultiOpts}
             />
           ),
         },
@@ -113,59 +115,59 @@ export function RoadmapFiltersBar({
           label: "Status",
           active: listFilters.isActive("status"),
           control: (
-            <BuildFilterSelect
+            <BuildMultiFilterSelect
               label="Status"
-              value={statusValue}
-              onValueChange={handleStatusChange}
-              options={ROADMAP_STATUS_OPTS}
+              values={statusValues}
+              onValuesChange={handleStatusValuesChange}
+              options={statusMultiOpts}
             />
           ),
         },
-        ...(teamOpts.length > 1
+        ...(teamOpts.length > 0
           ? [
               {
                 id: "teamId",
                 label: "Team",
                 active: listFilters.isActive("teamId"),
                 control: (
-                  <BuildFilterSelect
+                  <BuildMultiFilterSelect
                     label="Team"
-                    value={teamIdValue}
-                    onValueChange={handleTeamChange}
+                    values={teamIdValues}
+                    onValuesChange={handleTeamValuesChange}
                     options={teamOpts}
                   />
                 ),
               },
             ]
           : []),
-        ...(goalOpts.length > 1
+        ...(goalOpts.length > 0
           ? [
               {
                 id: "goalId",
                 label: "Goal",
                 active: listFilters.isActive("goalId"),
                 control: (
-                  <BuildFilterSelect
+                  <BuildMultiFilterSelect
                     label="Goal"
-                    value={goalIdValue}
-                    onValueChange={handleGoalChange}
+                    values={goalIdValues}
+                    onValuesChange={handleGoalValuesChange}
                     options={goalOpts}
                   />
                 ),
               },
             ]
           : []),
-        ...(segmentOpts.length > 1
+        ...(segmentOpts.length > 0
           ? [
               {
                 id: "segment",
                 label: "Segment",
                 active: listFilters.isActive("segment"),
                 control: (
-                  <BuildFilterSelect
+                  <BuildMultiFilterSelect
                     label="Segment"
-                    value={segmentValue}
-                    onValueChange={handleSegmentChange}
+                    values={segmentValues}
+                    onValuesChange={handleSegmentValuesChange}
                     options={segmentOpts}
                   />
                 ),

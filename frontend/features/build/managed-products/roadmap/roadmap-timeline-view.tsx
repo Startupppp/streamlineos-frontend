@@ -17,6 +17,7 @@ interface RoadmapTimelineViewProps {
   items: ScorableRoadmapItem[];
   onEdit: (item: ScorableRoadmapItem) => void;
   onDelete: (item: ScorableRoadmapItem) => void;
+  onView?: (item: ScorableRoadmapItem) => void;
 }
 
 interface TimelineSectionProps {
@@ -25,16 +26,19 @@ interface TimelineSectionProps {
   undated: ScorableRoadmapItem[];
   onEdit: (item: ScorableRoadmapItem) => void;
   onDelete: (item: ScorableRoadmapItem) => void;
+  onView?: (item: ScorableRoadmapItem) => void;
 }
 
 function TimelineItem({
   item,
   onEdit,
   onDelete,
+  onView,
 }: {
   item: ScorableRoadmapItem;
   onEdit: (item: ScorableRoadmapItem) => void;
   onDelete: (item: ScorableRoadmapItem) => void;
+  onView?: (item: ScorableRoadmapItem) => void;
 }) {
   const rawDate = roadmapTargetDate(item);
   const dateLabel = rawDate ? formatCalendarDate(rawDate) : null;
@@ -51,13 +55,13 @@ function TimelineItem({
         )}
       </div>
       <div className="min-w-0 flex-1">
-        <RoadmapItemCard item={item} onEdit={onEdit} onDelete={onDelete} />
+        <RoadmapItemCard item={item} onEdit={onEdit} onDelete={onDelete} onView={onView} />
       </div>
     </li>
   );
 }
 
-function TimelineSection({ horizon, dated, undated, onEdit, onDelete }: TimelineSectionProps) {
+function TimelineSection({ horizon, dated, undated, onEdit, onDelete, onView }: TimelineSectionProps) {
   const items = [...dated, ...undated];
   const tone = statusToneClasses(ROADMAP_HORIZON_TONE[horizon]);
 
@@ -73,14 +77,14 @@ function TimelineSection({ horizon, dated, undated, onEdit, onDelete }: Timeline
       </header>
       <ol className="flex flex-col gap-2" aria-label={`${ROADMAP_HORIZON_LABEL[horizon]} roadmap items`}>
         {items.map((item) => (
-          <TimelineItem key={item.id} item={item} onEdit={onEdit} onDelete={onDelete} />
+          <TimelineItem key={item.id} item={item} onEdit={onEdit} onDelete={onDelete} onView={onView} />
         ))}
       </ol>
     </section>
   );
 }
 
-export function RoadmapTimelineView({ items, onEdit, onDelete }: RoadmapTimelineViewProps) {
+export function RoadmapTimelineView({ items, onEdit, onDelete, onView }: RoadmapTimelineViewProps) {
   const grouped = useMemo(() => {
     const withDate = items.filter((item) => roadmapTargetDate(item) !== null);
     const withoutDate = items.filter((item) => roadmapTargetDate(item) === null);
@@ -106,6 +110,7 @@ export function RoadmapTimelineView({ items, onEdit, onDelete }: RoadmapTimeline
           undated={section.undated}
           onEdit={onEdit}
           onDelete={onDelete}
+          onView={onView}
         />
       ))}
     </div>

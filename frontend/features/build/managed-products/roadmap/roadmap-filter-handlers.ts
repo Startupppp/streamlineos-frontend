@@ -1,30 +1,62 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import {
   BUILD_FILTER_ALL,
   type BuildListFiltersState,
 } from "@/features/build/shared/use-build-list-filters";
 
+function splitMulti(raw: string): string[] {
+  if (!raw || raw === BUILD_FILTER_ALL) return [];
+  return raw
+    .split(",")
+    .map((v) => v.trim())
+    .filter(Boolean);
+}
+
 export function useRoadmapFilterHandlers(listFilters: BuildListFiltersState) {
-  const horizonValue = listFilters.value("horizon");
-  const statusValue = listFilters.value("status");
   const sortValue = listFilters.value("sort");
   const confidenceMinValue = listFilters.value("confidenceMin");
-  const teamIdValue = listFilters.value("teamId");
-  const goalIdValue = listFilters.value("goalId");
-  const segmentValue = listFilters.value("segment");
   const targetFromValue = listFilters.value("targetFrom");
   const targetToValue = listFilters.value("targetTo");
   const customerVisibleValue = listFilters.value("customerVisible");
   const evidenceStateValue = listFilters.value("evidenceState");
 
-  const handleHorizonChange = useCallback(
-    (v: string) => listFilters.setValue("horizon", v),
+  const horizonValues = useMemo(
+    () => splitMulti(listFilters.value("horizon")),
     [listFilters],
   );
-  const handleStatusChange = useCallback(
-    (v: string) => listFilters.setValue("status", v),
+  const statusValues = useMemo(
+    () => splitMulti(listFilters.value("status")),
+    [listFilters],
+  );
+  const teamIdValues = useMemo(
+    () => splitMulti(listFilters.value("teamId")),
+    [listFilters],
+  );
+  const goalIdValues = useMemo(
+    () => splitMulti(listFilters.value("goalId")),
+    [listFilters],
+  );
+  const segmentValues = useMemo(
+    () => splitMulti(listFilters.value("segment")),
+    [listFilters],
+  );
+
+  const handleHorizonValuesChange = useCallback(
+    (values: string[]) =>
+      listFilters.setValue(
+        "horizon",
+        values.length > 0 ? values.join(",") : BUILD_FILTER_ALL,
+      ),
+    [listFilters],
+  );
+  const handleStatusValuesChange = useCallback(
+    (values: string[]) =>
+      listFilters.setValue(
+        "status",
+        values.length > 0 ? values.join(",") : BUILD_FILTER_ALL,
+      ),
     [listFilters],
   );
   const handleSortChange = useCallback(
@@ -35,16 +67,28 @@ export function useRoadmapFilterHandlers(listFilters: BuildListFiltersState) {
     (v: string) => listFilters.setValue("confidenceMin", v),
     [listFilters],
   );
-  const handleTeamChange = useCallback(
-    (v: string) => listFilters.setValue("teamId", v),
+  const handleTeamValuesChange = useCallback(
+    (values: string[]) =>
+      listFilters.setValue(
+        "teamId",
+        values.length > 0 ? values.join(",") : BUILD_FILTER_ALL,
+      ),
     [listFilters],
   );
-  const handleGoalChange = useCallback(
-    (v: string) => listFilters.setValue("goalId", v),
+  const handleGoalValuesChange = useCallback(
+    (values: string[]) =>
+      listFilters.setValue(
+        "goalId",
+        values.length > 0 ? values.join(",") : BUILD_FILTER_ALL,
+      ),
     [listFilters],
   );
-  const handleSegmentChange = useCallback(
-    (v: string) => listFilters.setValue("segment", v),
+  const handleSegmentValuesChange = useCallback(
+    (values: string[]) =>
+      listFilters.setValue(
+        "segment",
+        values.length > 0 ? values.join(",") : BUILD_FILTER_ALL,
+      ),
     [listFilters],
   );
   const handleTargetFromChange = useCallback(
@@ -71,24 +115,24 @@ export function useRoadmapFilterHandlers(listFilters: BuildListFiltersState) {
   const targetToDate = targetToValue === BUILD_FILTER_ALL ? "" : targetToValue;
 
   return {
-    horizonValue,
-    statusValue,
+    horizonValues,
+    statusValues,
+    teamIdValues,
+    goalIdValues,
+    segmentValues,
     sortValue,
     confidenceMinValue,
-    teamIdValue,
-    goalIdValue,
-    segmentValue,
     targetFromDate,
     targetToDate,
     customerVisibleValue,
     evidenceStateValue,
-    handleHorizonChange,
-    handleStatusChange,
+    handleHorizonValuesChange,
+    handleStatusValuesChange,
     handleSortChange,
     handleConfidenceChange,
-    handleTeamChange,
-    handleGoalChange,
-    handleSegmentChange,
+    handleTeamValuesChange,
+    handleGoalValuesChange,
+    handleSegmentValuesChange,
     handleTargetFromChange,
     handleTargetToChange,
     handleCustomerVisibleChange,

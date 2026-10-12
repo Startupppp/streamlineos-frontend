@@ -15,6 +15,7 @@ interface RoadmapBoardColumnsProps {
   grouped: Record<RoadmapHorizon, ScorableRoadmapItem[]>;
   onEdit: (item: ScorableRoadmapItem) => void;
   onDelete: (item: ScorableRoadmapItem) => void;
+  onView?: (item: ScorableRoadmapItem) => void;
   onCreateInHorizon?: (horizon: RoadmapHorizon) => void;
 }
 
@@ -22,6 +23,7 @@ export function RoadmapBoardColumns({
   grouped,
   onEdit,
   onDelete,
+  onView,
   onCreateInHorizon,
 }: RoadmapBoardColumnsProps) {
   const canManage = useCan("build:roadmap:manage");
@@ -110,6 +112,7 @@ export function RoadmapBoardColumns({
           onCreate={onCreateInHorizon ? horizonCreateHandlers[col.horizon] : undefined}
           onEdit={onEdit}
           onDelete={onDelete}
+          onView={onView}
           onMove={handleMove}
           onPublishToggle={handlePublishToggle}
           moveHandlers={moveHandlers}

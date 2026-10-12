@@ -15,6 +15,7 @@ import { getUserDisplayName } from "@/lib/person-display";
 interface RoadmapListViewProps {
   items: ScorableRoadmapItem[];
   onEdit: (item: ScorableRoadmapItem) => void;
+  onView?: (item: ScorableRoadmapItem) => void;
   pagination?: {
     pageSize: number;
     hasMore: boolean;
@@ -25,8 +26,8 @@ interface RoadmapListViewProps {
   };
 }
 
-export function RoadmapListView({ items, onEdit, pagination }: RoadmapListViewProps) {
-  const handleRowClick = useCallback((item: ScorableRoadmapItem) => { onEdit(item); }, [onEdit]);
+export function RoadmapListView({ items, onEdit, onView, pagination }: RoadmapListViewProps) {
+  const handleRowClick = useCallback((item: ScorableRoadmapItem) => { (onView ?? onEdit)(item); }, [onEdit, onView]);
   const getRowKey = useCallback((item: ScorableRoadmapItem) => item.id, []);
 
   const columns = useMemo(

@@ -455,6 +455,13 @@ jest.mock(
   }),
 );
 
+jest.mock(
+  "@/features/build/managed-products/opportunity-impact-table",
+  () => ({
+    OpportunityImpactTable: () => null,
+  }),
+);
+
 export const {
   useGoals,
   useGoalsPage,

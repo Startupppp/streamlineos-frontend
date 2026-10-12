@@ -4,7 +4,10 @@ import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PmStaggerList } from "@/components/pm-chrome";
-import { RoadmapItemCard, type ScorableRoadmapItem } from "@/features/build/roadmap/roadmap-item-card";
+import {
+  RoadmapItemCard,
+  type ScorableRoadmapItem,
+} from "@/features/build/roadmap/roadmap-item-card";
 import { cn } from "@/lib/utils";
 import { statusToneClasses } from "@/lib/design-tokens";
 import type { RoadmapHorizon } from "@/types/projects";
@@ -22,6 +25,7 @@ interface RoadmapHorizonColumnProps {
   onCreate?: () => void;
   onEdit: (item: ScorableRoadmapItem) => void;
   onDelete: (item: ScorableRoadmapItem) => void;
+  onView?: (item: ScorableRoadmapItem) => void;
   onMove: (item: ScorableRoadmapItem, horizon: RoadmapHorizon) => void;
   onPublishToggle: (item: ScorableRoadmapItem) => void;
   moveHandlers: Record<number, { up?: () => void; down?: () => void }>;
@@ -35,6 +39,7 @@ export function RoadmapHorizonColumn({
   onCreate,
   onEdit,
   onDelete,
+  onView,
   onMove,
   onPublishToggle,
   moveHandlers,
@@ -50,12 +55,20 @@ export function RoadmapHorizonColumn({
       <header className="flex shrink-0 items-start justify-between gap-2 border-b border-border px-3 py-3">
         <div className="flex min-w-0 flex-col gap-1">
           <div className="flex items-center gap-2">
-            <span className={cn("size-2 shrink-0 rounded-full", tone.fill)} aria-hidden />
-            <h2 id={headingId} className="text-sm font-semibold text-balance text-foreground">
+            <span
+              className={cn("size-2 shrink-0 rounded-full", tone.fill)}
+              aria-hidden
+            />
+            <h2
+              id={headingId}
+              className="text-sm font-semibold text-balance text-foreground"
+            >
               {label}
             </h2>
           </div>
-          <p className="text-dense text-pretty text-muted-foreground">{ROADMAP_HORIZON_CAPTION[horizon]}</p>
+          <p className="text-dense text-pretty text-muted-foreground">
+            {ROADMAP_HORIZON_CAPTION[horizon]}
+          </p>
         </div>
         <div className="flex items-center gap-1">
           <span
@@ -89,7 +102,11 @@ export function RoadmapHorizonColumn({
             title="No items yet"
             description={ROADMAP_HORIZON_EMPTY[horizon]}
             compact
-            action={canManage && onCreate ? { label: "+ Add item", onClick: onCreate } : undefined}
+            action={
+              canManage && onCreate
+                ? { label: "+ Add item", onClick: onCreate }
+                : undefined
+            }
           />
         ) : (
           <PmStaggerList className="flex flex-col gap-2">
@@ -99,6 +116,7 @@ export function RoadmapHorizonColumn({
                 item={item}
                 onEdit={onEdit}
                 onDelete={onDelete}
+                onView={onView}
                 onMove={onMove}
                 onMoveUp={moveHandlers[item.id]?.up}
                 onMoveDown={moveHandlers[item.id]?.down}

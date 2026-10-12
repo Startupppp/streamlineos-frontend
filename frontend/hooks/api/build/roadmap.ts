@@ -10,6 +10,7 @@ import { apiClient } from "@/lib/api-client";
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import type { RoadmapStatus, RoadmapHorizon } from "@/types/projects";
 import { lazyContract, isApiError } from "@/lib/api-envelope";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type {
@@ -167,6 +168,8 @@ export interface ScoredRoadmapItem {
   prioritization: RoadmapPrioritization;
   tierWeighting: RoadmapTierWeighting;
   delivery: RoadmapDelivery;
+  allowedActions: string[];
+  sourceFreshness: string | null;
   version: number;
   createdBy: string | null;
   createdAt: string;
@@ -194,6 +197,26 @@ export function useRoadmapItems(filters: RoadmapItemFilters = {}) {
 
 const roadmapSignalsQueryKey = (roadmapItemId: number) =>
   knowledgeAndSurveysQueryKeys.roadmap.itemSignals(roadmapItemId);
+
+export function useRoadmapItem(
+  roadmapItemId: number | null,
+  options?: { enabled?: boolean },
+) {
+  const canView = useCan("build:roadmap:view");
+  return useQuery({
+    ...options,
+    queryKey: knowledgeAndSurveysQueryKeys.roadmap.item(roadmapItemId ?? 0),
+    queryFn: ({ signal }) =>
+      apiClient.get<ScoredRoadmapItem>(
+        `/build/roadmap/${String(roadmapItemId)}`,
+        undefined,
+        signal,
+        roadmapItemContract,
+      ),
+    enabled: canView && roadmapItemId !== null && (options?.enabled ?? true),
+    staleTime: 60_000,
+  });
+}
 
 export function useRoadmapItemSignals(
   roadmapItemId: number | null,
@@ -382,6 +405,14 @@ export function usePositionRoadmapItem() {
         roadmapItemContract,
       ),
     onSuccess: (result) => repositionRoadmapItemInCache(qc, result),
+    onError: (e, { roadmapItemId }) => {
+      if (isApiError(e) && e.status === 409) {
+        toast.error("Someone else moved this item. Refreshing…");
+        void qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.item(roadmapItemId), exact: true });
+      } else {
+        toast.error(getErrorMessage(e));
+      }
+    },
   });
 }
 

@@ -106,6 +106,8 @@ function makeItem(overrides: Partial<ScorableRoadmapItem> & { id: number; horizo
     sortOrder: overrides.id,
     votes: 0,
     version: 1,
+    allowedActions: ["edit", "delete", "move", "reorder"],
+    sourceFreshness: null,
     ...overrides,
   } as ScorableRoadmapItem;
 }

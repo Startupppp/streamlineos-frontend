@@ -30,7 +30,6 @@ import type {
   RoadmapDelivery,
 } from "@/hooks/api/build/roadmap-schema";
 import { getUserDisplayName } from "@/lib/person-display";
-import { useCan } from "@/hooks/api/access";
 import { RoadmapPriorityScore } from "./roadmap-priority-score";
 import type { RoadmapHorizon, RoadmapStatus } from "@/types/projects";
 import { ROADMAP_HORIZON_LABEL, ROADMAP_STATUS_BADGE_VARIANT, ROADMAP_STATUS_LABEL } from "./roadmap-constants";
@@ -69,6 +68,8 @@ export type ScorableRoadmapItem = {
   team?: RoadmapTeam | null;
   opportunity?: RoadmapOpportunity | null;
   delivery?: RoadmapDelivery;
+  allowedActions: string[];
+  sourceFreshness: string | null;
   version: number;
 };
 
@@ -76,6 +77,7 @@ interface RoadmapItemCardProps {
   item: ScorableRoadmapItem;
   onEdit: (item: ScorableRoadmapItem) => void;
   onDelete: (item: ScorableRoadmapItem) => void;
+  onView?: (item: ScorableRoadmapItem) => void;
   onMove?: (item: ScorableRoadmapItem, horizon: RoadmapHorizon) => void;
   onMoveUp?: (item: ScorableRoadmapItem) => void;
   onMoveDown?: (item: ScorableRoadmapItem) => void;
@@ -86,26 +88,28 @@ export const RoadmapItemCard = memo(function RoadmapItemCard({
   item,
   onEdit,
   onDelete,
+  onView,
   onMove,
   onMoveUp,
   onMoveDown,
   onPublishToggle,
 }: RoadmapItemCardProps) {
   const shouldReduceMotion = useReducedMotion();
-  const canManage = useCan("build:roadmap:manage");
   const [menuOpen, setMenuOpen] = useState(false);
+  const canEdit = item.allowedActions.includes("edit");
+  const canDelete = item.allowedActions.includes("delete");
+  const canMove = item.allowedActions.includes("move");
+  const canReorder = item.allowedActions.includes("reorder");
+  const hasActions = canEdit || canDelete;
 
   const handleEdit = useCallback(() => { onEdit(item); }, [item, onEdit]);
   const handleDelete = useCallback(() => { onDelete(item); }, [item, onDelete]);
+  const handleView = useCallback(() => { onView?.(item); }, [item, onView]);
   const handleMoveUp = useCallback(() => { onMoveUp?.(item); }, [item, onMoveUp]);
   const handleMoveDown = useCallback(() => { onMoveDown?.(item); }, [item, onMoveDown]);
   const handlePublishToggle = useCallback(() => { onPublishToggle?.(item); }, [item, onPublishToggle]);
 
-  const handleContextMenu = useCallback((event: MouseEvent<HTMLDivElement>) => {
-    if (!canManage) return;
-    event.preventDefault();
-    setMenuOpen(true);
-  }, [canManage]);
+  const handleContextMenu = useCallback((event: MouseEvent<HTMLDivElement>) => { if (!hasActions) return; event.preventDefault(); setMenuOpen(true); }, [hasActions]);
 
   const handleMoveNow = useCallback(() => { onMove?.(item, "now"); }, [item, onMove]);
   const handleMoveNext = useCallback(() => { onMove?.(item, "next"); }, [item, onMove]);
@@ -130,72 +134,35 @@ export const RoadmapItemCard = memo(function RoadmapItemCard({
     >
       <div className="space-y-2.5">
         <div className="flex min-w-0 items-start justify-between gap-2">
-          <TruncatedText text={item.title} lines={2} className="text-sm font-semibold leading-snug text-foreground" />
-          {canManage ? <div className="flex shrink-0 items-center gap-0.5 opacity-70 transition-opacity group-hover:opacity-100">
-            <Button size="icon" variant="ghost" aria-label="Edit roadmap item" onClick={handleEdit}>
-              <Pencil className="size-3.5" />
-            </Button>
-            <AnimatedIconButton
-              size="icon"
-              variant="ghost"
-              className="text-destructive hover:text-destructive"
-              aria-label="Delete roadmap item"
-              onClick={handleDelete}
-              icon={Trash2Icon}
-              iconSize={14}
-            />
+          {onView ? <button type="button" onClick={handleView} className="min-w-0 text-left"><TruncatedText text={item.title} lines={2} className="text-sm font-semibold leading-snug text-foreground hover:text-primary" /></button>
+          : <TruncatedText text={item.title} lines={2} className="text-sm font-semibold leading-snug text-foreground" />}
+          {hasActions ? <div className="flex shrink-0 items-center gap-0.5 opacity-70 transition-opacity group-hover:opacity-100">
+            {canEdit ? <Button size="icon" variant="ghost" aria-label="Edit roadmap item" onClick={handleEdit}><Pencil className="size-3.5" /></Button> : null}
+            {canDelete ? <AnimatedIconButton size="icon" variant="ghost" className="text-destructive hover:text-destructive" aria-label="Delete roadmap item" onClick={handleDelete} icon={Trash2Icon} iconSize={14} /> : null}
             <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
               <DropdownMenuTrigger asChild>
                 <span aria-hidden tabIndex={-1} className="sr-only" />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onSelect={handleEdit}>Edit</DropdownMenuItem>
-                {onMoveUp ? (
-                  <DropdownMenuItem onSelect={handleMoveUp}>
-                    <ArrowUp className="h-3.5 w-3.5" />
-                    Move up
-                  </DropdownMenuItem>
-                ) : null}
-                {onMoveDown ? (
-                  <DropdownMenuItem onSelect={handleMoveDown}>
-                    <ArrowDown className="h-3.5 w-3.5" />
-                    Move down
-                  </DropdownMenuItem>
-                ) : null}
-                {onMove ? (
+                {onView ? <DropdownMenuItem onSelect={handleView}>View details</DropdownMenuItem> : null}
+                {canEdit ? <DropdownMenuItem onSelect={handleEdit}>Edit</DropdownMenuItem> : null}
+                {canReorder && onMoveUp ? <DropdownMenuItem onSelect={handleMoveUp}><ArrowUp className="h-3.5 w-3.5" />Move up</DropdownMenuItem> : null}
+                {canReorder && onMoveDown ? <DropdownMenuItem onSelect={handleMoveDown}><ArrowDown className="h-3.5 w-3.5" />Move down</DropdownMenuItem> : null}
+                {canMove && onMove ? (
                   <>
                     <DropdownMenuSeparator />
-                    {item.horizon !== "now" ? (
-                      <DropdownMenuItem onSelect={handleMoveNow}>
-                        <ArrowRight className="h-3.5 w-3.5" />
-                        Move to Now
-                      </DropdownMenuItem>
-                    ) : null}
-                    {item.horizon !== "next" ? (
-                      <DropdownMenuItem onSelect={handleMoveNext}>
-                        <ArrowRight className="h-3.5 w-3.5" />
-                        Move to Next
-                      </DropdownMenuItem>
-                    ) : null}
-                    {item.horizon !== "later" ? (
-                      <DropdownMenuItem onSelect={handleMoveLater}>
-                        <ArrowRight className="h-3.5 w-3.5" />
-                        Move to Later
-                      </DropdownMenuItem>
-                    ) : null}
+                    {item.horizon !== "now" ? <DropdownMenuItem onSelect={handleMoveNow}><ArrowRight className="h-3.5 w-3.5" />Move to Now</DropdownMenuItem> : null}
+                    {item.horizon !== "next" ? <DropdownMenuItem onSelect={handleMoveNext}><ArrowRight className="h-3.5 w-3.5" />Move to Next</DropdownMenuItem> : null}
+                    {item.horizon !== "later" ? <DropdownMenuItem onSelect={handleMoveLater}><ArrowRight className="h-3.5 w-3.5" />Move to Later</DropdownMenuItem> : null}
                   </>
                 ) : null}
                 {onPublishToggle ? (
                   <>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onSelect={handlePublishToggle}>
-                      <EyeOff className="h-3.5 w-3.5" />
-                      {item.isPublic ? "Unpublish" : "Publish"}
-                    </DropdownMenuItem>
+                    <DropdownMenuItem onSelect={handlePublishToggle}><EyeOff className="h-3.5 w-3.5" />{item.isPublic ? "Unpublish" : "Publish"}</DropdownMenuItem>
                   </>
                 ) : null}
-                <DropdownMenuSeparator />
-                <DropdownMenuItem variant="destructive" onSelect={handleDelete}>Delete</DropdownMenuItem>
+                {canDelete ? <><DropdownMenuSeparator /><DropdownMenuItem variant="destructive" onSelect={handleDelete}>Delete</DropdownMenuItem></> : null}
               </DropdownMenuContent>
             </DropdownMenu>
           </div> : null}
