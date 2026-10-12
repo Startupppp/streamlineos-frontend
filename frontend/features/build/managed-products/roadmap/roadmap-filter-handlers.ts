@@ -17,6 +17,10 @@ function splitMulti(raw: string): string[] {
 export function useRoadmapFilterHandlers(listFilters: BuildListFiltersState) {
   const sortValue = listFilters.value("sort");
   const confidenceMinValue = listFilters.value("confidenceMin");
+  const confidenceValues = useMemo(
+    () => splitMulti(listFilters.value("confidenceMin")),
+    [listFilters],
+  );
   const targetFromValue = listFilters.value("targetFrom");
   const targetToValue = listFilters.value("targetTo");
   const customerVisibleValue = listFilters.value("customerVisible");
@@ -65,6 +69,14 @@ export function useRoadmapFilterHandlers(listFilters: BuildListFiltersState) {
   );
   const handleConfidenceChange = useCallback(
     (v: string) => listFilters.setValue("confidenceMin", v),
+    [listFilters],
+  );
+  const handleConfidenceValuesChange = useCallback(
+    (values: string[]) =>
+      listFilters.setValue(
+        "confidenceMin",
+        values.length > 0 ? values.join(",") : BUILD_FILTER_ALL,
+      ),
     [listFilters],
   );
   const handleTeamValuesChange = useCallback(
@@ -122,6 +134,7 @@ export function useRoadmapFilterHandlers(listFilters: BuildListFiltersState) {
     segmentValues,
     sortValue,
     confidenceMinValue,
+    confidenceValues,
     targetFromDate,
     targetToDate,
     customerVisibleValue,
@@ -130,6 +143,7 @@ export function useRoadmapFilterHandlers(listFilters: BuildListFiltersState) {
     handleStatusValuesChange,
     handleSortChange,
     handleConfidenceChange,
+    handleConfidenceValuesChange,
     handleTeamValuesChange,
     handleGoalValuesChange,
     handleSegmentValuesChange,

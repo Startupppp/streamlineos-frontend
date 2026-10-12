@@ -79,11 +79,11 @@ export function ProductSettingsMembersSection({
   }
 
   const handleNextPage = useCallback(() => {
-    if (data?.pagination.nextCursor) {
+    if (data?.pagination?.nextCursor) {
       setCursor(data.pagination.nextCursor);
       setPageNumber((n) => n + 1);
     }
-  }, [data?.pagination.nextCursor]);
+  }, [data?.pagination?.nextCursor]);
 
   const handlePreviousPage = useCallback(() => {
     setCursor(null);
@@ -91,7 +91,7 @@ export function ProductSettingsMembersSection({
   }, []);
 
   const members = data?.data ?? [];
-  const hasMore = data?.pagination.hasMore ?? false;
+  const hasMore = data?.pagination?.hasMore ?? false;
 
   return (
     <section aria-labelledby="members-section-heading" className="flex flex-col gap-3">

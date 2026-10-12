@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
@@ -44,7 +45,7 @@ export function ProjectCreateWizard({
   onOpenChange,
   scope,
 }: ProjectCreateWizardProps) {
-  const { step, direction, draft, updateDraft, goNext, goBack, reset } =
+  const { step, direction, draft, updateDraft, goNext, goBack, goToStep, reset } =
     useProjectCreate();
   const [keyConflictMessage, setKeyConflictMessage] = useState<string | null>(null);
 
@@ -88,6 +89,12 @@ export function ProjectCreateWizard({
   function handleKeyConflict(message: string): void {
     pendingKeyErrorRef.current = message;
     setKeyConflictMessage(message);
+    toast.error(message);
+  }
+
+  function handleGoToBasicsFromConflict(): void {
+    setKeyConflictMessage(null);
+    goToStep(1);
   }
 
   const { provision, isProvisioning } = useProjectProvisioning(
@@ -221,7 +228,7 @@ export function ProjectCreateWizard({
               {step === 4 && <StepToggles {...sharedProps} />}
               {step === 5 && <StepWorkflow {...sharedProps} />}
               {step === 6 && <StepTeam {...sharedProps} />}
-              {step === 7 && <StepReview draft={draft} keyConflictMessage={keyConflictMessage} />}
+              {step === 7 && <StepReview draft={draft} keyConflictMessage={keyConflictMessage} onGoToBasics={handleGoToBasicsFromConflict} />}
             </motion.div>
           </AnimatePresence>
         </SheetBody>

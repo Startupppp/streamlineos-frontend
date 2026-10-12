@@ -287,6 +287,11 @@ const nextConfig: NextConfig = {
       permanent: false,
     },
     {
+      source: "/settings/members",
+      destination: "/settings/users",
+      permanent: false,
+    },
+    {
       source: "/build/members",
       destination: "/build/settings/access",
       permanent: false,

@@ -1,9 +1,11 @@
 "use client";
 
 import { useMemo } from "react";
+import { useSession } from "next-auth/react";
 import { isApiError } from "@/lib/api-client";
 import { useProject } from "@/hooks/api/build/projects";
 import { useManagedProduct } from "@/hooks/api/build/managed-products";
+import { useGetOrganizations } from "@/hooks/common/auth-hooks";
 import {
   buildScopeKey,
   buildScopeOverviewHref,
@@ -30,6 +32,8 @@ function isMissingAccess(error: unknown): boolean {
 export function useBuildScopeIdentity(scope: BuildScope): BuildScopeIdentity {
   const { recents } = useBuildScopeRecents();
   const { starred } = useBuildScopeStars();
+  const { data: session } = useSession();
+  const { data: organizations } = useGetOrganizations();
 
   const projectQuery = useProject(scope.projectId ?? 0);
   const productQuery = useManagedProduct(scope.managedProductId ?? 0, {
@@ -81,13 +85,17 @@ export function useBuildScopeIdentity(scope: BuildScope): BuildScopeIdentity {
           isArchived: productQuery.data?.status === "archived",
           isInaccessible: isMissingAccess(productQuery.error),
         };
-      default:
+      default: {
+        const orgId = session?.orgId as string | undefined;
+        const activeOrg =
+          organizations?.find((o) => o.id === orgId) ?? organizations?.[0];
         return {
-          ref: ORGANIZATION_SCOPE_REF,
-          isLoading: false,
+          ref: { ...ORGANIZATION_SCOPE_REF, name: activeOrg?.name ?? ORGANIZATION_SCOPE_REF.name },
+          isLoading: organizations === undefined,
           isArchived: false,
           isInaccessible: false,
         };
+      }
     }
-  }, [scope, scopeKey, known, projectQuery, productQuery]);
+  }, [scope, scopeKey, known, projectQuery, productQuery, session, organizations]);
 }

@@ -164,7 +164,7 @@ export function useProductProjectsPage({ managedProductId }: UseProductProjectsP
   const isFilteredEmpty = !isLoading && rows.length === 0 && isFiltered;
 
   const writeParams = useCallback(
-    (updates: Record<string, string | null>, resetCursor = false) => {
+    (updates: Record<string, string | null>, resetCursor = false, useHistory = false) => {
       const next = new URLSearchParams(searchParams.toString());
       for (const [key, value] of Object.entries(updates)) {
         if (value === null || value === "") next.delete(key);
@@ -175,8 +175,10 @@ export function useProductProjectsPage({ managedProductId }: UseProductProjectsP
         next.delete(PP_PREV_PARAM);
       }
       const query = next.toString();
+      const url = query ? `${pathname}?${query}` : pathname;
       startTransition(() => {
-        router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+        if (useHistory) router.push(url, { scroll: false });
+        else router.replace(url, { scroll: false });
       });
     },
     [searchParams, pathname, router],
@@ -242,7 +244,7 @@ export function useProductProjectsPage({ managedProductId }: UseProductProjectsP
     if (!nextCursor) return;
     const stack = prevParamValue ? prevParamValue.split("|") : [];
     stack.push(cursorValue ?? "0");
-    writeParams({ [CURSOR_PARAM]: nextCursor, [PP_PREV_PARAM]: stack.join("|") });
+    writeParams({ [CURSOR_PARAM]: nextCursor, [PP_PREV_PARAM]: stack.join("|") }, false, true);
   }, [nextCursor, cursorValue, prevParamValue, writeParams]);
 
   const handlePreviousPage = useCallback(() => {
@@ -251,7 +253,7 @@ export function useProductProjectsPage({ managedProductId }: UseProductProjectsP
     writeParams({
       [CURSOR_PARAM]: goToRaw === "0" ? null : goToRaw,
       [PP_PREV_PARAM]: stack.length > 0 ? stack.join("|") : null,
-    });
+    }, false, true);
   }, [prevParamValue, writeParams]);
 
   const unlinkMutation = useUnlinkProjectManagedProduct();

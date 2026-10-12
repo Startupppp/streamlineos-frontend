@@ -76,7 +76,14 @@ jest.mock("next/link", () => ({
   }) => <a href={href}>{children}</a>,
 }));
 
-let mockPublication: { token: string | null; path: string | null } | undefined;
+let mockPublication:
+  | {
+      published: boolean;
+      publicationVersion: number | null;
+      expiresAt: string | null;
+      issuedAt: string | null;
+    }
+  | undefined;
 let mockPublicationLoading = false;
 let mockPreview:
   | {
@@ -128,34 +135,34 @@ beforeEach(() => {
 
 describe("RoadmapPublicationPanel — unpublished state (BSN-PUB-UNPUB)", () => {
   it("shows Not published status when token is null", () => {
-    mockPublication = { token: null, path: null };
+    mockPublication = { published: false, publicationVersion: null, expiresAt: null, issuedAt: null };
     render(<RoadmapPublicationPanel managedProductId={5} onClose={onClose} />);
     expect(screen.getByText("Not published")).toBeInTheDocument();
   });
 
   it("shows the Publish roadmap button when unpublished", () => {
-    mockPublication = { token: null, path: null };
+    mockPublication = { published: false, publicationVersion: null, expiresAt: null, issuedAt: null };
     render(<RoadmapPublicationPanel managedProductId={5} onClose={onClose} />);
     expect(screen.getByTestId("loading-button")).toBeInTheDocument();
     expect(screen.getByText("Publish roadmap")).toBeInTheDocument();
   });
 
   it("shows zero-item message when unpublished and no items in preview", () => {
-    mockPublication = { token: null, path: null };
+    mockPublication = { published: false, publicationVersion: null, expiresAt: null, issuedAt: null };
     mockPreview = { orgName: null, roadmap: { planned: [], in_progress: [], completed: [] }, feedback: [], changelog: [] };
     render(<RoadmapPublicationPanel managedProductId={5} onClose={onClose} />);
     expect(screen.getByText(/No items are marked as public yet/i)).toBeInTheDocument();
   });
 
   it("shows ready-item count when unpublished but preview has items", () => {
-    mockPublication = { token: null, path: null };
+    mockPublication = { published: false, publicationVersion: null, expiresAt: null, issuedAt: null };
     mockPreview = { orgName: null, roadmap: { planned: [{}], in_progress: [{}], completed: [] }, feedback: [], changelog: [] };
     render(<RoadmapPublicationPanel managedProductId={5} onClose={onClose} />);
     expect(screen.getByText(/2 items ready to publish/i)).toBeInTheDocument();
   });
 
   it("calls publish mutate when Publish roadmap button is clicked", () => {
-    mockPublication = { token: null, path: null };
+    mockPublication = { published: false, publicationVersion: null, expiresAt: null, issuedAt: null };
     render(<RoadmapPublicationPanel managedProductId={5} onClose={onClose} />);
     fireEvent.click(screen.getByText("Publish roadmap"));
     expect(mockPublishMutate).toHaveBeenCalledTimes(1);
@@ -164,17 +171,33 @@ describe("RoadmapPublicationPanel — unpublished state (BSN-PUB-UNPUB)", () => 
 
 describe("RoadmapPublicationPanel — published state (BSN-PUB-PUB)", () => {
   beforeEach(() => {
-    mockPublication = { token: "prt_abc123", path: "/roadmap/by-token?shareToken=prt_abc123" };
+    mockPublication = { published: true, publicationVersion: 1, expiresAt: null, issuedAt: "2026-10-12T00:00:00.000Z" };
   });
 
-  it("shows Published status when token is set", () => {
+  it("shows Published status when the product has an active publication", () => {
     render(<RoadmapPublicationPanel managedProductId={5} onClose={onClose} />);
     expect(screen.getByText("Published")).toBeInTheDocument();
   });
 
-  it("shows the share URL when published", () => {
+  it("does not reveal the share URL for an already-issued link, because only its hash is stored", () => {
     render(<RoadmapPublicationPanel managedProductId={5} onClose={onClose} />);
-    expect(screen.getByText("/roadmap/by-token?shareToken=prt_abc123", { exact: false })).toBeInTheDocument();
+    expect(screen.queryByText(/shareToken=/)).toBeNull();
+    expect(screen.getByText(/stored\s+only as a hash/i)).toBeInTheDocument();
+  });
+
+  it("shows the share URL once, right after the link is issued (control — the URL is still reachable)", () => {
+    mockPublishMutate.mockImplementation(
+      (_v: unknown, opts: { onSuccess: (i: { path: string }) => void }) => {
+        opts.onSuccess({ path: "/roadmap/by-token?shareToken=prt_fresh" });
+      },
+    );
+    render(<RoadmapPublicationPanel managedProductId={5} onClose={onClose} />);
+    fireEvent.click(screen.getByText("Rotate share link"));
+    fireEvent.click(screen.getByTestId("confirm-btn"));
+    expect(
+      screen.getByText("/roadmap/by-token?shareToken=prt_fresh", { exact: false }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Copy this link now/i)).toBeInTheDocument();
   });
 
   it("shows item count from preview when published", () => {

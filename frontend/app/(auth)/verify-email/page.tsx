@@ -118,7 +118,7 @@ function VerifyEmailForm() {
       const outcome = await signInWithMagicToken(autoLoginToken);
       if (outcome.status === "signed-in") {
         attemptedTokens.delete(verificationToken);
-        window.location.href = "/org-setup";
+        window.location.href = "/dashboard";
         return;
       }
       const failure =

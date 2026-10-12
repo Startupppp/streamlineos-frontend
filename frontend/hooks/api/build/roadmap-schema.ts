@@ -11,6 +11,8 @@ import {
   projectsTemplatesCreateTemplateResponseSchema,
   projectsTemplatesApplyTemplateResponseSchema,
   projectsRoadmapReadRoadmapPublicationResponseSchema,
+  managedProductRelationsGetRoadmapPublicationResponseSchema,
+  managedProductRelationsIssueRoadmapPublicationTokenResponseSchema,
   publicRoadmapGetRoadmapResponseSchema,
   publicRoadmapVoteRoadmapResponseSchema,
   publicRoadmapSubmitRoadmapFeedbackResponseSchema,
@@ -69,3 +71,7 @@ export const publicRoadmapBoardContract = publicRoadmapGetRoadmapResponseSchema;
 export const publicVoteResultContract = publicRoadmapVoteRoadmapResponseSchema;
 export const publicFeedbackResultContract = publicRoadmapSubmitRoadmapFeedbackResponseSchema;
 export const roadmapPublicationContract = projectsRoadmapReadRoadmapPublicationResponseSchema;
+export const productRoadmapPublicationContract =
+  managedProductRelationsGetRoadmapPublicationResponseSchema;
+export const productRoadmapPublicationIssuedContract =
+  managedProductRelationsIssueRoadmapPublicationTokenResponseSchema;

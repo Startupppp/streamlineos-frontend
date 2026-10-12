@@ -1,6 +1,6 @@
 "use client";
 
-import { forwardRef, useImperativeHandle, useMemo, useRef } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AlertTriangle } from "lucide-react";
@@ -34,7 +34,7 @@ import {
   BasicsClientField,
   charCounter,
 } from "./step-basics-manager-field";
-import { useProjects } from "@/hooks/api/build/projects";
+import { useProjects, useCheckProjectKeyAvailable } from "@/hooks/api/build/projects";
 
 export type BasicsHandle = { validate: () => Promise<boolean>; setKeyError: (message: string) => void };
 
@@ -58,6 +58,11 @@ export const StepBasics = forwardRef<
     const keyManuallyEditedRef = useRef(
       draft.key.length > 0 && draft.key !== generateProjectKey(draft.name),
     );
+    const keyCheckAbortRef = useRef<AbortController | null>(null);
+    const [keyTransformed, setKeyTransformed] = useState(false);
+    const checkKeyAvailable = useCheckProjectKeyAvailable();
+
+    useEffect(() => () => { keyCheckAbortRef.current?.abort(); }, []);
 
     const watchedStartDate = form.watch("startDate");
     const watchedName = form.watch("name");
@@ -76,24 +81,35 @@ export const StepBasics = forwardRef<
     useImperativeHandle(ref, () => ({
       async validate(): Promise<boolean> {
         const ok = await form.trigger();
-        if (ok) {
-          const v = form.getValues();
-          updateDraft({
-            name: v.name,
-            key: v.key,
-            description: v.description ?? "",
-            managerId: v.managerId ?? "",
-            clientId: v.clientId ?? "",
-            startDate: v.startDate ?? "",
-            endDate: v.endDate ?? "",
-          });
+        if (!ok) return false;
+        const v = form.getValues();
+        try {
+          const { available } = await checkKeyAvailable(v.key);
+          if (!available) {
+            form.setError("key", {
+              type: "manual",
+              message: `A project with key "${v.key}" already exists in this organization.`,
+            });
+            return false;
+          }
+        } catch {
+          // Network error: allow proceeding; server will catch any real conflict as 409.
         }
-        return ok;
+        updateDraft({
+          name: v.name,
+          key: v.key,
+          description: v.description ?? "",
+          managerId: v.managerId ?? "",
+          clientId: v.clientId ?? "",
+          startDate: v.startDate ?? "",
+          endDate: v.endDate ?? "",
+        });
+        return true;
       },
       setKeyError(message: string): void {
         form.setError("key", { type: "manual", message });
       },
-    }));
+    }), [checkKeyAvailable, form, updateDraft]);
 
     function handleFormSubmit(e: React.FormEvent) { e.preventDefault(); }
 
@@ -124,6 +140,29 @@ export const StepBasics = forwardRef<
         .replace(/[^A-Z0-9]/g, "")
         .slice(0, PROJECT_KEY_MAX);
       onChange(sanitized);
+      setKeyTransformed(sanitized !== value && value.length > 0);
+      if (form.getFieldState("key").error) {
+        void form.trigger("key");
+      }
+    }
+
+    async function handleKeyBlur(fieldOnBlur: () => void) {
+      fieldOnBlur();
+      const key = form.getValues("key");
+      if (form.getFieldState("key").invalid || key.length < 2) return;
+      keyCheckAbortRef.current?.abort();
+      keyCheckAbortRef.current = new AbortController();
+      try {
+        const { available } = await checkKeyAvailable(key, keyCheckAbortRef.current.signal);
+        if (!available) {
+          form.setError("key", {
+            type: "manual",
+            message: `A project with key "${key}" already exists in this organization.`,
+          });
+        }
+      } catch {
+        // Ignore network or abort errors from the blur check.
+      }
     }
 
     function handleStartDateChange(value: string) {
@@ -206,13 +245,21 @@ export const StepBasics = forwardRef<
                   <Input
                     placeholder="e.g. WR"
                     maxLength={PROJECT_KEY_MAX}
-                    {...field}
+                    name={field.name}
+                    value={field.value ?? ""}
+                    ref={field.ref}
                     onChange={(e) =>
                       handleKeyChange(e.target.value, field.onChange)
                     }
+                    onBlur={() => void handleKeyBlur(field.onBlur)}
                   />
                 </FormControl>
                 <FormMessage />
+                {keyTransformed && (
+                  <p className="text-xs text-muted-foreground">
+                    Non-letter and non-digit characters were removed and letters were uppercased.
+                  </p>
+                )}
               </FormItem>
             )}
           />

@@ -1,6 +1,7 @@
 import { createContext, forwardRef, useContext, type ReactNode } from "react";
 import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { ApiError } from "@/lib/api-envelope";
 import { OutcomeReviewsSection } from "./outcome-reviews-section";
 import type { DiscoveryReviewsListOutcomeReviewsResponse } from "@/contracts/build-contracts.generated";
 import type { CreateOutcomeReviewInput } from "@/hooks/api/build/outcome-review-mutations";
@@ -253,6 +254,7 @@ describe("OutcomeReviewRow — measure kind and source fields (BSN-OUTCOME-MEASU
     const review: ReviewRow = {
       ...SCHEDULED_REVIEW,
       id: 3,
+      opportunityId: null,
       measureKind: "measured",
       sourceUrl: "https://example.com/data",
     };
@@ -278,6 +280,7 @@ describe("OutcomeReviewRow — measure kind and source fields (BSN-OUTCOME-MEASU
     const review: ReviewRow = {
       ...SCHEDULED_REVIEW,
       id: 4,
+      opportunityId: null,
       state: "completed",
       result: "met",
       measureKind: "measured",
@@ -296,7 +299,7 @@ describe("OutcomeReviewRow — measure kind and source fields (BSN-OUTCOME-MEASU
         isUpdating={false}
       />,
     );
-    expect(screen.getByTestId("measured-at-4")).toBeInTheDocument();
+    expect(screen.getByTestId("freshness-4")).toBeInTheDocument();
   });
 });
 
@@ -331,6 +334,7 @@ describe("CompleteReviewDialog — measuredAt ISO conversion (BSN-OUTCOME-MEASUR
       expect(onComplete).toHaveBeenCalledWith(
         1,
         expect.objectContaining({ measuredAt: "2026-03-15T00:00:00.000Z" }),
+        expect.any(Function),
         expect.any(Function),
       );
     });
@@ -387,5 +391,204 @@ describe("OutcomeReviewsSection — schedule form (BSN-SCHEDULE-FORM)", () => {
     expect(screen.getByTestId("schedule-sheet")).toBeInTheDocument();
     act(() => onCreate.mock.calls[0][1]());
     expect(screen.queryByTestId("schedule-sheet")).not.toBeInTheDocument();
+  });
+});
+
+describe("OutcomeReviewsSection — cursor pagination >25 rows (BSN-OUTCOME-PAGINATION)", () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  const makeReview = (id: number): ReviewRow => ({ ...SCHEDULED_REVIEW, id, title: `Review ${id}` });
+
+  it("shows Next button when hasMore is true and calls onNextPage", () => {
+    const onNextPage = jest.fn();
+    render(
+      <OutcomeReviewsSection
+        managedProductId={10}
+        reviews={[makeReview(1)]}
+        isLoading={false}
+        isError={false}
+        onRetry={noop}
+        hasMore
+        hasPreviousPage={false}
+        pageNumber={1}
+        onNextPage={onNextPage}
+        onPreviousPage={noop}
+        onCreate={noop}
+        onComplete={noop}
+        onDelete={noop}
+        isCreating={false}
+        isUpdating={false}
+      />,
+    );
+    const nextBtn = screen.getByRole("button", { name: /next/i });
+    fireEvent.click(nextBtn);
+    expect(onNextPage).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows Previous button when hasPreviousPage is true and calls onPreviousPage", () => {
+    const onPreviousPage = jest.fn();
+    render(
+      <OutcomeReviewsSection
+        managedProductId={10}
+        reviews={[makeReview(1)]}
+        isLoading={false}
+        isError={false}
+        onRetry={noop}
+        hasMore={false}
+        hasPreviousPage
+        pageNumber={2}
+        onNextPage={noop}
+        onPreviousPage={onPreviousPage}
+        onCreate={noop}
+        onComplete={noop}
+        onDelete={noop}
+        isCreating={false}
+        isUpdating={false}
+      />,
+    );
+    const prevBtn = screen.getByRole("button", { name: /previous/i });
+    fireEvent.click(prevBtn);
+    expect(onPreviousPage).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("OutcomeReviewsSection — error and retry (BSN-OUTCOME-ERROR)", () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  it("shows the error state when isError is true instead of empty state", () => {
+    render(
+      <OutcomeReviewsSection
+        managedProductId={10}
+        reviews={[]}
+        isLoading={false}
+        isError
+        onRetry={noop}
+        hasMore={false}
+        hasPreviousPage={false}
+        pageNumber={1}
+        onNextPage={noop}
+        onPreviousPage={noop}
+        onCreate={noop}
+        onComplete={noop}
+        onDelete={noop}
+        isCreating={false}
+        isUpdating={false}
+      />,
+    );
+    expect(screen.queryByTestId("outcome-reviews-empty")).not.toBeInTheDocument();
+    expect(screen.getByText(/could not load/i)).toBeInTheDocument();
+  });
+
+  it("retry button calls onRetry so the query can be refetched", () => {
+    const onRetry = jest.fn();
+    render(
+      <OutcomeReviewsSection
+        managedProductId={10}
+        reviews={[]}
+        isLoading={false}
+        isError
+        onRetry={onRetry}
+        hasMore={false}
+        hasPreviousPage={false}
+        pageNumber={1}
+        onNextPage={noop}
+        onPreviousPage={noop}
+        onCreate={noop}
+        onComplete={noop}
+        onDelete={noop}
+        isCreating={false}
+        isUpdating={false}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: /try again/i }));
+    expect(onRetry).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("CompleteReviewDialog — 409 conflict inline error (BSN-OUTCOME-409)", () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  it("keeps the dialog open and shows inline conflict message when onFailed receives a 409", async () => {
+    const user = userEvent.setup();
+    const onComplete = jest.fn((
+      _reviewId: number,
+      _data: unknown,
+      _onCompleted: () => void,
+      onFailed: (err: unknown) => void,
+    ) => {
+      const err = new ApiError("Conflict", 409);
+      onFailed(err);
+    });
+
+    render(
+      <OutcomeReviewsSection
+        managedProductId={10}
+        reviews={[SCHEDULED_REVIEW]}
+        isLoading={false}
+        isError={false}
+        onRetry={noop}
+        hasMore={false}
+        hasPreviousPage={false}
+        pageNumber={1}
+        onNextPage={noop}
+        onPreviousPage={noop}
+        onCreate={noop}
+        onComplete={onComplete}
+        onDelete={noop}
+        isCreating={false}
+        isUpdating={false}
+      />,
+    );
+
+    fireEvent.click(screen.getByTestId("complete-review-btn-1"));
+    await user.click(screen.getByRole("option", { name: "Met" }));
+    await user.click(screen.getByRole("button", { name: /^complete$/i }));
+
+    await waitFor(() => {
+      expect(screen.getByTestId("complete-conflict-error")).toBeInTheDocument();
+    });
+    expect(screen.getByTestId("result-select")).toBeInTheDocument();
+  });
+
+  it("does not show conflict error for non-409 failures so only lock conflicts render inline", async () => {
+    const user = userEvent.setup();
+    const onComplete = jest.fn((
+      _reviewId: number,
+      _data: unknown,
+      _onCompleted: () => void,
+      onFailed: (err: unknown) => void,
+    ) => {
+      const err = new ApiError("Server error", 500);
+      onFailed(err);
+    });
+
+    render(
+      <OutcomeReviewsSection
+        managedProductId={10}
+        reviews={[SCHEDULED_REVIEW]}
+        isLoading={false}
+        isError={false}
+        onRetry={noop}
+        hasMore={false}
+        hasPreviousPage={false}
+        pageNumber={1}
+        onNextPage={noop}
+        onPreviousPage={noop}
+        onCreate={noop}
+        onComplete={onComplete}
+        onDelete={noop}
+        isCreating={false}
+        isUpdating={false}
+      />,
+    );
+
+    fireEvent.click(screen.getByTestId("complete-review-btn-1"));
+    await user.click(screen.getByRole("option", { name: "Met" }));
+    await user.click(screen.getByRole("button", { name: /^complete$/i }));
+
+    await waitFor(() => {
+      expect(onComplete).toHaveBeenCalled();
+    });
+    expect(screen.queryByTestId("complete-conflict-error")).not.toBeInTheDocument();
   });
 });

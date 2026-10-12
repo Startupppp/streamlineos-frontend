@@ -465,6 +465,29 @@ describe("ProductProjectsPage — cursor history (BSN-PROJ-CURSOR-HISTORY)", () 
     expect(PP_PREV_PARAM).toBe("pp_prev");
   });
 
+  it("next-page uses router.push so the browser back button returns to the previous page (BSN-PROJ-CURSOR-PUSH)", () => {
+    mockUseManagedProductProjects.mockReturnValue({
+      ...EMPTY_RESULT,
+      data: { data: [], pagination: { hasMore: true, nextCursor: "cursor_p2", limit: 20 } },
+    });
+    render(<ProductProjectsPage managedProductId={5} />);
+    fireEvent.click(screen.getByTestId("next-page"));
+    expect(mockRouterPush).toHaveBeenCalled();
+    expect(mockRouterReplace).not.toHaveBeenCalled();
+  });
+
+  it("previous-page uses router.push so the browser forward button returns to the next page (BSN-PROJ-CURSOR-PREV-PUSH)", () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("cursor=cursor_p2&pp_prev=0"));
+    mockUseManagedProductProjects.mockReturnValue({
+      ...EMPTY_RESULT,
+      data: { data: [], pagination: { hasMore: true, nextCursor: "cursor_p3", limit: 20 } },
+    });
+    render(<ProductProjectsPage managedProductId={5} />);
+    fireEvent.click(screen.getByTestId("prev-page"));
+    expect(mockRouterPush).toHaveBeenCalled();
+    expect(mockRouterReplace).not.toHaveBeenCalled();
+  });
+
   it("next-page encodes page1 sentinel in pp_prev so previous can recover the exact page (page1→page2)", () => {
     mockUseManagedProductProjects.mockReturnValue({
       ...EMPTY_RESULT,
@@ -472,7 +495,7 @@ describe("ProductProjectsPage — cursor history (BSN-PROJ-CURSOR-HISTORY)", () 
     });
     render(<ProductProjectsPage managedProductId={5} />);
     fireEvent.click(screen.getByTestId("next-page"));
-    const call = mockRouterReplace.mock.calls[0][0] as string;
+    const call = mockRouterPush.mock.calls[0][0] as string;
     const params = new URLSearchParams(call.includes("?") ? call.split("?")[1] : call);
     expect(params.get("cursor")).toBe("cursor_p2");
     expect(params.get("pp_prev")).toBe("0");
@@ -486,7 +509,7 @@ describe("ProductProjectsPage — cursor history (BSN-PROJ-CURSOR-HISTORY)", () 
     });
     render(<ProductProjectsPage managedProductId={5} />);
     fireEvent.click(screen.getByTestId("prev-page"));
-    const call = mockRouterReplace.mock.calls[0][0] as string;
+    const call = mockRouterPush.mock.calls[0][0] as string;
     expect(call).not.toContain("cursor=");
     expect(call).not.toContain("pp_prev=");
   });
@@ -499,7 +522,7 @@ describe("ProductProjectsPage — cursor history (BSN-PROJ-CURSOR-HISTORY)", () 
     });
     render(<ProductProjectsPage managedProductId={5} />);
     fireEvent.click(screen.getByTestId("prev-page"));
-    const call = mockRouterReplace.mock.calls[0][0] as string;
+    const call = mockRouterPush.mock.calls[0][0] as string;
     const params = new URLSearchParams(call.includes("?") ? call.split("?")[1] : call);
     expect(params.get("cursor")).toBe("cursor_p2");
     expect(params.get("pp_prev")).toBe("0");
@@ -514,7 +537,7 @@ describe("ProductProjectsPage — cursor history (BSN-PROJ-CURSOR-HISTORY)", () 
     render(<ProductProjectsPage managedProductId={5} />);
     expect(screen.getByTestId("prev-page")).toBeInTheDocument();
     fireEvent.click(screen.getByTestId("prev-page"));
-    const call = mockRouterReplace.mock.calls[0][0] as string;
+    const call = mockRouterPush.mock.calls[0][0] as string;
     const params = new URLSearchParams(call.includes("?") ? call.split("?")[1] : call);
     expect(params.get("cursor")).toBeNull();
     expect(params.get("pp_prev")).toBeNull();

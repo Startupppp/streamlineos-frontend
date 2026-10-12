@@ -69,7 +69,7 @@ export function RoadmapFiltersBar({
     goalIdValues,
     segmentValues,
     sortValue,
-    confidenceMinValue,
+    confidenceValues,
     targetFromDate,
     targetToDate,
     customerVisibleValue,
@@ -77,7 +77,7 @@ export function RoadmapFiltersBar({
     handleHorizonValuesChange,
     handleStatusValuesChange,
     handleSortChange,
-    handleConfidenceChange,
+    handleConfidenceValuesChange,
     handleTeamValuesChange,
     handleGoalValuesChange,
     handleSegmentValuesChange,
@@ -179,11 +179,11 @@ export function RoadmapFiltersBar({
           label: "Confidence",
           active: listFilters.isActive("confidenceMin"),
           control: (
-            <BuildFilterSelect
+            <BuildMultiFilterSelect
               label="Confidence"
-              value={confidenceMinValue}
-              onValueChange={handleConfidenceChange}
-              options={ROADMAP_CONFIDENCE_OPTS}
+              values={confidenceValues}
+              onValuesChange={handleConfidenceValuesChange}
+              options={ROADMAP_CONFIDENCE_OPTS.filter((o) => o.value !== BUILD_FILTER_ALL)}
             />
           ),
         },

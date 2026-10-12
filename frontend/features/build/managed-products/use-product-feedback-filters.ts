@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useMemo, useRef } from "react";
+import { useCallback, useMemo, useRef, useTransition } from "react";
+import { useRouter, usePathname } from "next/navigation";
 import { useSourceOverride } from "@/hooks/common/use-source-override";
 import {
   useBuildListFilters,
@@ -61,8 +62,30 @@ const CONSENT_VALUES = CONSENT_FILTER_OPTIONS
 export const PAGE_SIZE = 25;
 
 export function useProductFeedbackFilters(managedProductId: number) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const [, startTransition] = useTransition();
   const listFilters = useBuildListFilters({ filters: FILTER_DEFINITIONS });
+  const searchParams = listFilters.searchParams;
   const searchInputRef = useRef<HTMLInputElement | null>(null);
+
+  const writePaneParams = useCallback(
+    (updates: Record<string, string | null>) => {
+      const next = new URLSearchParams(searchParams.toString());
+      for (const [key, value] of Object.entries(updates)) {
+        if (value === null) next.delete(key);
+        else next.set(key, value);
+      }
+      const query = next.toString();
+      startTransition(() => {
+        router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+      });
+    },
+    [pathname, router, searchParams],
+  );
+
+  const pageRaw = searchParams.get("page");
+  const page = Math.max(1, parseInt(pageRaw ?? "1", 10) || 1);
 
   const typeValue = listFilters.value("type");
   const statusValue = listFilters.value("status");
@@ -156,7 +179,6 @@ export function useProductFeedbackFilters(managedProductId: number) {
     return Number.isFinite(n) && n > 0 ? n : null;
   }, [ticketProjectIdRaw]);
 
-  const [page, setPage] = useSourceOverride(listFilters.resetKey, 1);
   const [selected, setSelected] = useSourceOverride(listFilters.resetKey, new Set<string | number>());
 
   const isFiltered = useMemo(
@@ -216,15 +238,36 @@ export function useProductFeedbackFilters(managedProductId: number) {
   const handleConsentStatusChange = useCallback((v: string) => listFilters.setValue("consentStatus", v), [listFilters]);
   const handleLinkedToOpportunityChange = useCallback((v: string) => listFilters.setValue("linkedToOpportunity", v), [listFilters]);
   const handleClearSelection = useCallback(() => setSelected(new Set()), [setSelected]);
+  const handleOpenSubmission = useCallback(
+    (submissionId: number) => writePaneParams({ submission: String(submissionId) }),
+    [writePaneParams],
+  );
+  const handleCloseSubmissionPane = useCallback(
+    () => writePaneParams({ submission: null }),
+    [writePaneParams],
+  );
   const handleOpenTicket = useCallback(
     (ticketId: number, projectId: number) => {
-      listFilters.setValues({ ticket: String(ticketId), ticketProject: String(projectId) });
+      writePaneParams({ ticket: String(ticketId), ticketProject: String(projectId) });
     },
-    [listFilters],
+    [writePaneParams],
   );
-  const handleCloseTicketPane = useCallback(() => {
-    listFilters.setValues({ ticket: BUILD_FILTER_ALL, ticketProject: BUILD_FILTER_ALL });
-  }, [listFilters]);
+  const handleCloseTicketPane = useCallback(
+    () => writePaneParams({ ticket: null, ticketProject: null }),
+    [writePaneParams],
+  );
+  const handlePageChange = useCallback(
+    (newPage: number) => {
+      const next = new URLSearchParams(searchParams.toString());
+      if (newPage <= 1) next.delete("page");
+      else next.set("page", String(newPage));
+      const query = next.toString();
+      startTransition(() => {
+        router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+      });
+    },
+    [pathname, router, searchParams],
+  );
 
   const handleSourceChannelValuesChange = useCallback(
     (vals: string[]) => listFilters.setValue("sourceChannel", vals.length > 0 ? vals.join(",") : BUILD_FILTER_ALL),
@@ -287,10 +330,12 @@ export function useProductFeedbackFilters(managedProductId: number) {
     handleSegmentValuesChange,
     handleCrmOrgValuesChange,
     handleDateRangeChange: listFilters.setValues,
-    handlePageChange: setPage,
+    handlePageChange,
     handleClearSelection,
     paneTicketId,
     paneTicketProjectId,
+    handleOpenSubmission,
+    handleCloseSubmissionPane,
     handleOpenTicket,
     handleCloseTicketPane,
   };

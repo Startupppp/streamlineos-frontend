@@ -47,6 +47,7 @@ jest.mock("@/components/organization/archived-orgs-restore", () => ({
 jest.mock("@/hooks/common/auth-hooks", () => ({
   signInWithMagicToken: jest.fn((...args: unknown[]) => mockSignIn(...args)),
   useSessionClaimsRefresh: jest.fn(() => mockRefreshSessionClaims),
+  useMyPendingInvitations: jest.fn(() => ({ data: [] })),
 }));
 
 jest.mock("@/hooks/common/use-confirmed-session-claims-refresh", () => ({

@@ -138,7 +138,7 @@ const MOCK_PRODUCT = {
   allowedActions: ["update"],
 };
 
-const EMPTY_MEMBERS = { data: [] };
+const EMPTY_MEMBERS = { data: [], pagination: { hasMore: false, nextCursor: null, limit: 50 } };
 
 function setupDefaultMocks() {
   mockUseManagedProduct.mockReturnValue({
@@ -248,6 +248,7 @@ describe("ProductSettingsPage — members", () => {
             member: { id: "user-2", firstName: "Jane", lastName: "Doe", email: "jane@example.com" },
           },
         ],
+        pagination: { hasMore: false, nextCursor: null, limit: 50 },
       },
       isLoading: false,
     });

@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const OPENAPI_HASH = "sha256:a4b30ea545da9b4966c236239724b8f2fbfe9acea43297a033c845ed11ae2bae" as const;
+export const OPENAPI_HASH = "sha256:d57a7c90db24169884723563dfc467afe32f25a0d745095545914d6117ed4a1f" as const;
 
 export const agentTokensListResponseSchema = z.array(z.object({
   id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
@@ -1113,6 +1113,11 @@ export const managedProductRelationsListMembersResponseSchema = z.object({
       image: z.string().nullable(),
     }).nullable(),
   })),
+  pagination: z.object({
+    limit: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    hasMore: z.boolean(),
+    nextCursor: z.string().nullable(),
+  }),
 });
 export type ManagedProductRelationsListMembersResponse = z.infer<typeof managedProductRelationsListMembersResponseSchema>;
 
@@ -2044,6 +2049,8 @@ export const managedProductRelationsListReleasesResponseSchema = z.object({
     createdBy: z.string().nullable(),
     createdAt: z.iso.datetime({ offset: true }),
     updatedAt: z.iso.datetime({ offset: true }),
+    allowedActions: z.array(z.string()),
+    linkedRoadmapItemCount: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   })),
   pagination: z.object({
     limit: z.number().int().gte(-9007199254740991).lte(9007199254740991),
@@ -2069,6 +2076,8 @@ export const managedProductRelationsCreateReleaseResponseSchema = z.object({
   createdBy: z.string().nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
+  allowedActions: z.array(z.string()),
+  linkedRoadmapItemCount: z.number().int().gte(-9007199254740991).lte(9007199254740991),
 });
 export type ManagedProductRelationsCreateReleaseResponse = z.infer<typeof managedProductRelationsCreateReleaseResponseSchema>;
 
@@ -2100,6 +2109,8 @@ export const managedProductRelationsUpdateReleaseResponseSchema = z.object({
   createdBy: z.string().nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
+  allowedActions: z.array(z.string()),
+  linkedRoadmapItemCount: z.number().int().gte(-9007199254740991).lte(9007199254740991),
 });
 export type ManagedProductRelationsUpdateReleaseResponse = z.infer<typeof managedProductRelationsUpdateReleaseResponseSchema>;
 
@@ -2217,16 +2228,26 @@ export const managedProductRelationsGetRoadmapPreviewResponseSchema = z.object({
 export type ManagedProductRelationsGetRoadmapPreviewResponse = z.infer<typeof managedProductRelationsGetRoadmapPreviewResponseSchema>;
 
 export const managedProductRelationsGetRoadmapPublicationResponseSchema = z.object({
-  token: z.string().nullable(),
-  path: z.string().nullable(),
+  published: z.boolean(),
+  publicationVersion: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
+  expiresAt: z.string().nullable(),
+  issuedAt: z.string().nullable(),
 });
 export type ManagedProductRelationsGetRoadmapPublicationResponse = z.infer<typeof managedProductRelationsGetRoadmapPublicationResponseSchema>;
 
 export const managedProductRelationsIssueRoadmapPublicationTokenResponseSchema = z.object({
-  token: z.string().nullable(),
-  path: z.string().nullable(),
+  token: z.string(),
+  path: z.string(),
+  publicationVersion: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  expiresAt: z.string().nullable(),
+  issuedAt: z.string(),
 });
 export type ManagedProductRelationsIssueRoadmapPublicationTokenResponse = z.infer<typeof managedProductRelationsIssueRoadmapPublicationTokenResponseSchema>;
+
+export const managedProductRelationsIssueRoadmapPublicationTokenBodySchema = z.strictObject({
+  expiresAt: z.iso.datetime({ offset: true }).optional(),
+});
+export type ManagedProductRelationsIssueRoadmapPublicationTokenBody = z.input<typeof managedProductRelationsIssueRoadmapPublicationTokenBodySchema>;
 
 export const managedProductRelationsGetManagedProductSummaryResponseSchema = z.object({
   product: z.object({
@@ -2333,6 +2354,8 @@ export const managedProductRelationsGetManagedProductSummaryResponseSchema = z.o
       createdBy: z.string().nullable(),
       createdAt: z.iso.datetime({ offset: true }),
       updatedAt: z.iso.datetime({ offset: true }),
+      allowedActions: z.array(z.string()),
+      linkedRoadmapItemCount: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     })),
     opportunities: z.array(z.object({
       id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
@@ -2758,6 +2781,11 @@ export const programsUpdateProgramBodySchema = z.strictObject({
   health: z.enum(["on_track", "at_risk", "off_track"]).nullable().optional(),
 });
 export type ProgramsUpdateProgramBody = z.input<typeof programsUpdateProgramBodySchema>;
+
+export const projectsCheckProjectKeyAvailableResponseSchema = z.object({
+  available: z.boolean(),
+});
+export type ProjectsCheckProjectKeyAvailableResponse = z.infer<typeof projectsCheckProjectKeyAvailableResponseSchema>;
 
 export const projectsReleasesListOrgReleasesResponseSchema = z.object({
   data: z.array(z.object({
@@ -9243,7 +9271,7 @@ export const BUILD_CONTRACT_OPERATIONS = [
   { operationId: "ManagedProductsController_restoreManagedProduct", method: "POST", path: "/build/managed-products/{managedProductId}/restore", response: "managedProductsRestoreManagedProductResponseSchema", body: "managedProductsRestoreManagedProductBodySchema" },
   { operationId: "ManagedProductRelationsController_getRoadmapPreview", method: "GET", path: "/build/managed-products/{managedProductId}/roadmap-preview", response: "managedProductRelationsGetRoadmapPreviewResponseSchema" },
   { operationId: "ManagedProductRelationsController_getRoadmapPublication", method: "GET", path: "/build/managed-products/{managedProductId}/roadmap-publication", response: "managedProductRelationsGetRoadmapPublicationResponseSchema" },
-  { operationId: "ManagedProductRelationsController_issueRoadmapPublicationToken", method: "POST", path: "/build/managed-products/{managedProductId}/roadmap-publication", response: "managedProductRelationsIssueRoadmapPublicationTokenResponseSchema" },
+  { operationId: "ManagedProductRelationsController_issueRoadmapPublicationToken", method: "POST", path: "/build/managed-products/{managedProductId}/roadmap-publication", response: "managedProductRelationsIssueRoadmapPublicationTokenResponseSchema", body: "managedProductRelationsIssueRoadmapPublicationTokenBodySchema" },
   { operationId: "ManagedProductRelationsController_revokeRoadmapPublication", method: "DELETE", path: "/build/managed-products/{managedProductId}/roadmap-publication" },
   { operationId: "ManagedProductRelationsController_getManagedProductSummary", method: "GET", path: "/build/managed-products/{managedProductId}/summary", response: "managedProductRelationsGetManagedProductSummaryResponseSchema" },
   { operationId: "ManagedProductRelationsController_listProductUpdates", method: "GET", path: "/build/managed-products/{managedProductId}/updates", response: "managedProductRelationsListProductUpdatesResponseSchema" },
@@ -9268,6 +9296,7 @@ export const BUILD_CONTRACT_OPERATIONS = [
   { operationId: "ProgramsController_getProgram", method: "GET", path: "/build/programs/{programId}", response: "programsGetProgramResponseSchema" },
   { operationId: "ProgramsController_updateProgram", method: "PATCH", path: "/build/programs/{programId}", response: "programsUpdateProgramResponseSchema", body: "programsUpdateProgramBodySchema" },
   { operationId: "ProgramsController_deleteProgram", method: "DELETE", path: "/build/programs/{programId}" },
+  { operationId: "ProjectsController_checkProjectKeyAvailable", method: "GET", path: "/build/project-key-available", response: "projectsCheckProjectKeyAvailableResponseSchema" },
   { operationId: "ProjectsReleasesController_listOrgReleases", method: "GET", path: "/build/releases", response: "projectsReleasesListOrgReleasesResponseSchema" },
   { operationId: "RisksController_listOrgRisks", method: "GET", path: "/build/risks", response: "risksListOrgRisksResponseSchema" },
   { operationId: "ProjectsRoadmapController_listRoadmap", method: "GET", path: "/build/roadmap", response: "projectsRoadmapListRoadmapResponseSchema" },

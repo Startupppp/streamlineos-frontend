@@ -4,6 +4,7 @@ import { useEffect, useSyncExternalStore } from "react";
 import { isApiError } from "@/lib/api-envelope";
 import { useProject } from "@/hooks/api/build/projects";
 import {
+  LAST_PROJECT_CHANGED_EVENT,
   LAST_PROJECT_COOKIE_NAME,
   clearLastProjectId,
   parseLastProjectId,
@@ -17,8 +18,9 @@ function getLastProjectId(): number | null {
   return parseLastProjectId(cookie?.split("=")[1]);
 }
 
-function subscribeToLastProject(): () => void {
-  return () => {};
+function subscribeToLastProject(callback: () => void): () => void {
+  window.addEventListener(LAST_PROJECT_CHANGED_EVENT, callback);
+  return () => window.removeEventListener(LAST_PROJECT_CHANGED_EVENT, callback);
 }
 
 function getServerLastProjectId(): null {

@@ -71,7 +71,9 @@ function normalizeToHtml(raw: unknown): string | Record<string, unknown> | undef
   if (raw == null) return undefined;
   if (typeof raw === "object" && !Array.isArray(raw)) return raw as Record<string, unknown>;
   if (typeof raw !== "string") return undefined;
-  if (raw === "" || raw.trimStart().startsWith("<")) return raw;
+  if (raw === "") return raw;
+  const trimmed = raw.trimStart();
+  if (trimmed.startsWith("<") && /<\/[a-z]/i.test(trimmed)) return raw;
   return raw
     .split("\n")
     .map((line) => {
@@ -121,7 +123,11 @@ export function TiptapEditor({
   const extensions = [
     StarterKit.configure({ link: false, underline: false }),
     Placeholder.configure({ placeholder }),
-    Link.configure({ openOnClick: false, HTMLAttributes: { class: "text-primary underline" } }),
+    Link.configure({
+      openOnClick: false,
+      HTMLAttributes: { class: "text-primary underline" },
+      validate: (href: string) => !/^javascript:/i.test(href),
+    }),
     TextAlign.configure({ types: ["heading", "paragraph"] }),
     Underline,
     StorageImage.configure({ HTMLAttributes: { class: "max-w-full rounded-md" } }),

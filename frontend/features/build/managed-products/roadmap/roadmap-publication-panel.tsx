@@ -36,11 +36,9 @@ export function RoadmapPublicationPanel({ managedProductId, onClose }: RoadmapPu
   const [unpublishDialogOpen, setUnpublishDialogOpen] = useState(false);
   const [rotateDialogOpen, setRotateDialogOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [shareUrl, setShareUrl] = useState<string | null>(null);
 
-  const isPublished = Boolean(publication?.token);
-  const shareUrl = publication?.path
-    ? `${typeof window !== "undefined" ? window.location.origin : ""}${publication.path}`
-    : null;
+  const isPublished = publication?.published ?? false;
 
   const publicItemCount =
     preview
@@ -62,21 +60,32 @@ export function RoadmapPublicationPanel({ managedProductId, onClose }: RoadmapPu
 
   const handlePublish = useCallback(() => {
     publish.mutate(undefined, {
-      onSuccess: () => toast.success("Roadmap published"),
+      onSuccess: (issued) => {
+        setShareUrl(`${window.location.origin}${issued.path}`);
+        toast.success("Roadmap published");
+      },
       onError: (e) => toast.error(getErrorMessage(e)),
     });
   }, [publish]);
 
   const handleRotate = useCallback(() => {
     publish.mutate(undefined, {
-      onSuccess: () => { toast.success("Share link rotated"); setRotateDialogOpen(false); },
+      onSuccess: (issued) => {
+        setShareUrl(`${window.location.origin}${issued.path}`);
+        toast.success("Share link rotated");
+        setRotateDialogOpen(false);
+      },
       onError: (e) => toast.error(getErrorMessage(e)),
     });
   }, [publish]);
 
   const handleUnpublish = useCallback(() => {
     unpublish.mutate(undefined, {
-      onSuccess: () => { toast.success("Roadmap unpublished"); setUnpublishDialogOpen(false); },
+      onSuccess: () => {
+        setShareUrl(null);
+        toast.success("Roadmap unpublished");
+        setUnpublishDialogOpen(false);
+      },
       onError: (e) => toast.error(getErrorMessage(e)),
     });
   }, [unpublish]);
@@ -138,6 +147,18 @@ export function RoadmapPublicationPanel({ managedProductId, onClose }: RoadmapPu
                       <ExternalLink className="size-3.5" aria-hidden />
                     </Link>
                   </div>
+                ) : (
+                  <p className="rounded-md border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+                    A public link is active. For safety the link itself is stored
+                    only as a hash, so it cannot be shown again — rotate it below
+                    to get a new one.
+                  </p>
+                )}
+                {shareUrl ? (
+                  <p className="text-xs text-muted-foreground">
+                    Copy this link now. It is not shown again after you close this
+                    panel.
+                  </p>
                 ) : null}
                 <div className="flex flex-col gap-2 pt-2">
                   <Button

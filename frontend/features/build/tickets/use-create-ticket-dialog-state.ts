@@ -267,11 +267,12 @@ export function useCreateTicketDialogState({
     [],
   );
 
-  const handleExplicitSubmit = useCallback(() => {
-    void form.handleSubmit(handleSubmit)();
-  }, [form, handleSubmit]);
-
   const canSubmit = effectiveProjectId != null && pointsError === null;
+
+  const handleExplicitSubmit = useCallback(() => {
+    if (!canSubmit) return;
+    void form.handleSubmit(handleSubmit)();
+  }, [canSubmit, form, handleSubmit]);
   const projectSelectValue =
     effectiveProjectId != null ? String(effectiveProjectId) : undefined;
   const projectTriggerLabel =

@@ -64,6 +64,7 @@ function makeGoal(overrides: { id: number; title: string; level: string }): Goal
     deletedAt: null,
     target: null,
     current: null,
+    allowedActions: [],
   } as GoalListItem;
 }
 

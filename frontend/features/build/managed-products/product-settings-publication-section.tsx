@@ -23,20 +23,22 @@ export function ProductSettingsPublicationSection({
   managedProductId,
 }: ProductSettingsPublicationSectionProps) {
   const canManage = useCan("build:roadmap:manage");
-  const [revokeOpen, setRevokeOpen] = useState(false);
-  const [copied, setCopied] = useState(false);
 
-  const { data, isLoading } = useProductRoadmapPublication(managedProductId);
+  const [copied, setCopied] = useState(false);
+  const [revokeOpen, setRevokeOpen] = useState(false);
+  const [publicUrl, setPublicUrl] = useState<string | null>(null);
+
   const publish = usePublishProductRoadmap(managedProductId);
   const unpublish = useUnpublishProductRoadmap(managedProductId);
+  const { data, isLoading } = useProductRoadmapPublication(managedProductId);
 
-  const isPublished = !!data?.token;
-  const publicUrl = data?.path
-    ? `${typeof window !== "undefined" ? window.location.origin : ""}${data.path}`
-    : null;
+  const isPublished = data?.published ?? false;
 
   const handlePublish = useCallback(() => {
     publish.mutate(undefined, {
+      onSuccess: (issued) => {
+        setPublicUrl(`${window.location.origin}${issued.path}`);
+      },
       onError: (e) => toast.error(getErrorMessage(e)),
     });
   }, [publish]);
@@ -44,6 +46,7 @@ export function ProductSettingsPublicationSection({
   const handleRevokeConfirm = useCallback(() => {
     unpublish.mutate(undefined, {
       onSuccess: () => {
+        setPublicUrl(null);
         toast.success("Roadmap unpublished.");
         setRevokeOpen(false);
       },
@@ -61,8 +64,14 @@ export function ProductSettingsPublicationSection({
 
   if (isLoading) {
     return (
-      <section aria-labelledby="publication-section-heading" className="flex flex-col gap-3">
-        <h2 id="publication-section-heading" className="text-sm font-semibold text-foreground">
+      <section
+        aria-labelledby="publication-section-heading"
+        className="flex flex-col gap-3"
+      >
+        <h2
+          id="publication-section-heading"
+          className="text-sm font-semibold text-foreground"
+        >
           Client publication
         </h2>
         <Skeleton className="h-16 w-full" />
@@ -71,9 +80,15 @@ export function ProductSettingsPublicationSection({
   }
 
   return (
-    <section aria-labelledby="publication-section-heading" className="flex flex-col gap-3">
+    <section
+      aria-labelledby="publication-section-heading"
+      className="flex flex-col gap-3"
+    >
       <div className="flex items-center justify-between">
-        <h2 id="publication-section-heading" className="text-sm font-semibold text-foreground">
+        <h2
+          id="publication-section-heading"
+          className="text-sm font-semibold text-foreground"
+        >
           Client publication
         </h2>
         {canManage && !isPublished ? (
@@ -103,14 +118,20 @@ export function ProductSettingsPublicationSection({
 
       {isPublished && publicUrl ? (
         <div className="flex items-center gap-2 rounded-md border border-border bg-muted/40 px-3 py-2">
-          <span className="min-w-0 flex-1 truncate text-sm text-muted-foreground">{publicUrl}</span>
+          <span className="min-w-0 flex-1 truncate text-sm text-muted-foreground">
+            {publicUrl}
+          </span>
           <button
             type="button"
             aria-label="Copy public URL"
             className="shrink-0 rounded p-1 hover:bg-muted"
             onClick={handleCopy}
           >
-            {copied ? <Check size={14} aria-hidden="true" /> : <Copy size={14} aria-hidden="true" />}
+            {copied ? (
+              <Check size={14} aria-hidden="true" />
+            ) : (
+              <Copy size={14} aria-hidden="true" />
+            )}
           </button>
           <a
             href={publicUrl}
@@ -124,7 +145,9 @@ export function ProductSettingsPublicationSection({
         </div>
       ) : (
         <p className="text-sm text-muted-foreground">
-          Publish the roadmap to share it with clients via a public link.
+          {isPublished
+            ? "A public link is active. For safety the link itself is stored only as a hash, so it cannot be shown again — unpublish and publish again to get a new one."
+            : "Publish the roadmap to share it with clients via a public link."}
         </p>
       )}
 

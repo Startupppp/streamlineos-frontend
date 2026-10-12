@@ -64,6 +64,11 @@ const resendVerificationContract = lazyContract(() =>
 const logoutContract = lazyContract(() =>
   import("@/hooks/common/auth-schema").then((m) => m.logoutContract),
 );
+const pendingInvitationsForMeContract = lazyContract(() =>
+  import("@/hooks/common/auth-schema").then(
+    (m) => m.pendingInvitationsForMeContract,
+  ),
+);
 
 export type MagicLinkSignInOutcome =
   | { status: "signed-in" }
@@ -334,6 +339,23 @@ function sectionRootFromPathname(pathname: string): string {
   const first = pathname.split("/")[1];
   if (!first || AUTH_ONLY_SEGMENTS.has(first)) return "/dashboard";
   return `/${first}`;
+}
+
+export function useMyPendingInvitations(enabled = true) {
+  const { status } = useSession();
+  return useQuery({
+    queryKey: ["auth", "pending-invitations-for-me"],
+    queryFn: ({ signal }) =>
+      apiClient.get(
+        "/organization/invitations/pending-for-me",
+        undefined,
+        signal,
+        pendingInvitationsForMeContract,
+      ),
+    staleTime: 60_000,
+    enabled: status === "authenticated" && enabled,
+    ...INLINE_READ_ERROR,
+  });
 }
 
 export function useSwitchOrg() {

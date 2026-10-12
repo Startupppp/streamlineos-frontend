@@ -2,18 +2,9 @@
 
 import type { ReactNode } from "react";
 import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
+import { BuildMultiFilterSelect } from "@/features/build/shared/build-multi-filter-select";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import type { BuildToolbarFilter } from "@/features/build/shared/build-list-toolbar-layout";
-
-const STATE_OPTIONS = [
-  { label: "All states", value: "all" },
-  { label: "Identified", value: "identified" },
-  { label: "Validating", value: "validating" },
-  { label: "Accepted", value: "accepted" },
-  { label: "Declined", value: "declined" },
-  { label: "Delivered", value: "delivered" },
-  { label: "Measured", value: "measured" },
-];
 
 const SORT_OPTIONS = [
   { label: "By score", value: "score" },
@@ -22,10 +13,18 @@ const SORT_OPTIONS = [
 ];
 
 const CONFIDENCE_OPTIONS = [
-  { label: "Any confidence", value: "all" },
   { label: "Low", value: "low" },
   { label: "Medium", value: "medium" },
   { label: "High", value: "high" },
+];
+
+const STATE_OPTIONS = [
+  { label: "Identified", value: "identified" },
+  { label: "Validating", value: "validating" },
+  { label: "Accepted", value: "accepted" },
+  { label: "Declined", value: "declined" },
+  { label: "Delivered", value: "delivered" },
+  { label: "Measured", value: "measured" },
 ];
 
 const EVIDENCE_AGE_OPTIONS = [
@@ -52,53 +51,57 @@ const SCORE_MAX_OPTIONS = [
 ];
 
 export interface OpportunitiesFilterBarProps {
-  stateFilter: string;
+  stateValues: string[];
   sortFilter: string;
-  segmentFilter: string;
-  ownerFilter: string;
-  themeFilter?: string;
-  confidenceFilter: string;
+  segmentValues: string[];
+  ownerValues: string[];
+  themeValues?: string[];
+  confidenceValues: string[];
   evidenceAgeFilter: string;
   scoreMinFilter: string;
   scoreMaxFilter?: string;
+  search?: string;
   segmentOptions: Array<{ label: string; value: string }>;
   ownerOptions: Array<{ label: string; value: string }>;
   themeOptions?: Array<{ label: string; value: string }>;
-  onStateChange: (v: string) => void;
+  onStateValuesChange: (values: string[]) => void;
   onSortChange: (v: string) => void;
-  onSegmentChange: (v: string) => void;
-  onOwnerChange: (v: string) => void;
-  onThemeChange?: (v: string) => void;
-  onConfidenceChange: (v: string) => void;
+  onSegmentValuesChange: (values: string[]) => void;
+  onOwnerValuesChange: (values: string[]) => void;
+  onThemeValuesChange?: (values: string[]) => void;
+  onConfidenceValuesChange: (values: string[]) => void;
   onEvidenceAgeChange: (v: string) => void;
   onScoreMinChange: (v: string) => void;
   onScoreMaxChange?: (v: string) => void;
+  onSearchChange?: (v: string) => void;
   onClearAll?: () => void;
   trailing?: ReactNode;
 }
 
 export function OpportunitiesFilterBar({
-  stateFilter,
+  stateValues,
   sortFilter,
-  segmentFilter,
-  ownerFilter,
-  themeFilter = "all",
-  confidenceFilter,
+  segmentValues,
+  ownerValues,
+  themeValues = [],
+  confidenceValues,
   evidenceAgeFilter,
   scoreMinFilter,
   scoreMaxFilter = "all",
+  search = "",
   segmentOptions,
   ownerOptions,
   themeOptions,
-  onStateChange,
+  onStateValuesChange,
   onSortChange,
-  onSegmentChange,
-  onOwnerChange,
-  onThemeChange,
-  onConfidenceChange,
+  onSegmentValuesChange,
+  onOwnerValuesChange,
+  onThemeValuesChange,
+  onConfidenceValuesChange,
   onEvidenceAgeChange,
   onScoreMinChange,
   onScoreMaxChange,
+  onSearchChange,
   onClearAll,
   trailing,
 }: OpportunitiesFilterBarProps) {
@@ -106,12 +109,12 @@ export function OpportunitiesFilterBar({
     {
       id: "oppState",
       label: "State",
-      active: stateFilter !== "all",
+      active: stateValues.length > 0,
       control: (
-        <BuildFilterSelect
+        <BuildMultiFilterSelect
           label="State"
-          value={stateFilter}
-          onValueChange={onStateChange}
+          values={stateValues}
+          onValuesChange={onStateValuesChange}
           options={STATE_OPTIONS}
         />
       ),
@@ -119,57 +122,57 @@ export function OpportunitiesFilterBar({
     {
       id: "oppSort",
       label: "Sort",
-      active: sortFilter !== "all",
+      active: sortFilter !== "all" && sortFilter !== "",
       control: (
         <BuildFilterSelect
           label="Sort"
-          value={sortFilter}
+          value={sortFilter || "all"}
           onValueChange={onSortChange}
-          options={SORT_OPTIONS}
+          options={[{ label: "By score", value: "all" }, ...SORT_OPTIONS.slice(1)]}
         />
       ),
     },
   ];
-  if (segmentOptions.length > 1) {
+  if (segmentOptions.length > 0) {
     filters.push({
       id: "oppSegment",
       label: "Segment",
-      active: segmentFilter !== "all",
+      active: segmentValues.length > 0,
       control: (
-        <BuildFilterSelect
+        <BuildMultiFilterSelect
           label="Segment"
-          value={segmentFilter}
-          onValueChange={onSegmentChange}
+          values={segmentValues}
+          onValuesChange={onSegmentValuesChange}
           options={segmentOptions}
         />
       ),
     });
   }
-  if (ownerOptions.length > 1) {
+  if (ownerOptions.length > 0) {
     filters.push({
       id: "oppOwner",
       label: "Owner",
-      active: ownerFilter !== "all",
+      active: ownerValues.length > 0,
       control: (
-        <BuildFilterSelect
+        <BuildMultiFilterSelect
           label="Owner"
-          value={ownerFilter}
-          onValueChange={onOwnerChange}
+          values={ownerValues}
+          onValuesChange={onOwnerValuesChange}
           options={ownerOptions}
         />
       ),
     });
   }
-  if (themeOptions && themeOptions.length > 1 && onThemeChange) {
+  if (themeOptions && themeOptions.length > 0 && onThemeValuesChange) {
     filters.push({
       id: "oppTheme",
       label: "Theme",
-      active: themeFilter !== "all",
+      active: themeValues.length > 0,
       control: (
-        <BuildFilterSelect
+        <BuildMultiFilterSelect
           label="Theme"
-          value={themeFilter}
-          onValueChange={onThemeChange}
+          values={themeValues}
+          onValuesChange={onThemeValuesChange}
           options={themeOptions}
         />
       ),
@@ -179,12 +182,12 @@ export function OpportunitiesFilterBar({
     {
       id: "oppConfidence",
       label: "Confidence",
-      active: confidenceFilter !== "all",
+      active: confidenceValues.length > 0,
       control: (
-        <BuildFilterSelect
+        <BuildMultiFilterSelect
           label="Confidence"
-          value={confidenceFilter}
-          onValueChange={onConfidenceChange}
+          values={confidenceValues}
+          onValuesChange={onConfidenceValuesChange}
           options={CONFIDENCE_OPTIONS}
         />
       ),
@@ -234,6 +237,16 @@ export function OpportunitiesFilterBar({
 
   return (
     <BuildListToolbar
+      search={
+        onSearchChange
+          ? {
+              value: search,
+              onValueChange: onSearchChange,
+              placeholder: "Search opportunities…",
+              label: "Search opportunities",
+            }
+          : undefined
+      }
       filters={filters}
       onClearAll={onClearAll}
       trailing={trailing}

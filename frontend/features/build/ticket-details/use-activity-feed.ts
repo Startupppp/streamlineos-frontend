@@ -20,6 +20,7 @@ import { useAddReaction, useRemoveReaction } from "@/hooks/api/build/reactions";
 import { useCan } from "@/hooks/api/access";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { isApiError } from "@/lib/api-envelope";
 import type { TicketComment } from "@/types/projects";
 import type { MentionUser } from "@/features/build/comments/mention-textarea";
 import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
@@ -297,7 +298,7 @@ export function useActivityFeed({
       );
       if (disallowed) {
         toast.error(
-          `${disallowed.name} is not an accepted file type. Accepted: ${PROJECT_FILE_TYPES_LABEL}.`,
+          `${disallowed.name} is not an allowed file type.`,
         );
         return;
       }
@@ -322,8 +323,12 @@ export function useActivityFeed({
             fileId: uploaded.id,
           });
           attachedCount += 1;
-        } catch {
-          failedNames.push(file.name);
+        } catch (err) {
+          if (isApiError(err) && err.status === 400 && !isAllowedProjectFileType(file.type)) {
+            toast.error(`${file.name} is not an allowed file type.`);
+          } else {
+            failedNames.push(file.name);
+          }
           if (uploadedFileId !== null) {
             try {
               await deleteProjectFile.mutateAsync(uploadedFileId);

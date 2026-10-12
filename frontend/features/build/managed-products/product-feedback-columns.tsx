@@ -13,6 +13,7 @@ import {
   TYPE_VARIANTS,
   formatSubmissionAge,
 } from "@/features/build/feedbucket/feedbucket-constants";
+import { formatRelativeTime } from "@/lib/date-utils";
 
 export type SubmissionRow = PaginatedFeedbucketSubmissions["data"][number];
 
@@ -123,6 +124,7 @@ export const FEEDBACK_SKELETON_HEADERS = [
   "Message",
   "Status",
   "Age",
+  "Updated",
 ] as const;
 
 
@@ -255,6 +257,16 @@ export const FEEDBACK_COLUMNS: DataTableColumn<SubmissionRow>[] = [
     ),
     className: "hidden sm:table-cell w-[100px] text-right",
   },
+  {
+    key: "freshness",
+    header: "Updated",
+    cell: (row) => (
+      <span className="text-xs text-muted-foreground whitespace-nowrap">
+        {formatRelativeTime(row.updatedAt)}
+      </span>
+    ),
+    className: "hidden xl:table-cell w-[100px] text-right",
+  },
 ];
 
 export function buildFeedbackColumnsWithActions(opts: {
@@ -267,22 +279,25 @@ export function buildFeedbackColumnsWithActions(opts: {
     {
       key: "actions",
       header: "",
-      cell: (row) => (
-        <Button
-          variant="ghost"
-          size="sm"
-          aria-label="Route to Intake"
-          data-testid="route-to-intake-btn"
-          data-submission-id={row.id}
-          onClick={(e) => {
-            e.stopPropagation();
-            opts.onRouteToIntake(row);
-          }}
-        >
-          <ArrowRightCircle className="h-4 w-4 mr-1" />
-          Intake
-        </Button>
-      ),
+      cell: (row) => {
+        if (!row.allowedActions.includes("intake")) return null;
+        return (
+          <Button
+            variant="ghost"
+            size="sm"
+            aria-label="Route to Intake"
+            data-testid="route-to-intake-btn"
+            data-submission-id={row.id}
+            onClick={(e) => {
+              e.stopPropagation();
+              opts.onRouteToIntake(row);
+            }}
+          >
+            <ArrowRightCircle className="h-4 w-4 mr-1" />
+            Intake
+          </Button>
+        );
+      },
       className: "w-[100px] text-right",
     },
   ];

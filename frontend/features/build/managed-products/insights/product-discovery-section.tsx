@@ -31,29 +31,31 @@ export function ProductDiscoverySection({ managedProductId }: ProductDiscoverySe
     hasPreviousPage,
     goToNextPage,
     goToPreviousPage,
-    stateFilter,
     sortFilter,
     themePeriod,
-    segmentFilter,
-    ownerFilter,
-    themeFilter,
-    confidenceFilter,
     evidenceAgeFilter,
     scoreMinFilter,
     scoreMaxFilter,
+    stateValues,
+    segmentValues,
+    ownerValues,
+    themeValues,
+    confidenceValues,
     segmentOptions,
     ownerOptions,
     themeOptions,
     oppQueryParams,
     themeParams,
     isFiltered,
-    handleStateChange,
+    search,
+    handleSearchChange,
+    handleStateValuesChange,
     handleSortChange,
     handleThemePeriodChange,
-    handleSegmentChange,
-    handleOwnerChange,
-    handleThemeChange,
-    handleConfidenceChange,
+    handleSegmentValuesChange,
+    handleOwnerValuesChange,
+    handleThemeValuesChange,
+    handleConfidenceValuesChange,
     handleEvidenceAgeChange,
     handleScoreMinChange,
     handleScoreMaxChange,
@@ -146,7 +148,7 @@ export function ProductDiscoverySection({ managedProductId }: ProductDiscoverySe
   );
 
   const handleCompleteOutcomeReview = useCallback(
-    (reviewId: number, data: UpdateOutcomeReviewInput, onCompleted: () => void) => {
+    (reviewId: number, data: UpdateOutcomeReviewInput, onCompleted: () => void, onFailed: (err: unknown) => void) => {
       updateOutcomeReviewMutation.mutate(
         { outcomeReviewId: reviewId, ...data },
         {
@@ -154,7 +156,10 @@ export function ProductDiscoverySection({ managedProductId }: ProductDiscoverySe
             toast.success("Review completed.");
             onCompleted();
           },
-          onError: (err) => toast.error(getErrorMessage(err)),
+          onError: (err) => {
+            toast.error(getErrorMessage(err));
+            onFailed(err);
+          },
         },
       );
     },
@@ -190,27 +195,29 @@ export function ProductDiscoverySection({ managedProductId }: ProductDiscoverySe
 
   const filterBar = (
     <OpportunitiesFilterBar
-      stateFilter={stateFilter}
+      stateValues={stateValues}
       sortFilter={sortFilter}
-      segmentFilter={segmentFilter}
-      ownerFilter={ownerFilter}
-      themeFilter={themeFilter}
-      confidenceFilter={confidenceFilter}
+      segmentValues={segmentValues}
+      ownerValues={ownerValues}
+      themeValues={themeValues}
+      confidenceValues={confidenceValues}
       evidenceAgeFilter={evidenceAgeFilter}
       scoreMinFilter={scoreMinFilter}
       scoreMaxFilter={scoreMaxFilter}
+      search={search}
       segmentOptions={segmentOptions}
       ownerOptions={ownerOptions}
       themeOptions={themeOptions}
-      onStateChange={handleStateChange}
+      onStateValuesChange={handleStateValuesChange}
       onSortChange={handleSortChange}
-      onSegmentChange={handleSegmentChange}
-      onOwnerChange={handleOwnerChange}
-      onThemeChange={handleThemeChange}
-      onConfidenceChange={handleConfidenceChange}
+      onSegmentValuesChange={handleSegmentValuesChange}
+      onOwnerValuesChange={handleOwnerValuesChange}
+      onThemeValuesChange={handleThemeValuesChange}
+      onConfidenceValuesChange={handleConfidenceValuesChange}
       onEvidenceAgeChange={handleEvidenceAgeChange}
       onScoreMinChange={handleScoreMinChange}
       onScoreMaxChange={handleScoreMaxChange}
+      onSearchChange={handleSearchChange}
       onClearAll={clearAll}
     />
   );

@@ -45,6 +45,7 @@ export interface BuildListFiltersStateBase {
   isFiltered: boolean;
   resetKey: string;
   isPending: boolean;
+  searchParams: URLSearchParams;
 }
 
 export interface BuildListFiltersState extends BuildListFiltersStateBase {
@@ -246,6 +247,7 @@ export function useBuildListFilters(
     isFiltered: activeCount > 0 || (withSearch ? debouncedSearch.length > 0 : false),
     resetKey,
     isPending,
+    searchParams: searchParams as URLSearchParams,
   };
 
   if (!withSearch) return base;

@@ -131,6 +131,55 @@ describe("StepReview client row — BUG-004", () => {
   });
 });
 
+describe("StepReview key conflict banner — BUG-04", () => {
+  it("shows the conflict warning banner when keyConflictMessage is provided", () => {
+    const msg = 'A project with key "QAB" already exists in this organization.';
+    render(<StepReview draft={makeDraft([])} keyConflictMessage={msg} />);
+
+    expect(screen.getByText("Project key already taken")).toBeInTheDocument();
+    expect(document.body.textContent).toContain(msg);
+  });
+
+  it("shows the Fix Key button when keyConflictMessage and onGoToBasics are provided", () => {
+    const msg = 'A project with key "QAB" already exists in this organization.';
+    const handleGoToBasics = jest.fn();
+    render(
+      <StepReview
+        draft={makeDraft([])}
+        keyConflictMessage={msg}
+        onGoToBasics={handleGoToBasics}
+      />,
+    );
+
+    const fixKeyBtn = screen.getByRole("button", { name: "Fix Key" });
+    expect(fixKeyBtn).toBeInTheDocument();
+  });
+
+  it("calls onGoToBasics when the Fix Key button is clicked", async () => {
+    const msg = 'A project with key "QAB" already exists in this organization.';
+    const handleGoToBasics = jest.fn();
+    const { user } = { user: { click: (el: Element) => el.dispatchEvent(new MouseEvent("click", { bubbles: true })) } };
+    render(
+      <StepReview
+        draft={makeDraft([])}
+        keyConflictMessage={msg}
+        onGoToBasics={handleGoToBasics}
+      />,
+    );
+
+    const fixKeyBtn = screen.getByRole("button", { name: "Fix Key" });
+    user.click(fixKeyBtn);
+    expect(handleGoToBasics).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows the ready-to-create banner when keyConflictMessage is absent", () => {
+    render(<StepReview draft={makeDraft([])} />);
+
+    expect(screen.getByText("Ready to create")).toBeInTheDocument();
+    expect(document.body.textContent).not.toContain("Project key already taken");
+  });
+});
+
 describe("StepReview description overflow — BUG-16", () => {
   it("renders a long description without truncating its text content", () => {
     const longDesc = "A".repeat(2000);

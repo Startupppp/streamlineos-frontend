@@ -42,16 +42,16 @@ export function ProductFeedbackDialogs({
   const searchParams = useSearchParams();
   const requestLeave = useNavigationLeave();
   const {
-    listFilters,
     paneSubmissionId,
     paneTicketId,
     paneTicketProjectId,
     handleOpenTicket,
+    handleCloseSubmissionPane,
   } = filterState;
 
   const handleCloseFeedbackPane = useCallback(
-    (open: boolean) => { if (!open) listFilters.setValue("submission", "all"); },
-    [listFilters],
+    (open: boolean) => { if (!open) handleCloseSubmissionPane(); },
+    [handleCloseSubmissionPane],
   );
   const paneRow = useMemo(
     () => rows.find((row) => row.id === paneSubmissionId) ?? null,

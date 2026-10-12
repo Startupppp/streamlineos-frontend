@@ -93,8 +93,8 @@ export function ProductFeedbackPage({
   const selectionEnabled = canUpdateSubmission || canDeleteSubmission;
 
   const openSubmissionPane = useCallback(
-    (row: SubmissionRow) => listFilters.setValue("submission", String(row.id)),
-    [listFilters],
+    (row: SubmissionRow) => filterState.handleOpenSubmission(row.id),
+    [filterState],
   );
   const handleOpenFocused = useCallback(
     (index: number) => {

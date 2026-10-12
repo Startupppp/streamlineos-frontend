@@ -85,3 +85,38 @@ describe("project key validation messages — BUG-14", () => {
     expect(errors[0]).toMatch(/start with a letter/i);
   });
 });
+
+describe("project key sanitization — NEW-11", () => {
+  function sanitize(value: string): string {
+    return value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, PROJECT_KEY_MAX);
+  }
+
+  it("uppercases lowercase letters during sanitization", () => {
+    expect(sanitize("qa")).toBe("QA");
+  });
+
+  it("removes special characters from the sanitized key", () => {
+    expect(sanitize("qa-1!")).toBe("QA1");
+  });
+
+  it("sanitized value QA1 passes schema validation (stale error should clear)", () => {
+    expect(basicsSchema.safeParse({ name: "Alpha", key: sanitize("qa-1!") }).success).toBe(true);
+  });
+
+  it("sanitized value of all-special input is empty and fails validation", () => {
+    expect(sanitize("---")).toBe("");
+    expect(keyErrors("").length).toBeGreaterThan(0);
+  });
+
+  it("detects transformation when sanitized value differs from raw input", () => {
+    const raw = "qa-1!";
+    const sanitized = sanitize(raw);
+    expect(sanitized).not.toBe(raw);
+  });
+
+  it("detects no transformation when raw input is already valid uppercase", () => {
+    const raw = "QA1";
+    const sanitized = sanitize(raw);
+    expect(sanitized).toBe(raw);
+  });
+});

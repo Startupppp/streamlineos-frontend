@@ -265,6 +265,8 @@ export const feedbucketCustomerImpactContract = z.object({
       submissionCount: z.number().int(),
       opportunityCount: z.number().int(),
       accountValue: z.string().nullable(),
+      segments: z.array(z.string()),
+      tier: z.string().nullable(),
     }),
   ),
 });

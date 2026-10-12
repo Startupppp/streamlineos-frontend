@@ -158,6 +158,7 @@ describe("Product Goals page — C6 jsdom a11y reduced-motion (BSN-A11Y-GOALS-01
             progress: 45,
             keyResultCount: 3,
             owner: null,
+            allowedActions: ["update", "delete"],
           },
         ],
         page: 1,

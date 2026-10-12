@@ -33,6 +33,16 @@ const roadmapPublicationLazy = lazyContract(() =>
     (m) => m.roadmapPublicationContract,
   ),
 );
+const productRoadmapPublicationLazy = lazyContract(() =>
+  import("@/hooks/api/build/roadmap-schema").then(
+    (m) => m.productRoadmapPublicationContract,
+  ),
+);
+const productRoadmapPublicationIssuedLazy = lazyContract(() =>
+  import("@/hooks/api/build/roadmap-schema").then(
+    (m) => m.productRoadmapPublicationIssuedContract,
+  ),
+);
 const noContentLazy = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
 );
@@ -40,6 +50,21 @@ const noContentLazy = lazyContract(() =>
 interface RoadmapPublication {
   token: string | null;
   path: string | null;
+}
+
+export interface ProductRoadmapPublication {
+  published: boolean;
+  publicationVersion: number | null;
+  expiresAt: string | null;
+  issuedAt: string | null;
+}
+
+export interface ProductRoadmapPublicationIssued {
+  token: string;
+  path: string;
+  publicationVersion: number;
+  expiresAt: string | null;
+  issuedAt: string;
 }
 
 interface PublicRoadmapBoard {
@@ -252,11 +277,11 @@ export function useProductRoadmapPublication(managedProductId: number) {
         managedProductId,
       ),
     queryFn: ({ signal }) =>
-      apiClient.get<RoadmapPublication>(
+      apiClient.get<ProductRoadmapPublication>(
         `/build/managed-products/${String(managedProductId)}/roadmap-publication`,
         undefined,
         signal,
-        roadmapPublicationLazy,
+        productRoadmapPublicationLazy,
       ),
     enabled: canView,
     staleTime: 5 * 60_000,
@@ -274,18 +299,23 @@ export function usePublishProductRoadmap(managedProductId: number) {
       "publish",
     ],
     mutationFn: () =>
-      apiClient.post<RoadmapPublication>(
+      apiClient.post<ProductRoadmapPublicationIssued>(
         `/build/managed-products/${String(managedProductId)}/roadmap-publication`,
         {},
         undefined,
-        roadmapPublicationLazy,
+        productRoadmapPublicationIssuedLazy,
       ),
-    onSuccess: (publication) =>
-      qc.setQueryData(
+    onSuccess: (issued) =>
+      qc.setQueryData<ProductRoadmapPublication>(
         buildWorkQueryKeys.projects.managedProducts.roadmapPublication(
           managedProductId,
         ),
-        publication,
+        {
+          published: true,
+          publicationVersion: issued.publicationVersion,
+          expiresAt: issued.expiresAt,
+          issuedAt: issued.issuedAt,
+        },
       ),
   });
 }
@@ -308,11 +338,16 @@ export function useUnpublishProductRoadmap(managedProductId: number) {
         noContentLazy,
       ),
     onSuccess: () =>
-      qc.setQueryData(
+      qc.setQueryData<ProductRoadmapPublication>(
         buildWorkQueryKeys.projects.managedProducts.roadmapPublication(
           managedProductId,
         ),
-        { token: null, path: null },
+        {
+          published: false,
+          publicationVersion: null,
+          expiresAt: null,
+          issuedAt: null,
+        },
       ),
   });
 }

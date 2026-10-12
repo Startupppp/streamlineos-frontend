@@ -120,7 +120,7 @@ export function RoadmapHorizonColumn({
                 onMove={onMove}
                 onMoveUp={moveHandlers[item.id]?.up}
                 onMoveDown={moveHandlers[item.id]?.down}
-                onPublishToggle={onPublishToggle}
+                onPublishToggle={item.allowedActions.includes("publish") ? onPublishToggle : undefined}
               />
             ))}
           </PmStaggerList>

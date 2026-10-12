@@ -6,15 +6,12 @@ jest.mock("@/hooks/common/use-mobile", () => ({
 }));
 
 const segmentOptions = [
-  { value: "all", label: "All segments" },
   { value: "enterprise", label: "Enterprise" },
 ];
 const ownerOptions = [
-  { value: "all", label: "All owners" },
   { value: "7", label: "Ada" },
 ];
 const themeOptions = [
-  { value: "all", label: "All themes" },
   { value: "Performance", label: "Performance" },
   { value: "Reliability", label: "Reliability" },
 ];
@@ -22,20 +19,20 @@ const themeOptions = [
 function renderBar(overrides: Partial<React.ComponentProps<typeof OpportunitiesFilterBar>> = {}) {
   return render(
     <OpportunitiesFilterBar
-      stateFilter="declined"
+      stateValues={["declined"]}
       sortFilter="all"
-      segmentFilter="all"
-      ownerFilter="all"
-      confidenceFilter="all"
+      segmentValues={[]}
+      ownerValues={[]}
+      confidenceValues={[]}
       evidenceAgeFilter="all"
       scoreMinFilter="all"
       segmentOptions={segmentOptions}
       ownerOptions={ownerOptions}
-      onStateChange={jest.fn()}
+      onStateValuesChange={jest.fn()}
       onSortChange={jest.fn()}
-      onSegmentChange={jest.fn()}
-      onOwnerChange={jest.fn()}
-      onConfidenceChange={jest.fn()}
+      onSegmentValuesChange={jest.fn()}
+      onOwnerValuesChange={jest.fn()}
+      onConfidenceValuesChange={jest.fn()}
       onEvidenceAgeChange={jest.fn()}
       onScoreMinChange={jest.fn()}
       {...overrides}
@@ -75,28 +72,28 @@ describe("OpportunitiesFilterBar", () => {
     expect(container.querySelector("[data-filter-id=oppTheme]")).toBeNull();
   });
 
-  it("does not render the theme filter when themeOptions has only one entry so the all-themes sentinel is not a useful control", () => {
+  it("does not render the theme filter when onThemeValuesChange is absent even if themeOptions is provided", () => {
     const { container } = renderBar({
-      themeOptions: [{ value: "all", label: "All themes" }],
-      onThemeChange: jest.fn(),
+      themeValues: [],
+      themeOptions,
     });
     expect(container.querySelector("[data-filter-id=oppTheme]")).toBeNull();
   });
 
-  it("renders the theme filter when themeOptions has at least two entries and onThemeChange is provided", () => {
+  it("renders the theme filter when themeOptions has at least one entry and onThemeValuesChange is provided", () => {
     const { container } = renderBar({
-      themeFilter: "all",
+      themeValues: [],
       themeOptions,
-      onThemeChange: jest.fn(),
+      onThemeValuesChange: jest.fn(),
     });
     expect(container.querySelector("[data-filter-id=oppTheme]")).not.toBeNull();
   });
 
-  it("marks theme filter active when themeFilter is a non-all value", () => {
+  it("marks theme filter active when themeValues has a selected value", () => {
     const { container } = renderBar({
-      themeFilter: "Performance",
+      themeValues: ["Performance"],
       themeOptions,
-      onThemeChange: jest.fn(),
+      onThemeValuesChange: jest.fn(),
     });
     const themeCell = container.querySelector("[data-filter-id=oppTheme]");
     expect(themeCell?.getAttribute("data-active")).toBe("true");

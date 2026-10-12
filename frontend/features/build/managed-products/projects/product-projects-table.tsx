@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback } from "react";
-import { format } from "date-fns";
-import { Calendar, Map, Unlink } from "lucide-react";
+import { format, formatDistanceToNow } from "date-fns";
+import { Calendar, Map, RefreshCw, Unlink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -258,6 +258,19 @@ export function buildProductProjectsColumns({
           <span className="flex items-center gap-1 text-xs text-muted-foreground">
             <Map className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
             <span className="font-mono tabular-nums">{row.linkedRoadmapItemCount}</span>
+          </span>
+        ) : (
+          <span className="text-xs text-muted-foreground">—</span>
+        ),
+    },
+    {
+      key: "sourceFreshness",
+      header: "Data freshness",
+      cell: (row) =>
+        row.sourceFreshness ? (
+          <span className="flex items-center gap-1 text-xs text-muted-foreground" title={row.sourceFreshness}>
+            <RefreshCw className="h-3 w-3 shrink-0" aria-hidden="true" />
+            {formatDistanceToNow(new Date(row.sourceFreshness), { addSuffix: true })}
           </span>
         ) : (
           <span className="text-xs text-muted-foreground">—</span>

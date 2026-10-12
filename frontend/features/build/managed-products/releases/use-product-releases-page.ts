@@ -2,6 +2,7 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import {
   useInfiniteManagedProductReleases,
@@ -143,7 +144,7 @@ export function useProductReleasesPage(managedProductId: number) {
     void fetchNextPage();
   }, [fetchNextPage]);
 
-  const canUpdate = rows.some((r) => r.allowedActions.includes("update"));
+  const canUpdate = useCan("build:managed-products:update");
 
   const actions = useMemo<ReleaseActions>(
     () => ({

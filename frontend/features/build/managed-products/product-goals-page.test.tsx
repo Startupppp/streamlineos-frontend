@@ -43,6 +43,7 @@ function goalsPageResult(total: number, page: number) {
         progress: 50,
         owner: null,
         keyResultCount: 0,
+        allowedActions: [],
       })),
       page,
       pageSize: 20,

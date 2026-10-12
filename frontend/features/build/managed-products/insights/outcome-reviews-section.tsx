@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useMemo } from "react";
+import { isApiError } from "@/lib/api-envelope";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Plus } from "lucide-react";
@@ -72,7 +73,7 @@ interface OutcomeReviewsSectionProps {
   onNextPage: () => void;
   onPreviousPage: () => void;
   onCreate: (data: CreateOutcomeReviewInput, onCreated: () => void) => void;
-  onComplete: (reviewId: number, data: UpdateOutcomeReviewInput, onCompleted: () => void) => void;
+  onComplete: (reviewId: number, data: UpdateOutcomeReviewInput, onCompleted: () => void, onFailed: (err: unknown) => void) => void;
   onDelete: (reviewId: number) => void;
   isCreating: boolean;
   isUpdating: boolean;
@@ -84,12 +85,14 @@ function CompleteReviewDialog({
   onOpenChange,
   onComplete,
   isSubmitting,
+  conflictMessage,
 }: {
   review: OutcomeReviewRow;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onComplete: (data: UpdateOutcomeReviewInput) => void;
   isSubmitting: boolean;
+  conflictMessage?: string;
 }) {
   return (
     <EntityFormDialog<CompleteFormValues>
@@ -117,6 +120,11 @@ function CompleteReviewDialog({
     >
       {(form) => (
         <div className="space-y-4">
+          {conflictMessage ? (
+            <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive" role="alert" data-testid="complete-conflict-error">
+              {conflictMessage}
+            </p>
+          ) : null}
           <FormField
             control={form.control}
             name="result"
@@ -278,6 +286,7 @@ export function OutcomeReviewsSection({
 }: OutcomeReviewsSectionProps) {
   const canWrite = useCan("build:managed-products:update");
   const [completingId, setCompletingId] = useState<number | null>(null);
+  const [completeError, setCompleteError] = useState<string | null>(null);
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const handleScheduleSubmit = useCallback(
     (data: CreateOutcomeReviewInput) =>
@@ -290,12 +299,25 @@ export function OutcomeReviewsSection({
     [reviews, completingId],
   );
 
-  const handleCompleteClose = useCallback(() => setCompletingId(null), []);
+  const handleCompleteClose = useCallback(() => {
+    setCompletingId(null);
+    setCompleteError(null);
+  }, []);
 
   const handleCompleteReview = useCallback(
     (data: UpdateOutcomeReviewInput) => {
       if (completingId === null) return;
-      onComplete(completingId, data, () => setCompletingId(null));
+      setCompleteError(null);
+      onComplete(
+        completingId,
+        data,
+        () => setCompletingId(null),
+        (err) => {
+          if (isApiError(err) && err.status === 409) {
+            setCompleteError("This review was updated by someone else. Reload and try again.");
+          }
+        },
+      );
     },
     [completingId, onComplete],
   );
@@ -380,6 +402,7 @@ export function OutcomeReviewsSection({
           onOpenChange={handleCompleteClose}
           onComplete={handleCompleteReview}
           isSubmitting={isUpdating}
+          conflictMessage={completeError ?? undefined}
         />
       )}
 

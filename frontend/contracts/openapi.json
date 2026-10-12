@@ -133637,6 +133637,25 @@
               "exclusiveMinimum": 0,
               "maximum": 9007199254740991
             }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
           }
         ],
         "responses": {
@@ -133756,10 +133775,39 @@
                               "member"
                             ]
                           }
+                        },
+                        "pagination": {
+                          "type": "object",
+                          "properties": {
+                            "limit": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "hasMore": {
+                              "type": "boolean"
+                            },
+                            "nextCursor": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            }
+                          },
+                          "required": [
+                            "limit",
+                            "hasMore",
+                            "nextCursor"
+                          ]
                         }
                       },
                       "required": [
-                        "data"
+                        "data",
+                        "pagination"
                       ]
                     }
                   },
@@ -143423,6 +143471,17 @@
                               "updatedAt": {
                                 "type": "string",
                                 "format": "date-time"
+                              },
+                              "allowedActions": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              "linkedRoadmapItemCount": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
                               }
                             },
                             "required": [
@@ -143440,7 +143499,9 @@
                               "deploymentEvidenceUrl",
                               "createdBy",
                               "createdAt",
-                              "updatedAt"
+                              "updatedAt",
+                              "allowedActions",
+                              "linkedRoadmapItemCount"
                             ]
                           }
                         },
@@ -143647,6 +143708,17 @@
                         "updatedAt": {
                           "type": "string",
                           "format": "date-time"
+                        },
+                        "allowedActions": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "linkedRoadmapItemCount": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
                         }
                       },
                       "required": [
@@ -143664,7 +143736,9 @@
                         "deploymentEvidenceUrl",
                         "createdBy",
                         "createdAt",
-                        "updatedAt"
+                        "updatedAt",
+                        "allowedActions",
+                        "linkedRoadmapItemCount"
                       ]
                     }
                   },
@@ -143917,6 +143991,17 @@
                         "updatedAt": {
                           "type": "string",
                           "format": "date-time"
+                        },
+                        "allowedActions": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "linkedRoadmapItemCount": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
                         }
                       },
                       "required": [
@@ -143934,7 +144019,9 @@
                         "deploymentEvidenceUrl",
                         "createdBy",
                         "createdAt",
-                        "updatedAt"
+                        "updatedAt",
+                        "allowedActions",
+                        "linkedRoadmapItemCount"
                       ]
                     }
                   },
@@ -144981,7 +145068,22 @@
                     "data": {
                       "type": "object",
                       "properties": {
-                        "token": {
+                        "published": {
+                          "type": "boolean"
+                        },
+                        "publicationVersion": {
+                          "anyOf": [
+                            {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "expiresAt": {
                           "anyOf": [
                             {
                               "type": "string"
@@ -144991,7 +145093,7 @@
                             }
                           ]
                         },
-                        "path": {
+                        "issuedAt": {
                           "anyOf": [
                             {
                               "type": "string"
@@ -145003,8 +145105,10 @@
                         }
                       },
                       "required": [
-                        "token",
-                        "path"
+                        "published",
+                        "publicationVersion",
+                        "expiresAt",
+                        "issuedAt"
                       ]
                     }
                   },
@@ -145078,6 +145182,17 @@
                       "type": "object",
                       "properties": {
                         "token": {
+                          "type": "string"
+                        },
+                        "path": {
+                          "type": "string"
+                        },
+                        "publicationVersion": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "expiresAt": {
                           "anyOf": [
                             {
                               "type": "string"
@@ -145087,20 +145202,16 @@
                             }
                           ]
                         },
-                        "path": {
-                          "anyOf": [
-                            {
-                              "type": "string"
-                            },
-                            {
-                              "type": "null"
-                            }
-                          ]
+                        "issuedAt": {
+                          "type": "string"
                         }
                       },
                       "required": [
                         "token",
-                        "path"
+                        "path",
+                        "publicationVersion",
+                        "expiresAt",
+                        "issuedAt"
                       ]
                     }
                   },
@@ -145144,6 +145255,24 @@
         "x-exposure": "permissioned",
         "x-permission": "build:roadmap:manage",
         "description": "Exposure: permission — build:roadmap:manage",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "expiresAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
         "x-idempotency-command": "build.managed-products.roadmap-publication.issue",
         "x-idempotent": true
       },
@@ -145986,6 +146115,17 @@
                                   "updatedAt": {
                                     "type": "string",
                                     "format": "date-time"
+                                  },
+                                  "allowedActions": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "linkedRoadmapItemCount": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
                                   }
                                 },
                                 "required": [
@@ -146003,7 +146143,9 @@
                                   "deploymentEvidenceUrl",
                                   "createdBy",
                                   "createdAt",
-                                  "updatedAt"
+                                  "updatedAt",
+                                  "allowedActions",
+                                  "linkedRoadmapItemCount"
                                 ]
                               }
                             },
@@ -150911,6 +151053,82 @@
         "x-exposure": "permissioned",
         "x-permission": "build:programs:manage",
         "description": "Exposure: permission — build:programs:manage"
+      }
+    },
+    "/build/project-key-available": {
+      "get": {
+        "operationId": "ProjectsController_checkProjectKeyAvailable",
+        "parameters": [
+          {
+            "name": "key",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 10,
+              "pattern": "^[A-Z][A-Z0-9]*$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "available": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "available"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "tags": [
+          "Projects"
+        ],
+        "x-exposure": "permissioned",
+        "x-permission": "build:create",
+        "description": "Exposure: permission — build:create"
       }
     },
     "/build/releases": {
@@ -796753,6 +796971,22 @@
                                     "type": "null"
                                   }
                                 ]
+                              },
+                              "segments": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              "tier": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
                               }
                             },
                             "required": [
@@ -796760,7 +796994,9 @@
                               "customerName",
                               "submissionCount",
                               "opportunityCount",
-                              "accountValue"
+                              "accountValue",
+                              "segments",
+                              "tier"
                             ]
                           }
                         }
@@ -1184664,11 +1184900,18 @@
                     "success": {
                       "type": "boolean",
                       "const": true
+                    },
+                    "revision": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991
                     }
                   },
                   "required": [
-                    "success"
-                  ]
+                    "success",
+                    "revision"
+                  ],
+                  "additionalProperties": false
                 }
               }
             }
@@ -1186839,6 +1187082,80 @@
             }
           }
         }
+      }
+    },
+    "/organization/invitations/pending-for-me": {
+      "get": {
+        "operationId": "OrganizationController_listPendingInvitationsForMe",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "organizationName": {
+                            "type": "string"
+                          },
+                          "role": {
+                            "type": "string"
+                          },
+                          "expiresAt": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "organizationName",
+                          "role",
+                          "expiresAt"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "tags": [
+          "Organization"
+        ],
+        "x-exposure": "universal",
+        "description": "Exposure: universal — any authenticated member, subject from the token"
       }
     },
     "/organization/invitations/request-otp": {

@@ -1,6 +1,6 @@
-import { renderHook } from "@testing-library/react";
+import { renderHook, act } from "@testing-library/react";
 import { ApiError } from "@/lib/api-envelope";
-import { LAST_PROJECT_COOKIE_NAME } from "@/lib/projects/last-project";
+import { LAST_PROJECT_CHANGED_EVENT, LAST_PROJECT_COOKIE_NAME } from "@/lib/projects/last-project";
 
 let mockReadResult: {
   data: { id: number; name: string; status: string } | undefined;
@@ -79,4 +79,18 @@ it("clears Resume for an archived project", () => {
 
   expect(result.current).toBeNull();
   expect(document.cookie).not.toContain(`${LAST_PROJECT_COOKIE_NAME}=6`);
+});
+
+it("drops the resume action when the last-project cookie is cleared while the hook is mounted", () => {
+  mockReadResult.data = { id: 6, name: "Live project", status: "ACTIVE" };
+
+  const { result } = renderHook(() => useResumeLastProject());
+  expect(result.current).not.toBeNull();
+
+  act(() => {
+    document.cookie = `${LAST_PROJECT_COOKIE_NAME}=; path=/; max-age=0`;
+    window.dispatchEvent(new Event(LAST_PROJECT_CHANGED_EVENT));
+  });
+
+  expect(result.current).toBeNull();
 });

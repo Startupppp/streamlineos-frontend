@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { CustomerImpactPanel } from "./customer-impact-panel";
 
 jest.mock("@/hooks/api/feedbucket/use-feedbucket-product-stats", () => ({
@@ -27,9 +27,19 @@ const ROWS = [
   },
 ];
 
+const ALLOWED_ACCESS = { denied: false, allowed: true, pending: false, unavailable: false };
+const DENIED_ACCESS = { denied: true, allowed: false, pending: false, unavailable: false };
+
 describe("CustomerImpactPanel", () => {
   beforeEach(() => {
-    useProductCustomerImpact.mockReturnValue({ data: { rows: ROWS }, isLoading: false });
+    useProductCustomerImpact.mockReturnValue({
+      data: { rows: ROWS },
+      isLoading: false,
+      isError: false,
+      error: null,
+      access: ALLOWED_ACCESS,
+      refetch: jest.fn(),
+    });
   });
 
   it("renders a link with crmOrganizationId in the href for each row", () => {
@@ -70,14 +80,88 @@ describe("CustomerImpactPanel", () => {
   });
 
   it("returns null (renders nothing) when data has no rows", () => {
-    useProductCustomerImpact.mockReturnValue({ data: { rows: [] }, isLoading: false });
+    useProductCustomerImpact.mockReturnValue({
+      data: { rows: [] },
+      isLoading: false,
+      isError: false,
+      error: null,
+      access: ALLOWED_ACCESS,
+      refetch: jest.fn(),
+    });
     const { container } = render(<CustomerImpactPanel managedProductId={MANAGED_PRODUCT_ID} />);
     expect(container).toBeEmptyDOMElement();
   });
 
   it("shows skeleton rows while loading", () => {
-    useProductCustomerImpact.mockReturnValue({ data: undefined, isLoading: true });
+    useProductCustomerImpact.mockReturnValue({
+      data: undefined,
+      isLoading: true,
+      isError: false,
+      error: null,
+      access: ALLOWED_ACCESS,
+      refetch: jest.fn(),
+    });
     const { container } = render(<CustomerImpactPanel managedProductId={MANAGED_PRODUCT_ID} />);
     expect(container.querySelectorAll(".animate-pulse, [data-slot='skeleton']").length).toBeGreaterThan(0);
+  });
+
+  it("shows an error message and retry button on error", () => {
+    const refetch = jest.fn();
+    useProductCustomerImpact.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: true,
+      error: new Error("Network failure"),
+      access: ALLOWED_ACCESS,
+      refetch,
+    });
+    render(<CustomerImpactPanel managedProductId={MANAGED_PRODUCT_ID} />);
+    expect(screen.getByText(/Network failure/i)).toBeInTheDocument();
+    const retryBtn = screen.getByTestId("customer-impact-retry");
+    expect(retryBtn).toBeInTheDocument();
+    fireEvent.click(retryBtn);
+    expect(refetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows the denial notice when access is denied", () => {
+    useProductCustomerImpact.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: false,
+      error: null,
+      access: DENIED_ACCESS,
+      refetch: jest.fn(),
+    });
+    render(<CustomerImpactPanel managedProductId={MANAGED_PRODUCT_ID} />);
+    expect(screen.getByTestId("customer-impact-denied")).toBeInTheDocument();
+    expect(screen.getByText(/CRM customer fields are hidden/i)).toBeInTheDocument();
+  });
+
+  it("renders tier when present on a row", () => {
+    const rowWithTier = { ...ROWS[0]!, tier: "Gold" };
+    useProductCustomerImpact.mockReturnValue({
+      data: { rows: [rowWithTier, ROWS[1]!] },
+      isLoading: false,
+      isError: false,
+      error: null,
+      access: ALLOWED_ACCESS,
+      refetch: jest.fn(),
+    });
+    render(<CustomerImpactPanel managedProductId={MANAGED_PRODUCT_ID} />);
+    expect(screen.getByTestId(`tier-${ROWS[0]!.crmOrganizationId}`)).toHaveTextContent("Gold");
+  });
+
+  it("renders segments when present on a row", () => {
+    const rowWithSegments = { ...ROWS[0]!, segments: ["enterprise", "financial"] };
+    useProductCustomerImpact.mockReturnValue({
+      data: { rows: [rowWithSegments, ROWS[1]!] },
+      isLoading: false,
+      isError: false,
+      error: null,
+      access: ALLOWED_ACCESS,
+      refetch: jest.fn(),
+    });
+    render(<CustomerImpactPanel managedProductId={MANAGED_PRODUCT_ID} />);
+    expect(screen.getByTestId(`segments-${ROWS[0]!.crmOrganizationId}`)).toHaveTextContent("enterprise, financial");
   });
 });

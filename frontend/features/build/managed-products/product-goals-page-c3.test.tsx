@@ -240,6 +240,7 @@ const GOAL_WITH_ACTIONS = {
   progress: 40,
   keyResultCount: 2,
   owner: null,
+  allowedActions: [],
 };
 
 const RESULT_WITH_ONE_GOAL = {
@@ -297,7 +298,7 @@ describe("ProductGoalsPage — states (C3 BSN-STATE-GOALS-01)", () => {
     useGoalsPage.mockReturnValue({
       data: {
         items: [
-          { id: 1, title: "Grow revenue 20%", level: "company", status: "on_track", progress: 40, keyResultCount: 2, owner: null },
+          { id: 1, title: "Grow revenue 20%", level: "company", status: "on_track", progress: 40, keyResultCount: 2, owner: null, allowedActions: [] },
         ],
         page: 1, pageSize: 20, total: 1,
       },

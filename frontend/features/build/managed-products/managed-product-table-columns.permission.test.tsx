@@ -30,11 +30,13 @@ const product = {
 function renderActions(canUpdate: boolean, canDelete: boolean) {
   render(
     <ProductRowActions
-      product={product}
+      product={{ ...product, allowedActions: ["update", "delete", "archive", "restore"] }}
       canUpdate={canUpdate}
       canDelete={canDelete}
       onEdit={jest.fn()}
       onDelete={jest.fn()}
+      onArchive={jest.fn()}
+      onRestore={jest.fn()}
     />,
   );
 }

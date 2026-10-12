@@ -176,7 +176,8 @@ describe("ProductReleasesPage", () => {
     expect(screen.getByRole("button", { name: "Mark released" })).toBeInTheDocument();
   });
 
-  it("hides New release and row actions when all releases have view-only allowedActions", () => {
+  it("hides New release and row actions when the user cannot update", () => {
+    mockUseCan.mockImplementation((key: string) => key !== "build:managed-products:update");
     setReleases(ROWS.map((r) => ({ ...r, allowedActions: ["view"] })));
     render(<ProductReleasesPage managedProductId={7} />);
     expect(screen.queryByRole("button", { name: "New release" })).not.toBeInTheDocument();

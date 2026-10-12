@@ -123,7 +123,10 @@ function CommentItemComponent({
         e.preventDefault();
         handleSaveEdit();
       }
-      if (e.key === "Escape") handleCancelEdit();
+      if (e.key === "Escape") {
+        e.stopPropagation();
+        handleCancelEdit();
+      }
     },
     [handleSaveEdit, handleCancelEdit],
   );
@@ -181,7 +184,7 @@ function CommentItemComponent({
 
         {isEditing ? (
           <div className="mt-1 space-y-1.5">
-            <div onKeyDown={handleEditKeyDown}>
+            <div onKeyDownCapture={handleEditKeyDown} data-testid="comment-edit-field">
               <TiptapEditorDynamic
                 content={editText}
                 contentKey={comment.id}

@@ -41,6 +41,29 @@ import { StepWorkspace } from "@/features/org-setup/components/step-workspace";
 import { StepProducts } from "@/features/org-setup/components/step-products";
 import { StepInviteLaunch } from "@/features/org-setup/components/step-invite-launch";
 import { ArchivedOrgsRestore } from "@/components/organization/archived-orgs-restore";
+import { useMyPendingInvitations } from "@/hooks/common/auth-hooks";
+import type { PendingInvitationItem } from "@/hooks/common/auth-schema";
+
+function PendingInvitationsNotice({ items }: { items: PendingInvitationItem[] }) {
+  if (items.length === 0) return null;
+  return (
+    <div className="flex flex-col gap-2 rounded-lg border border-border bg-muted/40 p-4">
+      <p className="text-sm font-medium text-foreground">
+        {items.length === 1
+          ? "You have a pending invitation"
+          : `You have ${items.length} pending invitations`}
+      </p>
+      {items.map((item) => (
+        <p key={item.id} className="text-sm text-muted-foreground">
+          {item.organizationName} &mdash; {item.role}
+        </p>
+      ))}
+      <p className="text-xs text-muted-foreground">
+        Check your email to accept the invitation and join the organization.
+      </p>
+    </div>
+  );
+}
 
 export default function OrgSetupPage() {
   const { data: session } = useSession();
@@ -65,6 +88,8 @@ export default function OrgSetupPage() {
   const draftRevisionRef = useRef(0);
   const draftSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const draftSaveChainRef = useRef<Promise<void>>(Promise.resolve());
+
+  const { data: pendingInvitations } = useMyPendingInvitations(Boolean(userId));
 
   const { data: serverSession, isFetched: isServerSessionFetched } =
     useOrgSetupSessionQuery(Boolean(userId));
@@ -303,7 +328,12 @@ export default function OrgSetupPage() {
           onBack={goBack}
           onNext={goNext}
           isFirstStep
-          restoreSlot={<ArchivedOrgsRestore />}
+          restoreSlot={
+            <>
+              <ArchivedOrgsRestore />
+              <PendingInvitationsNotice items={pendingInvitations ?? []} />
+            </>
+          }
         />
       )}
       {currentStepId === "products" && (

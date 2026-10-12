@@ -39,3 +39,14 @@ export const resendVerificationContract = z.object({
 export const logoutContract = z.object({
   success: z.boolean(),
 }).or(z.object({}));
+
+export const pendingInvitationItemContract = z.object({
+  id: z.string(),
+  organizationName: z.string(),
+  role: z.string(),
+  expiresAt: z.string(),
+});
+
+export const pendingInvitationsForMeContract = z.array(pendingInvitationItemContract);
+
+export type PendingInvitationItem = z.infer<typeof pendingInvitationItemContract>;
