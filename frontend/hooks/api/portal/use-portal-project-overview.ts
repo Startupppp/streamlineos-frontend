@@ -42,21 +42,6 @@ export const backendPortalProjectOverviewSchema = z.object({
       dueDate: z.string().nullable(),
     }),
   ),
-  attachments: z.array(
-    z.object({
-      id: z.number().int(),
-      filename: z.string(),
-      url: z.string(),
-    }),
-  ),
-  comments: z.array(
-    z.object({
-      id: z.number().int(),
-      body: z.string(),
-      authorName: z.string().nullable(),
-      createdAt: z.string(),
-    }),
-  ),
   deliverables: z.array(
     z.object({
       id: z.number().int(),
@@ -85,17 +70,6 @@ export const backendPortalProjectOverviewSchema = z.object({
       status: z.string(),
     }),
   ),
-  requests: z
-    .array(
-      z.object({
-        id: z.number().int(),
-        title: z.string(),
-        status: z.string(),
-        decisionComment: z.string().nullable(),
-        createdAt: z.string(),
-        updatedAt: z.string(),
-      }),
-    ),
 });
 
 export function portalProjectOverviewQueryOptions(projectId: number) {

@@ -9,15 +9,6 @@ export interface PortalCapabilities {
   canViewRequests: boolean;
 }
 
-export interface PortalRequest {
-  id: number;
-  title: string;
-  status: string;
-  decisionComment: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
 export interface PortalDeliverable {
   id: number;
   name: string;
@@ -71,34 +62,14 @@ export interface PortalTask {
   assigneeName?: string | null;
 }
 
-export interface PortalAttachment {
-  id: number;
-  filename: string;
-  url: string;
-  mimeType?: string | null;
-  sizeBytes?: number | null;
-  uploadedAt?: string;
-  uploadedByName?: string | null;
-}
-
-export interface PortalComment {
-  id: number;
-  body: string;
-  authorName: string | null;
-  createdAt: string;
-}
-
 export interface PortalProjectOverview {
   project: PortalProject;
   capabilities?: PortalCapabilities;
   milestones: PortalMilestone[];
   tasks: PortalTask[];
-  attachments: PortalAttachment[];
-  comments: PortalComment[];
   deliverables: PortalDeliverable[];
   approvals: PortalApproval[];
   invoices: PortalInvoice[];
-  requests: PortalRequest[];
 }
 
 export interface AcceptInvitationResponse {

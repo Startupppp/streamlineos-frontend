@@ -61,7 +61,7 @@ the existence/count of hidden records.
 | Route · disposition | Components and actions | Filters, views, and paging | Backend, abuse, cache, and confirmation |
 |---|---|---|---|
 | `/forms/{formToken}` · KEEP | Branded published form; accessible field renderer; progress for multi-section form; success/closed/expired states | No internal filters/views; conditional fields deterministic; options bounded/searchable | Opaque revocable token; publish-version schema; rate limit/bot/file controls; idempotent submit; no tenant metadata leakage; submit confirmation/reference |
-| `/intake/{projectId}` · CONSOLIDATE into published Forms | Transitional minimal intake form with title/description and safe success state | None | Replace guessable project-ID exposure with opaque published form token; migrate requests/history before route deletion |
+| `/intake/{projectId}` · RETIRED 2026-10-12 | Page deleted; the address 404s | None | Replaced by the opaque token address below. Both `POST /public/intake/{projectId}` and `GET /public/intake/{projectId}/form` are deleted with it. See the decision below |
 | `/intake/t/{intakeToken}` · KEEP opaque intake address | Token-addressed intake form; success, closed and expired states | None | Opaque per-project intake token resolved server-side; token never returned to an unauthorized reader; publication gate on every submission; rate limit; generic refusal for unknown, unpublished and deleted alike |
 | `/roadmap/by-token` · KEEP product share identity | Branded public product roadmap addressed by share token; approved outcomes and releases | Approved status/date filters; timeline/list; bounded date window | Hashed `managed_product_share_tokens` row with expiry, rotation and revocation checked in the same predicate on every request; archived or deleted product 404s; `noindex` |
 | `/board/{shareToken}` · KEEP deny-by-default sharing | Board identity at the link's own access level; visible columns/cards/fields; freshness; revoke/expired state | Allowlisted public filter only; no saved views; per-column bounded paging | Opaque hashed token, expiry/revocation, field projection, rate limit; writes only on an editor link, with token, visibility, access level and expiry re-asserted inside the UPDATE; public cache keyed by share version and purged immediately. See the decision below |
@@ -129,6 +129,37 @@ The stored column value is `public_access = 'editor'`; `"edit"` is only the resp
 projection the browser sees. Do not treat `"edit"` as a column value.
 **Reverse this row if public editing should be withdrawn as a product capability**;
 nothing else in this file depends on the choice.
+
+### Decision 2026-10-12 — the project-ID intake address is retired, not kept alongside the token
+
+`/intake/{projectId}` is deleted rather than left serving beside the token address,
+and the two endpoints behind it go with it.
+
+The guessable address was an enumeration oracle on real data, not a theoretical
+one. Migration `1300_build_projects_intake_published_flag.sql` ran
+`UPDATE build.projects SET intake_published_at = now() WHERE deleted_at IS NULL`,
+so every project that existed at 1300 is published. A small-integer project id is
+therefore a working anonymous submit address on any database that has run 1300.
+Keeping the route would have left that open for as long as both addresses existed.
+
+The cost is accepted deliberately: **a link already shared at the project-ID
+address now 404s, with no redirect.** A redirect is impossible by construction —
+the replacement address contains a 24-byte secret, so nothing public may hand it
+out, and a redirect that leaked it would recreate the defect it fixes. The new
+production database holds no organizations, so it holds no live links.
+
+What made the retirement possible is that the token address finally has a producer.
+`intake_published_at` had no writer at all between migration 1300 and 2026-10-12,
+so every project created in that window refused every public intake submission on
+both addresses, and `intake_token` reached no client. The authorized writer is
+`build/{projectId}/settings/intake` with `publish` and `unpublish`; `unpublish`
+clears publication and rotates the token in one `UPDATE`, so no window exists in
+which a revoked address is live again. **Republishing therefore issues a new
+address and every previously shared link stays dead** — that is what revocable
+means here, and the confirmation copy says so.
+
+**Reverse this row only by re-publishing a non-secret address**, never by restoring
+the project-ID route.
 
 ## Public and Portal Safety
 
