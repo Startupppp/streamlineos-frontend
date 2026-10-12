@@ -12,6 +12,7 @@ import type {
   PublicFeedbackPost,
   PublicChangelogEntry,
 } from "@/types/projects";
+import type { ManagedProductRelationsGetRoadmapPreviewResponse as ProductRoadmapPreview } from "@/contracts/build-contracts.generated";
 
 const publicRoadmapBoardContract = lazyContract(() =>
   import("@/hooks/api/build/roadmap-schema").then(
@@ -31,6 +32,11 @@ const publicFeedbackResultContract = lazyContract(() =>
 const roadmapPublicationLazy = lazyContract(() =>
   import("@/hooks/api/build/roadmap-schema").then(
     (m) => m.roadmapPublicationContract,
+  ),
+);
+const productRoadmapPreviewLazy = lazyContract(() =>
+  import("@/hooks/api/build/roadmap-schema").then(
+    (m) => m.productRoadmapPreviewContract,
   ),
 );
 const productRoadmapPublicationLazy = lazyContract(() =>
@@ -259,11 +265,11 @@ export function useRoadmapPreview(managedProductId: number) {
         managedProductId,
       ),
     queryFn: ({ signal }) =>
-      apiClient.get<PublicRoadmapBoard>(
+      apiClient.get<ProductRoadmapPreview>(
         `/build/managed-products/${String(managedProductId)}/roadmap-preview`,
         undefined,
         signal,
-        publicRoadmapBoardContract,
+        productRoadmapPreviewLazy,
       ),
     staleTime: 30_000,
   });

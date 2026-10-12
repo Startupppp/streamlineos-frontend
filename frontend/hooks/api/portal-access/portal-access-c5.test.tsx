@@ -52,6 +52,7 @@ const VALID_GRANT = {
   canSubmitChangeRequests: true,
   canViewApprovals: false,
   canViewInvoices: false,
+  canViewRequests: false,
   status: "ACTIVE" as const,
   expiresAt: "2027-01-01T00:00:00.000Z",
   createdAt: "2025-01-01T00:00:00.000Z",
