@@ -31,6 +31,7 @@ function baseRow(status: string) {
     roadmapDefaultHorizon: null as "now" | "next" | "later" | null,
     lastReviewedAt: null,
     owner: null as { id: string; firstName: string | null; lastName: string | null; email: string; image: string | null } | null,
+    allowedActions: [] as string[],
     version: 1,
     deletedAt: null,
     createdAt: "2026-09-22T00:00:00.000Z",

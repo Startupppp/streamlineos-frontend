@@ -6,7 +6,7 @@ jest.mock("next/navigation", () => ({
   usePathname: () => "/build/managed-products/7/settings",
   useSearchParams: () => new URLSearchParams(""),
 }));
-jest.mock("@/hooks/api/access", () => ({ useCan: () => true }));
+jest.mock("@/hooks/api/access", () => ({ useCan: () => true, usePermissionGate: () => ({ allowed: true, isLoading: false }) }));
 jest.mock("@/hooks/api/use-page-state", () => ({ usePageState: () => ({ kind: "ready" }) }));
 jest.mock("@/components/shared/page-state", () => ({
   PageState: ({ children }: { children: React.ReactNode }) => <>{children}</>,
@@ -19,6 +19,17 @@ jest.mock("@/hooks/api/build/managed-product-mutations", () => ({
 }));
 jest.mock("./product-settings-members-section", () => ({
   ProductSettingsMembersSection: () => null,
+}));
+jest.mock("@/hooks/api/build/managed-product-members", () => ({
+  useManagedProductMembers: jest.fn(() => ({ data: { data: [] }, isLoading: false })),
+  useAddManagedProductMember: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+  useRemoveManagedProductMember: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+}));
+jest.mock("@/hooks/api/build/build-members", () => ({
+  useBuildMembers: jest.fn(() => ({ data: undefined, isLoading: false })),
+}));
+jest.mock("@/hooks/api/build/managed-product-projects", () => ({
+  useManagedProductProjects: jest.fn(() => ({ data: undefined, isLoading: false })),
 }));
 jest.mock("@/components/shared/dirty-state-context", () => ({
   DirtyStateProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,

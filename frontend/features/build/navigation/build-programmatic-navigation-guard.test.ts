@@ -4,7 +4,7 @@ import { join } from "node:path";
 const GUARDED_NAVIGATION_FILES = [
   "cycles/use-cycle-detail.ts",
   "feedbucket/project-submissions-inbox.tsx",
-  "managed-products/product-feedback-page.tsx",
+  "managed-products/product-feedback-dialogs.tsx",
   "project-list/project-card.tsx",
   "project-list/project-table.tsx",
   "triage/use-triage-ticket-actions.ts",

@@ -36,6 +36,10 @@ jest.mock("./new-project-dialog", () => ({
   NewProjectDialog: () => <div data-testid="new-project-dialog" />,
 }));
 
+jest.mock("./link-existing-project-dialog", () => ({
+  LinkExistingProjectDialog: () => <div data-testid="link-existing-project-dialog" />,
+}));
+
 beforeEach(() => {
   jest.clearAllMocks();
   project.mockReturnValue({ data: undefined, isError: false, error: null });

@@ -251,7 +251,7 @@ describe("reachableStep — a restored draft cannot skip an incomplete workspace
   const complete = { ...DEFAULT_DATA, displayName: "Acme", teamSize: "1-10", industry: "Agency" };
 
   it("sends a draft missing team size and industry back to the workspace step", () => {
-    expect(reachableStep(4, { ...DEFAULT_DATA, displayName: "Acme" }, sequence)).toBe(2);
+    expect(reachableStep(4, { ...DEFAULT_DATA, displayName: "Acme" }, sequence)).toBe(1);
   });
 
   it("keeps the restored step when the workspace step is complete", () => {

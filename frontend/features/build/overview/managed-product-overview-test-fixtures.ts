@@ -61,5 +61,5 @@ export const OVERVIEW_SUMMARY: ManagedProductSummary = {
     decisions: [],
     changelogPublished: 0,
   },
-  generatedAt: "2024-01-01T00:00:00Z",
+  generatedAt: "2026-10-11T08:30:00Z",
 };

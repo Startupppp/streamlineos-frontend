@@ -162,6 +162,27 @@ export const MODULE_GROUPS: { heading: string; keys: OrgModuleKey[] }[] = [
   { heading: "Work", keys: ["build", "sign", "surveys"] },
 ];
 
+export function selectOnboardingQuestions(
+  selectedModules: readonly OrgModuleKey[],
+  totalLimit = 2,
+): Partial<Record<OrgModuleKey, readonly ModuleQuestion[]>> {
+  const selected = new Set(selectedModules);
+  const result: Partial<Record<OrgModuleKey, readonly ModuleQuestion[]>> = {};
+  let remaining = Math.max(0, totalLimit);
+
+  for (const group of MODULE_GROUPS) {
+    for (const moduleKey of group.keys) {
+      if (!selected.has(moduleKey) || remaining === 0) continue;
+      const firstQuestion = MODULE_QUESTIONS[moduleKey]?.[0];
+      if (!firstQuestion) continue;
+      result[moduleKey] = [firstQuestion];
+      remaining -= 1;
+    }
+  }
+
+  return result;
+}
+
 export const DEFAULT_DATA: WizardData = {
   goals: [],
   industry: "",

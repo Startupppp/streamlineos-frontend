@@ -12,6 +12,7 @@ jest.mock("next/navigation", () => ({
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn(() => true),
+  usePermissionGate: jest.fn(() => ({ allowed: true, isLoading: false })),
 }));
 
 jest.mock("@/hooks/api/use-page-state", () => ({
@@ -55,6 +56,10 @@ jest.mock("@/hooks/api/build/build-members", () => ({
   useBuildMembers: jest.fn(),
 }));
 
+jest.mock("@/hooks/api/build/managed-product-projects", () => ({
+  useManagedProductProjects: jest.fn(),
+}));
+
 const { useCan: mockUseCan } = jest.requireMock("@/hooks/api/access") as { useCan: jest.Mock };
 const { usePageState: mockUsePageState } = jest.requireMock("@/hooks/api/use-page-state") as { usePageState: jest.Mock };
 const { useManagedProduct: mockUseManagedProduct } = jest.requireMock("@/hooks/api/build/managed-products") as { useManagedProduct: jest.Mock };
@@ -77,6 +82,7 @@ const {
   useRemoveManagedProductMember: jest.Mock;
 };
 const { useBuildMembers: mockUseBuildMembers } = jest.requireMock("@/hooks/api/build/build-members") as { useBuildMembers: jest.Mock };
+const { useManagedProductProjects: mockUseManagedProductProjects } = jest.requireMock("@/hooks/api/build/managed-product-projects") as { useManagedProductProjects: jest.Mock };
 
 jest.mock("@/components/shared/dirty-state-context", () => ({
   DirtyStateProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
@@ -149,6 +155,7 @@ function setupDefaultMocks() {
   mockUseAddManagedProductMember.mockReturnValue({ mutate: jest.fn(), isPending: false });
   mockUseRemoveManagedProductMember.mockReturnValue({ mutate: jest.fn(), isPending: false });
   mockUseBuildMembers.mockReturnValue({ data: { data: [], pagination: { hasMore: false, nextCursor: null } } });
+  mockUseManagedProductProjects.mockReturnValue({ data: undefined, isLoading: false });
 }
 
 beforeEach(() => {

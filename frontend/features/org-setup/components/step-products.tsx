@@ -28,8 +28,8 @@ import type { OrgSetupPreview } from "@/hooks/api/org-setup-schema";
 import {
   MODULE_CATALOG,
   MODULE_GROUPS,
-  MODULE_QUESTIONS,
   ALWAYS_ENABLED_MODULES,
+  selectOnboardingQuestions,
   type ModuleQuestion,
 } from "../lib/constants";
 import type { OrgModuleKey, WizardData } from "../lib/wizard-data-schema";
@@ -138,9 +138,9 @@ function ModuleCard({
   onToggle,
   onAnswerChange,
 }: {
-  moduleKey: OrgModuleKey;
-  isChecked: boolean;
   isAlways: boolean;
+  isChecked: boolean;
+  moduleKey: OrgModuleKey;
   answers: Record<string, string>;
   questions: readonly ModuleQuestion[];
   onToggle: (key: OrgModuleKey) => void;
@@ -264,17 +264,28 @@ function AlwaysOnCard({
         </span>
         <span className="min-w-0 flex-1">
           <span className="flex items-center gap-2">
-            <span className="block text-sm font-medium text-foreground">{label}</span>
-            <span className="text-xs font-normal text-muted-foreground">Always on</span>
+            <span className="block text-sm font-medium text-foreground">
+              {label}
+            </span>
+            <span className="text-xs font-normal text-muted-foreground">
+              Always on
+            </span>
           </span>
-          <span className="block text-xs leading-relaxed text-muted-foreground">{description}</span>
+          <span className="block text-xs leading-relaxed text-muted-foreground">
+            {description}
+          </span>
         </span>
       </div>
     </div>
   );
 }
 
-export function StepProducts({ data, patch, onBack, onNext }: StepProductsProps) {
+export function StepProducts({
+  data,
+  patch,
+  onBack,
+  onNext,
+}: StepProductsProps) {
   const enabledSet = useMemo(() => new Set(data.modules), [data.modules]);
   const [preview, setPreview] = useState<OrgSetupPreview | null>(null);
   const [previewError, setPreviewError] = useState<string | null>(null);
@@ -287,20 +298,10 @@ export function StepProducts({ data, patch, onBack, onNext }: StepProductsProps)
     [data.modules],
   );
 
-  const visibleQuestions = useMemo(() => {
-    const allowed = new Map<OrgModuleKey, ModuleQuestion[]>();
-    let remaining = 2;
-    for (const group of MODULE_GROUPS) {
-      for (const moduleKey of group.keys) {
-        if (!enabledSet.has(moduleKey) || remaining === 0) continue;
-        const questions = MODULE_QUESTIONS[moduleKey] ?? [];
-        const selected = questions.slice(0, remaining);
-        if (selected.length > 0) allowed.set(moduleKey, selected);
-        remaining -= selected.length;
-      }
-    }
-    return allowed;
-  }, [enabledSet]);
+  const visibleQuestions = useMemo(
+    () => selectOnboardingQuestions(data.modules),
+    [data.modules],
+  );
 
   const moduleSelectionKey = useMemo(
     () => [...data.modules].sort().join(","),
@@ -309,8 +310,8 @@ export function StepProducts({ data, patch, onBack, onNext }: StepProductsProps)
 
   useEffect(() => {
     const requestId = ++previewRequestRef.current;
-    setPreviewError(null);
     const timer = window.setTimeout(() => {
+      setPreviewError(null);
       const payload: OrgSetupPreviewPayload = { modules: data.modules };
       void previewSelection(payload)
         .then((result) => {
@@ -335,7 +336,9 @@ export function StepProducts({ data, patch, onBack, onNext }: StepProductsProps)
   const previewMatchesSelection =
     preview !== null &&
     preview.modules.length === data.modules.length &&
-    preview.modules.every((module) => enabledSet.has(module.moduleKey as OrgModuleKey));
+    preview.modules.every((module) =>
+      enabledSet.has(module.moduleKey as OrgModuleKey),
+    );
   const canContinue =
     extraCount > 0 &&
     previewMatchesSelection &&
@@ -381,7 +384,8 @@ export function StepProducts({ data, patch, onBack, onNext }: StepProductsProps)
         Home and Knowledge base are always on. Add the modules your team needs.
         {extraCount > 0 && (
           <span className="ml-1 font-medium text-foreground">
-            {extraCount} extra {extraCount === 1 ? "module" : "modules"} selected.
+            {extraCount} extra {extraCount === 1 ? "module" : "modules"}{" "}
+            selected.
           </span>
         )}
       </p>
@@ -406,11 +410,15 @@ export function StepProducts({ data, patch, onBack, onNext }: StepProductsProps)
       ) : null}
 
       {blockedModules.length > 0 ? (
-        <div role="alert" className="rounded-lg border border-status-warning-rule bg-status-warning-surface p-3 text-xs text-status-warning-ink">
+        <div
+          role="alert"
+          className="rounded-lg border border-status-warning-rule bg-status-warning-surface p-3 text-xs text-status-warning-ink"
+        >
           {blockedModules.map((module) => (
             <p key={module.moduleKey}>
-              {MODULE_CATALOG[module.moduleKey as OrgModuleKey]?.label ?? module.moduleKey}:{" "}
-              {module.reason ?? "Unavailable on the current plan"}
+              {MODULE_CATALOG[module.moduleKey as OrgModuleKey]?.label ??
+                module.moduleKey}
+              : {module.reason ?? "Unavailable on the current plan"}
             </p>
           ))}
         </div>
@@ -429,8 +437,10 @@ export function StepProducts({ data, patch, onBack, onNext }: StepProductsProps)
                   moduleKey={key}
                   isChecked={enabledSet.has(key)}
                   isAlways={false}
-                  answers={(data.moduleAnswers[key] ?? {}) as Record<string, string>}
-                  questions={visibleQuestions.get(key) ?? []}
+                  answers={
+                    (data.moduleAnswers[key] ?? {}) as Record<string, string>
+                  }
+                  questions={visibleQuestions[key] ?? []}
                   onToggle={handleToggle}
                   onAnswerChange={handleAnswerChange}
                 />
