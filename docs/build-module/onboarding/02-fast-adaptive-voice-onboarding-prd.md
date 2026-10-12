@@ -89,11 +89,17 @@ Module owners decide their records and initial useful state. Shared questions su
 
 Acceptance needs focused contract and negative tests, disposable database transaction/replay and query-plan tests, and desktop/mobile browser journeys at 375/768/1280 widths. Exercise refresh at every step, cross-device resume, two-tab conflicts, voice on/off, provider outage, slow network, plan changes, every selectable module alone and representative multi-module combinations, access boundaries, invitation distinctions, and activation retry. A source or route test alone does not certify the customer journey. Record deployment identity and measured timings before marking release verified.
 
-## 10. Product decisions to settle
+## 10. Default product decisions
 
-1. Should the first launch create starter records for **every** selected module, or only the primary module while others receive a checklist? The default recommendation is one useful starter record per module only where it is safe and reversible; regulated modules remain checklist-first.
-2. What is the commercial treatment for a module that is selected but plan-locked: block selection, offer an upgrade before Launch, or allow a dormant selection? Recommend visible locked card and an explicit upgrade path without pretending activation.
-3. What exact retention period should an unactivated draft have, and may confirmed voice transcripts be kept for support? Recommend 30 days for a non-sensitive draft and no transcript retention by default.
-4. Which locales/languages are required for the first voice release? Text must support the product's full launch locale set regardless.
-5. Should advanced `Customize` include custom fields at launch or defer them to the module after launch? Recommend defer until each owner has a safe preview, validation, and rollback contract.
+These defaults make the plan implementable. Product may amend them before implementation starts.
+
+1. Create one useful starter record for every selected module only when it is safe, reversible, and idempotent. Accounting, Payroll, HR compliance, Sign, and other regulated or consequential configuration starts with a checklist and no fabricated legal data.
+2. Keep plan-locked modules visible but unselected. Selecting one opens an explicit upgrade path. The module is never activated, previewed as active, or stored as a dormant entitlement without a successful commercial decision.
+3. Retain non-sensitive unactivated drafts for 30 days after the last save. Do not persist raw audio or voice transcripts by default. Confirmed structured answers follow the draft's retention policy.
+4. Launch voice in English first while accepting common regional accents. The architecture must support locale expansion without changing question keys or saved-answer contracts. Text remains available for every supported product locale.
+5. Defer custom-field creation to post-launch module setup until each module has safe preview, validation, idempotency, and rollback behavior.
+6. Choose the primary module from explicit entry context or customer choice. Never infer it from array order. Build-led entry selects Build by default but allows deselection.
+7. Universal surfaces such as Home, Chat, and Knowledge are described as included platform capabilities. They are not shown as paid customer selections.
+
+The implementation work packages and per-module launch behavior are specified in [Implementation plan and acceptance map](./03-fast-onboarding-implementation-plan.md).
 

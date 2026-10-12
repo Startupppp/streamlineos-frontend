@@ -79,3 +79,80 @@ Verified directly against the files and the database. Items marked *(other lane)
 | 15 | **Partly not code-closeable** | value themes **72, 74 and 76** require customer and competitor evidence; no implementation can close them |
 
 Migrations 1996, 1997 and 1998 are applied to production; ledger head `1803110800065`.
+
+## Third-pass current-code recheck — 2026-10-12
+
+This pass re-read the current implementation after the follow-up changes. It does not accept the resolution table above as proof. The following implementation work is still open.
+
+### P0
+
+1. **Enforce product reach for every direct Feedbucket widget mutation.** Widget list and detail reads are product-reach aware, and submission detail/update/delete now pass the actor. Widget update, delete, and key rotation still call service methods without the actor. The service consequently loads the existing widget without checking its product, and update checks only a newly supplied `managedProductId`. A restricted actor with the broad Feedbucket mutation permission can update, delete, or rotate the key of an inaccessible product widget by ID. Pass `CurrentUserContext` through all three methods, authorize the existing widget before mutation, authorize any new product before reassignment, and add negative tests for update-without-product-change, delete, rotate, and reassignment. Evidence: `backend/src/modules/feedbucket/feedbucket.controller.ts:147,158,172`; `backend/src/modules/feedbucket/feedbucket-widgets.service.ts:176-188,191-240`.
+
+### P1
+
+2. **Replace the hand-written Product Settings cursor state with cursor history.** Feedback Channels, Linked Projects, and Members increment `pageNumber` on Next but Previous always sets `cursor` to `null` and page 1. From page 3, Previous therefore jumps to page 1. Use the shared cursor pager or keep a cursor stack; reset it when the product/filter changes; test page 1 → 2 → 3 → 2 → 1. Evidence: `frontend/features/build/managed-products/product-settings-feedback-channels-section.tsx:21-42`; `product-settings-projects-section.tsx:32-60`; `product-settings-members-section.tsx:41-91`.
+
+3. **Render Members query failures and retry.** `ProductSettingsMembersSection` reads only `data` and `isLoading`. A failed request falls through to an empty `members` array and renders “No members yet,” which falsely reports a valid empty state. Consume `isError`, `error`, and `refetch`; render `ErrorState`; suppress pagination while failed; test error and retry. Evidence: `frontend/features/build/managed-products/product-settings-members-section.tsx:44-46,115-152`.
+
+4. **Expose the canonical project-release link and its evidence in the product UI.** The backend supports `projectReleaseId` and a detail response containing ticket, test-run, incident, and approval evidence. The frontend create/update input, form schema, form values, and submit payload omit `projectReleaseId`, and the release page has no detail query or evidence view. Users therefore cannot establish the canonical link from Manage Product or inspect the owning evidence that the backend can return. Add a reachable canonical-release selector limited to linked projects, persist/clear the relation, fetch release detail on drill-down, and show ticket membership, tests, incidents, and approval state. Evidence: `backend/src/modules/build/managed-products/managed-product-releases.service.ts`; `frontend/hooks/api/build/managed-product-releases.ts:18-46,85-172`; `frontend/features/build/managed-products/releases/product-release-form-schema.ts`; `product-release-form-sheet.tsx`.
+
+5. **Either implement versioned roadmap snapshots or narrow the publication contract to a live share link.** Token hashing, expiry, revocation, serialized version increment, and active-product checks are implemented. `resolveToken` returns only organization and product IDs, while the public service rebuilds the board from current live rows. `publicationVersion` is metadata and does not identify an immutable projection or cache entry. If publishing is intended to freeze an approved version, store and serve an allowlisted snapshot keyed by publication version and test preview/public equivalence. If live updates are intended, change the accepted contract and product copy so version does not imply a snapshot. Evidence: `backend/src/modules/build/managed-products/managed-product-share-token.service.ts:88-116`; `backend/src/modules/public/roadmap.service.ts:178-208`.
+
+### Completion evidence still required
+
+6. **Browser acceptance remains open.** Run all nine product routes at 375, 768, and 1280 pixels with populated, empty, filtered-empty, loading, error, denied, and not-found states. Include keyboard/focus restoration, three-page cursor navigation, dirty forms, failed mutation retention, public preview behavior, and revoked/expired tokens.
+
+7. **Persisted end-to-end product proof remains open.** Exercise the full product journey against a real database, including restricted membership, one project linked to two products, feedback through measured outcome, canonical release evidence, publication/revocation, audit rows, retries, conflicts, and cross-product/cross-tenant denial.
+
+8. **WOW claims 71–76 still need source-backed demonstrations.** Code paths exist, but code alone does not prove customer value, freshness, competitive superiority, or adoption. Record one persisted, authorized drill-down demonstration per reason; support customer/competitor claims with current external evidence.
+
+### Recheck verification
+
+- Backend: 4 focused suites, 74 tests passed using a workspace Jest cache.
+- Frontend: 4 focused suites, 61 tests passed using a workspace Jest cache.
+- The default `pnpm exec jest` path still failed before test startup with `[ERROR] unable to open database file`; direct Jest execution with `--cacheDirectory` was used successfully.
+- No authenticated browser, persisted database journey, or deployed-environment verification was performed in this pass.
+
+**Current decision: Manage Product is substantially implemented but is not complete.** Completing items 1–5 closes the remaining source-visible implementation gaps found in this pass. Items 6–8 are the remaining proof required before calling the entire product-owned Build scope complete.
+
+## Final consolidated current-code audit — supersedes all earlier lists
+
+This section was produced after re-reading the current dirty worktree. During the review, several items from earlier passes were implemented: Feedbucket widget mutations now receive the actor, Product Settings uses cursor history and explicit error states, and the product release form/detail UI now supports canonical project releases and evidence. Those items are closed and are not part of the remaining list below.
+
+### Remaining source-visible work
+
+1. **Define and implement one product-roadmap publication model.** Product tokens are hashed, expirable, revocable and versioned, but `publicationVersion` does not select a stored snapshot. Token resolution returns only organization/product IDs and the public endpoint rebuilds from live rows. Separately, the preview sheet reads the organization-level publication endpoint while the product publication panels use the product-token endpoint. Choose one product contract: either immutable versioned snapshots or an explicitly live board. Make preview, open-public-page, rotate, revoke, cache identity and copy consistent with that contract.
+
+2. **Finish read-error handling on secondary product surfaces.** Several reads consume only `data`/`isLoading` and convert failures into not-found, empty, or invisible content. Confirmed examples are Feedback detail, Opportunity Impact, Product Settings publication, Roadmap publication/preview, Roadmap initiative detail, duplicate search, linked-project Intake routing, Feedbucket collection, opportunity linking, and multiple filter/selector queries. Each needs an explicit error message and retry while retaining the current dialog/sheet state. A 403/404 must use the repo's non-leaking state rather than a false empty result.
+
+3. **Make every relation picker complete for large organizations/products.** Several selectors fetch a single bounded page (`limit: 50` or `100`) and expose no Next, infinite loading or server search. This can omit valid members, product goals, linked projects, releases, teams, owners and roadmap candidates. Convert the Add Member, Link Goal, Route to Intake, Accept Opportunity, Schedule Outcome Review, release-project/release picker, roadmap filters and project-owner filters to searchable cursor selectors or complete infinite queries.
+
+4. **Fix publication and focus timers.** Product publication copy feedback and roadmap pane focus restoration create `setTimeout` callbacks without cancellation. This violates FE-139 and can update state or focus an old element after unmount/navigation. Keep timer IDs in refs and clear them during cleanup, or use an existing safe clipboard/focus primitive.
+
+5. **Remove accessibility warnings from product dialogs and sheets.** The full frontend suite passes but emits Radix warnings for missing descriptions on Opportunity Pane and Compare Drawer. Add visible or screen-reader descriptions and assert the accessible name/description relationship. Also remove the unwrapped React updates in Product Feedback tests so interaction tests reliably represent browser behavior.
+
+6. **Make public-link recovery an explicit product experience.** Because only the hash is stored, the raw product URL is intentionally visible only at issue/rotation time. After reload, both publication panels can report “Published” but cannot open or copy the active link. Provide a deliberate recovery action such as “Rotate and copy new link,” expose issued/expiry/version metadata, and use one shared publication component so Settings and Roadmap cannot drift.
+
+7. **Complete release evidence navigation and selector failure states.** Canonical project-release linking and the evidence sheet now exist. Finish it by handling linked-project and project-release query errors, paginating/searching both selectors, and making ticket/test/incident/approval evidence navigable to authorized owning records with return context. Keep inaccessible records redacted rather than silently omitted.
+
+8. **Add regression coverage for the current security and paging repairs.** Add direct negative tests for inaccessible widget update/delete/key rotation/reassignment, three-page backward navigation for all three Product Settings lists, selector page boundaries, and read-error/retry states. Existing product-reach tests cover widget reads but do not prove every direct mutation path.
+
+### Required completion evidence
+
+9. **Run authenticated browser acceptance on every product route.** Cover directory, overview, feedback, insights/discovery, goals, projects, roadmap, releases and settings at 375/768/1280. Exercise loading, empty, filtered-empty, error, denied, not-found, offline, dirty forms, failed mutation retention, keyboard use, focus return, three-page navigation, deep links and public token expiry/revocation.
+
+10. **Run the full persisted product lifecycle against a real database.** Create a product and restricted membership; link one project to two products; capture/classify/deduplicate feedback; create/score/override/accept an opportunity; link goal/roadmap/project/release; attach tickets, QA, tests, approval, incidents and deployment evidence; deliver and record the outcome; publish/rotate/revoke. Assert rows, junctions, revisions, idempotency, audit records, conflicts and cross-product/cross-tenant denial.
+
+11. **Re-run the five server-listening authorization tests in an environment that permits loopback sockets.** The source-level backend suite completed 407 passing tests, but five RBAC HTTP tests could not bind/connect to `127.0.0.1` under the sandbox (`EACCES`). They are unverified, not failed product behavior.
+
+12. **Prove production readiness for the exact deployed revision.** Confirm migration head, frontend/backend/schema parity, query plans with large product datasets, concurrent membership/primary-link/release/publication writes, rollback, monitoring and revoked-token behavior. Earlier notes or local migrations do not prove the currently deployed state.
+
+13. **Demonstrate WOW reasons 71–76 with real source records.** Provide one authorized, persisted drill-down for feedback traceability, customer impact, explainable scoring, durable opportunity history, public roadmap and measured outcomes. Customer value, adoption and competitor-superiority claims require current customer/market evidence in addition to working code.
+
+### Current verification snapshot
+
+- Frontend managed-product scope: 65 suites / 722 tests passed. The run emitted accessibility and React `act` warnings described above.
+- Backend managed-product and product-boundary scope: 28 suites / 407 tests passed; one HTTP authorization suite contained 5 environment-blocked tests because loopback connections were denied.
+- No authenticated browser run, persisted end-to-end database run or deployed-environment verification was completed in this audit.
+
+**Final completion rule:** items 1–8 are the remaining implementation/test work visible in current source. Items 9–13 are mandatory evidence gates. When all thirteen are closed against the same revision, the product-owned Build scope can be called complete without another discovery audit.

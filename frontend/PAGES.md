@@ -262,6 +262,8 @@ PM Workspace is removed from Build entirely (not renamed, not consolidated into 
 - `/build/managed-products/[managedProductId]/insights` · **Build** · hooks: `→ features/build/managed-products` — product insights; gated `build:managed-products:view`
 - `/build/managed-products/[managedProductId]/projects` · **Build** · hooks: `→ features/build/project-list` — projects scoped to a managed product; `enforceRouteAccess`
 - `/build/managed-products/[managedProductId]/roadmap` · **Build** · hooks: `→ features/build/managed-products` — product roadmap; gated `build:roadmap:view`
+- `/build/managed-products/[managedProductId]/releases` · **Build** · hooks: `→ features/build/managed-products/releases` — product releases and canonical project-release evidence; `enforceRouteAccess`
+- `/build/managed-products/[managedProductId]/settings` · **Build** · hooks: `→ features/build/managed-products` — product settings tabs; gated `build:managed-products:update`
 
 ### Settings (Build module)
 - `/build/settings/integrations` · **Build** · hooks: `→ features/build/settings`
@@ -1040,9 +1042,11 @@ PM Workspace is removed from Build entirely (not renamed, not consolidated into 
 - `/help/[orgId]/[articleSlug]` · **Support (public KB)** · hooks: `→ features/support/kb`
 - `/forms/[formToken]` · **Build/HR (public forms)** · hooks: `→ features/forms`
 - `/intake/[projectId]` · **Build (public intake)** · hooks: `→ features/build/intake`
+- `/intake/t/[intakeToken]` · **Build (public intake, opaque token)** · hooks: `→ features/build/intake`
 - `/board/[shareToken]` · **Build (public board share)** · hooks: `→ features/build/board`
 - `/wiki/[shareToken]` · **Knowledge (public wiki share)** · hooks: `→ features/wiki`
 - `/roadmap/[orgId]` · **Build (public roadmap)** · hooks: `→ features/build/roadmap`
+- `/roadmap/by-token` · **Build (public product roadmap, share token)** · hooks: `→ features/build/public`
 - `/live/[sessionCode]` · **Surveys (live session)** · hooks: `→ features/surveys/live`
 - `/live-chat/[orgId]` · **Support (live chat widget)** · hooks: `→ features/support/chat`
 - `/vendor-portal/[vendorPortalToken]` · **Inventory/Accounting** · hooks: `→ features/vendor-portal`

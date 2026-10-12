@@ -34,7 +34,8 @@ every deep link. There is no workspace settings page.
 | `/build/managed-products/{managedProductId}/goals` · KEEP | Goal tree/list; progress/health; key results; contribution links; check-in freshness | Owner, status, health, parent, timebox, linked project/roadmap item; tree/list/table; cursor | Goals owner filtered by product; create/link/check-in overlays; close/archive confirmation; no parallel Build goal storage |
 | `/build/managed-products/{managedProductId}/feedback` · KEEP | Feedback queue/table; source/customer; theme/sentiment evidence; status/owner; linked roadmap/issue; preview panel | Search; source, customer, theme, sentiment, status, owner, date, linked/unlinked, duplicate; list/table; cursor | Feedback endpoint requires product filter and grant; merge dialog; link/create-ticket sheet; archive/delete according source retention; row route includes owning project |
 | `/build/managed-products/{managedProductId}/insights` · KEEP | KPI cards; trend charts with text summaries; themes; customer/source evidence; freshness and confidence | Date, source, segment, project, theme; chart + evidence table; evidence cursor | Server aggregates bounded and source-linked; AI inference labelled and human-verifiable; no cache across grants; export async |
-| `/build/managed-products/{managedProductId}/settings` · ADD | General/lifecycle, members/access, project links, roadmap defaults, feedback channels, client publication, archive | No general views; all relation selectors paginated | Dirty-state form; move/link/archive impact dialogs; last-owner and client visibility checks transactional; settings versioned |
+| `/build/managed-products/{managedProductId}/releases` · KEEP | Release timeline; upcoming, shipped and archived sections; owner, QA state and deployment evidence; canonical project-release link; evidence detail for tickets, test runs, incidents and approval | Status; timeline/list; cursor | Releases filtered by managed product; revision-conflict guarded create/edit sheet; canonical project-release link authorized on both records; archive/restore confirmation; evidence re-authorized per actor and redacted without a false zero count |
+| `/build/managed-products/{managedProductId}/settings` · KEEP | General/lifecycle, members/access, project links, roadmap defaults, feedback channels, client publication, archive | No general views; all relation selectors paginated | Dirty-state form; move/link/archive impact dialogs; last-owner and client visibility checks transactional; settings versioned |
 
 ## Internal Portal Preview
 
@@ -61,7 +62,9 @@ the existence/count of hidden records.
 |---|---|---|---|
 | `/forms/{formToken}` · KEEP | Branded published form; accessible field renderer; progress for multi-section form; success/closed/expired states | No internal filters/views; conditional fields deterministic; options bounded/searchable | Opaque revocable token; publish-version schema; rate limit/bot/file controls; idempotent submit; no tenant metadata leakage; submit confirmation/reference |
 | `/intake/{projectId}` · CONSOLIDATE into published Forms | Transitional minimal intake form with title/description and safe success state | None | Replace guessable project-ID exposure with opaque published form token; migrate requests/history before route deletion |
-| `/board/{shareToken}` · KEEP deny-by-default sharing | Read-only board identity; visible columns/cards/fields; freshness; revoke/expired state | Allowlisted public filter only; no saved views; per-column bounded paging | Opaque hashed token, expiry/revocation, field projection, rate limit, no mutation; public cache keyed by share version and purged immediately |
+| `/intake/t/{intakeToken}` · KEEP opaque intake address | Token-addressed intake form; success, closed and expired states | None | Opaque per-project intake token resolved server-side; token never returned to an unauthorized reader; publication gate on every submission; rate limit; generic refusal for unknown, unpublished and deleted alike |
+| `/roadmap/by-token` · KEEP product share identity | Branded public product roadmap addressed by share token; approved outcomes and releases | Approved status/date filters; timeline/list; bounded date window | Hashed `managed_product_share_tokens` row with expiry, rotation and revocation checked in the same predicate on every request; archived or deleted product 404s; `noindex` |
+| `/board/{shareToken}` · KEEP deny-by-default sharing | Board identity at the link's own access level; visible columns/cards/fields; freshness; revoke/expired state | Allowlisted public filter only; no saved views; per-column bounded paging | Opaque hashed token, expiry/revocation, field projection, rate limit; writes only on an editor link, with token, visibility, access level and expiry re-asserted inside the UPDATE; public cache keyed by share version and purged immediately. See the decision below |
 | `/roadmap/{orgId}` · REPLACE raw org selector with share identity | Branded public roadmap, reflecting the roadmap as it changes; approved outcomes/releases; timeline/list | Approved status/date/product filters; timeline/list; bounded date window | Opaque share/grant or deliberately public slug; no raw organization ID as authority; hashed token with expiry and rotation; revocation takes effect on the next request |
 | `/wiki/{shareToken}` · KB-owned integration | Read-only shared page/tree; accessible document; freshness/owner contact where approved | Page tree/search only within share grant; bounded tree/content | KB share token and ACL authoritative; Build only links; revoke, expiry, CSP, sanitization, and attachment projection |
 
@@ -94,6 +97,38 @@ hash, supports expiry and rotation, is revocable, serialises its version
 increment under a parent-row lock, and refuses an archived or deleted product.
 `publicationVersion` is a link-rotation counter and is not a projection
 identity — it is deliberately not rendered anywhere.
+
+### Decision 2026-10-12 — two roadmap share addresses, one authority rule
+
+Two addresses serve a public roadmap, owned by two services:
+
+| Address | Owner | Token |
+|---|---|---|
+| `/roadmap/{orgId}` | `public/roadmap.service.ts` via `build/core/roadmap/roadmap-publication.service.ts` | `organizations.roadmap_public_token`, plaintext, no expiry or revocation column |
+| `/roadmap/by-token?shareToken=` | `build/managed-products/managed-product-share-token.service.ts` | `managed_product_share_tokens.token_hash`, hashed, with expiry, rotation and revocation |
+
+Both stay. They address different things — an organization board and one product's
+board — and `01a`'s proposed `/roadmap/{shareToken}` path segment was never built.
+The binding rule for both: **a raw organization or product ID is never publication
+authority.** The organization address resolved an unpublished board whenever the
+handle happened to equal `organizations.id`, which also defeated unpublishing,
+because clearing the token left the ID address alive. Addressing by ID is only
+honoured where the organization has a current publication.
+
+### Decision 2026-10-12 — the shared board link is read-only or editable by issue, not by route
+
+The `/board/{shareToken}` row previously said "Read-only board identity … no
+mutation", but the surface deliberately supports an editable share, and the page
+PATCHes the scene on a debounce. The row above is narrowed to match: the **link**
+carries its own access level, chosen when it is issued. A viewer link refuses writes;
+an editor link accepts them under the same hashed-token, expiry and revocation
+predicate as the read. Revocation and expiry are re-asserted inside the UPDATE, not
+only before it, so a link revoked between the read and the write writes nothing.
+
+The stored column value is `public_access = 'editor'`; `"edit"` is only the response
+projection the browser sees. Do not treat `"edit"` as a column value.
+**Reverse this row if public editing should be withdrawn as a product capability**;
+nothing else in this file depends on the choice.
 
 ## Public and Portal Safety
 
