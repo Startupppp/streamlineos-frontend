@@ -9,6 +9,7 @@ import { useUpdateTicket } from "@/hooks/api/build/tickets";
 import { Gauge } from "lucide-react";
 import { InlineFieldWrapper } from "./card-field-wrapper";
 import { parseTicketPointsInput } from "../shared/ticket-points";
+import { MAX_TICKET_POINTS } from "@/lib/validation/projects";
 
 interface InlineEstimateProps {
   ticketId: number;
@@ -41,7 +42,7 @@ export const InlineEstimate = memo(function InlineEstimate({
   function handleSubmit() {
     const next = parseTicketPointsInput(value);
     if (next === undefined) {
-      toast.error("Story points must be a non-negative integer");
+      toast.error(`Story points must be a whole number between 0 and ${MAX_TICKET_POINTS}`);
       return;
     }
     const prev = currentPoints ?? null;

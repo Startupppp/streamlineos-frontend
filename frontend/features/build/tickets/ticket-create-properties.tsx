@@ -45,6 +45,7 @@ interface TicketCreatePropertiesProps {
   members: ProjectMemberRecord[];
   labels: TicketLabel[];
   cycles: Cycle[];
+  onPointsError?: (error: string | null) => void;
 }
 
 export const TicketCreateProperties = memo(function TicketCreateProperties({
@@ -54,6 +55,7 @@ export const TicketCreateProperties = memo(function TicketCreateProperties({
   members,
   labels,
   cycles,
+  onPointsError,
 }: TicketCreatePropertiesProps) {
   const {
     statusOpen,
@@ -75,7 +77,7 @@ export const TicketCreateProperties = memo(function TicketCreateProperties({
     makePriorityHandler,
     makeAssigneeHandler,
     handleEstimateChange,
-  } = useTicketCreateProperties({ value, onChange, projectStatuses, members });
+  } = useTicketCreateProperties({ value, onChange, projectStatuses, members, onPointsError });
 
   return (
     <div className="flex w-full flex-wrap items-center gap-1.5">

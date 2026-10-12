@@ -59,10 +59,12 @@ export function useCreateTicketDialogState({
 
   const [showLinksEditor, setShowLinksEditor] = useState(false);
   const [descriptionEditorKey, setDescriptionEditorKey] = useState(0);
+  const [pointsError, setPointsError] = useState<string | null>(null);
 
   const handleFormReset = useCallback(() => {
     setDescriptionEditorKey((k) => k + 1);
     setShowLinksEditor(false);
+    setPointsError(null);
   }, []);
 
   const {
@@ -245,6 +247,10 @@ export function useCreateTicketDialogState({
     setSelectedProjectId(Number.isFinite(parsed) ? parsed : null);
   }, [isPending, isUploading, setSelectedProjectId]);
 
+  const handlePointsErrorChange = useCallback((error: string | null) => {
+    setPointsError(error);
+  }, []);
+
   const handleShowLinksEditor = useCallback(() => setShowLinksEditor(true), []);
 
   const handleCreateMoreChange = useCallback(
@@ -265,7 +271,7 @@ export function useCreateTicketDialogState({
     void form.handleSubmit(handleSubmit)();
   }, [form, handleSubmit]);
 
-  const canSubmit = effectiveProjectId != null;
+  const canSubmit = effectiveProjectId != null && pointsError === null;
   const projectSelectValue =
     effectiveProjectId != null ? String(effectiveProjectId) : undefined;
   const projectTriggerLabel =
@@ -310,6 +316,7 @@ export function useCreateTicketDialogState({
     handleDiscardConfirm,
     handleDiscardCancel,
     handleProjectChange,
+    handlePointsErrorChange,
     handleShowLinksEditor,
     handleCreateMoreChange,
     handleFileChange,

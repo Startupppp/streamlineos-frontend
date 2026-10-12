@@ -88,6 +88,7 @@ function CreateTicketDialogContent({
     handleDiscardConfirm,
     handleDiscardCancel,
     handleProjectChange,
+    handlePointsErrorChange,
     handleShowLinksEditor,
     handleCreateMoreChange,
     handleFileChange,
@@ -228,6 +229,7 @@ function CreateTicketDialogContent({
                       key={String(descriptionEditorKey)}
                       value={properties}
                       onChange={handlePropertiesChange}
+                      onPointsError={handlePointsErrorChange}
                       projectStatuses={projectStatuses}
                       members={members}
                       labels={labels}

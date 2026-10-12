@@ -13,6 +13,7 @@ import { useAddRelatedLink } from "@/hooks/api/build/ticket-related-links";
 import { useUploadProjectFile, MAX_PROJECT_FILE_BYTES } from "@/hooks/api/build/project-files";
 import { useSourceOverride } from "@/hooks/common/use-source-override";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
+import { TICKET_TITLE_MAX } from "@/lib/validation/projects";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useQueryClient } from "@tanstack/react-query";
@@ -206,10 +207,10 @@ export function useCreateTicketForm({
         return;
       }
       if (createTicketMutation.isPending) return;
-      if (values.title.length > 200) {
+      if (values.title.length > TICKET_TITLE_MAX) {
         form.setError("title", {
           type: "max",
-          message: "Title must be 200 characters or fewer",
+          message: `Title must be ${TICKET_TITLE_MAX} characters or fewer`,
         });
         return;
       }

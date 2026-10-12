@@ -16,6 +16,7 @@ interface UseTicketCreatePropertiesParams {
   onChange: (patch: Partial<CreateTicketPropertiesValue>) => void;
   projectStatuses: ProjectStatusRecord[];
   members: ProjectMemberRecord[];
+  onPointsError?: (error: string | null) => void;
 }
 
 export function useTicketCreateProperties({
@@ -23,6 +24,7 @@ export function useTicketCreateProperties({
   onChange,
   projectStatuses,
   members,
+  onPointsError,
 }: UseTicketCreatePropertiesParams) {
   const [statusOpen, setStatusOpen] = useState(false);
   const [priorityOpen, setPriorityOpen] = useState(false);
@@ -80,10 +82,14 @@ export function useTicketCreateProperties({
     if (parsed !== undefined) {
       onChange({ points: parsed });
       setPointsError(null);
+      onPointsError?.(null);
     } else if (next.trim() !== "") {
-      setPointsError(`Enter a whole number between 0 and ${MAX_TICKET_POINTS}`);
+      const msg = `Enter a whole number between 0 and ${MAX_TICKET_POINTS}`;
+      setPointsError(msg);
+      onPointsError?.(msg);
     } else {
       setPointsError(null);
+      onPointsError?.(null);
     }
   }
 

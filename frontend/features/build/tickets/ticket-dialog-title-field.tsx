@@ -13,6 +13,7 @@ import {
 import { AiFieldTrigger, AiInlinePreview, type AiInlineSession } from "@/components/ai";
 import type { TicketSearchResult } from "@/types/projects";
 import type { CreateTicketFormValues } from "./ticket-create-model";
+import { TICKET_TITLE_MAX } from "@/lib/validation/projects";
 
 interface AiTriggerProps {
   label: string;
@@ -56,10 +57,10 @@ export function TicketDialogTitleField({
                   onChange={(event) => {
                     const value = event.target.value;
                     field.onChange(value);
-                    if (value.length > 200) {
+                    if (value.length > TICKET_TITLE_MAX) {
                       setError("title", {
                         type: "max",
-                        message: "Title must be 200 characters or fewer",
+                        message: `Title must be ${TICKET_TITLE_MAX} characters or fewer`,
                       });
                     } else if (getFieldState("title").error?.type === "max") {
                       clearErrors("title");
