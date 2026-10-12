@@ -26,7 +26,7 @@ function defaultQueryResult() {
     data: { pages: [{ data: PAGE_1, pagination: makePaginationDefaults(false) }] },
     isLoading: false,
     isError: false,
-    error: null,
+    error: null as Error | null,
     refetch: mockRefetch,
     fetchNextPage: mockFetchNextPage,
     hasNextPage: false,

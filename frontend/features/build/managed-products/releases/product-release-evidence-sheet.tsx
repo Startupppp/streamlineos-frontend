@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
 import {
   Sheet,
   SheetContent,
@@ -8,69 +9,17 @@ import {
   SheetTitle,
   SheetDescription,
 } from "@/components/ui/sheet";
-import { Badge } from "@/components/ui/badge";
 import { LoadingState } from "@/components/shared/loading-state";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
 import { useManagedProductRelease } from "@/hooks/api/build/managed-product-releases";
-import type { ManagedProductRelationsGetReleaseResponse } from "@/contracts/build-contracts.generated";
-
-type Evidence = NonNullable<ManagedProductRelationsGetReleaseResponse["evidence"]>;
-
-interface EvidencePanelProps {
-  evidence: Evidence;
-}
-
-function EvidenceTicketList({ evidence }: EvidencePanelProps) {
-  const tickets = useMemo(() => evidence.tickets, [evidence.tickets]);
-  return (
-    <section aria-labelledby="evidence-tickets-heading" className="flex flex-col gap-2">
-      <h3 id="evidence-tickets-heading" className="text-sm font-semibold text-foreground">
-        Tickets ({evidence.ticketCount})
-      </h3>
-      {tickets.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No tickets linked.</p>
-      ) : (
-        <ul className="flex flex-col gap-1" aria-label="Linked tickets">
-          {tickets.map((t) => (
-            <li key={t.ticketId} className="flex items-center gap-2 text-sm">
-              <span className="font-mono tabular-nums text-muted-foreground shrink-0">#{t.ticketNumber}</span>
-              <span className="truncate text-foreground">{t.title}</span>
-              <Badge variant="outline" className="ml-auto shrink-0 text-micro">
-                {t.status}
-              </Badge>
-            </li>
-          ))}
-        </ul>
-      )}
-    </section>
-  );
-}
-
-function EvidenceTestRunList({ evidence }: EvidencePanelProps) {
-  const testRuns = useMemo(() => evidence.testRuns, [evidence.testRuns]);
-  return (
-    <section aria-labelledby="evidence-test-runs-heading" className="flex flex-col gap-2">
-      <h3 id="evidence-test-runs-heading" className="text-sm font-semibold text-foreground">
-        Test runs ({evidence.testRunCount})
-      </h3>
-      {testRuns.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No test runs recorded.</p>
-      ) : (
-        <ul className="flex flex-col gap-1" aria-label="Test runs">
-          {testRuns.map((tr) => (
-            <li key={tr.id} className="flex items-center gap-2 text-sm">
-              <span className="truncate text-foreground">{tr.name}</span>
-              <Badge variant="outline" className="ml-auto shrink-0 text-micro">
-                {tr.status}
-              </Badge>
-            </li>
-          ))}
-        </ul>
-      )}
-    </section>
-  );
-}
+import { buildProductReturnParam } from "@/features/build/shared/product-return-href";
+import {
+  EvidenceApprovalState,
+  EvidenceIncidentList,
+  EvidenceTestRunList,
+  EvidenceTicketList,
+} from "./product-release-evidence-sections";
 
 interface ProductReleaseEvidenceSheetProps {
   managedProductId: number;
@@ -86,6 +35,8 @@ export function ProductReleaseEvidenceSheet({
   onOpenChange,
 }: ProductReleaseEvidenceSheetProps) {
   const detail = useManagedProductRelease(managedProductId, releaseId, { enabled: open });
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   const resolution = usePageState({
     permission: "build:managed-products:view",
@@ -93,6 +44,15 @@ export function ProductReleaseEvidenceSheet({
     isError: detail.isError,
     error: detail.error,
   });
+
+  const owner = useMemo(
+    () => ({
+      projectId: detail.data?.projectRelease?.projectId ?? null,
+      projectKey: detail.data?.projectRelease?.projectKey ?? null,
+      returnParam: buildProductReturnParam(pathname, searchParams.toString()),
+    }),
+    [detail.data?.projectRelease, pathname, searchParams],
+  );
 
   function handleRetry() {
     void detail.refetch();
@@ -120,24 +80,16 @@ export function ProductReleaseEvidenceSheet({
               </div>
             ) : detail.data?.evidence ? (
               <div className="flex flex-col gap-6">
-                <EvidenceTicketList evidence={detail.data.evidence} />
-                <EvidenceTestRunList evidence={detail.data.evidence} />
-                <section aria-labelledby="evidence-incidents-heading" className="flex flex-col gap-2">
-                  <h3 id="evidence-incidents-heading" className="text-sm font-semibold text-foreground">
-                    Incidents
-                  </h3>
-                  <p className="text-sm text-foreground font-mono tabular-nums">
-                    {detail.data.evidence.incidentCount}
+                {detail.data.evidence.restricted ? (
+                  <p className="rounded-md border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+                    This release ships from a project you cannot access. The counts below
+                    are real; the records behind them are withheld.
                   </p>
-                </section>
-                <section aria-labelledby="evidence-approval-heading" className="flex flex-col gap-2">
-                  <h3 id="evidence-approval-heading" className="text-sm font-semibold text-foreground">
-                    Approval state
-                  </h3>
-                  <p className="text-sm text-foreground">
-                    {detail.data.evidence.approvalState ?? "Not set"}
-                  </p>
-                </section>
+                ) : null}
+                <EvidenceTicketList evidence={detail.data.evidence} owner={owner} />
+                <EvidenceTestRunList evidence={detail.data.evidence} owner={owner} />
+                <EvidenceIncidentList evidence={detail.data.evidence} owner={owner} />
+                <EvidenceApprovalState evidence={detail.data.evidence} owner={owner} />
               </div>
             ) : null}
           </PageState>

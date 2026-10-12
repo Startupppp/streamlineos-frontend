@@ -50,7 +50,17 @@ const DETAIL_WITH_EVIDENCE = buildReleaseDetail({
   name: "Q4 Release",
   version: "4.0.0",
   projectReleaseId: 99,
+  projectRelease: {
+    id: 99,
+    name: "Sprint 9",
+    version: "9.0.0",
+    projectId: 11,
+    projectName: "Billing Project",
+    projectKey: "BILL",
+  },
   evidence: {
+    restricted: false,
+    visibleTicketCount: 2,
     ticketCount: 2,
     tickets: [
       { ticketId: 1, ticketNumber: 42, title: "Fix login bug", status: "done" },
@@ -61,6 +71,9 @@ const DETAIL_WITH_EVIDENCE = buildReleaseDetail({
       { id: 101, name: "Smoke suite", status: "passed" },
     ],
     incidentCount: 3,
+    incidents: [
+      { id: 301, title: "Checkout latency spike", severity: "high", status: "resolved" },
+    ],
     approvalState: "approved",
   },
 });
@@ -111,8 +124,9 @@ describe("ProductReleaseEvidenceSheet", () => {
     expect(screen.getByText("Smoke suite")).toBeInTheDocument();
     expect(screen.getByText("passed")).toBeInTheDocument();
 
-    expect(screen.getByRole("heading", { name: "Incidents" })).toBeInTheDocument();
-    expect(screen.getByText("3")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Incidents (3)" })).toBeInTheDocument();
+    expect(screen.getByText("Checkout latency spike")).toBeInTheDocument();
+    expect(screen.getByText("2 more not shown here.")).toBeInTheDocument();
 
     expect(screen.getByRole("heading", { name: "Approval state" })).toBeInTheDocument();
     expect(screen.getByText("approved")).toBeInTheDocument();
@@ -131,6 +145,67 @@ describe("ProductReleaseEvidenceSheet", () => {
     expect(screen.getByText("No canonical release linked")).toBeInTheDocument();
     expect(screen.queryByRole("list", { name: "Linked tickets" })).not.toBeInTheDocument();
     expect(screen.queryByRole("list", { name: "Test runs" })).not.toBeInTheDocument();
+  });
+
+  it("links each evidence record to its owning project record and carries the return context back to this release", () => {
+    renderSheet();
+
+    const ret = encodeURIComponent("/build/managed-products/7/releases");
+    expect(screen.getByRole("link", { name: "Fix login bug" })).toHaveAttribute(
+      "href",
+      `/build/11/tickets/BILL-42?ret=${ret}`,
+    );
+    expect(screen.getByRole("link", { name: "Smoke suite" })).toHaveAttribute(
+      "href",
+      `/build/11/qa/runs/101?ret=${ret}`,
+    );
+    expect(screen.getByRole("link", { name: "Checkout latency spike" })).toHaveAttribute(
+      "href",
+      `/build/11/incidents/301?ret=${ret}`,
+    );
+    expect(screen.getByRole("link", { name: "approved" })).toHaveAttribute(
+      "href",
+      `/build/11/approvals?ret=${ret}`,
+    );
+  });
+
+  it("withholds evidence detail but keeps the real counts when the owning project is unreachable, so hidden evidence never reads as zero", () => {
+    mockUseManagedProductRelease.mockReturnValue({
+      data: {
+        ...DETAIL_WITH_EVIDENCE,
+        evidence: {
+          restricted: true,
+          ticketCount: 6,
+          visibleTicketCount: 0,
+          tickets: [],
+          testRunCount: 2,
+          testRuns: [],
+          incidentCount: 3,
+          incidents: [],
+          approvalState: null,
+        },
+      },
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: mockRefetch,
+    });
+    mockUsePageState.mockReturnValue({ kind: "ready" });
+    renderSheet();
+
+    expect(screen.getByRole("heading", { name: "Tickets (6)" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Incidents (3)" })).toBeInTheDocument();
+    expect(screen.queryByText("No tickets linked.")).not.toBeInTheDocument();
+    expect(screen.queryByText("No incidents recorded.")).not.toBeInTheDocument();
+    expect(screen.queryByText("Not set")).not.toBeInTheDocument();
+    expect(
+      screen.getByText("Hidden — you do not have access to the owning project."),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "6 records are linked. You do not have access to the owning project, so their detail is hidden.",
+      ),
+    ).toBeInTheDocument();
   });
 
   it("the detail view renders an error state with retry when the detail query fails", async () => {
