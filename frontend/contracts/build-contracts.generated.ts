@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const OPENAPI_HASH = "sha256:2fca2c297bbd5dfa6f4b17b2b8caf6723c9f758d092b02e9780164dcb7a40b8c" as const;
+export const OPENAPI_HASH = "sha256:502ac128e49c7c7ecd70d97dd32460be1e0efbcb914545751d1fe6b0eb6a2ed9" as const;
 
 export const agentTokensListResponseSchema = z.array(z.object({
   id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
@@ -1259,7 +1259,6 @@ export const discoveryCreateOpportunityBodySchema = z.strictObject({
   outcomeBaseline: z.string().optional(),
   outcomeTarget: z.string().optional(),
   goalId: z.number().int().gt(0).lte(9007199254740991).optional(),
-  initialEvidenceIds: z.array(z.number().int().gt(0).lte(9007199254740991)).optional(),
 });
 export type DiscoveryCreateOpportunityBody = z.input<typeof discoveryCreateOpportunityBodySchema>;
 
