@@ -149,3 +149,29 @@ export function useCompanionPlacement(scope: string, compact: boolean) {
 
   return { rootRef, position, minimized, toggleMinimized, onPointerDown, onPointerMove, onPointerUp, onPointerCancel, onKeyDown, consumeDragClick };
 }
+
+const LAUNCHER_OVERLAY_SELECTOR = [
+  '[role="dialog"][aria-modal="true"]',
+  '[role="alertdialog"]',
+  '[data-slot="dialog-content"]',
+  '[data-slot="sheet-content"]',
+].join(",");
+
+export function useOverlayOpen(): boolean {
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    function refresh() {
+      setOpen(document.querySelector(LAUNCHER_OVERLAY_SELECTOR) !== null);
+    }
+    const observer = new MutationObserver(refresh);
+    observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["role", "aria-modal", "data-slot", "data-state"] });
+    const timer = window.setTimeout(refresh, 0);
+    return () => {
+      observer.disconnect();
+      window.clearTimeout(timer);
+    };
+  }, []);
+
+  return open;
+}

@@ -18,7 +18,7 @@ import type { AskOsCompanionState } from "./ask-os-companion-state";
 import { useAskOs } from "./ask-os-context";
 import { CompanionCharacter, type CompanionActivity } from "./companion-character";
 import { CompanionPromptBubble } from "./companion-prompt-bubble";
-import { useCompanionPlacement } from "./use-companion-placement";
+import { useCompanionPlacement, useOverlayOpen } from "./use-companion-placement";
 import { COMPANION_VOICES, type CompanionVoiceSettings } from "./companion-voice-settings";
 
 const INTRO_KEY = "companion-intro-seen";
@@ -166,6 +166,7 @@ export function CompanionLauncher({
     rootRef, position, minimized, toggleMinimized,
     onPointerDown, onPointerMove, onPointerUp, onPointerCancel, onKeyDown, consumeDragClick,
   } = useCompanionPlacement(scope, compact);
+  const overlayOpen = useOverlayOpen();
   const wasOpenRef = useRef(open);
   useForegroundHeartbeat(preferences.activityConsent, scope);
 
@@ -264,7 +265,8 @@ export function CompanionLauncher({
       ref={rootRef}
       style={position ? { left: position.x, top: position.y, right: "auto", bottom: "auto" } : undefined}
       className={cn(
-        "pointer-events-auto fixed bottom-[calc(env(safe-area-inset-bottom,0px)+4.5rem)] z-50 flex w-auto md:bottom-2",
+        "fixed bottom-[calc(env(safe-area-inset-bottom,0px)+4.5rem)] z-40 flex w-auto md:bottom-2",
+        overlayOpen ? "pointer-events-none" : "pointer-events-auto",
         left ? "left-2" : "right-2",
       )}
     >

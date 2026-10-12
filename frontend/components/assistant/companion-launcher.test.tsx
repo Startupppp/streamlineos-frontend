@@ -493,3 +493,31 @@ describe("companion prompt bubble", () => {
     expect(post.mock.calls.filter(([url]) => String(url).endsWith("/claim"))).toHaveLength(1);
   });
 });
+
+describe("companion stacking and pointer-events", () => {
+  it("sits below overlay portals at z-40", async () => {
+    server();
+    renderLauncher();
+    const pet = await screen.findByRole("button", { name: "Open Pip, Ready" });
+    const root = pet.parentElement?.parentElement;
+    expect(root).toHaveClass("z-40");
+    expect(root).not.toHaveClass("z-50");
+  });
+
+  it("suppresses pointer events while a modal overlay is in the DOM", async () => {
+    server();
+    renderLauncher();
+    const pet = await screen.findByRole("button", { name: "Open Pip, Ready" });
+    const root = pet.parentElement?.parentElement;
+    expect(root).toHaveClass("pointer-events-auto");
+
+    const modal = document.createElement("div");
+    modal.setAttribute("role", "dialog");
+    modal.setAttribute("aria-modal", "true");
+    await act(async () => { document.body.appendChild(modal); });
+    await waitFor(() => expect(root).toHaveClass("pointer-events-none"));
+
+    await act(async () => { modal.remove(); });
+    await waitFor(() => expect(root).toHaveClass("pointer-events-auto"));
+  });
+});

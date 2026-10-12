@@ -268,7 +268,7 @@ export function useGetOrganizations(enabled = true) {
     queryKey: platformCoreQueryKeys.organization.all,
     queryFn: ({ signal }) =>
       apiClient.get("/organization", undefined, signal, organizationsContract),
-    staleTime: 60_000,
+    staleTime: 5 * 60_000,
     enabled: status === "authenticated" && enabled,
     placeholderData: keepPreviousData,
     refetchOnWindowFocus: false,

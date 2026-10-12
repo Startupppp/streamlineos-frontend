@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useGetOrganizations, useSwitchOrg } from "@/hooks/common/auth-hooks";
 import { useAccess } from "@/hooks/api/access";
 import { useNavigationLeave } from "@/components/shared/dirty-state-context";
@@ -121,7 +122,8 @@ function OrganizationSwitcher({
 
   const isSidebar = variant === "sidebar";
   const isLabelHidden = isSidebar && iconOnly;
-  const workspaceName = activeOrg?.name ?? "Organization";
+  const isOrgLoading = organizations === undefined;
+  const workspaceName = activeOrg?.name ?? "";
 
   const panelProps = {
     canLeave,
@@ -155,10 +157,14 @@ function OrganizationSwitcher({
         )}
       />
       {!isLabelHidden && (
-        <TruncatedText
-          text={workspaceName}
-          className="flex-1 text-sm font-medium text-sidebar-foreground"
-        />
+        isOrgLoading ? (
+          <Skeleton className="h-3.5 w-20 flex-1" />
+        ) : (
+          <TruncatedText
+            text={workspaceName}
+            className="flex-1 text-sm font-medium text-sidebar-foreground"
+          />
+        )
       )}
     </>
   );
@@ -168,7 +174,9 @@ function OrganizationSwitcher({
       type="button"
       onClick={triggerOnly ? handleTriggerClick : undefined}
       aria-label={
-        isLabelHidden ? `Switch organization — ${workspaceName}` : "Switch organization"
+        isLabelHidden
+          ? `Switch organization${workspaceName ? ` — ${workspaceName}` : ""}`
+          : "Switch organization"
       }
       className={cn(
         identityClassName,
