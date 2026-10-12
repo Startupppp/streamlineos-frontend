@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -22,12 +22,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Combobox } from "@/components/ui/combobox";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { ErrorState } from "@/components/shared/error-state";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useAddManagedProductMember } from "@/hooks/api/build/managed-product-members";
 import { isWriteConflict } from "@/lib/api-envelope";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useAddProductMemberCandidates } from "./add-product-member-members-query";
+import { useAddProductMemberCandidates } from "./use-infinite-selector";
 import { toast } from "sonner";
 
 const addMemberSchema = z.object({
@@ -71,20 +72,10 @@ export function AddProductMemberDialog({
   });
 
   const membershipId = form.watch("membershipId");
-  const pagesLoaded = data?.pages.length ?? 0;
-  const sentinelRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const el = sentinelRef.current;
-    if (!el || !hasNextPage) return;
-    const observer = new IntersectionObserver((entries) => {
-      if (entries[0]?.isIntersecting && !isFetchingNextPage) {
-        void fetchNextPage();
-      }
-    });
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage, pagesLoaded]);
+  const handleLoadMore = useCallback(() => {
+    if (hasNextPage && !isFetchingNextPage) void fetchNextPage();
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
   const memberOptions = useMemo(() => {
     const all = (data?.pages ?? []).flatMap((p) => p.data);
@@ -194,9 +185,12 @@ export function AddProductMemberDialog({
                 emptyText={isLoading ? "Loading…" : "No members found."}
                 disabled={addMember.isPending}
                 footer={
-                  hasNextPage ? (
-                    <div ref={sentinelRef} aria-hidden className="h-px" />
-                  ) : undefined
+                  <InfiniteScrollSentinel
+                    hasNextPage={hasNextPage}
+                    isFetchingNextPage={isFetchingNextPage}
+                    onLoadMore={handleLoadMore}
+                    label="Load more members"
+                  />
                 }
               />
             )}

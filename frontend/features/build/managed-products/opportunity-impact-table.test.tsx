@@ -83,4 +83,20 @@ describe("OpportunityImpactTable", () => {
 
     expect(container.firstChild).toBeNull();
   });
+
+  it("renders an error state with retry when the impact fetch fails so the user can recover without a page reload", () => {
+    const refetch = jest.fn();
+    useProductOpportunityImpact.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: true,
+      error: new Error("Network error"),
+      refetch,
+    });
+
+    render(<OpportunityImpactTable managedProductId={MANAGED_PRODUCT_ID} />);
+
+    expect(screen.queryByRole("table")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /try again/i })).toBeInTheDocument();
+  });
 });

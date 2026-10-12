@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { FeedbackPane } from "./feedback-pane";
 
 jest.mock("@/hooks/api/access", () => ({
@@ -8,6 +8,15 @@ jest.mock("@/hooks/api/access", () => ({
 jest.mock("@/hooks/api/feedbucket/use-feedbucket-submissions", () => ({
   useFeedbucketSubmission: jest.fn(),
   useUnmarkDuplicate: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+}));
+
+jest.mock("@/components/shared/error-state", () => ({
+  ErrorState: ({ onRetry }: { onRetry?: () => void }) => (
+    <div role="alert" data-testid="error-state">
+      Error loading data.
+      {onRetry ? <button type="button" onClick={onRetry}>Try again</button> : null}
+    </div>
+  ),
 }));
 
 jest.mock("./use-submission-opportunities", () => ({
@@ -190,5 +199,56 @@ describe("FeedbackPane", () => {
       <FeedbackPane submissionId={41} managedProductId={7} open onOpenChange={jest.fn()} />,
     );
     expect(screen.queryByRole("button", { name: "Mark duplicate" })).not.toBeInTheDocument();
+  });
+});
+
+describe("FeedbackPane — error and retry states (MP-02)", () => {
+  it("renders an error state with retry when the submission fetch fails, so a failed read is never shown as not-found", () => {
+    const mockRefetch = jest.fn();
+    useFeedbucketSubmission.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: true,
+      error: new Error("Network error"),
+      refetch: mockRefetch,
+    });
+    render(
+      <FeedbackPane submissionId={41} managedProductId={7} open onOpenChange={jest.fn()} />,
+    );
+    expect(screen.getByTestId("error-state")).toBeInTheDocument();
+    expect(screen.queryByText("Submission not found.")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+    expect(mockRefetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps the sheet open when retrying after a failed submission fetch", () => {
+    useFeedbucketSubmission.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: true,
+      error: new Error("Network error"),
+      refetch: jest.fn(),
+    });
+    const onOpenChange = jest.fn();
+    render(
+      <FeedbackPane submissionId={41} managedProductId={7} open onOpenChange={onOpenChange} />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+    expect(onOpenChange).not.toHaveBeenCalled();
+  });
+
+  it("shows not-found text when fetch succeeds with no data, not the error state", () => {
+    useFeedbucketSubmission.mockReturnValue({
+      data: null,
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+    render(
+      <FeedbackPane submissionId={41} managedProductId={7} open onOpenChange={jest.fn()} />,
+    );
+    expect(screen.queryByTestId("error-state")).not.toBeInTheDocument();
+    expect(screen.getByText("Submission not found.")).toBeInTheDocument();
   });
 });

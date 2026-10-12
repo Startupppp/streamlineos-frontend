@@ -56,4 +56,22 @@ describe("CompareDrawer — max items limit (BSN-COMPARE-LIMIT)", () => {
     }
     expect(screen.queryByTestId("compare-row-6")).not.toBeInTheDocument();
   });
+
+  it("renders an accessible description so screen readers announce the drawer purpose", () => {
+    render(
+      <CompareDrawer
+        open
+        onOpenChange={noop}
+        selected={new Set([1])}
+        onDeselect={noop}
+        compareData={undefined}
+        isLoading={false}
+        allItems={MOCK_ITEMS}
+      />,
+    );
+
+    expect(
+      screen.getByText(/side-by-side rice scores/i),
+    ).toBeInTheDocument();
+  });
 });

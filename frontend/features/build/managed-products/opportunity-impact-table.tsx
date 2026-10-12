@@ -1,7 +1,9 @@
 "use client";
 
+import { useCallback } from "react";
 import Link from "next/link";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ErrorState } from "@/components/shared/error-state";
 import { useProductOpportunityImpact } from "@/hooks/api/feedbucket/use-feedbucket-product-stats";
 import type { FeedbucketOpportunityImpactRow } from "@/hooks/api/feedbucket/feedbucket-schema";
 
@@ -71,7 +73,8 @@ function ImpactRow({
 export function OpportunityImpactTable({
   managedProductId,
 }: OpportunityImpactTableProps) {
-  const { data, isLoading } = useProductOpportunityImpact(managedProductId);
+  const { data, isLoading, isError, error, refetch } = useProductOpportunityImpact(managedProductId);
+  const handleRetry = useCallback(() => void refetch(), [refetch]);
 
   if (isLoading) {
     return (
@@ -86,6 +89,7 @@ export function OpportunityImpactTable({
     );
   }
 
+  if (isError) return <ErrorState compact onRetry={handleRetry} error={error} />;
   if (!data || data.rows.length === 0) return null;
 
   const showTier = data.rows.some(

@@ -37,8 +37,36 @@ jest.mock("@/components/ui/select", () => ({
   },
 }));
 
-jest.mock("@/hooks/api/build/product-discovery", () => ({
-  useOpportunities: jest.fn(),
+jest.mock("@/components/ui/combobox", () => ({
+  Combobox: function Combobox({
+    options,
+    onChange,
+    "aria-label": ariaLabel,
+  }: {
+    options: Array<{ value: string; label: string }>;
+    onChange: (v: string) => void;
+    "aria-label"?: string;
+  }) {
+    return (
+      <div role="combobox" aria-label={ariaLabel}>
+        {options.map((o) => (
+          <button
+            key={o.value}
+            type="button"
+            role="option"
+            aria-selected={false}
+            onClick={() => onChange(o.value)}
+          >
+            {o.label}
+          </button>
+        ))}
+      </div>
+    );
+  },
+}));
+
+jest.mock("./use-infinite-selector", () => ({
+  useInfiniteSelectorOpportunities: jest.fn(),
 }));
 
 const mockUseGoals = jest.fn();
@@ -47,16 +75,37 @@ jest.mock("@/hooks/api/goals", () => ({
 }));
 
 import { OutcomeReviewScheduleSheet } from "./outcome-review-schedule-sheet";
-import { useOpportunities } from "@/hooks/api/build/product-discovery";
+import { useInfiniteSelectorOpportunities } from "./use-infinite-selector";
 
-const mockUseOpportunities = useOpportunities as jest.MockedFunction<typeof useOpportunities>;
+const mockUseInfiniteOps = useInfiniteSelectorOpportunities as jest.MockedFunction<
+  typeof useInfiniteSelectorOpportunities
+>;
 
-beforeEach(() => mockUseGoals.mockReturnValue({ data: [] }));
+const EMPTY_INFINITE = {
+  data: undefined,
+  isError: false,
+  error: null,
+  refetch: jest.fn(),
+  fetchNextPage: jest.fn(),
+  hasNextPage: false,
+  isFetchingNextPage: false,
+} as unknown as ReturnType<typeof useInfiniteSelectorOpportunities>;
+
+beforeEach(() => {
+  mockUseGoals.mockReturnValue({ data: [], isError: false, error: null, refetch: jest.fn() });
+  mockUseInfiniteOps.mockReturnValue(EMPTY_INFINITE);
+});
 
 function withOpportunities(rows: Array<{ id: number; title: string }>) {
-  mockUseOpportunities.mockReturnValue({
-    data: { data: rows, pagination: { limit: 25, hasMore: false, nextCursor: null } },
-  } as unknown as ReturnType<typeof useOpportunities>);
+  mockUseInfiniteOps.mockReturnValue({
+    data: { pages: [{ data: rows, pagination: { hasMore: false, nextCursor: null } }] },
+    isError: false,
+    error: null,
+    refetch: jest.fn(),
+    fetchNextPage: jest.fn(),
+    hasNextPage: false,
+    isFetchingNextPage: false,
+  } as unknown as ReturnType<typeof useInfiniteSelectorOpportunities>);
 }
 
 describe("OutcomeReviewScheduleSheet — opportunity link", () => {
@@ -79,7 +128,7 @@ describe("OutcomeReviewScheduleSheet — opportunity link", () => {
       />,
     );
 
-    expect(mockUseOpportunities).toHaveBeenCalledWith(39, undefined, { enabled: true });
+    expect(mockUseInfiniteOps).toHaveBeenCalledWith(39, expect.any(String), true);
     await user.type(screen.getByLabelText("Title (required)"), "Export adoption review");
     await user.click(screen.getByRole("option", { name: "Export discoverability" }));
     await user.click(screen.getByRole("button", { name: "Schedule" }));
@@ -111,12 +160,41 @@ describe("OutcomeReviewScheduleSheet — opportunity link", () => {
     expect(screen.queryByTestId("opportunity-select")).not.toBeInTheDocument();
     expect(screen.queryByTestId("goal-select")).not.toBeInTheDocument();
   });
+
+  it("shows an error state when opportunities fail to load and keeps the sheet open for retry", () => {
+    mockUseInfiniteOps.mockReturnValue({
+      data: undefined,
+      isError: true,
+      error: new Error("Network error"),
+      refetch: jest.fn(),
+      fetchNextPage: jest.fn(),
+      hasNextPage: false,
+      isFetchingNextPage: false,
+    } as unknown as ReturnType<typeof useInfiniteSelectorOpportunities>);
+
+    render(
+      <OutcomeReviewScheduleSheet
+        managedProductId={39}
+        open
+        onOpenChange={jest.fn()}
+        onSubmit={jest.fn()}
+        isSubmitting={false}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "Schedule" })).toBeInTheDocument();
+  });
 });
 
 describe("OutcomeReviewScheduleSheet — goal link", () => {
   it("links the review to one of the product's goals so the goal lists it as an outcome", async () => {
     withOpportunities([]);
-    mockUseGoals.mockReturnValue({ data: [{ id: 38, title: "QA BV Goal" }] });
+    mockUseGoals.mockReturnValue({
+      data: [{ id: 38, title: "QA BV Goal" }],
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+    });
     const onSubmit = jest.fn();
     const user = userEvent.setup();
 
@@ -130,7 +208,10 @@ describe("OutcomeReviewScheduleSheet — goal link", () => {
       />,
     );
 
-    expect(mockUseGoals).toHaveBeenCalledWith({ managedProductId: 39, limit: 100 }, { enabled: true });
+    expect(mockUseGoals).toHaveBeenCalledWith(
+      { managedProductId: 39, search: undefined },
+      { enabled: true },
+    );
     await user.type(screen.getByLabelText("Title (required)"), "Goal review");
     await user.click(screen.getByRole("option", { name: "QA BV Goal" }));
     await user.click(screen.getByRole("button", { name: "Schedule" }));

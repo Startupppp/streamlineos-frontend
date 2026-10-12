@@ -1,15 +1,16 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useGoals, useLinkGoalProduct } from "@/hooks/api/goals";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { Button } from "@/components/ui/button";
 import { Combobox } from "@/components/ui/combobox";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { ErrorState } from "@/components/shared/error-state";
-import { useLinkGoalCandidates } from "./link-existing-goal-goals-query";
+import { useLinkGoalCandidates } from "./use-infinite-selector";
 import {
   Dialog,
   DialogBody,
@@ -48,25 +49,11 @@ export function LinkExistingGoalDialog({
   const errorObj = goalsQuery.error ?? productGoalsQuery.error;
   const productGoals = productGoalsQuery.data;
 
-  const pagesLoaded = goalsQuery.data?.pages.length ?? 0;
-  const sentinelRef = useRef<HTMLDivElement>(null);
+  const { hasNextPage, isFetchingNextPage, fetchNextPage } = goalsQuery;
 
-  useEffect(() => {
-    const el = sentinelRef.current;
-    if (!el || !goalsQuery.hasNextPage) return;
-    const observer = new IntersectionObserver((entries) => {
-      if (entries[0]?.isIntersecting && !goalsQuery.isFetchingNextPage) {
-        void goalsQuery.fetchNextPage();
-      }
-    });
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [
-    goalsQuery.hasNextPage,
-    goalsQuery.isFetchingNextPage,
-    goalsQuery.fetchNextPage,
-    pagesLoaded,
-  ]);
+  const handleLoadMore = useCallback(() => {
+    if (hasNextPage && !isFetchingNextPage) void fetchNextPage();
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
   const candidates = useMemo(() => {
     if (!productGoals) return [];
@@ -149,22 +136,26 @@ export function LinkExistingGoalDialog({
               isLoading
                 ? "Loading goals…"
                 : isError
-                  ? getErrorMessage(errorObj)
+                  ? "Could not load goals."
                   : "No unlinked goals found."
             }
             footer={
-              isError ? (
-                <ErrorState
-                  compact
-                  error={errorObj}
-                  onRetry={handleRetry}
-                  autoMapStatus
-                />
-              ) : goalsQuery.hasNextPage ? (
-                <div ref={sentinelRef} aria-hidden className="h-px" />
-              ) : undefined
+              <InfiniteScrollSentinel
+                hasNextPage={!isError && hasNextPage}
+                isFetchingNextPage={isFetchingNextPage}
+                onLoadMore={handleLoadMore}
+                label="Load more goals"
+              />
             }
           />
+          {isError && (
+            <ErrorState
+              compact
+              error={errorObj}
+              description={getErrorMessage(errorObj)}
+              onRetry={handleRetry}
+            />
+          )}
           {selectedLabel ? (
             <p className="text-pretty text-sm text-muted-foreground">
               <span className="font-medium text-foreground">{selectedLabel}</span>

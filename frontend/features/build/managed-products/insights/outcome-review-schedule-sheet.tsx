@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useCallback, useMemo } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   FormControl,
@@ -20,15 +21,17 @@ import {
 import { DatePicker } from "@/components/ui/date-picker";
 import { EntityFormSheet } from "@/components/shared/entity-form-sheet";
 import { FIELD_CONTROL_CLASS } from "@/components/ui/field-control";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import {
   scheduleOutcomeReviewSchema,
   type ScheduleOutcomeReviewValues,
 } from "./outcome-review-form-schema";
 import type { CreateOutcomeReviewInput } from "@/hooks/api/build/outcome-review-mutations";
-import { useOpportunities } from "@/hooks/api/build/product-discovery";
 import { useGoals } from "@/hooks/api/goals";
 import { OutcomeReviewLinkField } from "./outcome-review-link-field";
 import { OutcomeReviewMeasurementFields } from "./outcome-review-measurement-fields";
+import { useInfiniteSelectorOpportunities } from "./use-infinite-selector";
+import { IntersectSentinel } from "./intersect-sentinel";
 
 const KIND_OPTIONS = [
   { label: "Outcome review", value: "outcome_review" },
@@ -63,11 +66,24 @@ export function OutcomeReviewScheduleSheet({
   onSubmit,
   isSubmitting,
 }: OutcomeReviewScheduleSheetProps) {
-  const { data: opportunitiesPage } = useOpportunities(managedProductId, undefined, {
-    enabled: open,
-  });
-  const opportunities = opportunitiesPage?.data ?? [];
-  const { data: goals = [] } = useGoals({ managedProductId, limit: 100 }, { enabled: open });
+  const [opSearch, setOpSearch] = useState("");
+  const [goalsSearch, setGoalsSearch] = useState("");
+  const debouncedOpSearch = useDebouncedValue(opSearch, 300);
+  const debouncedGoalsSearch = useDebouncedValue(goalsSearch, 300);
+
+  const opsQ = useInfiniteSelectorOpportunities(managedProductId, debouncedOpSearch, open);
+  const opsItems = useMemo(() => opsQ.data?.pages.flatMap((p) => p.data) ?? [], [opsQ.data]);
+
+  const goalsQ = useGoals({ managedProductId, search: debouncedGoalsSearch || undefined }, { enabled: open });
+  const goalsItems = useMemo(() => goalsQ.data ?? [], [goalsQ.data]);
+
+  const handleOpSearch = useCallback((v: string) => setOpSearch(v), []);
+  const handleGoalsSearch = useCallback((v: string) => setGoalsSearch(v), []);
+  const handleFetchOpsNext = useCallback(() => {
+    if (opsQ.hasNextPage && !opsQ.isFetchingNextPage) void opsQ.fetchNextPage();
+  }, [opsQ.fetchNextPage, opsQ.hasNextPage, opsQ.isFetchingNextPage]);
+  const handleRetryOps = useCallback(() => void opsQ.refetch(), [opsQ.refetch]);
+  const handleRetryGoals = useCallback(() => void goalsQ.refetch(), [goalsQ.refetch]);
 
   function handleSubmit(values: ScheduleOutcomeReviewValues) {
     const data: CreateOutcomeReviewInput = {
@@ -155,9 +171,23 @@ export function OutcomeReviewScheduleSheet({
             control={form.control}
             name="opportunityId"
             label="Opportunity"
-            options={opportunities}
+            options={opsItems}
+            isError={opsQ.isError}
+            error={opsQ.error}
+            onRetry={handleRetryOps}
+            onSearchChange={handleOpSearch}
+            footer={opsQ.hasNextPage ? <IntersectSentinel onVisible={handleFetchOpsNext} /> : undefined}
           />
-          <OutcomeReviewLinkField control={form.control} name="goalId" label="Goal" options={goals} />
+          <OutcomeReviewLinkField
+            control={form.control}
+            name="goalId"
+            label="Goal"
+            options={goalsItems}
+            isError={goalsQ.isError}
+            error={goalsQ.error}
+            onRetry={handleRetryGoals}
+            onSearchChange={handleGoalsSearch}
+          />
           <FormField
             control={form.control}
             name="hypothesis"

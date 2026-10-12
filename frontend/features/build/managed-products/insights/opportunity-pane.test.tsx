@@ -29,7 +29,13 @@ function setOpportunity(state: string, allowedActions: string[]) {
 jest.mock("@/hooks/api/access", () => ({ useCan: jest.fn(() => true) }));
 
 jest.mock("@/hooks/api/build/product-discovery", () => ({
-  useOpportunity: jest.fn(() => ({ isLoading: false, data: mockOpportunity })),
+  useOpportunity: jest.fn(() => ({
+    isLoading: false,
+    isError: false,
+    error: null,
+    refetch: jest.fn(),
+    data: mockOpportunity,
+  })),
   useOpportunityTrace: jest.fn(() => ({ data: undefined })),
 }));
 
@@ -119,5 +125,50 @@ describe("OpportunityPane — moving an identified opportunity into validation",
     expect(screen.queryByTestId("start-validating-opportunity-btn")).not.toBeInTheDocument();
     expect(screen.queryByTestId("score-opportunity-btn")).not.toBeInTheDocument();
     expect(screen.queryByTestId("override-score-btn")).not.toBeInTheDocument();
+  });
+});
+
+describe("OpportunityPane — error state and accessibility (BSN-PANE-ERROR)", () => {
+  const { useOpportunity } = jest.requireMock("@/hooks/api/build/product-discovery") as {
+    useOpportunity: jest.Mock;
+  };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it("renders an error state with retry and keeps the sheet open so the user does not lose context", () => {
+    useOpportunity.mockReturnValue({
+      isLoading: false,
+      isError: true,
+      error: new Error("Network error"),
+      refetch: jest.fn(),
+      data: undefined,
+    });
+
+    render(<OpportunityPane managedProductId={5} opportunityId={7} onClose={jest.fn()} />);
+
+    expect(screen.getByRole("button", { name: /try again/i })).toBeInTheDocument();
+  });
+
+  it("renders an accessible description so screen readers announce the pane purpose", () => {
+    useOpportunity.mockReturnValue({
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+      data: {
+        ...mockOpportunity,
+        problem: "Users cannot export large datasets without timing out.",
+      },
+    });
+
+    render(<OpportunityPane managedProductId={5} opportunityId={7} onClose={jest.fn()} />);
+
+    const descriptions = screen.getAllByText(
+      "Users cannot export large datasets without timing out.",
+    );
+    expect(descriptions.length).toBeGreaterThanOrEqual(1);
+    expect(descriptions.some((el) => el.dataset["slot"] === "sheet-description")).toBe(true);
   });
 });

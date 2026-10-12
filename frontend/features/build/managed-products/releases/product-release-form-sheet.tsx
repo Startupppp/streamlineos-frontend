@@ -172,6 +172,16 @@ export function ProductReleaseFormSheet({
                 key={editTarget?.id ?? "new"}
                 managedProductId={managedProductId}
                 initialProjectId={editTarget?.projectRelease?.projectId ?? null}
+                initialProjectLabel={
+                  editTarget?.projectRelease
+                    ? `${editTarget.projectRelease.projectKey ?? ""} · ${editTarget.projectRelease.projectName ?? ""}`.trim()
+                    : null
+                }
+                initialReleaseLabel={
+                  editTarget?.projectRelease
+                    ? `${editTarget.projectRelease.name} ${editTarget.projectRelease.version}`
+                    : null
+                }
               />
             </form>
           </Form>

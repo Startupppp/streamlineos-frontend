@@ -53,6 +53,9 @@ export function CompareDrawer({
           <SheetTitle className="text-base">
             Compare opportunities ({selected.size}/{MAX_COMPARE})
           </SheetTitle>
+          <SheetDescription>
+            Side-by-side RICE scores and evidence counts for the selected opportunities.
+          </SheetDescription>
         </SheetHeader>
 
         <div className="p-4">

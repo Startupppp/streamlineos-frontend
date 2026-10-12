@@ -80,8 +80,8 @@ export function MarkDuplicateDialog({
   }, [onOpenChange]);
 
   const handleNext = useCallback(() => {
-    pager.goNext(data?.pagination.nextCursor);
-  }, [pager, data?.pagination.nextCursor]);
+    pager.goNext(data?.pagination?.nextCursor);
+  }, [pager, data?.pagination?.nextCursor]);
 
   const handlePrevious = useCallback(() => {
     pager.goPrevious();
@@ -142,7 +142,7 @@ export function MarkDuplicateDialog({
             mode="cursor"
             rowCount={candidates.length}
             pageNumber={pager.pageNumber}
-            hasMore={data?.pagination.hasMore ?? false}
+            hasMore={data?.pagination?.hasMore ?? false}
             hasPrevious={pager.hasPrevious}
             onNext={handleNext}
             onPrevious={handlePrevious}

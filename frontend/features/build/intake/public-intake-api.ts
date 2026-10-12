@@ -1,5 +1,5 @@
 import { buildUrl } from "@/lib/api-client";
-import { parseApiResponse } from "@/lib/api-envelope";
+import { ApiError, parseApiResponse } from "@/lib/api-envelope";
 import {
   intakeSubmitResponseContract,
   type IntakeFormOutput,
@@ -18,6 +18,8 @@ async function postIntake(
   });
   if (!res.ok) {
     let message = "Failed to submit. Please try again.";
+    let code: string | undefined;
+    let details: unknown;
     try {
       const data = (await res.json()) as Record<string, unknown>;
       if (
@@ -32,8 +34,10 @@ async function postIntake(
         );
         if (messages.length > 0) message = messages.join(", ");
       }
+      if (typeof data?.code === "string") code = data.code;
+      if ("details" in data) details = data.details;
     } catch {}
-    throw new Error(message);
+    throw new ApiError(message, res.status, code, details, path);
   }
   return parseApiResponse(res, intakeSubmitResponseContract, path);
 }

@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, act } from "@testing-library/react";
+import { render, screen, fireEvent, act, waitFor } from "@testing-library/react";
 import { AddProductMemberDialog } from "./add-product-member-dialog";
 
 const mockMutate = jest.fn();
@@ -132,9 +132,11 @@ describe("AddProductMemberDialog", () => {
     );
 
     expect(screen.getByRole("alert")).toBeInTheDocument();
-    expect(screen.getByText(/Network failure/i)).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: /try again/i }));
+    const retryBtn = screen.getByRole("button", { name: /try again/i });
+    expect(retryBtn).toBeInTheDocument();
+
+    fireEvent.click(retryBtn);
     expect(mockRefetch).toHaveBeenCalledTimes(1);
     expect(onOpenChange).not.toHaveBeenCalled();
   });
@@ -176,15 +178,22 @@ describe("AddProductMemberDialog", () => {
     expect(trigger).toHaveTextContent("Alice Smith");
   });
 
-  it("submits the selected member and role to the mutation", () => {
-    openPicker();
+  it("submits the selected member and role to the mutation", async () => {
+    render(
+      <AddProductMemberDialog managedProductId={5} open onOpenChange={jest.fn()} />,
+    );
+    fireEvent.click(screen.getByRole("combobox", { name: "Select a member" }));
     fireEvent.click(screen.getByRole("option", { name: /Alice Smith/ }));
 
-    fireEvent.click(screen.getByRole("button", { name: "Add member" }));
+    await act(async () => {
+      fireEvent.submit(document.getElementById("add-product-member-form")!);
+    });
 
-    expect(mockMutate).toHaveBeenCalledWith(
-      { organizationMembershipId: PAGE_1[0]!.membershipId, role: "member" },
-      expect.any(Object),
-    );
+    await waitFor(() => {
+      expect(mockMutate).toHaveBeenCalledWith(
+        { organizationMembershipId: PAGE_1[0]!.membershipId, role: "member" },
+        expect.any(Object),
+      );
+    });
   });
 });

@@ -11,28 +11,8 @@ import {
 import { buildUrl } from "@/lib/api-client";
 import { parseApiResponse } from "@/lib/api-envelope";
 import { withCorrelation } from "@/lib/observability/with-correlation";
+import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
-
-async function messageFrom(res: Response, fallback: string): Promise<string> {
-  try {
-    const data: unknown = await res.json();
-    if (typeof data !== "object" || data === null) return fallback;
-    const message = Reflect.get(data, "message");
-    if (
-      typeof message === "string" &&
-      message &&
-      !message.startsWith(String(res.status))
-    )
-      return message;
-    if (Array.isArray(message)) {
-      const messages = message.filter(
-        (item): item is string => typeof item === "string",
-      );
-      if (messages.length > 0) return messages.join(", ");
-    }
-  } catch {}
-  return fallback;
-}
 
 async function fetchPublicFormAtPath(
   path: string,
@@ -43,10 +23,6 @@ async function fetchPublicFormAtPath(
     headers: withCorrelation(new Headers()),
     signal,
   });
-  if (!res.ok)
-    throw new Error(
-      await messageFrom(res, "Form not found or no longer active."),
-    );
   return parseApiResponse(res, publicFormDefinitionContract, path);
 }
 
@@ -60,28 +36,19 @@ export function fetchPublicForm(
 export async function submitPublicForm(
   token: string,
   values: Record<string, unknown>,
-  submittedByName?: string,
+  headers?: Record<string, string>,
 ): Promise<PublicFormSubmitResponse> {
   const path = `/public/forms/${token}/submit`;
   const res = await fetch(buildUrl(path), {
     method: "POST",
     credentials: "omit",
     headers: withCorrelation(
-      new Headers({ "Content-Type": "application/json" }),
+      new Headers({ "Content-Type": "application/json", ...headers }),
     ),
-    body: JSON.stringify({ values, submittedByName }),
+    body: JSON.stringify({ values }),
   });
-  if (!res.ok)
-    throw new Error(
-      await messageFrom(res, "Failed to submit. Please try again."),
-    );
   return parseApiResponse(res, publicFormSubmitResponseContract, path);
 }
-
-export type {
-  PublicFormDefinition,
-  PublicFormSubmitResponse,
-};
 
 export function usePublicForm(token: string) {
   return useQuery<PublicFormDefinition>({
@@ -91,13 +58,16 @@ export function usePublicForm(token: string) {
     enabled: !!token,
     retry: false,
     staleTime: 60_000,
+    ...INLINE_READ_ERROR,
   });
 }
 
 export function useSubmitPublicForm(token: string) {
+  const operation = useIdempotentOperation();
   return useMutation<PublicFormSubmitResponse, Error, Record<string, unknown>>({
     mutationKey: ["projects", "public-form", token, "submit"],
-    mutationFn: (payload) => submitPublicForm(token, payload),
+    mutationFn: (payload) =>
+      submitPublicForm(token, payload, operation.configFor(payload).headers),
   });
 }
 
