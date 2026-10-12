@@ -263,29 +263,26 @@ export function buildProductProjectsColumns({
           <span className="text-xs text-muted-foreground">—</span>
         ),
     },
-    ...(canManage
-      ? [
-          {
-            key: "actions",
-            header: "",
-            cell: (row: LinkedProjectRow) => (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                aria-label={`Unlink ${row.name} from product`}
-                className="h-7 gap-1.5 px-2 text-xs text-muted-foreground hover:text-destructive"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onUnlinkClick(row);
-                }}
-              >
-                <Unlink className="h-3.5 w-3.5" aria-hidden="true" />
-                Unlink
-              </Button>
-            ),
-          },
-        ]
-      : []),
+    {
+      key: "actions",
+      header: "",
+      cell: (row: LinkedProjectRow) =>
+        row.allowedActions.includes("unlink") ? (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            aria-label={`Unlink ${row.name} from product`}
+            className="h-7 gap-1.5 px-2 text-xs text-muted-foreground hover:text-destructive"
+            onClick={(e) => {
+              e.stopPropagation();
+              onUnlinkClick(row);
+            }}
+          >
+            <Unlink className="h-3.5 w-3.5" aria-hidden="true" />
+            Unlink
+          </Button>
+        ) : null,
+    },
   ];
 }

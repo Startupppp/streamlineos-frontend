@@ -1,11 +1,17 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
+import { useMemo } from "react";
 import { DatePicker } from "@/components/ui/date-picker";
 import { useBuildMembers } from "@/hooks/api/build/build-members";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
-import { ALL_SENTINEL, CONTRIB_OPTIONS, HEALTH_OPTIONS, STATUS_OPTIONS } from "./product-projects-table";
+import { BuildMultiFilterSelect } from "@/features/build/shared/build-multi-filter-select";
+import {
+  ALL_SENTINEL,
+  CONTRIB_OPTIONS,
+  HEALTH_OPTIONS,
+  STATUS_OPTIONS,
+} from "./product-projects-table";
 import type { useProductProjectsPage } from "./use-product-projects-page";
 
 const DATE_PICKER_CLASS = "w-full min-w-0 max-w-none bg-card text-foreground";
@@ -41,35 +47,32 @@ interface ProductProjectsToolbarProps {
   page: ProductProjectsToolbarModel;
 }
 
-function fromSentinel(value: string): string {
-  return value === ALL_SENTINEL ? "" : value;
-}
-
 export function ProductProjectsToolbar({ page }: ProductProjectsToolbarProps) {
-  const {
-    handleStatusChange,
-    handleHealthChange,
-    handleTeamChange,
-    handleOwnerChange,
-    handleClientChange,
-    handleContribChange,
-  } = page;
+  const { handleTeamChange, handleClientChange, handleContribChange } = page;
   const { data: membersData } = useBuildMembers({ limit: 100 });
   const ownerOptions = useMemo(
     () =>
       (membersData?.data ?? []).map((m) => ({
         value: String(m.membershipId),
-        label: m.name ?? ([m.firstName, m.lastName].filter(Boolean).join(" ") || m.email),
+        label:
+          m.name ??
+          ([m.firstName, m.lastName].filter(Boolean).join(" ") || m.email),
       })),
     [membersData],
   );
 
-  const handleStatusSelect = useCallback((v: string) => handleStatusChange(fromSentinel(v)), [handleStatusChange]);
-  const handleHealthSelect = useCallback((v: string) => handleHealthChange(fromSentinel(v)), [handleHealthChange]);
-  const handleTeamSelect = useCallback((v: string) => handleTeamChange(fromSentinel(v)), [handleTeamChange]);
-  const handleOwnerSelect = useCallback((v: string) => handleOwnerChange(fromSentinel(v)), [handleOwnerChange]);
-  const handleClientSelect = useCallback((v: string) => handleClientChange(fromSentinel(v)), [handleClientChange]);
-  const handleContribSelect = useCallback((v: string) => handleContribChange(fromSentinel(v)), [handleContribChange]);
+  const handleTeamSelect = useMemo(
+    () => (v: string) => handleTeamChange(v === ALL_SENTINEL ? "" : v),
+    [handleTeamChange],
+  );
+  const handleClientSelect = useMemo(
+    () => (v: string) => handleClientChange(v === ALL_SENTINEL ? "" : v),
+    [handleClientChange],
+  );
+  const handleContribSelect = useMemo(
+    () => (v: string) => handleContribChange(v === ALL_SENTINEL ? "" : v),
+    [handleContribChange],
+  );
 
   const search = useMemo(
     () => ({
@@ -87,26 +90,26 @@ export function ProductProjectsToolbar({ page }: ProductProjectsToolbarProps) {
       {
         id: "status",
         label: "Status",
-        active: Boolean(page.statusValue),
+        active: page.statusValue.length > 0,
         control: (
-          <BuildFilterSelect
+          <BuildMultiFilterSelect
             label="Status"
-            value={page.statusValue || ALL_SENTINEL}
-            onValueChange={handleStatusSelect}
-            options={[{ value: ALL_SENTINEL, label: "All statuses" }, ...STATUS_OPTIONS]}
+            values={page.statusValue}
+            onValuesChange={page.handleStatusChange}
+            options={STATUS_OPTIONS}
           />
         ),
       },
       {
         id: "health",
         label: "Health",
-        active: Boolean(page.healthValue),
+        active: page.healthValue.length > 0,
         control: (
-          <BuildFilterSelect
+          <BuildMultiFilterSelect
             label="Health"
-            value={page.healthValue || ALL_SENTINEL}
-            onValueChange={handleHealthSelect}
-            options={[{ value: ALL_SENTINEL, label: "Any health" }, ...HEALTH_OPTIONS]}
+            values={page.healthValue}
+            onValuesChange={page.handleHealthChange}
+            options={HEALTH_OPTIONS}
           />
         ),
       },
@@ -119,20 +122,23 @@ export function ProductProjectsToolbar({ page }: ProductProjectsToolbarProps) {
             label="Team"
             value={page.teamValue || ALL_SENTINEL}
             onValueChange={handleTeamSelect}
-            options={[{ value: ALL_SENTINEL, label: "All teams" }, ...page.teamOptions]}
+            options={[
+              { value: ALL_SENTINEL, label: "All teams" },
+              ...page.teamOptions,
+            ]}
           />
         ),
       },
       {
         id: "owner",
         label: "Owner",
-        active: Boolean(page.ownerValue),
+        active: page.ownerValue.length > 0,
         control: (
-          <BuildFilterSelect
+          <BuildMultiFilterSelect
             label="Owner"
-            value={page.ownerValue || ALL_SENTINEL}
-            onValueChange={handleOwnerSelect}
-            options={[{ value: ALL_SENTINEL, label: "All owners" }, ...ownerOptions]}
+            values={page.ownerValue}
+            onValuesChange={page.handleOwnerChange}
+            options={ownerOptions}
           />
         ),
       },
@@ -145,7 +151,10 @@ export function ProductProjectsToolbar({ page }: ProductProjectsToolbarProps) {
             label="Customer"
             value={page.clientValue || ALL_SENTINEL}
             onValueChange={handleClientSelect}
-            options={[{ value: ALL_SENTINEL, label: "All customers" }, ...page.clientOptions]}
+            options={[
+              { value: ALL_SENTINEL, label: "All customers" },
+              ...page.clientOptions,
+            ]}
           />
         ),
       },
@@ -158,7 +167,10 @@ export function ProductProjectsToolbar({ page }: ProductProjectsToolbarProps) {
             label="Contribution"
             value={page.contribValue || ALL_SENTINEL}
             onValueChange={handleContribSelect}
-            options={[{ value: ALL_SENTINEL, label: "Any contribution" }, ...CONTRIB_OPTIONS]}
+            options={[
+              { value: ALL_SENTINEL, label: "Any contribution" },
+              ...CONTRIB_OPTIONS,
+            ]}
           />
         ),
       },
@@ -206,11 +218,11 @@ export function ProductProjectsToolbar({ page }: ProductProjectsToolbarProps) {
       page.clientOptions,
       page.handleDateFromChange,
       page.handleDateToChange,
+      page.handleStatusChange,
+      page.handleHealthChange,
+      page.handleOwnerChange,
       ownerOptions,
-      handleStatusSelect,
-      handleHealthSelect,
       handleTeamSelect,
-      handleOwnerSelect,
       handleClientSelect,
       handleContribSelect,
     ],

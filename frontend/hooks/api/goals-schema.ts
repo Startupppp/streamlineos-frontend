@@ -70,6 +70,7 @@ export const goalListItemContract = goalRowContract.extend({
     .default(null),
   lastCheckInAt: z.string().nullable().default(null),
   checkInFreshness: z.enum(["fresh", "stale", "none"]).default("none"),
+  allowedActions: z.array(z.string()).default([]),
 });
 
 /** `goalsListResponseSchema` — offset page (no totalPages on this backend schema). */

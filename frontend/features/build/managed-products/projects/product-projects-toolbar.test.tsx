@@ -26,6 +26,34 @@ jest.mock("@/features/build/shared/build-filter-select", () => ({
   ),
 }));
 
+jest.mock("@/features/build/shared/build-multi-filter-select", () => ({
+  BuildMultiFilterSelect: ({ label, values, onValuesChange, options }: {
+    label: string;
+    values: string[];
+    onValuesChange: (v: string[]) => void;
+    options: { value: string; label: string }[];
+  }) => (
+    <div data-testid={`multi-select-${label.toLowerCase()}`}>
+      {options.map((o) => (
+        <label key={o.value}>
+          <input
+            type="checkbox"
+            aria-label={o.label}
+            checked={values.includes(o.value)}
+            onChange={() => {
+              const next = values.includes(o.value)
+                ? values.filter((v) => v !== o.value)
+                : [...values, o.value];
+              onValuesChange(next);
+            }}
+          />
+          {o.label}
+        </label>
+      ))}
+    </div>
+  ),
+}));
+
 jest.mock("@/components/ui/date-picker", () => ({
   DatePicker: ({ ariaLabel, value, onChange }: { ariaLabel: string; value: string; onChange: (v: string) => void }) => (
     <input aria-label={ariaLabel} value={value} onChange={(e) => onChange(e.target.value)} />
@@ -35,10 +63,10 @@ jest.mock("@/components/ui/date-picker", () => ({
 function pageModel(): ProductProjectsToolbarModel {
   return {
     searchValue: "",
-    statusValue: "",
-    healthValue: "",
+    statusValue: [],
+    healthValue: [],
     teamValue: "",
-    ownerValue: "",
+    ownerValue: [],
     clientValue: "",
     contribValue: "",
     dateFromValue: "",
@@ -71,14 +99,12 @@ beforeEach(() => {
   });
 });
 
-it("filters by owner using the member's membership id", () => {
+it("filters by owner using the member's membership id (BSN-PROJ-OWNER-MULTI)", () => {
   const page = pageModel();
   render(<ProductProjectsToolbar page={page} />);
-  expect(screen.getByRole("option", { name: "Grace Hopper" })).toBeInTheDocument();
-  fireEvent.change(screen.getByRole("combobox", { name: "Owner" }), { target: { value: "3" } });
-  expect(page.handleOwnerChange).toHaveBeenCalledWith("3");
-  fireEvent.change(screen.getByRole("combobox", { name: "Owner" }), { target: { value: "all" } });
-  expect(page.handleOwnerChange).toHaveBeenLastCalledWith("");
+  expect(screen.getByRole("checkbox", { name: "Grace Hopper" })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("checkbox", { name: "Ada Lovelace" }));
+  expect(page.handleOwnerChange).toHaveBeenCalledWith(["3"]);
 });
 
 it("filters by start and end date", () => {
@@ -90,9 +116,9 @@ it("filters by start and end date", () => {
   expect(page.handleDateToChange).toHaveBeenCalledWith("2026-12-31");
 });
 
-it("offers only All owners when no Build members are visible", () => {
+it("shows empty owner multi-select when no Build members are visible", () => {
   mockUseBuildMembers.mockReturnValue({ data: undefined });
   render(<ProductProjectsToolbar page={pageModel()} />);
-  const owner = screen.getByRole("combobox", { name: "Owner" });
-  expect(within(owner).getAllByRole("option").map((o) => o.textContent)).toEqual(["All owners"]);
+  const ownerContainer = screen.getByTestId("multi-select-owner");
+  expect(within(ownerContainer).queryAllByRole("checkbox")).toHaveLength(0);
 });

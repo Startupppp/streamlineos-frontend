@@ -86,15 +86,15 @@ export function ProductProjectsPage({ managedProductId }: ProductProjectsPagePro
   );
 
   const columns = useMemo(
-    () => buildProductProjectsColumns({ canManage, onUnlinkClick: handleUnlinkClick }),
-    [canManage, handleUnlinkClick],
+    () => buildProductProjectsColumns({ onUnlinkClick: handleUnlinkClick }),
+    [handleUnlinkClick],
   );
 
   const mobileCard = useCallback(
     (row: LinkedProjectRow) => (
-      <ProductProjectMobileCard row={row} canManage={canManage} onUnlink={handleUnlinkClick} />
+      <ProductProjectMobileCard row={row} onUnlink={handleUnlinkClick} />
     ),
-    [canManage, handleUnlinkClick],
+    [handleUnlinkClick],
   );
 
   return (

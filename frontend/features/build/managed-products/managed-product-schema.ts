@@ -71,6 +71,7 @@ export const editManagedProductSchema = z.object({
   missionStatement: z.string().max(2000).optional(),
   targetCustomer: z.string().max(2000).optional(),
   differentiators: z.string().max(2000).optional(),
+  roadmapDefaultHorizon: z.enum(["now", "next", "later"]).nullable().optional(),
 });
 
 export type EditManagedProductFormValues = z.infer<typeof editManagedProductSchema>;
@@ -96,6 +97,7 @@ export function toEditManagedProductInput(
     missionStatement: values.missionStatement || null,
     targetCustomer: values.targetCustomer || null,
     differentiators: values.differentiators || null,
+    roadmapDefaultHorizon: values.roadmapDefaultHorizon ?? null,
   };
 }
 
@@ -112,4 +114,10 @@ export const HEALTH_OPTIONS = [
   { value: "at_risk", label: "At risk" },
   { value: "off_track", label: "Off track" },
   { value: "unknown", label: "Unknown" },
+] as const;
+
+export const ROADMAP_HORIZON_OPTIONS = [
+  { value: "now", label: "Now" },
+  { value: "next", label: "Next" },
+  { value: "later", label: "Later" },
 ] as const;

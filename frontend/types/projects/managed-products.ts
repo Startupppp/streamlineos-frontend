@@ -56,6 +56,7 @@ export interface ManagedProduct {
   segments: string[];
   tags: string[];
   northStarMetric: string | null;
+  roadmapDefaultHorizon: "now" | "next" | "later" | null;
   lastReviewedAt: string | null;
   owner?: ManagedProductOwner | null;
   version: number;
@@ -114,4 +115,5 @@ export interface UpdateManagedProductInput {
   differentiators?: string | null;
   lastReviewedAt?: string | null;
   targetLaunchDate?: string | null;
+  roadmapDefaultHorizon?: "now" | "next" | "later" | null;
 }

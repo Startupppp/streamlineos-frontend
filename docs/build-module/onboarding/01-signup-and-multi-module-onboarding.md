@@ -5,6 +5,8 @@ Owners: Product, Design, Platform, Identity, Billing, and each selected module
 Applies to: solo professionals, freelancers, agencies, software product teams, and larger organizations
 Companion decisions: [Product vision and decisions](../product/00-product-vision-and-decisions.md)
 
+Proposed next iteration: [Fast, adaptive, voice-assisted onboarding](./02-fast-adaptive-voice-onboarding-prd.md) specifies a two-screen default journey, exact resume, optional voice, authoritative preview, and performance gates. Its two-screen journey is a proposal pending product approval; the three-step journey below remains the existing planned baseline until that decision is accepted.
+
 ## 1. Purpose
 
 This document specifies the complete path from anonymous visitor to an activated Streamline workspace. It covers a customer who selects only Build and a customer who selects Build together with CRM, Accounting, Timesheets, HR, or other Streamline modules.

@@ -21,7 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { MemberPicker } from "@/components/shared";
 import type { EditManagedProductFormValues } from "./managed-product-schema";
-import { LIFECYCLE_OPTIONS, HEALTH_OPTIONS } from "./managed-product-schema";
+import { LIFECYCLE_OPTIONS, HEALTH_OPTIONS, ROADMAP_HORIZON_OPTIONS } from "./managed-product-schema";
 import { ChipInput } from "@/features/recruitment/jobs/create-job-form/chip-input";
 
 interface ManagedProductEditFieldsProps {
@@ -152,6 +152,33 @@ export function ManagedProductEditFields({
                 </FormControl>
                 <SelectContent>
                   {HEALTH_OPTIONS.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="roadmapDefaultHorizon"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Default roadmap horizon (optional)</FormLabel>
+              <Select
+                value={field.value ?? ""}
+                onValueChange={(v) => field.onChange(v || null)}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select default horizon" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {ROADMAP_HORIZON_OPTIONS.map((opt) => (
                     <SelectItem key={opt.value} value={opt.value}>
                       {opt.label}
                     </SelectItem>

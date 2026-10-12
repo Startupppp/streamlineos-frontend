@@ -728,6 +728,7 @@ export const managedProductsListManagedProductsResponseSchema = z.object({
     segments: z.array(z.string()),
     tags: z.array(z.string()),
     northStarMetric: z.string().nullable(),
+    roadmapDefaultHorizon: z.enum(["now", "next", "later"]).nullable(),
     lastReviewedAt: z.iso.datetime({ offset: true }).nullable(),
     owner: z.object({
       id: z.string(),
@@ -793,6 +794,7 @@ export const managedProductsCreateManagedProductResponseSchema = z.object({
   segments: z.array(z.string()),
   tags: z.array(z.string()),
   northStarMetric: z.string().nullable(),
+  roadmapDefaultHorizon: z.enum(["now", "next", "later"]).nullable(),
   lastReviewedAt: z.iso.datetime({ offset: true }).nullable(),
   owner: z.object({
     id: z.string(),
@@ -884,6 +886,7 @@ export const managedProductsGetManagedProductResponseSchema = z.object({
   segments: z.array(z.string()),
   tags: z.array(z.string()),
   northStarMetric: z.string().nullable(),
+  roadmapDefaultHorizon: z.enum(["now", "next", "later"]).nullable(),
   lastReviewedAt: z.iso.datetime({ offset: true }).nullable(),
   owner: z.object({
     id: z.string(),
@@ -924,6 +927,7 @@ export const managedProductsUpdateManagedProductResponseSchema = z.object({
   segments: z.array(z.string()),
   tags: z.array(z.string()),
   northStarMetric: z.string().nullable(),
+  roadmapDefaultHorizon: z.enum(["now", "next", "later"]).nullable(),
   lastReviewedAt: z.iso.datetime({ offset: true }).nullable(),
   owner: z.object({
     id: z.string(),
@@ -962,6 +966,7 @@ export const managedProductsUpdateManagedProductBodySchema = z.strictObject({
   tags: z.array(z.string()).optional(),
   lastReviewedAt: z.iso.datetime({ offset: true }).nullable().optional(),
   targetLaunchDate: z.iso.datetime({ offset: true }).nullable().optional(),
+  roadmapDefaultHorizon: z.enum(["now", "next", "later"]).nullable().optional(),
 });
 export type ManagedProductsUpdateManagedProductBody = z.input<typeof managedProductsUpdateManagedProductBodySchema>;
 
@@ -990,6 +995,7 @@ export const managedProductsArchiveManagedProductResponseSchema = z.object({
   segments: z.array(z.string()),
   tags: z.array(z.string()),
   northStarMetric: z.string().nullable(),
+  roadmapDefaultHorizon: z.enum(["now", "next", "later"]).nullable(),
   lastReviewedAt: z.iso.datetime({ offset: true }).nullable(),
   owner: z.object({
     id: z.string(),
@@ -2080,6 +2086,7 @@ export const managedProductsRestoreManagedProductResponseSchema = z.object({
   segments: z.array(z.string()),
   tags: z.array(z.string()),
   northStarMetric: z.string().nullable(),
+  roadmapDefaultHorizon: z.enum(["now", "next", "later"]).nullable(),
   lastReviewedAt: z.iso.datetime({ offset: true }).nullable(),
   owner: z.object({
     id: z.string(),
@@ -2126,6 +2133,7 @@ export const managedProductRelationsGetManagedProductSummaryResponseSchema = z.o
     segments: z.array(z.string()),
     tags: z.array(z.string()),
     northStarMetric: z.string().nullable(),
+    roadmapDefaultHorizon: z.enum(["now", "next", "later"]).nullable(),
     lastReviewedAt: z.iso.datetime({ offset: true }).nullable(),
     owner: z.object({
       id: z.string(),

@@ -28,6 +28,7 @@ function baseRow(status: string) {
     segments: [] as string[],
     tags: [] as string[],
     northStarMetric: null,
+    roadmapDefaultHorizon: null as "now" | "next" | "later" | null,
     lastReviewedAt: null,
     owner: null as { id: string; firstName: string | null; lastName: string | null; email: string; image: string | null } | null,
     version: 1,

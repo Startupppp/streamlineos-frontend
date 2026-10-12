@@ -97,6 +97,7 @@ function ProductSettingsForm({ managedProductId }: ProductSettingsPageProps) {
           segments: product.segments,
           tags: product.tags,
           northStarMetric: product.northStarMetric ?? undefined,
+          roadmapDefaultHorizon: product.roadmapDefaultHorizon ?? null,
           successMetrics: product.successMetrics ?? [],
           vision: product.vision ?? undefined,
           missionStatement: product.missionStatement ?? undefined,

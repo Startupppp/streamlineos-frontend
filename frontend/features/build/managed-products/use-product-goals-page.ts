@@ -68,8 +68,8 @@ export function useProductGoalsPage({ managedProductId }: UseProductGoalsPagePro
   const unlinkGoalMutation = useUnlinkGoalProduct();
 
   const levelValue = listFilters.value("level");
-  const statusValue = listFilters.value("status");
-  const ownerIdValue = listFilters.value("ownerId");
+  const statusRaw = listFilters.value("status");
+  const ownerIdRaw = listFilters.value("ownerId");
   const readFilterValue = listFilters.value;
 
   const typedLevel = useMemo(
@@ -77,9 +77,22 @@ export function useProductGoalsPage({ managedProductId }: UseProductGoalsPagePro
     [levelValue],
   );
 
-  const typedStatus = useMemo(
-    () => STATUS_OPTIONS.find((o) => o.value === statusValue)?.value,
-    [statusValue],
+  const typedStatuses = useMemo(
+    () =>
+      statusRaw && statusRaw !== BUILD_FILTER_ALL
+        ? statusRaw.split(",").filter(Boolean).filter((s): s is typeof STATUS_OPTIONS[number]["value"] =>
+            STATUS_OPTIONS.some((o) => o.value === s),
+          )
+        : [],
+    [statusRaw],
+  );
+
+  const typedOwnerIds = useMemo(
+    () =>
+      ownerIdRaw && ownerIdRaw !== BUILD_FILTER_ALL
+        ? ownerIdRaw.split(",").filter(Boolean)
+        : [],
+    [ownerIdRaw],
   );
 
   const router = useRouter();
@@ -93,15 +106,15 @@ export function useProductGoalsPage({ managedProductId }: UseProductGoalsPagePro
       managedProductId,
       page,
       limit: PAGE_SIZE,
-      ...(typedStatus ? { status: typedStatus } : {}),
+      ...(typedStatuses.length > 0 ? { status: typedStatuses } : {}),
       ...(typedLevel ? { level: typedLevel } : {}),
-      ...(ownerIdValue && ownerIdValue !== BUILD_FILTER_ALL ? { ownerId: ownerIdValue } : {}),
+      ...(typedOwnerIds.length > 0 ? { ownerId: typedOwnerIds } : {}),
       ...(listFilters.debouncedSearch.trim()
         ? { search: listFilters.debouncedSearch.trim() }
         : {}),
       ...resolveGoalOutcomeParams(readFilterValue),
     }),
-    [managedProductId, page, typedStatus, typedLevel, ownerIdValue, listFilters.debouncedSearch, readFilterValue],
+    [managedProductId, page, typedStatuses, typedLevel, typedOwnerIds, listFilters.debouncedSearch, readFilterValue],
   );
 
   const { data: goalsPage, isLoading, isError, error, refetch, dataUpdatedAt } =

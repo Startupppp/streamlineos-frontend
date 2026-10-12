@@ -26,7 +26,7 @@ import {
   GOAL_FILTER_DEFINITIONS,
   resolveGoalOutcomeParams,
 } from "@/features/build/goals/goals-list-toolbar";
-import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
+import { BUILD_FILTER_ALL, useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
 import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
 import { usePageState } from "@/hooks/api/use-page-state";
 
@@ -49,8 +49,8 @@ export function useGoalsPageData() {
   const [page, setPage] = useSourceOverride(listFilters.resetKey, 1);
 
   const levelValue = listFilters.value("level");
-  const statusValue = listFilters.value("status");
-  const ownerIdValue = listFilters.value("ownerId");
+  const statusRaw = listFilters.value("status");
+  const ownerIdRaw = listFilters.value("ownerId");
   const readFilterValue = listFilters.value;
 
   const typedLevel = useMemo(
@@ -58,16 +58,29 @@ export function useGoalsPageData() {
     [levelValue],
   );
 
-  const typedStatus = useMemo(
-    () => STATUS_OPTIONS.find((o) => o.value === statusValue)?.value,
-    [statusValue],
+  const typedStatuses = useMemo(
+    () =>
+      statusRaw && statusRaw !== BUILD_FILTER_ALL
+        ? statusRaw.split(",").filter(Boolean).filter((s): s is typeof STATUS_OPTIONS[number]["value"] =>
+            STATUS_OPTIONS.some((o) => o.value === s),
+          )
+        : [],
+    [statusRaw],
+  );
+
+  const typedOwnerIds = useMemo(
+    () =>
+      ownerIdRaw && ownerIdRaw !== BUILD_FILTER_ALL
+        ? ownerIdRaw.split(",").filter(Boolean)
+        : [],
+    [ownerIdRaw],
   );
 
   const params = useMemo(
     () => ({
-      ...(typedStatus ? { status: typedStatus } : {}),
+      ...(typedStatuses.length > 0 ? { status: typedStatuses } : {}),
       ...(typedLevel ? { level: typedLevel } : {}),
-      ...(ownerIdValue !== "all" && ownerIdValue ? { ownerId: ownerIdValue } : {}),
+      ...(typedOwnerIds.length > 0 ? { ownerId: typedOwnerIds } : {}),
       ...(listFilters.debouncedSearch.trim()
         ? { search: listFilters.debouncedSearch.trim() }
         : {}),
@@ -75,7 +88,7 @@ export function useGoalsPageData() {
       page,
       limit: GOALS_PAGE_SIZE,
     }),
-    [typedStatus, typedLevel, ownerIdValue, listFilters.debouncedSearch, page, readFilterValue],
+    [typedStatuses, typedLevel, typedOwnerIds, listFilters.debouncedSearch, page, readFilterValue],
   );
 
   const { data: goalsPage, isLoading, isError, error, refetch } = useGoalsPage(params);

@@ -9,7 +9,8 @@ import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import type { RoadmapStatus, RoadmapHorizon } from "@/types/projects";
-import { lazyContract } from "@/lib/api-envelope";
+import { lazyContract, isApiError } from "@/lib/api-envelope";
+import { toast } from "sonner";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type {
   RoadmapOwner,
@@ -57,18 +58,18 @@ interface CursorPaginated<T> {
 }
 
 export interface RoadmapItemFilters {
-  status?: RoadmapStatus;
+  status?: string;
   search?: string;
   cursor?: string;
   limit?: number;
   managedProductId?: number;
   sort?: string;
   projectId?: number;
-  horizon?: RoadmapHorizon;
+  horizon?: string;
   ownerId?: number;
-  goalId?: number;
+  goalId?: string;
   releaseId?: number;
-  teamId?: number;
+  teamId?: string;
   opportunityId?: number;
   hasOpportunity?: boolean;
   confidenceMin?: number;
@@ -238,7 +239,12 @@ function patchRoadmapItemInCache(
 
 function listSortsByPosition(queryKey: readonly unknown[]): boolean {
   const params = queryKey[queryKey.length - 1];
-  return !(typeof params === "object" && params !== null && "sort" in params && params.sort);
+  return !(
+    typeof params === "object" &&
+    params !== null &&
+    "sort" in params &&
+    params.sort
+  );
 }
 
 function repositionRoadmapItemInCache(
@@ -259,7 +265,10 @@ function repositionRoadmapItemInCache(
     }
     qc.setQueryData(queryKey, { ...old, data });
   }
-  qc.setQueryData(knowledgeAndSurveysQueryKeys.roadmap.item(updated.id), updated);
+  qc.setQueryData(
+    knowledgeAndSurveysQueryKeys.roadmap.item(updated.id),
+    updated,
+  );
   void qc.invalidateQueries({
     queryKey: knowledgeAndSurveysQueryKeys.roadmap.items(),
     refetchType: "none",

@@ -5,20 +5,24 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
 import type { BuildFilterOption } from "@/features/build/shared/build-filter-select";
+import { BuildMultiFilterSelect } from "@/features/build/shared/build-multi-filter-select";
 import {
   BUILD_FILTER_ALL,
   type BuildListFiltersState,
 } from "@/features/build/shared/use-build-list-filters";
 import { LEVEL_OPTIONS, METRIC_OPTIONS, STATUS_OPTIONS } from "./constants";
 
+function splitMultiGoal(raw: string): string[] {
+  if (!raw || raw === BUILD_FILTER_ALL) return [];
+  return raw
+    .split(",")
+    .map((v) => v.trim())
+    .filter(Boolean);
+}
+
 const GOAL_LEVEL_FILTER_OPTIONS = [
   { value: BUILD_FILTER_ALL, label: "All levels" },
   ...LEVEL_OPTIONS,
-];
-
-const GOAL_STATUS_FILTER_OPTIONS = [
-  { value: BUILD_FILTER_ALL, label: "All statuses" },
-  ...STATUS_OPTIONS,
 ];
 
 export const GOAL_FILTER_DEFINITIONS = [
@@ -57,7 +61,7 @@ const GOAL_METRIC_FILTER_OPTIONS: readonly BuildFilterOption[] = [
 ];
 
 interface GoalOutcomeParams {
-  health?: (typeof GOAL_HEALTH_VALUES)[number];
+  health?: string[];
   scope?: "own" | "all";
   due?: string;
   metricType?: "number" | "percentage" | "currency" | "boolean";
@@ -67,13 +71,12 @@ export function resolveGoalOutcomeParams(
   read: (param: string) => string,
 ): GoalOutcomeParams {
   const params: GoalOutcomeParams = {};
-  const health = read("health");
+  const healthRaw = read("health");
   const scope = read("scope");
   const due = read("due");
   const metricType = read("metricType");
-  if (isGoalHealth(health)) {
-    params.health = health;
-  }
+  const healthVals = splitMultiGoal(healthRaw).filter(isGoalHealth);
+  if (healthVals.length > 0) params.health = healthVals;
   if (scope === "own") params.scope = "own";
   if (GOAL_DUE_PATTERN.test(due)) params.due = due;
   if (METRIC_OPTIONS.some((option) => option.value === metricType)) {
@@ -99,20 +102,20 @@ export function GoalsListToolbar({
     (value: string) => listFilters.setValue("level", value),
     [listFilters],
   );
-  const handleStatusChange = useCallback(
-    (value: string) => listFilters.setValue("status", value),
+  const handleStatusValuesChange = useCallback(
+    (values: string[]) => listFilters.setValue("status", values.length > 0 ? values.join(",") : BUILD_FILTER_ALL),
     [listFilters],
   );
-  const handleOwnerChange = useCallback(
-    (value: string) => listFilters.setValue("ownerId", value),
+  const handleOwnerValuesChange = useCallback(
+    (values: string[]) => listFilters.setValue("ownerId", values.length > 0 ? values.join(",") : BUILD_FILTER_ALL),
     [listFilters],
   );
   const handleScopeChange = useCallback(
     (value: string) => listFilters.setValue("scope", value),
     [listFilters],
   );
-  const handleHealthChange = useCallback(
-    (value: string) => listFilters.setValue("health", value),
+  const handleHealthValuesChange = useCallback(
+    (values: string[]) => listFilters.setValue("health", values.length > 0 ? values.join(",") : BUILD_FILTER_ALL),
     [listFilters],
   );
   const handleMetricTypeChange = useCallback(
@@ -125,111 +128,127 @@ export function GoalsListToolbar({
   );
 
   const dueValue = listFilters.value("due");
+  const statusValues = useMemo(() => splitMultiGoal(listFilters.value("status")), [listFilters]);
+  const healthValues = useMemo(() => splitMultiGoal(listFilters.value("health")), [listFilters]);
+  const ownerValues = useMemo(() => splitMultiGoal(listFilters.value("ownerId")), [listFilters]);
 
-  const ownerValue = listFilters.value("ownerId");
   const resolvedOwnerOptions = useMemo<readonly BuildFilterOption[]>(
-    () =>
-      ownerOptions
-        ? [{ value: BUILD_FILTER_ALL, label: "All owners" }, ...ownerOptions]
-        : [{ value: BUILD_FILTER_ALL, label: "All owners" }],
+    () => ownerOptions ?? [],
     [ownerOptions],
   );
 
-  const filters = [
-    {
-      id: "level",
-      label: "Level",
-      active: listFilters.isActive("level"),
-      control: (
-        <BuildFilterSelect
-          label="Level"
-          value={listFilters.value("level")}
-          onValueChange={handleLevelChange}
-          options={GOAL_LEVEL_FILTER_OPTIONS}
-        />
-      ),
-    },
-    {
-      id: "status",
-      label: "Status",
-      active: listFilters.isActive("status"),
-      control: (
-        <BuildFilterSelect
-          label="Status"
-          value={listFilters.value("status")}
-          onValueChange={handleStatusChange}
-          options={GOAL_STATUS_FILTER_OPTIONS}
-        />
-      ),
-    },
-    {
-      id: "owner",
-      label: "Owner",
-      active: listFilters.isActive("ownerId"),
-      control: (
-        <BuildFilterSelect
-          label="Owner"
-          value={ownerValue}
-          onValueChange={handleOwnerChange}
-          options={resolvedOwnerOptions}
-        />
-      ),
-    },
-    {
-      id: "scope",
-      label: "Scope",
-      active: listFilters.isActive("scope"),
-      control: (
-        <BuildFilterSelect
-          label="Scope"
-          value={listFilters.value("scope")}
-          onValueChange={handleScopeChange}
-          options={GOAL_SCOPE_FILTER_OPTIONS}
-        />
-      ),
-    },
-    {
-      id: "health",
-      label: "Health",
-      active: listFilters.isActive("health"),
-      control: (
-        <BuildFilterSelect
-          label="Health"
-          value={listFilters.value("health")}
-          onValueChange={handleHealthChange}
-          options={GOAL_HEALTH_FILTER_OPTIONS}
-        />
-      ),
-    },
-    {
-      id: "due",
-      label: GOAL_DUE_FILTER_LABEL,
-      active: listFilters.isActive("due"),
-      control: (
-        <DatePicker
-          ariaLabel={GOAL_DUE_FILTER_LABEL}
-          clearable
-          value={dueValue === BUILD_FILTER_ALL ? "" : dueValue}
-          onChange={handleDueChange}
-          placeholder={GOAL_DUE_FILTER_LABEL}
-          className="w-full min-w-0 max-w-none bg-card text-foreground"
-        />
-      ),
-    },
-    {
-      id: "metric",
-      label: "Metric",
-      active: listFilters.isActive("metricType"),
-      control: (
-        <BuildFilterSelect
-          label="Metric"
-          value={listFilters.value("metricType")}
-          onValueChange={handleMetricTypeChange}
-          options={GOAL_METRIC_FILTER_OPTIONS}
-        />
-      ),
-    },
-  ] as const;
+  const filters = useMemo(
+    () => [
+      {
+        id: "level",
+        label: "Level",
+        active: listFilters.isActive("level"),
+        control: (
+          <BuildFilterSelect
+            label="Level"
+            value={listFilters.value("level")}
+            onValueChange={handleLevelChange}
+            options={GOAL_LEVEL_FILTER_OPTIONS}
+          />
+        ),
+      },
+      {
+        id: "status",
+        label: "Status",
+        active: statusValues.length > 0,
+        control: (
+          <BuildMultiFilterSelect
+            label="Status"
+            values={statusValues}
+            onValuesChange={handleStatusValuesChange}
+            options={STATUS_OPTIONS}
+          />
+        ),
+      },
+      {
+        id: "owner",
+        label: "Owner",
+        active: ownerValues.length > 0,
+        control: (
+          <BuildMultiFilterSelect
+            label="Owner"
+            values={ownerValues}
+            onValuesChange={handleOwnerValuesChange}
+            options={resolvedOwnerOptions}
+          />
+        ),
+      },
+      {
+        id: "scope",
+        label: "Scope",
+        active: listFilters.isActive("scope"),
+        control: (
+          <BuildFilterSelect
+            label="Scope"
+            value={listFilters.value("scope")}
+            onValueChange={handleScopeChange}
+            options={GOAL_SCOPE_FILTER_OPTIONS}
+          />
+        ),
+      },
+      {
+        id: "health",
+        label: "Health",
+        active: healthValues.length > 0,
+        control: (
+          <BuildMultiFilterSelect
+            label="Health"
+            values={healthValues}
+            onValuesChange={handleHealthValuesChange}
+            options={GOAL_HEALTH_FILTER_OPTIONS.filter((o) => o.value !== BUILD_FILTER_ALL)}
+          />
+        ),
+      },
+      {
+        id: "due",
+        label: GOAL_DUE_FILTER_LABEL,
+        active: listFilters.isActive("due"),
+        control: (
+          <DatePicker
+            ariaLabel={GOAL_DUE_FILTER_LABEL}
+            clearable
+            value={dueValue === BUILD_FILTER_ALL ? "" : dueValue}
+            onChange={handleDueChange}
+            placeholder={GOAL_DUE_FILTER_LABEL}
+            className="w-full min-w-0 max-w-none bg-card text-foreground"
+          />
+        ),
+      },
+      {
+        id: "metric",
+        label: "Metric",
+        active: listFilters.isActive("metricType"),
+        control: (
+          <BuildFilterSelect
+            label="Metric"
+            value={listFilters.value("metricType")}
+            onValueChange={handleMetricTypeChange}
+            options={GOAL_METRIC_FILTER_OPTIONS}
+          />
+        ),
+      },
+    ],
+    [
+      listFilters,
+      statusValues,
+      healthValues,
+      ownerValues,
+      dueValue,
+      resolvedOwnerOptions,
+      handleLevelChange,
+      handleStatusValuesChange,
+      handleOwnerValuesChange,
+      handleScopeChange,
+      handleHealthValuesChange,
+      handleDueChange,
+      handleMetricTypeChange,
+    ],
+  );
 
   return (
     <BuildListToolbar

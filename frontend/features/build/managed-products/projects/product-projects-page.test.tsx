@@ -223,6 +223,39 @@ jest.mock("@/features/build/shared/build-filter-select", () => ({
   ),
 }));
 
+jest.mock("@/features/build/shared/build-multi-filter-select", () => ({
+  BuildMultiFilterSelect: ({
+    label,
+    values,
+    onValuesChange,
+    options,
+  }: {
+    label: string;
+    values: string[];
+    onValuesChange: (v: string[]) => void;
+    options: Array<{ value: string; label: string }>;
+  }) => (
+    <div data-testid={`multi-select-${label.toLowerCase()}`}>
+      {options.map((o) => (
+        <label key={o.value}>
+          <input
+            type="checkbox"
+            aria-label={`${label}-${o.value}`}
+            checked={values.includes(o.value)}
+            onChange={() => {
+              const next = values.includes(o.value)
+                ? values.filter((v) => v !== o.value)
+                : [...values, o.value];
+              onValuesChange(next);
+            }}
+          />
+          {o.label}
+        </label>
+      ))}
+    </div>
+  ),
+}));
+
 jest.mock("@/features/build/shared/build-header-actions", () => ({
   BuildHeaderActions: ({ actions }: { actions: Array<{ label: string; onSelect?: () => void }> }) => (
     <div data-testid="build-header-actions">
@@ -265,12 +298,14 @@ function makeRow(overrides: Partial<{
   key: string;
   status: string;
   contribution: { totalTickets: number; doneTickets: number; percent: number | null };
+  allowedActions: string[];
 }> = {}) {
   return {
     id: 1,
     name: "Alpha Project",
     key: "AP",
     status: "ACTIVE",
+    isPrimary: false,
     ownerId: null,
     ownerMembershipId: null,
     managerMembershipId: null,
@@ -280,6 +315,9 @@ function makeRow(overrides: Partial<{
     contribution: { totalTickets: 10, doneTickets: 5, percent: 50 },
     linkedRoadmapItemCount: 0,
     linkedGoals: [],
+    revision: 1,
+    sourceFreshness: "2026-01-01T00:00:00.000Z",
+    allowedActions: ["view", "unlink", "setPrimary"],
     createdAt: "2026-01-01T00:00:00.000Z",
     updatedAt: "2026-01-01T00:00:00.000Z",
     ...overrides,
@@ -302,7 +340,7 @@ describe("ProductProjectsPage — filter params forwarded to server (BSN-PROJ-FI
     mockUseSearchParams.mockReturnValue(new URLSearchParams("pp_status=ACTIVE"));
     render(<ProductProjectsPage managedProductId={5} />);
     const [callParams] = mockUseManagedProductProjects.mock.calls[0] as [Record<string, unknown>];
-    expect(callParams).toMatchObject({ status: "ACTIVE" });
+    expect(callParams).toMatchObject({ status: ["ACTIVE"] });
   });
 
   it("omits status from params when the URL param is absent", () => {
@@ -320,8 +358,7 @@ describe("ProductProjectsPage — filter params forwarded to server (BSN-PROJ-FI
 
   it("writes the status filter to the URL so the filtered view is shareable", () => {
     render(<ProductProjectsPage managedProductId={5} />);
-    const statusSelect = screen.getByRole("combobox", { name: "Status" });
-    fireEvent.change(statusSelect, { target: { value: "COMPLETED" } });
+    fireEvent.click(screen.getByRole("checkbox", { name: "Status-COMPLETED" }));
     expect(mockRouterReplace).toHaveBeenCalledWith(
       expect.stringContaining("pp_status=COMPLETED"),
       { scroll: false },
@@ -331,8 +368,7 @@ describe("ProductProjectsPage — filter params forwarded to server (BSN-PROJ-FI
   it("resets cursor when status filter changes", () => {
     mockUseSearchParams.mockReturnValue(new URLSearchParams("cursor=abc"));
     render(<ProductProjectsPage managedProductId={5} />);
-    const statusSelect = screen.getByRole("combobox", { name: "Status" });
-    fireEvent.change(statusSelect, { target: { value: "ARCHIVED" } });
+    fireEvent.click(screen.getByRole("checkbox", { name: "Status-ARCHIVED" }));
     const call = mockRouterReplace.mock.calls[0][0] as string;
     expect(call).not.toContain("cursor=");
   });

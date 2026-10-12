@@ -67,15 +67,15 @@ export interface GoalStats {
 }
 
 interface GoalsParams {
-  status?: GoalStatus;
+  status?: GoalStatus | GoalStatus[];
   level?: GoalLevel;
-  ownerId?: string;
+  ownerId?: string | string[];
   projectId?: number;
   managedProductId?: number;
   search?: string;
   page?: number;
   limit?: number;
-  health?: string;
+  health?: string | string[];
   due?: string;
   scope?: string;
   metricType?: KeyResultMetric;
@@ -130,7 +130,24 @@ interface AddGoalLinkInput {
 
 function toQueryParams(params?: GoalsParams): Record<string, unknown> | undefined {
   if (!params) return undefined;
-  return { ...params };
+  const { status, health, ownerId, ...rest } = params;
+  const result: Record<string, unknown> = { ...rest };
+  if (Array.isArray(status)) {
+    if (status.length > 0) result["status"] = status.join(",");
+  } else if (status) {
+    result["status"] = status;
+  }
+  if (Array.isArray(health)) {
+    if (health.length > 0) result["health"] = health.join(",");
+  } else if (health) {
+    result["health"] = health;
+  }
+  if (Array.isArray(ownerId)) {
+    if (ownerId.length > 0) result["ownerId"] = ownerId.join(",");
+  } else if (ownerId) {
+    result["ownerId"] = ownerId;
+  }
+  return result;
 }
 
 type GoalsListCache = GoalListItem[] | GoalsListPage;
