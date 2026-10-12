@@ -16,6 +16,11 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { isApiError } from "@/lib/api-envelope";
 import { toast } from "sonner";
 import { AddProductMemberDialog } from "./add-product-member-dialog";
+import { ErrorState } from "@/components/shared/error-state";
+import {
+  PRODUCT_MEMBER_CURSORS_PARAM,
+  useBuildCursorPager,
+} from "@/features/build/shared/use-build-cursor-pager";
 
 interface ProductSettingsMembersSectionProps {
   managedProductId: number;
@@ -38,12 +43,15 @@ export function ProductSettingsMembersSection({
   const [addOpen, setAddOpen] = useState(false);
   const [removeTarget, setRemoveTarget] = useState<ManagedProductMember | null>(null);
   const [removeBlockedMsg, setRemoveBlockedMsg] = useState<string | null>(null);
-  const [cursor, setCursor] = useState<string | null>(null);
-  const [pageNumber, setPageNumber] = useState(1);
+  const pager = useBuildCursorPager(
+    String(managedProductId),
+    PRODUCT_MEMBER_CURSORS_PARAM,
+  );
 
-  const { data, isLoading } = useManagedProductMembers(managedProductId, {
-    cursor: cursor ?? undefined,
-  });
+  const { data, isLoading, isError, error, refetch } = useManagedProductMembers(
+    managedProductId,
+    { cursor: pager.cursor },
+  );
   const removeMember = useRemoveManagedProductMember(managedProductId);
 
   const handleRemoveRow = useCallback((m: ManagedProductMember) => {
@@ -79,16 +87,12 @@ export function ProductSettingsMembersSection({
   }
 
   const handleNextPage = useCallback(() => {
-    if (data?.pagination?.nextCursor) {
-      setCursor(data.pagination.nextCursor);
-      setPageNumber((n) => n + 1);
-    }
-  }, [data?.pagination?.nextCursor]);
+    pager.goNext(data?.pagination?.nextCursor);
+  }, [pager, data?.pagination?.nextCursor]);
 
-  const handlePreviousPage = useCallback(() => {
-    setCursor(null);
-    setPageNumber(1);
-  }, []);
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   const members = data?.data ?? [];
   const hasMore = data?.pagination?.hasMore ?? false;
@@ -118,6 +122,14 @@ export function ProductSettingsMembersSection({
             <Skeleton key={i} className="h-10 w-full" />
           ))}
         </div>
+      ) : isError ? (
+        <ErrorState
+          compact
+          title="Could not load product members"
+          description={getErrorMessage(error)}
+          onRetry={handleRetry}
+          error={error}
+        />
       ) : (
         <ul className="flex flex-col gap-1" aria-label="Product members">
           {members.map((m) => (
@@ -151,15 +163,15 @@ export function ProductSettingsMembersSection({
         </ul>
       )}
 
-      {(members.length > 0 || pageNumber > 1) ? (
+      {!isError && (members.length > 0 || pager.hasPrevious) ? (
         <TablePagination
           mode="cursor"
           rowCount={members.length}
-          pageNumber={pageNumber}
+          pageNumber={pager.pageNumber}
           hasMore={hasMore}
-          hasPrevious={pageNumber > 1}
+          hasPrevious={pager.hasPrevious}
           onNext={handleNextPage}
-          onPrevious={handlePreviousPage}
+          onPrevious={pager.goPrevious}
           hideOnSinglePage
         />
       ) : null}

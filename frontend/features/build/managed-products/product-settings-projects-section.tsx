@@ -14,6 +14,10 @@ import {
   useSetPrimaryProject,
 } from "@/hooks/api/build/use-link-project-managed-product";
 import type { LinkedProjectRow } from "@/hooks/api/build/managed-product-projects";
+import {
+  PRODUCT_PROJECT_CURSORS_PARAM,
+  useBuildCursorPager,
+} from "@/features/build/shared/use-build-cursor-pager";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 
@@ -29,12 +33,14 @@ export function ProductSettingsProjectsSection({
   const canUpdateByPermission = useCan("build:managed-products:update");
   const canUpdate = canWriteProp !== undefined ? canWriteProp : canUpdateByPermission;
   const [unlinkTarget, setUnlinkTarget] = useState<LinkedProjectRow | null>(null);
-  const [cursor, setCursor] = useState<string | null>(null);
-  const [pageNumber, setPageNumber] = useState(1);
+  const pager = useBuildCursorPager(
+    String(managedProductId),
+    PRODUCT_PROJECT_CURSORS_PARAM,
+  );
 
   const { data, isLoading, isError, error, refetch } = useManagedProductProjects({
     managedProductId,
-    cursor: cursor ?? undefined,
+    cursor: pager.cursor,
   });
   const unlinkPair = useUnlinkProjectPair();
   const setPrimary = useSetPrimaryProject();
@@ -48,16 +54,8 @@ export function ProductSettingsProjectsSection({
   }, []);
 
   const handleNextPage = useCallback(() => {
-    if (data?.pagination?.nextCursor) {
-      setCursor(data.pagination.nextCursor);
-      setPageNumber((n) => n + 1);
-    }
-  }, [data?.pagination?.nextCursor]);
-
-  const handlePreviousPage = useCallback(() => {
-    setCursor(null);
-    setPageNumber(1);
-  }, []);
+    pager.goNext(data?.pagination?.nextCursor);
+  }, [pager, data?.pagination?.nextCursor]);
 
   const handleRetry = useCallback(() => {
     void refetch();
@@ -167,15 +165,15 @@ export function ProductSettingsProjectsSection({
         </ul>
       )}
 
-      {rows.length > 0 || pageNumber > 1 ? (
+      {!isError && (rows.length > 0 || pager.hasPrevious) ? (
         <TablePagination
           mode="cursor"
           rowCount={rows.length}
-          pageNumber={pageNumber}
+          pageNumber={pager.pageNumber}
           hasMore={hasMore}
-          hasPrevious={pageNumber > 1}
+          hasPrevious={pager.hasPrevious}
           onNext={handleNextPage}
-          onPrevious={handlePreviousPage}
+          onPrevious={pager.goPrevious}
           hideOnSinglePage
         />
       ) : null}

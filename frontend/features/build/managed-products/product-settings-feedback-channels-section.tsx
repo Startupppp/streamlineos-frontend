@@ -8,6 +8,10 @@ import { TablePagination } from "@/components/ui/table-pagination";
 import { ErrorState } from "@/components/shared/error-state";
 import { useFeedbucketWidgets } from "@/hooks/api/feedbucket/use-feedbucket-widgets";
 import { FeedbucketCollectDialog } from "./feedback/feedbucket-collect-dialog";
+import {
+  PRODUCT_WIDGET_CURSORS_PARAM,
+  useBuildCursorPager,
+} from "@/features/build/shared/use-build-cursor-pager";
 import { getErrorMessage } from "@/lib/get-error-message";
 
 interface ProductSettingsFeedbackChannelsSectionProps {
@@ -18,28 +22,22 @@ export function ProductSettingsFeedbackChannelsSection({
   managedProductId,
 }: ProductSettingsFeedbackChannelsSectionProps) {
   const [collectOpen, setCollectOpen] = useState(false);
-  const [cursor, setCursor] = useState<string | null>(null);
-  const [pageNumber, setPageNumber] = useState(1);
+  const pager = useBuildCursorPager(
+    String(managedProductId),
+    PRODUCT_WIDGET_CURSORS_PARAM,
+  );
 
   const { data, isLoading, isError, error, refetch } = useFeedbucketWidgets({
     managedProductId,
-    cursor: cursor ?? undefined,
+    cursor: pager.cursor,
   });
 
   const productWidgets = data?.data ?? [];
   const hasMore = data?.pagination.hasMore ?? false;
 
   const handleNextPage = useCallback(() => {
-    if (data?.pagination.nextCursor) {
-      setCursor(data.pagination.nextCursor);
-      setPageNumber((n) => n + 1);
-    }
-  }, [data?.pagination.nextCursor]);
-
-  const handlePreviousPage = useCallback(() => {
-    setCursor(null);
-    setPageNumber(1);
-  }, []);
+    pager.goNext(data?.pagination.nextCursor);
+  }, [pager, data?.pagination.nextCursor]);
 
   const handleOpenCollect = useCallback(() => {
     setCollectOpen(true);
@@ -119,15 +117,15 @@ export function ProductSettingsFeedbackChannelsSection({
         </ul>
       )}
 
-      {productWidgets.length > 0 || pageNumber > 1 ? (
+      {!isError && (productWidgets.length > 0 || pager.hasPrevious) ? (
         <TablePagination
           mode="cursor"
           rowCount={productWidgets.length}
-          pageNumber={pageNumber}
+          pageNumber={pager.pageNumber}
           hasMore={hasMore}
-          hasPrevious={pageNumber > 1}
+          hasPrevious={pager.hasPrevious}
           onNext={handleNextPage}
-          onPrevious={handlePreviousPage}
+          onPrevious={pager.goPrevious}
           hideOnSinglePage
         />
       ) : null}

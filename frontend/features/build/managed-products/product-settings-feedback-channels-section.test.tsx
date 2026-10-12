@@ -2,6 +2,18 @@ import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { ProductSettingsFeedbackChannelsSection } from "./product-settings-feedback-channels-section";
 
+let mockSearch = "";
+
+const mockReplace = jest.fn((url: string) => {
+  mockSearch = url.includes("?") ? url.slice(url.indexOf("?") + 1) : "";
+});
+
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({ replace: mockReplace, push: jest.fn() }),
+  usePathname: () => "/build/managed-products/7/settings",
+  useSearchParams: () => new URLSearchParams(mockSearch),
+}));
+
 jest.mock("@/hooks/api/feedbucket/use-feedbucket-widgets", () => ({
   useFeedbucketWidgets: jest.fn(),
   useCreateFeedbucketWidget: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
@@ -70,6 +82,66 @@ function page(
 }
 
 describe("ProductSettingsFeedbackChannelsSection", () => {
+  beforeEach(() => {
+    mockSearch = "";
+    mockReplace.mockClear();
+  });
+
+  it("steps back one page at a time from page three rather than jumping to the first page", () => {
+    useFeedbucketWidgets.mockReturnValue({
+      data: page([ACTIVE_WIDGET], { hasMore: true, nextCursor: "cursor-2" }),
+      isLoading: false,
+    });
+    const view = render(
+      <ProductSettingsFeedbackChannelsSection managedProductId={MANAGED_PRODUCT_ID} />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /next/i }));
+    useFeedbucketWidgets.mockReturnValue({
+      data: page([ACTIVE_WIDGET], { hasMore: true, nextCursor: "cursor-3" }),
+      isLoading: false,
+    });
+    view.rerender(
+      <ProductSettingsFeedbackChannelsSection managedProductId={MANAGED_PRODUCT_ID} />,
+    );
+    expect(useFeedbucketWidgets).toHaveBeenLastCalledWith(
+      expect.objectContaining({ cursor: "cursor-2" }),
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /next/i }));
+    view.rerender(
+      <ProductSettingsFeedbackChannelsSection managedProductId={MANAGED_PRODUCT_ID} />,
+    );
+    expect(useFeedbucketWidgets).toHaveBeenLastCalledWith(
+      expect.objectContaining({ cursor: "cursor-3" }),
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /previous/i }));
+    view.rerender(
+      <ProductSettingsFeedbackChannelsSection managedProductId={MANAGED_PRODUCT_ID} />,
+    );
+    expect(useFeedbucketWidgets).toHaveBeenLastCalledWith(
+      expect.objectContaining({ cursor: "cursor-2" }),
+    );
+  });
+
+  it("hides the pager while the request is failed so a stale page number cannot be navigated", () => {
+    useFeedbucketWidgets.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: true,
+      error: new Error("boom"),
+      refetch: jest.fn(),
+    });
+
+    render(
+      <ProductSettingsFeedbackChannelsSection managedProductId={MANAGED_PRODUCT_ID} />,
+    );
+
+    expect(screen.queryByRole("button", { name: /next/i })).toBeNull();
+    expect(screen.queryByRole("button", { name: /previous/i })).toBeNull();
+  });
+
   it("renders the section heading", () => {
     useFeedbucketWidgets.mockReturnValue({ data: page([]), isLoading: false });
 

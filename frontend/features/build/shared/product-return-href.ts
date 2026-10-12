@@ -15,6 +15,7 @@ const PRODUCT_RETURN_QUERY_KEYS = [
   "consentStatus",
   "crmOrganizationId",
   "cursor",
+  "cursors",
   "customerVisible",
   "due",
   "duplicate",
@@ -30,6 +31,7 @@ const PRODUCT_RETURN_QUERY_KEYS = [
   "linked",
   "linkedProjectId",
   "linkedToOpportunity",
+  "memberCursors",
   "oppConfidence",
   "oppEvidenceAge",
   "oppOwner",
@@ -44,6 +46,7 @@ const PRODUCT_RETURN_QUERY_KEYS = [
   "ownerId",
   "page",
   "period",
+  "projectCursors",
   "range",
   "scope",
   "search",
@@ -64,6 +67,7 @@ const PRODUCT_RETURN_QUERY_KEYS = [
   "to",
   "type",
   "view",
+  "widgetCursors",
 ] as const;
 
 export const PRODUCT_RETURN_PARAM = "ret";

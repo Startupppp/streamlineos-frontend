@@ -2,6 +2,18 @@ import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { ProductSettingsProjectsSection } from "./product-settings-projects-section";
 
+let mockSearch = "";
+
+const mockReplace = jest.fn((url: string) => {
+  mockSearch = url.includes("?") ? url.slice(url.indexOf("?") + 1) : "";
+});
+
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({ replace: mockReplace, push: jest.fn() }),
+  usePathname: () => "/build/managed-products/1/settings",
+  useSearchParams: () => new URLSearchParams(mockSearch),
+}));
+
 jest.mock("@/hooks/api/build/managed-product-projects", () => ({
   useManagedProductProjects: jest.fn(),
 }));
@@ -78,6 +90,50 @@ function makeQueryResult(overrides: Record<string, unknown> = {}) {
 }
 
 describe("ProductSettingsProjectsSection", () => {
+  beforeEach(() => {
+    mockSearch = "";
+    mockReplace.mockClear();
+  });
+
+  it("steps back one page at a time from page three rather than jumping to the first page", () => {
+    useManagedProductProjects.mockReturnValue(
+      makeQueryResult({ data: { data: [BASE_ROW], pagination: { limit: 20, hasMore: true, nextCursor: "cursor-2" } } }),
+    );
+    const view = render(<ProductSettingsProjectsSection managedProductId={MANAGED_PRODUCT_ID} />);
+
+    fireEvent.click(screen.getByRole("button", { name: /next/i }));
+    useManagedProductProjects.mockReturnValue(
+      makeQueryResult({ data: { data: [PAGE2_ROW], pagination: { limit: 20, hasMore: true, nextCursor: "cursor-3" } } }),
+    );
+    view.rerender(<ProductSettingsProjectsSection managedProductId={MANAGED_PRODUCT_ID} />);
+    expect(useManagedProductProjects).toHaveBeenLastCalledWith(
+      expect.objectContaining({ cursor: "cursor-2" }),
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /next/i }));
+    view.rerender(<ProductSettingsProjectsSection managedProductId={MANAGED_PRODUCT_ID} />);
+    expect(useManagedProductProjects).toHaveBeenLastCalledWith(
+      expect.objectContaining({ cursor: "cursor-3" }),
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /previous/i }));
+    view.rerender(<ProductSettingsProjectsSection managedProductId={MANAGED_PRODUCT_ID} />);
+    expect(useManagedProductProjects).toHaveBeenLastCalledWith(
+      expect.objectContaining({ cursor: "cursor-2" }),
+    );
+  });
+
+  it("hides the pager while the request is failed so a stale page number cannot be navigated", () => {
+    useManagedProductProjects.mockReturnValue(
+      makeQueryResult({ data: undefined, isError: true, error: new Error("boom") }),
+    );
+
+    render(<ProductSettingsProjectsSection managedProductId={MANAGED_PRODUCT_ID} />);
+
+    expect(screen.queryByRole("button", { name: /next/i })).toBeNull();
+    expect(screen.queryByRole("button", { name: /previous/i })).toBeNull();
+  });
+
   beforeEach(() => {
     useManagedProductProjects.mockClear();
   });
@@ -223,7 +279,7 @@ describe("ProductSettingsProjectsSection", () => {
     expect(screen.getByText("Beta")).toBeInTheDocument();
   });
 
-  it("resets to page 1 when Previous page is clicked", () => {
+  it("returns to the page before, which from page 2 is the uncursored first page", () => {
     useManagedProductProjects
       .mockReturnValueOnce(makeQueryResult({ data: PAGE1 }))
       .mockReturnValue(makeQueryResult({ data: PAGE2 }));
