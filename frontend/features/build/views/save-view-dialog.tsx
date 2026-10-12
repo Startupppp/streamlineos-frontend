@@ -12,6 +12,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+import { MAX_VIEW_NAME } from "./saved-views/create-view-schema";
 
 type ViewVisibility = "private" | "shared";
 
@@ -44,6 +45,7 @@ export function SaveViewDialog({
   onSaveWithMeta,
 }: SaveViewDialogProps) {
   const [visibility, setVisibility] = useState<ViewVisibility>("shared");
+  const nameOverLimit = viewName.trim().length > MAX_VIEW_NAME;
 
   const dispatchSave = useCallback(() => {
     if (onSaveWithMeta) {
@@ -55,9 +57,9 @@ export function SaveViewDialog({
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === "Enter") dispatchSave();
+      if (e.key === "Enter" && !nameOverLimit) dispatchSave();
     },
-    [dispatchSave],
+    [dispatchSave, nameOverLimit],
   );
 
   const handleCancel = useCallback(() => onOpenChange(false), [onOpenChange]);
@@ -84,7 +86,11 @@ export function SaveViewDialog({
               placeholder="My filtered view"
               className="mt-1.5"
               autoFocus
+              aria-invalid={nameOverLimit}
             />
+            <p className="text-xs text-destructive mt-1">
+              {nameOverLimit ? `Name must be ${MAX_VIEW_NAME} characters or fewer` : ""}
+            </p>
           </div>
           <div>
             <Label className="text-sm">Visibility</Label>
@@ -122,7 +128,7 @@ export function SaveViewDialog({
             <Button variant="outline" size="sm" onClick={handleCancel} disabled={isSaving}>
               Cancel
             </Button>
-            <LoadingButton size="sm" onClick={handleSave} disabled={!viewName.trim()} isPending={isSaving} loadingText="Saving...">
+            <LoadingButton size="sm" onClick={handleSave} disabled={!viewName.trim() || nameOverLimit} isPending={isSaving} loadingText="Saving...">
               Save view
             </LoadingButton>
           </div>
