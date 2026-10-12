@@ -20,6 +20,7 @@ export function buildRelease(overrides: Partial<ManagedProductRelease>): Managed
     allowedActions: ["view", "update", "archive"],
     linkedRoadmapItemCount: 0,
     projectReleaseId: null,
+    projectRelease: null,
     ...overrides,
   };
 }
@@ -46,6 +47,7 @@ export function buildReleaseDetail(
     updatedAt: "2026-01-01T00:00:00Z",
     allowedActions: ["view", "update", "archive"],
     linkedRoadmapItemCount: 0,
+    projectRelease: null,
     evidence: null,
     ...overrides,
   };

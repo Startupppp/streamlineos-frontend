@@ -43,6 +43,7 @@ const DRAFT: ManagedProductRelease = {
   createdAt: "2026-01-01T00:00:00Z",
   updatedAt: "2026-01-01T00:00:00Z",
   projectReleaseId: null,
+  projectRelease: null,
   allowedActions: ["view", "update", "archive"],
   linkedRoadmapItemCount: 0,
 };
