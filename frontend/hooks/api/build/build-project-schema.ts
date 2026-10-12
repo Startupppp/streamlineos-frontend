@@ -45,17 +45,19 @@ const projectDetailMemberContract =
     },
   }));
 
-
 export const ticketLabelListContract = projectsListLabelsResponseSchema;
 export const ticketLabelContract = projectsCreateLabelResponseSchema;
 export const projectListPageContract = projectsListProjectsResponseSchema;
 export const projectRowContract = projectsCreateProjectResponseSchema;
-export const projectDetailContract = projectsByIdGetProjectResponseSchema.extend({
-  members: z.array(projectDetailMemberContract),
-});
-export const projectMemberPageContract = projectResourcesListMembersResponseSchema;
+export const projectDetailContract =
+  projectsByIdGetProjectResponseSchema.extend({
+    members: z.array(projectDetailMemberContract),
+  });
+export const projectMemberPageContract =
+  projectResourcesListMembersResponseSchema;
 export const projectMemberRowContract = projectResourcesAddMemberResponseSchema;
-export const memberRoleContract = projectResourcesUpdateMemberRoleResponseSchema;
+export const memberRoleContract =
+  projectResourcesUpdateMemberRoleResponseSchema;
 export const projectRosterContract = projectResourcesGetRosterResponseSchema;
 export const projectCustomStateListContract =
   projectResourcesListCustomStatesResponseSchema;
@@ -74,7 +76,8 @@ export const ticketFieldValueCreateContract =
 export const projectReleaseListContract =
   projectsReleasesListReleasesResponseSchema;
 
-export const projectReleaseRowContract = projectsReleasesCreateReleaseResponseSchema;
+export const projectReleaseRowContract =
+  projectsReleasesCreateReleaseResponseSchema;
 export const projectWebhookPageContract =
   projectsWebhooksListWebhooksResponseSchema;
 export const projectWebhookListContract = projectWebhookPageContract;
@@ -95,4 +98,7 @@ export const buildMemberPageContract = buildMembersListResponseSchema.extend({
   ),
 });
 export const buildMemberRowContract = buildMembersAddResponseSchema;
-export const successContract = projectsCustomFieldsUpsertTicketValuesResponseSchema;
+export const successContract =
+  projectsCustomFieldsUpsertTicketValuesResponseSchema;
+
+export const projectKeyAvailableContract = z.object({ available: z.boolean() });

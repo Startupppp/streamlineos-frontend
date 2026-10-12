@@ -105,6 +105,7 @@ export function SidebarSelectFields({
     const points = parseTicketPointsInput(pointsDraft);
     if (points === undefined) {
       setPointsError(`Must be 0–${MAX_TICKET_POINTS}`);
+      setPointsDraft(ticket.points == null ? "" : String(ticket.points));
       return;
     }
     setPointsError(null);

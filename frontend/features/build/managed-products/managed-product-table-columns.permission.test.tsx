@@ -112,7 +112,7 @@ describe("managed product row actions — allowedActions gating", () => {
     expect(screen.queryByText("Archive")).not.toBeInTheDocument();
   });
 
-  it("shows all actions when allowedActions is undefined (no server restriction)", () => {
+  it("hides all permissioned actions when allowedActions is absent (fails closed)", () => {
     render(
       <ProductRowActions
         product={{ ...product, allowedActions: undefined }}
@@ -125,9 +125,10 @@ describe("managed product row actions — allowedActions gating", () => {
       />,
     );
 
-    expect(screen.getByText("Edit")).toBeInTheDocument();
-    expect(screen.getByText("Archive")).toBeInTheDocument();
-    expect(screen.getByText("Delete")).toBeInTheDocument();
+    expect(screen.queryByText("Edit")).not.toBeInTheDocument();
+    expect(screen.queryByText("Archive")).not.toBeInTheDocument();
+    expect(screen.queryByText("Delete")).not.toBeInTheDocument();
+    expect(screen.getByText("Open")).toBeInTheDocument();
   });
 });
 

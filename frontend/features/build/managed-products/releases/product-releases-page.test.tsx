@@ -140,18 +140,18 @@ describe("ProductReleasesPage", () => {
     render(<ProductReleasesPage managedProductId={7} />);
     await user.click(screen.getByRole("button", { name: "Mark released" }));
     expect(mockMutate).toHaveBeenCalledWith(
-      { releaseId: 1, status: "released", releaseDate: getTodayString() },
+      { releaseId: 1, expectedRevision: 1, status: "released", releaseDate: getTodayString() },
       expect.objectContaining({ onSuccess: expect.any(Function), onError: expect.any(Function) }),
     );
   });
 
   it("keeps an existing release date when marking a draft as released", async () => {
     const user = userEvent.setup();
-    setReleases([release({ id: 9, name: "Dated", status: "draft", releaseDate: "2026-12-01" })]);
+    setReleases([release({ id: 9, name: "Dated", status: "draft", releaseDate: "2026-12-01", recordRevision: 3 })]);
     render(<ProductReleasesPage managedProductId={7} />);
     await user.click(screen.getByRole("button", { name: "Mark released" }));
     expect(mockMutate).toHaveBeenCalledWith(
-      { releaseId: 9, status: "released", releaseDate: "2026-12-01" },
+      { releaseId: 9, expectedRevision: 3, status: "released", releaseDate: "2026-12-01" },
       expect.anything(),
     );
   });
@@ -164,7 +164,10 @@ describe("ProductReleasesPage", () => {
     expect(mockMutate).not.toHaveBeenCalled();
     const dialog = await screen.findByRole("alertdialog");
     await user.click(within(dialog).getByRole("button", { name: "Archive" }));
-    expect(mockMutate).toHaveBeenCalledWith({ releaseId: 2, status: "archived" }, expect.anything());
+    expect(mockMutate).toHaveBeenCalledWith(
+      { releaseId: 2, expectedRevision: 1, status: "archived" },
+      expect.anything(),
+    );
   });
 
   it("shows New release and row actions when the user can update", () => {
@@ -173,8 +176,8 @@ describe("ProductReleasesPage", () => {
     expect(screen.getByRole("button", { name: "Mark released" })).toBeInTheDocument();
   });
 
-  it("hides New release and row actions when the user cannot update", () => {
-    mockUseCan.mockImplementation((key: string) => key !== "build:managed-products:update");
+  it("hides New release and row actions when all releases have view-only allowedActions", () => {
+    setReleases(ROWS.map((r) => ({ ...r, allowedActions: ["view"] })));
     render(<ProductReleasesPage managedProductId={7} />);
     expect(screen.queryByRole("button", { name: "New release" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Mark released" })).not.toBeInTheDocument();

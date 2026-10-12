@@ -19,6 +19,7 @@ interface EvidenceCardProps {
   managedProductId: number;
   evidence: ManagedProductSummary["evidence"];
   previews: ManagedProductSummary["previews"];
+  ret?: string;
 }
 
 const STATE_FILL: Readonly<Record<string, string>> = {
@@ -42,8 +43,10 @@ export function ManagedProductOverviewEvidenceCard({
   managedProductId,
   evidence,
   previews,
+  ret,
 }: EvidenceCardProps) {
   const base = `/build/managed-products/${managedProductId}`;
+  const retSuffix = ret ? `?ret=${ret}` : "";
   const themedPct = percentOf(evidence.themedCount, evidence.feedbackCount);
   const last30dHref = useMemo(() => {
     const to = new Date();
@@ -65,14 +68,14 @@ export function ManagedProductOverviewEvidenceCard({
     <OverviewPanel
       title="Evidence strength"
       description="Volume, freshness and coverage of customer signal."
-      action={<OverviewSectionLink href={`${base}/feedback`}>View feedback</OverviewSectionLink>}
+      action={<OverviewSectionLink href={`${base}/feedback${retSuffix}`}>View feedback</OverviewSectionLink>}
     >
       <dl>
-        <OverviewFact label="Total feedback" href={`${base}/feedback`}>{evidence.feedbackCount}</OverviewFact>
-        <OverviewFact label="Last 30 days" href={last30dHref}>{evidence.feedbackLast30d}</OverviewFact>
+        <OverviewFact label="Total feedback" href={`${base}/feedback${retSuffix}`}>{evidence.feedbackCount}</OverviewFact>
+        <OverviewFact label="Last 30 days" href={`${last30dHref}${ret ? `&ret=${ret}` : ""}`}>{evidence.feedbackLast30d}</OverviewFact>
         <OverviewFact label="Themed">{themedPct !== null ? `${themedPct}%` : "Unknown"}</OverviewFact>
         <OverviewFact label="Latest feedback">{freshnessLabel(evidence.latestFeedbackAt)}</OverviewFact>
-        <OverviewFact label="Opportunities" href={`${base}/insights`}>{evidence.opportunityCount}</OverviewFact>
+        <OverviewFact label="Opportunities" href={`${base}/insights${retSuffix}`}>{evidence.opportunityCount}</OverviewFact>
       </dl>
 
       {stateSegments.length > 0 ? (
@@ -89,7 +92,7 @@ export function ManagedProductOverviewEvidenceCard({
             {previews.themes.map((theme) => (
               <li key={theme.theme}>
                 <Link
-                  href={`${base}/feedback?theme=${encodeURIComponent(theme.theme)}`}
+                  href={`${base}/feedback?theme=${encodeURIComponent(theme.theme)}${ret ? `&ret=${ret}` : ""}`}
                   className="group flex min-h-11 flex-col justify-center gap-1.5 py-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   <span className="flex items-baseline justify-between gap-3 text-sm">
@@ -115,7 +118,7 @@ export function ManagedProductOverviewEvidenceCard({
           {previews.opportunities.map((opportunity) => (
             <OverviewRecordLink
               key={opportunity.id}
-              href={`${base}/insights?opportunity=${opportunity.id}`}
+              href={`${base}/insights?opportunity=${opportunity.id}${ret ? `&ret=${ret}` : ""}`}
               title={opportunity.title}
               trailing={
                 <>

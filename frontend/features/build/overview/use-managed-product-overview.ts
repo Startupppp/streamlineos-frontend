@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { CalendarCheck, Link2, Lightbulb, MessageSquare, Pencil, Target } from "lucide-react";
 import { toast } from "sonner";
 import { useCan } from "@/hooks/api/access";
@@ -75,13 +75,18 @@ function readableToken(value: string): string {
 
 export function useManagedProductOverview(managedProductId: number) {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const retParam = searchParams.get("ret");
   const handleBack = useCallback(() => {
-    if (window.history.length > 1) {
+    if (retParam) {
+      router.push(decodeURIComponent(retParam));
+    } else if (window.history.length > 1) {
       router.back();
     } else {
       router.push("/build/managed-products");
     }
-  }, [router]);
+  }, [router, retParam]);
   const [editOpen, setEditOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const [linkGoalOpen, setLinkGoalOpen] = useState(false);
@@ -190,6 +195,11 @@ export function useManagedProductOverview(managedProductId: number) {
     [canEdit, product],
   );
 
+  const overviewRet = useMemo(() => {
+    const qs = searchParams.toString();
+    return encodeURIComponent(`${pathname}${qs ? `?${qs}` : ""}`);
+  }, [pathname, searchParams]);
+
   const editActions = useMemo(
     () =>
       !!product
@@ -203,8 +213,8 @@ export function useManagedProductOverview(managedProductId: number) {
                   { ...REVIEW_ACTION_BASE, onSelect: handleMarkReviewed, isPending: isMarkingReviewed },
                 ]
               : []),
-            { ...LINK_FEEDBACK_ACTION_BASE, href: `/build/managed-products/${managedProductId}/feedback` },
-            { ...LINK_PROJECT_ACTION_BASE, href: `/build/managed-products/${managedProductId}/projects` },
+            { ...LINK_FEEDBACK_ACTION_BASE, href: `/build/managed-products/${managedProductId}/feedback?ret=${overviewRet}` },
+            { ...LINK_PROJECT_ACTION_BASE, href: `/build/managed-products/${managedProductId}/projects?ret=${overviewRet}` },
           ]
         : [],
     [
@@ -212,6 +222,7 @@ export function useManagedProductOverview(managedProductId: number) {
       canUpdateProduct,
       product,
       managedProductId,
+      overviewRet,
       handleOpenCreate,
       handleOpenPostUpdate,
       handleOpenLinkGoal,
@@ -255,6 +266,7 @@ export function useManagedProductOverview(managedProductId: number) {
     summaryDataUpdatedAt: summaryQuery.dataUpdatedAt,
     overviewSubtitle,
     now,
+    overviewRet,
     markReviewed: canUpdateProduct && !!product ? handleMarkReviewed : undefined,
     isMarkingReviewed,
     teamOptions,

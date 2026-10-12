@@ -18,6 +18,7 @@ import {
 import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { MemberPicker } from "@/components/members/member-picker";
 import type { ReleaseFormValues } from "./product-release-form-schema";
 
 export function ProductReleaseFormFields() {
@@ -87,6 +88,64 @@ export function ProductReleaseFormFields() {
                 dateFormat="dd MMM yyyy"
                 clearable
                 ariaLabel="Release date"
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      <FormField
+        control={form.control}
+        name="ownerUserId"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Owner (optional)</FormLabel>
+            <FormControl>
+              <MemberPicker
+                mode="single"
+                value={field.value ?? undefined}
+                onChange={(userId) => field.onChange(userId ?? null)}
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      <FormField
+        control={form.control}
+        name="qaState"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>QA state (optional)</FormLabel>
+            <Select value={field.value ?? ""} onValueChange={(v) => field.onChange(v || null)}>
+              <FormControl>
+                <SelectTrigger>
+                  <SelectValue placeholder="None" />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                <SelectItem value="not_started">Not started</SelectItem>
+                <SelectItem value="in_review">In review</SelectItem>
+                <SelectItem value="approved">Approved</SelectItem>
+                <SelectItem value="rejected">Rejected</SelectItem>
+              </SelectContent>
+            </Select>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      <FormField
+        control={form.control}
+        name="deploymentEvidenceUrl"
+        render={({ field }) => (
+          <FormItem className="sm:col-span-2">
+            <FormLabel>Deployment evidence URL (optional)</FormLabel>
+            <FormControl>
+              <Input
+                {...field}
+                value={field.value ?? ""}
+                placeholder="https://ci.example.com/build/42"
+                type="url"
               />
             </FormControl>
             <FormMessage />

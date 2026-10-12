@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -43,6 +43,9 @@ function toFormValues(r: ManagedProductRelease): ReleaseFormValues {
     description: r.description ?? "",
     releaseDate: r.releaseDate ?? "",
     status: r.status,
+    ownerUserId: r.ownerUserId ?? null,
+    qaState: r.qaState ?? null,
+    deploymentEvidenceUrl: r.deploymentEvidenceUrl ?? null,
   };
 }
 
@@ -57,6 +60,8 @@ export function ProductReleaseFormSheet({
   const updateRelease = useUpdateManagedProductRelease(managedProductId);
   const isPending = isEdit ? updateRelease.isPending : createRelease.isPending;
 
+  const [conflictError, setConflictError] = useState<string | null>(null);
+
   const form = useForm<ReleaseFormValues>({
     resolver: zodResolver(releaseFormSchema),
     defaultValues: editTarget
@@ -67,6 +72,9 @@ export function ProductReleaseFormSheet({
           description: "",
           releaseDate: "",
           status: "draft",
+          ownerUserId: null,
+          qaState: null,
+          deploymentEvidenceUrl: null,
         },
     values: editTarget ? toFormValues(editTarget) : undefined,
   });
@@ -75,7 +83,10 @@ export function ProductReleaseFormSheet({
 
   function handleOpenChange(next: boolean) {
     if (!next && isPending) return;
-    if (!next) form.reset();
+    if (!next) {
+      form.reset();
+      setConflictError(null);
+    }
     onOpenChange(next);
   }
 
@@ -83,30 +94,43 @@ export function ProductReleaseFormSheet({
     handleOpenChange(false);
   }
 
+  function handleReloadRetry() {
+    setConflictError(null);
+    onOpenChange(false);
+  }
+
   const handleSubmit = useCallback(
     (values: ReleaseFormValues) => {
       if (isPending) return;
+      setConflictError(null);
       const data = {
         name: values.name,
         version: values.version,
         description: values.description || null,
         releaseDate: values.releaseDate || null,
         status: values.status,
+        ownerUserId: values.ownerUserId ?? null,
+        qaState: values.qaState ?? null,
+        deploymentEvidenceUrl: values.deploymentEvidenceUrl || null,
       };
       const onSuccess = () => {
         toast.success(isEdit ? "Release updated." : "Release created.");
         form.reset();
+        setConflictError(null);
         onOpenChange(false);
       };
       const onError = (e: unknown) => {
         if (isWriteConflict(e)) {
-          toast.error("This release was updated by someone else. Please reload and retry.");
+          setConflictError("This release was changed by someone else while you were editing. Reload to see the latest version, then re-apply your changes.");
         } else {
           toast.error(getErrorMessage(e));
         }
       };
       if (isEdit && editTarget) {
-        updateRelease.mutate({ releaseId: editTarget.id, ...data }, { onSuccess, onError });
+        updateRelease.mutate(
+          { releaseId: editTarget.id, expectedRevision: editTarget.recordRevision, ...data },
+          { onSuccess, onError },
+        );
       } else {
         createRelease.mutate(data, { onSuccess, onError });
       }
@@ -126,6 +150,14 @@ export function ProductReleaseFormSheet({
           </SheetDescription>
         </SheetHeader>
         <div className="min-h-0 flex-1 overflow-y-auto px-6 py-4">
+          {conflictError ? (
+            <div className="mb-4 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200">
+              <p className="mb-2">{conflictError}</p>
+              <Button type="button" variant="outline" size="sm" onClick={handleReloadRetry}>
+                Reload and retry
+              </Button>
+            </div>
+          ) : null}
           <Form {...form}>
             <form id={FORM_ID} onSubmit={form.handleSubmit(handleSubmit)} className="flex flex-col" noValidate>
               <ProductReleaseFormFields />

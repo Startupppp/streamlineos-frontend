@@ -17,12 +17,15 @@ import { toast } from "sonner";
 
 interface ProductSettingsProjectsSectionProps {
   managedProductId: number;
+  canWrite?: boolean;
 }
 
 export function ProductSettingsProjectsSection({
   managedProductId,
+  canWrite: canWriteProp,
 }: ProductSettingsProjectsSectionProps) {
-  const canUpdate = useCan("build:managed-products:update");
+  const canUpdateByPermission = useCan("build:managed-products:update");
+  const canUpdate = canWriteProp !== undefined ? canWriteProp : canUpdateByPermission;
   const [unlinkTarget, setUnlinkTarget] = useState<LinkedProjectRow | null>(null);
 
   const { data, isLoading } = useManagedProductProjects({ managedProductId, limit: 100 });

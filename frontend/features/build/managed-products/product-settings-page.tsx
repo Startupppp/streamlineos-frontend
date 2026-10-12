@@ -20,7 +20,7 @@ import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { useManagedProduct } from "@/hooks/api/build/managed-products";
 import { useManagedProductMembers } from "@/hooks/api/build/managed-product-members";
-import { useManagedProductProjects } from "@/hooks/api/build/managed-product-projects";
+import { useManagedProductSummary } from "@/hooks/api/build/managed-product-summary";
 import {
   useUpdateManagedProduct,
   useArchiveManagedProduct,
@@ -64,7 +64,7 @@ function toFormStatus(status: string): EditManagedProductFormValues["status"] {
 }
 
 function ProductSettingsForm({ managedProductId }: ProductSettingsPageProps) {
-  const canUpdate = useCan("build:managed-products:update");
+  const canUpdatePermission = useCan("build:managed-products:update");
   const [isConflict, setIsConflict] = useState(false);
   const [archiveOpen, setArchiveOpen] = useState(false);
   const [restoreOpen, setRestoreOpen] = useState(false);
@@ -84,12 +84,12 @@ function ProductSettingsForm({ managedProductId }: ProductSettingsPageProps) {
   const members = useManagedProductMembers(managedProductId, {
     enabled: archiveOpen,
   });
-  const linkedProjects = useManagedProductProjects({
-    managedProductId,
-    limit: 100,
-  });
+  const summary = useManagedProductSummary(managedProductId);
   const memberCount = members.data?.data.length ?? 0;
-  const linkedProjectCount = linkedProjects.data?.data.length ?? 0;
+  const linkedProjectCount = summary.data?.delivery.linkedProjects ?? 0;
+  const canUpdate =
+    canUpdatePermission &&
+    (product?.allowedActions?.includes("update") ?? false);
 
   const form = useForm<EditManagedProductFormValues>({
     resolver: zodResolver(editManagedProductSchema),
@@ -274,12 +274,14 @@ function ProductSettingsForm({ managedProductId }: ProductSettingsPageProps) {
           <TabsContent value="members" className="mt-0 outline-none">
             <ProductSettingsMembersSection
               managedProductId={managedProductId}
+              canWrite={canUpdate}
             />
           </TabsContent>
 
           <TabsContent value="projects" className="mt-0 outline-none">
             <ProductSettingsProjectsSection
               managedProductId={managedProductId}
+              canWrite={canUpdate}
             />
           </TabsContent>
 

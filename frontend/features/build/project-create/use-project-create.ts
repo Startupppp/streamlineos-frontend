@@ -99,11 +99,17 @@ export function useProjectCreate() {
     setStep((s) => Math.max(s - 1, 1));
   }
 
+  function goToStep(n: number) {
+    const target = Math.max(1, Math.min(n, TOTAL_STEPS));
+    setDirection(target < step ? -1 : 1);
+    setStep(target);
+  }
+
   function reset() {
     setStep(1);
     setDirection(1);
     setDraft(buildInitialDraft(creatorId));
   }
 
-  return { step, direction, draft, updateDraft, goNext, goBack, reset };
+  return { step, direction, draft, updateDraft, goNext, goBack, goToStep, reset };
 }

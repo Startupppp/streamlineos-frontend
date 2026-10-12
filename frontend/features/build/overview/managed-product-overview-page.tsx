@@ -55,6 +55,7 @@ export function ManagedProductOverviewPage({
     resolution,
     overviewSubtitle,
     now,
+    overviewRet,
     markReviewed,
     isMarkingReviewed,
     editActions,
@@ -233,11 +234,13 @@ export function ManagedProductOverviewPage({
                   delivery={summaryData.delivery}
                   previews={summaryData.previews}
                   now={now}
+                  ret={overviewRet}
                 />
                 <ManagedProductOverviewEvidenceCard
                   managedProductId={managedProductId}
                   evidence={summaryData.evidence}
                   previews={summaryData.previews}
+                  ret={overviewRet}
                 />
               </motion.div>
               <motion.div

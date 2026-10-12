@@ -56,8 +56,8 @@ jest.mock("@/hooks/api/build/build-members", () => ({
   useBuildMembers: jest.fn(),
 }));
 
-jest.mock("@/hooks/api/build/managed-product-projects", () => ({
-  useManagedProductProjects: jest.fn(),
+jest.mock("@/hooks/api/build/managed-product-summary", () => ({
+  useManagedProductSummary: jest.fn(),
 }));
 
 const { useCan: mockUseCan } = jest.requireMock("@/hooks/api/access") as { useCan: jest.Mock };
@@ -82,7 +82,7 @@ const {
   useRemoveManagedProductMember: jest.Mock;
 };
 const { useBuildMembers: mockUseBuildMembers } = jest.requireMock("@/hooks/api/build/build-members") as { useBuildMembers: jest.Mock };
-const { useManagedProductProjects: mockUseManagedProductProjects } = jest.requireMock("@/hooks/api/build/managed-product-projects") as { useManagedProductProjects: jest.Mock };
+const { useManagedProductSummary: mockUseManagedProductSummary } = jest.requireMock("@/hooks/api/build/managed-product-summary") as { useManagedProductSummary: jest.Mock };
 
 jest.mock("@/components/shared/dirty-state-context", () => ({
   DirtyStateProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
@@ -135,6 +135,7 @@ const MOCK_PRODUCT = {
   segments: ["enterprise"],
   tags: ["core"],
   successMetrics: [],
+  allowedActions: ["update"],
 };
 
 const EMPTY_MEMBERS = { data: [] };
@@ -155,7 +156,7 @@ function setupDefaultMocks() {
   mockUseAddManagedProductMember.mockReturnValue({ mutate: jest.fn(), isPending: false });
   mockUseRemoveManagedProductMember.mockReturnValue({ mutate: jest.fn(), isPending: false });
   mockUseBuildMembers.mockReturnValue({ data: { data: [], pagination: { hasMore: false, nextCursor: null } } });
-  mockUseManagedProductProjects.mockReturnValue({ data: undefined, isLoading: false });
+  mockUseManagedProductSummary.mockReturnValue({ data: { delivery: { linkedProjects: 2 } } });
 }
 
 beforeEach(() => {
@@ -301,5 +302,46 @@ describe("ProductSettingsPage — archive confirm", () => {
     render(<ProductSettingsPage managedProductId={7} />);
     fireEvent.click(screen.getByRole("button", { name: "Archive" }));
     expect(screen.getByRole("alertdialog")).toBeInTheDocument();
+  });
+
+  it("shows authoritative linked project count from summary in archive dialog", () => {
+    mockUseManagedProductSummary.mockReturnValue({
+      data: { delivery: { linkedProjects: 5 } },
+    });
+    render(<ProductSettingsPage managedProductId={7} />);
+    fireEvent.click(screen.getByRole("button", { name: "Archive" }));
+    expect(screen.getByText(/5 linked project/)).toBeInTheDocument();
+  });
+});
+
+describe("ProductSettingsPage — allowedActions gate", () => {
+  it("hides save button when allowedActions does not include update", () => {
+    mockUseManagedProduct.mockReturnValue({
+      data: { ...MOCK_PRODUCT, allowedActions: [] },
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+    render(<ProductSettingsPage managedProductId={7} />);
+    expect(screen.queryByRole("button", { name: /save changes/i })).not.toBeInTheDocument();
+  });
+
+  it("hides Add member button when allowedActions does not include update", () => {
+    mockSearch = "tab=members";
+    mockUseManagedProduct.mockReturnValue({
+      data: { ...MOCK_PRODUCT, allowedActions: [] },
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+    render(<ProductSettingsPage managedProductId={7} />);
+    expect(screen.queryByRole("button", { name: /add member/i })).not.toBeInTheDocument();
+  });
+
+  it("shows save button when allowedActions includes update and useCan is true", () => {
+    render(<ProductSettingsPage managedProductId={7} />);
+    expect(screen.getByRole("button", { name: /save changes/i })).toBeInTheDocument();
   });
 });

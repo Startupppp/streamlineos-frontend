@@ -351,6 +351,7 @@ export function OutcomeReviewsSection({
             <OutcomeReviewRow
               key={review.id}
               review={review}
+              managedProductId={managedProductId}
               canWrite={canWrite}
               onComplete={() => setCompletingId(review.id)}
               onDelete={() => onDelete(review.id)}

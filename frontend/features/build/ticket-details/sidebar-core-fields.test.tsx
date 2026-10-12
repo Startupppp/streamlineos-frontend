@@ -194,6 +194,58 @@ describe("Issue detail sidebar — the core fields the page contract lists are o
     expect(onPointsChange).not.toHaveBeenCalled();
   });
 
+  it("shows an error and reverts to the stored value when an out-of-range story-points value is blurred", () => {
+    const onPointsChange = jest.fn();
+    render(
+      <SidebarSelectFields
+        ticket={TICKET}
+        statuses={[]}
+        epics={[]}
+        modules={[]}
+        cycles={[]}
+        onStatusChange={jest.fn()}
+        onPriorityChange={jest.fn()}
+        onTypeChange={jest.fn()}
+        onPointsChange={onPointsChange}
+        onEpicChange={jest.fn()}
+        onModuleChange={jest.fn()}
+        onCycleChange={jest.fn()}
+      />,
+    );
+    const input = screen.getByRole("spinbutton");
+    fireEvent.change(input, { target: { value: "-5" } });
+    fireEvent.blur(input);
+    expect(screen.getByRole("alert")).toBeInTheDocument();
+    expect(onPointsChange).not.toHaveBeenCalled();
+    expect(input).toHaveValue(TICKET.points);
+  });
+
+  it("shows an error and reverts when a value above the max is blurred", () => {
+    const onPointsChange = jest.fn();
+    render(
+      <SidebarSelectFields
+        ticket={TICKET}
+        statuses={[]}
+        epics={[]}
+        modules={[]}
+        cycles={[]}
+        onStatusChange={jest.fn()}
+        onPriorityChange={jest.fn()}
+        onTypeChange={jest.fn()}
+        onPointsChange={onPointsChange}
+        onEpicChange={jest.fn()}
+        onModuleChange={jest.fn()}
+        onCycleChange={jest.fn()}
+      />,
+    );
+    const input = screen.getByRole("spinbutton");
+    fireEvent.change(input, { target: { value: "101" } });
+    fireEvent.blur(input);
+    expect(screen.getByRole("alert")).toBeInTheDocument();
+    expect(onPointsChange).not.toHaveBeenCalled();
+    expect(input).toHaveValue(TICKET.points);
+  });
+
   it("hides the add and remove assignee controls from a viewer who cannot assign, while still showing who is assigned", () => {
     render(
       <SidebarAssigneeSection

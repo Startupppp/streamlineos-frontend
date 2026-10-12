@@ -11,6 +11,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { formatRelativeTime } from "@/lib/format-relative-time";
 import type { ManagedProductRelease } from "@/hooks/api/build/managed-product-releases";
 import { useReleaseActions } from "./release-actions-context";
 
@@ -19,21 +20,25 @@ interface ReleaseRowActionsProps {
 }
 
 export function ReleaseRowActions({ release }: ReleaseRowActionsProps) {
-  const { canUpdate, pendingReleaseId, onEdit, onMarkReleased, onArchive, onRestore } =
-    useReleaseActions();
+  const { pendingReleaseId, onEdit, onMarkReleased, onArchive, onRestore } = useReleaseActions();
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   const isPending = pendingReleaseId === release.id;
+
+  const canUpdate = release.allowedActions.includes("update");
+  const canArchive = release.allowedActions.includes("archive");
+  const canRestore = release.allowedActions.includes("restore");
 
   const handleEdit = useCallback(() => onEdit(release), [onEdit, release]);
   const handleMarkReleased = useCallback(() => onMarkReleased(release), [onMarkReleased, release]);
   const handleArchive = useCallback(() => onArchive(release), [onArchive, release]);
   const handleRestore = useCallback(() => onRestore(release), [onRestore, release]);
 
-  if (!canUpdate) return null;
+  if (!canUpdate && !canArchive && !canRestore) return null;
 
   return (
-    <div className="flex shrink-0 items-center gap-1">
-      {release.status === "draft" ? (
+    <div className="flex shrink-0 items-center gap-2">
+      <span className="hidden text-xs text-muted-foreground sm:block">{formatRelativeTime(release.updatedAt)}</span>
+      {release.status === "draft" && canUpdate ? (
         <LoadingButton
           type="button"
           variant="outline"
@@ -60,14 +65,17 @@ export function ReleaseRowActions({ release }: ReleaseRowActionsProps) {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem onSelect={handleEdit}>Edit</DropdownMenuItem>
-          {release.status === "archived" ? (
+          {canUpdate ? (
+            <DropdownMenuItem onSelect={handleEdit}>Edit</DropdownMenuItem>
+          ) : null}
+          {release.status === "archived" && canRestore ? (
             <DropdownMenuItem onSelect={handleRestore}>Restore</DropdownMenuItem>
-          ) : (
+          ) : null}
+          {release.status !== "archived" && canArchive ? (
             <DropdownMenuItem variant="destructive" onSelect={handleArchive}>
               Archive
             </DropdownMenuItem>
-          )}
+          ) : null}
         </DropdownMenuContent>
       </DropdownMenu>
     </div>

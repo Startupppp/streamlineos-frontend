@@ -22,6 +22,7 @@ interface DeliveryCardProps {
   delivery: ManagedProductSummary["delivery"];
   previews: ManagedProductSummary["previews"];
   now: Date;
+  ret?: string;
 }
 
 const HORIZON_LABEL: Readonly<Record<string, string>> = {
@@ -39,15 +40,17 @@ function NextRelease({
   managedProductId,
   release,
   now,
+  ret,
 }: {
   managedProductId: number;
   release: NonNullable<ManagedProductSummary["delivery"]["nextRelease"]>;
   now: Date;
+  ret?: string;
 }) {
   const days = release.releaseDate ? wholeDaysUntil(release.releaseDate, now) : null;
   return (
     <Link
-      href={`/build/managed-products/${managedProductId}/releases`}
+      href={`/build/managed-products/${managedProductId}/releases${ret ? `?ret=${ret}` : ""}`}
       className="flex min-h-11 items-center gap-3 rounded-lg border border-border bg-muted/40 px-3 py-2.5 transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
       <span aria-hidden className="flex size-8 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
@@ -80,8 +83,10 @@ export function ManagedProductOverviewDeliveryCard({
   delivery,
   previews,
   now,
+  ret,
 }: DeliveryCardProps) {
   const base = `/build/managed-products/${managedProductId}`;
+  const retSuffix = ret ? `?ret=${ret}` : "";
   const nowNextItems = previews.roadmap.filter(
     (item) => item.horizon === "now" || item.horizon === "next",
   );
@@ -105,7 +110,7 @@ export function ManagedProductOverviewDeliveryCard({
     <OverviewPanel
       title="Delivery progress"
       description="Roadmap distribution and execution across linked projects."
-      action={<OverviewSectionLink href={`${base}/roadmap`}>View roadmap</OverviewSectionLink>}
+      action={<OverviewSectionLink href={`${base}/roadmap${retSuffix}`}>View roadmap</OverviewSectionLink>}
     >
       <OverviewSegmentedBar label="Roadmap by horizon" segments={segments} />
 
@@ -120,7 +125,7 @@ export function ManagedProductOverviewDeliveryCard({
         <div className="flex items-baseline justify-between gap-3">
           <p className="text-xs text-muted-foreground">Across linked projects</p>
           <Link
-            href={`${base}/projects`}
+            href={`${base}/projects${retSuffix}`}
             className="inline-flex min-h-11 items-center font-mono text-sm tabular-nums text-primary underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:min-h-0"
           >
             {delivery.linkedProjects} {delivery.linkedProjects === 1 ? "project" : "projects"}
@@ -129,7 +134,7 @@ export function ManagedProductOverviewDeliveryCard({
       </div>
 
       {delivery.nextRelease ? (
-        <NextRelease managedProductId={managedProductId} release={delivery.nextRelease} now={now} />
+        <NextRelease managedProductId={managedProductId} release={delivery.nextRelease} now={now} ret={ret} />
       ) : null}
 
       {nowNextItems.length > 0 ? (
@@ -139,7 +144,7 @@ export function ManagedProductOverviewDeliveryCard({
             {nowNextItems.map((item) => (
               <OverviewRecordLink
                 key={item.id}
-                href={`${base}/roadmap?horizon=${encodeURIComponent(item.horizon)}`}
+                href={`${base}/roadmap?horizon=${encodeURIComponent(item.horizon)}${ret ? `&ret=${ret}` : ""}`}
                 title={item.title}
                 trailing={
                   <>
@@ -167,7 +172,7 @@ export function ManagedProductOverviewDeliveryCard({
           {previews.releases.map((release) => (
             <OverviewRecordLink
               key={release.id}
-              href={`${base}/releases`}
+              href={`${base}/releases${retSuffix}`}
               title={release.name}
               trailing={
                 <>

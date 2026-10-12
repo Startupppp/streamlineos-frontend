@@ -92,8 +92,14 @@ export function useBuildListFilters(
       const sentinel = definition.all ?? BUILD_FILTER_ALL;
       const raw = searchParams.get(definition.param);
       if (!raw) return sentinel;
-      if (definition.options && !definition.options.includes(raw)) return sentinel;
-      return raw;
+      if (!definition.options) return raw;
+      if (definition.options.includes(raw as (typeof definition.options)[number])) return raw;
+      const parts = raw
+        .split(",")
+        .map((p) => p.trim())
+        .filter((p) => definition.options!.includes(p as (typeof definition.options)[number]));
+      if (parts.length === 0) return sentinel;
+      return parts.join(",");
     },
     [searchParams],
   );

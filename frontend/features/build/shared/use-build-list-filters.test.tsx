@@ -153,6 +153,34 @@ describe("useBuildListFilters", () => {
     expect(result.current.isActive("status")).toBe(false);
   });
 
+  it("accepts comma-separated values filtering to valid options only", () => {
+    setUrl("status=open,closed");
+    const { result } = renderHook(() => useBuildListFilters({ filters: FILTERS }));
+    expect(result.current.value("status")).toBe("open,closed");
+    expect(result.current.isActive("status")).toBe(true);
+  });
+
+  it("strips invalid parts from a comma-separated value and returns remaining valid ones", () => {
+    setUrl("status=open,exploded");
+    const { result } = renderHook(() => useBuildListFilters({ filters: FILTERS }));
+    expect(result.current.value("status")).toBe("open");
+    expect(result.current.isActive("status")).toBe(true);
+  });
+
+  it("returns the sentinel when all parts of a comma-separated value are invalid", () => {
+    setUrl("status=exploded,unknown");
+    const { result } = renderHook(() => useBuildListFilters({ filters: FILTERS }));
+    expect(result.current.value("status")).toBe(BUILD_FILTER_ALL);
+    expect(result.current.isActive("status")).toBe(false);
+  });
+
+  it("does not constrain a param with no options list", () => {
+    setUrl("severity=critical,high,any_string");
+    const { result } = renderHook(() => useBuildListFilters({ filters: FILTERS }));
+    expect(result.current.value("severity")).toBe("critical,high,any_string");
+    expect(result.current.isActive("severity")).toBe(true);
+  });
+
   it.each([false, true])("removes the param instead of writing the all sentinel (batch=%s)", (batch) => {
     setUrl("status=open&from=2026-10-01&to=2026-10-31");
     const { result } = renderHook(() => useBuildListFilters({ filters: [...FILTERS, { param: "from", all: "any" }, { param: "to" }] }));

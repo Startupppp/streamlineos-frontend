@@ -3,6 +3,7 @@
 import { useMemo, type ReactNode } from "react";
 import { AlertTriangle, CheckCircle2, FolderKanban, Settings2, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useProjectTemplates } from "@/hooks/api/build/templates";
 import { useSimpleClientsList } from "@/hooks/api/crm/clients";
@@ -13,6 +14,7 @@ import { resolveWizardMemberLabel } from "../resolve-wizard-member-label";
 interface StepReviewProps {
   draft: WizardDraft;
   keyConflictMessage?: string | null;
+  onGoToBasics?: () => void;
 }
 
 const WORKFLOW_LABELS: Record<string, string> = {
@@ -44,7 +46,7 @@ const FEATURE_LABELS: Record<string, string> = {
   ai: "AI Assistant",
 };
 
-export function StepReview({ draft, keyConflictMessage }: StepReviewProps) {
+export function StepReview({ draft, keyConflictMessage, onGoToBasics }: StepReviewProps) {
   const sessionUser = useWizardSessionUser();
   const { data: templatePages } = useProjectTemplates();
   const members = useWizardMembers(100);
@@ -81,9 +83,20 @@ export function StepReview({ draft, keyConflictMessage }: StepReviewProps) {
           <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-status-warning-fill text-foreground">
             <AlertTriangle className="size-4" aria-hidden="true" />
           </span>
-          <div>
+          <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-foreground">Project key already taken</p>
-            <p className="text-xs text-muted-foreground">{keyConflictMessage} Go back to step 1 to change the key.</p>
+            <p className="text-xs text-muted-foreground">{keyConflictMessage}</p>
+            {onGoToBasics && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="mt-2"
+                onClick={onGoToBasics}
+              >
+                Fix Key
+              </Button>
+            )}
           </div>
         </div>
       ) : (

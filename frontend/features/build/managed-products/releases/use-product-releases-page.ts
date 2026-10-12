@@ -2,7 +2,6 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import {
   useInfiniteManagedProductReleases,
@@ -33,7 +32,6 @@ interface LifecycleTarget {
 }
 
 export function useProductReleasesPage(managedProductId: number) {
-  const canUpdate = useCan("build:managed-products:update");
   const filters = useBuildListFilters({ withSearch: false, filters: RELEASE_VIEW_FILTERS });
   const view: ReleaseView = filters.value("view") === "archived" ? "archived" : "active";
   const { setValue } = filters;
@@ -90,9 +88,11 @@ export function useProductReleasesPage(managedProductId: number) {
 
   const handleMarkReleased = useCallback(
     (release: ManagedProductRelease) => {
+      if (!release.allowedActions.includes("update")) return;
       runUpdate(
         {
           releaseId: release.id,
+          expectedRevision: release.recordRevision,
           status: "released",
           releaseDate: release.releaseDate ?? getTodayString(),
         },
@@ -103,10 +103,12 @@ export function useProductReleasesPage(managedProductId: number) {
   );
 
   const handleArchive = useCallback((release: ManagedProductRelease) => {
+    if (!release.allowedActions.includes("archive")) return;
     setLifecycleTarget({ release, action: "archive" });
   }, []);
 
   const handleRestore = useCallback((release: ManagedProductRelease) => {
+    if (!release.allowedActions.includes("restore")) return;
     setLifecycleTarget({ release, action: "restore" });
   }, []);
 
@@ -119,9 +121,17 @@ export function useProductReleasesPage(managedProductId: number) {
     const { release, action } = lifecycleTarget;
     const closeDialog = () => setLifecycleTarget(null);
     if (action === "archive") {
-      runUpdate({ releaseId: release.id, status: "archived" }, `Archived ${release.name}.`, closeDialog);
+      runUpdate(
+        { releaseId: release.id, expectedRevision: release.recordRevision, status: "archived" },
+        `Archived ${release.name}.`,
+        closeDialog,
+      );
     } else {
-      runUpdate({ releaseId: release.id, status: "draft" }, `Restored ${release.name} as a draft.`, closeDialog);
+      runUpdate(
+        { releaseId: release.id, expectedRevision: release.recordRevision, status: "draft" },
+        `Restored ${release.name} as a draft.`,
+        closeDialog,
+      );
     }
   }, [lifecycleTarget, runUpdate]);
 
@@ -132,6 +142,8 @@ export function useProductReleasesPage(managedProductId: number) {
   const handleLoadMore = useCallback(() => {
     void fetchNextPage();
   }, [fetchNextPage]);
+
+  const canUpdate = rows.some((r) => r.allowedActions.includes("update"));
 
   const actions = useMemo<ReleaseActions>(
     () => ({

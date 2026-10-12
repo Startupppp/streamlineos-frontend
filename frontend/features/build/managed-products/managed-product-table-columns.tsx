@@ -61,6 +61,7 @@ export interface ManagedProductRowHandlers {
   onDelete: (row: ManagedProduct) => void;
   onArchive?: (row: ManagedProduct) => void;
   onRestore?: (row: ManagedProduct) => void;
+  makeProductHref?: (id: number) => string;
 }
 
 export function ProductRowActions({
@@ -71,6 +72,7 @@ export function ProductRowActions({
   onDelete,
   onArchive,
   onRestore,
+  makeProductHref,
 }: {
   product: ManagedProduct;
   canUpdate: boolean;
@@ -79,6 +81,7 @@ export function ProductRowActions({
   onDelete: (row: ManagedProduct) => void;
   onArchive?: (row: ManagedProduct) => void;
   onRestore?: (row: ManagedProduct) => void;
+  makeProductHref?: (id: number) => string;
 }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
 
@@ -115,7 +118,7 @@ export function ProductRowActions({
   const isArchived = product.status === "archived";
 
   const serverAllows = (action: string) =>
-    !product.allowedActions || product.allowedActions.includes(action);
+    Array.isArray(product.allowedActions) && product.allowedActions.includes(action);
 
   const canEditRecord = canUpdate && serverAllows("update");
   const canArchiveRecord =
@@ -139,7 +142,7 @@ export function ProductRowActions({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem asChild>
-          <Link href={`/build/managed-products/${product.id}`}>
+          <Link href={makeProductHref ? makeProductHref(product.id) : `/build/managed-products/${product.id}`}>
             <ArrowRight aria-hidden="true" />
             Open
           </Link>
@@ -200,6 +203,7 @@ export function buildManagedProductColumns({
   onDelete,
   onArchive,
   onRestore,
+  makeProductHref,
 }: ManagedProductRowHandlers): DataTableColumn<ManagedProduct>[] {
   function renderName(row: ManagedProduct) {
     return <ProductNameCell product={row} />;
@@ -238,6 +242,7 @@ export function buildManagedProductColumns({
         onDelete={onDelete}
         onArchive={onArchive}
         onRestore={onRestore}
+        makeProductHref={makeProductHref}
       />
     ) : null;
   }

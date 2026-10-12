@@ -22,6 +22,27 @@ interface ProductGoalsViewBodyProps {
   onRowClick: (goal: GoalListItem) => void;
 }
 
+function resolveGoalActions(
+  goal: GoalListItem,
+  canManage: boolean,
+  handlers: {
+    onEdit: (goal: GoalListItem) => void;
+    onDelete: (goal: GoalListItem) => void;
+    onUnlink: (goal: GoalListItem) => void;
+    onCheckIn: (goal: GoalListItem) => void;
+  },
+) {
+  const allowed = goal.allowedActions;
+  const hasAllowedActions = allowed.length > 0;
+  const allows = (action: string) => !hasAllowedActions || allowed.includes(action);
+  return {
+    onEdit: canManage && allows("update") ? handlers.onEdit : undefined,
+    onDelete: canManage && allows("delete") ? handlers.onDelete : undefined,
+    onUnlink: canManage && allows("unlink") ? handlers.onUnlink : undefined,
+    onCheckIn: handlers.onCheckIn,
+  };
+}
+
 export function ProductGoalsViewBody({
   viewMode,
   flatGoals,
@@ -56,16 +77,19 @@ export function ProductGoalsViewBody({
           {totalGoals === 1 ? " goal linked to this product" : " goals linked to this product"}
         </p>
         <PmStaggerList className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {flatGoals.map((goal) => (
-            <GoalCard
-              key={goal.id}
-              goal={goal}
-              onEdit={canManage ? onEdit : undefined}
-              onDelete={canManage ? onDelete : undefined}
-              onUnlink={canManage ? onUnlink : undefined}
-              onCheckIn={onCheckIn}
-            />
-          ))}
+          {flatGoals.map((goal) => {
+            const actions = resolveGoalActions(goal, canManage, { onEdit, onDelete, onUnlink, onCheckIn });
+            return (
+              <GoalCard
+                key={goal.id}
+                goal={goal}
+                onEdit={actions.onEdit}
+                onDelete={actions.onDelete}
+                onUnlink={actions.onUnlink}
+                onCheckIn={actions.onCheckIn}
+              />
+            );
+          })}
         </PmStaggerList>
       </div>
     );
@@ -87,16 +111,19 @@ export function ProductGoalsViewBody({
               </Badge>
             </div>
             <PmStaggerList className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {levelGoals.map((goal) => (
-                <GoalCard
-                  key={goal.id}
-                  goal={goal}
-                  onEdit={canManage ? onEdit : undefined}
-                  onDelete={canManage ? onDelete : undefined}
-                  onUnlink={canManage ? onUnlink : undefined}
-                  onCheckIn={onCheckIn}
-                />
-              ))}
+              {levelGoals.map((goal) => {
+                const actions = resolveGoalActions(goal, canManage, { onEdit, onDelete, onUnlink, onCheckIn });
+                return (
+                  <GoalCard
+                    key={goal.id}
+                    goal={goal}
+                    onEdit={actions.onEdit}
+                    onDelete={actions.onDelete}
+                    onUnlink={actions.onUnlink}
+                    onCheckIn={actions.onCheckIn}
+                  />
+                );
+              })}
             </PmStaggerList>
           </div>
         );

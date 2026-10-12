@@ -113,8 +113,11 @@ export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
   const checkInKeyResults = checkInGoalDetail?.keyResults ?? [];
 
   const handleGoalRowClick = useCallback(
-    (goal: GoalListItem) => router.push(`/build/goals/${goal.id}`),
-    [router],
+    (goal: GoalListItem) => {
+      const ret = encodeURIComponent(`${pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ""}`);
+      router.push(`/build/goals/${goal.id}?ret=${ret}`);
+    },
+    [router, pathname, searchParams],
   );
 
   const handleTreeMode = useCallback(() => handleViewModeChange("tree"), [handleViewModeChange]);

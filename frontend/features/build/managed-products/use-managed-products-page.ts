@@ -148,14 +148,22 @@ export function useManagedProductsPage() {
 
   const displayed = useMemo(() => data?.data ?? [], [data]);
 
+  const makeProductHref = useCallback(
+    (id: number) => {
+      const ret = encodeURIComponent(`${pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ""}`);
+      return `/build/managed-products/${id}?ret=${ret}`;
+    },
+    [pathname, searchParams],
+  );
+
   const handleOpenFocused = useCallback(
     (index: number) => {
       const product = displayed[index];
       if (product) {
-        router.push(`/build/managed-products/${product.id}`);
+        router.push(makeProductHref(product.id));
       }
     },
-    [displayed, router],
+    [displayed, router, makeProductHref],
   );
 
   const handleClearKeyboardSelection = useCallback(() => {
@@ -206,8 +214,9 @@ export function useManagedProductsPage() {
         onDelete: handleDeleteRow,
         onArchive: handleArchiveRow,
         onRestore: handleRestoreRow,
+        makeProductHref,
       }),
-    [canDelete, canUpdate, handleDeleteRow, handleEditRow, handleArchiveRow, handleRestoreRow, ownerOf],
+    [canDelete, canUpdate, handleDeleteRow, handleEditRow, handleArchiveRow, handleRestoreRow, ownerOf, makeProductHref],
   );
 
   return {

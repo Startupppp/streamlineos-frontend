@@ -15,7 +15,10 @@ import type {
   ManagedProductRelationsUpdateReleaseResponse,
 } from "@/contracts/build-contracts.generated";
 
-export type ManagedProductRelease = ManagedProductRelationsCreateReleaseResponse;
+export type ManagedProductRelease = ManagedProductRelationsCreateReleaseResponse & {
+  allowedActions: string[];
+  linkedRoadmapItemCount: number;
+};
 export type ManagedProductReleasesPage = ManagedProductRelationsListReleasesResponse;
 
 export interface CreateManagedProductReleaseInput {
@@ -24,15 +27,22 @@ export interface CreateManagedProductReleaseInput {
   description?: string | null;
   releaseDate?: string | null;
   status?: "draft" | "released" | "archived";
+  ownerUserId?: string | null;
+  qaState?: string | null;
+  deploymentEvidenceUrl?: string | null;
 }
 
 export interface UpdateManagedProductReleaseInput {
   releaseId: number;
+  expectedRevision: number;
   name?: string;
   version?: string;
   description?: string | null;
   releaseDate?: string | null;
   status?: "draft" | "released" | "archived";
+  ownerUserId?: string | null;
+  qaState?: string | null;
+  deploymentEvidenceUrl?: string | null;
 }
 
 export interface InfiniteManagedProductReleasesParams {

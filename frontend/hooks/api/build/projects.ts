@@ -5,6 +5,7 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
+import { useCallback } from "react";
 import type {
   InfiniteData,
   UseInfiniteQueryOptions,
@@ -66,6 +67,11 @@ const projectDeleteNoContentLazy = lazyContract(() =>
 const labelListLazy = lazyContract(() =>
   import("@/hooks/api/build/build-project-schema").then(
     (m) => m.ticketLabelListContract,
+  ),
+);
+const projectKeyAvailableLazy = lazyContract(() =>
+  import("@/hooks/api/build/build-project-schema").then(
+    (m) => m.projectKeyAvailableContract,
   ),
 );
 
@@ -391,4 +397,17 @@ export function useProjectLabels(
     ...options,
     enabled: canView && (options?.enabled ?? true),
   });
+}
+
+export function useCheckProjectKeyAvailable() {
+  return useCallback(
+    (key: string, signal?: AbortSignal) =>
+      apiClient.get<{ available: boolean }>(
+        "/build/project-key-available",
+        { key },
+        signal,
+        projectKeyAvailableLazy,
+      ),
+    [],
+  );
 }

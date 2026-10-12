@@ -44,28 +44,58 @@ function measureKindLabel(kind: string | null | undefined) {
   return null;
 }
 
+function freshnessLabel(measuredAt: string | null | undefined): string | null {
+  if (!measuredAt) return null;
+  const date = new Date(measuredAt);
+  if (Number.isNaN(date.getTime())) return null;
+  const days = Math.floor((Date.now() - date.getTime()) / 86_400_000);
+  if (days === 0) return "Measured today";
+  if (days === 1) return "Measured 1 day ago";
+  return `Measured ${days} days ago`;
+}
+
+function sourceRecordHref(
+  managedProductId: number,
+  review: OutcomeReview,
+): string | null {
+  if (review.opportunityId != null) {
+    return `/build/managed-products/${managedProductId}/insights?view=discovery&opportunity=${review.opportunityId}`;
+  }
+  if (review.roadmapItemId != null) {
+    return `/build/managed-products/${managedProductId}/roadmap?item=${review.roadmapItemId}`;
+  }
+  if (review.goalId != null) {
+    return `/build/managed-products/${managedProductId}/goals?goal=${review.goalId}`;
+  }
+  return null;
+}
+
 export function OutcomeReviewRow({
   review,
+  managedProductId,
   canWrite,
   onComplete,
   onDelete,
 }: {
   review: OutcomeReview;
+  managedProductId: number;
   canWrite: boolean;
   onComplete: () => void;
   onDelete: () => void;
 }) {
   const when = scheduledLabel(review.scheduledFor);
-  const measuredAtLabel = scheduledLabel(review.measuredAt ?? null);
   const mkLabel = measureKindLabel(review.measureKind);
+  const freshness = freshnessLabel(review.measuredAt);
   const open = review.state !== "completed" && review.state !== "cancelled";
+  const sourceHref = sourceRecordHref(managedProductId, review);
+  const hasMetrics = review.metric || review.baseline || review.target || review.actual;
 
   return (
     <li
-      className="flex flex-wrap items-center gap-x-4 gap-y-3 rounded-xl border border-border bg-card p-4 shadow-sm"
+      className="flex flex-wrap items-start gap-x-4 gap-y-3 rounded-xl border border-border bg-card p-4 shadow-sm"
       data-testid={`outcome-review-row-${review.id}`}
     >
-      <div className="min-w-0 space-y-2">
+      <div className="min-w-0 flex-1 space-y-2">
         <p className="truncate text-sm font-semibold text-foreground">{review.title}</p>
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-xs text-muted-foreground">{labelize(review.kind)}</span>
@@ -79,12 +109,21 @@ export function OutcomeReviewRow({
           {when ? (
             <span className="text-xs tabular-nums text-muted-foreground">{when}</span>
           ) : null}
-          {measuredAtLabel ? (
-            <span className="text-xs tabular-nums text-muted-foreground" data-testid={`measured-at-${review.id}`}>
-              Measured {measuredAtLabel}
+          {freshness ? (
+            <span className="text-xs tabular-nums text-muted-foreground" data-testid={`freshness-${review.id}`}>
+              {freshness}
             </span>
           ) : null}
-          {review.sourceUrl ? (
+          {sourceHref ? (
+            <a
+              href={sourceHref}
+              className="inline-flex items-center gap-1 text-xs text-primary underline underline-offset-2"
+              data-testid={`source-record-link-${review.id}`}
+            >
+              <ExternalLink className="size-3" aria-hidden />
+              Source record
+            </a>
+          ) : review.sourceUrl ? (
             <a
               href={review.sourceUrl}
               target="_blank"
@@ -97,6 +136,38 @@ export function OutcomeReviewRow({
             </a>
           ) : null}
         </div>
+        {hasMetrics ? (
+          <dl className="mt-1 grid grid-cols-2 gap-x-4 gap-y-1 text-xs sm:grid-cols-4" data-testid={`metrics-${review.id}`}>
+            {review.metric ? (
+              <>
+                <dt className="text-muted-foreground">Metric</dt>
+                <dd className="col-span-3 font-medium text-foreground sm:col-span-1">
+                  {review.metric}{review.unit ? ` (${review.unit})` : ""}
+                </dd>
+              </>
+            ) : null}
+            {review.baseline != null ? (
+              <>
+                <dt className="text-muted-foreground">Baseline</dt>
+                <dd className="font-mono tabular-nums text-foreground">{review.baseline}</dd>
+              </>
+            ) : null}
+            {review.target != null ? (
+              <>
+                <dt className="text-muted-foreground">Target</dt>
+                <dd className="font-mono tabular-nums text-foreground">{review.target}</dd>
+              </>
+            ) : null}
+            {review.actual != null ? (
+              <>
+                <dt className="text-muted-foreground">Actual</dt>
+                <dd className="font-mono tabular-nums text-foreground" data-testid={`actual-${review.id}`}>
+                  {review.actual}
+                </dd>
+              </>
+            ) : null}
+          </dl>
+        ) : null}
       </div>
       {canWrite ? (
         <div className="flex shrink-0 items-center gap-2">

@@ -143,3 +143,33 @@ describe("Create Issue title field contract", () => {
     expect(src).toMatch(/preventDefault/);
   });
 });
+
+describe("Create Issue empty-title validation (NEW-05)", () => {
+  beforeEach(() => {
+    mockCreateTicket.mockReset();
+    mockCreateTicket.mockResolvedValue({ id: 1 });
+  });
+
+  it("shows 'Title is required' inline when Create is clicked with an empty title", async () => {
+    renderDialog();
+    fireEvent.click(screen.getByRole("button", { name: /create issue/i }));
+    await screen.findByPlaceholderText("Issue title");
+    fireEvent.click(screen.getByRole("button", { name: "Create issue" }));
+    await waitFor(() => {
+      expect(screen.getByText(/title is required/i)).toBeInTheDocument();
+    });
+    expect(mockCreateTicket).not.toHaveBeenCalled();
+  });
+
+  it("shows 'at least 3 characters' inline when Create is clicked with a one-character title", async () => {
+    renderDialog();
+    fireEvent.click(screen.getByRole("button", { name: /create issue/i }));
+    const title = await screen.findByPlaceholderText("Issue title");
+    fireEvent.change(title, { target: { value: "x" } });
+    fireEvent.click(screen.getByRole("button", { name: "Create issue" }));
+    await waitFor(() => {
+      expect(screen.getByText(/at least 3 characters/i)).toBeInTheDocument();
+    });
+    expect(mockCreateTicket).not.toHaveBeenCalled();
+  });
+});

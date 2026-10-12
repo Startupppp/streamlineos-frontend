@@ -5,6 +5,7 @@ import { UserPlus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { TablePagination } from "@/components/ui/table-pagination";
 import { useCan } from "@/hooks/api/access";
 import {
   useManagedProductMembers,
@@ -18,6 +19,7 @@ import { AddProductMemberDialog } from "./add-product-member-dialog";
 
 interface ProductSettingsMembersSectionProps {
   managedProductId: number;
+  canWrite?: boolean;
 }
 
 function memberDisplayName(m: ManagedProductMember): string {
@@ -29,13 +31,19 @@ function memberDisplayName(m: ManagedProductMember): string {
 
 export function ProductSettingsMembersSection({
   managedProductId,
+  canWrite: canWriteProp,
 }: ProductSettingsMembersSectionProps) {
-  const canUpdate = useCan("build:managed-products:update");
+  const canUpdateByPermission = useCan("build:managed-products:update");
+  const canUpdate = canWriteProp !== undefined ? canWriteProp : canUpdateByPermission;
   const [addOpen, setAddOpen] = useState(false);
   const [removeTarget, setRemoveTarget] = useState<ManagedProductMember | null>(null);
   const [removeBlockedMsg, setRemoveBlockedMsg] = useState<string | null>(null);
+  const [cursor, setCursor] = useState<string | null>(null);
+  const [pageNumber, setPageNumber] = useState(1);
 
-  const { data, isLoading } = useManagedProductMembers(managedProductId);
+  const { data, isLoading } = useManagedProductMembers(managedProductId, {
+    cursor: cursor ?? undefined,
+  });
   const removeMember = useRemoveManagedProductMember(managedProductId);
 
   const handleRemoveRow = useCallback((m: ManagedProductMember) => {
@@ -62,13 +70,28 @@ export function ProductSettingsMembersSection({
       },
       onError: (e) => {
         if (isApiError(e) && e.status === 409) {
-          setRemoveBlockedMsg("Cannot remove the last member of a product.");
+          setRemoveBlockedMsg("Cannot remove the last admin of a product.");
         } else {
           toast.error(getErrorMessage(e));
         }
       },
     });
   }
+
+  const handleNextPage = useCallback(() => {
+    if (data?.pagination.nextCursor) {
+      setCursor(data.pagination.nextCursor);
+      setPageNumber((n) => n + 1);
+    }
+  }, [data?.pagination.nextCursor]);
+
+  const handlePreviousPage = useCallback(() => {
+    setCursor(null);
+    setPageNumber(1);
+  }, []);
+
+  const members = data?.data ?? [];
+  const hasMore = data?.pagination.hasMore ?? false;
 
   return (
     <section aria-labelledby="members-section-heading" className="flex flex-col gap-3">
@@ -97,7 +120,7 @@ export function ProductSettingsMembersSection({
         </div>
       ) : (
         <ul className="flex flex-col gap-1" aria-label="Product members">
-          {(data?.data ?? []).map((m) => (
+          {members.map((m) => (
             <li
               key={m.id}
               className="flex items-center justify-between rounded-md border border-border px-3 py-2"
@@ -122,11 +145,24 @@ export function ProductSettingsMembersSection({
               ) : null}
             </li>
           ))}
-          {(data?.data ?? []).length === 0 && !isLoading ? (
+          {members.length === 0 && !isLoading ? (
             <li className="py-4 text-center text-sm text-muted-foreground">No members yet.</li>
           ) : null}
         </ul>
       )}
+
+      {(members.length > 0 || pageNumber > 1) ? (
+        <TablePagination
+          mode="cursor"
+          rowCount={members.length}
+          pageNumber={pageNumber}
+          hasMore={hasMore}
+          hasPrevious={pageNumber > 1}
+          onNext={handleNextPage}
+          onPrevious={handlePreviousPage}
+          hideOnSinglePage
+        />
+      ) : null}
 
       {canUpdate ? (
         <AddProductMemberDialog
