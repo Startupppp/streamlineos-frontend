@@ -201,12 +201,11 @@ export function useCreateTicketForm({
   });
 
   const handleSubmit = useCallback(
-    (values: CreateTicketFormValues) => {
+    async (values: CreateTicketFormValues) => {
       if (projectId == null) {
         toast.error("Select a project");
         return;
       }
-      if (createTicketMutation.isPending) return;
       if (values.title.length > TICKET_TITLE_MAX) {
         form.setError("title", {
           type: "max",
@@ -214,7 +213,7 @@ export function useCreateTicketForm({
         });
         return;
       }
-      createTicketMutation.mutate({
+      return createTicketMutation.mutateAsync({
         ...values,
         projectId,
         status: properties.status,
