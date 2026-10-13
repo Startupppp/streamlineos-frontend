@@ -68,7 +68,7 @@ Unchanged: no code comments, no gate or ratchet weakened to pass (FE-136), no `a
 
 | Lane | Domain | Bugs | Stage |
 |---|---|---|---|
-| L1 | storage, attachments, project files, ticket page shell | B-013, B-016, B-024, B-030, B-031, B-017, NEW-27, B-020 | CODE DONE except B-031's server 403, sent back |
+| L1 | storage, attachments, project files, ticket page shell | B-013, B-016, B-024, B-030, B-031, B-017, NEW-27, B-020 | CODE DONE |
 | L2 | board rank, list/table ordering, display options, search limits | B-027, B-037, B-028, B-025, B-034, B-035, B-029, B-005, B-036, B-081, B-006 | RUNNING |
 | L3 | create-issue dialog, ticket activity, comments, timer, a11y, mobile | B-001, B-003, B-004, B-008, B-019, B-060, B-023, B-038, NEW-06 | CODE DONE |
 | L4 | releases, milestones, project updates | B-039, B-065, B-044, B-045, B-048, B-049, B-059, B-066, B-085, B-053, B-068 | CODE DONE |
