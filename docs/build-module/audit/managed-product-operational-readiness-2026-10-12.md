@@ -507,17 +507,53 @@ Fired when `readBreached`, `writeBreached`, `conflictBreached`, `denialBreached`
 3. A 409 spike without a code change indicates concurrent edits from an automated tool; back-off is needed in the caller.
 4. A 403 spike without a code change indicates a role-template drift; run `pnpm check:permission-keys`.
 
-**Paging destination:** `destination` in `alert-managed-product-ops.mjs` is set to `"CONFIGURE_ME — wire exit-code 1 to your oncall system"`. No paging route is wired. This matches the house pattern (all alert scripts in this repo share the same placeholder) but means no alert fires to an on-call system until this is wired.
+**Paging destination:** routed by urgency, from configuration. `MP_SLO_URGENCY` marks `authz-denial` and `share-token` as **page** and the other eight as **notify**; the script reads `MP_ALERT_PAGE_URL` or `MP_ALERT_NOTIFY_URL` accordingly. Neither is hardcoded, and with neither set the script behaves as before — except that a *breach* with no destination still exits non-zero and prints `ALERT BREACH: no destination configured — set <KEY> ...`, so an alert that cannot page is itself visible rather than silent.
 
 #### managed-product-db
 
 Fired when `feedbackFired`, `roadmapFired`, `releaseFired`, or `linkFired`.
 
-1. `feedbackFired`: the evidence-ingestion worker has stopped draining `product_opportunity_evidence`. Check background job queue age (`alert-job-queue-age`).
+1. `feedbackFired`: the AI classification pass has stopped draining `build.feedbucket_submissions` — rows older than the window still have `ai_processed_at IS NULL`. Check background job queue age (`alert-job-queue-age`) and the provider key, since the classifier fails closed without one.
 2. `roadmapFired`: the publication-rotation pipeline has stalled. Check `managed_product_share_tokens` expiry and the rotation sweep heartbeat.
 3. `releaseFired`: a release is stuck non-terminal. Check the evidence-attachment service for an uncaught exception.
 4. `linkFired` (`planningLinkOrphans > 0`): a `planning_links` row with `link_kind IN ('product_project', 'goal_product')` references a managed_product that no longer exists. `project_managed_products` and `managed_product_memberships` have validated CASCADE FKs to `managed_products`, so orphans there are structurally impossible and are not queried. The `planning_links` table has no FK to entities and is the only table where orphans are possible. Run `SELECT * FROM build.planning_links WHERE link_kind IN ('product_project','goal_product')` against production to identify the dangling row; open a data-integrity incident.
 
-**Paging destination:** same placeholder as above — not wired.
+**Paging destination:** same urgency routing as above. All four db signals are **notify**.
 
-**Limitation:** `alert-managed-product-db.mjs` requires `DATABASE_URL` pointing at a live database. The full script cannot be run against local replay DBs (`mp_ops14`, `replay2`, etc.) because those DBs do not have the `product_opportunity_evidence.processed_at` column (added in a migration not replayed there). The script must be run against production or a fully-replayed schema once that column is present.
+### Production predicate proof — 2026-10-13
+
+Every `db-threshold` predicate was run as a read-only `SELECT COUNT(*)` against the
+live production database (`backend/.env`'s `DATABASE_URL`, host
+`ep-fancy-forest-b3ndkij4-pooler.c-4.ap-southeast-1.aws.neon.tech`), so none of
+them can fail with `42703`/`42P01` on the deployed revision:
+
+```
+target host: ep-fancy-forest-b3ndkij4-pooler.c-4.ap-southeast-1.aws.neon.tech
+PASS  signal 3 feedback ingestion stall      -> count=0
+PASS  signal 5 roadmap publication stall     -> count=0
+PASS  signal 6 release evidence stall        -> count=0
+PASS  signal 10 planning-link orphans        -> count=0
+ALL FOUR PREDICATES EXECUTE ON THE DEPLOYED REVISION
+```
+
+The counts are all zero and that is the expected healthy state, not an absence of
+data: the same database reports 6 organizations, 12 users, 1 managed product and
+1158 ledger rows. The point of this probe is column and table existence on the
+deployed revision, which the earlier `prodshape` check could only approximate.
+
+**What this does and does not prove.** It proves the predicates execute and the
+schema they name is live. It does **not** prove an alert firing in production —
+that would mean injecting a real failure into a live tenant, which was not done.
+Firing, acknowledgement and recovery were proven against a local database and are
+recorded above as Proofs A through D.
+
+**Correction to an earlier limitation in this section.** A previous revision said
+the db script could not run locally because replay databases lack
+`product_opportunity_evidence.processed_at`. That column does not exist in
+production either — it does not exist anywhere, and neither does `inserted_at`.
+`product_opportunity_evidence` is a join table carrying only `added_at`,
+`added_by`, `id`, `note`, `opportunity_id`, `org_id`, `source_id` and
+`source_kind`, so it has no ingestion state to measure. Signal 3 now reads
+`build.feedbucket_submissions.ai_processed_at`, which is where the classification
+pipeline actually records progress. The runbook step for `feedbackFired` below is
+corrected accordingly.
