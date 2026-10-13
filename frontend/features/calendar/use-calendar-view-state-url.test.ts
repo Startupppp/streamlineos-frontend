@@ -57,6 +57,11 @@ describe("useCalendarViewState URL navigation", () => {
     expect(push).toHaveBeenLastCalledWith(
       "/calendar?filter=leadership&mode=list&attendance=0",
     );
+
+    act(() => result.current.setViewMode("calendar"));
+    expect(push).toHaveBeenLastCalledWith(
+      "/calendar?mode=calendar",
+    );
   });
 
   it("keeps a selected external item in the URL and removes it safely on close", () => {

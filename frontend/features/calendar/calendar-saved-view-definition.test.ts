@@ -38,4 +38,10 @@ describe("saved calendar view filter definition", () => {
     const values = { ...calendarSavedViewFormValues(undefined, null), ownerMembershipId: "me" };
     expect(() => calendarSavedViewDefinition(values, currentDate, null)).toThrow("membership is unavailable");
   });
+
+  it("preserves the presentation mode for Calendar and List saved views", () => {
+    const values = calendarSavedViewFormValues(undefined, 42);
+    expect(calendarSavedViewDefinition(values, currentDate, 42, "calendar").mode).toBe("calendar");
+    expect(calendarSavedViewDefinition(values, currentDate, 42, "list").mode).toBe("list");
+  });
 });

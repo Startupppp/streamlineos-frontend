@@ -1,5 +1,5 @@
 import { format } from "date-fns";
-import { calendarSavedViewDateLogic, calendarSavedViewWindow } from "./calendar-saved-view-date";
+import { calendarSavedViewDateLogic, calendarSavedViewGridView, calendarSavedViewWindow } from "./calendar-saved-view-date";
 
 describe("calendar saved view date logic", () => {
   it("resolves today in the viewer's local calendar day", () => {
@@ -25,5 +25,12 @@ describe("calendar saved view date logic", () => {
     if (logic.kind !== "custom") throw new Error("Expected custom range");
     expect(format(new Date(logic.start), "yyyy-MM-dd HH:mm")).toBe("2026-10-13 00:00");
     expect(format(new Date(logic.end), "yyyy-MM-dd HH:mm")).toBe("2026-10-14 00:00");
+  });
+
+  it("uses a grid scale that fits the saved date window", () => {
+    expect(calendarSavedViewGridView({ kind: "today" })).toBe("day");
+    expect(calendarSavedViewGridView({ kind: "this-week" })).toBe("week");
+    expect(calendarSavedViewGridView({ kind: "this-month" })).toBe("month");
+    expect(calendarSavedViewGridView({ kind: "custom", start: "2026-10-01T00:00:00.000Z", end: "2026-10-15T00:00:00.000Z" })).toBe("month");
   });
 });

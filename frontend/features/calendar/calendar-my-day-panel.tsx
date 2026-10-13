@@ -9,6 +9,7 @@ import type {
   CalendarListItem,
   CalendarSearchResponse,
 } from "@/hooks/api/calendar-types";
+import { calendarSearchIsPartial } from "./calendar-search-coverage";
 
 function nextAction(event: CalendarListItem): string {
   if (event.actions.complete) return "Complete";
@@ -110,10 +111,7 @@ export function CalendarMyDayPanel({
   const information = events.filter(
     (event) => kind(event, now) === "information",
   );
-  const incomplete = pages.some(
-    (page) =>
-      page.coverageState !== "complete" || (page.truncated && !page.nextCursor),
-  );
+  const incomplete = calendarSearchIsPartial(pages, hasMore);
 
   useEffect(() => {
     const interval = window.setInterval(() => setNow(Date.now()), 60_000);

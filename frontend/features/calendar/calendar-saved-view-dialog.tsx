@@ -15,6 +15,7 @@ export function CalendarSavedViewDialog({
   form,
   actorMembershipId,
   canManageTeam,
+  viewMode,
   isPending,
   onClose,
   onSubmit,
@@ -23,6 +24,7 @@ export function CalendarSavedViewDialog({
   form: UseFormReturn<CalendarSavedViewFormValues>;
   actorMembershipId: number | null;
   canManageTeam: boolean;
+  viewMode: "calendar" | "list" | "my-day";
   isPending: boolean;
   onClose: () => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
@@ -31,7 +33,7 @@ export function CalendarSavedViewDialog({
     <Dialog open={mode !== null} onOpenChange={(open) => { if (!open) onClose(); }}>
       <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>{mode === "rename" ? "Rename view" : "Save My Day view"}</DialogTitle>
+          <DialogTitle>{mode === "rename" ? "Rename view" : `Save ${viewMode === "my-day" ? "My Day" : viewMode} view`}</DialogTitle>
         </DialogHeader>
         <FormProvider {...form}>
           <form onSubmit={onSubmit} className="space-y-4">

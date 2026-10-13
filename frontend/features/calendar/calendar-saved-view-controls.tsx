@@ -31,9 +31,11 @@ import { calendarSavedViewDefinition, calendarSavedViewFormValues } from "./cale
 export function CalendarSavedViewControls({
   selectedId,
   currentDate,
+  mode,
 }: {
   selectedId: string | null;
   currentDate: Date;
+  mode: "calendar" | "list" | "my-day";
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -47,7 +49,7 @@ export function CalendarSavedViewControls({
   const views =
     query.data?.pages
       .flatMap((page) => page.items)
-      .filter((view) => view.definition.mode === "my-day") ?? [];
+      .filter((view) => view.definition.mode === mode) ?? [];
   const selected = views.find((view) => view.id === selectedId);
   const [dialogMode, setDialogMode] = useState<"create" | "rename" | null>(
     null,
@@ -84,7 +86,7 @@ export function CalendarSavedViewControls({
           name: values.name,
         });
       } else {
-        const definition = calendarSavedViewDefinition(values, currentDate, actorMembershipId);
+        const definition = calendarSavedViewDefinition(values, currentDate, actorMembershipId, mode);
         const created = await create.mutateAsync({
           name: values.name,
           scope: values.scope,
@@ -122,7 +124,7 @@ export function CalendarSavedViewControls({
           <SelectValue placeholder="Saved views" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="none">My Day</SelectItem>
+          <SelectItem value="none">{mode === "my-day" ? "My Day" : "All events"}</SelectItem>
           {views.map((view: CalendarSavedView) => (
             <SelectItem key={view.id} value={view.id}>
               {view.name}
@@ -173,6 +175,7 @@ export function CalendarSavedViewControls({
         form={form}
         actorMembershipId={actorMembershipId}
         canManageTeam={canManageTeam}
+        viewMode={mode}
         isPending={create.isPending || update.isPending}
         onClose={() => setDialogMode(null)}
         onSubmit={submit}

@@ -66,8 +66,9 @@ import { useCalendarSearch } from "@/hooks/api/calendar-search";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { CalendarMyDayPanel } from "./calendar-my-day-panel";
 import { useCalendarSavedViews } from "@/hooks/api/calendar-saved-views";
-import { calendarSavedViewWindow } from "./calendar-saved-view-date";
+import { calendarSavedViewGridView, calendarSavedViewWindow } from "./calendar-saved-view-date";
 import { CalendarSavedViewControls } from "./calendar-saved-view-controls";
+import { calendarSearchIsPartial } from "./calendar-search-coverage";
 
 const CalendarGridLayer = dynamic(
   () =>
@@ -214,11 +215,11 @@ export function CalendarView() {
     const interval = window.setInterval(() => setClockNow(new Date()), 60_000);
     return () => window.clearInterval(interval);
   }, []);
-  const savedViewsQuery = useCalendarSavedViews(viewMode === "my-day");
+  const savedViewsQuery = useCalendarSavedViews(viewMode !== "history");
   const selectedSavedView = savedViewsQuery.data?.pages
     .flatMap((page) => page.items)
     .find(
-      (item) => item.id === savedFilterId && item.definition.mode === "my-day",
+      (item) => item.id === savedFilterId && item.definition.mode === viewMode,
     );
   const fetchNextSavedViewPage = savedViewsQuery.fetchNextPage;
   useEffect(() => {
@@ -242,8 +243,14 @@ export function CalendarView() {
     !selectedSavedView &&
     (savedViewsQuery.isLoading || savedViewsQuery.hasNextPage),
   );
+  const savedViewLookupFailed = Boolean(
+    savedFilterId && !selectedSavedView && savedViewsQuery.isError,
+  );
   const savedViewUnavailable = Boolean(
-    savedFilterId && !selectedSavedView && !savedViewResolving,
+    savedFilterId &&
+    !selectedSavedView &&
+    !savedViewResolving &&
+    !savedViewLookupFailed,
   );
   const { hiddenIds } = useCalendarAccountFilters();
 
@@ -265,7 +272,7 @@ export function CalendarView() {
   } = useCalendarEvents(
     rangeStart,
     rangeEnd,
-    viewMode !== "history" && viewMode !== "my-day",
+    viewMode !== "history" && viewMode !== "my-day" && !savedFilterId,
   );
   const myDayStart = startOfDay(currentDate);
   const myDayWindow = selectedSavedView
@@ -274,6 +281,9 @@ export function CalendarView() {
         start: myDayStart.toISOString(),
         end: addDays(myDayStart, 1).toISOString(),
       };
+  const displayedGridView = selectedSavedView
+    ? calendarSavedViewGridView(selectedSavedView.definition.dateLogic)
+    : view;
   const myDayQuery = useCalendarSearch(
     {
       start: myDayWindow.start,
@@ -294,18 +304,43 @@ export function CalendarView() {
       hiddenConnectionIds:
         hiddenIds.length > 0 ? hiddenIds.join(",") : undefined,
     },
-    viewMode === "my-day" && !savedViewResolving && !savedViewUnavailable,
+    viewMode !== "history" &&
+      (viewMode === "my-day" || Boolean(savedFilterId)) &&
+      !savedViewResolving &&
+      !savedViewLookupFailed &&
+      !savedViewUnavailable,
   );
   const myDayPages = myDayQuery.data?.pages ?? NO_CALENDAR_SEARCH_PAGES;
   const myDayEvents = useMemo(
     () => myDayPages.flatMap((page) => page.events),
     [myDayPages],
   );
+  const savedViewActive = viewMode !== "my-day" && Boolean(selectedSavedView);
+  const savedViewEvents = useMemo(
+    () =>
+      filterCalendarEventsBySources(myDayEvents, {
+        attendanceVisible: attendanceEventsVisible,
+        crmVisible: crmEventsVisible,
+        hrVisible: hrEventsVisible,
+        hiddenConnectionIds: hiddenIds,
+      }),
+    [
+      attendanceEventsVisible,
+      crmEventsVisible,
+      hiddenIds,
+      hrEventsVisible,
+      myDayEvents,
+    ],
+  );
   const events = eventsResponse?.events ?? NO_CALENDAR_EVENTS;
   const sourceFailures = eventsResponse?.failures ?? [];
   const eventsTruncated = eventsResponse?.truncated ?? false;
   const { data: connections = [], isLoading: connectionsLoading } =
     useCalendarConnections();
+  const savedGridEvents = useMemo(
+    () => savedViewEvents.map((event) => toBigCalEvent(event, connections)),
+    [connections, savedViewEvents],
+  );
   const finalize = useFinalizeIntegrationConnection();
   const finalizeRef = useRef(false);
 
@@ -321,8 +356,9 @@ export function CalendarView() {
   const shellVariant = useShellVariant();
   const isMobile = shellVariant === "mobile";
   useEffect(() => {
-    if (isMobile && viewMode === "calendar") setViewMode("list");
-  }, [isMobile, setViewMode, viewMode]);
+    if (isMobile && viewMode === "calendar" && !savedFilterId)
+      setViewMode("list");
+  }, [isMobile, savedFilterId, setViewMode, viewMode]);
 
   const toggleHrEvents = useCallback(
     () => setSourceVisibility("hr", !hrEventsVisible),
@@ -337,11 +373,22 @@ export function CalendarView() {
     [attendanceEventsVisible, setSourceVisibility],
   );
 
-  const gridActive = viewMode === "calendar" && afterLoad;
+  const savedRangeDays =
+    (Date.parse(myDayWindow.end) - Date.parse(myDayWindow.start)) / 86_400_000;
+  const gridActive =
+    viewMode === "calendar" &&
+    afterLoad &&
+    !isMobile &&
+    (!savedViewActive ||
+      selectedSavedView?.definition.dateLogic.kind === "this-month" ||
+      savedRangeDays <= 31);
   const attendanceCoverage = useAttendanceCalendarEvents(
     rangeStart,
     rangeEnd,
-    attendanceEventsVisible && viewMode !== "history" && viewMode !== "my-day",
+    attendanceEventsVisible &&
+      viewMode !== "history" &&
+      viewMode !== "my-day" &&
+      !savedFilterId,
   );
   const calendarEvents = useMemo(
     () => mergeSelfAttendanceEvents(events, attendanceCoverage.events),
@@ -359,6 +406,7 @@ export function CalendarView() {
     rangeEnd,
     viewMode !== "history" &&
       viewMode !== "my-day" &&
+      !savedFilterId &&
       (connectionsLoading || activeConnectionCount > 0),
   );
 
@@ -440,7 +488,11 @@ export function CalendarView() {
     attendanceVisible: attendanceEventsVisible,
   });
   const surfaceEvents =
-    viewMode === "history" ? visibleHistoryEvents : rangeEvents;
+    viewMode === "history"
+      ? visibleHistoryEvents
+      : savedViewActive
+        ? savedViewEvents
+        : rangeEvents;
   const selectedListEvent = useMemo(() => {
     if (!selected) return null;
     return (
@@ -473,7 +525,7 @@ export function CalendarView() {
     !externalIsLoading &&
     !attendanceCoverage.isLoading &&
     (viewMode !== "history" || loadedHistoryPages >= historyPages) &&
-    (viewMode !== "my-day" || !myDayQuery.isLoading);
+    ((viewMode !== "my-day" && !savedViewActive) || !myDayQuery.isLoading);
   useEffect(() => {
     if (selected && selectedResolutionReady && !selectedListEvent)
       handleCloseSelected();
@@ -487,6 +539,32 @@ export function CalendarView() {
     (event: CalendarListItem) =>
       handleSelectEvent(toBigCalEvent(event, connections)),
     [connections, handleSelectEvent],
+  );
+  const handleSavedViewNavigate = useCallback(
+    (date: Date) => {
+      router.push(
+        calendarUrl(new URLSearchParams(searchParams.toString()), {
+          date: format(date, "yyyy-MM-dd"),
+          filter: null,
+        }),
+      );
+    },
+    [router, searchParams],
+  );
+  const handleGridViewChange = useCallback(
+    (next: typeof view) => {
+      if (!savedFilterId) {
+        setView(next);
+        return;
+      }
+      router.push(
+        calendarUrl(new URLSearchParams(searchParams.toString()), {
+          view: next,
+          filter: null,
+        }),
+      );
+    },
+    [router, savedFilterId, searchParams, setView],
   );
   const handleLoadOlderHistory = useCallback(async () => {
     const result = await fetchNextHistoryPage();
@@ -503,10 +581,27 @@ export function CalendarView() {
   const historyIsPartial = (historyData?.pages ?? []).some(
     (page) => page.truncated || page.coverageState !== "complete",
   );
+  const savedViewFailures = useMemo(() => {
+    const failures = new Map<string, { key: string; label: string }>();
+    for (const page of myDayPages) {
+      for (const failure of page.failures) failures.set(failure.key, failure);
+    }
+    return [...failures.values()];
+  }, [myDayPages]);
   const displayedSourceFailures =
-    viewMode === "history" ? historyFailures : sourceFailures;
+    viewMode === "history"
+      ? historyFailures
+      : viewMode === "my-day" || savedViewActive
+        ? savedViewFailures
+        : sourceFailures;
+  const regularSourcesActive =
+    viewMode !== "history" && viewMode !== "my-day" && !savedFilterId;
   const surfaceIsLoading =
-    viewMode === "history" ? historyIsLoading : eventsIsLoading;
+    viewMode === "history"
+      ? historyIsLoading
+      : savedViewActive
+        ? myDayQuery.isLoading
+        : eventsIsLoading;
 
   const handleRetryEvents = useCallback(() => {
     void refetchEvents();
@@ -569,6 +664,15 @@ export function CalendarView() {
                 : format(currentDate, "EEEE, MMMM d")}
             </span>
           </div>
+        ) : selectedSavedView ? (
+          <div className="flex flex-col">
+            <span className="text-base font-semibold">
+              {selectedSavedView.name}
+            </span>
+            <span className="text-dense font-normal text-muted-foreground">
+              Saved calendar view
+            </span>
+          </div>
         ) : (
           <CalendarMonthYearPicker
             currentDate={currentDate}
@@ -590,7 +694,7 @@ export function CalendarView() {
     >
       <div className="flex min-h-0 flex-1 flex-col gap-3">
         <CalendarToolbar
-          view={view}
+          view={displayedGridView}
           viewMode={viewMode}
           hrEventsVisible={hrEventsVisible}
           crmEventsVisible={crmEventsVisible}
@@ -599,7 +703,7 @@ export function CalendarView() {
           onPrev={handlePrev}
           onNext={handleNext}
           onToday={handleToday}
-          onViewChange={setView}
+          onViewChange={handleGridViewChange}
           onViewModeChange={setViewMode}
           onOpenCreate={handleOpenCreate}
           onOpenCreateTicket={handleOpenCreateTicket}
@@ -607,9 +711,7 @@ export function CalendarView() {
           onToggleCrmEvents={toggleCrmEvents}
           onToggleAttendanceEvents={toggleAttendanceEvents}
           hidePrimaryActions
-          navigationDisabled={
-            viewMode === "my-day" && Boolean(selectedSavedView)
-          }
+          navigationDisabled={Boolean(selectedSavedView)}
         />
 
         <div className="flex min-h-0 flex-1 gap-4">
@@ -623,14 +725,28 @@ export function CalendarView() {
                   : "overflow-hidden",
               )}
             >
+              {viewMode !== "history" ? (
+                <CalendarSavedViewControls
+                  selectedId={savedFilterId}
+                  currentDate={currentDate}
+                  mode={viewMode}
+                />
+              ) : null}
               {viewMode === "my-day" ? (
                 <div className="flex min-h-0 flex-1 flex-col">
-                  <CalendarSavedViewControls
-                    selectedId={savedFilterId}
-                    currentDate={currentDate}
-                  />
                   {savedViewResolving || myDayQuery.isLoading ? (
                     <CalendarListFallback label="Loading My Day" />
+                  ) : savedViewLookupFailed ? (
+                    <ErrorState
+                      compact
+                      title="Couldn't load saved views"
+                      description={getErrorMessage(savedViewsQuery.error)}
+                      error={savedViewsQuery.error}
+                      onRetry={() => {
+                        void savedViewsQuery.refetch();
+                      }}
+                      className="m-4"
+                    />
                   ) : savedViewUnavailable ? (
                     <ErrorState
                       compact
@@ -653,25 +769,64 @@ export function CalendarView() {
                     />
                   )}
                 </div>
+              ) : savedViewResolving ? (
+                <CalendarListFallback label="Loading saved view" />
+              ) : savedViewLookupFailed ? (
+                <ErrorState
+                  compact
+                  title="Couldn't load saved views"
+                  description={getErrorMessage(savedViewsQuery.error)}
+                  error={savedViewsQuery.error}
+                  onRetry={() => {
+                    void savedViewsQuery.refetch();
+                  }}
+                  className="m-4"
+                />
+              ) : savedViewUnavailable ? (
+                <ErrorState
+                  compact
+                  title="Saved view unavailable"
+                  description="This view is no longer available to you."
+                  className="m-4"
+                />
               ) : viewMode === "calendar" ? (
-                gridActive ? (
+                savedViewActive && myDayQuery.isLoading ? (
+                  <CalendarListFallback label="Loading saved view" />
+                ) : gridActive ? (
                   <CalendarGridLayer
-                    events={allCalEvents}
-                    currentDate={currentDate}
-                    view={view}
+                    events={savedViewActive ? savedGridEvents : allCalEvents}
+                    currentDate={
+                      savedViewActive
+                        ? new Date(myDayWindow.start)
+                        : currentDate
+                    }
+                    view={displayedGridView}
                     calHeight={calHeight}
-                    onView={setView}
-                    onNavigate={setCurrentDate}
+                    onView={handleGridViewChange}
+                    onNavigate={
+                      savedViewActive ? handleSavedViewNavigate : setCurrentDate
+                    }
                     onSelectSlot={
-                      isCalendarOverlayOpen ? undefined : guardedSelectSlot
+                      isCalendarOverlayOpen || savedViewActive
+                        ? undefined
+                        : guardedSelectSlot
                     }
                     onSelectEvent={handleSelectEvent}
                   />
                 ) : (
-                  <CalendarAgendaPreview
-                    events={surfaceEvents}
-                    onSelectEvent={handleSelectListEvent}
-                  />
+                  savedViewActive ? (
+                    <CalendarEventsPanel
+                      mode="list"
+                      events={savedViewEvents}
+                      range={{ start: new Date(myDayWindow.start), end: new Date(myDayWindow.end) }}
+                      onSelectEvent={handleSelectListEvent}
+                    />
+                  ) : (
+                    <CalendarAgendaPreview
+                      events={surfaceEvents}
+                      onSelectEvent={handleSelectListEvent}
+                    />
+                  )
                 )
               ) : isMobile ? (
                 surfaceIsLoading ? (
@@ -699,9 +854,20 @@ export function CalendarView() {
                   events={
                     viewMode === "history"
                       ? visibleHistoryEvents
-                      : visibleEvents
+                      : savedViewActive
+                        ? savedViewEvents
+                        : visibleEvents
                   }
-                  range={viewMode === "list" ? visibleRange : undefined}
+                  range={
+                    viewMode === "list"
+                      ? savedViewActive
+                        ? {
+                            start: new Date(myDayWindow.start),
+                            end: new Date(myDayWindow.end),
+                          }
+                        : visibleRange
+                      : undefined
+                  }
                   onSelectEvent={handleSelectListEvent}
                   hasMore={viewMode === "history" && historyHasNextPage}
                   isLoadingMore={historyIsFetchingNextPage}
@@ -722,14 +888,46 @@ export function CalendarView() {
                   }
                 />
               )}
+              {savedViewActive ? (
+                <div className="flex shrink-0 flex-wrap items-center gap-2 border-t border-border px-4 py-2 text-xs text-muted-foreground">
+                  <span>
+                    Saved range: {format(new Date(myDayWindow.start), "PP")} –{" "}
+                    {format(new Date(Date.parse(myDayWindow.end) - 1), "PP")}
+                  </span>
+                  {calendarSearchIsPartial(
+                    myDayPages,
+                    Boolean(myDayQuery.hasNextPage),
+                  ) ? (
+                    <span role="status">
+                      Results are incomplete until all pages load or sources
+                      recover.
+                    </span>
+                  ) : null}
+                  {myDayQuery.hasNextPage ? (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      disabled={myDayQuery.isFetchingNextPage}
+                      onClick={() => {
+                        void myDayQuery.fetchNextPage();
+                      }}
+                    >
+                      {myDayQuery.isFetchingNextPage
+                        ? "Loading more"
+                        : "Load more results"}
+                    </Button>
+                  ) : null}
+                </div>
+              ) : null}
             </div>
           </div>
         </div>
 
-        {viewMode === "my-day" && myDayQuery.isError && (
+        {(viewMode === "my-day" || savedViewActive) && myDayQuery.isError && (
           <ErrorState
             compact
-            title="Couldn't load My Day"
+            title="Couldn't load calendar search"
             description={getErrorMessage(myDayQuery.error)}
             error={myDayQuery.error}
             onRetry={() => {
@@ -739,7 +937,7 @@ export function CalendarView() {
           />
         )}
 
-        {viewMode !== "history" && viewMode !== "my-day" && eventsIsError && (
+        {regularSourcesActive && eventsIsError && (
           <ErrorState
             compact
             title="Couldn't load calendar events"
@@ -762,7 +960,7 @@ export function CalendarView() {
           />
         )}
 
-        {viewMode !== "history" &&
+        {regularSourcesActive &&
           attendanceEventsVisible &&
           attendanceCoverage.access.denied && (
             <NoPermissionState
@@ -774,7 +972,7 @@ export function CalendarView() {
             />
           )}
 
-        {viewMode !== "history" && attendanceCoverage.isError && (
+        {regularSourcesActive && attendanceCoverage.isError && (
           <ErrorState
             compact
             title="Attendance coverage is incomplete"
@@ -785,8 +983,9 @@ export function CalendarView() {
           />
         )}
 
-        {(surfaceIsLoading ||
-          (viewMode !== "history" &&
+        {(((viewMode === "history" || regularSourcesActive) &&
+          surfaceIsLoading) ||
+          (regularSourcesActive &&
             (externalIsLoading || attendanceCoverage.isLoading))) && (
           <div
             className="shrink-0 rounded-md border border-border bg-muted/40 px-3 py-1.5 text-dense text-muted-foreground"
@@ -797,7 +996,9 @@ export function CalendarView() {
           </div>
         )}
 
-        {(viewMode === "history" ? historyIsPartial : eventsTruncated) && (
+        {(viewMode === "history"
+          ? historyIsPartial
+          : regularSourcesActive && eventsTruncated) && (
           <div className="flex shrink-0 items-center gap-2 rounded-md border border-status-warning-rule bg-status-warning-surface px-3 py-1.5">
             <span className="min-w-0 flex-1 text-dense text-status-warning-ink">
               {viewMode === "history"
@@ -807,7 +1008,7 @@ export function CalendarView() {
           </div>
         )}
 
-        {viewMode !== "history" && externalIsError && (
+        {regularSourcesActive && externalIsError && (
           <ErrorState
             compact
             title="Couldn't load connected calendars"
@@ -818,7 +1019,7 @@ export function CalendarView() {
           />
         )}
 
-        {viewMode !== "history" &&
+        {regularSourcesActive &&
           externalData?.errors &&
           externalData.errors.length > 0 && (
             <div className="flex shrink-0 flex-col gap-2 rounded-md border border-status-warning-rule bg-status-warning-surface px-3 py-1.5 sm:flex-row sm:items-center">
@@ -846,7 +1047,7 @@ export function CalendarView() {
             </div>
           )}
 
-        {viewMode !== "history" &&
+        {regularSourcesActive &&
           externalData &&
           !externalData.complete &&
           externalData.errors.length === 0 && (

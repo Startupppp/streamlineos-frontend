@@ -109,6 +109,7 @@ export function useCalendarViewState() {
       if (next === viewMode) return;
       navigate({
         mode: next,
+        filter: null,
         historyBefore: next === "history" ? urlState.historyBefore : null,
         historyPages: next === "history" ? String(urlState.historyPages) : null,
       });

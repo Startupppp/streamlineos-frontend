@@ -25,6 +25,7 @@ export function calendarSavedViewDefinition(
   values: CalendarSavedViewFormValues,
   currentDate: Date,
   actorMembershipId: number | null,
+  mode: CalendarSavedViewDefinition["mode"] = "my-day",
 ): CalendarSavedViewDefinition {
   if (values.ownerMembershipId === "me" && actorMembershipId === null)
     throw new Error("Your membership is unavailable. Refresh before saving this owner filter.");
@@ -35,7 +36,7 @@ export function calendarSavedViewDefinition(
       : Number(values.ownerMembershipId);
   return {
     dateLogic: calendarSavedViewDateLogic(values.dateKind, currentDate),
-    mode: "my-day",
+    mode,
     ...(values.sourceKey !== "all" ? { sourceKey: values.sourceKey } : {}),
     ...(ownerMembershipId ? { ownerMembershipId } : {}),
     ...(values.projectId !== "all" ? { projectId: Number(values.projectId) } : {}),

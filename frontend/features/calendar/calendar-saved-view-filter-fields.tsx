@@ -13,10 +13,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useCan } from "@/hooks/api/access";
-import { useCalendarConnections, useCalendarSources } from "@/hooks/api/calendar";
+import { useCalendarSources } from "@/hooks/api/calendar";
 import { useInfiniteProjects } from "@/hooks/api/build/projects";
 import { usePeople } from "@/hooks/api/directory/people";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
+import { useCalendarConnections } from "./use-calendar-connections";
 import type { CalendarSavedViewFormValues } from "./calendar-saved-view-form-schema";
 
 export function CalendarSavedViewFilterFields({ actorMembershipId }: { actorMembershipId: number | null }) {

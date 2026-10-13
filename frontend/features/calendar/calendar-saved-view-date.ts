@@ -1,5 +1,16 @@
 import { addDays, addMonths, addWeeks, startOfDay, startOfMonth, startOfWeek } from "date-fns";
 import type { CalendarSavedViewDefinition } from "@/hooks/api/calendar-saved-view-schema";
+import type { View } from "./big-calendar-wrapper";
+
+export function calendarSavedViewGridView(
+  dateLogic: CalendarSavedViewDefinition["dateLogic"],
+): View {
+  if (dateLogic.kind === "today") return "day";
+  if (dateLogic.kind === "this-week" || dateLogic.kind === "next-seven-days") return "week";
+  if (dateLogic.kind === "this-month") return "month";
+  const days = (Date.parse(dateLogic.end) - Date.parse(dateLogic.start)) / 86_400_000;
+  return days <= 1 ? "day" : days <= 7 ? "week" : "month";
+}
 
 export function calendarSavedViewWindow(
   dateLogic: CalendarSavedViewDefinition["dateLogic"],

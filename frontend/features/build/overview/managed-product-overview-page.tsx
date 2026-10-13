@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useMemo } from "react";
 import { motion } from "framer-motion";
-import { X } from "lucide-react";
 import { useMotionVariants } from "@/lib/motion-variants";
 import { Button } from "@/components/ui/button";
 import { ManagedProductFormSheet } from "@/features/build/managed-products/managed-product-form-sheet";
@@ -13,10 +12,8 @@ import { ManagedProductUpdateSheet } from "./managed-product-update-sheet";
 import { BuildHeaderActions } from "@/features/build/shared/build-header-actions";
 import { PageState } from "@/components/shared/page-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
-import { BuildInlineFilters } from "@/features/build/shared/build-inline-filters";
-import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { BuildOfflineNotice } from "@/features/build/shared/build-offline-notice";
+import { ManagedProductOverviewFilters } from "./managed-product-overview-filters";
 import { ManagedProductOverviewSkeleton } from "@/features/build/managed-products/managed-product-page-skeletons";
 import { ManagedProductOverviewStrategyCard } from "./managed-product-overview-strategy-card";
 import { ManagedProductOverviewEvidenceCard } from "./managed-product-overview-evidence-card";
@@ -28,11 +25,7 @@ import { ManagedProductOverviewAttention } from "./managed-product-overview-atte
 import { ManagedProductOverviewPulse } from "./managed-product-overview-pulse";
 import { ManagedProductOverviewFlow } from "./managed-product-overview-flow";
 import { deriveAttentionSignals } from "./overview-attention-signals";
-import {
-  useManagedProductOverview,
-  PERIOD_OPTIONS,
-  INITIATIVE_STATUS_OPTIONS,
-} from "./use-managed-product-overview";
+import { useManagedProductOverview } from "./use-managed-product-overview";
 
 interface ManagedProductOverviewPageProps {
   managedProductId: number;
@@ -96,78 +89,23 @@ export function ManagedProductOverviewPage({
       contentClassName="h-auto"
       actions={<BuildHeaderActions actions={editActions} />}
       filters={
-        <div className="flex min-w-0 items-center gap-2">
-          <BuildInlineFilters
-            filters={[
-              {
-                id: "period",
-                control: (
-                  <BuildFilterSelect
-                    label="Period"
-                    value={rawPeriod ?? "all"}
-                    onValueChange={handlePeriodChange}
-                    options={PERIOD_OPTIONS}
-                  />
-                ),
-              },
-              {
-                id: "teamId",
-                control: (
-                  <BuildFilterSelect
-                    label="Team"
-                    value={teamSelectValue}
-                    onValueChange={handleTeamChange}
-                    options={teamOptions}
-                  />
-                ),
-              },
-              {
-                id: "initiativeStatus",
-                control: (
-                  <BuildFilterSelect
-                    label="Status"
-                    value={listFilters.value("initiativeStatus") ?? "all"}
-                    onValueChange={handleInitiativeStatusChange}
-                    options={INITIATIVE_STATUS_OPTIONS}
-                  />
-                ),
-              },
-              {
-                id: "segment",
-                control: (
-                  <BuildFilterSelect
-                    label="Segment"
-                    value={segmentSelectValue}
-                    onValueChange={handleSegmentChange}
-                    options={segmentOptions}
-                  />
-                ),
-              },
-              {
-                id: "dateRange",
-                control: (
-                  <DateRangePicker
-                    from={from}
-                    to={to}
-                    onChange={handleDateRangeChange}
-                  />
-                ),
-              },
-            ]}
-          />
-          {isFiltered ? (
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={handleClearFilters}
-              className="shrink-0 gap-1.5 text-xs text-muted-foreground"
-            >
-              <X className="size-3.5" />
-              Clear all
-            </Button>
-          ) : null}
-        </div>
+        <ManagedProductOverviewFilters
+          rawPeriod={rawPeriod}
+          teamSelectValue={teamSelectValue}
+          initiativeStatus={listFilters.value("initiativeStatus") ?? "all"}
+          segmentSelectValue={segmentSelectValue}
+          teamOptions={teamOptions}
+          segmentOptions={segmentOptions}
+          from={from}
+          to={to}
+          isFiltered={isFiltered}
+          onPeriodChange={handlePeriodChange}
+          onTeamChange={handleTeamChange}
+          onInitiativeStatusChange={handleInitiativeStatusChange}
+          onSegmentChange={handleSegmentChange}
+          onDateRangeChange={handleDateRangeChange}
+          onClearFilters={handleClearFilters}
+        />
       }
     >
       {product ? (
@@ -211,7 +149,7 @@ export function ManagedProductOverviewPage({
             <>
               <motion.div
                 variants={fadeUp}
-                className="grid grid-cols-1 items-stretch gap-4 xl:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)]"
+                className="grid grid-cols-1 items-start gap-4 xl:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)]"
               >
                 <ManagedProductOverviewHero
                   product={summaryData.product}
@@ -259,7 +197,7 @@ export function ManagedProductOverviewPage({
               </motion.div>
               <motion.div
                 variants={fadeUp}
-                className="grid grid-cols-1 items-stretch gap-4 lg:grid-cols-2"
+                className="grid grid-cols-1 items-start gap-4 lg:grid-cols-2"
               >
                 <ManagedProductOverviewOutcomesCard
                   managedProductId={managedProductId}

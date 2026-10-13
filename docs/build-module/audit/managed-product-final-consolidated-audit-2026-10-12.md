@@ -184,6 +184,15 @@ design-system gallery or a source-level test for browser evidence.
    covers card content. Reserve safe space or move the control so it never
    obscures a form field, card action or navigation target.
 
+Browser verified on the later 2026-10-13 pass, product 1 Settings at 375×812:
+quick actions is 44×44 at y=696 and More is at y=748, so they do not overlap.
+The Archive control ends at y=688, above the button. Ask OS is not displayed,
+so it does not cover More. The same non-overlap and zero document overflow
+were seen at 375 px on the directory, overview, feedback, insights, goals,
+projects, roadmap, and releases. Overview filters were also browser verified
+at 375, 768, and 1280 px: the row fills the content width, mobile stays at
+two rows, and controls that do not fit open from Filters.
+
 ### What this closes and what it does not
 
 This closes the authenticated real-route and responsive smoke portion of
