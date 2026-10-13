@@ -114,10 +114,14 @@ export function useCreatePortfolio() {
         undefined,
         portfolioRowContract,
       ),
-    onSuccess: () => {
-      qc.invalidateQueries({
-        queryKey: buildWorkQueryKeys.projects.portfolios.list(),
-      });
+    onSuccess: (newPortfolio) => {
+      qc.setQueriesData<PortfoliosPage>(
+        { queryKey: buildWorkQueryKeys.projects.portfolios.list() },
+        (prev) => {
+          if (!prev) return prev;
+          return { ...prev, data: [newPortfolio, ...prev.data] };
+        },
+      );
     },
   });
 }
@@ -160,9 +164,15 @@ export function useDeletePortfolio() {
         undefined,
         noContentLazy,
       ),
-    onSuccess: () => {
+    onSuccess: (_, portfolioId) => {
+      qc.setQueriesData<PortfoliosPage>(
+        { queryKey: buildWorkQueryKeys.projects.portfolios.list() },
+        (old) => old ? { ...old, data: old.data.filter((p) => p.id !== portfolioId) } : old,
+      );
       qc.invalidateQueries({
-        queryKey: buildWorkQueryKeys.projects.portfolios.list(),
+        queryKey: buildWorkQueryKeys.projects.portfolios.detail(portfolioId),
+        exact: true,
+        refetchType: "none",
       });
     },
   });
