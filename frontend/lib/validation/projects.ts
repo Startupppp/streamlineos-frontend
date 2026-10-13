@@ -3,6 +3,15 @@ import { z } from "zod";
 export const MAX_TICKET_POINTS = 100;
 export const TICKET_TITLE_MAX = 500;
 
+export const portfolioOrProgramNameSchema = z.string().trim().min(1, "Required").max(255);
+export const BUDGET_MAX = 1_000_000_000_000;
+
+const BIDI_STRIP_RE = /[‪-‮⁦-⁩​﻿]/g;
+
+export function stripBidiControls(v: string): string {
+  return v.replace(BIDI_STRIP_RE, "");
+}
+
 const projectStatusSchema = z.enum(["ACTIVE", "COMPLETED", "ARCHIVED"]);
 
 const ticketTypeSchema = z.enum(["EPIC", "STORY", "TASK", "BUG"]);
@@ -10,7 +19,7 @@ const ticketPrioritySchema = z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]);
 
 export const updateProjectSettingsInputSchema = z.object({
   projectId: z.number().int().positive(),
-  name: z.string().min(1, "Project name is required").max(200),
+  name: z.string().trim().min(1, "Project name is required").max(200),
   description: z.string().max(2000).optional(),
   status: projectStatusSchema,
   managerId: z.string().optional(),
@@ -24,10 +33,15 @@ export const createTicketInputSchema = z.object({
   projectId: z.number().int().positive(),
   title: z
     .string()
-    .min(1, "Title is required")
-    .max(TICKET_TITLE_MAX, `Title must be ${TICKET_TITLE_MAX} characters or fewer`)
-    .refine((v) => v.trim().length >= 3, { message: "Title must be at least 3 characters" })
-    .refine((v) => /[a-zA-Z0-9]/.test(v.trim()), { message: "Title must contain at least one letter or number" }),
+    .transform(stripBidiControls)
+    .pipe(
+      z
+        .string()
+        .min(1, "Title is required")
+        .max(TICKET_TITLE_MAX, `Title must be ${TICKET_TITLE_MAX} characters or fewer`)
+        .refine((v) => v.trim().length >= 3, { message: "Title must be at least 3 characters" })
+        .refine((v) => /[a-zA-Z0-9]/.test(v.trim()), { message: "Title must contain at least one letter or number" }),
+    ),
   description: z.string().max(100_000).optional(),
   type: ticketTypeSchema,
   priority: ticketPrioritySchema.optional(),
@@ -42,4 +56,21 @@ export const createTicketInputSchema = z.object({
   originalEstimate: z.number().positive().optional(),
   parentTicketId: z.number().int().positive().optional(),
   status: z.string().optional(),
+});
+
+export const budgetFormSchema = z.object({
+  budget: z
+    .string()
+    .refine((v) => v !== "" && Number.isFinite(Number(v)), "Enter a valid budget amount")
+    .transform((v) => Number(v))
+    .pipe(
+      z
+        .number()
+        .min(0, "Budget must be 0 or more")
+        .max(BUDGET_MAX, `Budget must be ${new Intl.NumberFormat("en-IN").format(BUDGET_MAX)} or less`)
+        .refine(
+          (v) => { const s = v.toString(); const d = s.split(".")[1]; return !d || d.length <= 2; },
+          "Use at most 2 decimal places",
+        ),
+    ),
 });
