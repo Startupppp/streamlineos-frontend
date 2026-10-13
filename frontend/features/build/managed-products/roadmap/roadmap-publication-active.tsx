@@ -14,6 +14,7 @@ interface RoadmapPublicationActiveProps {
   issuedAt: string | null;
   expiresAt: string | null;
   isRotating: boolean;
+  canManage?: boolean;
   onCopy: () => void;
   onRotateAndCopy: () => void;
   onOpenRotate: () => void;
@@ -29,6 +30,7 @@ export function RoadmapPublicationActive({
   issuedAt,
   expiresAt,
   isRotating,
+  canManage = true,
   onCopy,
   onRotateAndCopy,
   onOpenRotate,
@@ -115,18 +117,20 @@ export function RoadmapPublicationActive({
               </dd>
             </div>
           </dl>
-          <LoadingButton
-            type="button"
-            variant="outline"
-            size="sm"
-            className="w-full justify-start gap-2"
-            isPending={isRotating}
-            loadingText="Rotating…"
-            onClick={onRotateAndCopy}
-          >
-            <RefreshCw className="size-3.5" aria-hidden />
-            Rotate and copy new link
-          </LoadingButton>
+          {canManage ? (
+            <LoadingButton
+              type="button"
+              variant="outline"
+              size="sm"
+              className="w-full justify-start gap-2"
+              isPending={isRotating}
+              loadingText="Rotating…"
+              onClick={onRotateAndCopy}
+            >
+              <RefreshCw className="size-3.5" aria-hidden />
+              Rotate and copy new link
+            </LoadingButton>
+          ) : null}
         </div>
       )}
       {shareUrl ? (
@@ -134,28 +138,30 @@ export function RoadmapPublicationActive({
           Copy this link now. It is not shown again after you close this panel.
         </p>
       ) : null}
-      <div className="flex flex-col gap-2 pt-2">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="w-full justify-start gap-2"
-          onClick={onOpenRotate}
-        >
-          <RefreshCw className="size-3.5" aria-hidden />
-          Rotate share link
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="w-full justify-start gap-2 text-destructive hover:text-destructive"
-          onClick={onOpenUnpublish}
-        >
-          <EyeOff className="size-3.5" aria-hidden />
-          Unpublish
-        </Button>
-      </div>
+      {canManage ? (
+        <div className="flex flex-col gap-2 pt-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="w-full justify-start gap-2"
+            onClick={onOpenRotate}
+          >
+            <RefreshCw className="size-3.5" aria-hidden />
+            Rotate share link
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="w-full justify-start gap-2 text-destructive hover:text-destructive"
+            onClick={onOpenUnpublish}
+          >
+            <EyeOff className="size-3.5" aria-hidden />
+            Unpublish
+          </Button>
+        </div>
+      ) : null}
     </div>
   );
 }

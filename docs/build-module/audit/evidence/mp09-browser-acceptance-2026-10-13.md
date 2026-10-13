@@ -137,3 +137,19 @@ Fallback: intercepted harness + mock backend at port 9999.
 None found in the pages themselves. All tested pages render without horizontal overflow at all three viewport widths. FAB and bottom-nav More tab are non-intersecting and meet the 44 × 44 minimum tap target at 375 px.
 
 The `/billing` browser-side endpoint was missing from the mock, producing `ApiContractError: CONTRACT_VIOLATION` in the browser console (not a test failure). Fixed by adding a conforming mock response for `GET /billing`.
+
+---
+
+## IDE browser pass — product 1, signed-in owner
+
+This section is the local app at `http://localhost:1000` against the configured API. It is not the intercepted harness above, and it does not close MP-09.
+
+| Check | Result |
+|---|---|
+| Reload `/build/managed-products/1/settings?tab=publishing` | Publishing stays selected. The page shows Published, link issued 13 Oct 2026 13:13:19, no expiry. |
+| Rotate share link, then Escape | Dialog opens with focus on Cancel. Escape closes it, focus returns to Rotate share link, and the issued time is unchanged. |
+| Description save, refresh, clear, refresh | The saved description was present after refresh. Clearing it and saving again left the field empty after a second refresh. Product name stayed testog. |
+| Owner publication controls | Rotate and copy new link, Rotate share link, and Unpublish are visible to this owner. |
+| Read-only publication controls | Not walked with a second user. The settings section now hides rotate and unpublish unless `build:roadmap:manage` is granted, covered by the publication section test. |
+
+Still not shown in this browser: a restricted member, another tenant, three-page pagination, offline recovery, an expired or rotated or revoked public token, and scroll restoration through `?ret=`. The live public link was left published.

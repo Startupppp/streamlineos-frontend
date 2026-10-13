@@ -14,6 +14,7 @@ let mockPreviewIsError = false;
 const mockRefetch = jest.fn();
 const mockPreviewRefetch = jest.fn();
 const mockPublishMutate = jest.fn();
+let mockCanManage = true;
 
 jest.mock("@/hooks/api/build/roadmap-public", () => ({
   useProductRoadmapPublication: () => ({
@@ -35,7 +36,7 @@ jest.mock("@/hooks/api/build/roadmap-public", () => ({
   useUnpublishProductRoadmap: () => ({ mutate: jest.fn(), isPending: false }),
 }));
 
-jest.mock("@/hooks/api/access", () => ({ useCan: () => true }));
+jest.mock("@/hooks/api/access", () => ({ useCan: () => mockCanManage }));
 
 jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn() } }));
 
@@ -53,6 +54,7 @@ describe("ProductSettingsPublicationSection", () => {
     mockRefetch.mockClear();
     mockPreviewRefetch.mockClear();
     mockPublishMutate.mockClear();
+    mockCanManage = true;
   });
 
   it("offers Publish when the product is not published", () => {
@@ -128,6 +130,22 @@ describe("ProductSettingsPublicationSection", () => {
     ).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /^retry$/i }));
     expect(mockPreviewRefetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps publication metadata readable and hides rotate and unpublish for a viewer", () => {
+    mockCanManage = false;
+    mockPublication = {
+      published: true,
+      issuedAt: "2026-10-12T09:30:00.000Z",
+      expiresAt: "2026-11-12T09:30:00.000Z",
+    };
+    render(<ProductSettingsPublicationSection managedProductId={MANAGED_PRODUCT_ID} />);
+    expect(screen.getByText("Published")).toBeInTheDocument();
+    expect(screen.getByText("Link issued")).toBeInTheDocument();
+    expect(screen.getByText("Expires")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /rotate/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /unpublish/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /publish roadmap/i })).not.toBeInTheDocument();
   });
 
   it("reports a real zero when the preview read succeeded and nothing is public", () => {

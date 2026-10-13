@@ -66,6 +66,7 @@ export function ProductSettingsPublicationSection({
           issuedAt={controls.issuedAt}
           expiresAt={controls.expiresAt}
           isRotating={controls.isPublishing}
+          canManage={canManage}
           onCopy={controls.handleCopy}
           onRotateAndCopy={controls.handleRotateAndCopy}
           onOpenRotate={controls.handleOpenRotate}
@@ -78,25 +79,29 @@ export function ProductSettingsPublicationSection({
         </p>
       )}
 
-      <ConfirmDialog
-        open={controls.unpublishDialogOpen}
-        onOpenChange={controls.handleUnpublishOpenChange}
-        title="Unpublish this roadmap?"
-        description="The public link will stop working immediately. You can publish again to get a new link."
-        confirmLabel="Unpublish"
-        destructive
-        onConfirm={controls.handleUnpublish}
-      />
+      {canManage ? (
+        <>
+          <ConfirmDialog
+            open={controls.unpublishDialogOpen}
+            onOpenChange={controls.handleUnpublishOpenChange}
+            title="Unpublish this roadmap?"
+            description="The public link will stop working immediately. You can publish again to get a new link."
+            confirmLabel="Unpublish"
+            destructive
+            onConfirm={controls.handleUnpublish}
+          />
 
-      <ConfirmDialog
-        open={controls.rotateDialogOpen}
-        onOpenChange={controls.handleRotateOpenChange}
-        title="Rotate share link?"
-        description="The current link will stop working immediately. A new unique link will be generated."
-        confirmLabel="Rotate link"
-        destructive
-        onConfirm={controls.handleRotate}
-      />
+          <ConfirmDialog
+            open={controls.rotateDialogOpen}
+            onOpenChange={controls.handleRotateOpenChange}
+            title="Rotate share link?"
+            description="The current link will stop working immediately. A new unique link will be generated."
+            confirmLabel="Rotate link"
+            destructive
+            onConfirm={controls.handleRotate}
+          />
+        </>
+      ) : null}
     </section>
   );
 }

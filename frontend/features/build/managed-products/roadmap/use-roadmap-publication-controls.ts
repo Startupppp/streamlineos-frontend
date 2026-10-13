@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCopyFeedback } from "@/hooks/common/use-copy-feedback";
@@ -23,11 +23,14 @@ export function useRoadmapPublicationControls(managedProductId: number) {
   const { copied, copy } = useCopyFeedback();
 
   const previewBoard = preview.data?.roadmap;
-  const publicItemCount = previewBoard
-    ? (previewBoard.planned?.length ?? 0) +
+  const publicItemCount = useMemo(() => {
+    if (!previewBoard) return null;
+    return (
+      (previewBoard.planned?.length ?? 0) +
       (previewBoard.in_progress?.length ?? 0) +
       (previewBoard.completed?.length ?? 0)
-    : null;
+    );
+  }, [previewBoard]);
 
   const handleCopy = useCallback(async () => {
     if (!shareUrl) return;
@@ -35,26 +38,31 @@ export function useRoadmapPublicationControls(managedProductId: number) {
     if (!ok) toast.error("Could not copy to clipboard");
   }, [shareUrl, copy]);
 
+  const refetchPublication = publication.refetch;
+  const refetchPreview = preview.refetch;
+  const publishRoadmap = publish.mutate;
+  const unpublishRoadmap = unpublish.mutate;
+
   const handleRetry = useCallback(() => {
-    void publication.refetch();
-  }, [publication]);
+    void refetchPublication();
+  }, [refetchPublication]);
 
   const handleRetryPreview = useCallback(() => {
-    void preview.refetch();
-  }, [preview]);
+    void refetchPreview();
+  }, [refetchPreview]);
 
   const handlePublish = useCallback(() => {
-    publish.mutate(undefined, {
+    publishRoadmap(undefined, {
       onSuccess: (issued) => {
         setShareUrl(`${window.location.origin}${issued.path}`);
         toast.success("Roadmap published");
       },
       onError: (e) => toast.error(getErrorMessage(e)),
     });
-  }, [publish]);
+  }, [publishRoadmap]);
 
   const handleRotate = useCallback(() => {
-    publish.mutate(undefined, {
+    publishRoadmap(undefined, {
       onSuccess: (issued) => {
         setShareUrl(`${window.location.origin}${issued.path}`);
         toast.success("Share link rotated");
@@ -62,10 +70,10 @@ export function useRoadmapPublicationControls(managedProductId: number) {
       },
       onError: (e) => toast.error(getErrorMessage(e)),
     });
-  }, [publish]);
+  }, [publishRoadmap]);
 
   const handleRotateAndCopy = useCallback(() => {
-    publish.mutate(undefined, {
+    publishRoadmap(undefined, {
       onSuccess: (issued) => {
         const url = `${window.location.origin}${issued.path}`;
         setShareUrl(url);
@@ -79,10 +87,10 @@ export function useRoadmapPublicationControls(managedProductId: number) {
       },
       onError: (e) => toast.error(getErrorMessage(e)),
     });
-  }, [publish, copy]);
+  }, [publishRoadmap, copy]);
 
   const handleUnpublish = useCallback(() => {
-    unpublish.mutate(undefined, {
+    unpublishRoadmap(undefined, {
       onSuccess: () => {
         setShareUrl(null);
         toast.success("Roadmap unpublished");
@@ -90,7 +98,7 @@ export function useRoadmapPublicationControls(managedProductId: number) {
       },
       onError: (e) => toast.error(getErrorMessage(e)),
     });
-  }, [unpublish]);
+  }, [unpublishRoadmap]);
 
   const handleUnpublishOpenChange = useCallback((open: boolean) => {
     setUnpublishDialogOpen(open);
@@ -103,30 +111,62 @@ export function useRoadmapPublicationControls(managedProductId: number) {
   const handleOpenUnpublish = useCallback(() => setUnpublishDialogOpen(true), []);
   const handleOpenRotate = useCallback(() => setRotateDialogOpen(true), []);
 
-  return {
-    isPublished: publication.data?.published ?? false,
-    issuedAt: publication.data?.issuedAt ?? null,
-    expiresAt: publication.data?.expiresAt ?? null,
-    isLoading: publication.isLoading,
-    isError: publication.isError,
-    error: publication.error,
-    publicItemCount,
-    isPreviewError: preview.isError,
-    isPublishing: publish.isPending,
-    shareUrl,
-    copied,
-    unpublishDialogOpen,
-    rotateDialogOpen,
-    handleCopy,
-    handleRetry,
-    handleRetryPreview,
-    handlePublish,
-    handleRotate,
-    handleRotateAndCopy,
-    handleUnpublish,
-    handleUnpublishOpenChange,
-    handleRotateOpenChange,
-    handleOpenUnpublish,
-    handleOpenRotate,
-  };
+  const isPublished = publication.data?.published ?? false;
+  const issuedAt = publication.data?.issuedAt ?? null;
+  const expiresAt = publication.data?.expiresAt ?? null;
+
+  return useMemo(
+    () => ({
+      isPublished,
+      issuedAt,
+      expiresAt,
+      isLoading: publication.isLoading,
+      isError: publication.isError,
+      error: publication.error,
+      publicItemCount,
+      isPreviewError: preview.isError,
+      isPublishing: publish.isPending,
+      shareUrl,
+      copied,
+      unpublishDialogOpen,
+      rotateDialogOpen,
+      handleCopy,
+      handleRetry,
+      handleRetryPreview,
+      handlePublish,
+      handleRotate,
+      handleRotateAndCopy,
+      handleUnpublish,
+      handleUnpublishOpenChange,
+      handleRotateOpenChange,
+      handleOpenUnpublish,
+      handleOpenRotate,
+    }),
+    [
+      isPublished,
+      issuedAt,
+      expiresAt,
+      publication.isLoading,
+      publication.isError,
+      publication.error,
+      publicItemCount,
+      preview.isError,
+      publish.isPending,
+      shareUrl,
+      copied,
+      unpublishDialogOpen,
+      rotateDialogOpen,
+      handleCopy,
+      handleRetry,
+      handleRetryPreview,
+      handlePublish,
+      handleRotate,
+      handleRotateAndCopy,
+      handleUnpublish,
+      handleUnpublishOpenChange,
+      handleRotateOpenChange,
+      handleOpenUnpublish,
+      handleOpenRotate,
+    ],
+  );
 }

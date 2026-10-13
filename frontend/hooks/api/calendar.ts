@@ -37,6 +37,7 @@ import type {
   CalendarHistoryResponse,
   ExternalCalendarEventsResponse,
 } from "./calendar-types";
+import { clearOfflineCalendarSnapshot, saveOfflineCalendarSnapshot } from "@/lib/offline/calendar-offline-cache";
 
 // ---- Re-exports — all public imports from this module remain intact ----
 export type {
@@ -115,10 +116,22 @@ export function useCalendarMemberLookup({
 
 export function useCalendarEvents(start: Date, end: Date, enabled = true) {
   const qc = useQueryClient();
-  const { data: session } = useSession();
+  const { data: session, status: sessionStatus } = useSession();
   const orgId = session?.orgId ?? "";
   const userId = session?.user?.id ?? "";
   const canView = useCan("calendar:read");
+  useEffect(() => {
+    if (sessionStatus === "loading") return;
+    const identity = orgId && userId && canView ? `${orgId}:${userId}` : "";
+    try {
+      const previous = localStorage.getItem("streamline-calendar-offline-identity");
+      if (previous && previous !== identity) void clearOfflineCalendarSnapshot().catch(() => undefined);
+      if (identity) localStorage.setItem("streamline-calendar-offline-identity", identity);
+      else localStorage.removeItem("streamline-calendar-offline-identity");
+    } catch {
+      void clearOfflineCalendarSnapshot().catch(() => undefined);
+    }
+  }, [orgId, userId, canView, sessionStatus]);
   useEffect(
     () => subscribeToCalendarProjectionChanges(
       () => invalidateCalendarProjectionWindows(qc, false),
@@ -132,11 +145,14 @@ export function useCalendarEvents(start: Date, end: Date, enabled = true) {
       start.toISOString(),
       end.toISOString(),
     ),
-    queryFn: ({ signal }) =>
-      apiClient.get<CalendarEventsResponse>("/calendar/events", {
+    queryFn: async ({ signal }) => {
+      const result = await apiClient.get<CalendarEventsResponse>("/calendar/events", {
         start: start.toISOString(),
         end: end.toISOString(),
-      }, signal, calendarEventsResponseContract),
+      }, signal, calendarEventsResponseContract);
+      if (navigator.onLine) void saveOfflineCalendarSnapshot(`${orgId}:${userId}`, start, end, result).catch(() => undefined);
+      return result;
+    },
     staleTime: 2 * 60 * 1000,
     enabled: Boolean(orgId && userId) && canView && enabled,
     refetchOnWindowFocus: "always",

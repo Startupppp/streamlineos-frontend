@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   Select,
@@ -32,10 +33,14 @@ export function CalendarSavedViewControls({
   selectedId,
   currentDate,
   mode,
+  search,
+  onSearchChange,
 }: {
   selectedId: string | null;
   currentDate: Date;
   mode: "calendar" | "list" | "my-day";
+  search?: string;
+  onSearchChange?: (value: string) => void;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -61,6 +66,7 @@ export function CalendarSavedViewControls({
   });
 
   const selectView = (id: string | null) => {
+    onSearchChange?.("");
     router.push(
       calendarUrl(new URLSearchParams(searchParams.toString()), { filter: id }),
     );
@@ -133,6 +139,16 @@ export function CalendarSavedViewControls({
           ))}
         </SelectContent>
       </Select>
+      {search !== undefined && onSearchChange ? (
+        <Input
+          value={search}
+          onChange={(event) => onSearchChange(event.target.value)}
+          placeholder="Search this view"
+          aria-label="Search saved calendar view"
+          className="h-9 min-w-40 max-w-64 text-xs"
+          maxLength={200}
+        />
+      ) : null}
       {query.hasNextPage ? (
         <Button
           type="button"

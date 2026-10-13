@@ -82,7 +82,7 @@ Database: `scratch_mp_dbspec` on `127.0.0.1:5432`. RLS live. `streamline_app` ro
 
 **Status: workflow PROVEN by MP-10 db spec 14/14 and chain spec source.**
 
-**Needs browser:** Responsive layout at 375/768/1280 px — placeholder for `docs/build-module/audit/evidence/mp09-browser-acceptance-2026-10-13.md`.
+**Needs browser:** Responsive workflow evidence at 375/768/1280 px — track it in [MP-09 browser acceptance](./mp09-browser-acceptance-2026-10-13.md).
 
 ---
 
@@ -125,7 +125,7 @@ contracts, so the same class of drift fails the typecheck instead of rendering b
 
 **Status: WORKFLOW PROVEN pending browser. The differentiation claim remains an unvalidated hypothesis.**
 
-**Needs browser:** the segment/tier comparison rendered at 375/768/1280 and the `showCrmData`-denied variant — placeholder for `mp09-browser-acceptance-2026-10-13.md`.
+**Needs browser:** the segment/tier comparison rendered at 375/768/1280 and the `showCrmData`-denied variant — track it in [MP-09 browser acceptance](./mp09-browser-acceptance-2026-10-13.md).
 
 ---
 
@@ -153,7 +153,7 @@ contracts, so the same class of drift fails the typecheck instead of rendering b
 
 **Status: workflow PROVEN by MP-10 db spec 14/14 and chain spec source.**
 
-**Needs browser:** Score display, input breakdown, override annotation rendering — placeholder for `mp09-browser-acceptance-2026-10-13.md`.
+**Needs browser:** Score display, input breakdown and override annotation rendering — track it in [MP-09 browser acceptance](./mp09-browser-acceptance-2026-10-13.md).
 
 ---
 
@@ -183,7 +183,7 @@ contracts, so the same class of drift fails the typecheck instead of rendering b
 
 **Status: workflow PROVEN by MP-10 db spec 14/14 and chain spec source. Differentiation vs Productboard/Canny is a hypothesis (no study run).**
 
-**Needs browser:** Opportunity detail form, evidence tab, state machine transitions — placeholder for `mp09-browser-acceptance-2026-10-13.md`.
+**Needs browser:** Opportunity detail form, evidence tab and state-machine transitions — track it in [MP-09 browser acceptance](./mp09-browser-acceptance-2026-10-13.md).
 
 ---
 
@@ -212,7 +212,7 @@ contracts, so the same class of drift fails the typecheck instead of rendering b
 
 **Status: workflow PROVEN by MP-10 publication spec 12/12 and chain spec source.**
 
-**Needs browser:** Roadmap publication toggle, public view rendering, revoke confirmation — placeholder for `mp09-browser-acceptance-2026-10-13.md`.
+**Needs browser:** Roadmap publication toggle, public view rendering and revoke confirmation — track it in [MP-09 browser acceptance](./mp09-browser-acceptance-2026-10-13.md).
 
 ---
 
@@ -237,7 +237,7 @@ contracts, so the same class of drift fails the typecheck instead of rendering b
 
 **Status: workflow PROVEN by MP-10 publication spec 12/12 and chain spec source. Differentiation requires customer adoption evidence (no study run).**
 
-**Needs browser:** Outcome review create form, scheduled/completed states, metric display — placeholder for `mp09-browser-acceptance-2026-10-13.md`.
+**Needs browser:** Outcome-review creation, scheduled/completed states and metric display — track it in [MP-09 browser acceptance](./mp09-browser-acceptance-2026-10-13.md).
 
 ---
 

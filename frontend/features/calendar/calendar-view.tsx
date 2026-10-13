@@ -10,6 +10,7 @@ import {
   subMonths,
   startOfDay,
   addDays,
+  differenceInCalendarDays,
   format,
 } from "date-fns";
 import { Plus, Ticket } from "lucide-react";
@@ -69,6 +70,8 @@ import { useCalendarSavedViews } from "@/hooks/api/calendar-saved-views";
 import { calendarSavedViewGridView, calendarSavedViewWindow } from "./calendar-saved-view-date";
 import { CalendarSavedViewControls } from "./calendar-saved-view-controls";
 import { calendarSearchIsPartial } from "./calendar-search-coverage";
+import { useOnlineStatus } from "@/hooks/common/use-online-status";
+import { CalendarOfflinePanel } from "./calendar-offline-panel";
 
 const CalendarGridLayer = dynamic(
   () =>
@@ -158,10 +161,17 @@ const CalendarAccountsSheet = dynamic(
   },
 );
 
+const CalendarCoachSheet = dynamic(() => import("./calendar-coach-sheet").then((module) => ({ default: module.CalendarCoachSheet })), {
+  ssr: false,
+  loading: () => <CalendarSheetFallback label="Loading personal insights" />,
+});
+
 const NO_CALENDAR_EVENTS: CalendarListItem[] = [];
 const NO_CALENDAR_SEARCH_PAGES: CalendarSearchResponse[] = [];
 
 export function CalendarView() {
+  const online = useOnlineStatus();
+  const [coachOpen, setCoachOpen] = useState(false);
   const [myDaySearch, setMyDaySearch] = useState("");
   const [clockNow, setClockNow] = useState(() => new Date());
   const debouncedMyDaySearch = useDebouncedValue(myDaySearch, 300);
@@ -316,7 +326,7 @@ export function CalendarView() {
     [myDayPages],
   );
   const savedViewActive = viewMode !== "my-day" && Boolean(selectedSavedView);
-  const savedViewEvents = useMemo(
+  const visibleSearchEvents = useMemo(
     () =>
       filterCalendarEventsBySources(myDayEvents, {
         attendanceVisible: attendanceEventsVisible,
@@ -338,8 +348,8 @@ export function CalendarView() {
   const { data: connections = [], isLoading: connectionsLoading } =
     useCalendarConnections();
   const savedGridEvents = useMemo(
-    () => savedViewEvents.map((event) => toBigCalEvent(event, connections)),
-    [connections, savedViewEvents],
+    () => visibleSearchEvents.map((event) => toBigCalEvent(event, connections)),
+    [connections, visibleSearchEvents],
   );
   const finalize = useFinalizeIntegrationConnection();
   const finalizeRef = useRef(false);
@@ -374,7 +384,7 @@ export function CalendarView() {
   );
 
   const savedRangeDays =
-    (Date.parse(myDayWindow.end) - Date.parse(myDayWindow.start)) / 86_400_000;
+    differenceInCalendarDays(new Date(myDayWindow.end), new Date(myDayWindow.start));
   const gridActive =
     viewMode === "calendar" &&
     afterLoad &&
@@ -491,18 +501,26 @@ export function CalendarView() {
     viewMode === "history"
       ? visibleHistoryEvents
       : savedViewActive
-        ? savedViewEvents
+        ? visibleSearchEvents
         : rangeEvents;
   const selectedListEvent = useMemo(() => {
     if (!selected) return null;
+    const selectionEvents =
+      savedFilterId && !selectedSavedView
+        ? NO_CALENDAR_EVENTS
+        : viewMode === "history"
+        ? visibleHistoryEvents
+        : viewMode === "my-day" || savedViewActive
+          ? visibleSearchEvents
+          : visibleEvents;
     return (
-      [...visibleEvents, ...visibleHistoryEvents, ...myDayEvents].find(
+      selectionEvents.find(
         (event) =>
           event.id === selected.id &&
           calendarSourceFamily(event) === selected.source,
       ) ?? null
     );
-  }, [selected, visibleEvents, visibleHistoryEvents, myDayEvents]);
+  }, [selected, savedFilterId, selectedSavedView, visibleEvents, visibleHistoryEvents, visibleSearchEvents, savedViewActive, viewMode]);
   const selectedBigEvent = useMemo(
     () =>
       selectedListEvent ? toBigCalEvent(selectedListEvent, connections) : null,
@@ -521,6 +539,7 @@ export function CalendarView() {
       ? selectedListEvent
       : null;
   const selectedResolutionReady =
+    !savedViewResolving &&
     !eventsIsLoading &&
     !externalIsLoading &&
     !attendanceCoverage.isLoading &&
@@ -643,6 +662,8 @@ export function CalendarView() {
     if (searchParams.get("accounts") === "1") setAccountsOpen(true);
   }, [searchParams, setAccountsOpen]);
 
+  if (!online) return <CalendarOfflinePanel />;
+
   return (
     <PageWrapper
       title={
@@ -684,14 +705,15 @@ export function CalendarView() {
       noInternalScroll
       actionsInline
       actions={
-        <CalendarToolbarPrimaryActions
+        <div className="flex items-center gap-2"><Button variant="outline" onClick={() => setCoachOpen(true)}>My time insights</Button><CalendarToolbarPrimaryActions
           activeConnectionCount={activeConnectionCount}
           onOpenAccounts={handleOpenAccounts}
           onOpenCreate={handleOpenCreate}
           onOpenCreateTicket={handleOpenCreateTicket}
-        />
+        /></div>
       }
     >
+      {coachOpen ? <CalendarCoachSheet onClose={() => setCoachOpen(false)} /> : null}
       <div className="flex min-h-0 flex-1 flex-col gap-3">
         <CalendarToolbar
           view={displayedGridView}
@@ -730,6 +752,8 @@ export function CalendarView() {
                   selectedId={savedFilterId}
                   currentDate={currentDate}
                   mode={viewMode}
+                  search={savedViewActive ? myDaySearch : undefined}
+                  onSearchChange={setMyDaySearch}
                 />
               ) : null}
               {viewMode === "my-day" ? (
@@ -756,7 +780,7 @@ export function CalendarView() {
                     />
                   ) : (
                     <CalendarMyDayPanel
-                      events={myDayEvents}
+                      events={visibleSearchEvents}
                       pages={myDayPages}
                       search={myDaySearch}
                       onSearchChange={setMyDaySearch}
@@ -817,7 +841,7 @@ export function CalendarView() {
                   savedViewActive ? (
                     <CalendarEventsPanel
                       mode="list"
-                      events={savedViewEvents}
+                      events={visibleSearchEvents}
                       range={{ start: new Date(myDayWindow.start), end: new Date(myDayWindow.end) }}
                       onSelectEvent={handleSelectListEvent}
                     />
@@ -855,7 +879,7 @@ export function CalendarView() {
                     viewMode === "history"
                       ? visibleHistoryEvents
                       : savedViewActive
-                        ? savedViewEvents
+                        ? visibleSearchEvents
                         : visibleEvents
                   }
                   range={

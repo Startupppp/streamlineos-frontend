@@ -37,6 +37,7 @@ import {
 } from "./event-detail-content";
 import { CalendarListFallback } from "./calendar-lazy-fallbacks";
 import { CalendarSourceActionPanel } from "./calendar-source-action-panel";
+import type { CommitmentReference } from "@/hooks/api/calendar-commitment-schema";
 
 const MeetingWorkspacePanel = dynamic(
   () =>
@@ -47,6 +48,16 @@ const MeetingWorkspacePanel = dynamic(
     ssr: false,
     loading: () => <CalendarListFallback label="Loading meeting workspace" />,
   },
+);
+
+const ProtectedWorkDialog = dynamic(
+  () => import("./protected-work-dialog").then((m) => ({ default: m.ProtectedWorkDialog })),
+  { ssr: false },
+);
+
+const CommitmentRadarSheet = dynamic(
+  () => import("./commitment-radar-sheet").then((m) => ({ default: m.CommitmentRadarSheet })),
+  { ssr: false },
 );
 
 interface EventDetailSheetProps {
@@ -60,6 +71,8 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
   const [unlinkConfirmOpen, setUnlinkConfirmOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [meetingWorkspaceOpen, setMeetingWorkspaceOpen] = useState(false);
+  const [protectedWorkOpen, setProtectedWorkOpen] = useState(false);
+  const [commitmentRadarOpen, setCommitmentRadarOpen] = useState(false);
   const { mutateAsync: deleteEvent, isPending: deleteEventIsPending } =
     useDeleteCalendarEvent();
   const {
@@ -78,6 +91,11 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
   const canUpdate = isCalendarEvent && detail?.canManage === true;
   const canMutateEvent = canUpdate && event?.category !== "huddle";
   const canExport = useCan("calendar:events:export");
+  const commitmentRoot: CommitmentReference | null = detail?.linkedTicket
+    ? { source: "build", type: "ticket", recordId: String(detail.linkedTicket.id) }
+    : event?.entityType === "deal" && event.entityId && /^\d+$/.test(event.entityId)
+      ? { source: "crm", type: "deal", recordId: event.entityId }
+      : null;
   const { iconRef: huddleIconRef, hoverHandlers: huddleHoverHandlers } =
     useAnimatedIcon();
   const { iconRef: deleteIconRef, hoverHandlers: deleteHoverHandlers } =
@@ -285,6 +303,16 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
                   Edit
                 </Button>
               ) : null}
+              {canMutateEvent && !detail?.isRecurring && !event?.allDay ? (
+                <Button variant="outline" size="sm" onClick={() => setProtectedWorkOpen(true)}>
+                  Protect time
+                </Button>
+              ) : null}
+              {commitmentRoot ? (
+                <Button variant="outline" size="sm" onClick={() => setCommitmentRadarOpen(true)}>
+                  Commitment radar
+                </Button>
+              ) : null}
               <Button variant="outline" size="sm" onClick={onClose}>
                 Close
               </Button>
@@ -330,6 +358,18 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
         open={meetingWorkspaceOpen}
         onOpenChange={setMeetingWorkspaceOpen}
       />
+      {protectedWorkOpen && numericEventId !== null && event ? (
+        <ProtectedWorkDialog
+          eventId={numericEventId}
+          eventStart={new Date(event.start)}
+          eventEnd={new Date(event.end)}
+          open
+          onClose={() => setProtectedWorkOpen(false)}
+        />
+      ) : null}
+      {commitmentRadarOpen && commitmentRoot ? (
+        <CommitmentRadarSheet root={commitmentRoot} open onClose={() => setCommitmentRadarOpen(false)} />
+      ) : null}
     </>
   );
 }

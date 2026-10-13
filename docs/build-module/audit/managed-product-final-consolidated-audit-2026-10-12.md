@@ -172,17 +172,15 @@ design-system gallery or a source-level test for browser evidence.
 - The browser recorded no warning or error console entries during the pass.
 
 
-### Browser defects found
+### Browser defects found and closed
 
-1. **Mobile Ask OS collision.** At 375 px the Ask OS launcher sits on top of the
-   bottom navigation's **More** item on every product route inspected. This
-   makes two interactive targets occupy the same bottom-right area and can make
-   the product's overflow navigation unreliable for touch and keyboard users.
-2. **Mobile quick-actions collision.** At 375 px the floating quick-actions
-   button overlaps page content and controls. On Product Settings it is drawn
-   over the right side of the Status field; on the directory and overview it
-   covers card content. Reserve safe space or move the control so it never
-   obscures a form field, card action or navigation target.
+1. **Mobile Ask OS collision — closed.** The first pass found the launcher over
+   the bottom-navigation **More** item. The later 375 px pass did not render Ask
+   OS over More, and the dedicated overlay suite passed its non-intersection and
+   44×44 target assertions.
+2. **Mobile quick-actions collision — closed.** The first pass found the button
+   over product content and Settings controls. The later pass measured it above
+   More and the Archive control; the dedicated suite passed on seven routes.
 
 Browser verified on the later 2026-10-13 pass, product 1 Settings at 375×812:
 quick actions is 44×44 at y=696 and More is at y=748, so they do not overlap.
@@ -196,13 +194,20 @@ two rows, and controls that do not fit open from Filters.
 ### What this closes and what it does not
 
 This closes the authenticated real-route and responsive smoke portion of
-MP-09. MP-09 as written remains open because this pass did not fabricate
-evidence for the rest of its matrix: populated and filtered-empty variants,
-explicit error/denied/not-found/offline routes, keyboard traversal and focus
-return, three-page pagination, dirty-form navigation, failed-mutation value
-retention, deep-link refresh, restricted-role behavior, or expired/revoked
-public-token browser flows. Those cases require suitable fixtures and multiple
-roles/states, then browser execution after the two mobile collisions are fixed.
+MP-09. A later IDE-browser pass on product 1 also confirmed three narrower
+facts: reloading `/build/managed-products/1/settings?tab=publishing` stays on
+Publishing and shows the already-published roadmap; Escape on Rotate share
+link returns focus to that button and leaves the issued time unchanged; a
+description save persists after refresh and a following clear persists after
+refresh, so the field is empty again. The signed-in owner still sees Rotate
+and Unpublish. Read-only viewers no longer receive those controls. MP-09 as
+written remains open because this pass did not fabricate evidence for the
+rest of its matrix: filtered-empty and loading variants, working retry and
+offline recovery, real-role denial, keyboard traversal across every route,
+three-page pagination, failed-mutation value retention, scroll restoration,
+or expired/rotated/revoked public-token browser flows. The live link has no
+expiry and was not rotated or unpublished. The intercepted state suite
+stopped with 12 untriaged failures, and its authorization responses are stubbed.
 
 ## Current recheck — 2026-10-13
 
@@ -211,11 +216,10 @@ Manage Product implementation defect was found in this recheck. Three gates
 remain:
 
 1. **MP-09 — authenticated browser acceptance.** The real authenticated routes
-   now have responsive smoke evidence at 375/768/1280, as recorded above, and
-   that run found two mobile overlay collisions. Fix those collisions, then
-   complete the remaining state and interaction matrix with authorized and
-   restricted roles, three-page navigation, error/offline states, mutation
-   failures, focus/keyboard flows, and expired/revoked public tokens.
+   have responsive smoke evidence at 375/768/1280, and the two mobile overlay
+   collisions found in the first pass are closed. Complete the remaining state,
+   authorization, interaction and persistence matrix described in
+   `managed-product-pending-work.md`.
 2. **MP-12 — operational monitoring.** Migration/ledger parity, database
    lifecycle, concurrency, token revocation and the rollback drill are proven.
    Add production telemetry and alerting for product read/write latency and
@@ -683,3 +687,19 @@ MP-12 anchors below were checked by hand instead.
 **Manage Product is not complete.** Two items hold it open, and only one of them
 is engineering work: MP-09's browser matrix, and MP-13's external customer and
 competitor evidence, which no amount of code can produce.
+
+## Cleanup review — 2026-10-13
+
+The latest code review found two additional source issues in the shared roadmap
+publication refactor:
+
+1. Product Settings renders Rotate link and Unpublish controls to a read-only
+   viewer once a roadmap is published. Preserve readable publication metadata,
+   but gate the mutation controls with `build:roadmap:manage` (FE-44, FE-51).
+2. `useRoadmapPublicationControls` returns a fresh object on every render. Memoize
+   the returned object as required by FE-114.
+
+Completed rows were removed from `managed-product-pending-work.md`. Its org
+invitation row was also removed because invitation/onboarding is outside the
+Manage Product acceptance scope. That file remains because the two source fixes,
+MP-09 browser matrix and MP-13 external evidence are still open.

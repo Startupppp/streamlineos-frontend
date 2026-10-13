@@ -1,24 +1,58 @@
-# Managed-product pending work
+# Managed Product pending work
 
-Status: **code complete** (2026-10-12). The 2026-10-12 code audit items, many-to-many project links, product reach checks on every product read and write, release revision and evidence fields, contains search, and the QA retest bugs are implemented and covered by focused tests. Overview, Goals, Settings, and the browser checks already finished are removed from this list. Creating a product, accepting an opportunity onto an epic, picking an epic on the roadmap, the overview feedback count after a capture, and the Linked Projects customer filter are proven in the browser. Browser verified on 2026-10-13 in the signed-in local browser: overview filters at 375, 768, and 1280 px, the missing-product Settings page, and the 375 px quick-actions clearance. Still open: Denial, invitation, and the layout line below, because keyboard, focus restore, and `?ret=` were not walked. This does not replace the [product-discovery delivery checklist](../experience/screens/product-discovery.md#delivery-checklist), [requirement ledger](../implementation/REQUIREMENT-LEDGER.md), or [work claims](../implementation/WORK-CLAIMS.md).
+Status: **browser acceptance remains** as of 2026-10-13.
+The publication viewer gate and the stable publication-controls object are
+done. This file contains only work that is still open. Completed source,
+database, HTTP authorization and browser checks live in the
+[consolidated audit](./managed-product-final-consolidated-audit-2026-10-12.md)
+and [MP-09 browser evidence](./evidence/mp09-browser-acceptance-2026-10-13.md).
 
-Product decision: Overview is the concise product summary and Insights is the source-linked deep dive. They stay separate routes.
+## Browser acceptance — MP-09
 
-## Delivery checklist
+The responsive smoke pass, overview filters, missing-product Settings state and
+375 px mobile overlay clearance are complete. The following evidence remains:
 
-Only browser verification remains. Each item needs an authenticated session against the current deployment at 375, 768, and 1280 px, plus keyboard checks.
+- Triage the 12 failures in
+  `frontend/e2e-intercepted/managed-products-states.spec.ts`. Correct invalid
+  fixtures and assertions first; classify a failure as a product defect only
+  after its mocked response satisfies the current response contract.
+- Complete all nine real authenticated routes at 375, 768 and 1280 px for
+  populated, empty, filtered-empty, loading, error with working retry, denied,
+  not-found and offline/recovery states.
+- Prove denial in the browser with a real restricted product member, a caller
+  without the required product/roadmap/feedback permission, and a caller from a
+  different tenant. The intercepted `/me/access` stub proves presentation only;
+  MP-11 proves HTTP authorization separately.
+- Run keyboard-only traversal on the authenticated routes: visible focus,
+  dialogs/sheets/menus/comboboxes trapping focus where required, Escape/Cancel
+  focus return, and mobile full-screen dialog behavior. The three passing
+  keyboard tests currently exercise only the design-system gallery.
+- Prove return context and navigation: `?ret=` focus and scroll restoration,
+  deep-link refresh, Back/Forward, modifier-click behavior and organization
+  switching.
+- Prove three-page pagination and cursor stability: 1 → 2 → 3 → 2 → 1,
+  filter round-trips, selector continuation beyond page one, and no duplicate
+  or missing rows.
+- Prove dirty-form navigation and failed-mutation retention, including duplicate
+  submission protection, validation errors and stale-revision recovery.
+- Drive representative persisted mutations through the browser and confirm the
+  saved result after refresh. Stubbed API responses are not persistence proof.
+- Prove public roadmap preview/publication plus expired, rotated and revoked
+  token behavior in the browser.
+- Record role, tenant, starting fixture, action, URL, visible result, network and
+  console result, refresh result and screenshot for every claimed cell.
 
-- [x] Directory owner: set and clear the owner on product 39 from Edit product and confirm the overview follows each change — [BVG-OWN-001](./browser-verification-backend-gaps.md).
-- [x] Directory: create a product outside the sandbox — [BVG-BLOCK-001](./browser-verification-backend-gaps.md).
-- [x] Feedback: route a submission to Intake through the project picker — [BVG-FB-003](./browser-verification-backend-gaps.md), create a product widget from Collect via Feedbucket and submit through it so the row shows the Feedbucket badge — [BVG-FB-004](./browser-verification-backend-gaps.md), open the opportunity deep link — [BVG-INS-001](./browser-verification-backend-gaps.md), and confirm a missing product's submissions list is not a successful empty inbox — [BVG-FB-001](./browser-verification-backend-gaps.md).
-- [x] Insights: accept an opportunity into the roadmap with an epic. QA BV epic accept is on the Next column and its Epic link opens ticket 89.
-- [x] Roadmap reorder: move a card up and confirm it stays in the new place after reload — [BVG-RM-001](./browser-verification-backend-gaps.md).
-- [x] Roadmap: pick an epic on a project that has epics.
-- [x] Linked Projects: choose a real CRM client in the customer filter — [BVG-BLOCK-004](./browser-verification-backend-gaps.md). QA BV Client (id 6) is the client on Build QA Sandbox, and `?pp_client=6` lists that project only.
-- [x] Browser verified — overview filters on product 1. The row fills the content width. At 1280 px, Period, Team, Status, Segment, and the date range are one row and each label is fully visible. At 768 px, Period, Team, and Status fill the row; Filters holds Segment and the date range, and the date calendar opens from that menu. At 375 px there are two rows only (Period with Team, then Status with Filters), and both rows meet the content edge.
-- [x] Browser verified — missing product. `/build/managed-products/39/settings` shows "Product not found" and Back to products.
-- [x] Browser verified — mobile chrome at 375 px on product 1 Settings. Quick actions sits above More and does not cover it. The Archive control ends above the button. Ask OS is not drawn on More. Directory, overview, feedback, insights, goals, projects, roadmap, and releases at 375 px also showed no document overflow and no overlap between quick actions and More.
-- [ ] Denial: a user without the managed-products, roadmap, or feedback permission, and a user from another tenant, are refused on pages, selectors, mutations, and deep links. Not run — [BVG-BLOCK-001](./browser-verification-backend-gaps.md).
-- [x] Cache: Overview counts follow Feedback writes without a full refetch. The list and pane already follow classify, merge, unmark, and opportunity link with no GET — see the Verification log in [the gaps doc](./browser-verification-backend-gaps.md).
-- [ ] Layout and keyboard: directory, overview, feedback, insights, roadmap, releases, and settings at 375, 768, and 1280 px, including focus and scroll restore when returning through `?ret=` and full-screen dialogs on mobile.
-- [ ] Invitation: an invited user who signs up with the invited email sees the pending invitation on org setup and joins the inviting organization.
+## Non-browser evidence — MP-13
+
+The six WOW workflows are implemented and have database/API evidence. Claims of
+superior usability, customer value, adoption, willingness to pay or competitive
+advantage remain hypotheses until the customer study and same-scope Productboard
+and Canny comparison in
+[MP-13 WOW evidence](./evidence/mp13-wow-evidence-2026-10-13.md) are executed.
+
+## Operational limitation
+
+MP-12's monitoring definitions and local firing/recovery proofs are complete.
+The repository still has no wired paging destination, and the alert proof was
+not executed against the deployed revision. Keep this limitation explicit in a
+release decision; do not describe the local proof as production paging proof.
