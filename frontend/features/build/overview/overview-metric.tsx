@@ -1,19 +1,43 @@
 "use client";
 
 import Link from "next/link";
-import type { ReactNode } from "react";
+import type { ComponentType, ReactNode, Ref } from "react";
+import type { IconHandle } from "@animateicons/react";
 import { motion, useReducedMotion } from "framer-motion";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { cn } from "@/lib/utils";
 
 const BAR_TRANSITION = { duration: 0.35, ease: [0.25, 1, 0.5, 1] } as const;
 
-export function OverviewSectionLink({ href, children }: { href: string; children: string }) {
+type OverviewActionIcon = ComponentType<{
+  ref?: Ref<IconHandle>;
+  size?: number;
+  className?: string;
+  "aria-hidden"?: boolean;
+}>;
+
+export function OverviewSectionLink({
+  href,
+  children,
+  icon: Icon,
+}: {
+  href: string;
+  children: string;
+  icon?: OverviewActionIcon;
+}) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
   return (
     <Link
       href={href}
-      className="inline-flex min-h-11 shrink-0 items-center text-xs font-medium text-primary underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:min-h-0"
+      {...hoverHandlers}
+      className="inline-flex min-h-11 shrink-0 items-center gap-1.5 text-xs font-medium text-primary underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:min-h-0"
     >
       {children}
+      {Icon ? (
+        <span data-slot="overview-section-link-icon" aria-hidden className="inline-flex shrink-0">
+          <Icon ref={iconRef} size={14} aria-hidden />
+        </span>
+      ) : null}
     </Link>
   );
 }
@@ -31,7 +55,7 @@ export function OverviewPanel({ title, description, action, children, className 
     <section
       aria-label={title}
       className={cn(
-        "group/panel relative flex min-w-0 flex-col gap-3 overflow-hidden rounded-xl border border-border/80 bg-card p-3.5 shadow-xs transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-border hover:shadow-sm motion-reduce:transform-none sm:p-4",
+        "group/panel relative flex h-full min-w-0 flex-col gap-3 overflow-hidden rounded-xl border border-border/80 bg-card p-3.5 shadow-xs transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-border hover:shadow-sm motion-reduce:transform-none sm:p-4",
         className,
       )}
     >

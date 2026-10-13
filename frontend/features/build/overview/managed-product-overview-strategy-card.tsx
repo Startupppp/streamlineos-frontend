@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { SettingsIcon } from "@animateicons/react/lucide";
 import { Compass } from "lucide-react";
 import { useCan } from "@/hooks/api/access";
 import type { ManagedProductSummary } from "@/hooks/api/build/managed-product-summary";
@@ -58,7 +59,7 @@ export function ManagedProductOverviewStrategyCard({
   return (
     <OverviewPanel
       title="Strategy"
-      action={canUpdate ? <OverviewSectionLink href={settingsHref}>Edit strategy</OverviewSectionLink> : undefined}
+      action={canUpdate ? <OverviewSectionLink href={settingsHref} icon={SettingsIcon}>Edit strategy</OverviewSectionLink> : undefined}
     >
       {product.vision ? (
         <p className="max-w-prose text-balance text-base font-medium leading-snug text-foreground">{product.vision}</p>

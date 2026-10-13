@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import Link from "next/link";
+import { MapPinnedIcon } from "@animateicons/react/lucide";
 import { Rocket } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import type { ManagedProductSummary } from "@/hooks/api/build/managed-product-summary";
@@ -110,7 +111,7 @@ export function ManagedProductOverviewDeliveryCard({
     <OverviewPanel
       title="Delivery progress"
       description="Roadmap distribution and execution across linked projects."
-      action={<OverviewSectionLink href={`${base}/roadmap${retSuffix}`}>View roadmap</OverviewSectionLink>}
+      action={<OverviewSectionLink href={`${base}/roadmap${retSuffix}`} icon={MapPinnedIcon}>View roadmap</OverviewSectionLink>}
     >
       <OverviewSegmentedBar label="Roadmap by horizon" segments={segments} />
 

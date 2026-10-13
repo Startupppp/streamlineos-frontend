@@ -51,7 +51,7 @@ function AttentionAction({ signal, onMarkReviewed, isMarkingReviewed }: Attentio
   return (
     <Link
       href={signal.href}
-      className="group ml-8 inline-flex min-h-11 shrink-0 items-center gap-1 rounded-md px-2 text-xs font-medium text-primary transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:ml-0 sm:min-h-8"
+      className="group ml-8 inline-flex min-h-11 shrink-0 items-center gap-1 rounded-md border border-border/60 bg-background px-2.5 text-xs font-medium text-primary shadow-xs transition-[color,background-color,border-color,transform] hover:-translate-y-0.5 hover:border-primary/30 hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transform-none sm:ml-0 sm:min-h-8"
     >
       {signal.actionLabel}
       <ArrowUpRight
@@ -66,7 +66,7 @@ function AttentionRow({ signal, onMarkReviewed, isMarkingReviewed }: AttentionRo
   const tone = statusToneClasses(signal.tone);
   const Icon = TONE_ICON[signal.tone];
   return (
-    <li className="flex flex-wrap items-start gap-x-3 gap-y-1 py-3 first:pt-0 last:pb-0">
+    <li className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg border border-border/60 bg-muted/15 p-2.5 transition-colors hover:bg-muted/35 motion-reduce:transition-none">
       <span
         aria-hidden
         className={cn("mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-md", tone.surface, tone.ink)}
@@ -111,7 +111,7 @@ export function ManagedProductOverviewAttention({
           </p>
         </div>
       ) : (
-        <ul className="flex flex-col divide-y divide-border/80">
+        <ul className="flex flex-1 flex-col gap-2">
           {signals.map((signal) => (
             <AttentionRow
               key={signal.id}

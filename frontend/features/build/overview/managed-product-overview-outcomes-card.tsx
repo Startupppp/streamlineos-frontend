@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import Link from "next/link";
+import { CircleCheckIcon } from "@animateicons/react/lucide";
 import type { ManagedProductSummary } from "@/hooks/api/build/managed-product-summary";
 import { statusToneClasses } from "@/lib/design-tokens";
 import { formatRelativeTime } from "@/lib/date-utils";
@@ -39,7 +40,7 @@ export function ManagedProductOverviewOutcomesCard({
     <OverviewPanel
       title="Measured outcomes"
       description="Did shipped work move the metrics it promised to?"
-      action={<OverviewSectionLink href={`/build/managed-products/${managedProductId}/goals`}>View goals</OverviewSectionLink>}
+      action={<OverviewSectionLink href={`/build/managed-products/${managedProductId}/goals`} icon={CircleCheckIcon}>View goals</OverviewSectionLink>}
     >
       {hasReviews ? (
         <OverviewSegmentedBar

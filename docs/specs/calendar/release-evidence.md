@@ -2,6 +2,10 @@
 
 ## Current local verification checkpoint
 
+The post-fix Calendar run on 2026-10-13 passed all 128 backend Calendar suites and 988 tests. The frontend Jest Calendar selection passed all 73 suites and 450 tests after updating a stale event-ID template-count expectation. A broader first Jest scan mistakenly included one Playwright E2E spec, which cannot run under Jest; the corrected selection excluded that separate runner. These passes cover local unit and component behavior, not production authentication, database migrations, provider sandboxes, or deployment.
+
+The intercepted Calendar Playwright suite was separately attempted with installed system Chrome and its fixture-only backend configuration. The Next.js test server did not reach runner readiness and the process was stopped after remaining silent beyond the configured startup limit. A direct localhost:3201 probe returned a sandbox socket-permission error. The E2E TypeScript project passed, but no intercepted browser cases executed; this attempt is unverified browser evidence.
+
 On 2026-10-13, the complete backend Calendar Jest selection passed 127 suites and 978 tests. The frontend Calendar feature, hook, offline, and booking selection passed 66 suites and 402 tests; four Calendar route and accessibility suites passed another 22 tests. Frontend TypeScript passed. After the offline policy revocation fix, three focused frontend suites passed 14 tests, frontend TypeScript passed again, and targeted ESLint passed. The backend Nest build completed successfully and its compiled output contains `CalendarOfflinePolicyController` and `dist/main.js`.
 
 These checks do not prove production API routing, applied migration 2016, saved-view CRUD, provider sandbox behavior, or live offline and cross-tab behavior. The production Calendar browser tool failed before opening a tab with an OS kernel-asset path error, and a separate web request could not access the authenticated page. The earlier production `/calendar/saved-views` HTTP 500 remains unresolved without backend logs or database access. Migration-chain verification without `DATABASE_URL` reported six historical journal timestamp regressions outside the Calendar migration range; no historical migration was restamped.
@@ -270,6 +274,8 @@ Evidence recorded on 2026-10-13 for ticket 24.
 
 Implementation recorded on 2026-10-13 for ticket 25. Validation is intentionally deferred while the local server and toolchain are being repaired.
 
+On 2026-10-14, the workflow planner was moved into one tenant transaction for its policy read, rule read, and effect insertion. A new focused regression passed, and targeted lint passed. The prior complete backend Calendar run covered the existing ticket 25 suites but preceded this new test. Real tenant RLS, duplicate delivery, and live notification evidence remain open.
+
 | Evidence layer | Status | Evidence | Limit |
 | --- | --- | --- | --- |
 | Lifecycle trigger planning | Implemented; validation deferred | The shared outbox consumer maps booking and event creation, change, reschedule, cancellation, no-show, start, end, failure, repair, and source-state changes into versioned rule plans. Stable effect identity prevents duplicate creation while allowing different aggregate versions to be processed out of order. | The new focused suites have not been run in this pass. |
@@ -281,6 +287,8 @@ Implementation recorded on 2026-10-13 for ticket 25. Validation is intentionally
 ## Scheduling APIs and webhooks
 
 Implementation recorded on 2026-10-13 for ticket 26. Validation is intentionally deferred while the local server and toolchain are being repaired.
+
+On 2026-10-14, API-key booking list and detail reads were moved into tenant transactions bound to the credential organization. A focused service suite passed two tests that reject raw-handle reads, and targeted lint passed. Real RLS and credential replay behavior remain unverified.
 
 | Evidence layer | Status | Evidence | Limit |
 | --- | --- | --- | --- |
@@ -295,6 +303,8 @@ Implementation recorded on 2026-10-13 for ticket 26. Validation is intentionally
 
 Implementation recorded on 2026-10-13 for ticket 27. Validation is intentionally deferred while the local server and toolchain are being repaired.
 
+On 2026-10-14, unrecognized Calendar source coverage states were changed to count as partial rather than complete. The focused analytics policy suite passed seven tests, including the new unexpected-state case, and targeted lint passed. Live multi-source failure and recovery remain unverified.
+
 | Evidence layer | Status | Evidence | Limit |
 | --- | --- | --- | --- |
 | Authoritative metric facts | Implemented; validation deferred | A fan-out consumer records minimized lifecycle facts with tenant-scoped producer-event and aggregate-version uniqueness. Booking cohorts start at version 1, latest versions determine period-end state, and late or corrective versions remain visible without consulting mutable projection rows. | The consumer, SQL rollup, and migration have not been executed in this pass. |
@@ -307,6 +317,8 @@ Implementation recorded on 2026-10-13 for ticket 27. Validation is intentionally
 ## Source action proposals and receipts
 
 Implementation recorded on 2026-10-13 for ticket 28. Validation is intentionally deferred while the local server and toolchain are being repaired.
+
+On 2026-10-14, expired confirmation now commits the EXPIRED proposal state before returning a conflict. Step completion also checks the claimed attempt number and running status, so a late result from an older attempt cannot overwrite a newly claimed repair. The focused store suite passed two tests and targeted lint passed. Real database concurrency and source-owner receipts remain unverified.
 
 | Evidence layer | Status | Evidence | Limit |
 | --- | --- | --- | --- |

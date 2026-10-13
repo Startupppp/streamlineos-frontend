@@ -181,7 +181,7 @@ export function ManagedProductOverviewPage({
               </motion.div>
               <motion.div
                 variants={fadeUp}
-                className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]"
+                className="grid grid-cols-1 items-stretch gap-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]"
               >
                 <ManagedProductOverviewDeliveryCard
                   managedProductId={managedProductId}
@@ -199,7 +199,7 @@ export function ManagedProductOverviewPage({
               </motion.div>
               <motion.div
                 variants={fadeUp}
-                className="grid grid-cols-1 items-start gap-4 lg:grid-cols-2"
+                className="grid grid-cols-1 items-stretch gap-4 lg:grid-cols-2"
               >
                 <ManagedProductOverviewOutcomesCard
                   managedProductId={managedProductId}

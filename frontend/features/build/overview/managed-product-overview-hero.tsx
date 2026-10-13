@@ -122,11 +122,28 @@ export function ManagedProductOverviewHero({ product, now }: HeroProps) {
   return (
     <section
       aria-label="Product identity"
-      className="flex min-w-0 flex-col gap-4 rounded-xl border border-border bg-card p-4 shadow-sm"
+      className="group/identity relative flex h-full min-w-0 flex-col gap-3 overflow-hidden rounded-xl border border-border/80 bg-card p-3.5 shadow-xs transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-border hover:shadow-sm motion-reduce:transform-none sm:p-4"
     >
-      <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-        <div className="flex min-w-0 max-w-prose flex-col gap-3">
-          <div className="flex flex-wrap items-center gap-2">
+      <span
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/35 to-transparent opacity-0 transition-opacity duration-200 group-hover/identity:opacity-100 motion-reduce:transition-none"
+      />
+      <div className="flex flex-col gap-3">
+        <div className="flex min-w-0 flex-col gap-2.5 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0 max-w-2xl">
+            <p
+              className={cn(
+                "text-pretty text-base leading-snug",
+                lead ? "font-medium text-foreground" : "text-sm text-muted-foreground",
+              )}
+            >
+              {lead ?? "No description yet. Explain what this product is for in product settings."}
+            </p>
+            {product.vision && product.description ? (
+              <p className="mt-1.5 text-pretty text-sm text-muted-foreground">{product.description}</p>
+            ) : null}
+          </div>
+          <div className="flex shrink-0 flex-wrap items-center gap-2">
             <HealthPill health={product.health} />
             {product.status === "archived" ? (
               <Badge variant="outline" className="text-xs">
@@ -134,26 +151,15 @@ export function ManagedProductOverviewHero({ product, now }: HeroProps) {
               </Badge>
             ) : null}
           </div>
-          <p
-            className={cn(
-              "text-pretty text-balance text-base leading-snug",
-              lead ? "font-medium text-foreground" : "text-sm text-muted-foreground",
-            )}
-          >
-            {lead ?? "No description yet. Explain what this product is for in product settings."}
-          </p>
-          {product.vision && product.description ? (
-            <p className="text-pretty text-sm text-muted-foreground">{product.description}</p>
-          ) : null}
         </div>
-        <dl className="grid shrink-0 grid-cols-1 gap-3 rounded-lg bg-muted/40 p-3 sm:grid-cols-3 md:w-72 md:grid-cols-1">
-          <div className="flex items-start justify-between gap-3 sm:flex-col sm:justify-start sm:gap-1">
+        <dl className="grid shrink-0 grid-cols-1 overflow-hidden rounded-lg border border-border/60 bg-muted/20 sm:grid-cols-3 sm:divide-x sm:divide-border/60">
+          <div className="flex items-center justify-between gap-3 border-b border-border/60 px-3 py-2.5 sm:flex-col sm:items-start sm:justify-start sm:border-b-0">
             <dt className="text-xs text-muted-foreground">Owner</dt>
             <dd>
               <OwnerFact owner={product.owner} />
             </dd>
           </div>
-          <div className="flex items-start justify-between gap-3 sm:flex-col sm:justify-start sm:gap-1">
+          <div className="flex items-center justify-between gap-3 border-b border-border/60 px-3 py-2.5 sm:flex-col sm:items-start sm:justify-start sm:border-b-0">
             <dt className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <CalendarClock aria-hidden className="size-3.5" />
               Target launch
@@ -162,7 +168,7 @@ export function ManagedProductOverviewHero({ product, now }: HeroProps) {
               <LaunchFact targetLaunchDate={product.targetLaunchDate} now={now} />
             </dd>
           </div>
-          <div className="flex items-start justify-between gap-3 sm:flex-col sm:justify-start sm:gap-1">
+          <div className="flex items-center justify-between gap-3 px-3 py-2.5 sm:flex-col sm:items-start sm:justify-start">
             <dt className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <Flag aria-hidden className="size-3.5" />
               Current phase
@@ -173,9 +179,14 @@ export function ManagedProductOverviewHero({ product, now }: HeroProps) {
           </div>
         </dl>
       </div>
-      <LifecycleTrack lifecycle={product.lifecycle} />
+      <div className="flex min-h-20 flex-1 items-center rounded-lg border border-border/60 bg-background/60 px-3 py-3">
+        <div className="w-full">
+          <p className="mb-2 text-micro font-medium uppercase tracking-wide text-muted-foreground">Lifecycle</p>
+          <LifecycleTrack lifecycle={product.lifecycle} />
+        </div>
+      </div>
       {labels.length > 0 ? (
-        <ul aria-label="Segments and tags" className="flex flex-wrap gap-1.5">
+        <ul aria-label="Segments and tags" className="flex shrink-0 flex-wrap gap-1.5 border-t border-border/60 pt-3">
           {product.segments.map((segment) => (
             <li key={`segment-${segment}`}>
               <Badge variant="secondary" className="text-xs">

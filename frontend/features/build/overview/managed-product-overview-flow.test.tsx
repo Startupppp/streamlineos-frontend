@@ -37,4 +37,16 @@ describe("ManagedProductOverviewFlow", () => {
     expect(firstLink).toHaveClass("motion-reduce:transform-none", "motion-reduce:transition-none");
     expect(container.querySelectorAll("svg")).toHaveLength(11);
   });
+
+  it("gives every stage a distinct token-based color treatment", () => {
+    render(<ManagedProductOverviewFlow managedProductId={42} summary={OVERVIEW_SUMMARY} />);
+
+    const links = within(screen.getByRole("list", { name: "Signal to outcome" })).getAllByRole("link");
+    expect(links[0]).toHaveClass("bg-status-info-surface/45");
+    expect(links[1]).toHaveClass("bg-muted/45");
+    expect(links[2]).toHaveClass("bg-status-warning-surface/45");
+    expect(links[3]).toHaveClass("bg-primary/5");
+    expect(links[4]).toHaveClass("bg-status-success-surface/45");
+    expect(links[5]).toHaveClass("bg-secondary/70");
+  });
 });

@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import Link from "next/link";
+import { MessageCircleIcon } from "@animateicons/react/lucide";
 import type { ManagedProductSummary } from "@/hooks/api/build/managed-product-summary";
 import { statusToneClasses } from "@/lib/design-tokens";
 import { formatRelativeTime } from "@/lib/date-utils";
@@ -68,7 +69,7 @@ export function ManagedProductOverviewEvidenceCard({
     <OverviewPanel
       title="Evidence strength"
       description="Volume, freshness and coverage of customer signal."
-      action={<OverviewSectionLink href={`${base}/feedback${retSuffix}`}>View feedback</OverviewSectionLink>}
+      action={<OverviewSectionLink href={`${base}/feedback${retSuffix}`} icon={MessageCircleIcon}>View feedback</OverviewSectionLink>}
     >
       <dl>
         <OverviewFact label="Total feedback" href={`${base}/feedback${retSuffix}`}>{evidence.feedbackCount}</OverviewFact>
