@@ -60,10 +60,18 @@ function identityIsCurrent(identity: string): boolean {
 function policyIsRevoked(identity: string): boolean {
   try {
     const state = policyState(identity);
-    if (!state) return false;
-    return !state.enabled;
+    return !state || !state.enabled;
   } catch {
     return true;
+  }
+}
+
+function policyVersionIsCurrent(identity: string, version: number): boolean {
+  try {
+    const state = policyState(identity);
+    return Boolean(state?.enabled && state.version === version);
+  } catch {
+    return false;
   }
 }
 
@@ -168,7 +176,7 @@ export async function readOfflineCalendarSnapshot(identity: string): Promise<Off
   if (!snapshot || !identityIsCurrent(identity)) return null;
   const age = Date.now() - snapshot.fetchedAt;
   if (!Number.isFinite(age) || age < 0 ||
-    !Number.isInteger(snapshot.policyVersion) || !Number.isInteger(snapshot.maxAgeDays) ||
+    !Number.isInteger(snapshot.policyVersion) || !policyVersionIsCurrent(identity, snapshot.policyVersion) || !Number.isInteger(snapshot.maxAgeDays) ||
     snapshot.maxAgeDays < 1 || snapshot.maxAgeDays > 30 ||
     age > snapshot.maxAgeDays * 86_400_000 ||
     !Array.isArray(snapshot.windows) || !Array.isArray(snapshot.sources)) {

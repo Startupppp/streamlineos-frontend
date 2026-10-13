@@ -53,6 +53,7 @@ function fakeIndexedDb() {
 }
 
 function save() {
+  allowOfflineCalendarPolicy("org-1:user-1", 1);
   return saveOfflineCalendarSnapshot("org-1:user-1", new Date("2026-10-13T09:00:00.000Z"), new Date("2026-10-13T10:00:00.000Z"), {
     events: [], coverageState: "complete", coverage: [],
   } as never, { version: 1, maxAgeDays: 1 });

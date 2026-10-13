@@ -86,7 +86,6 @@ export function ManagedProductOverviewPage({
       badge={product?.key}
       subtitle={overviewSubtitle}
       onBack={handleBack}
-      contentClassName="h-auto"
       actions={<BuildHeaderActions actions={editActions} />}
       filters={
         <ManagedProductOverviewFilters
@@ -135,7 +134,6 @@ export function ManagedProductOverviewPage({
         resolution={resolution}
         loading={<ManagedProductOverviewSkeleton />}
         onRetry={handleRetry}
-        className="h-auto flex-none"
       >
         <motion.div
           className="flex w-full min-w-0 flex-col gap-3 pb-8 sm:gap-4"

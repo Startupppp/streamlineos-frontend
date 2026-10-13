@@ -43,12 +43,12 @@
       if (className) element.className = className;
       parent.append(element);
     }
-    function policyDenied(identity) {
+    function policyDenied(identity, version) {
       try {
         const raw = localStorage.getItem(`streamline-calendar-offline-policy-revocation:${identity}`);
-        if (!raw) return false;
+        if (!raw) return true;
         const state = JSON.parse(raw);
-        return !state || !Number.isInteger(state.version) || state.version < 0 || typeof state.enabled !== "boolean" || !state.enabled;
+        return !state || !Number.isInteger(state.version) || state.version < 0 || typeof state.enabled !== "boolean" || !state.enabled || version !== undefined && state.version !== version;
       } catch { return true; }
     }
     function readSnapshot() {
@@ -78,7 +78,7 @@
       try {
         const snapshot = await readSnapshot();
         const age = snapshot && Date.now() - snapshot.fetchedAt;
-        if (!snapshot || snapshot.identity !== identity || localStorage.getItem("streamline-calendar-offline-identity") !== identity || policyDenied(identity) || !Number.isFinite(age) || age < 0 ||
+        if (!snapshot || snapshot.identity !== identity || localStorage.getItem("streamline-calendar-offline-identity") !== identity || policyDenied(identity, snapshot.policyVersion) || !Number.isFinite(age) || age < 0 ||
           !Number.isInteger(snapshot.maxAgeDays) || snapshot.maxAgeDays < 1 || snapshot.maxAgeDays > 30 ||
           age > snapshot.maxAgeDays * 86400000 || !Array.isArray(snapshot.sources) || !Array.isArray(snapshot.windows)) {
           status.textContent = "No recent offline schedule is available for this tab. Reconnect to refresh it.";

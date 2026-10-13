@@ -163,7 +163,10 @@ describe("ManagedProductOverviewPage — error handling", () => {
   it("renders the error state when the resolution reports an error", () => {
     usePageState.mockReturnValue({ kind: "error", error: new Error("Load failed") });
     render(<ManagedProductOverviewPage managedProductId={42} />);
-    expect(screen.getByRole("alert")).toBeInTheDocument();
+    const errorState = screen.getByRole("alert");
+    expect(errorState).toBeInTheDocument();
+    expect(errorState).toHaveClass("flex-1");
+    expect(errorState).not.toHaveClass("flex-none");
   });
 
   it("passes the summary query error to usePageState so a 402 or 403 is not silently degraded", () => {

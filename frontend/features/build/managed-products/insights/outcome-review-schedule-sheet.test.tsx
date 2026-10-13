@@ -2,6 +2,24 @@ import { createContext, forwardRef, useContext, type ReactNode } from "react";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
+jest.mock("@/components/ui/date-picker", () => ({
+  DatePicker: ({
+    id,
+    value,
+    onChange,
+  }: {
+    id: string;
+    value: string;
+    onChange: (value: string) => void;
+  }) => (
+    <input
+      data-testid={`date-${id}`}
+      value={value}
+      onChange={(event) => onChange(event.target.value)}
+    />
+  ),
+}));
+
 const mockSelectContext = createContext<(value: string) => void>(() => {});
 
 jest.mock("@/components/ui/select", () => ({
@@ -244,8 +262,7 @@ describe("OutcomeReviewScheduleSheet — measurement fields", () => {
     await user.type(screen.getByTestId("metric-period-input"), "Q1 2025");
     await user.type(screen.getByTestId("source-url-input"), "https://example.com/data");
     await user.click(screen.getByRole("option", { name: "Measured" }));
-    const dateInputs = screen.getAllByLabelText("Pick a date");
-    fireEvent.change(dateInputs[dateInputs.length - 1], {
+    fireEvent.change(screen.getByTestId("date-scheduleMeasuredAt"), {
       target: { value: "2026-10-13" },
     });
     await user.click(screen.getByRole("button", { name: "Schedule" }));
