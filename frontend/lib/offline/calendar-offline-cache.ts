@@ -15,6 +15,18 @@ export interface OfflineCalendarSnapshot {
 const DB_NAME = "streamline-calendar-offline";
 const STORE = "snapshot";
 const KEY = "latest";
+const SESSION_IDENTITY_KEY = "streamline-calendar-offline-session-identity";
+const DEVICE_IDENTITY_KEY = "streamline-calendar-offline-identity";
+let cacheEpoch = 0;
+
+function identityIsCurrent(identity: string): boolean {
+  try {
+    return sessionStorage.getItem(SESSION_IDENTITY_KEY) === identity &&
+      localStorage.getItem(DEVICE_IDENTITY_KEY) === identity;
+  } catch {
+    return false;
+  }
+}
 
 function openDb(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
@@ -54,6 +66,7 @@ export async function saveOfflineCalendarSnapshot(
   policy: { version: number; maxAgeDays: number },
 ): Promise<void> {
   if (!identity || !Number.isFinite(start.getTime()) || !Number.isFinite(end.getTime())) return;
+  const writeEpoch = cacheEpoch;
   const snapshot: OfflineCalendarSnapshot = {
     identity,
     fetchedAt: Date.now(),
@@ -71,6 +84,7 @@ export async function saveOfflineCalendarSnapshot(
     })),
   };
   await transact<void>("readwrite", (store, resolve) => {
+    if (writeEpoch !== cacheEpoch || !identityIsCurrent(identity)) return resolve();
     const request = store.put(snapshot, KEY);
     request.onsuccess = () => resolve();
   });
@@ -100,6 +114,7 @@ export async function readOfflineCalendarSnapshot(identity: string): Promise<Off
 }
 
 export async function clearOfflineCalendarSnapshot(): Promise<void> {
+  cacheEpoch++;
   await transact<void>("readwrite", (store, resolve) => {
     const request = store.delete(KEY);
     request.onsuccess = () => resolve();
