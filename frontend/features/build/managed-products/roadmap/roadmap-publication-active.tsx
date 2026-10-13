@@ -7,7 +7,8 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { formatDateTime } from "@/lib/date-utils";
 
 interface RoadmapPublicationActiveProps {
-  publicItemCount: number;
+  publicItemCount: number | null;
+  publicItemCountError: boolean;
   shareUrl: string | null;
   copied: boolean;
   issuedAt: string | null;
@@ -17,10 +18,12 @@ interface RoadmapPublicationActiveProps {
   onRotateAndCopy: () => void;
   onOpenRotate: () => void;
   onOpenUnpublish: () => void;
+  onRetryPublicItemCount?: () => void;
 }
 
 export function RoadmapPublicationActive({
   publicItemCount,
+  publicItemCountError,
   shareUrl,
   copied,
   issuedAt,
@@ -30,6 +33,7 @@ export function RoadmapPublicationActive({
   onRotateAndCopy,
   onOpenRotate,
   onOpenUnpublish,
+  onRetryPublicItemCount,
 }: RoadmapPublicationActiveProps) {
   return (
     <div className="flex flex-col gap-4">
@@ -37,11 +41,29 @@ export function RoadmapPublicationActive({
         <Globe className="size-4 shrink-0 text-green-600" aria-hidden />
         <p className="text-sm font-medium text-foreground">Published</p>
       </div>
-      <p className="text-sm text-muted-foreground">
-        {publicItemCount === 0
-          ? "No items are marked as public. Mark roadmap items public for them to appear."
-          : `${String(publicItemCount)} item${publicItemCount === 1 ? "" : "s"} visible to the public.`}
-      </p>
+      {publicItemCount !== null ? (
+        <p className="text-sm text-muted-foreground">
+          {publicItemCount === 0
+            ? "No items are marked as public. Mark roadmap items public for them to appear."
+            : `${String(publicItemCount)} item${publicItemCount === 1 ? "" : "s"} visible to the public.`}
+        </p>
+      ) : publicItemCountError ? (
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="text-sm text-muted-foreground">
+            The number of publicly visible items could not be loaded.
+          </p>
+          {onRetryPublicItemCount ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={onRetryPublicItemCount}
+            >
+              Retry
+            </Button>
+          ) : null}
+        </div>
+      ) : null}
       <p className="text-sm text-muted-foreground">
         The public board is not a snapshot. It reflects your roadmap as you
         change it, so edits appear on the shared link.

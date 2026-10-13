@@ -1,8 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
 import { Globe, EyeOff } from "lucide-react";
-import { toast } from "sonner";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
@@ -13,15 +11,9 @@ import {
   SheetBody,
 } from "@/components/ui/sheet";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useCopyFeedback } from "@/hooks/common/use-copy-feedback";
 import { ErrorState } from "@/components/shared/error-state";
 import { RoadmapPublicationActive } from "./roadmap-publication-active";
-import {
-  useProductRoadmapPublication,
-  usePublishProductRoadmap,
-  useUnpublishProductRoadmap,
-} from "@/hooks/api/build/roadmap-public";
-import { useRoadmapPreview } from "@/hooks/api/build/roadmap-public";
+import { useRoadmapPublicationControls } from "./use-roadmap-publication-controls";
 
 interface RoadmapPublicationPanelProps {
   managedProductId: number;
@@ -29,100 +21,7 @@ interface RoadmapPublicationPanelProps {
 }
 
 export function RoadmapPublicationPanel({ managedProductId, onClose }: RoadmapPublicationPanelProps) {
-  const {
-    data: publication,
-    isLoading,
-    isError,
-    error,
-    refetch,
-  } = useProductRoadmapPublication(managedProductId);
-  const { data: preview } = useRoadmapPreview(managedProductId);
-  const publish = usePublishProductRoadmap(managedProductId);
-  const unpublish = useUnpublishProductRoadmap(managedProductId);
-
-  const [unpublishDialogOpen, setUnpublishDialogOpen] = useState(false);
-  const [rotateDialogOpen, setRotateDialogOpen] = useState(false);
-  const [shareUrl, setShareUrl] = useState<string | null>(null);
-  const { copied, copy } = useCopyFeedback();
-
-  const isPublished = publication?.published ?? false;
-
-  const publicItemCount =
-    preview
-      ? (preview.roadmap.planned?.length ?? 0) +
-        (preview.roadmap.in_progress?.length ?? 0) +
-        (preview.roadmap.completed?.length ?? 0)
-      : 0;
-
-  const handleCopy = useCallback(async () => {
-    if (!shareUrl) return;
-    const ok = await copy(shareUrl);
-    if (!ok) toast.error("Could not copy to clipboard");
-  }, [shareUrl, copy]);
-
-  const handleRetry = useCallback(() => {
-    void refetch();
-  }, [refetch]);
-
-  const handlePublish = useCallback(() => {
-    publish.mutate(undefined, {
-      onSuccess: (issued) => {
-        setShareUrl(`${window.location.origin}${issued.path}`);
-        toast.success("Roadmap published");
-      },
-      onError: (e) => toast.error(getErrorMessage(e)),
-    });
-  }, [publish]);
-
-  const handleRotate = useCallback(() => {
-    publish.mutate(undefined, {
-      onSuccess: (issued) => {
-        setShareUrl(`${window.location.origin}${issued.path}`);
-        toast.success("Share link rotated");
-        setRotateDialogOpen(false);
-      },
-      onError: (e) => toast.error(getErrorMessage(e)),
-    });
-  }, [publish]);
-
-  const handleRotateAndCopy = useCallback(() => {
-    publish.mutate(undefined, {
-      onSuccess: (issued) => {
-        const url = `${window.location.origin}${issued.path}`;
-        setShareUrl(url);
-        void copy(url).then((ok) => {
-          toast.success(
-            ok
-              ? "Share link rotated and copied"
-              : "Share link rotated. Copy it from the field above.",
-          );
-        });
-      },
-      onError: (e) => toast.error(getErrorMessage(e)),
-    });
-  }, [publish, copy]);
-
-  const handleUnpublish = useCallback(() => {
-    unpublish.mutate(undefined, {
-      onSuccess: () => {
-        setShareUrl(null);
-        toast.success("Roadmap unpublished");
-        setUnpublishDialogOpen(false);
-      },
-      onError: (e) => toast.error(getErrorMessage(e)),
-    });
-  }, [unpublish]);
-
-  const handleUnpublishOpenChange = useCallback((open: boolean) => {
-    setUnpublishDialogOpen(open);
-  }, []);
-
-  const handleRotateOpenChange = useCallback((open: boolean) => {
-    setRotateDialogOpen(open);
-  }, []);
-
-  const handleOpenUnpublish = useCallback(() => setUnpublishDialogOpen(true), []);
-  const handleOpenRotate = useCallback(() => setRotateDialogOpen(true), []);
+  const controls = useRoadmapPublicationControls(managedProductId);
 
   return (
     <>
@@ -132,26 +31,28 @@ export function RoadmapPublicationPanel({ managedProductId, onClose }: RoadmapPu
             <SheetTitle>Public Roadmap</SheetTitle>
           </SheetHeader>
           <SheetBody className="px-6 py-5">
-            {isLoading ? null : isError ? (
+            {controls.isLoading ? null : controls.isError ? (
               <ErrorState
                 compact
                 title="Could not load the publication state"
-                description={getErrorMessage(error)}
-                onRetry={handleRetry}
-                error={error}
+                description={getErrorMessage(controls.error)}
+                onRetry={controls.handleRetry}
+                error={controls.error}
               />
-            ) : isPublished ? (
+            ) : controls.isPublished ? (
               <RoadmapPublicationActive
-                publicItemCount={publicItemCount}
-                shareUrl={shareUrl}
-                copied={copied}
-                issuedAt={publication?.issuedAt ?? null}
-                expiresAt={publication?.expiresAt ?? null}
-                isRotating={publish.isPending}
-                onCopy={handleCopy}
-                onRotateAndCopy={handleRotateAndCopy}
-                onOpenRotate={handleOpenRotate}
-                onOpenUnpublish={handleOpenUnpublish}
+                publicItemCount={controls.publicItemCount}
+                publicItemCountError={controls.isPreviewError}
+                shareUrl={controls.shareUrl}
+                copied={controls.copied}
+                issuedAt={controls.issuedAt}
+                expiresAt={controls.expiresAt}
+                isRotating={controls.isPublishing}
+                onCopy={controls.handleCopy}
+                onRotateAndCopy={controls.handleRotateAndCopy}
+                onOpenRotate={controls.handleOpenRotate}
+                onOpenUnpublish={controls.handleOpenUnpublish}
+                onRetryPublicItemCount={controls.handleRetryPreview}
               />
             ) : (
               <div className="flex flex-col gap-4">
@@ -160,16 +61,20 @@ export function RoadmapPublicationPanel({ managedProductId, onClose }: RoadmapPu
                   <p className="text-sm font-medium text-foreground">Not published</p>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  {publicItemCount === 0
-                    ? "No items are marked as public yet. Mark roadmap items public, then publish to share this board."
-                    : `${String(publicItemCount)} item${publicItemCount === 1 ? "" : "s"} ready to publish.`}
+                  {controls.publicItemCount === null
+                    ? controls.isPreviewError
+                      ? "The number of items ready to publish could not be loaded."
+                      : "No items are marked as public yet. Mark roadmap items public, then publish to share this board."
+                    : controls.publicItemCount === 0
+                      ? "No items are marked as public yet. Mark roadmap items public, then publish to share this board."
+                      : `${String(controls.publicItemCount)} item${controls.publicItemCount === 1 ? "" : "s"} ready to publish.`}
                 </p>
                 <LoadingButton
                   type="button"
                   size="sm"
                   className="gap-2"
-                  isPending={publish.isPending}
-                  onClick={handlePublish}
+                  isPending={controls.isPublishing}
+                  onClick={controls.handlePublish}
                 >
                   <Globe className="size-3.5" aria-hidden />
                   Publish roadmap
@@ -181,23 +86,23 @@ export function RoadmapPublicationPanel({ managedProductId, onClose }: RoadmapPu
       </Sheet>
 
       <ConfirmDialog
-        open={unpublishDialogOpen}
-        onOpenChange={handleUnpublishOpenChange}
+        open={controls.unpublishDialogOpen}
+        onOpenChange={controls.handleUnpublishOpenChange}
         title="Unpublish roadmap?"
         description="The share link will stop working immediately. You can re-publish at any time with a new link."
         confirmLabel="Unpublish"
         destructive
-        onConfirm={handleUnpublish}
+        onConfirm={controls.handleUnpublish}
       />
 
       <ConfirmDialog
-        open={rotateDialogOpen}
-        onOpenChange={handleRotateOpenChange}
+        open={controls.rotateDialogOpen}
+        onOpenChange={controls.handleRotateOpenChange}
         title="Rotate share link?"
         description="The current link will stop working immediately. A new unique link will be generated."
         confirmLabel="Rotate link"
         destructive
-        onConfirm={handleRotate}
+        onConfirm={controls.handleRotate}
       />
     </>
   );

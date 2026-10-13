@@ -1,21 +1,14 @@
 "use client";
 
-import { useCallback, useState } from "react";
-import { Check, Copy, ExternalLink, Globe } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Globe } from "lucide-react";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useCan } from "@/hooks/api/access";
-import {
-  useProductRoadmapPublication,
-  usePublishProductRoadmap,
-  useUnpublishProductRoadmap,
-} from "@/hooks/api/build/roadmap-public";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useCopyFeedback } from "@/hooks/common/use-copy-feedback";
 import { ErrorState } from "@/components/shared/error-state";
-import { toast } from "sonner";
+import { RoadmapPublicationActive } from "./roadmap/roadmap-publication-active";
+import { useRoadmapPublicationControls } from "./roadmap/use-roadmap-publication-controls";
 
 interface ProductSettingsPublicationSectionProps {
   managedProductId: number;
@@ -25,92 +18,7 @@ export function ProductSettingsPublicationSection({
   managedProductId,
 }: ProductSettingsPublicationSectionProps) {
   const canManage = useCan("build:roadmap:manage");
-
-  const [revokeOpen, setRevokeOpen] = useState(false);
-  const [publicUrl, setPublicUrl] = useState<string | null>(null);
-
-  const publish = usePublishProductRoadmap(managedProductId);
-  const unpublish = useUnpublishProductRoadmap(managedProductId);
-  const { data, isLoading, isError, error, refetch } =
-    useProductRoadmapPublication(managedProductId);
-  const { copied, copy } = useCopyFeedback();
-
-  const isPublished = data?.published ?? false;
-
-  const handlePublish = useCallback(() => {
-    publish.mutate(undefined, {
-      onSuccess: (issued) => {
-        setPublicUrl(`${window.location.origin}${issued.path}`);
-      },
-      onError: (e) => toast.error(getErrorMessage(e)),
-    });
-  }, [publish]);
-
-  const handleRevokeConfirm = useCallback(() => {
-    unpublish.mutate(undefined, {
-      onSuccess: () => {
-        setPublicUrl(null);
-        toast.success("Roadmap unpublished.");
-        setRevokeOpen(false);
-      },
-      onError: (e) => toast.error(getErrorMessage(e)),
-    });
-  }, [unpublish]);
-
-  const handleCopy = useCallback(() => {
-    if (!publicUrl) return;
-    void copy(publicUrl).then((ok) => {
-      if (!ok) toast.error("Could not copy to clipboard");
-    });
-  }, [publicUrl, copy]);
-
-  const handleRetry = useCallback(() => {
-    void refetch();
-  }, [refetch]);
-
-  const handleOpenRevoke = useCallback(() => {
-    setRevokeOpen(true);
-  }, []);
-
-  if (isLoading) {
-    return (
-      <section
-        aria-labelledby="publication-section-heading"
-        className="flex flex-col gap-3"
-      >
-        <h2
-          id="publication-section-heading"
-          className="text-sm font-semibold text-foreground"
-        >
-          Client publication
-        </h2>
-        <Skeleton className="h-16 w-full" />
-      </section>
-    );
-  }
-
-  if (isError) {
-    return (
-      <section
-        aria-labelledby="publication-section-heading"
-        className="flex flex-col gap-3"
-      >
-        <h2
-          id="publication-section-heading"
-          className="text-sm font-semibold text-foreground"
-        >
-          Client publication
-        </h2>
-        <ErrorState
-          compact
-          title="Could not load the publication state"
-          description={getErrorMessage(error)}
-          onRetry={handleRetry}
-          error={error}
-        />
-      </section>
-    );
-  }
+  const controls = useRoadmapPublicationControls(managedProductId);
 
   return (
     <section
@@ -124,74 +32,70 @@ export function ProductSettingsPublicationSection({
         >
           Client publication
         </h2>
-        {canManage && !isPublished ? (
+        {canManage && !controls.isLoading && !controls.isError && !controls.isPublished ? (
           <LoadingButton
             type="button"
             variant="outline"
             size="sm"
-            isPending={publish.isPending}
+            isPending={controls.isPublishing}
             loadingText="Publishing…"
-            onClick={handlePublish}
+            onClick={controls.handlePublish}
           >
             <Globe aria-hidden="true" />
             Publish roadmap
           </LoadingButton>
         ) : null}
-        {canManage && isPublished ? (
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={handleOpenRevoke}
-          >
-            Unpublish
-          </Button>
-        ) : null}
       </div>
 
-      {isPublished && publicUrl ? (
-        <div className="flex items-center gap-2 rounded-md border border-border bg-muted/40 px-3 py-2">
-          <span className="min-w-0 flex-1 truncate text-sm text-muted-foreground">
-            {publicUrl}
-          </span>
-          <button
-            type="button"
-            aria-label="Copy public URL"
-            className="shrink-0 rounded p-1 hover:bg-muted"
-            onClick={handleCopy}
-          >
-            {copied ? (
-              <Check size={14} aria-hidden="true" />
-            ) : (
-              <Copy size={14} aria-hidden="true" />
-            )}
-          </button>
-          <a
-            href={publicUrl}
-            target="_blank"
-            rel="noreferrer"
-            aria-label="Open public roadmap"
-            className="shrink-0 rounded p-1 hover:bg-muted"
-          >
-            <ExternalLink size={14} aria-hidden="true" />
-          </a>
-        </div>
+      {controls.isLoading ? (
+        <Skeleton className="h-16 w-full" />
+      ) : controls.isError ? (
+        <ErrorState
+          compact
+          title="Could not load the publication state"
+          description={getErrorMessage(controls.error)}
+          onRetry={controls.handleRetry}
+          error={controls.error}
+        />
+      ) : controls.isPublished ? (
+        <RoadmapPublicationActive
+          publicItemCount={controls.publicItemCount}
+          publicItemCountError={controls.isPreviewError}
+          shareUrl={controls.shareUrl}
+          copied={controls.copied}
+          issuedAt={controls.issuedAt}
+          expiresAt={controls.expiresAt}
+          isRotating={controls.isPublishing}
+          onCopy={controls.handleCopy}
+          onRotateAndCopy={controls.handleRotateAndCopy}
+          onOpenRotate={controls.handleOpenRotate}
+          onOpenUnpublish={controls.handleOpenUnpublish}
+          onRetryPublicItemCount={controls.handleRetryPreview}
+        />
       ) : (
         <p className="text-sm text-muted-foreground">
-          {isPublished
-            ? "A public link is active. For safety the link itself is stored only as a hash, so it cannot be shown again — unpublish and publish again to get a new one."
-            : "Publish the roadmap to share it with clients via a public link."}
+          Publish the roadmap to share it with clients via a public link.
         </p>
       )}
 
       <ConfirmDialog
-        open={revokeOpen}
-        onOpenChange={setRevokeOpen}
+        open={controls.unpublishDialogOpen}
+        onOpenChange={controls.handleUnpublishOpenChange}
         title="Unpublish this roadmap?"
         description="The public link will stop working immediately. You can publish again to get a new link."
         confirmLabel="Unpublish"
         destructive
-        onConfirm={handleRevokeConfirm}
+        onConfirm={controls.handleUnpublish}
+      />
+
+      <ConfirmDialog
+        open={controls.rotateDialogOpen}
+        onOpenChange={controls.handleRotateOpenChange}
+        title="Rotate share link?"
+        description="The current link will stop working immediately. A new unique link will be generated."
+        confirmLabel="Rotate link"
+        destructive
+        onConfirm={controls.handleRotate}
       />
     </section>
   );
