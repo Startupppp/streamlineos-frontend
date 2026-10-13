@@ -1,9 +1,5 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 
-jest.mock("@/hooks/api/goals", () => ({
-  useGoals: jest.fn(() => ({ data: [], isError: false, error: null, refetch: jest.fn() })),
-}));
-
 jest.mock("@/hooks/api/build/epics", () => ({
   useEpics: jest.fn(() => ({ data: [] })),
 }));
@@ -39,15 +35,26 @@ jest.mock("../use-infinite-selector", () => ({
     hasNextPage: false,
     isFetchingNextPage: false,
   })),
+  useLinkGoalCandidates: jest.fn(() => ({
+    data: undefined,
+    isError: false,
+    error: null,
+    refetch: jest.fn(),
+    fetchNextPage: jest.fn(),
+    hasNextPage: false,
+    isFetchingNextPage: false,
+  })),
 }));
 
 import { OpportunityAcceptDialog } from "./opportunity-accept-dialog";
-import { useGoals } from "@/hooks/api/goals";
 import { useEpics } from "@/hooks/api/build/epics";
 import { useInfiniteManagedProductReleases } from "@/hooks/api/build/managed-product-releases";
-import { useInfiniteSelectorProjects, useInfiniteSelectorRoadmapItems } from "../use-infinite-selector";
+import {
+  useInfiniteSelectorProjects,
+  useInfiniteSelectorRoadmapItems,
+  useLinkGoalCandidates,
+} from "../use-infinite-selector";
 
-const mockUseGoals = useGoals as jest.MockedFunction<typeof useGoals>;
 const mockUseEpics = useEpics as jest.MockedFunction<typeof useEpics>;
 const mockUseInfiniteReleases = useInfiniteManagedProductReleases as jest.MockedFunction<
   typeof useInfiniteManagedProductReleases
@@ -57,6 +64,9 @@ const mockUseInfiniteProjects = useInfiniteSelectorProjects as jest.MockedFuncti
 >;
 const mockUseInfiniteRoadmap = useInfiniteSelectorRoadmapItems as jest.MockedFunction<
   typeof useInfiniteSelectorRoadmapItems
+>;
+const mockUseLinkGoalCandidates = useLinkGoalCandidates as jest.MockedFunction<
+  typeof useLinkGoalCandidates
 >;
 
 function withProjects(projects: Array<{ id: number; name: string }>) {
@@ -69,6 +79,30 @@ function withProjects(projects: Array<{ id: number; name: string }>) {
     hasNextPage: false,
     isFetchingNextPage: false,
   } as unknown as ReturnType<typeof useInfiniteSelectorProjects>);
+}
+
+function withGoals(goals: Array<{ id: number; title: string }>) {
+  mockUseLinkGoalCandidates.mockReturnValue({
+    data: {
+      pages: [
+        {
+          items: goals,
+          page: 1,
+          pageSize: 20,
+          total: goals.length,
+          nextCursor: null,
+          hasMore: false,
+        },
+      ],
+      pageParams: [undefined],
+    },
+    isError: false,
+    error: null,
+    refetch: jest.fn(),
+    fetchNextPage: jest.fn(),
+    hasNextPage: false,
+    isFetchingNextPage: false,
+  } as unknown as ReturnType<typeof useLinkGoalCandidates>);
 }
 
 const noop = jest.fn();
@@ -165,20 +199,21 @@ describe("OpportunityAcceptDialog — form submission (BSN-ACCEPT-DIALOG)", () =
 
     render(<OpportunityAcceptDialog {...BASE_PROPS} />);
 
-    expect(mockUseInfiniteReleases).toHaveBeenCalledWith(5, { limit: 25 });
-    expect(screen.getByTestId("release-select")).toBeInTheDocument();
+    expect(mockUseInfiniteReleases).toHaveBeenCalledWith(5, expect.objectContaining({ limit: 25 }));
+    expect(screen.getByRole("combobox", { name: "Release (optional)" })).toBeInTheDocument();
+  });
+
+  it("does not load releases without a search combobox when no releases exist so the form stays minimal", () => {
+    render(<OpportunityAcceptDialog {...BASE_PROPS} />);
+
+    expect(screen.queryByRole("combobox", { name: "Release (optional)" })).not.toBeInTheDocument();
   });
 
   it("renders the goal combobox when goals are returned from the hook so the user can link to an OKR goal", () => {
-    mockUseGoals.mockReturnValueOnce({
-      data: [
-        { id: 10, title: "Increase NPS", status: "on_track", level: "company", progress: 0, keyResults: [] },
-        { id: 11, title: "Reduce churn", status: "on_track", level: "company", progress: 0, keyResults: [] },
-      ],
-      isError: false,
-      error: null,
-      refetch: jest.fn(),
-    } as unknown as ReturnType<typeof useGoals>);
+    withGoals([
+      { id: 10, title: "Increase NPS" },
+      { id: 11, title: "Reduce churn" },
+    ]);
 
     render(<OpportunityAcceptDialog {...BASE_PROPS} />);
 
@@ -186,16 +221,19 @@ describe("OpportunityAcceptDialog — form submission (BSN-ACCEPT-DIALOG)", () =
   });
 
   it("does not render the goal selector when no goals are available so the form stays minimal", () => {
-    mockUseGoals.mockReturnValueOnce({
-      data: [],
-      isError: false,
-      error: null,
-      refetch: jest.fn(),
-    } as unknown as ReturnType<typeof useGoals>);
+    withGoals([]);
 
     render(<OpportunityAcceptDialog {...BASE_PROPS} />);
 
     expect(screen.queryByRole("combobox", { name: "Goal (optional)" })).not.toBeInTheDocument();
+  });
+
+  it("passes managedProductId to useLinkGoalCandidates so goals are scoped to this product", () => {
+    render(<OpportunityAcceptDialog {...BASE_PROPS} />);
+
+    expect(mockUseLinkGoalCandidates).toHaveBeenCalledWith(
+      expect.objectContaining({ managedProductId: 5 }),
+    );
   });
 
   it("renders the is-public toggle always so the user can set customer visibility", () => {

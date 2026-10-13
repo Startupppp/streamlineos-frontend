@@ -153,6 +153,7 @@ export function AcceptFields({ form, managedProductId, enabled, goals, projects,
           isError={releases.isError}
           error={releases.error}
           onRetry={releases.onRetry}
+          onSearchChange={releases.onSearchChange}
           footer={releases.footer}
         />
       )}

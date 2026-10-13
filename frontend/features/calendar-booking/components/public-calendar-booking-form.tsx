@@ -21,6 +21,8 @@ import type {
   PublicCalendarBookingSession,
 } from "@/hooks/api/calendar-booking-public-schema";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { usePaidCalendarBooking } from "../hooks/use-paid-calendar-booking";
+import { PublicCalendarBookingPaymentStatus } from "./public-calendar-booking-payment-status";
 
 const bookingFormSchema = z.object({
   slotStart: z.string().min(1, "Choose a time"),
@@ -57,7 +59,9 @@ export function PublicCalendarBookingForm({
 }) {
   const acquireHold = useCreatePublicCalendarBookingHold(token);
   const confirmBooking = useConfirmPublicCalendarBooking(token);
-  const receipt = confirmBooking.data;
+  const paidBooking = usePaidCalendarBooking(token, offering, session);
+  const paymentResult = paidBooking.result;
+  const receipt = paymentResult?.receipt ?? confirmBooking.data;
   const callbackQuery = usePublicCalendarBookingCallback(
     token,
     session.sessionToken,
@@ -81,8 +85,10 @@ export function PublicCalendarBookingForm({
     const enabled = new Set(session.intakeKeys);
     return offering.intakeFields.filter((field) => enabled.has(field.key));
   }, [offering.intakeFields, session.intakeKeys]);
-  const pending = acquireHold.isPending || confirmBooking.isPending;
-  const failure = acquireHold.error ?? confirmBooking.error;
+  const pending = acquireHold.isPending || confirmBooking.isPending ||
+    paidBooking.pending;
+  const failure = acquireHold.error ?? confirmBooking.error ??
+    paidBooking.error;
 
   useEffect(() => {
     if (!callbackQuery.data || !session.targetOrigin || !callbackState) return;
@@ -100,6 +106,10 @@ export function PublicCalendarBookingForm({
       consentAccepted: values.consentAccepted,
       honeypot: values.website,
     });
+    if (session.payment) {
+      await paidBooking.submit(hold, values);
+      return;
+    }
     await confirmBooking.mutateAsync({
       holdId: hold.id,
       sessionToken: session.sessionToken,
@@ -116,6 +126,16 @@ export function PublicCalendarBookingForm({
 
   function handleConsentChange(checked: boolean | "indeterminate") {
     form.setValue("consentAccepted", checked === true, { shouldValidate: true });
+  }
+
+  if (
+    paymentResult &&
+    !(
+      paymentResult.paymentState === "captured" &&
+      (paymentResult.bookingState === "confirmed" || receipt?.outcome === "pending")
+    )
+  ) {
+    return <PublicCalendarBookingPaymentStatus payment={paymentResult} />;
   }
 
   if (receipt) {
@@ -255,9 +275,9 @@ export function PublicCalendarBookingForm({
         </div>
       )}
 
-      {failure && (
+      {(failure || paidBooking.flowError) && (
         <p className="text-sm text-destructive" role="alert">
-          {getErrorMessage(failure) || "The booking could not be completed. Try again."}
+          {paidBooking.flowError ?? (getErrorMessage(failure) || "The booking could not be completed. Try again.")}
         </p>
       )}
 
@@ -265,11 +285,13 @@ export function PublicCalendarBookingForm({
         type="submit"
         className="w-full"
         isPending={pending}
-        loadingText="Confirming…"
+        loadingText={session.payment ? "Opening payment…" : "Confirming…"}
         disabled={offering.slots.length === 0 ||
           (session.consentRequired && !form.watch("consentAccepted"))}
       >
-        Confirm booking
+        {session.payment
+          ? `Pay ${new Intl.NumberFormat(undefined, { style: "currency", currency: session.payment.currency }).format(session.payment.amountMinor / 100)} and book`
+          : "Confirm booking"}
       </LoadingButton>
     </form>
   );

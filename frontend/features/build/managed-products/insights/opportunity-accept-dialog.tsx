@@ -3,12 +3,14 @@
 import { useCallback, useMemo } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { EntityFormSheet } from "@/components/shared/entity-form-sheet";
-import { useGoals } from "@/hooks/api/goals";
 import { useInfiniteManagedProductReleases } from "@/hooks/api/build/managed-product-releases";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useState } from "react";
 import type { AcceptOpportunityInput } from "@/hooks/api/build/opportunity-mutations";
-import { acceptSchema, type AcceptFormValues } from "./opportunity-accept-schema";
+import {
+  acceptSchema,
+  type AcceptFormValues,
+} from "./opportunity-accept-schema";
 import {
   AcceptFields,
   type NamedItem,
@@ -16,7 +18,10 @@ import {
   type TitledItem,
   type SelectorProps,
 } from "./opportunity-accept-fields";
-import { useInfiniteSelectorProjects } from "../use-infinite-selector";
+import {
+  useInfiniteSelectorProjects,
+  useLinkGoalCandidates,
+} from "../use-infinite-selector";
 import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 
 interface OpportunityAcceptDialogProps {
@@ -40,15 +45,24 @@ export function OpportunityAcceptDialog({
 }: OpportunityAcceptDialogProps) {
   const [goalsSearch, setGoalsSearch] = useState("");
   const [projectsSearch, setProjectsSearch] = useState("");
+  const [releasesSearch, setReleasesSearch] = useState("");
   const debouncedGoalsSearch = useDebouncedValue(goalsSearch, 300);
   const debouncedProjectsSearch = useDebouncedValue(projectsSearch, 300);
+  const debouncedReleasesSearch = useDebouncedValue(releasesSearch, 300);
 
   const {
-    data: goalsRaw,
+    data: goalsPages,
     isError: isGoalsError,
     error: goalsError,
     refetch: refetchGoals,
-  } = useGoals({ managedProductId, search: debouncedGoalsSearch || undefined });
+    fetchNextPage: fetchGoalsNextPage,
+    hasNextPage: hasGoalsNextPage,
+    isFetchingNextPage: isFetchingGoalsNextPage,
+  } = useLinkGoalCandidates({
+    search: debouncedGoalsSearch || undefined,
+    enabled: open,
+    managedProductId,
+  });
 
   const {
     data: projectsPages,
@@ -58,7 +72,11 @@ export function OpportunityAcceptDialog({
     fetchNextPage: fetchProjectsNextPage,
     hasNextPage: hasProjectsNextPage,
     isFetchingNextPage: isFetchingProjectsNextPage,
-  } = useInfiniteSelectorProjects(managedProductId, debouncedProjectsSearch, open);
+  } = useInfiniteSelectorProjects(
+    managedProductId,
+    debouncedProjectsSearch,
+    open,
+  );
 
   const {
     data: releasesPages,
@@ -68,9 +86,15 @@ export function OpportunityAcceptDialog({
     fetchNextPage: fetchReleasesNextPage,
     hasNextPage: hasReleasesNextPage,
     isFetchingNextPage: isFetchingReleasesNextPage,
-  } = useInfiniteManagedProductReleases(managedProductId, { limit: 25 });
+  } = useInfiniteManagedProductReleases(managedProductId, {
+    limit: 25,
+    search: debouncedReleasesSearch || undefined,
+  });
 
-  const goals = useMemo<TitledItem[]>(() => goalsRaw ?? [], [goalsRaw]);
+  const goals = useMemo<TitledItem[]>(
+    () => goalsPages?.pages.flatMap((p) => p.items) ?? [],
+    [goalsPages],
+  );
   const projectItems = useMemo<NamedItem[]>(
     () => projectsPages?.pages.flatMap((p) => p.data) ?? [],
     [projectsPages],
@@ -81,16 +105,37 @@ export function OpportunityAcceptDialog({
   );
 
   const handleGoalsSearch = useCallback((v: string) => setGoalsSearch(v), []);
-  const handleProjectsSearch = useCallback((v: string) => setProjectsSearch(v), []);
+  const handleProjectsSearch = useCallback(
+    (v: string) => setProjectsSearch(v),
+    [],
+  );
+  const handleReleasesSearch = useCallback(
+    (v: string) => setReleasesSearch(v),
+    [],
+  );
+  const handleFetchGoalsNext = useCallback(() => {
+    if (hasGoalsNextPage && !isFetchingGoalsNextPage) void fetchGoalsNextPage();
+  }, [fetchGoalsNextPage, hasGoalsNextPage, isFetchingGoalsNextPage]);
   const handleFetchProjectsNext = useCallback(() => {
-    if (hasProjectsNextPage && !isFetchingProjectsNextPage) void fetchProjectsNextPage();
+    if (hasProjectsNextPage && !isFetchingProjectsNextPage)
+      void fetchProjectsNextPage();
   }, [fetchProjectsNextPage, hasProjectsNextPage, isFetchingProjectsNextPage]);
   const handleFetchReleasesNext = useCallback(() => {
-    if (hasReleasesNextPage && !isFetchingReleasesNextPage) void fetchReleasesNextPage();
+    if (hasReleasesNextPage && !isFetchingReleasesNextPage)
+      void fetchReleasesNextPage();
   }, [fetchReleasesNextPage, hasReleasesNextPage, isFetchingReleasesNextPage]);
-  const handleRetryGoals = useCallback(() => void refetchGoals(), [refetchGoals]);
-  const handleRetryProjects = useCallback(() => void refetchProjects(), [refetchProjects]);
-  const handleRetryReleases = useCallback(() => void refetchReleases(), [refetchReleases]);
+  const handleRetryGoals = useCallback(
+    () => void refetchGoals(),
+    [refetchGoals],
+  );
+  const handleRetryProjects = useCallback(
+    () => void refetchProjects(),
+    [refetchProjects],
+  );
+  const handleRetryReleases = useCallback(
+    () => void refetchReleases(),
+    [refetchReleases],
+  );
 
   const goalsSelectorProps: SelectorProps<TitledItem> = {
     items: goals,
@@ -98,6 +143,14 @@ export function OpportunityAcceptDialog({
     error: goalsError,
     onRetry: handleRetryGoals,
     onSearchChange: handleGoalsSearch,
+    footer: (
+      <InfiniteScrollSentinel
+        hasNextPage={hasGoalsNextPage}
+        isFetchingNextPage={isFetchingGoalsNextPage}
+        onLoadMore={handleFetchGoalsNext}
+        label="Load more goals"
+      />
+    ),
   };
 
   const projectsSelectorProps: SelectorProps<NamedItem> = {
@@ -121,6 +174,7 @@ export function OpportunityAcceptDialog({
     isError: isReleasesError,
     error: releasesError,
     onRetry: handleRetryReleases,
+    onSearchChange: handleReleasesSearch,
     footer: (
       <InfiniteScrollSentinel
         hasNextPage={hasReleasesNextPage}

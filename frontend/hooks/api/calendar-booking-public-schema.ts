@@ -53,6 +53,10 @@ export const publicCalendarBookingSessionContract = z.object({
   intakeKeys: z.array(z.string()),
   consentRequired: z.boolean(),
   distributionVersion: z.number().int().positive().nullable(),
+  payment: z.object({
+    amountMinor: z.number().int().positive(),
+    currency: z.string().length(3),
+  }).nullable(),
 });
 
 export const publicCalendarBookingHoldContract = z.object({
@@ -92,8 +96,26 @@ export const publicCalendarBookingCallbackContract = z.object({
   }),
 });
 
+export const publicCalendarBookingPaymentContract = z.object({
+  sagaId: z.string().uuid(),
+  bookingId: z.string().uuid().nullable(),
+  providerKey: z.string(),
+  publicKeyId: z.string().nullable(),
+  providerOrderId: z.string().nullable(),
+  amountMinor: z.number().int().positive(),
+  currency: z.string().length(3),
+  paymentState: z.enum(["order_pending", "order_unknown", "order_created", "authorized", "captured", "failed", "partially_refunded", "refunded", "charged_back"]),
+  bookingState: z.enum(["pending", "confirmed", "failed", "cancelled"]),
+  repairState: z.enum(["none", "reconcile_order", "reconcile_payment", "refund_required", "refund_pending", "refund_failed", "manual_review", "resolved"]),
+  refundedAmountMinor: z.number().int().nonnegative(),
+  chargebackAmountMinor: z.number().int().nonnegative(),
+  version: z.number().int().positive(),
+  receipt: publicCalendarBookingReceiptContract.nullable(),
+});
+
 export type PublicCalendarBookingOffering = z.infer<typeof publicCalendarBookingOfferingContract>;
 export type PublicCalendarBookingSession = z.infer<typeof publicCalendarBookingSessionContract>;
 export type PublicCalendarBookingHold = z.infer<typeof publicCalendarBookingHoldContract>;
 export type PublicCalendarBookingReceipt = z.infer<typeof publicCalendarBookingReceiptContract>;
 export type PublicCalendarBookingCallback = z.infer<typeof publicCalendarBookingCallbackContract>;
+export type PublicCalendarBookingPayment = z.infer<typeof publicCalendarBookingPaymentContract>;

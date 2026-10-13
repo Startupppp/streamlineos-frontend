@@ -62,6 +62,7 @@ export interface UpdateManagedProductReleaseInput {
 
 export interface InfiniteManagedProductReleasesParams {
   limit: number;
+  search?: string;
 }
 
 const releasesPageContract = lazyContract(() =>
@@ -121,13 +122,15 @@ export function useInfiniteManagedProductReleases(
   params: InfiniteManagedProductReleasesParams,
 ) {
   const canView = useCan("build:managed-products:view");
+  const { limit, search } = params;
+  const keyParams: Record<string, unknown> = { limit };
+  if (search) keyParams.search = search;
   return useInfiniteQuery({
-    queryKey: buildWorkQueryKeys.projects.managedProducts.releasesTimeline(managedProductId, {
-      limit: params.limit,
-    }),
+    queryKey: buildWorkQueryKeys.projects.managedProducts.releasesTimeline(managedProductId, keyParams),
     queryFn: ({ pageParam, signal }) => {
-      const query: Record<string, string> = { limit: String(params.limit) };
+      const query: Record<string, string> = { limit: String(limit) };
       if (pageParam !== undefined) query.cursor = pageParam;
+      if (search) query.search = search;
       return apiClient.get<ManagedProductReleasesPage>(
         `/build/managed-products/${managedProductId}/releases`,
         query,

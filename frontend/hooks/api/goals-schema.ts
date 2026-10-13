@@ -79,6 +79,8 @@ export const goalsListContract = z.object({
   page: z.number().int(),
   pageSize: z.number().int(),
   total: z.number().int(),
+  nextCursor: z.string().nullable(),
+  hasMore: z.boolean(),
 });
 
 /** `goalStatsSchema` */

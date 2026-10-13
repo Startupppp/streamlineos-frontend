@@ -6,11 +6,13 @@ import {
   publicCalendarBookingCallbackContract,
   publicCalendarBookingHoldContract,
   publicCalendarBookingOfferingContract,
+  publicCalendarBookingPaymentContract,
   publicCalendarBookingReceiptContract,
   publicCalendarBookingSessionContract,
   type PublicCalendarBookingCallback,
   type PublicCalendarBookingHold,
   type PublicCalendarBookingOffering,
+  type PublicCalendarBookingPayment,
   type PublicCalendarBookingReceipt,
   type PublicCalendarBookingSession,
 } from "./calendar-booking-public-schema";
@@ -53,6 +55,30 @@ interface ConfirmCalendarBookingInput {
   honeypot: string;
 }
 
+interface PrepareCalendarBookingPaymentInput {
+  holdId: string;
+  sessionToken: string;
+  idempotencyKey: string;
+  expectedFencingToken: number;
+  expectedRuleVersion: number;
+  consentAccepted: boolean;
+  honeypot: string;
+}
+
+interface ConfirmCalendarBookingPaymentInput {
+  sagaId: string;
+  sessionToken: string;
+  paymentId: string;
+  signature: string;
+  expectedFencingToken: number;
+  expectedRuleVersion: number;
+  guestName: string;
+  guestEmail: string;
+  intake: Record<string, string>;
+  consentAccepted: boolean;
+  honeypot: string;
+}
+
 function basePath(token: string) {
   return `/public/calendar/booking/${encodeURIComponent(token)}`;
 }
@@ -77,7 +103,7 @@ export function usePublicCalendarBookingSession(
   input: CreateCalendarBookingSessionInput,
 ) {
   return useQuery({
-    queryKey: ["public", "calendar", "booking", token, "session", input.locale, input.callbackState],
+    queryKey: ["public", "calendar", "booking", token, "session", input],
     queryFn: () => apiClient.post<PublicCalendarBookingSession>(
       `${basePath(token)}/sessions`,
       input,
@@ -115,6 +141,32 @@ export function useConfirmPublicCalendarBooking(token: string) {
         input,
         undefined,
         publicCalendarBookingReceiptContract,
+      ),
+  });
+}
+
+export function usePreparePublicCalendarBookingPayment(token: string) {
+  return useMutation({
+    mutationKey: ["public", "calendar", "booking", token, "payment", "prepare"],
+    mutationFn: (input: PrepareCalendarBookingPaymentInput) =>
+      apiClient.post<PublicCalendarBookingPayment>(
+        `${basePath(token)}/payments/prepare`,
+        input,
+        undefined,
+        publicCalendarBookingPaymentContract,
+      ),
+  });
+}
+
+export function useConfirmPublicCalendarBookingPayment(token: string) {
+  return useMutation({
+    mutationKey: ["public", "calendar", "booking", token, "payment", "confirm"],
+    mutationFn: (input: ConfirmCalendarBookingPaymentInput) =>
+      apiClient.post<PublicCalendarBookingPayment>(
+        `${basePath(token)}/payments/confirm`,
+        input,
+        undefined,
+        publicCalendarBookingPaymentContract,
       ),
   });
 }

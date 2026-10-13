@@ -187,3 +187,49 @@ Evidence recorded on 2026-10-13 for ticket 22.
 - Focused Ticket 22 backend ESLint: passed.
 - `pnpm -C backend test:db-specs -- src/modules/calendar/calendar-team-routing.db.spec.ts`: refused before tests because destructive database opt in was absent.
 - Migration discipline, rollback, chain, parameterization, and route schema gates found no Ticket 22 issue; only the older repository findings listed above remain.
+
+## Secure branded and embedded booking
+
+Evidence recorded on 2026-10-13 for ticket 23.
+
+| Evidence layer | Status | Evidence | Limit |
+| --- | --- | --- | --- |
+| Branded public journey | Passed | The public route renders versioned branding, locale copy, configured intake fields, consent, available slots, terminal receipts, and a safe unavailable state. The focused journey passed four tests, including an automated accessibility scan and an end-to-end mocked hold, confirm, and callback flow. | Provider writes and email delivery remain asynchronous responsibilities of earlier Calendar tickets. |
+| Embed and callback security | Passed | Embed access links bind one exact approved origin. Embed sessions require caller state, hash it, and receive a signed token bound to session hash, origin, state hash, and a 24-hour expiry. The callback verifies that signature and returns only the facts approved by the frozen distribution version. | A deployed third-party embedding site was not available in this workspace. |
+| Link, session, and abuse lifecycle | Passed | Access tokens and session tokens are stored only as hashes. Expiry, revocation, single-use consumption, 24-hour session expiry, completion-time limits, attempt limits, consent, honeypot persistence, and public read/write/session rate limits are enforced server side. Public failures use non-enumerating responses. | Operational counts are available to authorized rule managers; alert routing is owned by later observability work. |
+| Idempotency and attribution | Passed locally; database execution blocked | Conversion rows are unique per booking and per session. Booking conversion, session completion, and single-use link consumption share the booking transaction, so refresh, retry, embed callback, and reschedule do not create a second conversion for the same booking. The PostgreSQL suite defines simultaneous single-use consumption, duplicate retry, and expired-link cases. | The database runner refused execution because no explicitly approved disposable `DATABASE_URL` and `ALLOW_DESTRUCTIVE_DB_TESTS=1` were present. No real-database race result is claimed. |
+| Regression verification | Passed | Six focused backend suites passed 22 tests, the frontend public journey passed 4 tests, and the complete backend Calendar run passed 103 suites and 838 tests. Backend and frontend production TypeScript, frontend specification TypeScript, backend test TypeScript, focused ESLint, and diff whitespace passed during the ticket pass. | The final repeated spec-compilation run was stopped after extended no-output memory contention; focused Jest compilation and the earlier successful spec compilers cover the unchanged contracts. |
+| Migration and architecture gates | New work clean | Migration 2009 adds identity keys, tenant RLS, grants, exact origin checks, expiry and foreign-key indexes, journal registration, lock timeout, rollback, and conversion uniqueness. Ticket 23 services and frontend components remain below 300 lines. Tenant-index, retention, and OpenAPI path gates passed. | Repository-wide gates still report older migration findings in 1956, 1958, and 1993, rollback omissions for 1981 and 1982, six older timestamp regressions, and unrelated Build/module baseline debt. |
+
+### Secure booking commands
+
+- `pnpm -C backend test -- --runInBand src/modules/calendar`: 103 suites and 838 tests passed.
+- Focused secure distribution, embed, DTO, hold, and commit acceptance: 6 suites and 22 tests passed.
+- Focused public booking journey and automated accessibility acceptance: 1 suite and 4 tests passed.
+- `pnpm -C backend typecheck`, `pnpm -C backend typecheck:test`, `pnpm -C frontend type-check`, and `pnpm -C frontend type-check:specs`: passed during the ticket pass.
+- Focused Ticket 23 backend and frontend ESLint: passed.
+- `pnpm -C backend test:db-specs -- src/modules/calendar/calendar-booking-public-access.db.spec.ts`: refused before tests because destructive database opt in was absent.
+- Migration discipline, rollback, chain, route, retention, and tenant gates found no Ticket 23 issue; only the older repository findings listed above remain.
+
+## Paid appointment reconciliation
+
+Evidence recorded on 2026-10-13 for ticket 24.
+
+| Evidence layer | Status | Evidence | Limit |
+| --- | --- | --- | --- |
+| Durable payment and booking identity | Passed | A tenant-scoped saga binds the public session, hold, immutable booking rule, frozen payment policy, idempotency identity, provider order and payment identities, booking identity, and optimistic version. Payment, booking, refund, chargeback, and repair states remain independently visible through public and managed response schemas. | Provider effects cannot share the local database transaction, so uncertain remote outcomes remain explicitly queued for reconciliation. |
+| Duplicate and uncertain-effect safety | Passed locally; database execution blocked | A durable operation ledger claims order creation, capture, and refund effects once. Lost order responses enter `order_unknown`; capture timeouts enter `reconcile_payment`; neither path repeats an uncertain provider effect. The guarded PostgreSQL suite defines concurrent duplicate submit and booking-race cases. | The database runner refused execution because no explicitly approved disposable `DATABASE_URL` and `ALLOW_DESTRUCTIVE_DB_TESTS=1` were present. No real-database race result is claimed. |
+| Booking failure, cancellation, and refund | Passed | Booking commit occurs only after authoritative capture. A booking race or commit failure preserves the captured amount and enters `refund_required`. Cancellation uses the frozen notice and late-refund policy, supports partial and full refunds, keeps provider refund identity, and exposes repair failures for retry. | Refund completion remains subject to the configured payment provider and its external settlement lifecycle. |
+| Provider reconciliation and chargeback | Passed | A bounded tenant sweep retries due reconciliation and refund work. Verified, deduplicated provider webhooks update matching sagas in the webhook transaction, validate order, amount, and currency before capture, quarantine mismatches, record authoritative refunds and failures, and keep bounded chargebacks separate from booking state. | Live provider sandbox credentials and webhook delivery were unavailable, so provider validation is based on adapter contracts and deterministic tests. |
+| Public paid-booking journey | Passed | The booking session exposes the configured amount and currency, the page creates the provider order, invokes the existing secure Razorpay checkout helper, confirms through the saga endpoint, and renders payment, booking, and repair state separately. A refunded booking race is never rendered as confirmed. | This is component and transport proof rather than a deployed third-party checkout journey. |
+| Regression verification | Passed | Four focused backend suites passed 16 tests, the focused frontend page suite passed 6 tests, and the complete backend Calendar run passed 106 suites and 852 tests. Backend production and test TypeScript, frontend production and specification TypeScript, focused backend and frontend ESLint, diff whitespace, tenant-index, route, migration, and file-size checks passed for Ticket 24. | Repository-wide gates retain older unrelated migration, module, route-schema, and file-size debt recorded in earlier evidence. |
+
+### Paid appointment commands
+
+- `pnpm -C backend test -- --runInBand src/modules/calendar`: 106 suites and 852 tests passed.
+- Focused provider, coordinator, webhook, and Razorpay acceptance: 4 suites and 16 tests passed.
+- Focused public paid-booking journey: 1 suite and 6 tests passed.
+- `pnpm -C backend typecheck`, `pnpm -C backend typecheck:test`, `pnpm -C frontend type-check`, and `pnpm -C frontend type-check:specs`: passed during the ticket pass.
+- Focused Ticket 24 backend and frontend ESLint: passed.
+- `pnpm -C backend test:db-specs -- src/modules/calendar/calendar-booking-payment.db.spec.ts`: refused before tests because no approved disposable database and destructive opt in were configured.
+- Ticket 24 migration discipline, rollback, chain, tenant-index, sweep-budget, route, and architecture checks passed; only the older repository findings recorded above remain.

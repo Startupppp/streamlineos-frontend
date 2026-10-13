@@ -2,8 +2,10 @@ import type { ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { axe } from "jest-axe";
 import { apiClient } from "@/lib/api-client";
 import { PublicCalendarBookingPage } from "./public-calendar-booking-page";
+import { openCheckout } from "@/features/billing/lib/checkout-script";
 
 jest.mock("@/lib/api-client", () => ({
   apiClient: { get: jest.fn(), post: jest.fn() },
@@ -12,6 +14,11 @@ jest.mock("@/lib/api-client", () => ({
 jest.mock("next/navigation", () => ({
   useParams: () => ({ token: "booking-token-value-long-enough" }),
   useSearchParams: () => new URLSearchParams("state=customer-state&utm_source=partner"),
+}));
+
+jest.mock("@/features/billing/lib/checkout-script", () => ({
+  loadCheckoutScript: jest.fn().mockResolvedValue(undefined),
+  openCheckout: jest.fn(),
 }));
 
 const mockedGet = jest.mocked(apiClient.get);
@@ -63,6 +70,7 @@ const session = {
   intakeKeys: ["company"],
   consentRequired: true,
   distributionVersion: 2,
+  payment: null,
 };
 
 const hold = {
@@ -90,6 +98,26 @@ const receipt = {
   },
   alternatives: [],
 };
+
+function paidSaga(overrides: Record<string, unknown> = {}) {
+  return {
+    sagaId: "f099eaa2-cfb5-4a6d-8985-9ed88ad74b69",
+    bookingId: null,
+    providerKey: "razorpay",
+    publicKeyId: "rzp_test_public",
+    providerOrderId: "order-1",
+    amountMinor: 2500,
+    currency: "INR",
+    paymentState: "order_created",
+    bookingState: "pending",
+    repairState: "none",
+    refundedAmountMinor: 0,
+    chargebackAmountMinor: 0,
+    version: 2,
+    receipt: null,
+    ...overrides,
+  };
+}
 
 function renderPage() {
   const client = new QueryClient({
@@ -129,6 +157,12 @@ describe("public calendar booking page", () => {
     expect(screen.getByText("I agree to scheduling contact")).toBeInTheDocument();
   });
 
+  it("has no automated accessibility violations", async () => {
+    const { container } = renderPage();
+    await screen.findByRole("heading", { name: "Meet Northwind" });
+    expect(await axe(container)).toHaveNoViolations();
+  });
+
   it("commits once and posts the server-projected callback to the approved origin", async () => {
     const postMessage = jest.spyOn(window.parent, "postMessage").mockImplementation();
     const user = userEvent.setup();
@@ -162,6 +196,81 @@ describe("public calendar booking page", () => {
       expect.anything(),
     );
     postMessage.mockRestore();
+  });
+
+  it("confirms a paid booking only after provider success", async () => {
+    const paidSession = { ...session, channel: "page", targetOrigin: null, payment: { amountMinor: 2500, currency: "INR" } };
+    mockedPost.mockImplementation(async (path) => {
+      const value = String(path);
+      if (value.endsWith("/sessions")) return paidSession;
+      if (value.endsWith("/holds")) return hold;
+      if (value.endsWith("/payments/prepare")) return paidSaga();
+      return paidSaga({
+        bookingId: receipt.bookingId,
+        publicKeyId: null,
+        paymentState: "captured",
+        bookingState: "confirmed",
+        version: 4,
+        receipt,
+      });
+    });
+    jest.mocked(openCheckout).mockImplementation((options) => options.onSuccess({
+      orderId: "order-1",
+      paymentId: "pay-1",
+      signature: "provider-signature",
+    }));
+    const user = userEvent.setup();
+    renderPage();
+    await screen.findByRole("heading", { name: "Meet Northwind" });
+    await user.click(screen.getByRole("radio"));
+    await user.type(screen.getByLabelText("Name"), "Ada Lovelace");
+    await user.type(screen.getByLabelText("Email"), "ada@example.com");
+    await user.type(screen.getByLabelText("Organization"), "Analytical Engines");
+    await user.click(screen.getByRole("checkbox"));
+    await user.click(screen.getByRole("button", { name: /Pay.*and book/ }));
+    expect(await screen.findByRole("heading", { name: "Your booking is confirmed" })).toBeInTheDocument();
+    expect(mockedPost).toHaveBeenCalledWith(
+      "/public/calendar/booking/booking-token-value-long-enough/payments/confirm",
+      expect.objectContaining({ paymentId: "pay-1", signature: "provider-signature" }),
+      undefined,
+      expect.anything(),
+    );
+  });
+
+  it("never presents a refunded booking race as a confirmed paid booking", async () => {
+    const paidSession = { ...session, channel: "page", targetOrigin: null, payment: { amountMinor: 2500, currency: "INR" } };
+    mockedPost.mockImplementation(async (path) => {
+      const value = String(path);
+      if (value.endsWith("/sessions")) return paidSession;
+      if (value.endsWith("/holds")) return hold;
+      if (value.endsWith("/payments/prepare")) return paidSaga();
+      return paidSaga({
+        publicKeyId: null,
+        paymentState: "refunded",
+        bookingState: "cancelled",
+        repairState: "resolved",
+        refundedAmountMinor: 2500,
+        version: 5,
+        receipt: { ...receipt, bookingId: null, outcome: "rejected", reasonCode: "capacity_lost" },
+      });
+    });
+    jest.mocked(openCheckout).mockImplementation((options) => options.onSuccess({
+      orderId: "order-1",
+      paymentId: "pay-1",
+      signature: "provider-signature",
+    }));
+    const user = userEvent.setup();
+    renderPage();
+    await screen.findByRole("heading", { name: "Meet Northwind" });
+    await user.click(screen.getByRole("radio"));
+    await user.type(screen.getByLabelText("Name"), "Ada Lovelace");
+    await user.type(screen.getByLabelText("Email"), "ada@example.com");
+    await user.type(screen.getByLabelText("Organization"), "Analytical Engines");
+    await user.click(screen.getByRole("checkbox"));
+    await user.click(screen.getByRole("button", { name: /Pay.*and book/ }));
+    expect(await screen.findByRole("heading", { name: "Your payment needs attention" })).toBeInTheDocument();
+    expect(screen.getByText(/Payment: refunded/)).toBeInTheDocument();
+    expect(screen.queryByText("Your booking is confirmed")).not.toBeInTheDocument();
   });
 
   it("hides offering details when the token cannot be resolved", async () => {

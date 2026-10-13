@@ -39,13 +39,13 @@ const releasesPageC = lazyContract(() =>
   ),
 );
 const candidatesPageContract = lazyContract(() =>
-  import("@/hooks/api/build/build-project-schema").then((m) => m.buildMemberPageContract),
+  import("@/hooks/api/build/build-project-schema").then(
+    (m) => m.buildMemberPageContract,
+  ),
 );
 const goalsPageContract = lazyContract(() =>
   import("@/hooks/api/goals-schema").then((m) => m.goalsListContract),
 );
-
-const INITIAL_GOALS_PAGE: number = 1;
 
 interface MemberCandidatesParams {
   search?: string;
@@ -55,6 +55,7 @@ interface MemberCandidatesParams {
 interface GoalCandidatesParams {
   search?: string;
   enabled?: boolean;
+  managedProductId?: number;
 }
 
 interface GoalsPage {
@@ -62,6 +63,8 @@ interface GoalsPage {
   page: number;
   pageSize: number;
   total: number;
+  nextCursor: string | null;
+  hasMore: boolean;
 }
 
 export function useInfiniteSelectorProjects(
@@ -92,7 +95,9 @@ export function useInfiniteSelectorProjects(
     },
     initialPageParam: NO_CURSOR_YET,
     getNextPageParam: (last) =>
-      last.pagination.hasMore ? (last.pagination.nextCursor ?? undefined) : undefined,
+      last.pagination.hasMore
+        ? (last.pagination.nextCursor ?? undefined)
+        : undefined,
     enabled: canView && managedProductId > 0 && enabled,
     staleTime: 30_000,
   });
@@ -126,7 +131,9 @@ export function useInfiniteSelectorOpportunities(
     },
     initialPageParam: NO_CURSOR_YET,
     getNextPageParam: (last) =>
-      last.pagination.hasMore ? (last.pagination.nextCursor ?? undefined) : undefined,
+      last.pagination.hasMore
+        ? (last.pagination.nextCursor ?? undefined)
+        : undefined,
     enabled: canView && managedProductId > 0 && enabled,
     staleTime: 30_000,
   });
@@ -158,7 +165,9 @@ export function useInfiniteSelectorRoadmapItems(
     },
     initialPageParam: NO_CURSOR_YET,
     getNextPageParam: (last) =>
-      last.pagination.hasMore ? (last.pagination.nextCursor ?? undefined) : undefined,
+      last.pagination.hasMore
+        ? (last.pagination.nextCursor ?? undefined)
+        : undefined,
     enabled: canView && managedProductId > 0 && enabled,
     staleTime: 30_000,
   });
@@ -186,7 +195,9 @@ export function useInfiniteSelectorProjectReleases(
     },
     initialPageParam: NO_CURSOR_YET,
     getNextPageParam: (last) =>
-      last.pagination.hasMore ? (last.pagination.nextCursor ?? undefined) : undefined,
+      last.pagination.hasMore
+        ? (last.pagination.nextCursor ?? undefined)
+        : undefined,
     enabled: canView && hasProject && enabled,
     staleTime: 30_000,
   });
@@ -222,11 +233,19 @@ export function useAddProductMemberCandidates({
   });
 }
 
-export function useLinkGoalCandidates({ search, enabled = true }: GoalCandidatesParams) {
+export function useLinkGoalCandidates({
+  search,
+  enabled = true,
+  managedProductId,
+}: GoalCandidatesParams) {
   const canView = useCan("build:goals:view");
+  const listParams: Record<string, unknown> = {};
+  if (search) listParams.search = search;
+  if (managedProductId) listParams.managedProductId = managedProductId;
+  const keyParams = Object.keys(listParams).length ? listParams : undefined;
   return useInfiniteQuery({
     queryKey: [
-      ...accountingAndSupportQueryKeys.goals.list({ search }),
+      ...accountingAndSupportQueryKeys.goals.list(keyParams),
       "dialog-candidates",
     ],
     queryFn: ({ signal, pageParam }) =>
@@ -234,16 +253,17 @@ export function useLinkGoalCandidates({ search, enabled = true }: GoalCandidates
         "/goals",
         {
           ...(search ? { search } : {}),
-          page: pageParam,
+          ...(managedProductId ? { managedProductId } : {}),
+          ...(typeof pageParam === "string" && pageParam
+            ? { cursor: pageParam }
+            : {}),
         },
         signal,
         goalsPageContract,
       ),
-    getNextPageParam: (lastPage) => {
-      const totalPages = Math.ceil(lastPage.total / lastPage.pageSize);
-      return lastPage.page < totalPages ? lastPage.page + 1 : undefined;
-    },
-    initialPageParam: INITIAL_GOALS_PAGE,
+    getNextPageParam: (lastPage) =>
+      lastPage.hasMore ? (lastPage.nextCursor ?? undefined) : undefined,
+    initialPageParam: NO_CURSOR_YET,
     staleTime: 30_000,
     enabled: canView && enabled,
   });

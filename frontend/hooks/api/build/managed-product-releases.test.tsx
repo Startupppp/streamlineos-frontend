@@ -1,4 +1,4 @@
-import { act, renderHook } from "@testing-library/react";
+import { act, renderHook, waitFor } from "@testing-library/react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import type { InfiniteData } from "@tanstack/react-query";
 import type { ReactNode } from "react";
@@ -6,14 +6,17 @@ import { createAppQueryClient } from "@/components/providers/query-provider";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import {
   useCreateManagedProductRelease,
+  useInfiniteManagedProductReleases,
   useUpdateManagedProductRelease,
 } from "./managed-product-releases";
 import type { ManagedProductRelease, ManagedProductReleasesPage } from "./managed-product-releases";
 
+const mockGet = jest.fn();
 const mockPatch = jest.fn();
 const mockPost = jest.fn();
 jest.mock("@/lib/api-client", () => ({
   apiClient: {
+    get: (...args: unknown[]) => mockGet(...args),
     patch: (...args: unknown[]) => mockPatch(...args),
     post: (...args: unknown[]) => mockPost(...args),
   },
@@ -69,6 +72,7 @@ function setup() {
 }
 
 beforeEach(() => {
+  mockGet.mockReset();
   mockPatch.mockReset();
   mockPost.mockReset();
 });
@@ -101,4 +105,65 @@ it("prepends a created release to the first page of each cache", async () => {
   expect(
     client.getQueryData<InfiniteData<ManagedProductReleasesPage>>(timeline)?.pages[0].data.map((r) => r.id),
   ).toEqual([2, 1]);
+});
+
+describe("useInfiniteManagedProductReleases — search param (BSN-RELEASE-SEARCH)", () => {
+  function makeWrapper() {
+    const client = createAppQueryClient();
+    client.setDefaultOptions({ queries: { retry: false } });
+    function Wrapper({ children }: { children: ReactNode }) {
+      return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
+    }
+    return { client, wrapper: Wrapper };
+  }
+
+  it("includes search in the query key and sends it to the API when provided so filtered results are cached separately", async () => {
+    const releasePage: ManagedProductReleasesPage = {
+      data: [DRAFT],
+      pagination: { limit: 10, hasMore: false, nextCursor: null },
+    };
+    mockGet.mockResolvedValue(releasePage);
+    const { wrapper } = makeWrapper();
+
+    const { result } = renderHook(
+      () => useInfiniteManagedProductReleases(7, { limit: 10, search: "bugfix" }),
+      { wrapper },
+    );
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    const [, params] = mockGet.mock.calls[0] as [string, Record<string, string>];
+    expect(params.search).toBe("bugfix");
+  });
+
+  it("omits search from the API call when search is not provided so unfiltered queries stay cache-compatible", async () => {
+    const releasePage: ManagedProductReleasesPage = {
+      data: [DRAFT],
+      pagination: { limit: 10, hasMore: false, nextCursor: null },
+    };
+    mockGet.mockResolvedValue(releasePage);
+    const { wrapper } = makeWrapper();
+
+    const { result } = renderHook(
+      () => useInfiniteManagedProductReleases(7, { limit: 10 }),
+      { wrapper },
+    );
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    const [, params] = mockGet.mock.calls[0] as [string, Record<string, string>];
+    expect(params.search).toBeUndefined();
+  });
+
+  it("produces different query keys for different search values so cached pages do not bleed across filters", () => {
+    const withSearch = buildWorkQueryKeys.projects.managedProducts.releasesTimeline(7, { limit: 10, search: "v2" });
+    const withoutSearch = buildWorkQueryKeys.projects.managedProducts.releasesTimeline(7, { limit: 10 });
+    expect(withSearch).not.toEqual(withoutSearch);
+  });
+
+  it("query key without search is a prefix of the key with search so patchReleaseCaches invalidates all variants", () => {
+    const base = buildWorkQueryKeys.projects.managedProducts.releasesTimeline(7);
+    const withSearch = buildWorkQueryKeys.projects.managedProducts.releasesTimeline(7, { limit: 10, search: "v2" });
+    expect(withSearch.slice(0, base.length)).toEqual(base);
+  });
 });
