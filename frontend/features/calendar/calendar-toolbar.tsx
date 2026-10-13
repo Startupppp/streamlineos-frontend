@@ -11,6 +11,7 @@ import {
   Building2,
   Handshake,
   Clock3,
+  ListTodo,
 } from "lucide-react";
 import {
   ChevronLeftIcon,
@@ -47,7 +48,7 @@ import {
   SourceFailureBanner,
 } from "./calendar-source-panel";
 
-type ViewMode = "calendar" | "list" | "history";
+type ViewMode = "calendar" | "list" | "history" | "my-day";
 
 const VIEW_PERIOD_LABEL: Record<View, string> = {
   day: "day",
@@ -63,6 +64,7 @@ const VIEW_MODE_OPTIONS: ViewOption<ViewMode>[] = [
   { value: "calendar", icon: CalendarIcon, label: "Calendar View" },
   { value: "list", icon: List, label: "List View" },
   { value: "history", icon: History, label: "History" },
+  { value: "my-day", icon: ListTodo, label: "My Day" },
 ];
 
 interface CalendarToolbarPrimaryActionsProps {
@@ -243,7 +245,7 @@ export const CalendarToolbar = memo(function CalendarToolbar({
         </div>
 
         <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-          {viewMode !== "history" ? (
+          {viewMode !== "history" && viewMode !== "my-day" ? (
             <Select value={view} onValueChange={handleViewChange}>
               <SelectTrigger
                 aria-label="Calendar view"

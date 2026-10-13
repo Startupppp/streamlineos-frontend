@@ -158,6 +158,10 @@ export interface CalendarHistoryResponse extends CalendarEventsResponse {
   nextCursor: string;
 }
 
+export interface CalendarSearchResponse extends CalendarEventsResponse {
+  nextCursor: string | null;
+}
+
 export interface ExternalCalendarEvent {
   id: string;
   connectionId: number;

@@ -49,7 +49,12 @@ export const calendarEventsResponseContract = z.object({
           endDate: z.string(),
         }),
       ]),
-      availability: z.enum(["busy", "free", "out-of-office", "working-elsewhere"]),
+      availability: z.enum([
+        "busy",
+        "free",
+        "out-of-office",
+        "working-elsewhere",
+      ]),
       sourceVersion: z.string().nullable(),
       actions: z.object({
         view: z.boolean(),
@@ -67,18 +72,26 @@ export const calendarEventsResponseContract = z.object({
   failures: z.array(z.object({ key: z.string(), label: z.string() })),
   truncated: z.boolean(),
   coverageState: z.enum(["complete", "partial", "failed", "continued"]),
-  coverage: z.array(z.object({
-    sourceKey: z.string(),
-    state: z.enum(["complete", "partial", "failed", "continued"]),
-    nextCursor: z.string().nullable(),
-  })),
+  coverage: z.array(
+    z.object({
+      sourceKey: z.string(),
+      state: z.enum(["complete", "partial", "failed", "continued"]),
+      nextCursor: z.string().nullable(),
+    }),
+  ),
 });
 
-export const calendarHistoryResponseContract = calendarEventsResponseContract.extend({
-  windowStart: z.string(),
-  windowEnd: z.string(),
-  nextCursor: z.string().min(1),
-});
+export const calendarHistoryResponseContract =
+  calendarEventsResponseContract.extend({
+    windowStart: z.string(),
+    windowEnd: z.string(),
+    nextCursor: z.string().min(1),
+  });
+
+export const calendarSearchResponseContract =
+  calendarEventsResponseContract.extend({
+    nextCursor: z.string().nullable(),
+  });
 
 /** `calendarSourcesResponseSchema` */
 export const calendarSourcesContract = z.array(
@@ -141,13 +154,15 @@ export const calendarExternalEventsContract = z.object({
     }),
   ),
   complete: z.boolean(),
-  accounts: z.array(z.object({
-    connectionId: z.number().int(),
-    accountEmail: z.string().nullable(),
-    toolkit: z.enum(["googlecalendar", "outlook"]),
-    state: z.enum(["complete", "partial", "failed", "reauth_required"]),
-    hasMore: z.boolean(),
-  })),
+  accounts: z.array(
+    z.object({
+      connectionId: z.number().int(),
+      accountEmail: z.string().nullable(),
+      toolkit: z.enum(["googlecalendar", "outlook"]),
+      state: z.enum(["complete", "partial", "failed", "reauth_required"]),
+      hasMore: z.boolean(),
+    }),
+  ),
 });
 
 /** `calendarEventDetailSchema` */
@@ -297,8 +312,16 @@ export const calendarSyncStatusContract = z.object({
   queuedAt: z.string().nullable(),
   processedAt: z.string().nullable(),
   retryable: z.boolean(),
-  failureKind: z.enum(["auth", "capability", "conference", "conflict", "transient"]).nullable(),
-  repairAction: z.enum(["none", "retry", "reconnect", "change_event", "review_conflict"]),
+  failureKind: z
+    .enum(["auth", "capability", "conference", "conflict", "transient"])
+    .nullable(),
+  repairAction: z.enum([
+    "none",
+    "retry",
+    "reconnect",
+    "change_event",
+    "review_conflict",
+  ]),
 });
 
 /** `attendanceRowSchema` from `time-attendance-response.schemas.ts` */
@@ -312,9 +335,7 @@ export const attendanceLogContract = z.object({
   status: z.string(),
   workHours: z.string().nullable(),
   breakHours: z.string(),
-  breaks: z.array(
-    z.object({ start: z.string(), end: z.string().optional() }),
-  ),
+  breaks: z.array(z.object({ start: z.string(), end: z.string().optional() })),
   locationData: z
     .object({
       lat: z.number().optional(),
@@ -351,7 +372,9 @@ export const hrCalendarEventListContract = z.array(
 export const attendanceLogListContract = z.array(attendanceLogContract);
 
 /** sync-retry response */
-export const calendarSyncRetryContract = z.object({ requeued: z.number().int() });
+export const calendarSyncRetryContract = z.object({
+  requeued: z.number().int(),
+});
 
 /**
  * `GET /org/members`. NOT `orgMemberListResponseSchema`, which declares

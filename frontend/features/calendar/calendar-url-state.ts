@@ -1,7 +1,7 @@
 import { format } from "date-fns";
 import type { View } from "./big-calendar-wrapper";
 
-export type CalendarViewMode = "calendar" | "list" | "history";
+export type CalendarViewMode = "calendar" | "list" | "history" | "my-day";
 export type CalendarSelectionSource =
   | "calendar"
   | "build"
@@ -32,7 +32,7 @@ export interface CalendarUrlState {
 }
 
 const VIEWS = new Set<View>(["day", "week", "month"]);
-const MODES = new Set<CalendarViewMode>(["calendar", "list", "history"]);
+const MODES = new Set<CalendarViewMode>(["calendar", "list", "history", "my-day"]);
 const SELECTION_SOURCES = new Set<CalendarSelectionSource>([
   "calendar",
   "build",

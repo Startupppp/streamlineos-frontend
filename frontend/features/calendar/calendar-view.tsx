@@ -1,9 +1,16 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useEffect } from "react";
+import { useCallback, useMemo, useRef, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
-import { startOfMonth, endOfMonth, addMonths, subMonths } from "date-fns";
+import {
+  startOfMonth,
+  endOfMonth,
+  addMonths,
+  subMonths,
+  startOfDay,
+  addDays,
+} from "date-fns";
 import { Plus, Ticket } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -22,6 +29,7 @@ import {
   useExternalCalendarEvents,
 } from "@/hooks/api/calendar";
 import type { CalendarListItem } from "@/hooks/api/calendar";
+import type { CalendarSearchResponse } from "@/hooks/api/calendar-types";
 import {
   CalendarAgendaPreview,
   CalendarListFallback,
@@ -54,6 +62,9 @@ import { useCalendarViewState } from "./use-calendar-view-state";
 import { useAfterLoad } from "@/hooks/common/use-after-load";
 import { useShellVariant } from "@/components/layout/shell-variant-context";
 import { calendarUrl } from "./calendar-url-state";
+import { useCalendarSearch } from "@/hooks/api/calendar-search";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
+import { CalendarMyDayPanel } from "./calendar-my-day-panel";
 
 const CalendarGridLayer = dynamic(
   () =>
@@ -144,8 +155,11 @@ const CalendarAccountsSheet = dynamic(
 );
 
 const NO_CALENDAR_EVENTS: CalendarListItem[] = [];
+const NO_CALENDAR_SEARCH_PAGES: CalendarSearchResponse[] = [];
 
 export function CalendarView() {
+  const [myDaySearch, setMyDaySearch] = useState("");
+  const debouncedMyDaySearch = useDebouncedValue(myDaySearch, 300);
   const router = useRouter();
   const searchParams = useSearchParams();
   const {
@@ -206,7 +220,25 @@ export function CalendarView() {
     isError: eventsIsError,
     error: eventsError,
     refetch: refetchEvents,
-  } = useCalendarEvents(rangeStart, rangeEnd, viewMode !== "history");
+  } = useCalendarEvents(
+    rangeStart,
+    rangeEnd,
+    viewMode !== "history" && viewMode !== "my-day",
+  );
+  const myDayStart = startOfDay(currentDate);
+  const myDayQuery = useCalendarSearch(
+    {
+      start: myDayStart.toISOString(),
+      end: addDays(myDayStart, 1).toISOString(),
+      query: debouncedMyDaySearch.trim() || undefined,
+    },
+    viewMode === "my-day",
+  );
+  const myDayPages = myDayQuery.data?.pages ?? NO_CALENDAR_SEARCH_PAGES;
+  const myDayEvents = useMemo(
+    () => myDayPages.flatMap((page) => page.events),
+    [myDayPages],
+  );
   const events = eventsResponse?.events ?? NO_CALENDAR_EVENTS;
   const sourceFailures = eventsResponse?.failures ?? [];
   const eventsTruncated = eventsResponse?.truncated ?? false;
@@ -248,21 +280,18 @@ export function CalendarView() {
   const attendanceCoverage = useAttendanceCalendarEvents(
     rangeStart,
     rangeEnd,
-    attendanceEventsVisible && viewMode !== "history",
+    attendanceEventsVisible && viewMode !== "history" && viewMode !== "my-day",
   );
   const hrCoverage = useHrCalendarEventsMapped(
     rangeStart,
     rangeEnd,
-    hrEventsVisible && viewMode !== "history",
+    hrEventsVisible && viewMode !== "history" && viewMode !== "my-day",
   );
   const calendarEvents = useMemo(
     () => mergeSelfAttendanceEvents(events, attendanceCoverage.events),
     [attendanceCoverage.events, events],
   );
 
-  // External events take only the date range, so waiting for the connection
-  // list before asking is a pure waterfall. Ask optimistically and stop only
-  // once we know the org has no active connection.
   const {
     data: externalData,
     isLoading: externalIsLoading,
@@ -272,7 +301,9 @@ export function CalendarView() {
   } = useExternalCalendarEvents(
     rangeStart,
     rangeEnd,
-    viewMode !== "history" && (connectionsLoading || activeConnectionCount > 0),
+    viewMode !== "history" &&
+      viewMode !== "my-day" &&
+      (connectionsLoading || activeConnectionCount > 0),
   );
 
   const historyQuery = useCalendarHistory(
@@ -358,13 +389,13 @@ export function CalendarView() {
   const selectedListEvent = useMemo(() => {
     if (!selected) return null;
     return (
-      [...visibleEvents, ...visibleHistoryEvents].find(
+      [...visibleEvents, ...visibleHistoryEvents, ...myDayEvents].find(
         (event) =>
           event.id === selected.id &&
           calendarSourceFamily(event) === selected.source,
       ) ?? null
     );
-  }, [selected, visibleEvents, visibleHistoryEvents]);
+  }, [selected, visibleEvents, visibleHistoryEvents, myDayEvents]);
   const selectedBigEvent = useMemo(
     () =>
       selectedListEvent ? toBigCalEvent(selectedListEvent, connections) : null,
@@ -387,7 +418,8 @@ export function CalendarView() {
     !externalIsLoading &&
     !attendanceCoverage.isLoading &&
     !hrCoverage.isLoading &&
-    (viewMode !== "history" || loadedHistoryPages >= historyPages);
+    (viewMode !== "history" || loadedHistoryPages >= historyPages) &&
+    (viewMode !== "my-day" || !myDayQuery.isLoading);
   useEffect(() => {
     if (selected && selectedResolutionReady && !selectedListEvent)
       handleCloseSelected();
@@ -527,7 +559,24 @@ export function CalendarView() {
                   : "overflow-hidden",
               )}
             >
-              {viewMode === "calendar" ? (
+              {viewMode === "my-day" ? (
+                myDayQuery.isLoading ? (
+                  <CalendarListFallback label="Loading My Day" />
+                ) : (
+                  <CalendarMyDayPanel
+                    events={myDayEvents}
+                    pages={myDayPages}
+                    search={myDaySearch}
+                    onSearchChange={setMyDaySearch}
+                    onSelectEvent={handleSelectListEvent}
+                    hasMore={Boolean(myDayQuery.hasNextPage)}
+                    isLoadingMore={myDayQuery.isFetchingNextPage}
+                    onLoadMore={() => {
+                      void myDayQuery.fetchNextPage();
+                    }}
+                  />
+                )
+              ) : viewMode === "calendar" ? (
                 gridActive ? (
                   <CalendarGridLayer
                     events={allCalEvents}
@@ -600,7 +649,20 @@ export function CalendarView() {
           </div>
         </div>
 
-        {viewMode !== "history" && eventsIsError && (
+        {viewMode === "my-day" && myDayQuery.isError && (
+          <ErrorState
+            compact
+            title="Couldn't load My Day"
+            description={getErrorMessage(myDayQuery.error)}
+            error={myDayQuery.error}
+            onRetry={() => {
+              void myDayQuery.refetch();
+            }}
+            className="shrink-0 border border-border rounded-xl"
+          />
+        )}
+
+        {viewMode !== "history" && viewMode !== "my-day" && eventsIsError && (
           <ErrorState
             compact
             title="Couldn't load calendar events"
