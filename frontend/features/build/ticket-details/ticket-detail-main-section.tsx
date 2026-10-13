@@ -3,6 +3,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { motion, useReducedMotion } from "framer-motion";
+import { Loader2 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { fadeIn } from "@/lib/motion-variants";
@@ -68,6 +69,43 @@ interface AttachmentItem {
   fileUrl: string;
   fileName: string;
   mimeType?: string | null;
+}
+
+interface NonImageAttachmentButtonProps {
+  attachment: AttachmentItem;
+}
+
+function NonImageAttachmentButton({ attachment }: NonImageAttachmentButtonProps) {
+  const [pending, setPending] = useState(false);
+  const [itemError, setItemError] = useState(false);
+
+  function handleClick() {
+    if (pending) return;
+    setPending(true);
+    setItemError(false);
+    void viewFile(attachment.fileUrl)
+      .then(() => { setPending(false); })
+      .catch(() => { setPending(false); setItemError(true); });
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      disabled={pending}
+      className="group relative aspect-video rounded-md overflow-hidden bg-muted border hover:border-foreground/40 transition-all text-left disabled:opacity-60"
+    >
+      <div className="flex items-center justify-center h-full text-muted-foreground text-micro p-1 text-center">
+        {pending ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : itemError ? (
+          <span className="text-status-danger-ink">Couldn&apos;t open attachment</span>
+        ) : (
+          attachment.fileName
+        )}
+      </div>
+    </button>
+  );
 }
 
 interface AttachmentContextMenuProps {
@@ -351,18 +389,7 @@ export function TicketDetailMainSection({
                       </AttachmentContextMenu>
                     );
                   }
-                  return (
-                    <button
-                      key={att.id}
-                      type="button"
-                      onClick={() => void viewFile(att.fileUrl)}
-                      className="group relative aspect-video rounded-md overflow-hidden bg-muted border hover:border-foreground/40 transition-all text-left"
-                    >
-                      <div className="flex items-center justify-center h-full text-muted-foreground text-micro p-1 text-center">
-                        {att.fileName}
-                      </div>
-                    </button>
-                  );
+                  return <NonImageAttachmentButton key={att.id} attachment={att} />;
                 })}
               </div>
             </div>

@@ -44,7 +44,7 @@ function formatFileSize(bytes: number): string {
 
 function FileDownloadButton({ projectId, file }: { projectId: number; file: ProjectFileRow }) {
   const [enabled, setEnabled] = useState(false);
-  const { data, isFetching } = useProjectFileSignedUrl(
+  const { data, isFetching, isError } = useProjectFileSignedUrl(
     projectId,
     enabled ? file.id : null,
   );
@@ -59,6 +59,13 @@ function FileDownloadButton({ projectId, file }: { projectId: number; file: Proj
       afterDownload();
     }
   }, [data?.url]);
+
+  useEffect(() => {
+    if (isError) {
+      toast.error("Couldn't get download link. Please try again.");
+      setEnabled(false);
+    }
+  }, [isError]);
 
   const handleClick = useCallback(() => {
     if (data?.url) {
@@ -160,6 +167,11 @@ export function FilesPage({ projectId }: FilesPageProps) {
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (!file) return;
+      if (file.size === 0) {
+        toast.error(`${file.name} is empty and cannot be uploaded.`);
+        e.target.value = "";
+        return;
+      }
       if (!isAllowedProjectFileType(file.type)) {
         toast.error(
           `${file.name} is not an accepted file type. Accepted: ${PROJECT_FILE_TYPES_LABEL}.`,

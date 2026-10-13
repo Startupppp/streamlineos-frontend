@@ -2,13 +2,19 @@ import { render, screen } from "@testing-library/react";
 import { FilesPage } from "./files-page";
 import { ApiError } from "@/lib/api-envelope";
 
-jest.mock("@/hooks/api/build/project-files", () => ({
-  useProjectFiles: jest.fn(),
-  useUploadProjectFile: jest.fn(),
-  useDeleteProjectFile: jest.fn(),
-  useProjectFileSignedUrl: jest.fn(),
-  MAX_PROJECT_FILE_BYTES: 2 * 1024 * 1024,
-}));
+jest.mock("@/hooks/api/build/project-files", () => {
+  const mimes = ["application/pdf", "image/jpeg", "image/png"];
+  return {
+    useProjectFiles: jest.fn(),
+    useUploadProjectFile: jest.fn(),
+    useDeleteProjectFile: jest.fn(),
+    useProjectFileSignedUrl: jest.fn(),
+    MAX_PROJECT_FILE_BYTES: 2 * 1024 * 1024,
+    PROJECT_FILE_MIME_TYPES: mimes,
+    PROJECT_FILE_TYPES_LABEL: "PDF, JPG, PNG",
+    isAllowedProjectFileType: (mimeType: string) => mimes.includes(mimeType),
+  };
+});
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ replace: jest.fn(), push: jest.fn() }),
@@ -127,7 +133,7 @@ beforeEach(() => {
   mockUseProjectFiles.mockReturnValue(baseQueryResult());
   mockUseUploadProjectFile.mockReturnValue({ mutate: jest.fn(), isPending: false });
   mockUseDeleteProjectFile.mockReturnValue({ mutate: jest.fn(), isPending: false });
-  mockUseProjectFileSignedUrl.mockReturnValue({ data: undefined, isFetching: false });
+  mockUseProjectFileSignedUrl.mockReturnValue({ data: undefined, isFetching: false, isError: false });
 });
 
 it("renders denied state when build:files:view is not in the access snapshot", () => {

@@ -218,6 +218,10 @@ export function TiptapEditor({
     const file = e.target.files?.[0];
     if (!file || !editor) return;
     e.target.value = "";
+    if (!isImageFile(file)) {
+      toast.error("Only image files are supported.");
+      return;
+    }
     void uploadImageFile(file).then((url) => {
       editor.chain().focus().setImage({ src: url }).run();
     }).catch((err: unknown) => {
@@ -253,14 +257,16 @@ export function TiptapEditor({
       <div className="min-h-0 flex-1 overflow-y-auto" onContextMenu={editable ? handleEditorContextMenu : undefined}>
         <EditorContent editor={editor} className="h-full" />
       </div>
-      <input
-        ref={imageInputRef}
-        type="file"
-        accept="image/jpeg,image/png,image/gif,image/webp"
-        className="hidden"
-        onChange={handleImageFileChange}
-        aria-hidden
-      />
+      {editable && (
+        <input
+          ref={imageInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/gif,image/webp"
+          className="hidden"
+          onChange={handleImageFileChange}
+          aria-hidden
+        />
+      )}
       {contextMenu && editor && (
         <EditorImageContextMenu
           editor={editor}
