@@ -55,13 +55,13 @@ describe("range projection contract — CalendarListItem vs calendarEventItemSch
       expect([field, server.has(field)]).toEqual([field, true]);
   });
 
-  it("the four detail-only fields are absent from CalendarListItem", () => {
-    for (const dropped of ["rrule", "isRecurring", "meetingUrl", "linkedTicket"])
+  it("the detail-only fields are absent from CalendarListItem", () => {
+    for (const dropped of ["rrule", "isRecurring", "linkedTicket"])
       expect(frontendListFields).not.toContain(dropped);
   });
 
-  it("the four detail-only fields are absent from calendarEventItemSchema", () => {
-    for (const dropped of ["rrule", "isRecurring", "meetingUrl", "linkedTicket"])
+  it("the detail-only fields are absent from calendarEventItemSchema", () => {
+    for (const dropped of ["rrule", "isRecurring", "linkedTicket"])
       expect(backendItemFields).not.toContain(dropped);
   });
 });
@@ -89,9 +89,9 @@ describe("detail contract — CalendarEventDetail vs calendarEventDetailSchema",
       expect([field, client.has(field)]).toEqual([field, true]);
   });
 
-  it("the four stripped fields appear in CalendarEventDetail and not in CalendarListItem", () => {
+  it("the detail-only fields appear in CalendarEventDetail and not in CalendarListItem", () => {
     const listFields = interfaceFields(feSource, "CalendarListItem");
-    for (const field of ["rrule", "isRecurring", "meetingUrl", "linkedTicket"]) {
+    for (const field of ["rrule", "isRecurring", "linkedTicket"]) {
       expect(frontendDetailFields).toContain(field);
       expect(listFields).not.toContain(field);
     }

@@ -64,6 +64,7 @@ jest.mock("@/hooks/common/use-animated-icon", () => ({
 jest.mock("next/dynamic", () => () => () => null);
 
 import type { CalendarListItem } from "@/hooks/api/calendar";
+import { calendarProjectionFields } from "./calendar-projection-fixtures";
 
 type CalendarMock = {
   useDeleteCalendarEvent: jest.Mock;
@@ -88,6 +89,7 @@ const baseEvent: CalendarListItem = {
   source: "event",
   category: "meeting",
   color: "blue",
+  ...calendarProjectionFields("event-1", "2026-09-12T10:00:00Z", "2026-09-12T11:00:00Z"),
 };
 
 describe("EventDetailSheet — error messages go through getErrorMessage", () => {

@@ -7,7 +7,10 @@ import type { CalendarListItem } from "@/hooks/api/calendar";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { platformHierarchyQueryKeys } from "@/lib/query-keys/platform-hierarchy";
 import type { BigCalEvent } from "./big-calendar-wrapper";
-import { useAttendanceCalendarEvents } from "./use-attendance-calendar-events";
+import {
+  useAttendanceCalendarEvents,
+  type AttendanceCalendarEventsResult,
+} from "./use-attendance-calendar-events";
 import {
   clampToHrCalendarWindow,
   useHrCalendarEventsMapped,
@@ -16,7 +19,26 @@ import {
 const mockUseCan = jest.fn();
 jest.mock("@/hooks/api/access", () => ({
   useCan: (key: string) => mockUseCan(key),
+  usePermissionGate: (key: string) => {
+    const allowed = mockUseCan(key);
+    return {
+      permission: key,
+      allowed,
+      denied: !allowed,
+      pending: false,
+      unavailable: false,
+    };
+  },
   useModuleEnabled: () => true,
+}));
+
+let mockOrgId = "org-1";
+let mockUserId = "user-1";
+jest.mock("next-auth/react", () => ({
+  useSession: () => ({
+    data: { orgId: mockOrgId, user: { id: mockUserId } },
+    status: "authenticated",
+  }),
 }));
 
 const mockApiGet = jest.fn();
@@ -61,6 +83,8 @@ function routeGet(path: unknown): unknown {
 }
 
 beforeEach(() => {
+  mockOrgId = "org-1";
+  mockUserId = "user-1";
   mockUseCan.mockReset();
   mockUseCan.mockReturnValue(true);
   mockApiGet.mockReset();
@@ -74,12 +98,15 @@ function requestedPaths(): unknown[] {
 }
 
 const ATTENDANCE_KEY = humanResourcesQueryKeys.hr.monthlyAttendance({
+  orgId: "org-1",
+  actorUserId: "user-1",
   year: RANGE_START.getFullYear(),
   month: RANGE_START.getMonth(),
 });
 
 const HR_WINDOW = clampToHrCalendarWindow(RANGE_START, RANGE_END);
 const HR_KEY = platformHierarchyQueryKeys.calendar.hrSupplemental(
+  "org-1",
   format(HR_WINDOW.from, "yyyy-MM-dd"),
   format(HR_WINDOW.to, "yyyy-MM-dd"),
 );
@@ -106,8 +133,17 @@ function AttendanceProbe({
   recorder,
   visible = true,
 }: ProbeProps<CalendarListItem[]>) {
-  const events = useAttendanceCalendarEvents(RANGE_START, RANGE_END, visible);
-  recorder.renders.push(events);
+  const result = useAttendanceCalendarEvents(RANGE_START, RANGE_END, visible);
+  recorder.renders.push(result.events);
+  return null;
+}
+
+function AttendanceStateProbe({
+  recorder,
+  visible = true,
+}: ProbeProps<AttendanceCalendarEventsResult>) {
+  const result = useAttendanceCalendarEvents(RANGE_START, RANGE_END, visible);
+  recorder.renders.push(result);
   return null;
 }
 
@@ -204,11 +240,8 @@ describe("useAttendanceCalendarEvents — fetch timing is unchanged", () => {
     mount((tick) => (
       <AttendanceProbe recorder={recorder} visible={false} tick={tick} />
     ));
-    await waitFor(() => {
-      expect(requestedPaths()).toContain("/me/time-off/wfh");
-    });
-
     expect(requestedPaths()).not.toContain("/me/attendance/monthly");
+    expect(requestedPaths()).not.toContain("/me/time-off/wfh");
   });
 
   it("does not fetch monthly attendance without self:attendance", async () => {
@@ -222,6 +255,44 @@ describe("useAttendanceCalendarEvents — fetch timing is unchanged", () => {
     });
 
     expect(requestedPaths()).not.toContain("/me/attendance/monthly");
+  });
+});
+
+describe("attendance calendar coverage state", () => {
+  it("surfaces a failed monthly request and retries it", async () => {
+    let monthlyCalls = 0;
+    mockApiGet.mockImplementation((path: unknown) => {
+      if (path === "/me/attendance/monthly") {
+        monthlyCalls += 1;
+        return monthlyCalls === 1
+          ? Promise.reject(new Error("Attendance unavailable"))
+          : Promise.resolve(ATTENDANCE_LOGS);
+      }
+      return Promise.resolve(routeGet(path));
+    });
+    const recorder = createRecorder<AttendanceCalendarEventsResult>();
+    mount((tick) => <AttendanceStateProbe recorder={recorder} tick={tick} />);
+    await waitFor(() => expect(latest(recorder).isError).toBe(true));
+
+    await act(async () => {
+      await latest(recorder).refetch();
+    });
+
+    await waitFor(() => expect(latest(recorder).isError).toBe(false));
+    expect(monthlyCalls).toBeGreaterThanOrEqual(2);
+  });
+
+  it("surfaces a failed work-from-home request", async () => {
+    mockApiGet.mockImplementation((path: unknown) =>
+      path === "/me/time-off/wfh"
+        ? Promise.reject(new Error("WFH unavailable"))
+        : Promise.resolve(routeGet(path)),
+    );
+    const recorder = createRecorder<AttendanceCalendarEventsResult>();
+    mount((tick) => <AttendanceStateProbe recorder={recorder} tick={tick} />);
+
+    await waitFor(() => expect(latest(recorder).isError).toBe(true));
+    expect((latest(recorder).error as Error).message).toBe("WFH unavailable");
   });
 });
 
@@ -265,5 +336,39 @@ describe("useHrCalendarEventsMapped — referential identity", () => {
     });
 
     expect(Object.is(before, latest(recorder))).toBe(false);
+  });
+
+  it("recovers from a prior 403 after the organization changes", async () => {
+    mockApiGet.mockImplementation((path: unknown) => {
+      if (typeof path === "string" && path.startsWith("/hr/calendar")) {
+        return mockOrgId === "org-1"
+          ? Promise.reject({ status: 403 })
+          : Promise.resolve(HR_EVENTS);
+      }
+      return Promise.resolve(routeGet(path));
+    });
+    const recorder = createRecorder<BigCalEvent[]>();
+    const mounted = mount((tick) => <HrProbe recorder={recorder} tick={tick} />);
+    await waitFor(() => {
+      expect(requestedPaths().filter((path) => path === "/hr/calendar")).toHaveLength(1);
+    });
+
+    mockOrgId = "org-2";
+    await act(async () => mounted.rerenderWithNoChangedInput());
+
+    await waitFor(() => expect(latest(recorder)).toHaveLength(1));
+    expect(requestedPaths().filter((path) => path === "/hr/calendar")).toHaveLength(2);
+  });
+
+  it("starts fetching when the permission is restored", async () => {
+    mockUseCan.mockReturnValue(false);
+    const recorder = createRecorder<BigCalEvent[]>();
+    const mounted = mount((tick) => <HrProbe recorder={recorder} tick={tick} />);
+    expect(requestedPaths()).not.toContain("/hr/calendar");
+
+    mockUseCan.mockReturnValue(true);
+    await act(async () => mounted.rerenderWithNoChangedInput());
+
+    await waitFor(() => expect(requestedPaths()).toContain("/hr/calendar"));
   });
 });

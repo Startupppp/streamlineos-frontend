@@ -2,6 +2,7 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { invalidateCalendarProjectionWindows } from "@/lib/calendar-projection-cache";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
@@ -77,7 +78,10 @@ export function useCreateShift() {
     mutationKey: ["hr", "shifts", "create"],
     mutationFn: (data: { name: string; type: string; startTime: string; endTime: string; breakMinutes?: number; isNightShift?: boolean; gracePeriodMinutes?: number }) =>
       apiClient.post("/hr/shifts", data, undefined, shiftRowContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.all, "shifts"] }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.all, "shifts"] });
+      invalidateCalendarProjectionWindows(qc);
+    },
   });
 }
 
@@ -87,7 +91,10 @@ export function useUpdateShift() {
     mutationKey: ["hr", "shifts", "update"],
     mutationFn: ({ shiftId, ...data }: { shiftId: number; name?: string; type?: string; startTime?: string; endTime?: string; breakMinutes?: number; isNightShift?: boolean; gracePeriodMinutes?: number }) =>
       apiClient.patch(`/hr/shifts/${shiftId}`, data, undefined, shiftRowContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.all, "shifts"] }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.all, "shifts"] });
+      invalidateCalendarProjectionWindows(qc);
+    },
   });
 }
 
@@ -96,7 +103,10 @@ export function useDeleteShift() {
   return useAuthorizedMutation("hr:attendance:manage", {
     mutationKey: ["hr", "shifts", "delete"],
     mutationFn: (shiftId: number) => apiClient.delete(`/hr/shifts/${shiftId}`, undefined, undefined, shiftDeleteContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.all, "shifts"] }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.all, "shifts"] });
+      invalidateCalendarProjectionWindows(qc);
+    },
   });
 }
 
@@ -128,6 +138,9 @@ export function useUpdateSwapStatus() {
     mutationKey: ["hr", "shifts", "swapStatus"],
     mutationFn: ({ swapId, status }: { swapId: number; status: string }) =>
       apiClient.patch(`/hr/shifts/swaps/${swapId}`, { status }, undefined, shiftSwapRowContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.all, "shiftSwaps"] }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.all, "shiftSwaps"] });
+      invalidateCalendarProjectionWindows(qc);
+    },
   });
 }

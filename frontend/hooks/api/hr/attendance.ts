@@ -27,6 +27,7 @@ import type {
   TeamAttendanceStatusResponse,
 } from "@/types/hr";
 import { activeAttendancePollInterval } from "@/lib/query-request-policies";
+import { invalidateCalendarProjectionWindows } from "@/lib/calendar-projection-cache";
 
 const attendanceStatusC = lazyContract(() =>
   import("@/hooks/api/hr/attendance-schema").then((m) => m.attendanceStatusContract),
@@ -214,7 +215,10 @@ export function useHrCheckIn(
         exact: true,
       });
     },
-    onSuccess: options?.onSuccess,
+    onSuccess: (...args) => {
+      invalidateCalendarProjectionWindows(qc);
+      options?.onSuccess?.(...args);
+    },
   });
 }
 
@@ -268,7 +272,10 @@ export function useHrCheckOut(
         exact: true,
       });
     },
-    onSuccess: options?.onSuccess,
+    onSuccess: (...args) => {
+      invalidateCalendarProjectionWindows(qc);
+      options?.onSuccess?.(...args);
+    },
   });
 }
 
@@ -300,18 +307,28 @@ export function useHrToggleBreak(
         queryKey: [...humanResourcesQueryKeys.hr.all, "monthlyAttendance"],
       });
     },
-    onSuccess: options?.onSuccess,
+    onSuccess: (...args) => {
+      invalidateCalendarProjectionWindows(qc);
+      options?.onSuccess?.(...args);
+    },
     onError: options?.onError,
   });
 }
 
 export function useHrMonthlyAttendance(params: GetMonthlyAttendanceInput) {
+  const { data: session } = useSession();
+  const orgId = session?.orgId ?? "";
+  const actorUserId = session?.user?.id ?? "";
   const canSelf = useCan("self:attendance");
   const canManage = useCan("hr:attendance:view");
   const hrEnabled = useModuleEnabled("hr");
   const isOtherUser = params.userId !== undefined;
   return useQuery({
-    queryKey: humanResourcesQueryKeys.hr.monthlyAttendance(params),
+    queryKey: humanResourcesQueryKeys.hr.monthlyAttendance({
+      ...params,
+      orgId,
+      actorUserId,
+    }),
     queryFn: ({ signal }) => {
       const qParams = { year: params.year, month: params.month, ...(params.userId ? { userId: params.userId } : {}) };
       if (isOtherUser)
@@ -319,7 +336,7 @@ export function useHrMonthlyAttendance(params: GetMonthlyAttendanceInput) {
       return apiClient.get<AttendanceLog[]>("/me/attendance/monthly", qParams, signal, attendanceRowListC);
     },
     staleTime: 2 * 60_000,
-    enabled: isOtherUser ? hrEnabled && canManage : canSelf,
+    enabled: Boolean(orgId && actorUserId) && (isOtherUser ? hrEnabled && canManage : canSelf),
   });
 }
 

@@ -3,6 +3,7 @@
 import { render, act } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { CalendarView } from "./calendar-view";
+import { calendarProjectionFields } from "./calendar-projection-fixtures";
 
 jest.mock("./big-calendar-wrapper", () => ({
   BigCalendarWrapper: () => null,
@@ -15,15 +16,23 @@ jest.mock("next/navigation", () => ({
   usePathname: () => "/calendar",
 }));
 
+jest.mock("next-auth/react", () => ({
+  useSession: () => ({
+    data: { orgId: "org-1", user: { id: "user-1" } },
+    status: "authenticated",
+  }),
+}));
+
 jest.mock("@/hooks/api/access", () => ({
   useCan: () => true,
   useScope: () => "all",
   useModuleEnabled: () => true,
   usePermissionGate: () => ({
+    permission: "self:attendance",
     allowed: true,
-    loading: false,
     denied: false,
-    ready: true,
+    pending: false,
+    unavailable: false,
   }),
   useAccess: () => ({ data: undefined, isLoading: false }),
 }));
@@ -65,10 +74,19 @@ const CALENDAR_EVENTS = {
       category: "meeting",
       source: "calendar",
       description: null,
+      ...calendarProjectionFields(
+        "evt-1",
+        "2026-09-15T09:00:00.000Z",
+        "2026-09-15T09:15:00.000Z",
+      ),
     },
   ],
   failures: [],
   truncated: false,
+  coverageState: "complete",
+  coverage: [
+    { sourceKey: "calendar-events", state: "complete", nextCursor: null },
+  ],
 };
 
 const ATTENDANCE_LOGS = [
@@ -87,6 +105,9 @@ const ATTENDANCE_LOGS = [
 function routeGet(path: unknown): unknown {
   if (typeof path !== "string") return [];
   if (path.startsWith("/calendar/events")) return CALENDAR_EVENTS;
+  if (path.startsWith("/calendar/external-events")) {
+    return { events: [], errors: [], complete: true, accounts: [] };
+  }
   if (path.includes("/attendance/monthly")) return ATTENDANCE_LOGS;
   return [];
 }
@@ -113,7 +134,6 @@ async function renderCalendar() {
     </QueryClientProvider>,
   );
   for (let i = 0; i < 6; i += 1)
-    // eslint-disable-next-line no-await-in-loop
     await act(async () => {
       await Promise.resolve();
     });

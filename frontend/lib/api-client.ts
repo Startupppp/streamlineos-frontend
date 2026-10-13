@@ -64,7 +64,11 @@ const PUBLIC_AUTH_PATHS = new Set([
 
 function isPublicPath(path: string): boolean {
   const clean = path.split("?")[0];
-  return PUBLIC_AUTH_PATHS.has(clean);
+  return (
+    PUBLIC_AUTH_PATHS.has(clean) ||
+    clean.startsWith("/public/calendar/invitations/") ||
+    clean.startsWith("/public/calendar/polls/")
+  );
 }
 
 const ORGANIZATION_ACCESS_ERROR_CODES = new Set([

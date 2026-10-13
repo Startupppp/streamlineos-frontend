@@ -1,9 +1,8 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   format,
-  isSameDay,
   startOfMonth,
   endOfMonth,
   startOfWeek,
@@ -16,6 +15,67 @@ import type { IntegrationConnection } from "@/hooks/api/integrations";
 import type { BigCalEvent, View } from "./big-calendar-wrapper";
 import { accountColor } from "./calendar-account-colors";
 
+export type CalendarSourceFamily =
+  | "calendar"
+  | "build"
+  | "tasks"
+  | "crm"
+  | "hr"
+  | "attendance"
+  | "external"
+  | "other";
+
+export function calendarSourceFamily(event: CalendarListItem): CalendarSourceFamily {
+  const source = event.source.toLowerCase();
+  const sourceKey = event.sourceKey.toLowerCase();
+  const entityType = event.entityType?.toUpperCase() ?? "";
+  if (source === "external" || sourceKey.startsWith("external:")) return "external";
+  if (source === "attendance" || sourceKey === "hr-attendance") return "attendance";
+  if (["LEAD", "DEAL", "CONTACT"].includes(entityType) || sourceKey.startsWith("crm")) return "crm";
+  if (source === "hr" || ["leave", "interview", "holiday"].includes(source) || sourceKey.startsWith("hr-")) return "hr";
+  if (sourceKey === "build" || entityType === "TICKET") return "build";
+  if (sourceKey === "tasks" || source === "task") return "tasks";
+  if (sourceKey === "calendar" || sourceKey === "calendar-events" || source === "calendar") return "calendar";
+  return "other";
+}
+
+export function eventOverlapsRange(
+  event: Pick<CalendarListItem, "start" | "end">,
+  range: { start: Date; end: Date },
+): boolean {
+  const eventStart = new Date(event.start).getTime();
+  const eventEnd = new Date(event.end).getTime();
+  const rangeStart = range.start.getTime();
+  const rangeEnd = range.end.getTime();
+  return Number.isFinite(eventStart) &&
+    Number.isFinite(eventEnd) &&
+    eventStart <= rangeEnd &&
+    eventEnd >= rangeStart;
+}
+
+export function filterCalendarEventsBySources(
+  events: CalendarListItem[],
+  filters: {
+    hrVisible: boolean;
+    crmVisible: boolean;
+    attendanceVisible: boolean;
+    hiddenConnectionIds?: readonly number[];
+  },
+): CalendarListItem[] {
+  return events.filter((event) => {
+    const family = calendarSourceFamily(event);
+    if (!filters.attendanceVisible && family === "attendance") return false;
+    if (!filters.crmVisible && family === "crm") return false;
+    if (!filters.hrVisible && family === "hr") return false;
+    if (
+      family === "external" &&
+      event.connectionId !== undefined &&
+      filters.hiddenConnectionIds?.includes(event.connectionId)
+    ) return false;
+    return true;
+  });
+}
+
 export function mergeSelfAttendanceEvents(
   events: CalendarListItem[],
   selfAttendanceEvents: CalendarListItem[],
@@ -23,7 +83,7 @@ export function mergeSelfAttendanceEvents(
   if (selfAttendanceEvents.length === 0) return events;
   const aggregateAttendanceDates = new Set(
     events
-      .filter((event) => event.source === "attendance")
+      .filter((event) => calendarSourceFamily(event) === "attendance")
       .map((event) => format(new Date(event.start), "yyyy-MM-dd")),
   );
   const additions = selfAttendanceEvents.filter(
@@ -32,6 +92,111 @@ export function mergeSelfAttendanceEvents(
   );
   if (additions.length === 0) return events;
   return [...events, ...additions];
+}
+
+function normalizeExternalEvents(
+  externalData: ExternalCalendarEventsResponse | undefined,
+  hiddenIds: readonly number[],
+): CalendarListItem[] {
+  return (externalData?.events ?? [])
+    .filter((event) => !hiddenIds.includes(event.connectionId))
+    .map((event) => ({
+      id: event.id,
+      title: event.title,
+      start: event.start,
+      end: event.end,
+      allDay: event.allDay,
+      color: null,
+      category: "external",
+      source: "external",
+      sourceKey: event.sourceKey,
+      sourceRecordId: event.sourceRecordId,
+      occurrenceId: event.occurrenceId,
+      status: event.status,
+      timeKind: event.timeKind,
+      time: event.timeKind === "date"
+        ? { kind: "date" as const, startDate: event.start.slice(0, 10), endDate: event.end.slice(0, 10) }
+        : { kind: "timed" as const, start: event.start, end: event.end, timezone: event.timezone ?? null },
+      availability: event.availability,
+      sourceVersion: event.sourceVersion,
+      actions: event.actions,
+      freshness: event.freshness,
+      timezone: event.timezone,
+      location: event.location,
+      connectionId: event.connectionId,
+      accountEmail: event.accountEmail,
+      meetingUrl: event.meetingUrl,
+      webLink: event.webLink,
+    }));
+}
+
+function normalizeHrEvents(hrEvents: BigCalEvent[]): CalendarListItem[] {
+  return hrEvents.map((event) => ({
+    id: String(event.id),
+    title: event.title,
+    start: event.start.toISOString(),
+    end: event.end.toISOString(),
+    allDay: event.allDay ?? true,
+    color: event.resource?.color ?? null,
+    category: event.resource?.hrEventType?.toLowerCase() ?? "hr",
+    source: "hr",
+    sourceKey: "hr-supplemental",
+    sourceRecordId: String(event.id),
+    occurrenceId: String(event.id),
+    status: null,
+    timeKind: event.allDay ? "date" : "timed",
+    time: event.allDay
+      ? { kind: "date", startDate: event.start.toISOString().slice(0, 10), endDate: event.end.toISOString().slice(0, 10) }
+      : { kind: "timed", start: event.start.toISOString(), end: event.end.toISOString(), timezone: event.resource?.timezone ?? null },
+    availability: "free",
+    sourceVersion: null,
+    actions: { view: true, edit: false, delete: false, rsvp: false, complete: false },
+    freshness: { state: "fresh", asOf: new Date().toISOString() },
+    location: event.resource?.location,
+    description: event.resource?.description,
+  }));
+}
+
+export function toBigCalEvent(
+  event: CalendarListItem,
+  connections: IntegrationConnection[] = [],
+): BigCalEvent {
+  const family = calendarSourceFamily(event);
+  const connectionIndex = event.connectionId === undefined
+    ? -1
+    : connections.findIndex((connection) => connection.id === event.connectionId);
+  return {
+    id: event.id,
+    title: event.title,
+    start: new Date(event.start),
+    end: new Date(event.end),
+    allDay: event.allDay ?? false,
+    resource: {
+      color: family === "external"
+        ? accountColor(connectionIndex === -1 ? 0 : connectionIndex)
+        : event.color,
+      category: event.category,
+      timezone: event.timezone,
+      description: event.description,
+      location: event.location,
+      source: family === "hr" || family === "attendance" ? "hr" : event.source,
+      sourceFamily: family,
+      sourceKey: event.sourceKey,
+      sourceRecordId: event.sourceRecordId,
+      status: event.status,
+      actions: event.actions,
+      myRsvpStatus: event.myRsvpStatus,
+      entityType: event.entityType,
+      entityId: event.entityId,
+      projectId: event.projectId,
+      accountEmail: event.accountEmail,
+      meetingUrl: event.meetingUrl,
+      webLink: event.webLink,
+      connectionId: event.connectionId,
+      externalId: family === "external" ? event.id : null,
+      hrEventType: family === "hr" ? event.category.toUpperCase() : undefined,
+    },
+  };
 }
 
 interface UseCalendarComputedParams {
@@ -59,90 +224,28 @@ export function useCalendarComputed({
   crmVisible = true,
   attendanceVisible = true,
 }: UseCalendarComputedParams) {
+  const [historyCutoff] = useState(() => Date.now());
+  const unifiedEvents = useMemo(
+    () => [
+      ...events,
+      ...normalizeExternalEvents(externalData, hiddenIds),
+      ...normalizeHrEvents(hrCalEvents),
+    ],
+    [events, externalData, hiddenIds, hrCalEvents],
+  );
+
   const visibleEvents = useMemo(
-    () =>
-      events.filter((event) => {
-        if (!attendanceVisible && event.source === "attendance") return false;
-        if (
-          !crmVisible &&
-          (event.entityType === "LEAD" ||
-            event.entityType === "DEAL" ||
-            event.entityType === "CONTACT")
-        ) {
-          return false;
-        }
-        return true;
-      }),
-    [attendanceVisible, crmVisible, events],
-  );
-
-  const calEvents = useMemo<BigCalEvent[]>(
-    () =>
-      visibleEvents.map((e) => ({
-        id: e.id,
-        title: e.title,
-        start: new Date(e.start),
-        end: new Date(e.end),
-        allDay: e.allDay ?? false,
-        resource: {
-          color: e.color,
-          category: e.category,
-          description: e.description,
-          location: e.location,
-          source: e.source,
-          myRsvpStatus: e.myRsvpStatus,
-          entityType: e.entityType,
-          entityId: e.entityId,
-          projectId: e.projectId,
-        },
-      })),
-    [visibleEvents],
-  );
-
-  const externalCalEvents = useMemo<BigCalEvent[]>(
-    () =>
-      (externalData?.events ?? [])
-        .filter((e) => !hiddenIds.includes(e.connectionId))
-        .map((e) => {
-          const index = connections.findIndex((c) => c.id === e.connectionId);
-          return {
-            id: e.id,
-            title: e.title,
-            start: new Date(e.start),
-            end: new Date(e.end),
-            allDay: e.allDay,
-            resource: {
-              source: "external",
-              color: accountColor(index === -1 ? 0 : index),
-              location: e.location,
-              accountEmail: e.accountEmail,
-              meetingUrl: e.meetingUrl,
-              webLink: e.webLink,
-              connectionId: e.connectionId,
-              externalId: e.id,
-              timezone: e.timezone,
-            },
-          };
-        }),
-    [externalData, hiddenIds, connections],
-  );
-
-  const visibleHrCalEvents = useMemo(
-    () => (hrVisible ? hrCalEvents : []),
-    [hrCalEvents, hrVisible],
+    () => filterCalendarEventsBySources(unifiedEvents, {
+      attendanceVisible,
+      crmVisible,
+      hrVisible,
+    }),
+    [attendanceVisible, crmVisible, hrVisible, unifiedEvents],
   );
 
   const allCalEvents = useMemo(
-    () => [...calEvents, ...externalCalEvents, ...visibleHrCalEvents],
-    [calEvents, externalCalEvents, visibleHrCalEvents],
-  );
-
-  const todayActivities = useMemo(
-    () =>
-      calEvents
-        .filter((e) => isSameDay(e.start, currentDate))
-        .sort((a, b) => a.start.getTime() - b.start.getTime()),
-    [calEvents, currentDate],
+    () => visibleEvents.map((event) => toBigCalEvent(event, connections)),
+    [connections, visibleEvents],
   );
 
   const formattedRange = useMemo(() => {
@@ -172,12 +275,25 @@ export function useCalendarComputed({
     return { start: startOfDay(currentDate), end: endOfDay(currentDate) };
   }, [currentDate, view]);
 
+  const rangeEvents = useMemo(
+    () => visibleEvents
+      .filter((event) => eventOverlapsRange(event, visibleRange))
+      .sort((left, right) => new Date(left.start).getTime() - new Date(right.start).getTime()),
+    [visibleEvents, visibleRange],
+  );
+
+  const historyEvents = useMemo(
+    () => visibleEvents
+      .filter((event) => new Date(event.end).getTime() < historyCutoff)
+      .sort((left, right) => new Date(right.start).getTime() - new Date(left.start).getTime()),
+    [historyCutoff, visibleEvents],
+  );
+
   return {
-    calEvents,
-    externalCalEvents,
     allCalEvents,
     visibleEvents,
-    todayActivities,
+    rangeEvents,
+    historyEvents,
     formattedRange,
     visibleRange,
   };

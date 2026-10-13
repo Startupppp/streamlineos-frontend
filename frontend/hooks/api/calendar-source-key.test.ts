@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { renderHook } from "@testing-library/react";
 import { useCan } from "@/hooks/api/access";
 import { queryKeys } from "@/lib/query-keys";
 import { partialMatchKey } from "@tanstack/react-query";
@@ -12,6 +13,9 @@ jest.mock("@tanstack/react-query", () => ({
   useMutation: jest.fn(),
 }));
 jest.mock("@/hooks/api/access", () => ({ useCan: jest.fn() }));
+jest.mock("next-auth/react", () => ({
+  useSession: () => ({ data: { orgId: "org-1", user: { id: "user-1" } } }),
+}));
 jest.mock("@/lib/api-client", () => ({ apiClient: { get: jest.fn() } }));
 
 const mockQuery = useQuery as jest.Mock;
@@ -26,7 +30,9 @@ interface CapturedOptions {
 }
 
 function useCaptureEventsOptions(): CapturedOptions {
-  useCalendarEvents(START, END);
+  renderHook(function useCalendarEventsProbe() {
+    return useCalendarEvents(START, END);
+  });
   const call = mockQuery.mock.calls
     .map((c) => c[0] as CapturedOptions)
     .find((o) => o.queryKey.includes("events"));
@@ -46,11 +52,16 @@ describe("the calendar events key fires immediately on permission", () => {
     expect(opts.enabled).toBe(true);
   });
 
-  it("key is the date range only, stable across source changes", () => {
+  it("key binds the organization, actor, and date range", () => {
     const opts = useCaptureEventsOptions();
 
     expect(opts.queryKey).toEqual(
-      queryKeys.calendar.events(START.toISOString(), END.toISOString()),
+      queryKeys.calendar.events(
+        "org-1",
+        "user-1",
+        START.toISOString(),
+        END.toISOString(),
+      ),
     );
     expect(opts.queryKey).not.toContain(undefined);
   });
@@ -64,7 +75,12 @@ describe("the calendar events key fires immediately on permission", () => {
     expect(
       partialMatchKey(
         opts.queryKey as QueryKey,
-        queryKeys.calendar.events(START.toISOString(), END.toISOString()) as QueryKey,
+        queryKeys.calendar.events(
+          "org-1",
+          "user-1",
+          START.toISOString(),
+          END.toISOString(),
+        ) as QueryKey,
       ),
     ).toBe(true);
   });

@@ -1,6 +1,6 @@
 "use client";
 
-import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { usePermissionGate } from "@/hooks/api/access";
@@ -14,6 +14,7 @@ import type {
 } from "@/types/crm/activities";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { lazyContract } from "@/lib/api-envelope";
+import { invalidateCalendarProjectionWindows } from "@/lib/calendar-projection-cache";
 
 const timelinePageLazy = lazyContract(() =>
   import("@/hooks/api/crm/activity-timeline-schema").then((m) => m.timelinePageContract),
@@ -125,6 +126,7 @@ export function useLogActivity() {
     mutationFn: (input: CreateActivityInput) => apiClient.post("/crm/activities", input, undefined, logActivityLazy),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.crm.all });
+      invalidateCalendarProjectionWindows(qc);
     },
   });
 }
@@ -138,6 +140,7 @@ export function useCompleteActivityTask() {
     onSuccess: () => {
       // The same row appears on a timeline and in the person's own task list.
       void qc.invalidateQueries({ queryKey: queryKeys.crm.all });
+      invalidateCalendarProjectionWindows(qc);
     },
   });
 }

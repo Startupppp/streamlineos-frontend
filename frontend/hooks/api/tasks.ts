@@ -1,6 +1,7 @@
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
+import { invalidateCalendarProjectionWindows } from "@/lib/calendar-projection-cache";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 
@@ -103,6 +104,7 @@ export function useCreateTask() {
     mutationFn: (input: CreateTaskInput) => apiClient.post<Task>("/tasks", input, undefined, taskRowContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: accessAndCrmQueryKeys.tasks.all });
+      invalidateCalendarProjectionWindows(qc);
     },
   });
 }
@@ -115,6 +117,7 @@ export function useUpdateTask() {
       apiClient.patch<Task>(`/tasks/${taskId}`, input, undefined, taskRowContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: accessAndCrmQueryKeys.tasks.all });
+      invalidateCalendarProjectionWindows(qc);
     },
   });
 }
@@ -127,6 +130,7 @@ export function useDeleteTask() {
       apiClient.delete<{ success: boolean }>(`/tasks/${taskId}`, undefined, undefined, taskSuccessContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: accessAndCrmQueryKeys.tasks.all });
+      invalidateCalendarProjectionWindows(qc);
     },
   });
 }
@@ -152,6 +156,7 @@ export function useCompleteTask() {
     },
     onSettled: () => {
       void qc.invalidateQueries({ queryKey: accessAndCrmQueryKeys.tasks.all });
+      invalidateCalendarProjectionWindows(qc);
     },
   });
 }

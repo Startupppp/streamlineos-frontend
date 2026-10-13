@@ -4,6 +4,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import type { CalendarListItem } from "@/hooks/api/calendar";
 import { formatEventDate, formatEventTimeRange } from "@/lib/date-utils";
 import { EVENT_COLORS } from "./calendar-event-constants";
+import { Button } from "@/components/ui/button";
 
 function agendaWhen(event: CalendarListItem): string {
   if (event.allDay)
@@ -14,31 +15,48 @@ function agendaWhen(event: CalendarListItem): string {
 export function CalendarAgendaPreview({
   events,
   maxEvents = 6,
+  onSelectEvent,
+  descending = false,
+  hasMore = false,
+  isLoadingMore = false,
+  onLoadMore,
 }: {
   events: CalendarListItem[];
   maxEvents?: number;
+  onSelectEvent?: (event: CalendarListItem) => void;
+  descending?: boolean;
+  hasMore?: boolean;
+  isLoadingMore?: boolean;
+  onLoadMore?: () => void;
 }) {
-  const todayStart = new Date();
-  todayStart.setHours(0, 0, 0, 0);
-
   const upcoming = events
-    .filter((e) => new Date(e.start) >= todayStart)
-    .sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime())
+    .slice()
+    .sort((a, b) => descending
+      ? new Date(b.end).getTime() - new Date(a.end).getTime()
+      : new Date(a.start).getTime() - new Date(b.start).getTime())
     .slice(0, maxEvents);
 
   if (upcoming.length === 0)
     return (
       <div className="flex min-h-0 flex-1 flex-col items-center justify-center p-6">
-        <p className="text-sm text-muted-foreground">No upcoming events</p>
+        <p className="text-sm text-muted-foreground">No events in this period</p>
+        {hasMore && onLoadMore ? (
+          <Button className="mt-3" variant="outline" size="sm" onClick={onLoadMore} disabled={isLoadingMore}>
+            {isLoadingMore ? "Loading older events…" : "Load older events"}
+          </Button>
+        ) : null}
       </div>
     );
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto p-3">
       {upcoming.map((event) => (
-        <div
+        <button
+          type="button"
           key={event.id}
-          className="flex items-start gap-3 rounded-md border border-border/50 bg-card px-3 py-2"
+          onClick={() => onSelectEvent?.(event)}
+          disabled={!event.actions.view}
+          className="flex w-full items-start gap-3 rounded-md border border-border/50 bg-card px-3 py-2 text-left transition-colors hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-60"
         >
           <div
             className="mt-1 h-2 w-2 shrink-0 rounded-full"
@@ -54,8 +72,13 @@ export function CalendarAgendaPreview({
               {agendaWhen(event)}
             </p>
           </div>
-        </div>
+        </button>
       ))}
+      {hasMore && onLoadMore ? (
+        <Button className="mt-2 self-center" variant="outline" size="sm" onClick={onLoadMore} disabled={isLoadingMore}>
+          {isLoadingMore ? "Loading older events…" : "Load older events"}
+        </Button>
+      ) : null}
     </div>
   );
 }

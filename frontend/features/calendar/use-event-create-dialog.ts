@@ -119,7 +119,13 @@ export function useEventCreateDialog({
     }));
   }, []);
 
-  const seriesScope = useEventSeriesScope({ event, updateEvent, upsertOccurrenceException, onClose: handleClose });
+  const seriesScope = useEventSeriesScope({
+    event,
+    updateEvent,
+    upsertOccurrenceException,
+    expectedVersion: editingDetail?.localVersion,
+    onClose: handleClose,
+  });
 
   const handleTitleChange = useCallback(
     (e: ChangeEvent<HTMLInputElement>) => {

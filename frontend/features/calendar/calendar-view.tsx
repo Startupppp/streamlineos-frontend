@@ -18,6 +18,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { toast } from "sonner";
 import {
   useCalendarEvents,
+  useCalendarHistory,
   useExternalCalendarEvents,
 } from "@/hooks/api/calendar";
 import type { CalendarListItem } from "@/hooks/api/calendar";
@@ -29,10 +30,10 @@ import {
 } from "./calendar-lazy-fallbacks";
 import { CALENDAR_TRUNCATED_WARNING } from "./calendar-event-constants";
 import { useCalendarAccountFilters } from "./use-calendar-account-filters";
-import { useCalendarSourceVisibility } from "./use-calendar-source-visibility";
 import { useCalendarSourceDeepLink } from "./use-calendar-source-deeplink";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { ErrorState } from "@/components/shared/error-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { useFinalizeIntegrationConnection } from "@/hooks/api/integrations";
 import { useCalendarConnections } from "./use-calendar-connections";
 import {
@@ -41,13 +42,18 @@ import {
 } from "./calendar-toolbar";
 import { CalendarMonthYearPicker } from "./calendar-month-year-picker";
 import {
+  calendarSourceFamily,
+  filterCalendarEventsBySources,
   mergeSelfAttendanceEvents,
+  toBigCalEvent,
   useCalendarComputed,
 } from "./use-calendar-computed";
 import { useAttendanceCalendarEvents } from "./use-attendance-calendar-events";
+import { useHrCalendarEventsMapped } from "./use-hr-calendar-events";
 import { useCalendarViewState } from "./use-calendar-view-state";
 import { useAfterLoad } from "@/hooks/common/use-after-load";
 import { useShellVariant } from "@/components/layout/shell-variant-context";
+import { calendarUrl } from "./calendar-url-state";
 
 const CalendarGridLayer = dynamic(
   () =>
@@ -114,7 +120,6 @@ const CalendarAccountsSheet = dynamic(
 );
 
 const NO_CALENDAR_EVENTS: CalendarListItem[] = [];
-const NO_HR_EVENTS: import("./big-calendar-wrapper").BigCalEvent[] = [];
 
 export function CalendarView() {
   const router = useRouter();
@@ -132,13 +137,18 @@ export function CalendarView() {
     isCreateOpen,
     setIsCreateOpen,
     shouldMountCreate,
-    selectedEventId,
+    selected,
+    historyBefore,
+    historyPages,
+    hrEventsVisible,
+    crmEventsVisible,
+    attendanceEventsVisible,
+    setSourceVisibility,
+    setHistoryPages,
     isSlotChoiceOpen,
     setIsSlotChoiceOpen,
     isCreateTicketOpen,
     createTicketSlot,
-    selectedExternal,
-    selectedHrEvent,
     accountsOpen,
     setAccountsOpen,
     isCalendarOverlayOpen,
@@ -151,13 +161,10 @@ export function CalendarView() {
     handlePrev,
     handleNext,
     handleToday,
-    handleCloseDetail,
-    handleCloseExternal,
-    handleCloseHrEvent,
+    handleCloseSelected,
     handleOpenAccounts,
     handleCloseAccounts,
     handleCloseCreateTicket,
-    handleSelectEventById,
   } = useCalendarViewState();
 
   const rangeStart = useMemo(
@@ -175,7 +182,7 @@ export function CalendarView() {
     isError: eventsIsError,
     error: eventsError,
     refetch: refetchEvents,
-  } = useCalendarEvents(rangeStart, rangeEnd);
+  } = useCalendarEvents(rangeStart, rangeEnd, viewMode !== "history");
   const events = eventsResponse?.events ?? NO_CALENDAR_EVENTS;
   const sourceFailures = eventsResponse?.failures ?? [];
   const eventsTruncated = eventsResponse?.truncated ?? false;
@@ -196,59 +203,182 @@ export function CalendarView() {
   const shellVariant = useShellVariant();
   const isMobile = shellVariant === "mobile";
   useEffect(() => {
-    if (isMobile) setViewMode("list");
-  }, [isMobile, setViewMode]);
+    if (isMobile && viewMode === "calendar") setViewMode("list");
+  }, [isMobile, setViewMode, viewMode]);
 
   const { hiddenIds } = useCalendarAccountFilters();
-  const { visible: hrEventsVisible, toggle: toggleHrEvents } = useCalendarSourceVisibility("hrEvents", true);
-  const { visible: crmEventsVisible, toggle: toggleCrmEvents } = useCalendarSourceVisibility("crmEvents", true);
-  const {
-    visible: attendanceEventsVisible,
-    toggle: toggleAttendanceEvents,
-  } = useCalendarSourceVisibility("attendance", true);
+  const toggleHrEvents = useCallback(
+    () => setSourceVisibility("hr", !hrEventsVisible),
+    [hrEventsVisible, setSourceVisibility],
+  );
+  const toggleCrmEvents = useCallback(
+    () => setSourceVisibility("crm", !crmEventsVisible),
+    [crmEventsVisible, setSourceVisibility],
+  );
+  const toggleAttendanceEvents = useCallback(
+    () => setSourceVisibility("attendance", !attendanceEventsVisible),
+    [attendanceEventsVisible, setSourceVisibility],
+  );
 
   const gridActive = viewMode === "calendar" && afterLoad;
-  const selfAttendanceEvents = useAttendanceCalendarEvents(
+  const attendanceCoverage = useAttendanceCalendarEvents(
     rangeStart,
     rangeEnd,
-    attendanceEventsVisible && gridActive,
+    attendanceEventsVisible && viewMode !== "history",
+  );
+  const hrCoverage = useHrCalendarEventsMapped(
+    rangeStart,
+    rangeEnd,
+    hrEventsVisible && viewMode !== "history",
   );
   const calendarEvents = useMemo(
-    () => mergeSelfAttendanceEvents(events, selfAttendanceEvents),
-    [events, selfAttendanceEvents],
+    () => mergeSelfAttendanceEvents(events, attendanceCoverage.events),
+    [attendanceCoverage.events, events],
   );
 
   // External events take only the date range, so waiting for the connection
   // list before asking is a pure waterfall. Ask optimistically and stop only
   // once we know the org has no active connection.
-  const { data: externalData } = useExternalCalendarEvents(
+  const {
+    data: externalData,
+    isLoading: externalIsLoading,
+    isError: externalIsError,
+    error: externalError,
+    refetch: refetchExternal,
+  } = useExternalCalendarEvents(
     rangeStart,
     rangeEnd,
-    connectionsLoading || activeConnectionCount > 0,
+    viewMode !== "history" && (connectionsLoading || activeConnectionCount > 0),
   );
 
-  const selectedEvent = useMemo<CalendarListItem | null>(
-    () => {
-      if (selectedEventId === null) return null;
-      return calendarEvents.find((e) => e.id === selectedEventId) ?? null;
-    },
-    [selectedEventId, calendarEvents],
+  const historyQuery = useCalendarHistory(historyBefore, viewMode === "history");
+  const historyData = historyQuery.data;
+  const historyError = historyQuery.error;
+  const historyIsError = historyQuery.isError;
+  const historyIsLoading = historyQuery.isLoading;
+  const historyHasNextPage = historyQuery.hasNextPage;
+  const historyIsFetchingNextPage = historyQuery.isFetchingNextPage;
+  const fetchNextHistoryPage = historyQuery.fetchNextPage;
+  const refetchHistory = historyQuery.refetch;
+  const historyEvents = useMemo(() => {
+    const byIdentity = new Map<string, CalendarListItem>();
+    for (const page of historyData?.pages ?? []) {
+      for (const event of page.events) {
+        const identity = `${event.sourceKey}:${event.occurrenceId}`;
+        if (!byIdentity.has(identity)) byIdentity.set(identity, event);
+      }
+    }
+    return [...byIdentity.values()].sort(
+      (left, right) => new Date(right.end).getTime() - new Date(left.end).getTime(),
+    );
+  }, [historyData?.pages]);
+  const visibleHistoryEvents = useMemo(
+    () => filterCalendarEventsBySources(historyEvents, {
+      attendanceVisible: attendanceEventsVisible,
+      crmVisible: crmEventsVisible,
+      hrVisible: hrEventsVisible,
+      hiddenConnectionIds: hiddenIds,
+    }),
+    [attendanceEventsVisible, crmEventsVisible, hiddenIds, historyEvents, hrEventsVisible],
   );
+  const loadedHistoryPages = historyData?.pages.length ?? 0;
+  useEffect(() => {
+    if (
+      viewMode !== "history" ||
+      loadedHistoryPages >= historyPages ||
+      historyIsFetchingNextPage ||
+      !historyHasNextPage
+    ) return;
+    void fetchNextHistoryPage();
+  }, [
+    fetchNextHistoryPage,
+    historyHasNextPage,
+    historyPages,
+    historyIsFetchingNextPage,
+    loadedHistoryPages,
+    viewMode,
+  ]);
 
-  const { visibleEvents, visibleRange, formattedRange } = useCalendarComputed({
-    events,
+  const {
+    allCalEvents,
+    visibleEvents,
+    rangeEvents,
+    visibleRange,
+    formattedRange,
+  } = useCalendarComputed({
+    events: calendarEvents,
     externalData,
     hiddenIds,
     connections,
     currentDate,
     view,
-    hrCalEvents: NO_HR_EVENTS,
+    hrCalEvents: hrCoverage.hrCalEvents,
     hrVisible: hrEventsVisible,
     crmVisible: crmEventsVisible,
     attendanceVisible: attendanceEventsVisible,
   });
+  const surfaceEvents = viewMode === "history" ? visibleHistoryEvents : rangeEvents;
+  const selectedListEvent = useMemo(() => {
+    if (!selected) return null;
+    return [...visibleEvents, ...visibleHistoryEvents].find(
+      (event) => event.id === selected.id && calendarSourceFamily(event) === selected.source,
+    ) ?? null;
+  }, [selected, visibleEvents, visibleHistoryEvents]);
+  const selectedBigEvent = useMemo(
+    () => selectedListEvent ? toBigCalEvent(selectedListEvent, connections) : null,
+    [connections, selectedListEvent],
+  );
+  const selectedExternal = selected?.source === "external" ? selectedBigEvent : null;
+  const selectedHrEvent = selected?.source === "hr" || selected?.source === "attendance"
+    ? selectedBigEvent
+    : null;
+  const selectedEvent = selected !== null && selectedExternal === null && selectedHrEvent === null
+    ? selectedListEvent
+    : null;
+  const selectedResolutionReady =
+    !eventsIsLoading &&
+    !externalIsLoading &&
+    !attendanceCoverage.isLoading &&
+    !hrCoverage.isLoading &&
+    (viewMode !== "history" || loadedHistoryPages >= historyPages);
+  useEffect(() => {
+    if (selected && selectedResolutionReady && !selectedListEvent)
+      handleCloseSelected();
+  }, [handleCloseSelected, selected, selectedListEvent, selectedResolutionReady]);
+  const handleSelectListEvent = useCallback(
+    (event: CalendarListItem) => handleSelectEvent(toBigCalEvent(event, connections)),
+    [connections, handleSelectEvent],
+  );
+  const handleLoadOlderHistory = useCallback(async () => {
+    const result = await fetchNextHistoryPage();
+    const nextCount = result.data?.pages.length ?? loadedHistoryPages;
+    if (nextCount > loadedHistoryPages) setHistoryPages(nextCount);
+  }, [fetchNextHistoryPage, loadedHistoryPages, setHistoryPages]);
+  const historyFailures = useMemo(() => {
+    const failures = new Map<string, { key: string; label: string }>();
+    for (const page of historyData?.pages ?? []) {
+      for (const failure of page.failures) failures.set(failure.key, failure);
+    }
+    return [...failures.values()];
+  }, [historyData?.pages]);
+  const historyIsPartial = (historyData?.pages ?? []).some(
+    (page) => page.truncated || page.coverageState !== "complete",
+  );
+  const displayedSourceFailures = viewMode === "history" ? historyFailures : sourceFailures;
+  const surfaceIsLoading = viewMode === "history" ? historyIsLoading : eventsIsLoading;
 
   const handleRetryEvents = useCallback(() => { void refetchEvents(); }, [refetchEvents]);
+  const handleRetryExternal = useCallback(() => {
+    void refetchExternal();
+  }, [refetchExternal]);
+  const refetchAttendance = attendanceCoverage.refetch;
+  const refetchHr = hrCoverage.refetch;
+  const handleRetryAttendance = useCallback(() => {
+    void refetchAttendance();
+  }, [refetchAttendance]);
+  const handleRetryHr = useCallback(() => {
+    void refetchHr();
+  }, [refetchHr]);
 
   const finalizeMutate = finalize.mutate;
   useEffect(() => {
@@ -264,7 +394,10 @@ export function CalendarView() {
         setAccountsOpen(true);
       },
       onError: (error) => toast.error(getErrorMessage(error)),
-      onSettled: () => router.replace("/calendar"),
+      onSettled: () => router.replace(calendarUrl(
+        new URLSearchParams(searchParams.toString()),
+        { connected_account_id: null, connectedAccountId: null },
+      )),
     });
   }, [searchParams, finalizeMutate, router, setAccountsOpen]);
 
@@ -276,11 +409,20 @@ export function CalendarView() {
   return (
     <PageWrapper
       title={
-        <CalendarMonthYearPicker
-          currentDate={currentDate}
-          title={formattedRange}
-          onDateChange={setCurrentDate}
-        />
+        viewMode === "history" ? (
+          <div className="flex flex-col">
+            <span className="text-base font-semibold">Calendar history</span>
+            <span className="text-dense font-normal text-muted-foreground">
+              Browse past events from newest to oldest
+            </span>
+          </div>
+        ) : (
+          <CalendarMonthYearPicker
+            currentDate={currentDate}
+            title={formattedRange}
+            onDateChange={setCurrentDate}
+          />
+        )
       }
       noInternalScroll
       actionsInline
@@ -300,7 +442,7 @@ export function CalendarView() {
           hrEventsVisible={hrEventsVisible}
           crmEventsVisible={crmEventsVisible}
           attendanceEventsVisible={attendanceEventsVisible}
-          sourceFailures={sourceFailures}
+          sourceFailures={displayedSourceFailures}
           onPrev={handlePrev}
           onNext={handleNext}
           onToday={handleToday}
@@ -328,17 +470,9 @@ export function CalendarView() {
               {viewMode === "calendar" ? (
                 gridActive ? (
                   <CalendarGridLayer
-                    events={calendarEvents}
-                    externalData={externalData}
-                    hiddenIds={hiddenIds}
-                    connections={connections}
+                    events={allCalEvents}
                     currentDate={currentDate}
                     view={view}
-                    rangeStart={rangeStart}
-                    rangeEnd={rangeEnd}
-                    hrEventsVisible={hrEventsVisible}
-                    crmEventsVisible={crmEventsVisible}
-                    attendanceEventsVisible={attendanceEventsVisible}
                     calHeight={calHeight}
                     onView={setView}
                     onNavigate={setCurrentDate}
@@ -348,29 +482,53 @@ export function CalendarView() {
                     onSelectEvent={handleSelectEvent}
                   />
                 ) : (
-                  <CalendarAgendaPreview events={visibleEvents} />
+                  <CalendarAgendaPreview
+                    events={surfaceEvents}
+                    onSelectEvent={handleSelectListEvent}
+                  />
                 )
               ) : isMobile ? (
-                eventsIsLoading ? (
+                surfaceIsLoading ? (
                   <CalendarListFallback label="Loading events" />
                 ) : (
-                  <CalendarAgendaPreview events={visibleEvents} maxEvents={50} />
+                  <CalendarAgendaPreview
+                    events={surfaceEvents}
+                    maxEvents={50}
+                    onSelectEvent={handleSelectListEvent}
+                    descending={viewMode === "history"}
+                    hasMore={viewMode === "history" && historyHasNextPage}
+                    isLoadingMore={historyIsFetchingNextPage}
+                    onLoadMore={viewMode === "history" ? handleLoadOlderHistory : undefined}
+                  />
                 )
+              ) : surfaceIsLoading ? (
+                <CalendarListFallback label="Loading events" />
               ) : afterLoad ? (
                 <CalendarEventsPanel
                   mode={viewMode}
-                  events={visibleEvents}
+                  events={viewMode === "history" ? visibleHistoryEvents : visibleEvents}
                   range={viewMode === "list" ? visibleRange : undefined}
-                  onSelectEvent={handleSelectEventById}
+                  onSelectEvent={handleSelectListEvent}
+                  hasMore={viewMode === "history" && historyHasNextPage}
+                  isLoadingMore={historyIsFetchingNextPage}
+                  onLoadMore={viewMode === "history" ? handleLoadOlderHistory : undefined}
                 />
               ) : (
-                <CalendarAgendaPreview events={visibleEvents} maxEvents={20} />
+                <CalendarAgendaPreview
+                  events={surfaceEvents}
+                  maxEvents={20}
+                  onSelectEvent={handleSelectListEvent}
+                  descending={viewMode === "history"}
+                  hasMore={viewMode === "history" && historyHasNextPage}
+                  isLoadingMore={historyIsFetchingNextPage}
+                  onLoadMore={viewMode === "history" ? handleLoadOlderHistory : undefined}
+                />
               )}
             </div>
           </div>
         </div>
 
-        {eventsIsError && (
+        {viewMode !== "history" && eventsIsError && (
           <ErrorState
             compact
             title="Couldn't load calendar events"
@@ -380,28 +538,122 @@ export function CalendarView() {
           />
         )}
 
-        {eventsTruncated && (
+        {viewMode === "history" && historyIsError && (
+          <ErrorState
+            compact
+            title="Couldn't load calendar history"
+            description={getErrorMessage(historyError)}
+            error={historyError}
+            onRetry={() => { void refetchHistory(); }}
+            className="shrink-0 border border-border rounded-xl"
+          />
+        )}
+
+        {viewMode !== "history" && attendanceEventsVisible && attendanceCoverage.access.denied && (
+          <NoPermissionState
+            compact
+            permission="self:attendance"
+            title="Attendance hidden"
+            description="You do not have permission to view attendance and work-from-home coverage."
+            className="shrink-0 rounded-xl border border-border"
+          />
+        )}
+
+        {viewMode !== "history" && hrEventsVisible && hrCoverage.access.denied && (
+          <NoPermissionState
+            compact
+            permission="hr:helpdesk:view"
+            title="HR events hidden"
+            description="You do not have permission to view supplemental HR calendar events."
+            className="shrink-0 rounded-xl border border-border"
+          />
+        )}
+
+        {viewMode !== "history" && attendanceCoverage.isError && (
+          <ErrorState
+            compact
+            title="Attendance coverage is incomplete"
+            description={getErrorMessage(attendanceCoverage.error)}
+            error={attendanceCoverage.error}
+            onRetry={handleRetryAttendance}
+            className="shrink-0 border border-border rounded-xl"
+          />
+        )}
+
+        {viewMode !== "history" && hrCoverage.isError && (
+          <ErrorState
+            compact
+            title="HR coverage is incomplete"
+            description={getErrorMessage(hrCoverage.error)}
+            error={hrCoverage.error}
+            onRetry={handleRetryHr}
+            className="shrink-0 border border-border rounded-xl"
+          />
+        )}
+
+        {(surfaceIsLoading || (viewMode !== "history" && (externalIsLoading || attendanceCoverage.isLoading || hrCoverage.isLoading))) && (
+          <div
+            className="shrink-0 rounded-md border border-border bg-muted/40 px-3 py-1.5 text-dense text-muted-foreground"
+            role="status"
+            aria-live="polite"
+          >
+            Loading calendar sources…
+          </div>
+        )}
+
+        {(viewMode === "history" ? historyIsPartial : eventsTruncated) && (
           <div className="flex shrink-0 items-center gap-2 rounded-md border border-status-warning-rule bg-status-warning-surface px-3 py-1.5">
             <span className="min-w-0 flex-1 text-dense text-status-warning-ink">
-              {CALENDAR_TRUNCATED_WARNING}
+              {viewMode === "history"
+                ? "Some history sources are partial. Loaded events remain available while you retry or continue to older periods."
+                : CALENDAR_TRUNCATED_WARNING}
             </span>
           </div>
         )}
 
-        {externalData?.errors && externalData.errors.length > 0 && (
+        {viewMode !== "history" && externalIsError && (
+          <ErrorState
+            compact
+            title="Couldn't load connected calendars"
+            description={getErrorMessage(externalError)}
+            error={externalError}
+            onRetry={handleRetryExternal}
+            className="shrink-0 border border-border rounded-xl"
+          />
+        )}
+
+        {viewMode !== "history" && externalData?.errors && externalData.errors.length > 0 && (
           <div className="flex shrink-0 flex-col gap-2 rounded-md border border-status-warning-rule bg-status-warning-surface px-3 py-1.5 sm:flex-row sm:items-center">
             <span className="min-w-0 flex-1 text-dense text-status-warning-ink">
               {externalData.errors
                 .map((e) => `${e.accountEmail ?? "Account"}: ${e.message}`)
                 .join(" · ")}
             </span>
-            <button
-              type="button"
-              onClick={handleOpenAccounts}
-              className="shrink-0 self-start text-dense font-medium text-status-warning-ink underline underline-offset-2 sm:self-auto"
-            >
-              Manage accounts
-            </button>
+            <div className="flex shrink-0 items-center gap-3 self-start sm:self-auto">
+              <button
+                type="button"
+                onClick={handleRetryExternal}
+                className="text-dense font-medium text-status-warning-ink underline underline-offset-2"
+              >
+                Retry
+              </button>
+              <button
+                type="button"
+                onClick={handleOpenAccounts}
+                className="text-dense font-medium text-status-warning-ink underline underline-offset-2"
+              >
+                Manage accounts
+              </button>
+            </div>
+          </div>
+        )}
+
+        {viewMode !== "history" && externalData && !externalData.complete && externalData.errors.length === 0 && (
+          <div
+            className="shrink-0 rounded-md border border-status-warning-rule bg-status-warning-surface px-3 py-1.5 text-dense text-status-warning-ink"
+            role="status"
+          >
+            Connected calendar coverage is partial. Retry before relying on this time window.
           </div>
         )}
 
@@ -456,18 +708,18 @@ export function CalendarView() {
         </Dialog>
 
         {selectedEvent !== null && (
-          <EventDetailSheet event={selectedEvent} onClose={handleCloseDetail} />
+          <EventDetailSheet event={selectedEvent} onClose={handleCloseSelected} />
         )}
         {selectedExternal !== null && (
           <ExternalEventDetailSheet
             event={selectedExternal}
-            onClose={handleCloseExternal}
+            onClose={handleCloseSelected}
           />
         )}
         {selectedHrEvent !== null && (
           <HrEventDetailSheet
             event={selectedHrEvent}
-            onClose={handleCloseHrEvent}
+            onClose={handleCloseSelected}
           />
         )}
         {accountsOpen && (

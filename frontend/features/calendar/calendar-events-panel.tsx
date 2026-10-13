@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, type CSSProperties, type Key } from "react";
-import { format, isWithinInterval } from "date-fns";
+import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { EmptyState } from "@/components/ui/empty-state";
 import { List, useDynamicRowHeight, type RowComponentProps } from "react-window";
@@ -9,12 +9,17 @@ import type { CalendarListItem } from "@/hooks/api/calendar";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { formatEventTimeRange } from "@/lib/date-utils";
 import { EVENT_COLORS } from "./calendar-event-constants";
+import { eventOverlapsRange } from "./use-calendar-computed";
+import { Button } from "@/components/ui/button";
 
 interface CalendarEventsPanelProps {
   mode: "list" | "history";
   events: CalendarListItem[];
   range?: { start: Date; end: Date };
-  onSelectEvent: (eventId: string) => void;
+  onSelectEvent: (event: CalendarListItem) => void;
+  hasMore?: boolean;
+  isLoadingMore?: boolean;
+  onLoadMore?: () => void;
 }
 
 type PanelRow =
@@ -23,7 +28,7 @@ type PanelRow =
 
 interface PanelRowData {
   rows: PanelRow[];
-  onSelectEvent: (eventId: string) => void;
+  onSelectEvent: (event: CalendarListItem) => void;
 }
 
 const ESTIMATED_ROW_HEIGHT = 96;
@@ -86,7 +91,7 @@ function PanelVirtualRow({
   const color = EVENT_COLORS[event.color ?? "blue"] ?? EVENT_COLORS.blue;
 
   function handleSelectEvent() {
-    onSelectEvent(event.id);
+    onSelectEvent(event);
   }
 
   return (
@@ -95,9 +100,10 @@ function PanelVirtualRow({
         type="button"
         aria-label={event.title}
         onClick={handleSelectEvent}
+        disabled={!event.actions.view}
         className={cn(
           /* impeccable-disable side-tab -- Colored left border is intentional calendar event category indicator (standard pattern in Google Calendar, Outlook) */
-          "w-full rounded-lg border border-l-4 bg-card p-3 text-left shadow-xs transition-colors hover:bg-muted/40 overflow-hidden min-w-0",
+          "w-full rounded-lg border border-l-4 bg-card p-3 text-left shadow-xs transition-colors hover:bg-muted/40 overflow-hidden min-w-0 disabled:cursor-not-allowed disabled:opacity-60",
         )}
         style={{ borderLeftColor: color }}
       >
@@ -133,6 +139,9 @@ export function CalendarEventsPanel({
   events,
   range,
   onSelectEvent,
+  hasMore = false,
+  isLoadingMore = false,
+  onLoadMore,
 }: CalendarEventsPanelProps) {
   const filteredEvents = useMemo(() => {
     const now = new Date();
@@ -144,9 +153,7 @@ export function CalendarEventsPanel({
     }
 
     const inRange = range
-      ? events.filter((e) =>
-          isWithinInterval(new Date(e.start), { start: range.start, end: range.end }),
-        )
+      ? events.filter((event) => eventOverlapsRange(event, range))
       : events;
 
     return inRange.sort(
@@ -187,31 +194,49 @@ export function CalendarEventsPanel({
 
   if (filteredEvents.length === 0) {
     return (
-      <EmptyState
-        illustrationPreset="calendar"
-        title={mode === "history" ? "No past events" : "No events in this period"}
-        description={
-          mode === "history"
-            ? "Events that have ended will appear here."
-            : "Try a different date range or add a new event."
-        }
-        className="h-full min-h-0 flex-1 border-0 bg-transparent shadow-none"
-      />
+      <div className="flex h-full min-h-0 flex-1 flex-col">
+        <EmptyState
+          illustrationPreset="calendar"
+          title={mode === "history" ? "No past events" : "No events in this period"}
+          description={
+            mode === "history"
+              ? "Load an older period to continue through your history."
+              : "Try a different date range or add a new event."
+          }
+          className="min-h-0 flex-1 border-0 bg-transparent shadow-none"
+        />
+        {mode === "history" && hasMore && onLoadMore ? (
+          <div className="shrink-0 border-t border-border p-3 text-center">
+            <Button variant="outline" size="sm" onClick={onLoadMore} disabled={isLoadingMore}>
+              {isLoadingMore ? "Loading older events…" : "Load older events"}
+            </Button>
+          </div>
+        ) : null}
+      </div>
     );
   }
 
   return (
-    <div className="min-h-0 flex-1">
-      <List<PanelRowData>
-        rowComponent={PanelVirtualRow}
-        rowCount={rows.length}
-        rowHeight={rowHeight}
-        rowProps={rowProps}
-        rowKey={getPanelRowKey}
-        defaultHeight={DEFAULT_LIST_HEIGHT}
-        overscanCount={OVERSCAN_COUNT}
-        style={{ height: "100%" }}
-      />
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div className="min-h-0 flex-1">
+        <List<PanelRowData>
+          rowComponent={PanelVirtualRow}
+          rowCount={rows.length}
+          rowHeight={rowHeight}
+          rowProps={rowProps}
+          rowKey={getPanelRowKey}
+          defaultHeight={DEFAULT_LIST_HEIGHT}
+          overscanCount={OVERSCAN_COUNT}
+          style={{ height: "100%" }}
+        />
+      </div>
+      {mode === "history" && hasMore && onLoadMore ? (
+        <div className="shrink-0 border-t border-border p-3 text-center">
+          <Button variant="outline" size="sm" onClick={onLoadMore} disabled={isLoadingMore}>
+            {isLoadingMore ? "Loading older events…" : "Load older events"}
+          </Button>
+        </div>
+      ) : null}
     </div>
   );
 }

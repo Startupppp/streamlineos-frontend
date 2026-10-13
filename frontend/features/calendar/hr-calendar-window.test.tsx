@@ -16,7 +16,21 @@ import {
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: () => true,
+  usePermissionGate: () => ({
+    permission: "hr:helpdesk:view",
+    allowed: true,
+    denied: false,
+    pending: false,
+    unavailable: false,
+  }),
   useModuleEnabled: () => true,
+}));
+
+jest.mock("next-auth/react", () => ({
+  useSession: () => ({
+    data: { orgId: "org-1", user: { id: "user-1" } },
+    status: "authenticated",
+  }),
 }));
 
 let requestedParams: Record<string, string> | undefined;
@@ -36,7 +50,13 @@ jest.mock("@tanstack/react-query", () => {
     ...actual,
     useQuery: jest.fn((opts: { queryFn: (ctx: { signal: undefined }) => unknown }) => {
       void opts.queryFn({ signal: undefined });
-      return { data: undefined, isError: false, error: null };
+      return {
+        data: undefined,
+        isLoading: false,
+        isError: false,
+        error: null,
+        refetch: jest.fn(),
+      };
     }),
   };
 });

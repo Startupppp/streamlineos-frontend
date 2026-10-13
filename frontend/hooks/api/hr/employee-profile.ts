@@ -14,6 +14,7 @@ import { INLINE_READ_ERROR, optionalSignalRead } from "@/lib/query-error-policy"
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { invalidateHrWorkforceQueries } from "@/lib/hr-workforce-cache";
 import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
+import { invalidateCalendarProjectionWindows } from "@/lib/calendar-projection-cache";
 import type {
   UpdateProfileInput,
   OnboardEmployeeInput,
@@ -77,6 +78,7 @@ export function useUpdateProfile() {
       ),
     onSuccess: (_, { userId }) => {
       void invalidateHrWorkforceQueries(qc, userId);
+      invalidateCalendarProjectionWindows(qc);
     },
   });
 }
@@ -93,7 +95,10 @@ export function useOnboardEmployee() {
         operation.configFor(data),
         _onboardEmployeeContract,
       ),
-    onSuccess: (result) => void invalidateHrWorkforceQueries(qc, result.userId),
+    onSuccess: (result) => {
+      void invalidateHrWorkforceQueries(qc, result.userId);
+      invalidateCalendarProjectionWindows(qc);
+    },
     onSettled: operation.settle,
   });
 }
@@ -154,6 +159,7 @@ export function useBulkOnboardEmployees() {
     onSuccess: () => {
       operation.settle();
       void invalidateHrWorkforceQueries(qc);
+      invalidateCalendarProjectionWindows(qc);
     },
   });
 }

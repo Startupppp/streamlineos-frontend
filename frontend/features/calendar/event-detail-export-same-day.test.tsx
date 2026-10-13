@@ -1,6 +1,7 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { EventDetailSheet } from "./event-detail-sheet";
 import type { CalendarListItem } from "@/hooks/api/calendar";
+import { calendarProjectionFields } from "./calendar-projection-fixtures";
 import { downloadCalendarExport } from "./calendar-export";
 
 jest.mock("./calendar-export", () => ({
@@ -66,6 +67,7 @@ const sameDayEvent: CalendarListItem = {
   color: "blue",
   category: "meeting",
   source: "event",
+  ...calendarProjectionFields("42", "2026-09-30T09:00:00", "2026-09-30T10:00:00"),
 };
 
 beforeEach(() => jest.clearAllMocks());

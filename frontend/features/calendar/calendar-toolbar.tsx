@@ -199,65 +199,74 @@ export const CalendarToolbar = memo(function CalendarToolbar({
     <div className="flex w-full min-w-0 shrink-0 flex-col gap-2 overflow-x-auto">
       <div className="flex min-w-max select-none flex-row items-center justify-between gap-2 border-b border-border pb-2">
         <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="shrink-0 px-2.5 text-xs font-medium sm:px-3"
-            onClick={onToday}
-          >
-            Today
-          </Button>
+          {viewMode === "history" ? (
+            <span className="px-1 text-xs font-medium text-muted-foreground">
+              Newest to oldest
+            </span>
+          ) : (
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                className="shrink-0 px-2.5 text-xs font-medium sm:px-3"
+                onClick={onToday}
+              >
+                Today
+              </Button>
 
-          <div
-            role="group"
-            aria-label="Date navigation"
-            className="flex shrink-0 items-center"
-          >
-            <AnimatedIconButton
-              icon={ChevronLeftIcon}
-              iconSize={16}
-              variant="outline"
-              size="icon"
-              className="w-8 rounded-r-none border-r-0"
-              aria-label={`Previous ${VIEW_PERIOD_LABEL[view]}`}
-              onClick={onPrev}
-            />
-            <AnimatedIconButton
-              icon={ChevronRightIcon}
-              iconSize={16}
-              variant="outline"
-              size="icon"
-              className="w-8 rounded-l-none"
-              aria-label={`Next ${VIEW_PERIOD_LABEL[view]}`}
-              onClick={onNext}
-            />
-          </div>
-
+              <div
+                role="group"
+                aria-label="Date navigation"
+                className="flex shrink-0 items-center"
+              >
+                <AnimatedIconButton
+                  icon={ChevronLeftIcon}
+                  iconSize={16}
+                  variant="outline"
+                  size="icon"
+                  className="w-8 rounded-r-none border-r-0"
+                  aria-label={`Previous ${VIEW_PERIOD_LABEL[view]}`}
+                  onClick={onPrev}
+                />
+                <AnimatedIconButton
+                  icon={ChevronRightIcon}
+                  iconSize={16}
+                  variant="outline"
+                  size="icon"
+                  className="w-8 rounded-l-none"
+                  aria-label={`Next ${VIEW_PERIOD_LABEL[view]}`}
+                  onClick={onNext}
+                />
+              </div>
+            </>
+          )}
         </div>
 
         <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-          <Select value={view} onValueChange={handleViewChange}>
-            <SelectTrigger
-              aria-label="Calendar view"
-              className={cn(
-                "w-fit min-w-[4.5rem] text-xs font-medium",
-                FILTER_SELECT_TRIGGER,
-              )}
-            >
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
-              <SelectItem value="day" className="text-xs">
-                Day
-              </SelectItem>
-              <SelectItem value="week" className="text-xs">
-                Week
-              </SelectItem>
-              <SelectItem value="month" className="text-xs">
-                Month
-              </SelectItem>
-            </SelectContent>
-          </Select>
+          {viewMode !== "history" ? (
+            <Select value={view} onValueChange={handleViewChange}>
+              <SelectTrigger
+                aria-label="Calendar view"
+                className={cn(
+                  "w-fit min-w-[4.5rem] text-xs font-medium",
+                  FILTER_SELECT_TRIGGER,
+                )}
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
+                <SelectItem value="day" className="text-xs">
+                  Day
+                </SelectItem>
+                <SelectItem value="week" className="text-xs">
+                  Week
+                </SelectItem>
+                <SelectItem value="month" className="text-xs">
+                  Month
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          ) : null}
 
           <div className="hidden items-center gap-1.5 lg:flex sm:gap-2">
             {!hidePrimaryActions ? (

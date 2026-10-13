@@ -9,6 +9,7 @@ import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useAuthorizedIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
 import { IDEMPOTENCY_HEADER } from "@/lib/idempotency-key";
 import type { AttendanceRegularization } from "@/hooks/api/hr/attendance";
+import { invalidateCalendarProjectionWindows } from "@/lib/calendar-projection-cache";
 
 const regularizationQueueC = lazyContract(() =>
   import("@/hooks/api/hr/attendance-regularization-queue-schema").then(
@@ -89,6 +90,7 @@ export function useApplyRegularization() {
         ),
       onSuccess: () => {
         void queryClient.invalidateQueries({ queryKey: REGULARIZATIONS_KEY });
+        invalidateCalendarProjectionWindows(queryClient);
       },
     },
   );

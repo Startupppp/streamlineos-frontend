@@ -1,6 +1,7 @@
 import { QueryClient } from "@tanstack/react-query";
-import { invalidateTicketUpdateViews } from "./ticket-cache-invalidation";
+import { invalidateBuildViews, invalidateTicketUpdateViews } from "./ticket-cache-invalidation";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
+import { platformHierarchyQueryKeys } from "@/lib/query-keys/platform-hierarchy";
 
 const PROJECT_ID = 42;
 const TICKET_ID = 7;
@@ -312,5 +313,41 @@ describe("19 — invalidateTicketUpdateViews narrows report eviction per cache-p
     expect(invalidatedKeys(spy)).not.toContain(
       JSON.stringify(buildWorkQueryKeys.projects.columnCounts(PROJECT_ID)),
     );
+  });
+});
+
+describe("build calendar projection invalidation", () => {
+  const calendarKey = platformHierarchyQueryKeys.calendar.events(
+    "org-1",
+    "user-1",
+    "2026-10-01T00:00:00.000Z",
+    "2026-11-01T00:00:00.000Z",
+  );
+
+  function seededCalendarClient(): QueryClient {
+    const client = makeClient();
+    client.setQueryData(calendarKey, { events: [] });
+    return client;
+  }
+
+  it.each([
+    ["due-date move", { dueDate: "2026-10-19" }],
+    ["status change", { status: "done" }],
+  ])("invalidates every window after a %s", (_name, changes) => {
+    const client = seededCalendarClient();
+    invalidateTicketUpdateViews(client, PROJECT_ID, TICKET_ID, changes);
+    expect(client.getQueryState(calendarKey)?.isInvalidated).toBe(true);
+  });
+
+  it("invalidates every window after create or deletion when the prior date is unknown", () => {
+    const client = seededCalendarClient();
+    invalidateBuildViews(client, PROJECT_ID, [TICKET_ID]);
+    expect(client.getQueryState(calendarKey)?.isInvalidated).toBe(true);
+  });
+
+  it("keeps windows fresh when an update cannot change a projection", () => {
+    const client = seededCalendarClient();
+    invalidateTicketUpdateViews(client, PROJECT_ID, TICKET_ID, { points: 3 });
+    expect(client.getQueryState(calendarKey)?.isInvalidated).toBe(false);
   });
 });

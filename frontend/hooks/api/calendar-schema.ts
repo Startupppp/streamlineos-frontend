@@ -18,7 +18,7 @@ export const calendarEventsResponseContract = z.object({
       allDay: z.boolean().optional(),
       color: z.string().nullable().optional(),
       category: z.string(),
-      source: z.enum(["event", "leave", "interview", "task", "holiday", "attendance"]),
+      source: z.string().min(1),
       timezone: z.string().nullable().optional(),
       location: z.string().nullable().optional(),
       description: z.string().nullable().optional(),
@@ -27,10 +27,57 @@ export const calendarEventsResponseContract = z.object({
       entityType: z.string().nullable().optional(),
       myRsvpStatus: z.string().nullable().optional(),
       projectId: z.number().int().nullable().optional(),
+      connectionId: z.number().int().optional(),
+      accountEmail: z.string().nullable().optional(),
+      meetingUrl: z.string().nullable().optional(),
+      webLink: z.string().nullable().optional(),
+      sourceKey: z.string().min(1),
+      sourceRecordId: z.string().min(1),
+      occurrenceId: z.string().min(1),
+      status: z.string().nullable(),
+      timeKind: z.enum(["timed", "date"]),
+      time: z.discriminatedUnion("kind", [
+        z.object({
+          kind: z.literal("timed"),
+          start: z.string(),
+          end: z.string(),
+          timezone: z.string().nullable(),
+        }),
+        z.object({
+          kind: z.literal("date"),
+          startDate: z.string(),
+          endDate: z.string(),
+        }),
+      ]),
+      availability: z.enum(["busy", "free", "out-of-office", "working-elsewhere"]),
+      sourceVersion: z.string().nullable(),
+      actions: z.object({
+        view: z.boolean(),
+        edit: z.boolean(),
+        delete: z.boolean(),
+        rsvp: z.boolean(),
+        complete: z.boolean(),
+      }),
+      freshness: z.object({
+        state: z.enum(["fresh", "stale", "unknown"]),
+        asOf: z.string().nullable(),
+      }),
     }),
   ),
   failures: z.array(z.object({ key: z.string(), label: z.string() })),
   truncated: z.boolean(),
+  coverageState: z.enum(["complete", "partial", "failed", "continued"]),
+  coverage: z.array(z.object({
+    sourceKey: z.string(),
+    state: z.enum(["complete", "partial", "failed", "continued"]),
+    nextCursor: z.string().nullable(),
+  })),
+});
+
+export const calendarHistoryResponseContract = calendarEventsResponseContract.extend({
+  windowStart: z.string(),
+  windowEnd: z.string(),
+  nextCursor: z.string().min(1),
 });
 
 /** `calendarSourcesResponseSchema` */
@@ -66,6 +113,24 @@ export const calendarExternalEventsContract = z.object({
       location: z.string().nullable(),
       meetingUrl: z.string().nullable(),
       webLink: z.string().nullable(),
+      sourceKey: z.string().min(1),
+      sourceRecordId: z.string().min(1),
+      occurrenceId: z.string().min(1),
+      status: z.string().nullable(),
+      timeKind: z.enum(["timed", "date"]),
+      availability: z.enum(["busy", "free"]),
+      sourceVersion: z.string().nullable(),
+      actions: z.object({
+        view: z.boolean(),
+        edit: z.boolean(),
+        delete: z.boolean(),
+        rsvp: z.boolean(),
+        complete: z.boolean(),
+      }),
+      freshness: z.object({
+        state: z.enum(["fresh", "stale", "unknown"]),
+        asOf: z.string().nullable(),
+      }),
     }),
   ),
   errors: z.array(
@@ -75,6 +140,14 @@ export const calendarExternalEventsContract = z.object({
       message: z.string(),
     }),
   ),
+  complete: z.boolean(),
+  accounts: z.array(z.object({
+    connectionId: z.number().int(),
+    accountEmail: z.string().nullable(),
+    toolkit: z.enum(["googlecalendar", "outlook"]),
+    state: z.enum(["complete", "partial", "failed", "reauth_required"]),
+    hasMore: z.boolean(),
+  })),
 });
 
 /** `calendarEventDetailSchema` */
@@ -224,6 +297,8 @@ export const calendarSyncStatusContract = z.object({
   queuedAt: z.string().nullable(),
   processedAt: z.string().nullable(),
   retryable: z.boolean(),
+  failureKind: z.enum(["auth", "capability", "conference", "conflict", "transient"]).nullable(),
+  repairAction: z.enum(["none", "retry", "reconnect", "change_event", "review_conflict"]),
 });
 
 /** `attendanceRowSchema` from `time-attendance-response.schemas.ts` */

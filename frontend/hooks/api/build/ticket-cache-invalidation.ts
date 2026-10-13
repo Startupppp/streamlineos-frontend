@@ -2,6 +2,7 @@ import type { QueryClient } from "@tanstack/react-query";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
+import { invalidateCalendarProjectionWindows } from "@/lib/calendar-projection-cache";
 
 export function invalidateBuildViews(
   client: QueryClient,
@@ -9,6 +10,7 @@ export function invalidateBuildViews(
   ticketIds: number[] = [],
   aggregates = true,
 ) {
+  invalidateCalendarProjectionWindows(client);
   void client.invalidateQueries({
     queryKey: buildWorkQueryKeys.projects.tickets({ projectId }),
     refetchType: "none",
@@ -90,6 +92,14 @@ export function invalidateTicketUpdateViews(
     assigneeIds?: unknown;
   },
 ) {
+  if (
+    changes.title !== undefined ||
+    changes.status !== undefined ||
+    changes.startDate !== undefined ||
+    changes.dueDate !== undefined
+  ) {
+    invalidateCalendarProjectionWindows(client);
+  }
   void client.invalidateQueries({
     queryKey: accountingAndSupportQueryKeys.ticketActivity.list(ticketId),
     exact: true,

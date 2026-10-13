@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useSession } from "next-auth/react";
 import { addDays, differenceInCalendarDays, format, subDays } from "date-fns";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
@@ -12,7 +13,8 @@ const hrCalendarEventListContract = lazyContract(() =>
 import type { HrCalendarEvent } from "@/hooks/api/hr/hr-calendar";
 import type { BigCalEvent } from "./big-calendar-wrapper";
 import { platformHierarchyQueryKeys } from "@/lib/query-keys/platform-hierarchy";
-import { useCan, useModuleEnabled } from "@/hooks/api/access";
+import { useModuleEnabled, usePermissionGate } from "@/hooks/api/access";
+import type { PermissionGate } from "@/lib/rbac/permission-gate";
 
 /**
  * `/hr/calendar` refuses a window wider than 62 days, and the calendar view asks
@@ -51,14 +53,24 @@ const HR_TYPE_COLORS: Record<string, string> = {
   TRAVEL: "#38bdf8",
   INTERVIEW: "#0284c7",
 };
+const HR_ACCESS_ERROR = new Error("HR calendar access could not be verified.");
 
 export function useHrCalendarEventsMapped(
   rangeStart: Date,
   rangeEnd: Date,
   hrVisible: boolean,
-): { hrCalEvents: BigCalEvent[]; hrEnabled: boolean } {
-  const [forbidden, setForbidden] = useState(false);
-  const canView = useCan("hr:helpdesk:view");
+): {
+  hrCalEvents: BigCalEvent[];
+  hrEnabled: boolean;
+  isLoading: boolean;
+  isError: boolean;
+  error: unknown;
+  access: PermissionGate;
+  refetch: () => Promise<unknown>;
+} {
+  const { data: session } = useSession();
+  const orgId = session?.orgId ?? "";
+  const access = usePermissionGate("hr:helpdesk:view");
   const hrModuleEnabled = useModuleEnabled("hr");
 
   const window = useMemo(
@@ -68,8 +80,8 @@ export function useHrCalendarEventsMapped(
   const from = format(window.from, "yyyy-MM-dd");
   const to = format(window.to, "yyyy-MM-dd");
 
-  const { data, isError, error } = useQuery({
-    queryKey: platformHierarchyQueryKeys.calendar.hrSupplemental(from, to),
+  const query = useQuery({
+    queryKey: platformHierarchyQueryKeys.calendar.hrSupplemental(orgId, from, to),
     queryFn: ({ signal }) =>
       apiClient.get<HrCalendarEvent[]>("/hr/calendar", {
         from,
@@ -77,22 +89,16 @@ export function useHrCalendarEventsMapped(
         types: "BIRTHDAY,ANNIVERSARY,REVIEW_CYCLE,TRAVEL",
       }, signal, hrCalendarEventListContract),
     staleTime: 5 * 60_000,
-    retry: false,
-    enabled: !forbidden && hrVisible && canView && hrModuleEnabled,
+    retry: (failureCount, error) =>
+      (error as { status?: number } | null)?.status !== 403 && failureCount < 2,
+    enabled: Boolean(orgId) && hrVisible && access.allowed && hrModuleEnabled,
+    refetchOnWindowFocus: "always",
+    refetchOnReconnect: "always",
   });
-
-  useEffect(() => {
-    if (isError) {
-      const status = (error as { status?: number } | null)?.status;
-      if (status === 403) {
-        setForbidden(true);
-      }
-    }
-  }, [isError, error]);
 
   const hrCalEvents = useMemo<BigCalEvent[]>(
     () =>
-      (data ?? []).map((ev) => ({
+      (query.data ?? []).map((ev) => ({
         id: `hr-${ev.id}`,
         title: ev.title,
         start: new Date(ev.date),
@@ -104,8 +110,16 @@ export function useHrCalendarEventsMapped(
           hrEventType: ev.type,
         },
       })),
-    [data],
+    [query.data],
   );
 
-  return { hrCalEvents, hrEnabled: !forbidden && canView && hrModuleEnabled };
+  return {
+    hrCalEvents,
+    hrEnabled: access.allowed && hrModuleEnabled,
+    isLoading: hrVisible && (access.pending || query.isLoading),
+    isError: hrVisible && (access.unavailable || query.isError),
+    error: access.unavailable ? HR_ACCESS_ERROR : query.error,
+    access,
+    refetch: query.refetch,
+  };
 }

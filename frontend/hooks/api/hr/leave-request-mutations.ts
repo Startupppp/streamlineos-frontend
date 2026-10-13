@@ -21,6 +21,7 @@ import {
   useLeaveQueryIdentity,
 } from "@/hooks/api/hr/leaves-query-identity";
 import type { RequestLeaveInput } from "@/types/hr";
+import { invalidateCalendarProjectionWindows } from "@/lib/calendar-projection-cache";
 
 export function useRequestLeave() {
   const qc = useQueryClient();
@@ -34,6 +35,7 @@ export function useRequestLeave() {
       qc.invalidateQueries({ queryKey: leaveContextKey(identity) });
       qc.invalidateQueries({ queryKey: leaveMyRequestsKey(identity) });
       invalidateLeaveDashboard();
+      invalidateCalendarProjectionWindows(qc);
     },
   });
 }
@@ -55,6 +57,7 @@ export function useApproveLeaveDedicated() {
       qc.invalidateQueries({ queryKey: leaveMyRequestsKey(identity) });
       qc.invalidateQueries({ queryKey: leaveThisWeekKey(identity) });
       invalidateLeaveDashboard();
+      invalidateCalendarProjectionWindows(qc);
     },
   });
 }
@@ -81,6 +84,7 @@ export function useRejectLeaveDedicated() {
       qc.invalidateQueries({ queryKey: leaveMyRequestsKey(identity) });
       qc.invalidateQueries({ queryKey: leaveThisWeekKey(identity) });
       invalidateLeaveDashboard();
+      invalidateCalendarProjectionWindows(qc);
     },
   });
 }
@@ -99,6 +103,7 @@ export function useCancelLeave() {
       qc.invalidateQueries({ queryKey: leaveTeamKey(identity) });
       qc.invalidateQueries({ queryKey: leaveThisWeekKey(identity) });
       invalidateLeaveDashboard();
+      invalidateCalendarProjectionWindows(qc);
     },
   });
 }
@@ -118,6 +123,7 @@ export function useRevertLeave() {
       qc.invalidateQueries({ queryKey: leaveTeamKey(identity) });
       qc.invalidateQueries({ queryKey: leaveMyRequestsKey(identity) });
       invalidateLeaveDashboard();
+      invalidateCalendarProjectionWindows(qc);
     },
   });
 }

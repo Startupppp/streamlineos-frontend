@@ -53,11 +53,16 @@ export const humanResourcesQueryKeys = {
         ? ([...base, "hr", "workLogs"] as const)
         : ([...base, "hr", "workLogs", params] as const),
     orgChart: () => [...base, "hr", "orgChart"] as const,
-    wfhRequests: () => [...base, "hr", "wfhRequests"] as const,
+    wfhRequestsAll: [...base, "hr", "wfhRequests"] as const,
+    wfhRequests: (orgId: string, userId: string) =>
+      [...base, "hr", "wfhRequests", orgId, userId] as const,
     pendingWfhRequests: () => [...base, "hr", "pendingWfhRequests"] as const,
     holidaysCalendar: (params: { year: number; month: number }) =>
       [...base, "hr", "holidaysCalendar", params] as const,
+    monthlyAttendanceAll: [...base, "hr", "monthlyAttendance"] as const,
     monthlyAttendance: (params: {
+      orgId: string;
+      actorUserId: string;
       userId?: string;
       year: number;
       month: number;

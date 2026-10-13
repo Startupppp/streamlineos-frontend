@@ -2,6 +2,7 @@ import { act, render, screen } from "@testing-library/react";
 import { CalendarEventsPanel } from "./calendar-events-panel";
 import { formatEventTimeRange, readerTimeZone } from "@/lib/date-utils";
 import type { CalendarListItem } from "@/hooks/api/calendar";
+import { calendarProjectionFields } from "./calendar-projection-fixtures";
 
 jest.mock("@/components/ui/truncated-text", () => ({
   TruncatedText: ({ text, className }: { text: string; className?: string }) => (
@@ -80,6 +81,7 @@ function foreignZoneEvent(
     source: "event",
     timezone: AUTHORED_ZONE,
     ...overrides,
+    ...calendarProjectionFields(id, start, start, false, AUTHORED_ZONE, overrides.sourceKey ?? "calendar-events"),
   };
 }
 

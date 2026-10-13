@@ -1,6 +1,7 @@
 import { act, renderHook } from "@testing-library/react";
 import { useUpdateCalendarEvent, useUpsertOccurrenceException } from "@/hooks/api/calendar";
 import type { CalendarListItem } from "@/hooks/api/calendar";
+import { calendarProjectionFields } from "./calendar-projection-fixtures";
 import { useEventSeriesScope } from "./use-event-series-scope";
 import type { CalendarEventPayload } from "./event-create-validators";
 
@@ -57,6 +58,11 @@ const MOVED_OCCURRENCE: CalendarListItem = {
   end: "2026-03-19T14:30:00.000Z",
   category: "meeting",
   source: "event",
+  ...calendarProjectionFields(
+    `event-42-${NOMINAL_START}`,
+    MOVED_START,
+    "2026-03-19T14:30:00.000Z",
+  ),
 };
 
 const PAYLOAD: CalendarEventPayload = {
@@ -83,7 +89,13 @@ function renderScope(event: CalendarListItem | null, onClose = jest.fn()) {
   return renderHook(() => {
     const updateEvent = useUpdateCalendarEvent();
     const upsertOccurrenceException = useUpsertOccurrenceException();
-    return useEventSeriesScope({ event, updateEvent, upsertOccurrenceException, onClose });
+    return useEventSeriesScope({
+      event,
+      updateEvent,
+      upsertOccurrenceException,
+      expectedVersion: 7,
+      onClose,
+    });
   });
 }
 
@@ -110,6 +122,7 @@ describe("useEventSeriesScope — instance edits", () => {
       modifiedTitle: PAYLOAD.title,
       modifiedStart: PAYLOAD.startDate,
       modifiedEnd: PAYLOAD.endDate,
+      expectedVersion: 7,
     });
     expect(callsFor("series")).toHaveLength(0);
   });
@@ -144,6 +157,7 @@ describe("useEventSeriesScope — series edits", () => {
       startDate: PAYLOAD.startDate,
       endDate: PAYLOAD.endDate,
       category: PAYLOAD.category,
+      expectedVersion: 7,
     });
     expect(callsFor("occurrence")).toHaveLength(0);
     expect(toastSuccess).toHaveBeenCalledWith("Event updated");

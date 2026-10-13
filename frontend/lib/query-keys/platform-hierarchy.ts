@@ -3,10 +3,15 @@ import { queryKeyBase as base, type QueryKeyParams } from "./base";
 export const platformHierarchyQueryKeys = {
   calendar: {
     all: [...base, "calendar"] as const,
-    events: (start: string, end: string, sources?: readonly string[]) =>
+    eventsAll: [...base, "calendar", "events"] as const,
+    eventsForIdentity: (orgId: string, userId: string) =>
+      [...base, "calendar", "events", orgId, userId] as const,
+    events: (orgId: string, userId: string, start: string, end: string, sources?: readonly string[]) =>
       sources === undefined
-        ? ([...base, "calendar", "events", start, end] as const)
-        : ([...base, "calendar", "events", start, end, sources] as const),
+        ? ([...base, "calendar", "events", orgId, userId, start, end] as const)
+        : ([...base, "calendar", "events", orgId, userId, start, end, sources] as const),
+    history: (orgId: string, userId: string, before: string) =>
+      [...base, "calendar", "events", "history", orgId, userId, before] as const,
     attendees: (eventId: number) =>
       [...base, "calendar", "attendees", eventId] as const,
     orgMembers: (limit: number) => [...base, "calendar", "orgMembers", limit] as const,
@@ -14,11 +19,15 @@ export const platformHierarchyQueryKeys = {
     memberSearch: (search: string, limit: number) =>
       [...base, "calendar", "memberSearch", search, limit] as const,
     memberSearchAll: [...base, "calendar", "memberSearch"] as const,
-    externalEvents: (start: string, end: string) =>
-      [...base, "calendar", "externalEvents", start, end] as const,
-    hrSupplemental: (from: string, to: string) =>
-      [...base, "calendar", "hr-supplemental", from, to] as const,
-    sources: () => [...base, "calendar", "sources"] as const,
+    externalEventsAll: [...base, "calendar", "externalEvents"] as const,
+    externalEvents: (orgId: string, userId: string, start: string, end: string) =>
+      [...base, "calendar", "externalEvents", orgId, userId, start, end] as const,
+    hrSupplemental: (orgId: string, from: string, to: string) =>
+      [...base, "calendar", "hr-supplemental", orgId, from, to] as const,
+    hrSupplementalAll: [...base, "calendar", "hr-supplemental"] as const,
+    sourcesAll: [...base, "calendar", "sources"] as const,
+    sources: (orgId: string, userId: string) =>
+      [...base, "calendar", "sources", orgId, userId] as const,
     eventDetail: (eventId: number) => [...base, "calendar", "event", eventId] as const,
   },
 

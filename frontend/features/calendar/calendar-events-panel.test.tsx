@@ -1,6 +1,7 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { CalendarEventsPanel } from "./calendar-events-panel";
 import type { CalendarListItem } from "@/hooks/api/calendar";
+import { calendarProjectionFields } from "./calendar-projection-fixtures";
 
 jest.mock("react-window", () => ({
   List: jest.fn(
@@ -27,10 +28,11 @@ function makeEvent(id: string, start: string): CalendarListItem {
     color: "blue",
     category: "personal",
     source: "event",
+    ...calendarProjectionFields(id, start),
   };
 }
 
-const noop = (_id: string) => undefined;
+const noop = (_event: CalendarListItem) => undefined;
 
 describe("CalendarEventsPanel", () => {
   it("delegates rendering to react-window List rather than mapping all items into the DOM", () => {
@@ -58,6 +60,25 @@ describe("CalendarEventsPanel", () => {
     expect(list.getAttribute("data-row-count")).toBe("4");
   });
 
+  it("keeps an overnight event whose interval overlaps the visible day", () => {
+    const overnight = {
+      ...makeEvent("overnight", "2026-09-01T23:00:00.000Z"),
+      end: "2026-09-02T01:00:00.000Z",
+    };
+    render(
+      <CalendarEventsPanel
+        mode="list"
+        events={[overnight]}
+        range={{
+          start: new Date("2026-09-02T00:00:00.000Z"),
+          end: new Date("2026-09-02T23:59:59.999Z"),
+        }}
+        onSelectEvent={noop}
+      />,
+    );
+    expect(screen.getByTestId("virtual-list").getAttribute("data-row-count")).toBe("2");
+  });
+
   it("renders the empty state and NOT the virtual list when there are no events", () => {
     render(<CalendarEventsPanel mode="list" events={[]} onSelectEvent={noop} />);
     expect(screen.queryByTestId("virtual-list")).toBeNull();
@@ -68,5 +89,21 @@ describe("CalendarEventsPanel", () => {
     render(<CalendarEventsPanel mode="list" events={[]} onSelectEvent={noop} />);
     const list = screen.queryByTestId("virtual-list");
     expect(list).toBeNull();
+  });
+
+  it("lets an empty history page continue to an older cursor", () => {
+    const onLoadMore = jest.fn();
+    render(
+      <CalendarEventsPanel
+        mode="history"
+        events={[]}
+        onSelectEvent={jest.fn()}
+        hasMore
+        onLoadMore={onLoadMore}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Load older events" }));
+    expect(onLoadMore).toHaveBeenCalledTimes(1);
   });
 });

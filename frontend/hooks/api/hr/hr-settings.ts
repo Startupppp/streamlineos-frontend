@@ -1,9 +1,11 @@
 "use client";
 
 import { useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
+import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
+import { invalidateCalendarProjectionWindows } from "@/lib/calendar-projection-cache";
 
 const noContentC = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
@@ -146,13 +148,18 @@ export function useCreateGoal() {
   });
 }
 
-export function useHrWfhRequests() {
+export function useHrWfhRequests(options?: { enabled?: boolean }) {
+  const { data: session } = useSession();
+  const orgId = session?.orgId ?? "";
+  const userId = session?.user?.id ?? "";
   const canSelf = useCan("self:attendance");
   return useQuery({
-    queryKey: humanResourcesQueryKeys.hr.wfhRequests(),
+    queryKey: humanResourcesQueryKeys.hr.wfhRequests(orgId, userId),
     queryFn: ({ signal }) => apiClient.get<WfhRequest[]>("/me/time-off/wfh", undefined, signal, lazyContract(() => import("@/hooks/api/hr/hr-settings-schema").then(m => m.wfhRequestListContract))),
     staleTime: 2 * 60_000,
-    enabled: canSelf,
+    enabled: Boolean(orgId && userId) && canSelf && (options?.enabled ?? true),
+    refetchOnWindowFocus: "always",
+    refetchOnReconnect: "always",
     ...INLINE_READ_ERROR,
   });
 }
@@ -176,8 +183,9 @@ export function useCreateWfhRequest() {
     mutationFn: (data: CreateWfhRequestInput) =>
       apiClient.post<{ success: boolean }>("/me/time-off/wfh", data, undefined, lazyContract(() => import("@/hooks/api/hr/hr-settings-schema").then(m => m.successResponseContract))),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.wfhRequests() });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.wfhRequestsAll });
       qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.pendingWfhRequests() });
+      invalidateCalendarProjectionWindows(qc);
     },
   });
 }
@@ -189,8 +197,9 @@ export function useProcessWfhRequest() {
     mutationFn: ({ requestId, ...data }: ProcessWfhRequestInput) =>
       apiClient.patch<{ success: boolean }>(`/hr/wfh/${requestId}`, data, undefined, lazyContract(() => import("@/hooks/api/hr/hr-settings-schema").then(m => m.successResponseContract))),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.wfhRequests() });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.wfhRequestsAll });
       qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.pendingWfhRequests() });
+      invalidateCalendarProjectionWindows(qc);
     },
   });
 }

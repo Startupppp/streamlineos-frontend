@@ -10,6 +10,7 @@ const noContentC = lazyContract(() =>
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { invalidateCalendarProjectionWindows } from "@/lib/calendar-projection-cache";
 import type {
   Interview,
   CreateInterviewInput,
@@ -173,6 +174,7 @@ export function useCreateInterview() {
       qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.interviews() });
       qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.recruitmentStats() });
       qc.invalidateQueries({ queryKey: INTERVIEW_STATS_KEY });
+      invalidateCalendarProjectionWindows(qc);
     },
   });
 }
@@ -186,6 +188,7 @@ export function useUpdateInterview() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.interviews() });
       qc.invalidateQueries({ queryKey: INTERVIEW_STATS_KEY });
+      invalidateCalendarProjectionWindows(qc);
     },
   });
 }
@@ -262,6 +265,7 @@ export function useScheduleInterview() {
       qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.interviews() });
       qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.recruitmentStats() });
       qc.invalidateQueries({ queryKey: INTERVIEW_STATS_KEY });
+      invalidateCalendarProjectionWindows(qc);
     },
   });
 }
@@ -306,7 +310,10 @@ export function useBulkRescheduleInterviews() {
       );
       return { rescheduled: ids.length };
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.interviews() }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.interviews() });
+      invalidateCalendarProjectionWindows(qc);
+    },
   });
 }
 

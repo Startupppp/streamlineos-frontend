@@ -4,6 +4,7 @@ import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan } from "@/hooks/api/access";
+import { invalidateCalendarProjectionWindows } from "@/lib/calendar-projection-cache";
 
 const noContentC = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
@@ -41,7 +42,10 @@ export function useCreateHoliday() {
     mutationKey: ["hr", "holidays", "create"],
     mutationFn: (data: CreateHolidayInput) =>
       apiClient.post<Holiday>("/hr/attendance/holidays", data, undefined, lazyContract(() => import("@/hooks/api/hr/holidays-schema").then(m => m.holidayRowContract))),
-    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.holidays() }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.holidays() });
+      invalidateCalendarProjectionWindows(qc);
+    },
   });
 }
 
@@ -51,7 +55,10 @@ export function useUpdateHoliday() {
     mutationKey: ["hr", "holidays", "update"],
     mutationFn: ({ holidayId, ...data }: Partial<CreateHolidayInput> & { holidayId: string }) =>
       apiClient.patch<Holiday>(`/hr/attendance/holidays/${holidayId}`, data, undefined, lazyContract(() => import("@/hooks/api/hr/holidays-schema").then(m => m.holidayRowContract))),
-    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.holidays() }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.holidays() });
+      invalidateCalendarProjectionWindows(qc);
+    },
   });
 }
 
@@ -61,6 +68,9 @@ export function useDeleteHoliday() {
     mutationKey: ["hr", "holidays", "delete"],
     mutationFn: (holidayId: string) =>
       apiClient.delete<void>(`/hr/attendance/holidays/${holidayId}`, undefined, undefined, noContentC),
-    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.holidays() }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.holidays() });
+      invalidateCalendarProjectionWindows(qc);
+    },
   });
 }

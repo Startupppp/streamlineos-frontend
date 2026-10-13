@@ -5,6 +5,7 @@ import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useAuthorizedIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+import { invalidateCalendarProjectionWindows } from "@/lib/calendar-projection-cache";
 
 const travelListContract = lazyContract(() =>
   import("@/hooks/api/hr/travel-schema").then((m) => m.travelRequestListContract),
@@ -77,7 +78,10 @@ export function useCreateTravelRequest() {
     mutationKey: ["hr", "travel", "create"],
     mutationFn: (data: CreateTravelInput) =>
       apiClient.post("/hr/travel", data, undefined, travelRowContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.travelAll }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.travelAll });
+      invalidateCalendarProjectionWindows(qc);
+    },
   });
 }
 
@@ -86,7 +90,10 @@ export function useManagerApproveTravelRequest() {
   return useAuthorizedMutation("hr:travel:manage", {
     mutationKey: ["hr", "travel", "manager-approve"],
     mutationFn: (travelId: number) => apiClient.patch(`/hr/travel/${travelId}/manager-approve`, undefined, undefined, travelRowContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.travelAll }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.travelAll });
+      invalidateCalendarProjectionWindows(qc);
+    },
   });
 }
 
@@ -95,7 +102,10 @@ export function useFinanceApproveTravelRequest() {
   return useAuthorizedMutation("hr:travel:manage", {
     mutationKey: ["hr", "travel", "finance-approve"],
     mutationFn: (travelId: number) => apiClient.patch(`/hr/travel/${travelId}/finance-approve`, undefined, undefined, travelRowContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.travelAll }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.travelAll });
+      invalidateCalendarProjectionWindows(qc);
+    },
   });
 }
 
@@ -106,6 +116,9 @@ export function useRejectTravelRequest() {
     mutationKey: ["hr", "travel", "reject"],
     mutationFn: ({ travelId, reason }, idempotencyKey) =>
       apiClient.patch(`/hr/travel/${travelId}/reject`, { reason }, { headers: { "Idempotency-Key": idempotencyKey } }, travelRowContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.travelAll }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.travelAll });
+      invalidateCalendarProjectionWindows(qc);
+    },
   });
 }

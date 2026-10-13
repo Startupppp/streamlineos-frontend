@@ -58,6 +58,17 @@ export interface BigCalEvent {
     connectionId?: number | null;
     externalId?: string | null;
     hrEventType?: string | null;
+    sourceFamily?: string;
+    sourceKey?: string;
+    sourceRecordId?: string;
+    status?: string | null;
+    actions?: {
+      view: boolean;
+      edit: boolean;
+      delete: boolean;
+      rsvp: boolean;
+      complete: boolean;
+    };
   };
 }
 

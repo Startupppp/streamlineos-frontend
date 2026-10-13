@@ -8,6 +8,7 @@ import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
+import { invalidateCalendarProjectionWindows } from "@/lib/calendar-projection-cache";
 
 const rostersListC = lazyContract(() =>
   import("@/hooks/api/hr/rosters-schema").then((m) => m.rostersListContract),
@@ -62,7 +63,10 @@ export function useCreateRoster() {
     mutationKey: ["hr", "rosters", "create"],
     mutationFn: (data: { name: string; weekStart: string; weekEnd: string }) =>
       apiClient.post<Roster>("/hr/rosters", data, undefined, createRosterC),
-    onSuccess: () => qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.all, "rosters"] }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.all, "rosters"] });
+      invalidateCalendarProjectionWindows(qc);
+    },
   });
 }
 
@@ -104,6 +108,7 @@ export function useUpsertRosterEntry() {
       void qc.invalidateQueries({
         queryKey: [...humanResourcesQueryKeys.hr.all, "rosters"],
       });
+      invalidateCalendarProjectionWindows(qc);
     },
   });
 }
@@ -116,6 +121,9 @@ export function usePublishRoster() {
     mutationKey: ["hr", "rosters", "publish"],
     mutationFn: (rosterId, idempotencyKey) =>
       apiClient.patch<Roster>(`/hr/rosters/${rosterId}/publish`, {}, { headers: { [IDEMPOTENCY_HEADER]: idempotencyKey } }, publishRosterC),
-    onSuccess: () => qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.all, "rosters"] }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.all, "rosters"] });
+      invalidateCalendarProjectionWindows(qc);
+    },
   });
 }

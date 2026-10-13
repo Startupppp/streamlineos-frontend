@@ -1,10 +1,11 @@
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { invalidateCalendarProjectionWindows } from "@/lib/calendar-projection-cache";
 
 import { lazyContract } from "@/lib/api-envelope";
 const tasksListLazy = lazyContract(() => import("@/hooks/api/crm/crm-activities-schema").then((m) => m.tasksListContract));
@@ -87,6 +88,7 @@ export function useLogCrmActivity() {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.crmActivities.all });
       void qc.invalidateQueries({ queryKey: queryKeys.tasks.all });
+      invalidateCalendarProjectionWindows(qc);
     },
   });
 }
@@ -99,6 +101,7 @@ export function useCompleteCrmActivity() {
       apiClient.post<CrmActivity>(`/tasks/${activityId}/complete`, {}, undefined, taskRowLazy),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.crmActivities.all });
+      invalidateCalendarProjectionWindows(qc);
     },
   });
 }

@@ -86,4 +86,57 @@ describe("request", () => {
     expect(response.status).toBe(429);
     expect(response.headers.get("retry-after")).toBe("45");
   });
+
+  it("keeps dynamic public invitation routes independent from session authentication", async () => {
+    let sessionCalls = 0;
+    const authorizations: Array<string | null> = [];
+
+    global.fetch = jest.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      if (String(input).includes("/api/auth/session")) {
+        sessionCalls += 1;
+      }
+
+      authorizations.push(new Headers(init?.headers).get("Authorization"));
+      return {
+        ok: true,
+        status: 200,
+        headers: new Headers({ "content-type": "application/json" }),
+        json: async () => ({ invitation: { id: "invitation-1" } }),
+      } as Response;
+    }) as typeof fetch;
+
+    const response = await request(
+      "/public/calendar/invitations/rsvp?token=signed-token",
+      {},
+    );
+
+    expect(response.ok).toBe(true);
+    expect(sessionCalls).toBe(0);
+    expect(authorizations).toEqual([null]);
+  });
+
+  it("keeps signed scheduling poll routes independent from session authentication", async () => {
+    let sessionCalls = 0;
+    const authorizations: Array<string | null> = [];
+
+    global.fetch = jest.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      if (String(input).includes("/api/auth/session")) sessionCalls += 1;
+      authorizations.push(new Headers(init?.headers).get("Authorization"));
+      return {
+        ok: true,
+        status: 200,
+        headers: new Headers({ "content-type": "application/json" }),
+        json: async () => ({ poll: { id: "poll-1" } }),
+      } as Response;
+    }) as typeof fetch;
+
+    const response = await request(
+      "/public/calendar/polls/signed.poll.token/votes",
+      { method: "PUT" },
+    );
+
+    expect(response.ok).toBe(true);
+    expect(sessionCalls).toBe(0);
+    expect(authorizations).toEqual([null]);
+  });
 });

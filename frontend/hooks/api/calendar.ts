@@ -1,11 +1,16 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
+import { useEffect } from "react";
+import { useInfiniteQuery, useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
+import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 
 const calendarEventsResponseContract = lazyContract(() =>
   import("@/hooks/api/calendar-schema").then((m) => m.calendarEventsResponseContract),
+);
+const calendarHistoryResponseContract = lazyContract(() =>
+  import("@/hooks/api/calendar-schema").then((m) => m.calendarHistoryResponseContract),
 );
 const calendarSourcesContract = lazyContract(() =>
   import("@/hooks/api/calendar-schema").then((m) => m.calendarSourcesContract),
@@ -20,11 +25,16 @@ const calendarOrgMembersContract = lazyContract(() =>
   import("@/hooks/api/calendar-schema").then((m) => m.calendarOrgMembersContract),
 );
 import { platformHierarchyQueryKeys } from "@/lib/query-keys/platform-hierarchy";
+import {
+  invalidateCalendarProjectionWindows,
+  subscribeToCalendarProjectionChanges,
+} from "@/lib/calendar-projection-cache";
 import { useCan } from "@/hooks/api/access";
 import type {
   CalendarOrgMember,
   CalendarSource,
   CalendarEventsResponse,
+  CalendarHistoryResponse,
   ExternalCalendarEventsResponse,
 } from "./calendar-types";
 
@@ -37,6 +47,7 @@ export type {
   CalendarEventDetail,
   ParsedCalendarEventId,
   CalendarEventsResponse,
+  CalendarHistoryResponse,
   ExternalCalendarEvent,
   ExternalCalendarEventsResponse,
   CalendarSource,
@@ -102,10 +113,22 @@ export function useCalendarMemberLookup({
 
 // ---- Range-list hooks ----
 
-export function useCalendarEvents(start: Date, end: Date) {
+export function useCalendarEvents(start: Date, end: Date, enabled = true) {
+  const qc = useQueryClient();
+  const { data: session } = useSession();
+  const orgId = session?.orgId ?? "";
+  const userId = session?.user?.id ?? "";
   const canView = useCan("calendar:read");
+  useEffect(
+    () => subscribeToCalendarProjectionChanges(
+      () => invalidateCalendarProjectionWindows(qc, false),
+    ),
+    [qc],
+  );
   return useQuery({
     queryKey: platformHierarchyQueryKeys.calendar.events(
+      orgId,
+      userId,
       start.toISOString(),
       end.toISOString(),
     ),
@@ -115,18 +138,53 @@ export function useCalendarEvents(start: Date, end: Date) {
         end: end.toISOString(),
       }, signal, calendarEventsResponseContract),
     staleTime: 2 * 60 * 1000,
-    enabled: canView,
+    enabled: Boolean(orgId && userId) && canView && enabled,
+    refetchOnWindowFocus: "always",
+    refetchOnReconnect: "always",
+  });
+}
+
+export function useCalendarHistory(before: string, enabled = true) {
+  const qc = useQueryClient();
+  const { data: session } = useSession();
+  const orgId = session?.orgId ?? "";
+  const userId = session?.user?.id ?? "";
+  const canView = useCan("calendar:read");
+  useEffect(
+    () => subscribeToCalendarProjectionChanges(
+      () => invalidateCalendarProjectionWindows(qc, false),
+    ),
+    [qc],
+  );
+  return useInfiniteQuery({
+    queryKey: platformHierarchyQueryKeys.calendar.history(orgId, userId, before),
+    queryFn: ({ pageParam, signal }) =>
+      apiClient.get<CalendarHistoryResponse>(
+        "/calendar/history",
+        pageParam ? { cursor: pageParam } : { before },
+        signal,
+        calendarHistoryResponseContract,
+      ),
+    initialPageParam: null as string | null,
+    getNextPageParam: (lastPage) => lastPage.nextCursor,
+    staleTime: 2 * 60 * 1000,
+    enabled: Boolean(orgId && userId && before) && canView && enabled,
+    refetchOnWindowFocus: "always",
+    refetchOnReconnect: "always",
   });
 }
 
 export function useCalendarSources() {
+  const { data: session } = useSession();
+  const orgId = session?.orgId ?? "";
+  const userId = session?.user?.id ?? "";
   const canView = useCan("calendar:read");
   return useQuery({
-    queryKey: platformHierarchyQueryKeys.calendar.sources(),
+    queryKey: platformHierarchyQueryKeys.calendar.sources(orgId, userId),
     queryFn: ({ signal }) =>
       apiClient.get<CalendarSource[]>("/calendar/sources", undefined, signal, calendarSourcesContract),
     staleTime: 30_000,
-    enabled: canView,
+    enabled: Boolean(orgId && userId) && canView,
   });
 }
 
@@ -141,16 +199,60 @@ export function useSetCalendarSourcePreference() {
         undefined,
         calendarSourcePreferenceContract,
       ),
+    onMutate: async ({ sourceKey, enabled }) => {
+      await Promise.all([
+        qc.cancelQueries({ queryKey: platformHierarchyQueryKeys.calendar.sourcesAll }),
+        qc.cancelQueries({ queryKey: platformHierarchyQueryKeys.calendar.eventsAll }),
+      ]);
+      const sources = qc.getQueriesData<CalendarSource[]>({
+        queryKey: platformHierarchyQueryKeys.calendar.sourcesAll,
+      });
+      const eventWindows = qc.getQueriesData<CalendarEventsResponse>({
+        queryKey: platformHierarchyQueryKeys.calendar.eventsAll,
+      });
+      qc.setQueriesData<CalendarSource[]>(
+        { queryKey: platformHierarchyQueryKeys.calendar.sourcesAll },
+        (current) => current?.map((source) =>
+          source.key === sourceKey ? { ...source, enabled } : source,
+        ),
+      );
+      if (!enabled) {
+        qc.setQueriesData<CalendarEventsResponse>(
+          { queryKey: platformHierarchyQueryKeys.calendar.eventsAll },
+          (current) => current === undefined
+            ? undefined
+            : {
+                ...current,
+                events: current.events.filter((event) => event.sourceKey !== sourceKey),
+              },
+        );
+      }
+      return { sources, eventWindows };
+    },
+    onError: (_error, _variables, context) => {
+      for (const [queryKey, data] of context?.sources ?? []) {
+        qc.setQueryData(queryKey, data);
+      }
+      for (const [queryKey, data] of context?.eventWindows ?? []) {
+        qc.setQueryData(queryKey, data);
+      }
+    },
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.calendar.sources() });
+      void qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.calendar.sourcesAll });
+      invalidateCalendarProjectionWindows(qc);
     },
   });
 }
 
 export function useExternalCalendarEvents(start: Date, end: Date, enabled: boolean) {
+  const { data: session } = useSession();
+  const orgId = session?.orgId ?? "";
+  const userId = session?.user?.id ?? "";
   const canView = useCan("calendar:read");
   return useQuery({
     queryKey: platformHierarchyQueryKeys.calendar.externalEvents(
+      orgId,
+      userId,
       start.toISOString(),
       end.toISOString(),
     ),
@@ -159,7 +261,9 @@ export function useExternalCalendarEvents(start: Date, end: Date, enabled: boole
         start: start.toISOString(),
         end: end.toISOString(),
       }, signal, calendarExternalEventsContract),
-    enabled: canView && enabled,
+    enabled: Boolean(orgId && userId) && canView && enabled,
     staleTime: 60_000,
+    refetchOnWindowFocus: "always",
+    refetchOnReconnect: "always",
   });
 }

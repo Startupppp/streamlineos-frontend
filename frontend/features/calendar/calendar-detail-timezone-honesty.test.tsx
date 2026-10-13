@@ -4,6 +4,7 @@ import { HrEventDetailSheet } from "./hr-event-detail-sheet";
 import { CalendarAgendaPreview } from "./calendar-lazy-fallbacks";
 import type { BigCalEvent } from "./big-calendar-wrapper";
 import type { CalendarListItem } from "@/hooks/api/calendar";
+import { calendarProjectionFields } from "./calendar-projection-fixtures";
 
 const READER_ZONE = "America/New_York";
 const CLOCK = /\d{1,2}:\d{2}/;
@@ -65,6 +66,7 @@ function agendaTimed(): CalendarListItem {
     category: "meeting",
     source: "event",
     timezone: "Asia/Kolkata",
+    ...calendarProjectionFields("event-9", "2027-09-14T14:00:00.000Z", "2027-09-14T14:30:00.000Z", false, "Asia/Kolkata"),
   };
 }
 
@@ -78,6 +80,7 @@ function agendaAuthoredAllDay(): CalendarListItem {
     category: "meeting",
     source: "event",
     timezone: "Asia/Kolkata",
+    ...calendarProjectionFields("event-10", "2027-01-25T18:30:00.000Z", "2027-01-26T18:30:00.000Z", true, "Asia/Kolkata"),
   };
 }
 
@@ -91,6 +94,7 @@ function agendaZonelessAllDay(): CalendarListItem {
     category: "holiday",
     source: "holiday",
     timezone: null,
+    ...calendarProjectionFields("holiday-3", "2027-01-26T12:00:00.000Z", "2027-01-26T12:00:00.000Z", true),
   };
 }
 
