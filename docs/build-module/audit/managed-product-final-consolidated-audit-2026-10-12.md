@@ -625,3 +625,52 @@ rather than taken: because a push to `main` is a deploy and `2016`'s code is
 already on `main`, the next push ships code whose tables do not exist in
 production — the same pending-migration-plus-live-call-site landmine that caused
 the 2026-10-13 outage.
+
+### Validation measured in this pass
+
+| Check | Command | Result |
+|---|---|---|
+| Focused frontend | `npx jest --runInBand features/build/managed-products hooks/api/build` | **178 suites, 1738 tests, all passed** |
+| Focused backend | `jest --runInBand src/modules/build/managed-products src/modules/feedbucket src/common/slo` | **58 of 59 suites, 793 tests, 0 tests failed**; `slo-catalogue.spec.ts` throws at module scope and contributes 0 tests |
+| Frontend typecheck | `tsc --noEmit --incremental false` | **exit 0, no output** |
+| Backend typecheck | `tsc --noEmit --incremental false -p tsconfig.build.json` | **exit 0, no output** |
+| Alert system gate | `pnpm check:alert-system` | **21 of 21 scripts pass self-test** |
+| Migration ledger | `pnpm check:migration-ledger` | **1158/1159, 1 pending (calendar), gate passed** |
+| MP-10 lifecycle | `jest --config ./jest-db.json --testPathPattern=managed-product-lifecycle` | **14 of 14 passed** against `scratch_mp_dbspec` |
+| MP-10 publication | same, `managed-product-publication-lifecycle` | **12 of 12 passed** |
+| MP-11 authorization | `jest-e2e-seeded.json`, `managed-products-access` | **exit 0**; the 118 count was not captured this run |
+| Browser, mobile overlay | `playwright test --config playwright-intercepted.config.ts` | **7 of 7 passed** at 375px across 7 routes |
+| Browser, state matrix | same spec file | **stopped, 12 untriaged failures** |
+
+The frontend typecheck was proven not blind rather than assumed: the program
+held 10,057 files, 125 of them under `managed-products`, and zero
+`.next-intercepted` files.
+
+`slo-catalogue.spec.ts`'s failure is environmental and pre-existing, confirmed
+three independent ways: `resolveRunbookRoot` runs at module scope and throws
+unless `<root>/architecture-refactor/prd/completion-plan.md` exists, and that
+path is absent from this checkout. **The consequence matters** — it is the gate
+that validates every objective's `runbookFile` and `runbookAnchor`, so the
+MP-12 anchors below were checked by hand instead.
+
+### Per-item status — 2026-10-13, fourth pass
+
+| Item | Status |
+|---|---|
+| MP-01 | Closed. Re-verified: the preview hook reads the product share-token endpoint. |
+| MP-02 | Closed, and extended — one surface was still presenting a failed read as an authoritative zero. |
+| MP-03 | Closed. Re-verified: keyset `cursor` on goals, server-side `search` on releases. |
+| MP-04 | Closed. |
+| MP-05 | Closed. The focused frontend scope runs warning-free across 178 suites. |
+| MP-06 | **Reopened and closed in this pass.** It had been closed on the Roadmap entry point only; Settings had no rotate action at all. |
+| MP-07 | Closed. |
+| MP-08 | Closed. |
+| MP-09 | **Open, and the only item still open on work a test runner cannot do.** The mobile overlay rule is now proven in a real Chromium at 375px on 7 routes. Everything else in the matrix is NOT-RUN: the state matrix was stopped with 12 untriaged failures, keyboard evidence exists only against the design-system gallery, no persisted mutation was driven through a browser, and the local backend never bound to port 1500. |
+| MP-10 | Closed. Re-run this pass: 14/14 and 12/12. |
+| MP-11 | Closed. Re-run this pass: exit 0. |
+| MP-12 | **Closed for monitoring definition; one limitation remains.** Ten objectives covering the eleven required signals, with bounded-cardinality dimensions, thresholds, windows, owners, runbook anchors and redaction rules. Two of them queried columns absent from production and could never have fired; both now read columns that exist, verified against `prodshape`. A schema error is now a hard breach rather than exit-2 inconclusive, so a predicate that loses its column is itself the alert. **The limitation: no alert in this repository has a wired paging destination** — every script, new and pre-existing, emits `"CONFIGURE_ME — wire exit-code 1 to your oncall system"`. Alert firing and recovery were proven against a local database, not against the deployed revision. |
+| MP-13 | **Closed for implemented-workflow evidence; market evidence remains open by nature.** All six themes have a per-theme record naming the spec assertion or query that proves the workflow. Every claim of superior usability, customer value, adoption, willingness to pay or competitive advantage is now stated as an unvalidated hypothesis, because no customer study has been run and no dated public competitor fact was sourced. The evidence-collection plan names the study design, participants, tasks, success criteria and competitor scope that would close them. |
+
+**Manage Product is not complete.** Two items hold it open, and only one of them
+is engineering work: MP-09's browser matrix, and MP-13's external customer and
+competitor evidence, which no amount of code can produce.

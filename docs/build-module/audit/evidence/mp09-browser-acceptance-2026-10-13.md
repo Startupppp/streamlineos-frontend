@@ -17,6 +17,12 @@ The intercepted harness (`playwright-intercepted.config.ts`, port 3201) cannot s
 - `GET /auth/session-data/*` → returns 404 (propagates as null; token claims are used)
 - `GET /me/access` → returns the full build scopes and modules
 
+**`/me/access` is stubbed, so no cell here proves authorization.** This stub was
+the only way to make the intercepted harness serve a module-gated page at all,
+but it means every `denied` cell proves how the **UI renders** a denied state and
+nothing about whether the server would actually deny. Real authorization is
+proven by the MP-11 suite — 118 HTTP tests against a listening server — not here.
+
 The mock server lives in `frontend/e2e/fixtures/mock-backend-9999.ts`. It is started and stopped per spec file. The browser-side API calls (port 1500) continue to be intercepted by Playwright route handlers per the existing calendar-core pattern.
 
 ---
@@ -45,7 +51,32 @@ No defects found.
 ## Priority 2 — State matrix × viewports
 
 **Spec:** `frontend/e2e-intercepted/managed-products-states.spec.ts`  
-**Result:** Running at time of writing — see addendum below once complete.
+**Result: NOT COMPLETE — 12 failures, untriaged. The run was stopped deliberately.**
+
+Browser verification was taken out of scope part-way through this pass, so the
+state matrix was stopped rather than finished. What exists is the spec file and
+12 recorded failures in `frontend/test-results/`, in five groups:
+
+| Group | Count |
+|---|---|
+| `empty-state-not-error-state` | 3 (one per viewport) |
+| `product-name-is-visible` | 3 |
+| `and-no-horizontal-overflow` | 3 |
+| `with-retry-not-empty-state` | 2 |
+| `route-lands-on-the-right-page` | 1 |
+
+**These 12 are not product defects and must not be read as any.** They are
+untriaged, and each one is still one of three things: a genuine defect, drift in
+this harness's own mock payloads, or an assertion written for 1280 that cannot
+hold at 375 because Playwright's role and visibility queries respect
+`display:none`. The `empty-state-not-error-state` and `with-retry-not-empty-state`
+groups are the most likely to be harness drift: when a mocked empty payload does
+not satisfy the response contract, `ApiContractError` renders the error boundary
+and an empty-state assertion fails for a reason that has nothing to do with the
+page. The same class of problem was already hit and fixed once in this pass, for
+`GET /billing`.
+
+Triage is the first thing to do if browser verification is resumed.
 
 Viewports: 375 × 812, 768 × 1024, 1280 × 800.
 
@@ -60,10 +91,18 @@ Routes: list, overview, insights, feedback, goals, projects, roadmap, releases, 
 
 ---
 
-## Priority 3 — Keyboard traversal and focus (gallery)
+## Priority 3 — Keyboard traversal and focus — GALLERY ONLY, not the real route
 
 **Spec:** `frontend/e2e/managed-products-acceptance.spec.ts`  
 **Result: 3/3 gallery tests PASSED** (3 real-backend tests skipped — no tenant env)
+
+These three ran against the dev-only `/design-system` gallery, **not** against an
+authenticated Manage Product route. MP-09 explicitly rules the gallery out as a
+substitute for browser evidence, so this does not close the keyboard portion of
+MP-09. Authenticated keyboard traversal, visible focus, focus trapping and focus
+return are **NOT-RUN**, because the real-backend specs skip on
+`hasBackendSecrets()` / `hasTenantEnv()` and the local backend never bound to
+port 1500 (see the startup investigation below). A skip is not a pass.
 
 | Test | Result |
 |---|---|
