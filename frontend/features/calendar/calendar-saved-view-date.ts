@@ -21,3 +21,12 @@ export function calendarSavedViewWindow(
   const start = startOfMonth(now);
   return { start: start.toISOString(), end: addMonths(start, 1).toISOString() };
 }
+
+export function calendarSavedViewDateLogic(
+  kind: CalendarSavedViewDefinition["dateLogic"]["kind"],
+  currentDate: Date,
+): CalendarSavedViewDefinition["dateLogic"] {
+  if (kind !== "custom") return { kind };
+  const start = startOfDay(currentDate);
+  return { kind, start: start.toISOString(), end: addDays(start, 1).toISOString() };
+}

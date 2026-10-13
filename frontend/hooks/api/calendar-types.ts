@@ -54,7 +54,6 @@ export interface CalendarListItem {
   entityId?: string | null;
   entityType?: string | null;
   projectId?: number | null;
-  ownerMembershipId?: number | null;
   myRsvpStatus?: string | null;
   sourceKey: string;
   sourceRecordId: string;

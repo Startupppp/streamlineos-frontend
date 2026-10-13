@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { addDays, startOfDay } from "date-fns";
 import { useRouter, useSearchParams } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -37,6 +36,7 @@ import type {
 } from "@/hooks/api/calendar-saved-view-schema";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { calendarUrl } from "./calendar-url-state";
+import { calendarSavedViewDateLogic } from "./calendar-saved-view-date";
 
 const formSchema = z.object({
   name: z.string().trim().min(1).max(100),
@@ -61,7 +61,7 @@ export function CalendarSavedViewControls({
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const canWrite = useCan("calendar:write");
+  const canWrite = useCan("calendar:read");
   const canManageTeam = useCan("calendar:admin:manage");
   const query = useCalendarSavedViews();
   const create = useCreateCalendarSavedView();
@@ -115,15 +115,10 @@ export function CalendarSavedViewControls({
           name: values.name,
         });
       } else {
-        const start = startOfDay(currentDate);
-        const dateLogic: CalendarSavedViewDefinition["dateLogic"] =
-          values.dateKind === "custom"
-            ? {
-                kind: "custom",
-                start: start.toISOString(),
-                end: addDays(start, 1).toISOString(),
-              }
-            : { kind: values.dateKind };
+        const dateLogic = calendarSavedViewDateLogic(
+          values.dateKind,
+          currentDate,
+        );
         const definition: CalendarSavedViewDefinition = {
           ...(selected?.definition ?? {}),
           dateLogic,

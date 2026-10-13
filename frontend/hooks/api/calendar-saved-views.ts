@@ -5,6 +5,7 @@ import {
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
+import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { useCan } from "@/hooks/api/access";
@@ -32,6 +33,7 @@ const removeContract = lazyContract(() =>
 );
 
 export function useCalendarSavedViews(enabled = true) {
+  const { data: session } = useSession();
   const canRead = useCan("calendar:read");
   return useInfiniteQuery({
     queryKey: platformHierarchyQueryKeys.calendar.savedViews,
@@ -45,7 +47,7 @@ export function useCalendarSavedViews(enabled = true) {
       ),
     getNextPageParam: (page) => page.nextCursor ?? undefined,
     staleTime: 30_000,
-    enabled: canRead && enabled,
+    enabled: Boolean(session?.orgId && session.user?.id) && canRead && enabled,
   });
 }
 
