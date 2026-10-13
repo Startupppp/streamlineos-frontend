@@ -181,6 +181,8 @@ describe("OutcomeReviewsSection — result required (BSN-OUTCOME-RESULT)", () =>
     );
 
     fireEvent.click(screen.getByTestId("complete-review-btn-1"));
+    expect(screen.getByTestId("result-select")).toHaveAttribute("aria-required", "true");
+    expect(screen.queryByText(/\(required\)/i)).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /^complete$/i }));
 
     await waitFor(() => {

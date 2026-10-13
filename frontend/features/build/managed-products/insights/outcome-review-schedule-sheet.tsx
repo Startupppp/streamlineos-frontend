@@ -71,10 +71,20 @@ export function OutcomeReviewScheduleSheet({
   const debouncedOpSearch = useDebouncedValue(opSearch, 300);
   const debouncedGoalsSearch = useDebouncedValue(goalsSearch, 300);
 
-  const opsQ = useInfiniteSelectorOpportunities(managedProductId, debouncedOpSearch, open);
-  const opsItems = useMemo(() => opsQ.data?.pages.flatMap((p) => p.data) ?? [], [opsQ.data]);
+  const opsQ = useInfiniteSelectorOpportunities(
+    managedProductId,
+    debouncedOpSearch,
+    open,
+  );
+  const opsItems = useMemo(
+    () => opsQ.data?.pages.flatMap((p) => p.data) ?? [],
+    [opsQ.data],
+  );
 
-  const goalsQ = useGoals({ managedProductId, search: debouncedGoalsSearch || undefined }, { enabled: open });
+  const goalsQ = useGoals(
+    { managedProductId, search: debouncedGoalsSearch || undefined },
+    { enabled: open },
+  );
   const goalsItems = useMemo(() => goalsQ.data ?? [], [goalsQ.data]);
 
   const handleOpSearch = useCallback((v: string) => setOpSearch(v), []);
@@ -83,7 +93,10 @@ export function OutcomeReviewScheduleSheet({
     if (opsQ.hasNextPage && !opsQ.isFetchingNextPage) void opsQ.fetchNextPage();
   }, [opsQ.fetchNextPage, opsQ.hasNextPage, opsQ.isFetchingNextPage]);
   const handleRetryOps = useCallback(() => void opsQ.refetch(), [opsQ.refetch]);
-  const handleRetryGoals = useCallback(() => void goalsQ.refetch(), [goalsQ.refetch]);
+  const handleRetryGoals = useCallback(
+    () => void goalsQ.refetch(),
+    [goalsQ.refetch],
+  );
 
   function handleSubmit(values: ScheduleOutcomeReviewValues) {
     const data: CreateOutcomeReviewInput = {
@@ -96,11 +109,17 @@ export function OutcomeReviewScheduleSheet({
       ...(values.unit?.trim() ? { unit: values.unit } : {}),
       ...(values.baseline?.trim() ? { baseline: values.baseline } : {}),
       ...(values.target?.trim() ? { target: values.target } : {}),
-      ...(values.scheduledFor?.trim() ? { scheduledFor: values.scheduledFor } : {}),
+      ...(values.scheduledFor?.trim()
+        ? { scheduledFor: values.scheduledFor }
+        : {}),
       ...(values.measureKind ? { measureKind: values.measureKind } : {}),
-      ...(values.metricPeriod?.trim() ? { metricPeriod: values.metricPeriod } : {}),
+      ...(values.metricPeriod?.trim()
+        ? { metricPeriod: values.metricPeriod }
+        : {}),
       ...(values.sourceUrl?.trim() ? { sourceUrl: values.sourceUrl } : {}),
-      ...(values.measuredAt ? { measuredAt: new Date(values.measuredAt).toISOString() } : {}),
+      ...(values.measuredAt
+        ? { measuredAt: new Date(values.measuredAt).toISOString() }
+        : {}),
     };
     onSubmit(data);
   }
@@ -125,7 +144,12 @@ export function OutcomeReviewScheduleSheet({
             name="kind"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Type (required)</FormLabel>
+                <FormLabel>
+                  Type{" "}
+                  <span className="text-destructive" aria-hidden="true">
+                    *
+                  </span>
+                </FormLabel>
                 <Select
                   value={field.value}
                   onValueChange={(v) => v && field.onChange(v)}
@@ -134,6 +158,7 @@ export function OutcomeReviewScheduleSheet({
                     <SelectTrigger
                       className={FIELD_CONTROL_CLASS}
                       data-testid="kind-select"
+                      aria-required="true"
                     >
                       <SelectValue placeholder="Select type" />
                     </SelectTrigger>
@@ -155,10 +180,16 @@ export function OutcomeReviewScheduleSheet({
             name="title"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Title (required)</FormLabel>
+                <FormLabel>
+                  Title{" "}
+                  <span className="text-destructive" aria-hidden="true">
+                    *
+                  </span>
+                </FormLabel>
                 <FormControl>
                   <Input
                     {...field}
+                    aria-required="true"
                     className={FIELD_CONTROL_CLASS}
                     placeholder="e.g. NPS impact review"
                     data-testid="title-input"
@@ -177,8 +208,14 @@ export function OutcomeReviewScheduleSheet({
             error={opsQ.error}
             onRetry={handleRetryOps}
             onSearchChange={handleOpSearch}
-            footer={<InfiniteScrollSentinel hasNextPage={opsQ.hasNextPage} isFetchingNextPage={opsQ.isFetchingNextPage}
-              onLoadMore={handleFetchOpsNext} label="Load more opportunities" />}
+            footer={
+              <InfiniteScrollSentinel
+                hasNextPage={opsQ.hasNextPage}
+                isFetchingNextPage={opsQ.isFetchingNextPage}
+                onLoadMore={handleFetchOpsNext}
+                label="Load more opportunities"
+              />
+            }
           />
           <OutcomeReviewLinkField
             control={form.control}

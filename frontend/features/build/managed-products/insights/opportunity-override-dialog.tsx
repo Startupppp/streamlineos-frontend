@@ -2,7 +2,13 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { ControllerRenderProps, UseFormReturn } from "react-hook-form";
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { EntityFormDialog } from "@/components/shared/entity-form-dialog";
@@ -76,10 +82,16 @@ export function OpportunityOverrideDialog({
             name="reason"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Reason (required)</FormLabel>
+                <FormLabel>
+                  Reason{" "}
+                  <span className="text-destructive" aria-hidden="true">
+                    *
+                  </span>
+                </FormLabel>
                 <FormControl>
                   <Textarea
                     {...field}
+                    aria-required="true"
                     className={FIELD_CONTROL_CLASS}
                     placeholder="Explain why this score is being overridden"
                     rows={3}
@@ -117,11 +129,7 @@ export function OpportunityDeclineDialog({
 }: OpportunityDeclineDialogProps) {
   function renderDeclineFields(form: UseFormReturn<DeclineFormValues>) {
     return (
-      <FormField
-        control={form.control}
-        name="note"
-        render={renderNoteField}
-      />
+      <FormField control={form.control} name="note" render={renderNoteField} />
     );
   }
   return (
@@ -142,7 +150,11 @@ export function OpportunityDeclineDialog({
   );
 }
 
-function renderNoteField({ field }: { field: ControllerRenderProps<DeclineFormValues, "note"> }) {
+function renderNoteField({
+  field,
+}: {
+  field: ControllerRenderProps<DeclineFormValues, "note">;
+}) {
   return (
     <FormItem>
       <FormLabel>Reason</FormLabel>

@@ -44,7 +44,9 @@ describe("OpportunityOverrideDialog — reason required (BSN-OVERRIDE-REQUIRED)"
     );
 
     await user.type(screen.getByLabelText("Override score"), "6.25");
-    await user.type(screen.getByLabelText("Reason (required)"), "Q3 NPS signals");
+    const reason = screen.getByRole("textbox", { name: "Reason" });
+    expect(reason).toHaveAttribute("aria-required", "true");
+    await user.type(reason, "Q3 NPS signals");
     fireEvent.click(screen.getByRole("button", { name: /save override/i }));
 
     await waitFor(() => {

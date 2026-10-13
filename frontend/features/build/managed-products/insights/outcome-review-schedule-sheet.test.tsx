@@ -128,6 +128,23 @@ function withOpportunities(rows: Array<{ id: number; title: string }>) {
 
 describe("OutcomeReviewScheduleSheet — opportunity link", () => {
 
+  it("uses accessible required controls and visual asterisks without parenthetical label text", () => {
+    render(
+      <OutcomeReviewScheduleSheet
+        managedProductId={39}
+        open
+        onOpenChange={jest.fn()}
+        onSubmit={jest.fn()}
+        isSubmitting={false}
+      />,
+    );
+
+    expect(screen.getByTestId("kind-select")).toHaveAttribute("aria-required", "true");
+    expect(screen.getByRole("textbox", { name: "Title" })).toHaveAttribute("aria-required", "true");
+    expect(screen.queryByText(/\(required\)/i)).not.toBeInTheDocument();
+    expect(document.querySelectorAll("label .text-destructive")).toHaveLength(2);
+  });
+
   it("links the review to the chosen opportunity so it appears in that opportunity's trace", async () => {
     withOpportunities([
       { id: 1, title: "Export discoverability" },
@@ -147,7 +164,7 @@ describe("OutcomeReviewScheduleSheet — opportunity link", () => {
     );
 
     expect(mockUseInfiniteOps).toHaveBeenCalledWith(39, expect.any(String), true);
-    await user.type(screen.getByLabelText("Title (required)"), "Export adoption review");
+    await user.type(screen.getByRole("textbox", { name: "Title" }), "Export adoption review");
     await user.click(screen.getByRole("option", { name: "Export discoverability" }));
     await user.click(screen.getByRole("button", { name: "Schedule" }));
 
@@ -230,7 +247,7 @@ describe("OutcomeReviewScheduleSheet — goal link", () => {
       { managedProductId: 39, search: undefined },
       { enabled: true },
     );
-    await user.type(screen.getByLabelText("Title (required)"), "Goal review");
+    await user.type(screen.getByRole("textbox", { name: "Title" }), "Goal review");
     await user.click(screen.getByRole("option", { name: "QA BV Goal" }));
     await user.click(screen.getByRole("button", { name: "Schedule" }));
 
@@ -258,7 +275,7 @@ describe("OutcomeReviewScheduleSheet — measurement fields", () => {
       />,
     );
 
-    await user.type(screen.getByLabelText("Title (required)"), "NPS review");
+    await user.type(screen.getByRole("textbox", { name: "Title" }), "NPS review");
     await user.type(screen.getByTestId("metric-period-input"), "Q1 2025");
     await user.type(screen.getByTestId("source-url-input"), "https://example.com/data");
     await user.click(screen.getByRole("option", { name: "Measured" }));
@@ -295,7 +312,7 @@ describe("OutcomeReviewScheduleSheet — measurement fields", () => {
       />,
     );
 
-    await user.type(screen.getByLabelText("Title (required)"), "Measured review");
+    await user.type(screen.getByRole("textbox", { name: "Title" }), "Measured review");
     await user.click(screen.getByRole("option", { name: "Measured" }));
     await user.click(screen.getByRole("button", { name: "Schedule" }));
 
@@ -319,7 +336,7 @@ describe("OutcomeReviewScheduleSheet — measurement fields", () => {
       />,
     );
 
-    await user.type(screen.getByLabelText("Title (required)"), "NPS review");
+    await user.type(screen.getByRole("textbox", { name: "Title" }), "NPS review");
     await user.click(screen.getByRole("button", { name: "Schedule" }));
 
     await waitFor(() => expect(onSubmit).toHaveBeenCalled());

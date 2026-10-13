@@ -42,6 +42,23 @@ function makeReview(overrides: Record<string, unknown> = {}) {
 }
 
 describe("OutcomeReviewRow — metric fields", () => {
+  it("uses compact, consistently styled icon actions with accessible tooltip labels", () => {
+    render(
+      <OutcomeReviewRow
+        review={makeReview()}
+        managedProductId={MANAGED_PRODUCT_ID}
+        canWrite
+        onComplete={jest.fn()}
+        onDelete={jest.fn()}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "Complete review" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Delete review" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Complete" })).not.toBeInTheDocument();
+    expect(screen.getByTestId("outcome-review-row-1")).toHaveClass("px-3", "py-2.5");
+  });
+
   it("renders metric, baseline, target and actual when all are present", () => {
     const review = makeReview({
       metric: "Revenue",

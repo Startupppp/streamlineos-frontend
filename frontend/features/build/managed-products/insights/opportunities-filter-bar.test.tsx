@@ -43,6 +43,13 @@ function renderBar(overrides: Partial<React.ComponentProps<typeof OpportunitiesF
 describe("OpportunitiesFilterBar", () => {
   it("shows four filters on desktop, three on tablet, and two on mobile", () => {
     const { container } = renderBar();
+    const toolbar = container.querySelector("[data-slot=build-list-toolbar]");
+    const actions = container.querySelector("[data-slot=build-toolbar-actions]");
+    expect(toolbar).toHaveClass(
+      "[&>[data-slot=build-toolbar-actions]]:w-full",
+      "[&>[data-slot=build-toolbar-actions]]:flex-1",
+    );
+    expect(actions).toHaveClass("max-md:w-full", "md:flex-1");
     expect(container.querySelector("[data-filter-id=oppState]")?.className).toContain(
       "max-md:flex-1",
     );

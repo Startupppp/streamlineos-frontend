@@ -44,9 +44,7 @@
     ".next-intercepted/types/**/*.ts",
     ".next-intercepted/dev/types/**/*.ts",
     ".next-build-verification-window12h/types/**/*.ts",
-    ".next-build-verification-window12h/dev/types/**/*.ts",
-    ".next-codex/types/**/*.ts",
-    ".next-codex/dev/types/**/*.ts"
+    ".next-build-verification-window12h/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",
@@ -57,7 +55,6 @@
     ".next-build-check",
     ".next-intercepted",
     ".next-build-verification-window12h",
-    ".next-codex",
     ".next/dev/types",
     "**/__tests__/**",
     "**/*.test.ts",

@@ -128,7 +128,10 @@ export function OpportunitiesFilterBar({
           label="Sort"
           value={sortFilter || "all"}
           onValueChange={onSortChange}
-          options={[{ label: "By score", value: "all" }, ...SORT_OPTIONS.slice(1)]}
+          options={[
+            { label: "By score", value: "all" },
+            ...SORT_OPTIONS.slice(1),
+          ]}
         />
       ),
     },
@@ -251,6 +254,7 @@ export function OpportunitiesFilterBar({
       onClearAll={onClearAll}
       trailing={trailing}
       row={{ mobile: 2, tablet: 3, desktop: 4 }}
+      className="[&>[data-slot=build-toolbar-actions]]:w-full [&>[data-slot=build-toolbar-actions]]:flex-1"
     />
   );
 }

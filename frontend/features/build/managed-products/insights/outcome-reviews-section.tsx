@@ -47,25 +47,41 @@ const RESULT_OPTIONS = [
   { label: "Inconclusive", value: "inconclusive" },
 ];
 
-const completeSchema = z.object({
-  actual: z.string().optional(),
-  result: z.enum(["met", "partially_met", "not_met", "inconclusive"], {
-    error: "Result is required to complete a review",
-  }),
-  notes: z.string().max(5000).optional(),
-  version: z.number().int().min(1),
-  measureKind: z.enum(["self_reported", "measured"]).optional(),
-  sourceUrl: z.string().trim().url("Enter a valid URL").max(2000).optional().or(z.literal("")),
-  measuredAt: z.union([z.iso.date(), z.literal("")]).optional(),
-}).superRefine((values, ctx) => {
-  if (values.measureKind !== "measured") return;
-  if (!values.sourceUrl) {
-    ctx.addIssue({ code: "custom", path: ["sourceUrl"], message: "Source URL is required for measured results" });
-  }
-  if (!values.measuredAt) {
-    ctx.addIssue({ code: "custom", path: ["measuredAt"], message: "Measured date is required for measured results" });
-  }
-});
+const completeSchema = z
+  .object({
+    actual: z.string().optional(),
+    result: z.enum(["met", "partially_met", "not_met", "inconclusive"], {
+      error: "Result is required to complete a review",
+    }),
+    notes: z.string().max(5000).optional(),
+    version: z.number().int().min(1),
+    measureKind: z.enum(["self_reported", "measured"]).optional(),
+    sourceUrl: z
+      .string()
+      .trim()
+      .url("Enter a valid URL")
+      .max(2000)
+      .optional()
+      .or(z.literal("")),
+    measuredAt: z.union([z.iso.date(), z.literal("")]).optional(),
+  })
+  .superRefine((values, ctx) => {
+    if (values.measureKind !== "measured") return;
+    if (!values.sourceUrl) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["sourceUrl"],
+        message: "Source URL is required for measured results",
+      });
+    }
+    if (!values.measuredAt) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["measuredAt"],
+        message: "Measured date is required for measured results",
+      });
+    }
+  });
 
 type CompleteFormValues = z.infer<typeof completeSchema>;
 
@@ -81,7 +97,12 @@ interface OutcomeReviewsSectionProps {
   onNextPage: () => void;
   onPreviousPage: () => void;
   onCreate: (data: CreateOutcomeReviewInput, onCreated: () => void) => void;
-  onComplete: (reviewId: number, data: UpdateOutcomeReviewInput, onCompleted: () => void, onFailed: (err: unknown) => void) => void;
+  onComplete: (
+    reviewId: number,
+    data: UpdateOutcomeReviewInput,
+    onCompleted: () => void,
+    onFailed: (err: unknown) => void,
+  ) => void;
   onDelete: (reviewId: number) => void;
   isCreating: boolean;
   isUpdating: boolean;
@@ -109,7 +130,10 @@ function CompleteReviewDialog({
       title="Complete review"
       description={`Record the result for "${review.title}".`}
       resolver={zodResolver(completeSchema)}
-      defaultValues={{ version: review.version, measureKind: review.measureKind ?? "self_reported" }}
+      defaultValues={{
+        version: review.version,
+        measureKind: review.measureKind ?? "self_reported",
+      }}
       onSubmit={(values) =>
         onComplete({
           state: "completed",
@@ -119,7 +143,9 @@ function CompleteReviewDialog({
           version: values.version,
           measureKind: values.measureKind ?? "self_reported",
           ...(values.sourceUrl?.trim() ? { sourceUrl: values.sourceUrl } : {}),
-          ...(values.measuredAt?.trim() ? { measuredAt: new Date(values.measuredAt).toISOString() } : {}),
+          ...(values.measuredAt?.trim()
+            ? { measuredAt: new Date(values.measuredAt).toISOString() }
+            : {}),
         })
       }
       isSubmitting={isSubmitting}
@@ -129,7 +155,11 @@ function CompleteReviewDialog({
       {(form) => (
         <div className="space-y-4">
           {conflictMessage ? (
-            <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive" role="alert" data-testid="complete-conflict-error">
+            <p
+              className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive"
+              role="alert"
+              data-testid="complete-conflict-error"
+            >
               {conflictMessage}
             </p>
           ) : null}
@@ -138,7 +168,12 @@ function CompleteReviewDialog({
             name="result"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Result (required)</FormLabel>
+                <FormLabel>
+                  Result{" "}
+                  <span className="text-destructive" aria-hidden="true">
+                    *
+                  </span>
+                </FormLabel>
                 <Select
                   value={field.value ?? ""}
                   onValueChange={(v) => v && field.onChange(v)}
@@ -147,6 +182,7 @@ function CompleteReviewDialog({
                     <SelectTrigger
                       className={FIELD_CONTROL_CLASS}
                       data-testid="result-select"
+                      aria-required="true"
                     >
                       <SelectValue placeholder="Select result" />
                     </SelectTrigger>
@@ -322,7 +358,9 @@ export function OutcomeReviewsSection({
         () => setCompletingId(null),
         (err) => {
           if (isApiError(err) && err.status === 409) {
-            setCompleteError("This review was updated by someone else. Reload and try again.");
+            setCompleteError(
+              "This review was updated by someone else. Reload and try again.",
+            );
           }
         },
       );
@@ -368,9 +406,12 @@ export function OutcomeReviewsSection({
           className="rounded-xl border border-dashed border-border bg-card px-4 py-6"
           data-testid="outcome-reviews-empty"
         >
-          <p className="text-sm font-medium text-foreground">No reviews scheduled</p>
+          <p className="text-sm font-medium text-foreground">
+            No reviews scheduled
+          </p>
           <p className="mt-1 max-w-prose text-sm text-muted-foreground">
-            Schedule an outcome review or experiment when you want to measure a result.
+            Schedule an outcome review or experiment when you want to measure a
+            result.
           </p>
         </div>
       )}

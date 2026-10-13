@@ -1,4 +1,4 @@
-import { allowOfflineCalendarPolicy, clearOfflineCalendarSnapshot, readOfflineCalendarSnapshot, revokeOfflineCalendarPolicy, saveOfflineCalendarSnapshot, subscribeOfflineCalendarClear } from "./calendar-offline-cache";
+import { allowOfflineCalendarPolicy, clearOfflineCalendarSnapshot, offlineCalendarIdentityIsCurrent, readOfflineCalendarSnapshot, revokeOfflineCalendarPolicy, saveOfflineCalendarSnapshot, subscribeOfflineCalendarClear } from "./calendar-offline-cache";
 
 function fakeIndexedDb() {
   const opens: Array<{ result: unknown; onsuccess?: () => void }> = [];
@@ -179,5 +179,16 @@ describe("Calendar offline cache identity", () => {
     expect(allowOfflineCalendarPolicy("org-1:user-1", 3)).toBe(false);
     expect(allowOfflineCalendarPolicy("org-2:user-1", 3)).toBe(true);
     expect(allowOfflineCalendarPolicy("org-1:user-1", 3)).toBe(false);
+  });
+
+  it("requires the active account and its enabled policy before rendering", () => {
+    sessionStorage.setItem("streamline-calendar-offline-session-identity", "org-1:user-1");
+    localStorage.setItem("streamline-calendar-offline-identity", "org-1:user-1");
+    expect(offlineCalendarIdentityIsCurrent("org-1:user-1")).toBe(false);
+    expect(allowOfflineCalendarPolicy("org-1:user-1", 1)).toBe(true);
+    expect(offlineCalendarIdentityIsCurrent("org-1:user-1")).toBe(true);
+    expect(offlineCalendarIdentityIsCurrent("org-2:user-1")).toBe(false);
+    revokeOfflineCalendarPolicy("org-1:user-1", 2);
+    expect(offlineCalendarIdentityIsCurrent("org-1:user-1")).toBe(false);
   });
 });
