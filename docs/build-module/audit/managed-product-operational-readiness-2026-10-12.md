@@ -229,7 +229,7 @@ Ten SLOs defined in `backend/src/common/slo/slo-managed-product.ts` and register
 |---|--------|------|--------------|----------|-----------|
 | 1 | Read route 5xx rate | outcome-rate | route SPAN `http.status_code` | managed-product-ops | >5%, ≥2 faults / 1h |
 | 2 | Write route 5xx rate | outcome-rate | route SPAN `http.status_code` | managed-product-ops | >5%, ≥2 faults / 1h |
-| 3 | Feedback ingestion stall | db-threshold | `product_opportunity_evidence.processed_at IS NULL` | managed-product-db | >50 rows older than 4h |
+| 3 | Feedback ingestion stall | db-threshold | `feedbucket_submissions.ai_processed_at IS NULL` | managed-product-db | >50 rows older than 4h |
 | 4 | Opportunity op failures | outcome-rate | `mp.opportunity.operation` span `status` | managed-product-ops | >5%, ≥2 faults / 1h |
 | 5 | Roadmap publication stall | db-threshold | `roadmap_items` is_public=true, not updated | managed-product-db | >20 items older than 72h |
 | 6 | Release evidence stall | db-threshold | `managed_product_releases` non-terminal, not updated | managed-product-db | >10 rows older than 4h |
@@ -243,18 +243,44 @@ Ten SLOs defined in `backend/src/common/slo/slo-managed-product.ts` and register
 - **Signals 1, 2, 7, 8** — correlation-id middleware emits one SPAN per route with the HTTP method, path template, `http.status_code`, and `latencyMs`. `managed-products.service.ts` is 592 lines (ratcheted) and was not modified; the existing route spans are sufficient.
 - **Signals 4** — `mp.opportunity.operation` span emitted by `opportunity-command.service.ts` via `withSpan("mp.opportunity.operation", ...)` wrapping `create`, `update`, `softDelete`.
 - **Signal 9** — `mp.share-token.operation` span emitted by `managed-product-share-token.service.ts` via `withSpan("mp.share-token.operation", ...)` wrapping `issueToken`, `resolveToken`.
-- **Signals 3, 5, 6, 10** — no span needed; `alert-managed-product-db.mjs` queries the tables directly against a local DB.
+- **Signals 3, 5, 6, 10** — no span needed; `alert-managed-product-db.mjs` queries the tables directly against a live DB. Signal 3 queries `build.feedbucket_submissions` (not `product_opportunity_evidence` which has no processing-state columns). Signal 6 queries `managed_product_releases` with no `deleted_at` filter (that table has no soft-delete column).
 
 ### Alert scripts
 
 | Script | Self-test checks | pnpm entry |
 |--------|-----------------|------------|
 | `backend/src/scripts/alert-managed-product-ops.mjs` | 9 | `alert:managed-product-ops:self-test` |
-| `backend/src/scripts/alert-managed-product-db.mjs` | 6 | `alert:managed-product-db:self-test` |
+| `backend/src/scripts/alert-managed-product-db.mjs` | 7 | `alert:managed-product-db:self-test` |
 
 Both are registered in `check-alert-system.mjs`; `pnpm check:alert-system` verified all 21 scripts pass (2026-10-13).
 
 Both alertIds (`managed-product-ops`, `managed-product-db`) are registered in `alert-dispatch.mjs` REGISTRY with `owner: "delivery-team"`.
+
+### Column-presence audit against prodshape (2026-10-13)
+
+`prodshape` is a restore of production's schema dump at migration ledger head. All columns used by `alert-managed-product-db.mjs` were verified against it before the script was finalised.
+
+| Signal | Table | Column | prodshape |
+|--------|-------|--------|-----------|
+| 3 | `build.feedbucket_submissions` | `ai_processed_at` | present |
+| 3 | `build.feedbucket_submissions` | `deleted_at` | present |
+| 3 | `build.feedbucket_submissions` | `created_at` | present |
+| 3 (rejected) | `build.product_opportunity_evidence` | `processed_at` | **MISSING** |
+| 3 (rejected) | `build.product_opportunity_evidence` | `inserted_at` | **MISSING** |
+| 5 | `build.roadmap_items` | `is_public` | present |
+| 5 | `build.roadmap_items` | `managed_product_id` | present |
+| 5 | `build.roadmap_items` | `deleted_at` | present |
+| 5 | `build.roadmap_items` | `updated_at` | present |
+| 6 | `build.managed_product_releases` | `status` | present |
+| 6 | `build.managed_product_releases` | `updated_at` | present |
+| 6 (removed) | `build.managed_product_releases` | `deleted_at` | **MISSING** (table has no soft-delete) |
+| 10 | `build.planning_links` | `link_kind` | present |
+| 10 | `build.planning_links` | `source_id` / `target_id` / `org_id` | present |
+| 10 | `build.managed_products` | `id` / `org_id` | present |
+
+Signals 1, 2, 4, 7, 8, 9 are outcome-rate on log spans and touch no DB columns.
+
+**Schema-drift fail-open hazard — fix applied:** The original script had one `catch` branch for all errors, writing `fired: false` and exiting with code 2 (inconclusive). A schema error (42703 undefined\_column, 42P01 undefined\_table) would silently disable the alert forever with no visible breach. The updated script checks `err.code` against `SCHEMA_ERROR_CODES = new Set(["42703", "42P01", "42704"])` and on a schema error writes `fired: true, schemaError: true` and exits with code 1, making the broken predicate visible as a breach. Connection failures still exit 2 (inconclusive). The self-test verifies this distinction as `schemaErrorCodesAreTreatedAsHardFailure: true`.
 
 ### End-to-end proofs
 
@@ -349,7 +375,109 @@ DELETE FROM build.planning_links WHERE link_kind = 'product_project' AND source_
 -- Result: cnt = 0
 ```
 
-The full `alert-managed-product-db.mjs` script requires `DATABASE_URL` and cannot be run against `mp_ops14` because that DB does not have `product_opportunity_evidence.processed_at` (a column from a later migration). The link-orphan arm was verified directly with psql; the other three arms were verified by the self-test using the `evaluate()` function.
+#### Proof C — feedbucket_submissions classification stall (signal 3, real local DB)
+
+DB: `mp_ops14` at `127.0.0.1:5432`. All steps run 2026-10-13.
+
+**Step 1 — baseline (0 unclassified submissions older than 4h):**
+
+```sql
+SELECT COUNT(*)::int AS cnt FROM build.feedbucket_submissions
+WHERE ai_processed_at IS NULL AND deleted_at IS NULL
+  AND created_at < NOW() - interval '4 hours';
+-- Result: cnt = 0
+```
+
+**Step 2 — insert 51 synthetic unclassified submissions:**
+
+```sql
+INSERT INTO build.feedbucket_submissions
+  (org_id, widget_id, type, status, message, ai_processed_at, created_at)
+SELECT 'kbcib-579c434f', 2, 'bug', 'open', 'test-alert-proof-'||g, NULL,
+       NOW() - interval '5 hours'
+FROM generate_series(1,51) g;
+-- Result: INSERT 0 51
+```
+
+**Step 3 — count after insert:**
+
+```sql
+-- same query as step 1
+-- Result: cnt = 51
+```
+
+**Step 4 — run alert script against local DB:**
+
+```
+DATABASE_URL=postgres://neondb_owner:***@127.0.0.1:5432/mp_ops14 \
+  node src/scripts/alert-managed-product-db.mjs
+```
+
+Actual stdout:
+
+```json
+{"destination":"CONFIGURE_ME — wire exit-code 1 to your oncall system","fired":true,"feedbackFired":true,"roadmapFired":false,"releaseFired":false,"linkFired":false,"feedbackStaleRows":51,"roadmapStuckItems":0,"releaseStuckRows":1,"planningLinkOrphans":0,"thresholds":{"maxFeedbackStaleRows":50,"maxRoadmapStuckItems":20,"maxReleaseStuckRows":10}}
+exit: 1
+```
+
+**Step 5 — cleanup:**
+
+```sql
+DELETE FROM build.feedbucket_submissions WHERE message LIKE 'test-alert-proof-%';
+-- Result: DELETE 51
+```
+
+**Step 6 — run alert script after cleanup:**
+
+```json
+{"fired":false,"feedbackFired":false,...,"feedbackStaleRows":0,...}
+exit: 0
+```
+
+#### Proof D — managed_product_releases stall (signal 6, real local DB)
+
+DB: `mp_ops14` at `127.0.0.1:5432`. All steps run 2026-10-13.
+
+**Step 1 — baseline (1 pre-existing non-terminal release, below threshold of 10):**
+
+```sql
+SELECT COUNT(*)::int AS cnt FROM build.managed_product_releases
+WHERE status NOT IN ('shipped', 'cancelled')
+  AND updated_at < NOW() - interval '4 hours';
+-- Result: cnt = 1
+```
+
+**Step 2 — insert 10 more non-terminal releases to breach threshold:**
+
+```sql
+INSERT INTO build.managed_product_releases
+  (org_id, managed_product_id, name, version, status, updated_at)
+SELECT v_org, v_mp_id, 'alert-proof-rel-'||g, '0.0.'||g, 'draft',
+       NOW() - interval '5 hours'
+FROM generate_series(1,10) g;
+-- Result: INSERT 0 10; total now 11
+```
+
+**Step 3 — run alert script against local DB:**
+
+Actual stdout:
+
+```json
+{"destination":"CONFIGURE_ME — wire exit-code 1 to your oncall system","fired":true,"feedbackFired":false,"roadmapFired":false,"releaseFired":true,"linkFired":false,"feedbackStaleRows":0,"roadmapStuckItems":0,"releaseStuckRows":11,"planningLinkOrphans":0,"thresholds":{"maxFeedbackStaleRows":50,"maxRoadmapStuckItems":20,"maxReleaseStuckRows":10}}
+exit: 1
+```
+
+**Step 4 — cleanup and verify:**
+
+```sql
+DELETE FROM build.managed_product_releases WHERE name LIKE 'alert-proof-rel-%';
+-- Result: DELETE 10
+```
+
+```json
+{"fired":false,"releaseFired":false,"releaseStuckRows":1,...}
+exit: 0
+```
 
 #### Heading list (proves anchors resolve)
 
@@ -362,6 +490,8 @@ Headings in this document that serve as runbook anchors, extracted 2026-10-13:
 - `### End-to-end proofs`
 - `#### Proof A — read route 5xx spike (ops alert, predicate + synthetic log)`
 - `#### Proof B — planning_links orphan (db alert, real local DB)`
+- `#### Proof C — feedbucket_submissions classification stall (signal 3, real local DB)`
+- `#### Proof D — managed_product_releases stall (signal 6, real local DB)`
 - `#### Heading list (proves anchors resolve)`
 - `#### managed-product-ops`
 - `#### managed-product-db`

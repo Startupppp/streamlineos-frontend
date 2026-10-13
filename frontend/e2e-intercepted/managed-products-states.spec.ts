@@ -1,5 +1,6 @@
 import { expect, test, type BrowserContext, type Page } from "@playwright/test";
 import { encode } from "@auth/core/jwt";
+import { startMockBackend, type MockBackend9999 } from "../e2e/fixtures/mock-backend-9999";
 
 const PRODUCT_ID = 1002;
 
@@ -15,10 +16,25 @@ const SESSION = {
   email: "mp09-states@example.test",
 };
 
-function backendJwt(orgId: string, userId: string): string {
-  const enc = (v: object) => Buffer.from(JSON.stringify(v)).toString("base64url");
-  return `${enc({ alg: "none" })}.${enc({ orgId, sub: userId, exp: Math.floor(Date.now() / 1000) + 3600 })}.signature`;
-}
+const FULL_SCOPES = {
+  "build:managed-products:view": "all",
+  "build:managed-products:create": "all",
+  "build:managed-products:update": "all",
+  "build:managed-products:delete": "all",
+};
+
+const BUILD_MODULES = { build: true, hr: false, tasks: true, calendar: false, integrations: false };
+
+let mockBackend: MockBackend9999 | undefined;
+
+test.beforeAll(async () => {
+  mockBackend = await startMockBackend(9999, SESSION.orgId, SESSION.userId, FULL_SCOPES, BUILD_MODULES);
+});
+
+test.afterAll(async () => {
+  await mockBackend?.stop();
+  mockBackend = undefined;
+});
 
 async function signIn(context: BrowserContext, baseURL: string, opts: { isOwner?: boolean } = {}): Promise<void> {
   const now = Math.floor(Date.now() / 1000);
@@ -28,6 +44,7 @@ async function signIn(context: BrowserContext, baseURL: string, opts: { isOwner?
   const value = await encode({
     token: {
       sub: SESSION.userId,
+      id: SESSION.userId,
       email: SESSION.email,
       name: SESSION.email,
       orgId: SESSION.orgId,
@@ -37,7 +54,7 @@ async function signIn(context: BrowserContext, baseURL: string, opts: { isOwner?
       orgOnboardingCompletedAt: new Date(now * 1000).toISOString(),
       userOnboardingCompletedAt: new Date(now * 1000).toISOString(),
       authProvider: "credentials",
-      sessionId: `mp09-states-session`,
+      sessionId: "mp09-states-session",
       iat: now,
       exp: now + 3600,
       jti: crypto.randomUUID(),
@@ -109,34 +126,13 @@ function makeProduct(id: number = PRODUCT_ID) {
 type ApiRouteState = "populated" | "empty" | "error" | "denied" | "not-found";
 
 async function installRoutes(page: Page, state: ApiRouteState): Promise<void> {
-  const token = backendJwt(SESSION.orgId, SESSION.userId);
-
-  await page.route("**/api/auth/session", (route) => route.fulfill({
-    status: 200,
-    contentType: "application/json",
-    body: JSON.stringify({
-      user: { id: SESSION.userId, email: SESSION.email, name: SESSION.email },
-      orgId: SESSION.orgId,
-      isOrgOwner: state !== "denied",
-      backendJwt: token,
-      expires: "2026-11-15T00:00:00.000Z",
-    }),
-  }));
-
   await page.route("http://localhost:1500/**", (route) => {
     const url = new URL(route.request().url());
     const p = url.pathname;
     const unlimited = { limit: null, used: 0 };
 
     if (p === "/me/access") {
-      const scopes = state === "denied"
-        ? {}
-        : {
-            "build:managed-products:view": "all",
-            "build:managed-products:create": "all",
-            "build:managed-products:update": "all",
-            "build:managed-products:delete": "all",
-          };
+      const scopes = state === "denied" ? {} : FULL_SCOPES;
       return route.fulfill({
         status: 200, contentType: "application/json",
         body: JSON.stringify({
@@ -144,7 +140,7 @@ async function installRoutes(page: Page, state: ApiRouteState): Promise<void> {
           scopes,
           isOrgOwner: state !== "denied",
           canManageOrganizationMembership: true,
-          modules: { build: true, hr: false, tasks: true, calendar: false, integrations: false },
+          modules: BUILD_MODULES,
         }),
       });
     }
