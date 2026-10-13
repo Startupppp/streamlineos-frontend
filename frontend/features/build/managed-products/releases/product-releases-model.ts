@@ -65,13 +65,5 @@ export function releaseCountValue(count: number, hasMore: boolean): string {
 
 export function releasesSubtitle(groups: ReleaseGroups, hasMore: boolean): string {
   if (groups.total === 0) return "Plan and track what ships for this product";
-  const drafts = groups.upcoming.length;
-  const parts = [
-    `${releaseCountValue(drafts, hasMore)} ${drafts === 1 ? "draft" : "drafts"}`,
-    `${releaseCountValue(groups.shipped.length, hasMore)} released`,
-  ];
-  if (groups.archived.length > 0) {
-    parts.push(`${releaseCountValue(groups.archived.length, hasMore)} archived`);
-  }
-  return parts.join(" · ");
+  return `${releaseCountValue(groups.upcoming.length, hasMore)} upcoming · ${releaseCountValue(groups.shipped.length, hasMore)} shipped`;
 }

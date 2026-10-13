@@ -25,7 +25,7 @@ function ShippedReleaseItem({
   showRail: boolean;
 }) {
   return (
-    <li className="flex gap-3">
+    <li className="group flex gap-3 rounded-lg px-3 pt-3 transition-colors hover:bg-muted/40 motion-reduce:transition-none">
       <div className="flex w-24 shrink-0 flex-col pt-0.5">
         {release.releaseDate ? (
           <time dateTime={release.releaseDate} className="font-mono text-dense tabular-nums text-muted-foreground">
@@ -83,7 +83,7 @@ export function ReleaseShippedTimeline({ releases, count, className }: ReleaseSh
           action={canUpdate ? { label: "New release", onClick: onCreate } : undefined}
         />
       ) : (
-        <ol aria-label="Shipped releases" className="flex flex-col px-4 pt-4">
+        <ol aria-label="Shipped releases" className="flex min-h-full flex-col p-1">
           {releases.map((release, index) => (
             <ShippedReleaseItem key={release.id} release={release} showRail={index < lastIndex} />
           ))}

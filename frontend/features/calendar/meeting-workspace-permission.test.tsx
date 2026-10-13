@@ -67,4 +67,22 @@ describe("meeting workspace capability controls", () => {
     expect(screen.getByRole("button", { name: "Revoke" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Record consent" })).toBeInTheDocument();
   });
+
+  it("shows failure states without opening unavailable source content", () => {
+    const value = workspace(false);
+    const original = value.contexts[0];
+    const contexts = [
+      { ...original, id: "49300e37-a9a5-4819-9045-b65aff30a49a", state: "UNAVAILABLE" as const, title: null, summary: null, href: null, sourceKey: null, sourceRecordId: null, failureCode: "PERMISSION_OR_SOURCE_UNAVAILABLE" },
+      { ...original, id: "fd5f6a4f-c71a-4b3b-8ed2-8782dd405174", state: "CONSENT_REQUIRED" as const, title: null, summary: null, href: null, sourceKey: null, sourceRecordId: null, failureCode: "CONSENT_WITHDRAWN", contextType: "TRANSCRIPT" as const },
+      { ...original, id: "462a4485-4424-4890-9c0c-460582f96665", state: "EXPIRED" as const, title: null, summary: null, href: null, sourceKey: null, sourceRecordId: null, failureCode: "RETENTION_EXPIRED" },
+    ];
+    render(<><MeetingWorkspaceContext workspace={{ ...value, contexts }} /><MeetingWorkspaceGovernance workspace={value} /></>);
+    expect(screen.getByText("UNAVAILABLE")).toBeInTheDocument();
+    expect(screen.getByText("CONSENT REQUIRED")).toBeInTheDocument();
+    expect(screen.getByText("EXPIRED")).toBeInTheDocument();
+    expect(screen.getByText("permission or source unavailable")).toBeInTheDocument();
+    expect(screen.getByText("consent withdrawn")).toBeInTheDocument();
+    expect(screen.getByText("retention expired")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Open source" })).not.toBeInTheDocument();
+  });
 });

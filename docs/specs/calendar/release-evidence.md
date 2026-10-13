@@ -6,6 +6,32 @@ On 2026-10-13, the complete backend Calendar Jest selection passed 127 suites an
 
 These checks do not prove production API routing, applied migration 2016, saved-view CRUD, provider sandbox behavior, or live offline and cross-tab behavior. The production Calendar browser tool failed before opening a tab with an OS kernel-asset path error, and a separate web request could not access the authenticated page. The earlier production `/calendar/saved-views` HTTP 500 remains unresolved without backend logs or database access. Migration-chain verification without `DATABASE_URL` reported six historical journal timestamp regressions outside the Calendar migration range; no historical migration was restamped.
 
+The subsequent multiple-account offline policy refinement passed three focused frontend suites and 16 tests plus targeted ESLint. Its full frontend TypeScript run was interrupted after several minutes without output and is unverified. The new tests cover independent account policy versions, stale enable and disable responses, and matching cross-tab storage events; the production browser path remains untested.
+
+An additional render-identity guard passed the focused offline cache suite (10 tests), a targeted TypeScript compile of the changed Calendar hook, offline panel, cache and NextAuth augmentation, and targeted ESLint. This targeted compile does not replace the stalled complete frontend typecheck. Live account switching, offline navigation, and cross-tab revocation remain unverified.
+
+The standalone offline shell then passed a headless system Chrome check through `frontend/scripts/check-calendar-offline-shell.cjs`: authorized busy-window display, title redaction, immediate removal on a simulated cross-tab policy change, blocked reload after revocation, a second account's independent snapshot, policy-version mismatch, and expiry. The script loads the HTML file directly with controlled IndexedDB and browser storage. It does not prove service-worker fallback delivery, authenticated production access, or backend revocation propagation.
+
+The same repeatable script subsequently registered the real `public/sw.js` under a routed secure browser origin, removed its route, and navigated offline to `/calendar`. Chrome displayed the cached shell and authorized busy windows; a simulated policy revocation cleared the windows, and offline reload denied access. This proves local service-worker navigation fallback with controlled storage, not production deployment, real membership revocation propagation, or provider behavior.
+
+For ticket 29, the focused meeting-workspace UI suite passed 3 tests showing safe unavailable, consent-withdrawn, and expired context states. The backend context suite passed 7 tests, including isolation of one failed source from another authorized source. Targeted lint passed. These fixtures do not establish a real database retention sweep or authenticated API and browser lifecycle.
+
+For ticket 30, the aggregate search suite passed 23 tests after correcting false next-page cursors when a source is partial but exactly 100 authorized matches are loaded. Targeted backend TypeScript and ESLint passed. Source coverage remains visibly partial because upstream source cursors are not traversable through the search endpoint. The production saved-view HTTP 500, migration 2016 state, and database CRUD remain unverified.
+
+For ticket 31, the lifecycle replan consumer now uses its own tenant transaction only for candidate scans. The protected-work service already opens tenant transactions for suggestions and moves, so removing outer wrappers avoids holding an extra connection across availability evaluation. A focused consumer regression passed (1 test), as did targeted backend TypeScript and ESLint. Connection-pool pressure and lifecycle replan behavior against a real database remain unverified.
+
+Ticket 31 planner and service edge suites then passed 16 tests covering repeated meeting churn inside cooldown, a changed deadline, and lost active membership during registration, alongside existing capacity, stale-availability, and undo-collision cases. Targeted lint passed. Real transactional move and undo evidence is still open.
+
+For ticket 32, a failed commitment source adapter now leaves its own nodes restricted while allowing other source batches to resolve. The focused registry suite passed 3 tests. This is local partial-outage evidence, not live cross-module behavior.
+
+For ticket 33, applying a signed scenario now derives the source-proposal idempotency identity from the token, so a changed client key cannot create a second proposal. The focused scenario suite passed 15 tests and targeted lint passed. Database replay, source-owner outcomes, and live multi-step repair remain unverified.
+
+For ticket 34, malformed claim or constraint time windows now return unknown capacity for the requested resource instead of disappearing from the calculation. The focused capacity suite passed 10 tests and targeted lint passed. Real allocation races and Inventory freshness remain unverified.
+
+For ticket 35, the overdue Tasks metric now enforces its documented 28-day lower bound when processing source pages. The focused coach suite passed 8 tests and targeted lint passed. Live consent changes, private access, and lifecycle corrections remain unverified.
+
+For ticket 36, offline busy-window snapshots exceeding the 2,000-window cap now report partial aggregate and source coverage. The focused cache suite passed 11 tests and targeted lint passed. The production browser tool still fails during initialization with an OS kernel-asset path error; a DNS lookup was denied by this task environment. Live authenticated offline behavior remains unverified.
+
 ## Core projection migration
 
 Evidence recorded on 2026-10-13 for tickets 01 through 12.

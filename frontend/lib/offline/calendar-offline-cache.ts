@@ -208,20 +208,21 @@ export async function saveOfflineCalendarSnapshot(
   )
     return;
   const writeEpoch = cacheEpoch;
+  const busyWindows = result.events.filter((event) => event.availability !== "free");
+  const truncated = busyWindows.length > 2000;
   const snapshot: OfflineCalendarSnapshot = {
     identity,
     fetchedAt: Date.now(),
     windowStart: start.toISOString(),
     windowEnd: end.toISOString(),
-    coverage: result.coverageState,
+    coverage: truncated && result.coverageState === "complete" ? "partial" : result.coverageState,
     policyVersion: policy.version,
     maxAgeDays: policy.maxAgeDays,
     sources: result.coverage.map((entry) => ({
       sourceKey: entry.sourceKey,
-      state: entry.state,
+      state: truncated && entry.state === "complete" ? "partial" : entry.state,
     })),
-    windows: result.events
-      .filter((event) => event.availability !== "free")
+    windows: busyWindows
       .slice(0, 2000)
       .map((event) => ({
         start: event.start,

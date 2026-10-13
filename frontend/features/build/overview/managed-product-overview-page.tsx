@@ -141,6 +141,13 @@ export function ManagedProductOverviewPage({
           initial="hidden"
           animate="visible"
         >
+          {summaryData ? (
+            <ManagedProductOverviewPulse
+              managedProductId={managedProductId}
+              summary={summaryData}
+            />
+          ) : null}
+
           <BuildOfflineNotice dataUpdatedAt={summaryDataUpdatedAt} />
 
           {summaryData ? (
@@ -153,18 +160,12 @@ export function ManagedProductOverviewPage({
                   product={summaryData.product}
                   now={now}
                 />
-                <div className="min-w-0 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:h-full">
+                <div className="min-w-0 lg:col-start-2 lg:row-start-1 lg:h-full">
                   <ManagedProductOverviewAttention
                     signals={attentionSignals}
                     onMarkReviewed={markReviewed}
                     isMarkingReviewed={isMarkingReviewed}
                     className="lg:h-full"
-                  />
-                </div>
-                <div className="min-w-0 lg:col-start-1 lg:row-start-2">
-                  <ManagedProductOverviewPulse
-                    managedProductId={managedProductId}
-                    summary={summaryData}
                   />
                 </div>
               </motion.div>

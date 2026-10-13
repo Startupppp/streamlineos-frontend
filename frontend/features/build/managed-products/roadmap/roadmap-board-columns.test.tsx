@@ -257,11 +257,27 @@ describe("RoadmapBoardColumns — in-column reorder (BSN-RM-SORT)", () => {
 describe("RoadmapBoardColumns — column structure (BSN-RM-BOARD)", () => {
   it("renders all three horizon columns even when all groups are empty", () => {
     const grouped = { now: [], next: [], later: [] };
-    render(<RoadmapBoardColumns grouped={grouped} onEdit={onEdit} onDelete={onDelete} />);
+    const { container } = render(
+      <RoadmapBoardColumns grouped={grouped} onEdit={onEdit} onDelete={onDelete} />,
+    );
     expect(screen.getByText("Now")).toBeInTheDocument();
     expect(screen.getByText("Next")).toBeInTheDocument();
     expect(screen.getByText("Later")).toBeInTheDocument();
     expect(screen.getAllByText("No items yet")).toHaveLength(3);
+    expect(screen.getByTestId("roadmap-board-columns")).toHaveClass(
+      "rounded-xl",
+      "bg-muted/20",
+    );
+    for (const emptyState of screen.getAllByRole("status")) {
+      expect(emptyState).toHaveClass("min-h-48", "flex-1");
+      expect(emptyState.parentElement).toHaveClass("flex", "flex-col", "flex-1");
+    }
+    for (const heading of ["Now", "Next", "Later"]) {
+      expect(container.querySelector(`#roadmap-horizon-${heading.toLowerCase()}`)?.closest("section")).toHaveClass(
+        "bg-muted/30",
+        "border-border/80",
+      );
+    }
   });
 
   it("places cards in the column matching their horizon", () => {

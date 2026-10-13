@@ -2,9 +2,11 @@
 
 import { useCallback } from "react";
 import { EllipsisIcon } from "@animateicons/react/lucide";
+import { RocketIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Button } from "@/components/ui/button";
-import { LoadingButton } from "@/components/ui/loading-button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -40,16 +42,23 @@ export function ReleaseRowActions({ release }: ReleaseRowActionsProps) {
     <div className="flex shrink-0 items-center gap-2">
       <span className="hidden text-xs text-muted-foreground sm:block">{formatRelativeTime(release.updatedAt)}</span>
       {release.status === "draft" && canUpdate ? (
-        <LoadingButton
-          type="button"
-          variant="outline"
-          size="sm"
-          isPending={isPending}
-          loadingText="Releasing…"
-          onClick={handleMarkReleased}
-        >
-          Mark released
-        </LoadingButton>
+        <TooltipProvider delayDuration={0}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <AnimatedIconButton
+                icon={RocketIcon}
+                type="button"
+                variant="outline"
+                size="icon"
+                className="size-8 text-status-success-ink transition-[color,background-color,transform] hover:bg-status-success-surface active:scale-95 motion-reduce:transition-none motion-reduce:active:scale-100"
+                aria-label="Mark released"
+                disabled={isPending}
+                onClick={handleMarkReleased}
+              />
+            </TooltipTrigger>
+            <TooltipContent side="top">{isPending ? "Releasing…" : "Mark released"}</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       ) : null}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>

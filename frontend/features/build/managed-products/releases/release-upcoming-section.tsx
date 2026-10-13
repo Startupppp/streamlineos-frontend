@@ -36,7 +36,7 @@ function UpcomingSchedule({ releaseDate, now }: { releaseDate: string | null; no
 
 function UpcomingReleaseRow({ release, now }: { release: ManagedProductRelease; now: Date }) {
   return (
-    <li className="flex flex-col gap-2 px-4 py-3 hover:bg-muted/50 sm:flex-row sm:items-center sm:justify-between">
+    <li className="group flex flex-col gap-2.5 border-b border-border/60 bg-card px-4 py-3 transition-colors last:border-b-0 hover:bg-muted/40 motion-reduce:transition-none sm:flex-row sm:items-center sm:justify-between">
       <div className="flex min-w-0 flex-col gap-1">
         <ReleaseIdentity release={release} />
         <div className="flex flex-wrap items-center gap-2 text-dense text-muted-foreground">
@@ -71,7 +71,7 @@ export function ReleaseUpcomingSection({ releases, count, now, className }: Rele
           action={canUpdate ? { label: "New release", onClick: onCreate } : undefined}
         />
       ) : (
-        <ul aria-label="Upcoming releases" className="flex flex-col divide-y divide-border">
+        <ul aria-label="Upcoming releases" className="flex min-h-full flex-col">
           {releases.map((release) => (
             <UpcomingReleaseRow key={release.id} release={release} now={now} />
           ))}

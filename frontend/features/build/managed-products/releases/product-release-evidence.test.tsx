@@ -110,6 +110,22 @@ beforeEach(() => {
 });
 
 describe("ProductReleaseEvidenceSheet", () => {
+  it("uses a release-shaped loading state that mirrors evidence sections", () => {
+    mockUsePageState.mockReturnValue({ kind: "loading" });
+    mockUseManagedProductRelease.mockReturnValue({
+      data: undefined,
+      isLoading: true,
+      isError: false,
+      error: null,
+      refetch: mockRefetch,
+    });
+
+    renderSheet();
+
+    expect(screen.getByRole("status", { name: "Loading release evidence" })).toBeInTheDocument();
+    expect(document.querySelectorAll("section")).toHaveLength(4);
+  });
+
   it("the detail view renders ticket membership, test runs, incident count and approval state", () => {
     renderSheet();
 

@@ -50,9 +50,9 @@ export function RoadmapHorizonColumn({
   return (
     <section
       aria-labelledby={headingId}
-      className="flex min-h-0 min-w-72 flex-1 flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm"
+      className="flex min-h-0 min-w-72 flex-1 flex-col overflow-hidden rounded-xl border border-border/80 bg-muted/30"
     >
-      <header className="flex shrink-0 items-start justify-between gap-2 border-b border-border px-3 py-3">
+      <header className="flex shrink-0 items-start justify-between gap-2 border-b border-border/80 bg-muted/40 px-3 py-3">
         <div className="flex min-w-0 flex-col gap-1">
           <div className="flex items-center gap-2">
             <span
@@ -96,12 +96,13 @@ export function RoadmapHorizonColumn({
           ) : null}
         </div>
       </header>
-      <div className="min-h-0 flex-1 overflow-y-auto p-2">
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-2">
         {items.length === 0 ? (
           <EmptyState
             title="No items yet"
             description={ROADMAP_HORIZON_EMPTY[horizon]}
             compact
+            className="min-h-48 flex-1"
             action={
               canManage && onCreate
                 ? { label: "+ Add item", onClick: onCreate }

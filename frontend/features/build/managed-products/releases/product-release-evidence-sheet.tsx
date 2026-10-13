@@ -9,7 +9,7 @@ import {
   SheetTitle,
   SheetDescription,
 } from "@/components/ui/sheet";
-import { LoadingState } from "@/components/shared/loading-state";
+import { Skeleton } from "@/components/ui/skeleton";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
 import { useManagedProductRelease } from "@/hooks/api/build/managed-product-releases";
@@ -26,6 +26,46 @@ interface ProductReleaseEvidenceSheetProps {
   releaseId: number;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+}
+
+function ReleaseEvidenceSkeleton() {
+  const sections = [
+    { id: "tickets", rows: 3 },
+    { id: "tests", rows: 2 },
+    { id: "incidents", rows: 2 },
+  ] as const;
+  return (
+    <div role="status" aria-label="Loading release evidence" className="flex flex-col gap-5">
+      {sections.map((section) => (
+        <section
+          key={section.id}
+          className="overflow-hidden rounded-xl border border-border/80 bg-card shadow-xs"
+        >
+          <div className="flex items-center justify-between border-b border-border/60 px-3 py-2.5">
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-5 w-8 rounded-full" />
+          </div>
+          <div className="flex flex-col divide-y divide-border/60 px-3">
+            {Array.from({ length: section.rows }, (_, rowIndex) => (
+              <div key={`${section.id}-${rowIndex}`} className="flex min-h-12 items-center gap-3 py-2">
+                <Skeleton className="size-8 shrink-0 rounded-md" />
+                <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+                  <Skeleton className="h-3.5 w-3/5" />
+                  <Skeleton className="h-3 w-2/5" />
+                </div>
+                <Skeleton className="h-5 w-14 rounded-full" />
+              </div>
+            ))}
+          </div>
+        </section>
+      ))}
+      <section className="rounded-xl border border-border/80 bg-card p-3 shadow-xs">
+        <Skeleton className="h-4 w-28" />
+        <Skeleton className="mt-3 h-9 w-full rounded-md" />
+      </section>
+      <span className="sr-only">Loading release evidence</span>
+    </div>
+  );
 }
 
 export function ProductReleaseEvidenceSheet({
@@ -70,7 +110,7 @@ export function ProductReleaseEvidenceSheet({
         <div className="min-h-0 flex-1 overflow-y-auto px-6 py-4">
           <PageState
             resolution={resolution}
-            loading={<LoadingState variant="list" rows={4} />}
+            loading={<ReleaseEvidenceSkeleton />}
             onRetry={handleRetry}
           >
             {detail.data?.evidence === null ? (

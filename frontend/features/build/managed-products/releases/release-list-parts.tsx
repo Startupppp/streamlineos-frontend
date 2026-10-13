@@ -21,9 +21,9 @@ export function ReleaseSection({ id, title, description, count, className, child
   return (
     <section
       aria-labelledby={headingId}
-      className={cn(CONTENT_PANEL_SOLID, "flex min-w-0 flex-col overflow-hidden", className)}
+      className={cn(CONTENT_PANEL_SOLID, "flex min-w-0 flex-col overflow-hidden shadow-sm", className)}
     >
-      <div className="flex shrink-0 items-start justify-between gap-3 border-b border-border px-4 py-3">
+      <div className="flex shrink-0 items-start justify-between gap-3 border-b border-border/70 bg-muted/20 px-4 py-3">
         <div className="flex min-w-0 flex-col gap-1">
           <h2 id={headingId} className="text-sm font-semibold text-balance text-foreground">
             {title}
@@ -34,7 +34,7 @@ export function ReleaseSection({ id, title, description, count, className, child
         </div>
         <span className="font-mono text-dense tabular-nums text-muted-foreground">{count}</span>
       </div>
-      {children}
+      <div className="min-h-0 flex-1">{children}</div>
     </section>
   );
 }

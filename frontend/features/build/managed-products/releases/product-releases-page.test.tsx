@@ -123,7 +123,8 @@ describe("ProductReleasesPage", () => {
   it("renders upcoming drafts and the shipped timeline with a count subtitle", () => {
     render(<ProductReleasesPage managedProductId={7} />);
     expect(screen.getByRole("heading", { level: 1, name: "Releases" })).toBeInTheDocument();
-    expect(screen.getByText("1 draft · 1 released · 1 archived")).toBeInTheDocument();
+    expect(screen.getByText("1 upcoming · 1 shipped")).toBeInTheDocument();
+    expect(screen.getByTestId("active-release-grid")).toHaveClass("flex-1", "items-stretch");
     const upcoming = screen.getByRole("list", { name: "Upcoming releases" });
     expect(within(upcoming).getByText("Spring launch")).toBeInTheDocument();
     const shipped = screen.getByRole("list", { name: "Shipped releases" });
@@ -171,6 +172,13 @@ describe("ProductReleasesPage", () => {
       { releaseId: 1, expectedRevision: 1, status: "released", releaseDate: getTodayString() },
       expect.objectContaining({ onSuccess: expect.any(Function), onError: expect.any(Function) }),
     );
+  });
+
+  it("explains the icon-only release action on hover", async () => {
+    const user = userEvent.setup();
+    render(<ProductReleasesPage managedProductId={7} />);
+    await user.hover(screen.getByRole("button", { name: "Mark released" }));
+    expect(await screen.findByRole("tooltip")).toHaveTextContent("Mark released");
   });
 
   it("keeps an existing release date when marking a draft as released", async () => {

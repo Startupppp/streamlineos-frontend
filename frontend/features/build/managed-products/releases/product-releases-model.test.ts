@@ -49,8 +49,8 @@ describe("releasesSubtitle", () => {
       [release({ id: 1 }), release({ id: 2 }), release({ id: 3, status: "released" })],
       "2026-10-11",
     );
-    expect(releasesSubtitle(groups, false)).toBe("2 drafts · 1 released");
-    expect(releasesSubtitle(groups, true)).toBe("2+ drafts · 1+ released");
+    expect(releasesSubtitle(groups, false)).toBe("2 upcoming · 1 shipped");
+    expect(releasesSubtitle(groups, true)).toBe("2+ upcoming · 1+ shipped");
   });
 
   it("describes the page when there are no releases", () => {

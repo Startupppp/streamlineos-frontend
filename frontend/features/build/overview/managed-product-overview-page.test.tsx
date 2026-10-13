@@ -106,6 +106,15 @@ describe("ManagedProductOverviewPage — access control", () => {
 });
 
 describe("ManagedProductOverviewPage — three distinct sections", () => {
+  it("places the compact product pulse first in the content below the filters", () => {
+    render(<ManagedProductOverviewPage managedProductId={42} />);
+    const pulse = screen.getByRole("region", { name: "Product pulse" });
+
+    expect(pulse.parentElement?.firstElementChild).toBe(pulse);
+    expect(pulse.querySelector("[data-slot=stat-card-grid]")).toHaveClass("gap-2");
+    expect(within(pulse).getAllByRole("link")).toHaveLength(5);
+  });
+
   it("renders Evidence strength, Delivery progress, and Measured outcomes section headings", () => {
     render(<ManagedProductOverviewPage managedProductId={42} />);
     expect(screen.getByText("Evidence strength")).toBeInTheDocument();

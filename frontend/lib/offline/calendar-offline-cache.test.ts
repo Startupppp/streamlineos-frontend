@@ -148,6 +148,26 @@ describe("Calendar offline cache identity", () => {
     expect(db.puts).toEqual([expect.objectContaining({ identity: "org-1:user-1" })]);
   });
 
+  it("marks offline coverage partial when the busy-window cache limit is reached", async () => {
+    const db = fakeIndexedDb();
+    sessionStorage.setItem("streamline-calendar-offline-session-identity", "org-1:user-1");
+    localStorage.setItem("streamline-calendar-offline-identity", "org-1:user-1");
+    allowOfflineCalendarPolicy("org-1:user-1", 1);
+    const pending = saveOfflineCalendarSnapshot("org-1:user-1", new Date("2026-10-13T09:00:00.000Z"), new Date("2026-10-13T10:00:00.000Z"), {
+      events: Array.from({ length: 2001 }, () => ({ start: "2026-10-13T09:00:00.000Z", end: "2026-10-13T09:01:00.000Z", allDay: false, availability: "busy" })),
+      coverageState: "complete",
+      coverage: [{ sourceKey: "native", state: "complete" }],
+    } as never, { version: 1, maxAgeDays: 1 });
+    db.openNext();
+    await pending;
+    expect(db.puts).toEqual([expect.objectContaining({
+      coverage: "partial",
+      sources: [{ sourceKey: "native", state: "partial" }],
+      windows: expect.arrayContaining([expect.objectContaining({ availability: "busy" })]),
+    })]);
+    expect((db.puts[0] as { windows: unknown[] }).windows).toHaveLength(2000);
+  });
+
   it("rejects a stale enabled policy after another tab disables caching", async () => {
     const db = fakeIndexedDb();
     sessionStorage.setItem("streamline-calendar-offline-session-identity", "org-1:user-1");

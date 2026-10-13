@@ -92,7 +92,7 @@ export function ProductReleasesPage({ managedProductId }: ProductReleasesPagePro
               }
             >
               <ReleaseActionsProvider value={page.actions}>
-                <div className="flex flex-col gap-4 pb-4">
+                <div className="flex min-h-0 flex-1 flex-col gap-4 pb-4">
                   <StatCardGrid cols={4}>
                     <StatCard
                       label="Drafts"
@@ -126,17 +126,20 @@ export function ProductReleasesPage({ managedProductId }: ProductReleasesPagePro
                       count={releaseCountValue(groups.archived.length, hasMore)}
                     />
                   ) : (
-                    <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-5">
+                    <div
+                      data-testid="active-release-grid"
+                      className="grid min-h-0 flex-1 grid-cols-1 items-stretch gap-4 lg:grid-cols-5"
+                    >
                       <ReleaseUpcomingSection
                         releases={groups.upcoming}
                         count={releaseCountValue(groups.upcoming.length, hasMore)}
                         now={now}
-                        className="lg:col-span-2"
+                        className="h-full min-h-0 lg:col-span-2"
                       />
                       <ReleaseShippedTimeline
                         releases={groups.shipped}
                         count={releaseCountValue(groups.shipped.length, hasMore)}
-                        className="lg:col-span-3"
+                        className="h-full min-h-0 lg:col-span-3"
                       />
                     </div>
                   )}
