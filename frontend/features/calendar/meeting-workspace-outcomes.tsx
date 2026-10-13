@@ -22,6 +22,7 @@ import {
 import { useConfirmCalendarSourceActionProposal } from "@/hooks/api/calendar-source-actions";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
+import { MeetingWorkspaceSourceActionDraft } from "./meeting-workspace-source-action-draft";
 
 export function MeetingWorkspaceOutcomes({
   workspace,
@@ -140,6 +141,8 @@ export function MeetingWorkspaceOutcomes({
         </div>
       </div>
 
+      <MeetingWorkspaceSourceActionDraft workspace={workspace} />
+
       <div className="space-y-2">
         {workspace.drafts.length === 0 ? (
           <p className="text-xs text-muted-foreground">
@@ -224,6 +227,20 @@ export function MeetingWorkspaceOutcomes({
                     </Button>
                   </div>
                 ) : null}
+              </div>
+            ) : null}
+            {!draft.sourceProposal && draft.sourceOutcome ? (
+              <div className="space-y-1 rounded-md bg-muted/40 p-2">
+                {draft.sourceOutcome.steps.map((step, index) => (
+                  <p
+                    key={`${draft.id}-${index}`}
+                    className="text-xs text-muted-foreground"
+                  >
+                    Source action {index + 1}: {step.status.toLowerCase()}
+                    {step.outcomeMessage ? ` · ${step.outcomeMessage}` : ""}
+                    {step.receiptRecorded ? " · receipt recorded" : ""}
+                  </p>
+                ))}
               </div>
             ) : null}
             <p className="text-micro text-muted-foreground">

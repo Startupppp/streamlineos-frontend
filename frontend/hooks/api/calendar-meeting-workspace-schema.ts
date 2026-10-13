@@ -40,6 +40,15 @@ export const calendarMeetingDraftContract = z.object({
   status: z.enum(["DRAFT", "DECLINED", "PROPOSED", "APPLIED", "PARTIAL"]),
   sourceActionProposalId: z.string().uuid().nullable(),
   sourceProposal: calendarSourceActionProposalContract.nullable(),
+  sourceOutcome: z.object({
+    status: z.enum(["PROPOSED", "APPLYING", "COMPLETED", "PARTIAL", "EXPIRED", "CANCELLED"]),
+    steps: z.array(z.object({
+      status: z.enum(["PENDING", "DECLINED", "RUNNING", "COMMITTED", "FAILED", "UNCERTAIN"]),
+      outcomeCode: z.string().nullable(),
+      outcomeMessage: z.string().nullable(),
+      receiptRecorded: z.boolean(),
+    })),
+  }).nullable(),
   version: z.number().int().positive(),
   reviewedAt: z.string().datetime().nullable(),
   createdAt: z.string().datetime(),

@@ -345,7 +345,7 @@ function MeetingWorkspaceSheet({
   open,
   onOpenChange,
 }: MeetingWorkspaceSheetProps) {
-  const eventId = event ? parseCalendarEventId(event.id).eventId : null;
+  const eventId = event ? parseCalendarEventId(event.id)?.eventId ?? null : null;
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="flex flex-col p-0 w-full sm:max-w-2xl">

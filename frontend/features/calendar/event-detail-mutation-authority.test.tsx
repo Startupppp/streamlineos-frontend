@@ -25,6 +25,7 @@ jest.mock("./event-detail-content", () => ({
 }));
 
 jest.mock("./event-create-dialog", () => ({ EventCreateDialog: () => null }));
+jest.mock("./calendar-source-action-panel", () => ({ CalendarSourceActionPanel: () => null }));
 
 jest.mock("@/hooks/api/calendar", () => ({
   parseCalendarEventId: (id: string) => {
