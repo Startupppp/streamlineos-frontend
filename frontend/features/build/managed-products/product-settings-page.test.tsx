@@ -49,14 +49,17 @@ jest.mock("@/components/shared/page-state", () => ({
     resolution,
     loading,
     children,
+    notFound,
   }: {
     resolution: { kind: string; permission?: string | null };
     loading: React.ReactNode;
     children: React.ReactNode;
+    notFound?: React.ReactNode;
   }) => {
     if (resolution.kind === "loading") return <div data-testid="page-loading">{loading}</div>;
     if (resolution.kind === "denied") return <div data-testid="no-permission" />;
     if (resolution.kind === "error") return <div data-testid="error-state" />;
+    if (resolution.kind === "not-found") return <div data-testid="not-found">{notFound}</div>;
     return <div data-testid="page-ready">{children}</div>;
   },
 }));
@@ -369,5 +372,19 @@ describe("ProductSettingsPage — allowedActions gate", () => {
   it("shows save button when allowedActions includes update and useCan is true", () => {
     render(<ProductSettingsPage managedProductId={7} />);
     expect(screen.getByRole("button", { name: /save changes/i })).toBeInTheDocument();
+  });
+
+  it("shows product not found when the product is missing", () => {
+    mockUseManagedProduct.mockReturnValue({
+      data: null,
+      isSuccess: true,
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+    render(<ProductSettingsPage managedProductId={7} />);
+    expect(screen.getByText("Product not found")).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Identity, strategy & lifecycle" })).not.toBeInTheDocument();
   });
 });

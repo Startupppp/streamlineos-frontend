@@ -78,7 +78,7 @@ export function MeetingWorkspaceContext({ workspace }: { workspace: CalendarMeet
 
   return (
     <div className="space-y-4">
-      <div className="grid gap-2 rounded-lg border p-3 sm:grid-cols-2">
+      {workspace.canManage ? <div className="grid gap-2 rounded-lg border p-3 sm:grid-cols-2">
         <Select value={contextType} onValueChange={(value) => {
           const next = value as keyof typeof contextLabels;
           setContextType(next);
@@ -101,7 +101,7 @@ export function MeetingWorkspaceContext({ workspace }: { workspace: CalendarMeet
         <Button size="sm" className="h-8" onClick={handleAdd} disabled={add.isPending || !sourceRecordId.trim()}>
           <Link2 className="mr-1.5 h-3.5 w-3.5" />Link context
         </Button>
-      </div>
+      </div> : null}
 
       <div className="space-y-2">
         {workspace.contexts.length === 0 ? <p className="text-xs text-muted-foreground">No linked context yet.</p> : null}
@@ -120,17 +120,21 @@ export function MeetingWorkspaceContext({ workspace }: { workspace: CalendarMeet
             {context.failureCode ? <p className="text-micro text-muted-foreground">{context.failureCode.replaceAll("_", " ").toLowerCase()}</p> : null}
             <div className="flex flex-wrap items-center gap-2">
               {context.href && context.state !== "UNAVAILABLE" ? <Button asChild variant="outline" size="sm" className="h-7 text-xs"><Link href={context.href}>Open source</Link></Button> : null}
-              <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => changeContext(context.id, context.version, { sharedWithGuests: !context.sharedWithGuests })}>
-                {context.sharedWithGuests ? "Stop guest sharing" : "Share with guests"}
-              </Button>
-              {(context.contextType === "RECORDING" || context.contextType === "TRANSCRIPT") ? (
-                <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => changeContext(context.id, context.version, { consentStatus: context.consentStatus === "GRANTED" ? "WITHDRAWN" : "GRANTED" })}>
-                  {context.consentStatus === "GRANTED" ? "Withdraw consent" : "Record consent"}
-                </Button>
+              {workspace.canManage ? (
+                <>
+                  <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => changeContext(context.id, context.version, { sharedWithGuests: !context.sharedWithGuests })}>
+                    {context.sharedWithGuests ? "Stop guest sharing" : "Share with guests"}
+                  </Button>
+                  {(context.contextType === "RECORDING" || context.contextType === "TRANSCRIPT") ? (
+                    <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => changeContext(context.id, context.version, { consentStatus: context.consentStatus === "GRANTED" ? "WITHDRAWN" : "GRANTED" })}>
+                      {context.consentStatus === "GRANTED" ? "Withdraw consent" : "Record consent"}
+                    </Button>
+                  ) : null}
+                  <Button variant="ghost" size="sm" className="h-7 text-xs text-destructive" onClick={() => changeContext(context.id, context.version, { revoke: true })} disabled={context.state === "REVOKED"}>
+                    <Unlink className="mr-1 h-3.5 w-3.5" />Revoke
+                  </Button>
+                </>
               ) : null}
-              <Button variant="ghost" size="sm" className="h-7 text-xs text-destructive" onClick={() => changeContext(context.id, context.version, { revoke: true })} disabled={context.state === "REVOKED"}>
-                <Unlink className="mr-1 h-3.5 w-3.5" />Revoke
-              </Button>
             </div>
           </div>
         ))}

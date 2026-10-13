@@ -119,6 +119,7 @@ function makeProduct(id: number = PRODUCT_ID) {
     nextRelease: null,
     feedbackTrend: { last30d: 0, previous30d: 0 },
     goalHealth: null,
+    sourceFreshness: null,
     owner: { id: SESSION.userId, firstName: "MP09", lastName: "States", email: SESSION.email, image: null },
   };
 }
@@ -198,7 +199,18 @@ async function installRoutes(page: Page, state: ApiRouteState): Promise<void> {
     }
 
     if (p === `/build/managed-products/${PRODUCT_ID}/summary`) {
-      return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ id: PRODUCT_ID, name: `MP09 States Product ${PRODUCT_ID}`, key: `ST-${PRODUCT_ID}`, status: "active", lifecycle: "build", health: "on_track", linkedProjectCount: 0, feedbackTrend: { last30d: 0, previous30d: 0 }, goalHealth: null, nextRelease: null }) });
+      const summaryProduct = makeProduct();
+      return route.fulfill({
+        status: 200, contentType: "application/json",
+        body: JSON.stringify({
+          product: summaryProduct,
+          evidence: { feedbackCount: 0, feedbackLast30d: 0, themedCount: 0, latestFeedbackAt: null, opportunityCount: 0, opportunitiesByState: {} },
+          delivery: { linkedProjects: 0, roadmapByHorizon: { now: 0, next: 0, later: 0 }, roadmapCompleted: 0, ticketTotals: { total: 0, done: 0 }, nextRelease: null },
+          outcomes: { goalsLinked: 0, outcomeReviews: { scheduled: 0, completed: 0, met: 0, notMet: 0 }, latestReviewAt: null },
+          previews: { themes: [], roadmap: [], releases: [], opportunities: [], goals: [], decisions: [], changelogPublished: 0 },
+          generatedAt: "2026-10-01T00:00:00.000Z",
+        }),
+      });
     }
 
     const emptyPage = { data: [], pagination: { limit: 25, nextCursor: null, hasMore: false } };
@@ -248,8 +260,8 @@ test.describe("MP-09 list page states × viewports", () => {
         await expect(page).not.toHaveURL(/\/signin/);
         await page.waitForLoadState("networkidle");
         await expect(page.getByRole("status")).toBeVisible({ timeout: 20_000 });
-        await expect(page.getByText(/no managed products yet/i)).toBeVisible();
-        await expect(page.getByText(/could not load/i)).not.toBeVisible();
+        await expect(page.getByText(/Start with a product/i)).toBeVisible();
+        await expect(page.getByText(/Something went wrong/i)).not.toBeVisible();
       });
 
       test("error: renders error state with retry, not empty state", async ({ page }) => {
@@ -257,8 +269,8 @@ test.describe("MP-09 list page states × viewports", () => {
         await page.goto("/build/managed-products");
         await expect(page).not.toHaveURL(/\/signin/);
         await page.waitForLoadState("networkidle");
-        await expect(page.getByText(/could not load/i)).toBeVisible({ timeout: 20_000 });
-        await expect(page.getByText(/no managed products yet/i)).not.toBeVisible();
+        await expect(page.getByText(/Something went wrong/i)).toBeVisible({ timeout: 20_000 });
+        await expect(page.getByText(/Start with a product/i)).not.toBeVisible();
       });
 
       test("no horizontal overflow in any state", async ({ page }) => {
@@ -372,7 +384,7 @@ test.describe("MP-09 denied state: list page shows access restricted, not empty"
     await expect(page).not.toHaveURL(/\/signin/);
     await page.waitForLoadState("networkidle");
 
-    await expect(page.getByText(/no managed products yet/i)).not.toBeVisible({ timeout: 20_000 });
+    await expect(page.getByText(/Start with a product/i)).not.toBeVisible({ timeout: 20_000 });
   });
 });
 

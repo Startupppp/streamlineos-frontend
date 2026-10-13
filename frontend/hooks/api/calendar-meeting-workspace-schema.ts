@@ -62,6 +62,7 @@ export const calendarMeetingWorkspaceContract = z.object({
   eventStartAt: z.string().datetime(),
   eventEndAt: z.string().datetime(),
   agenda: z.string().nullable(),
+  canManage: z.boolean(),
   version: z.number().int().positive(),
   retentionUntil: z.string().datetime().nullable(),
   recordingConsentStatus: z.enum(["PENDING", "GRANTED", "WITHDRAWN"]),

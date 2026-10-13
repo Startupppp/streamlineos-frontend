@@ -45,6 +45,7 @@ import {
   productSettingsTabFromParam,
 } from "./product-settings-tabs";
 import { useProductReturn } from "@/features/build/shared/use-product-return";
+import { ManagedProductNotFound } from "./managed-product-detail-layout";
 
 interface ProductSettingsPageProps {
   managedProductId: number;
@@ -375,6 +376,7 @@ function ProductSettingsForm({ managedProductId }: ProductSettingsPageProps) {
 export function ProductSettingsPage({
   managedProductId,
 }: ProductSettingsPageProps) {
+  const productQuery = useManagedProduct(managedProductId);
   const { value, setValue } = useBuildListFilters({
     withSearch: false,
     filters: SETTINGS_FILTER_DEFINITIONS,
@@ -388,6 +390,10 @@ export function ProductSettingsPage({
   );
 
   const { handleBack } = useProductReturn(`/build/managed-products/${managedProductId}`);
+
+  if (productQuery.isSuccess && productQuery.data === null) {
+    return <ManagedProductNotFound />;
+  }
 
   return (
     <DirtyStateProvider>

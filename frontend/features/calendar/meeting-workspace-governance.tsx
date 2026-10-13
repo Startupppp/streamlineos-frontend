@@ -27,18 +27,18 @@ export function MeetingWorkspaceGovernance({ workspace }: { workspace: CalendarM
       <section className="rounded-lg border p-3 space-y-3">
         <div className="flex items-center gap-2"><Shield className="h-4 w-4 text-muted-foreground" /><p className="text-sm font-medium">Recording and transcript consent</p><Badge variant="outline" className="ml-auto text-micro">{workspace.recordingConsentStatus}</Badge></div>
         <p className="text-xs text-muted-foreground">Record consent before any recording or transcript source becomes available. Withdrawal immediately hides linked media.</p>
-        <div className="flex gap-2">
+        {workspace.canManage ? <div className="flex gap-2">
           <Button size="sm" className="h-8 text-xs" onClick={() => apply({ recordingConsentStatus: "GRANTED" })}>Record consent</Button>
           <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => apply({ recordingConsentStatus: "WITHDRAWN" })}>Withdraw</Button>
-        </div>
+        </div> : null}
       </section>
       <section className="rounded-lg border p-3 space-y-3">
         <div className="flex items-center gap-2"><TimerReset className="h-4 w-4 text-muted-foreground" /><p className="text-sm font-medium">Workspace retention</p></div>
         <Label htmlFor="meeting-retention" className="text-xs">Remove retained workspace content after</Label>
-        <div className="flex gap-2">
+        {workspace.canManage ? <div className="flex gap-2">
           <Input id="meeting-retention" type="date" value={retentionDate} onChange={(event) => setRetentionDate(event.target.value)} className="h-8 text-xs" />
           <Button size="sm" className="h-8 text-xs" onClick={() => apply({ retentionUntil: retentionDate ? new Date(`${retentionDate}T23:59:59.999Z`).toISOString() : null })}>Save</Button>
-        </div>
+        </div> : null}
         <p className="text-micro text-muted-foreground">Expired content is hidden from members, guests, and meeting AI.</p>
       </section>
     </div>
