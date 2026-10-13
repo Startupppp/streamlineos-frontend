@@ -6,7 +6,7 @@ import { renderWithProviders } from "@/test-utils/render";
 import { DashboardShell } from "./dashboard-shell";
 import { ChatMobileBottomNav } from "@/features/chat/chat-mobile-bottom-nav";
 import { getChatMobileBottomNavClassName } from "./mobile/chat-mobile-chrome-layout";
-import { scrollGutterCssPx } from "./mobile/mobile-bottom-chrome-geometry";
+import { launcherBottomCssPx, scrollGutterCssPx } from "./mobile/mobile-bottom-chrome-geometry";
 
 const drawerCalls: Array<{ direction?: string; open?: boolean }> = [];
 const productSwitcherCalls: Array<{ drawerOnly?: boolean }> = [];
@@ -387,6 +387,12 @@ describe("DashboardShell mobile scroll gutter", () => {
     const main = document.getElementById("dashboard-content");
     expect(main?.style?.getPropertyValue("--mb-scroll-gutter")).toBe(
       `${scrollGutterCssPx(true)}px`,
+    );
+    expect(main?.style?.getPropertyValue("--mb-fab-lane")).toBe(
+      `${scrollGutterCssPx(true)}px`,
+    );
+    expect(document.documentElement.style.getPropertyValue("--mb-launcher-bottom")).toBe(
+      `${launcherBottomCssPx(true)}px`,
     );
   });
 });

@@ -34,8 +34,6 @@ import {
   fabBottomCssPx,
   launcherBottomCssPx,
   scrollGutterCssPx,
-  FAB_MARGIN_PX,
-  FAB_SIZE_PX,
 } from "./mobile/mobile-bottom-chrome-geometry";
 import { isPortalChromelessPath } from "./sidebar/sidebar-nav-items";
 import type { BuildSidebarSlot } from "./sidebar/build-sidebar-slot";
@@ -218,6 +216,19 @@ export function DashboardShell({
   }, []);
 
   useEffect(() => {
+    const root = document.documentElement;
+    root.style.setProperty("--mb-fab-bottom", `${fabBottomCssPx(showAboveBottomNav)}px`);
+    root.style.setProperty(
+      "--mb-launcher-bottom",
+      `${launcherBottomCssPx(showAboveBottomNav)}px`,
+    );
+    return () => {
+      root.style.removeProperty("--mb-fab-bottom");
+      root.style.removeProperty("--mb-launcher-bottom");
+    };
+  }, [showAboveBottomNav]);
+
+  useEffect(() => {
     if (access?.isOrgOwner !== true) return;
 
     if (typeof window.requestIdleCallback === "function") {
@@ -308,9 +319,7 @@ export function DashboardShell({
                     aria-label="Main content"
                     style={{
                       "--mb-scroll-gutter": `${scrollGutterCssPx(showAboveBottomNav)}px`,
-                      "--mb-fab-lane": showAboveBottomNav
-                        ? `${FAB_MARGIN_PX + FAB_SIZE_PX + FAB_MARGIN_PX}px`
-                        : `${scrollGutterCssPx(false)}px`,
+                      "--mb-fab-lane": `${scrollGutterCssPx(showAboveBottomNav)}px`,
                     } as React.CSSProperties}
                     className={cn(
                       "flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden outline-none",

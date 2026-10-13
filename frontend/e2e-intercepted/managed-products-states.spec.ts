@@ -160,6 +160,13 @@ async function installRoutes(page: Page, state: ApiRouteState): Promise<void> {
         }),
       });
     }
+    if (p === "/billing") {
+      const checkout = { configured: false, providerKey: null, environment: null, publicKeyId: null, webhookConfigured: false, unavailableReason: "no_credentials" };
+      return route.fulfill({
+        status: 200, contentType: "application/json",
+        body: JSON.stringify({ subscription: null, publicKeyId: null, isConfigured: false, platformCheckout: checkout }),
+      });
+    }
     if (p === "/me/preferences") return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ language: "en" }) });
     if (p === "/me/inbox/unified/count") {
       return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ notification: 0, mail: 0, approval: 0, total: 0, mailExact: true, approvalExact: true }) });

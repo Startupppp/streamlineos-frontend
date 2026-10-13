@@ -231,7 +231,7 @@ function ProductSettingsForm({ managedProductId }: ProductSettingsPageProps) {
       resolution={pageState}
       loading={<ProductSettingsSkeleton />}
       onRetry={handleRetry}
-      className="flex-1"
+      className="max-md:overflow-y-auto"
     >
       {product ? (
         <div className="flex max-w-2xl flex-col gap-8 pb-12">
