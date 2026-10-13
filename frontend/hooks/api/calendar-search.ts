@@ -21,6 +21,7 @@ export interface CalendarSearchFilters {
   sourceKey?: string;
   status?: string;
   projectId?: string;
+  ownerMembershipId?: string;
   location?: string;
   actionable?: "true" | "false";
 }
@@ -34,11 +35,7 @@ export function useCalendarSearch(
   const userId = session?.user?.id ?? "";
   const canView = useCan("calendar:read");
   return useInfiniteQuery({
-    queryKey: platformHierarchyQueryKeys.calendar.search(
-      orgId,
-      userId,
-      filters,
-    ),
+    queryKey: platformHierarchyQueryKeys.calendar.search(filters),
     initialPageParam: "" as string,
     queryFn: ({ pageParam, signal }) =>
       apiClient.get<CalendarSearchResponse>(

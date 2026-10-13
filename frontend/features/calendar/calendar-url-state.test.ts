@@ -69,4 +69,10 @@ describe("calendar URL state", () => {
       "/calendar?connected_account_id=abc&mode=history&filter=mine&historyPages=3",
     );
   });
+
+  it("restores My Day from the URL", () => {
+    const state = parseCalendarUrlState(new URLSearchParams("mode=my-day&date=2026-10-13"), FALLBACK);
+    expect(state.mode).toBe("my-day");
+    expect(state.date.getDate()).toBe(13);
+  });
 });

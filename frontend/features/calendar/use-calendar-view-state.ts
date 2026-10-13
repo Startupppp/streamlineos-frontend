@@ -220,19 +220,21 @@ export function useCalendarViewState() {
 
   const handlePrev = useCallback(() => {
     setCurrentDate((d) => {
+      if (viewMode === "my-day") return subDays(d, 1);
       if (view === "month") return subMonths(d, 1);
       if (view === "week") return subWeeks(d, 1);
       return subDays(d, 1);
     });
-  }, [setCurrentDate, view]);
+  }, [setCurrentDate, view, viewMode]);
 
   const handleNext = useCallback(() => {
     setCurrentDate((d) => {
+      if (viewMode === "my-day") return addDays(d, 1);
       if (view === "month") return addMonths(d, 1);
       if (view === "week") return addWeeks(d, 1);
       return addDays(d, 1);
     });
-  }, [setCurrentDate, view]);
+  }, [setCurrentDate, view, viewMode]);
 
   const handleToday = useCallback(
     () => setCurrentDate(new Date()),

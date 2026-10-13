@@ -144,6 +144,88 @@ Record one authorized persisted drill-down for feedback traceability, customer i
 
 Manage Product can be called complete when MP-01 through MP-13 are closed against the same code and schema revision.
 
+## Authenticated browser verification — 2026-10-13
+
+This pass used the visible Codex browser against the already-running local
+frontend and its configured API, with the existing authenticated owner session
+and persisted product `testog` (`/build/managed-products/1`). The attempted
+second backend process failed its production environment guard because
+`APP_DATABASE_URL` was absent, and was not used as evidence. This pass did not substitute the public
+design-system gallery or a source-level test for browser evidence.
+
+### Proven in the browser
+
+- At **1280 px**, the directory, overview, Feedback, Insights, Roadmap,
+  Releases, Goals, Linked Projects and Product Settings routes all rendered.
+  The seeded empty states resolved, navigation stayed product-scoped, and there
+  was no document-level horizontal overflow.
+- At **768 px**, the directory, overview, Roadmap and Product Settings rendered
+  without document-level horizontal overflow. The directory table uses its own
+  horizontal viewport at this breakpoint.
+- At **375 px**, the directory switches to product cards and the overview,
+  Feedback, Insights, Roadmap, Releases, Goals, Linked Projects and Product
+  Settings routes all rendered without document-level horizontal overflow.
+- The directory returned the persisted product. Empty Releases, Goals and
+  Linked Projects states resolved after their loading states. Feedback exposed
+  the real tenant state: `Feedbucket is not enabled for your organization`,
+  with Retry, Enable Feedbucket and Manage Modules actions.
+- The browser recorded no warning or error console entries during the pass.
+
+### Browser defects found
+
+1. **Mobile Ask OS collision.** At 375 px the Ask OS launcher sits on top of the
+   bottom navigation's **More** item on every product route inspected. This
+   makes two interactive targets occupy the same bottom-right area and can make
+   the product's overflow navigation unreliable for touch and keyboard users.
+2. **Mobile quick-actions collision.** At 375 px the floating quick-actions
+   button overlaps page content and controls. On Product Settings it is drawn
+   over the right side of the Status field; on the directory and overview it
+   covers card content. Reserve safe space or move the control so it never
+   obscures a form field, card action or navigation target.
+
+### What this closes and what it does not
+
+This closes the authenticated real-route and responsive smoke portion of
+MP-09. MP-09 as written remains open because this pass did not fabricate
+evidence for the rest of its matrix: populated and filtered-empty variants,
+explicit error/denied/not-found/offline routes, keyboard traversal and focus
+return, three-page pagination, dirty-form navigation, failed-mutation value
+retention, deep-link refresh, restricted-role behavior, or expired/revoked
+public-token browser flows. Those cases require suitable fixtures and multiple
+roles/states, then browser execution after the two mobile collisions are fixed.
+
+## Current recheck — 2026-10-13
+
+The current source closes MP-01 through MP-08, MP-10 and MP-11. No additional
+Manage Product implementation defect was found in this recheck. Three gates
+remain:
+
+1. **MP-09 — authenticated browser acceptance.** The real authenticated routes
+   now have responsive smoke evidence at 375/768/1280, as recorded above, and
+   that run found two mobile overlay collisions. Fix those collisions, then
+   complete the remaining state and interaction matrix with authorized and
+   restricted roles, three-page navigation, error/offline states, mutation
+   failures, focus/keyboard flows, and expired/revoked public tokens.
+2. **MP-12 — operational monitoring.** Migration/ledger parity, database
+   lifecycle, concurrency, token revocation and the rollback drill are proven.
+   Add production telemetry and alerting for product read/write latency and
+   errors, publication issue/rotate/revoke failures, feedback-to-opportunity
+   failures, release-evidence failures and authorization-denial anomalies;
+   document dashboard ownership, thresholds, paging/escalation and a tested
+   alert path for the exact deployed revision.
+3. **MP-13 — customer and market validation for the product WOW claims.** The
+   workflows and six persisted drill-downs exist. Reasons 71, 73 and 75 still
+   need browser proof from MP-09. Reasons 72, 74 and 76 additionally need a
+   customer usability/value study, adoption or willingness-to-pay evidence, and
+   same-scope comparison with named competitors such as Productboard and Canny.
+   Until that evidence exists, describe these as implemented workflows or
+   differentiation hypotheses rather than proven competitive advantages.
+
+This recheck uses the product-specific reasons 71–76 in
+`product/customer-value-and-differentiation.md`. The older competitor research
+pack also numbers unrelated global Build ideas 71–76; those are outside this
+Manage Product audit and must not be mixed into its completion decision.
+
 ## Resolution status — 2026-10-12
 
 Source and focused-test tier only. No browser, persisted-database or deployed

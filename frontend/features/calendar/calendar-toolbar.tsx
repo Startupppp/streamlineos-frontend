@@ -171,6 +171,7 @@ interface CalendarToolbarProps {
   onToggleCrmEvents: () => void;
   onToggleAttendanceEvents: () => void;
   hidePrimaryActions?: boolean;
+  navigationDisabled?: boolean;
 }
 
 export const CalendarToolbar = memo(function CalendarToolbar({
@@ -191,6 +192,7 @@ export const CalendarToolbar = memo(function CalendarToolbar({
   onToggleCrmEvents,
   onToggleAttendanceEvents,
   hidePrimaryActions = false,
+  navigationDisabled = false,
 }: CalendarToolbarProps) {
   const handleViewChange = useCallback(
     (v: string) => onViewChange(v as View),
@@ -212,6 +214,7 @@ export const CalendarToolbar = memo(function CalendarToolbar({
                 size="sm"
                 className="shrink-0 px-2.5 text-xs font-medium sm:px-3"
                 onClick={onToday}
+                disabled={navigationDisabled}
               >
                 Today
               </Button>
@@ -227,7 +230,8 @@ export const CalendarToolbar = memo(function CalendarToolbar({
                   variant="outline"
                   size="icon"
                   className="w-8 rounded-r-none border-r-0"
-                  aria-label={`Previous ${VIEW_PERIOD_LABEL[view]}`}
+                  aria-label={`Previous ${viewMode === "my-day" ? "day" : VIEW_PERIOD_LABEL[view]}`}
+                  disabled={navigationDisabled}
                   onClick={onPrev}
                 />
                 <AnimatedIconButton
@@ -236,7 +240,8 @@ export const CalendarToolbar = memo(function CalendarToolbar({
                   variant="outline"
                   size="icon"
                   className="w-8 rounded-l-none"
-                  aria-label={`Next ${VIEW_PERIOD_LABEL[view]}`}
+                  aria-label={`Next ${viewMode === "my-day" ? "day" : VIEW_PERIOD_LABEL[view]}`}
+                  disabled={navigationDisabled}
                   onClick={onNext}
                 />
               </div>

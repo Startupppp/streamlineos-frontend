@@ -10,6 +10,7 @@ import {
   subMonths,
   startOfDay,
   addDays,
+  format,
 } from "date-fns";
 import { Plus, Ticket } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -65,6 +66,9 @@ import { calendarUrl } from "./calendar-url-state";
 import { useCalendarSearch } from "@/hooks/api/calendar-search";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { CalendarMyDayPanel } from "./calendar-my-day-panel";
+import { useCalendarSavedViews } from "@/hooks/api/calendar-saved-views";
+import { calendarSavedViewWindow } from "./calendar-saved-view-date";
+import { CalendarSavedViewControls } from "./calendar-saved-view-controls";
 
 const CalendarGridLayer = dynamic(
   () =>
@@ -159,6 +163,7 @@ const NO_CALENDAR_SEARCH_PAGES: CalendarSearchResponse[] = [];
 
 export function CalendarView() {
   const [myDaySearch, setMyDaySearch] = useState("");
+  const [clockNow, setClockNow] = useState(() => new Date());
   const debouncedMyDaySearch = useDebouncedValue(myDaySearch, 300);
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -168,6 +173,7 @@ export function CalendarView() {
     view,
     setView,
     viewMode,
+    savedFilterId,
     setViewMode,
     calContainerRef,
     calHeight,
@@ -205,6 +211,42 @@ export function CalendarView() {
     handleCloseCreateTicket,
   } = useCalendarViewState();
 
+  useEffect(() => {
+    const interval = window.setInterval(() => setClockNow(new Date()), 60_000);
+    return () => window.clearInterval(interval);
+  }, []);
+  const savedViewsQuery = useCalendarSavedViews(viewMode === "my-day");
+  const selectedSavedView = savedViewsQuery.data?.pages
+    .flatMap((page) => page.items)
+    .find(
+      (item) => item.id === savedFilterId && item.definition.mode === "my-day",
+    );
+  const fetchNextSavedViewPage = savedViewsQuery.fetchNextPage;
+  useEffect(() => {
+    if (
+      !savedFilterId ||
+      selectedSavedView ||
+      !savedViewsQuery.hasNextPage ||
+      savedViewsQuery.isFetchingNextPage
+    )
+      return;
+    void fetchNextSavedViewPage();
+  }, [
+    fetchNextSavedViewPage,
+    savedFilterId,
+    savedViewsQuery.hasNextPage,
+    savedViewsQuery.isFetchingNextPage,
+    selectedSavedView,
+  ]);
+  const savedViewResolving = Boolean(
+    savedFilterId &&
+    !selectedSavedView &&
+    (savedViewsQuery.isLoading || savedViewsQuery.hasNextPage),
+  );
+  const savedViewUnavailable = Boolean(
+    savedFilterId && !selectedSavedView && !savedViewResolving,
+  );
+
   const rangeStart = useMemo(
     () => startOfMonth(subMonths(currentDate, 1)),
     [currentDate],
@@ -226,13 +268,31 @@ export function CalendarView() {
     viewMode !== "history" && viewMode !== "my-day",
   );
   const myDayStart = startOfDay(currentDate);
+  const myDayWindow = selectedSavedView
+    ? calendarSavedViewWindow(selectedSavedView.definition.dateLogic, clockNow)
+    : {
+        start: myDayStart.toISOString(),
+        end: addDays(myDayStart, 1).toISOString(),
+      };
   const myDayQuery = useCalendarSearch(
     {
-      start: myDayStart.toISOString(),
-      end: addDays(myDayStart, 1).toISOString(),
+      start: myDayWindow.start,
+      end: myDayWindow.end,
       query: debouncedMyDaySearch.trim() || undefined,
+      sourceKey: selectedSavedView?.definition.sourceKey,
+      status: selectedSavedView?.definition.status,
+      ownerMembershipId:
+        selectedSavedView?.definition.ownerMembershipId?.toString(),
+      projectId: selectedSavedView?.definition.projectId?.toString(),
+      location: selectedSavedView?.definition.location,
+      actionable:
+        selectedSavedView?.definition.actionable === undefined
+          ? undefined
+          : selectedSavedView.definition.actionable
+            ? "true"
+            : "false",
     },
-    viewMode === "my-day",
+    viewMode === "my-day" && !savedViewResolving && !savedViewUnavailable,
   );
   const myDayPages = myDayQuery.data?.pages ?? NO_CALENDAR_SEARCH_PAGES;
   const myDayEvents = useMemo(
@@ -508,6 +568,11 @@ export function CalendarView() {
               Browse past events from newest to oldest
             </span>
           </div>
+        ) : viewMode === "my-day" ? (
+          <div className="flex flex-col">
+            <span className="text-base font-semibold">{selectedSavedView?.name ?? "My Day"}</span>
+            <span className="text-dense font-normal text-muted-foreground">{selectedSavedView ? "Saved calendar view" : format(currentDate, "EEEE, MMMM d")}</span>
+          </div>
         ) : (
           <CalendarMonthYearPicker
             currentDate={currentDate}
@@ -546,6 +611,7 @@ export function CalendarView() {
           onToggleCrmEvents={toggleCrmEvents}
           onToggleAttendanceEvents={toggleAttendanceEvents}
           hidePrimaryActions
+          navigationDisabled={viewMode === "my-day" && Boolean(selectedSavedView)}
         />
 
         <div className="flex min-h-0 flex-1 gap-4">
@@ -560,22 +626,33 @@ export function CalendarView() {
               )}
             >
               {viewMode === "my-day" ? (
-                myDayQuery.isLoading ? (
-                  <CalendarListFallback label="Loading My Day" />
-                ) : (
-                  <CalendarMyDayPanel
-                    events={myDayEvents}
-                    pages={myDayPages}
-                    search={myDaySearch}
-                    onSearchChange={setMyDaySearch}
-                    onSelectEvent={handleSelectListEvent}
-                    hasMore={Boolean(myDayQuery.hasNextPage)}
-                    isLoadingMore={myDayQuery.isFetchingNextPage}
-                    onLoadMore={() => {
-                      void myDayQuery.fetchNextPage();
-                    }}
-                  />
-                )
+                <div className="flex min-h-0 flex-1 flex-col">
+                  <CalendarSavedViewControls selectedId={savedFilterId} currentDate={currentDate} />
+                  {savedViewResolving || myDayQuery.isLoading ? (
+                    <CalendarListFallback label="Loading My Day" />
+                  ) : savedViewUnavailable ? (
+                    <ErrorState
+                      compact
+                      title="Saved view unavailable"
+                      description="This view is no longer available to you."
+                      className="m-4"
+                    />
+                  ) : (
+                    <CalendarMyDayPanel
+                      events={myDayEvents}
+                      pages={myDayPages}
+                      search={myDaySearch}
+                      onSearchChange={setMyDaySearch}
+                      onSelectEvent={handleSelectListEvent}
+                      hasMore={Boolean(myDayQuery.hasNextPage)}
+                      isLoadingMore={myDayQuery.isFetchingNextPage}
+                      connectedAccountCount={activeConnectionCount}
+                      onLoadMore={() => {
+                        void myDayQuery.fetchNextPage();
+                      }}
+                    />
+                  )}
+                </div>
               ) : viewMode === "calendar" ? (
                 gridActive ? (
                   <CalendarGridLayer
