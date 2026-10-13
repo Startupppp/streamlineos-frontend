@@ -115,10 +115,20 @@ export function useUpdateProgram() {
     mutationKey: ["projects", "programs", "update"],
     mutationFn: ({ programId, ...data }: UpdateProgramInput & { programId: number }) =>
       apiClient.patch<Program>(`/build/programs/${programId}`, data, undefined, programRowContract),
-    onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.programs.list() });
+    onSuccess: (updated, vars) => {
+      qc.setQueriesData<ProgramsPage>(
+        { queryKey: buildWorkQueryKeys.projects.programs.list() },
+        (prev) =>
+          prev
+            ? {
+                ...prev,
+                data: prev.data.map((p) => (p.id === vars.programId ? updated : p)),
+              }
+            : prev,
+      );
       qc.invalidateQueries({
         queryKey: buildWorkQueryKeys.projects.programs.detail(vars.programId),
+        exact: true,
       });
     },
   });

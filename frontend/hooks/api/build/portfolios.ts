@@ -66,7 +66,7 @@ export function usePortfolios(filters?: ListFilters) {
     queryFn: ({ signal }) =>
       apiClient.get<PortfoliosPage>("/build/portfolios", params, signal, portfolioPageContract),
     enabled: canView,
-    staleTime: 60_000,
+    staleTime: 30_000,
   });
 }
 
@@ -140,15 +140,23 @@ export function useUpdatePortfolio() {
         undefined,
         portfolioRowContract,
       ),
-    onSuccess: (_, vars) => {
-      qc.invalidateQueries({
-        queryKey: buildWorkQueryKeys.projects.portfolios.list(),
-      });
-      qc.invalidateQueries({
-        queryKey: buildWorkQueryKeys.projects.portfolios.detail(
-          vars.portfolioId,
-        ),
-      });
+    onSuccess: (updated, vars) => {
+      qc.setQueriesData<PortfoliosPage>(
+        { queryKey: buildWorkQueryKeys.projects.portfolios.list() },
+        (prev) =>
+          prev
+            ? {
+                ...prev,
+                data: prev.data.map((p) =>
+                  p.id === vars.portfolioId ? updated : p,
+                ),
+              }
+            : prev,
+      );
+      qc.setQueryData<PortfolioDetail>(
+        buildWorkQueryKeys.projects.portfolios.detail(vars.portfolioId),
+        (prev) => (prev ? { ...prev, ...updated } : prev),
+      );
     },
   });
 }

@@ -2,13 +2,14 @@ import { renderHook, act } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createElement } from "react";
 import type { ReactNode } from "react";
-import { useCreatePortfolio, useDeletePortfolio } from "./portfolios";
+import { useCreatePortfolio, useDeletePortfolio, useUpdatePortfolio } from "./portfolios";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import type { PortfoliosPage } from "@/types/projects";
 
 jest.mock("@/lib/api-client", () => ({
   apiClient: {
     post: jest.fn(),
+    patch: jest.fn(),
     delete: jest.fn(),
   },
 }));
@@ -152,5 +153,77 @@ describe("useDeletePortfolio — B-075: deleted portfolio disappears from the li
 
     const cached = client.getQueryData<PortfoliosPage>(filteredKey);
     expect(cached?.data.find((p) => p.id === 10)).toBeUndefined();
+  });
+});
+
+describe("useUpdatePortfolio — the edited row is patched in from the response, not refetched", () => {
+  let client: QueryClient;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (apiClient.patch as jest.Mock).mockResolvedValue({
+      ...EXISTING_PAGE.data[0],
+      name: "Renamed Portfolio",
+      status: "on_hold",
+    });
+    client = makeClient();
+  });
+
+  it("replaces the edited row in every cached list so the new name shows without a reload", async () => {
+    const listKey = buildWorkQueryKeys.projects.portfolios.list();
+    const filteredKey = buildWorkQueryKeys.projects.portfolios.list({ limit: "20" });
+    client.setQueryData(listKey, EXISTING_PAGE);
+    client.setQueryData(filteredKey, EXISTING_PAGE);
+
+    const { result } = renderHook(() => useUpdatePortfolio(), { wrapper: wrap(client) });
+
+    await act(async () => {
+      await result.current.mutateAsync({ portfolioId: 10, name: "Renamed Portfolio" });
+    });
+
+    expect(client.getQueryData<PortfoliosPage>(listKey)?.data[0]).toMatchObject({
+      id: 10,
+      name: "Renamed Portfolio",
+      status: "on_hold",
+    });
+    expect(client.getQueryData<PortfoliosPage>(filteredKey)?.data[0]).toMatchObject({
+      name: "Renamed Portfolio",
+    });
+  });
+
+  it("leaves rows it did not edit untouched", async () => {
+    const listKey = buildWorkQueryKeys.projects.portfolios.list();
+    client.setQueryData(listKey, {
+      ...EXISTING_PAGE,
+      data: [...EXISTING_PAGE.data, { ...CREATED_PORTFOLIO, id: 11, name: "Other" }],
+    });
+
+    const { result } = renderHook(() => useUpdatePortfolio(), { wrapper: wrap(client) });
+
+    await act(async () => {
+      await result.current.mutateAsync({ portfolioId: 10, name: "Renamed Portfolio" });
+    });
+
+    const cached = client.getQueryData<PortfoliosPage>(listKey);
+    expect(cached?.data.find((p) => p.id === 11)).toMatchObject({ name: "Other" });
+  });
+
+  it("merges the updated fields into an open detail cache without dropping its linked collections", async () => {
+    const detailKey = buildWorkQueryKeys.projects.portfolios.detail(10);
+    client.setQueryData(detailKey, {
+      ...EXISTING_PAGE.data[0],
+      projects: { data: [{ id: 1 }], pagination: { hasMore: false, nextCursor: null } },
+      programs: { data: [], pagination: { hasMore: false, nextCursor: null } },
+    });
+
+    const { result } = renderHook(() => useUpdatePortfolio(), { wrapper: wrap(client) });
+
+    await act(async () => {
+      await result.current.mutateAsync({ portfolioId: 10, name: "Renamed Portfolio" });
+    });
+
+    const cached = client.getQueryData<Record<string, unknown>>(detailKey);
+    expect(cached).toMatchObject({ name: "Renamed Portfolio", status: "on_hold" });
+    expect(cached?.["projects"]).toMatchObject({ data: [{ id: 1 }] });
   });
 });

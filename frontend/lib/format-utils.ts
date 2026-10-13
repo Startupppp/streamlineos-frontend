@@ -179,13 +179,15 @@ export function formatMoneyCompact(
   value: number | string | null | undefined,
   display: MoneyDisplay,
 ): string {
-  return new Intl.NumberFormat(display.locale, {
+  const amount = toAmount(value);
+  if (display.currency === "INR") return formatINRCompact(amount);
+  return cachedNumberFormat(display.locale, {
     style: "currency",
     currency: display.currency,
     notation: "compact",
     minimumFractionDigits: 0,
     maximumFractionDigits: 1,
-  }).format(toAmount(value));
+  }).format(amount);
 }
 
 const numberFormats = new Map<string, Intl.NumberFormat>();
