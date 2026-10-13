@@ -26,14 +26,7 @@ function CustomerImpactRow({
   row: FeedbucketCustomerImpactRow;
   managedProductId: number;
 }) {
-  const tier = (row as Record<string, unknown>).tier as
-    | string
-    | null
-    | undefined;
-  const segments = (row as Record<string, unknown>).segments as
-    | string[]
-    | null
-    | undefined;
+  const { tier, segments } = row;
 
   return (
     <Link
@@ -51,7 +44,7 @@ function CustomerImpactRow({
           {tier}
         </span>
       ) : null}
-      {segments && segments.length > 0 ? (
+      {segments.length > 0 ? (
         <span
           className="hidden text-xs text-muted-foreground sm:inline"
           data-testid={`segments-${row.crmOrganizationId}`}

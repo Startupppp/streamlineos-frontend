@@ -1,4 +1,5 @@
 import { render, screen, fireEvent } from "@testing-library/react";
+import type { FeedbucketCustomerImpactRow } from "@/hooks/api/feedbucket/feedbucket-schema";
 import { CustomerImpactPanel } from "./customer-impact-panel";
 
 jest.mock("@/hooks/api/feedbucket/use-feedbucket-product-stats", () => ({
@@ -10,13 +11,15 @@ const { useProductCustomerImpact } = jest.requireMock(
 ) as { useProductCustomerImpact: jest.Mock };
 
 const MANAGED_PRODUCT_ID = 55;
-const ROWS = [
+const ROWS: FeedbucketCustomerImpactRow[] = [
   {
     crmOrganizationId: 42,
     customerName: "ACME Corp",
     submissionCount: 7,
     opportunityCount: 2,
     accountValue: "80000.00",
+    segments: [],
+    tier: null,
   },
   {
     crmOrganizationId: 99,
@@ -24,6 +27,8 @@ const ROWS = [
     submissionCount: 3,
     opportunityCount: 0,
     accountValue: null,
+    segments: [],
+    tier: null,
   },
 ];
 
