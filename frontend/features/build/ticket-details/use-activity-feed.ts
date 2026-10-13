@@ -315,6 +315,11 @@ export function useActivityFeed({
         toast.error(`${oversized.name} exceeds the 2 MB file limit.`);
         return;
       }
+      const empty = files.find((file) => file.size === 0);
+      if (empty) {
+        toast.error(`${empty.name} is empty and cannot be uploaded.`);
+        return;
+      }
       let attachedCount = 0;
       const failedNames: string[] = [];
       const cleanupFailedNames: string[] = [];

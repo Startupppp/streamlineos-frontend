@@ -192,6 +192,20 @@ it("names the rejected file instead of uploading a type the server refuses", asy
   expect(mockUploadFile).not.toHaveBeenCalled();
 });
 
+it("refuses a 0-byte attachment with a message rather than uploading nothing", async () => {
+  mockUseCan.mockImplementation((key: string) => key === "build:tickets:update" || key === "build:files:manage");
+  mockToastError.mockClear();
+  mockUploadFile.mockClear();
+  render(<ActivityFeed {...defaultProps} />);
+  const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+  const blank = new File([], "blank.pdf", { type: "application/pdf" });
+  fireEvent.change(input, { target: { files: [blank] } });
+  await waitFor(() =>
+    expect(mockToastError).toHaveBeenCalledWith("blank.pdf is empty and cannot be uploaded."),
+  );
+  expect(mockUploadFile).not.toHaveBeenCalled();
+});
+
 it("replaces saved status with an inline failure and retries through a native button", async () => {
   jest.useFakeTimers();
   mockFlush.mockRejectedValueOnce(new Error("Storage unavailable"));
