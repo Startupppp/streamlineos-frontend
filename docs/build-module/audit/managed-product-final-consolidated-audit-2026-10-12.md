@@ -453,3 +453,175 @@ it — `check:route-classification` costs seconds. And **a deploy that reports
 `success` has not finished**: this one reported success at 04:57:50 and failure
 at 05:00:11, so the status to trust is the one that comes after the container
 has been alive for a few minutes, or better, `/health` itself.
+
+## Fourth pass — 2026-10-13
+
+This pass fixed the two mobile overlay defects the previous pass found, added
+the operational monitoring MP-12 was missing, recorded MP-13's workflow evidence
+and downgraded its market claims, and reopened one item that had been marked
+closed on the strength of half a fix.
+
+### The two mobile defects, and a correction to how defect A was described
+
+The audit recorded defect A as "the Ask OS launcher sits on top of the bottom
+navigation's **More** item". Measured at 375x667 with no safe-area inset, that
+is not what was happening:
+
+| Control | Rect (y from viewport top, x from left) | z-index |
+|---|---|---|
+| Bottom nav | y [603, 667], x [0, 375]; More tab x [300, 375] | 50 |
+| Quick-actions FAB | y [551, 591], x [319, 359] | 60 |
+| Ask OS launcher | y [505, 595], x [205, 367] | 40 |
+
+The launcher's bottom edge sat at 595 and the nav's top edge at 603 — an 8px
+gap, so the launcher never touched the nav. The real collision was
+**launcher against FAB, and it was total containment**: the FAB's entire rect
+lay inside the launcher's, and because the FAB is `z-[60]` against the
+launcher's `z-40` it painted over and swallowed the pointer across that whole
+area. A tap aimed at the launcher's character or its control strip landed on the
+FAB instead. The audit's required outcome — separate, reliable touch and
+keyboard targets — was right; its account of which two controls overlapped was
+not.
+
+A third fault the audit did not mention: **five sub-44px targets, not one**. The
+FAB was `size-10` (40px) and all four of the launcher's control-strip buttons
+were `size-9` (36px).
+
+Both defects are now fixed by one mechanism rather than three independent `rem`
+literals. `components/layout/mobile/mobile-bottom-chrome-geometry.ts` is the
+single source: `NAV_HEIGHT_PX`, `FAB_SIZE_PX`, the two margins, and the derived
+`fabBottomCssPx`, `launcherBottomCssPx` and `scrollGutterCssPx`. The nav, FAB
+and launcher all consume it, as do both drag clamps, and the shell publishes the
+values as CSS variables so fixed descendants cannot drift from the measurement.
+The FAB is now 44px and the launcher's strip buttons are 44px on mobile.
+Stacking order is nav, then FAB 8px above it, then launcher 4px above that, so
+the three rects are **disjoint by construction** — and the separation is on the
+y axis only, so it does not depend on the launcher's measured width or height,
+which is what makes it hold when the launcher's contents change.
+
+Defect B needed a second fix the first attempt missed, and the miss is worth
+recording because it is the `content-fill-panel` opt-in trap. Reserving the
+gutter on the shell wrapper covers only pages that also carry
+`CONTENT_FILL_PANEL`, because `mobile-nav-active` is a selector host and the
+64px it enables materialises only on elements carrying that class. Eight of the
+nine Manage Product routes wrap their scroll region in `PmPageShell` /
+`ManagedProductDetailShell`, which is `overflow-hidden`, so nothing inside them
+can enter the FAB zone at any scroll position. **`product-settings-page.tsx` was
+the exception** — it grows naturally inside `PageWrapper`'s own
+`overflow-y-auto`, so mid-form fields pass through the FAB band as the user
+scrolls. That is exactly why the reported symptom was the FAB over the
+**Status** field on Product Settings and nowhere else. Making `PageState` the
+mobile scroll container (`max-md:overflow-y-auto`) ends its viewport 8px above
+the FAB's top edge. Desktop behaviour is unchanged.
+
+Regression coverage is a pure geometry module under test, not a snapshot and not
+a re-assertion of the class strings: pairwise non-intersection across six
+viewports with nav shown and hidden and safe-area 0 and 34, a 44x44 minimum per
+control, proof that a persisted drag position landing on the nav or on the FAB
+is clamped out of it, proof that the reserved gutter clears the FAB's top edge,
+and a direct test of the containment case that was the live bug. Three of its
+assertions do restate `scrollGutterCssPx`'s own arithmetic and are weak for that
+reason; the rest would fail if the rule broke.
+
+### MP-06 was not closed — Settings never got the fix
+
+The item is recorded closed with "one shared published-state component ... Keep
+confirmation, mutation errors and cache updates consistent in both entry
+points." Only the Roadmap entry point had it. `RoadmapPublicationActive` was
+imported by exactly one file. `product-settings-publication-section.tsx` kept
+its own 198-line copy with:
+
+- **no rotate action at all.** Its recovery text read "unpublish and publish
+  again to get a new one" — which revokes the live link for every existing
+  audience before issuing a replacement. MP-06 exists precisely to replace that
+  with a non-destructive rotate;
+- no issuance time and no expiry, so an unrecoverable link was also
+  unaccountable;
+- no public-item count and none of the live-board wording MP-01 requires both
+  entry points to share.
+
+Both entry points now share one hook (`use-roadmap-publication-controls.ts`) and
+one component, so the two cannot drift again. Four new tests pin the rule rather
+than the markup: rotate-and-copy is offered and the unpublish-and-republish
+advice is gone, issuance and expiry are shown, and rotate calls the publish
+mutation with no preceding revoke.
+
+This is the `PORTAL x2` pattern — a duplicated surface where only one copy was
+repaired — and the lesson is that "closed" has to mean every call site, counted.
+
+### Two more defects found by the same question, both false evidence
+
+Asking "what does this render when the read fails?" found two:
+
+1. **A false zero in the shared publication component.** `publicItemCount` fell
+   back to `0` whenever the preview read returned nothing, and the component
+   rendered "No items are marked as public" — identical to a real empty board.
+   A failed read presented as an authoritative zero. The count is now unknown
+   with a retry when the read errored, absent while it is still in flight, and
+   zero only when the read succeeded and the board is genuinely empty. This is
+   the same "no false zero count" rule MP-07 states for release evidence; it
+   simply was not being applied here.
+2. **An unreachable Tier column.** `opportunity-impact-table.tsx` gated a Tier
+   column on `data.rows.some((r) => (r as Record<string, unknown>).tier != null)`,
+   but neither `feedbucketOpportunityImpactContract` nor
+   `FeedbucketFacetsService.opportunityImpact` has a `tier` field, so `showTier`
+   was always false and the column, its header, its cell and its `data-testid`
+   were all dead. The cast is what hid it from the typecheck, and no test
+   covered it. Removed rather than wired up: tier is a per-customer attribute
+   and this aggregate spans many customers per opportunity, so there is no
+   single tier to show — which is why the service never selected one.
+
+`customer-impact-panel.tsx` read `tier` and `segments` through the same
+`Record<string, unknown>` cast even though the contract declares both as
+required. Both impact tables' fixtures were untyped object literals fed through
+a jest mock, so nothing bound them to the contract and they omitted fields the
+API always sends. Typing the fixtures is what turns a future contract drift into
+a typecheck failure instead of a blank cell.
+
+### The validation gate was blind, and that is now fixed
+
+`frontend/tsconfig.json` listed the generated route types of **seven** build
+directories in `include` — `.next`, `.next-attr`, `.next-build-check`,
+`.next-e2e`, `.next-intercepted` and `.next-build-verification-window12h` —
+while excluding only two of them. Each is written by whichever harness owns it,
+and a `next dev` interrupted mid-write leaves a truncated `routes.d.ts` that
+raises TS1005/TS1128. tsc then reports **only** those lines and suppresses every
+semantic error in the program, so the gate looks like it passes with two known
+generated-file errors while measuring nothing. This happened during this pass: a
+sibling lane was running the Playwright intercepted harness and a typecheck came
+back reporting only `.next-intercepted` errors.
+
+The four unexcluded transient directories are now excluded, which is lossless —
+`**/*.spec.ts` is already excluded from this project, so the harnesses' route
+types were never checked here; `tsconfig.e2e.json` owns those.
+
+**One hazard survives and should be known.** `next-env.d.ts` is generated,
+untracked, and contains a *real import* of whichever dist directory the last
+`next dev` belonged to, and `exclude` cannot drop a directly-imported file. It
+currently reads `import "./.next-e2e/dev/types/routes.d.ts"`, and two
+`.next-e2e` generated files are consequently in the program. Both are intact, so
+the measurements recorded below are sound — but the gate's honesty depends on a
+generated file any sibling harness can rewrite. The durable fix is to stop the
+typecheck depending on `next-env.d.ts`, which is a larger change than this pass
+should make.
+
+### Migrations — production is already at head for Manage Product
+
+`pnpm check:migration-ledger` against production: **1158 applied rows against
+1159 journal entries, watermark 1803110800099, one migration pending, no orphan,
+duplicate or unreachable entries, gate passed.** The single pending entry is
+`2016_calendar_saved_views`, which belongs to another session's in-flight
+calendar work. **No Manage Product migration is pending**, and none was authored
+in this pass, so there was nothing to apply.
+
+`2016` was deliberately **not** applied, for two reasons. Its feature code is
+committed but that session still had uncommitted calendar files while this pass
+ran, and applying a migration whose file may still be edited is what produced
+the `1988_managed_product_share_tokens` ledger divergence recorded in the third
+pass — an applied migration edited afterwards no longer hashes to its ledger row,
+and the seeded harness then refuses the database. It is also a deploy decision
+about another team's feature rather than this audit's to make. So it is flagged
+rather than taken: because a push to `main` is a deploy and `2016`'s code is
+already on `main`, the next push ships code whose tables do not exist in
+production — the same pending-migration-plus-live-call-site landmine that caused
+the 2026-10-13 outage.
