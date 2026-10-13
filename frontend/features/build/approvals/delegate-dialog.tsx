@@ -32,37 +32,41 @@ import {
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import type { DirectoryMember } from "@/hooks/api/members/use-member-directory";
+import { useSubmitGuard } from "@/hooks/common/use-submit-guard";
 
 interface DelegateDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onConfirm: (approverId: string) => void;
-  isPending?: boolean;
+  onConfirm: (approverId: string) => Promise<void>;
   members: DirectoryMember[];
   currentApproverId?: string | null;
+  requesterId?: string | null;
 }
 
 export function DelegateDialog({
   open,
   onOpenChange,
   onConfirm,
-  isPending,
   members,
   currentApproverId,
+  requesterId,
 }: DelegateDialogProps) {
   const form = useForm<DelegateApprovalValues>({
     resolver: zodResolver(delegateApprovalSchema),
     defaultValues: { approverId: "" },
   });
+  const guard = useSubmitGuard(onConfirm);
 
-  const candidates = members.filter((m) => m.id !== currentApproverId);
+  const candidates = members.filter(
+    (m) => m.id !== currentApproverId && m.id !== requesterId,
+  );
 
-  function handleSubmit(values: DelegateApprovalValues) {
-    onConfirm(values.approverId);
+  async function handleSubmit(values: DelegateApprovalValues) {
+    await guard.submit(values.approverId);
   }
 
   function handleOpenChange(open: boolean) {
-    if (!open && isPending) return;
+    if (!open && guard.isSubmitting) return;
     if (!open) form.reset();
     onOpenChange(open);
   }
@@ -117,7 +121,7 @@ export function DelegateDialog({
               <LoadingButton
                 type="submit"
                 size="sm"
-                isPending={isPending}
+                isPending={guard.isSubmitting}
                 loadingText="Delegating…"
               >
                 Delegate

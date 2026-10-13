@@ -1,6 +1,6 @@
 "use client";
 
-import { useInfiniteQuery, useQuery, useQueryClient, type MutateOptions } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery, useQueryClient, type InfiniteData, type MutateOptions, type QueryClient } from "@tanstack/react-query";
 import { useId, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useSession } from "next-auth/react";
 import type { UnreadCount } from "@/types/notifications";
@@ -221,8 +221,48 @@ export function useApproval(projectId: number, approvalId: number, enabled = tru
     isPending: !receipt && !error, refetch };
 }
 
+type ApprovalListPage = { data: BuildApprovalsCreateApprovalResponse[]; pagination: { limit: number; hasMore: boolean; nextCursor: string | null } };
+
+function isApprovalListPage(v: unknown): v is InfiniteData<ApprovalListPage> {
+  return (
+    typeof v === "object" &&
+    v !== null &&
+    "pages" in v &&
+    Array.isArray((v as Record<string, unknown>).pages)
+  );
+}
+
+function patchApprovalInPages(updated: BuildApprovalsCreateApprovalResponse) {
+  return (old: unknown): unknown => {
+    if (!isApprovalListPage(old)) return old;
+    return {
+      ...old,
+      pages: old.pages.map((page) => ({
+        ...page,
+        data: page.data.map((item) => (item.id === updated.id ? updated : item)),
+      })),
+    };
+  };
+}
+
+function removeApprovalFromPages(approvalId: number) {
+  return (old: unknown): unknown => {
+    if (!isApprovalListPage(old)) return old;
+    return {
+      ...old,
+      pages: old.pages.map((page) => ({
+        ...page,
+        data: page.data.filter((item) => item.id !== approvalId),
+      })),
+    };
+  };
+}
+
+type PatchCacheFn<TData, TInput> = (data: TData, input: TInput, projectId: number, qc: QueryClient) => void;
+
 function useApprovalMutation<TInput, TData>(permission: PermissionKey, projectOf: (input: TInput) => number,
-  request: (input: TInput, config: RequestConfig) => Promise<TData>) {
+  request: (input: TInput, config: RequestConfig) => Promise<TData>,
+  patchCache?: PatchCacheFn<TData, TInput>) {
   const { captureOwner, queryClient } = useApprovalOwner();
   type Command = { input: TInput; owner: ApprovalOwner | null; projectId: number; request: typeof request };
   const mutation = useAuthorizedMutation<TData, Error, Command>(permission, {
@@ -234,9 +274,13 @@ function useApprovalMutation<TInput, TData>(permission: PermissionKey, projectOf
       return response;
     },
     onSettled: (...settlement) => {
-      const command = settlement[2];
+      const [data, error, command] = settlement;
       if (!command.owner?.isCurrent()) return;
-      void queryClient.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.approvals.list(command.projectId) });
+      if (!error && patchCache) {
+        patchCache(data as TData, command.input, command.projectId, queryClient);
+      } else {
+        void queryClient.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.approvals.list(command.projectId) });
+      }
       void queryClient.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.approvals.inbox() });
       void queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.inbox.all });
       void queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.notifications.all });
@@ -261,20 +305,43 @@ export function useCreateApproval(projectId: number) {
       (await import("./approvals-schema")).createApprovalInputSchema.parse(data), config, approvalCreateContract));
 }
 export function useDecideApproval(projectId: number) {
-  return useApprovalMutation<BuildApprovalsDecideApprovalBody & { approvalId: number }, BuildApprovalsCreateApprovalResponse>("build:approvals:decide", () => projectId,
+  type Input = BuildApprovalsDecideApprovalBody & { approvalId: number };
+  return useApprovalMutation<Input, BuildApprovalsCreateApprovalResponse>(
+    "build:approvals:decide",
+    () => projectId,
     async ({ approvalId, ...data }, config) =>
       apiClient.patch<BuildApprovalsCreateApprovalResponse>(`/build/${projectId}/approvals/${approvalId}/decide`,
-        (await import("./approvals-schema")).decideApprovalInputSchema.parse(data), config, approvalDecideContract));
+        (await import("./approvals-schema")).decideApprovalInputSchema.parse(data), config, approvalDecideContract),
+    (data, input, pid, qc) => {
+      qc.setQueriesData({ queryKey: buildWorkQueryKeys.projects.approvals.list(pid) }, patchApprovalInPages(data));
+      void qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.approvals.detail(pid, input.approvalId), exact: true, refetchType: "none" });
+    },
+  );
 }
 export function useUpdateApproval(projectId?: number) {
-  return useApprovalMutation("build:approvals:manage", (input: BuildApprovalsUpdateApprovalBody & ApprovalTarget) => projectId ?? input.projectId ?? 0,
+  type Input = BuildApprovalsUpdateApprovalBody & ApprovalTarget;
+  return useApprovalMutation<Input, BuildApprovalsCreateApprovalResponse>(
+    "build:approvals:manage",
+    (input) => projectId ?? input.projectId ?? 0,
     async ({ approvalId, projectId: targetProject, ...data }, config) =>
       apiClient.patch<BuildApprovalsCreateApprovalResponse>(`/build/${projectId ?? targetProject ?? 0}/approvals/${approvalId}`,
-        (await import("./approvals-schema")).updateApprovalInputSchema.parse(data), config, approvalUpdateContract));
+        (await import("./approvals-schema")).updateApprovalInputSchema.parse(data), config, approvalUpdateContract),
+    (data, input, pid, qc) => {
+      qc.setQueriesData({ queryKey: buildWorkQueryKeys.projects.approvals.list(pid) }, patchApprovalInPages(data));
+      void qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.approvals.detail(pid, input.approvalId), exact: true, refetchType: "none" });
+    },
+  );
 }
 export function useDeleteApproval(projectId: number) {
-  return useApprovalMutation<BuildApprovalsSoftDeleteApprovalBody & { approvalId: number }, void>("build:approvals:manage", () => projectId,
+  type Input = BuildApprovalsSoftDeleteApprovalBody & { approvalId: number };
+  return useApprovalMutation<Input, void>(
+    "build:approvals:manage",
+    () => projectId,
     async ({ approvalId, ...data }, config) =>
       apiClient.delete<void>(`/build/${projectId}/approvals/${approvalId}`,
-        (await import("./approvals-schema")).deleteApprovalInputSchema.parse(data), config, noContentContract));
+        (await import("./approvals-schema")).deleteApprovalInputSchema.parse(data), config, noContentContract),
+    (_data, input, pid, qc) => {
+      qc.setQueriesData({ queryKey: buildWorkQueryKeys.projects.approvals.list(pid) }, removeApprovalFromPages(input.approvalId));
+    },
+  );
 }

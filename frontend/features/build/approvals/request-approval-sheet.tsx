@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useSourceOverride } from "@/hooks/common/use-source-override";
 import { isApiError } from "@/lib/api-envelope";
 import { createApprovalInputSchema } from "@/hooks/api/build/approvals-schema";
@@ -23,6 +23,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import type { BuildApprovalsCreateApprovalBody } from "@/contracts/build-contracts.generated";
 import type { ApprovalEntityType } from "@/types/projects";
 import { useEntityItems, type SelectionState } from "./use-entity-items";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { RequestApprovalFormBody } from "./request-approval-form-body";
 import { entityTypeTitlePrefix } from "./approvals-constants";
 const EMPTY_SELECTION: SelectionState = { task: null, error: null, blocked: false };
@@ -62,6 +63,9 @@ export function RequestApprovalSheet({
 
   const entityType = form.watch("entityType");
   const entityId = form.watch("entityId");
+  const [taskSearch, setTaskSearch] = useState("");
+  const debouncedTaskSearch = useDebouncedValue(taskSearch, 300);
+  const handleTaskSearchChange = useCallback((search: string) => setTaskSearch(search), []);
   const context = JSON.stringify([
     open,
     projectId,
@@ -84,6 +88,7 @@ export function RequestApprovalSheet({
   const { items: entityItems, isFetching: entityFetching } = useEntityItems(
     open ? projectId : 0,
     entityType,
+    entityType === "task" ? debouncedTaskSearch : undefined,
   );
 
   useEffect(() => {
@@ -97,6 +102,7 @@ export function RequestApprovalSheet({
         dueAt: "",
         level: "1",
       });
+      setTaskSearch("");
     }
   }, [open, projectId, currentUserId, defaultEntityType, form]);
 
@@ -207,6 +213,7 @@ export function RequestApprovalSheet({
                 setSelection={setSelection}
                 currentUserId={currentUserId}
                 projectId={projectId}
+                onTaskSearchChange={handleTaskSearchChange}
               />
             </SheetBody>
             <SheetFooter className="px-6 py-4 border-t shrink-0">

@@ -44,6 +44,7 @@ interface RequestApprovalFormBodyProps {
   setSelection: Dispatch<SetStateAction<SelectionState>>;
   currentUserId?: string;
   projectId: number;
+  onTaskSearchChange?: (search: string) => void;
 }
 
 export function RequestApprovalFormBody({
@@ -55,6 +56,7 @@ export function RequestApprovalFormBody({
   setSelection,
   currentUserId,
   projectId,
+  onTaskSearchChange,
 }: RequestApprovalFormBodyProps) {
   const showEntityPicker = entityType !== "budget";
   const isBudgetType = entityType === "budget";
@@ -88,6 +90,7 @@ export function RequestApprovalFormBody({
             options={entityItems}
             value={field.value}
             onChange={handleEntityChange}
+            onSearchChange={entityType === "task" ? onTaskSearchChange : undefined}
             placeholder={
               entityFetching
                 ? "Loading…"
@@ -234,6 +237,7 @@ export function RequestApprovalFormBody({
                 onChange={field.onChange}
                 placeholder="Pick a date"
                 className="text-sm"
+                disablePast
               />
             </FormControl>
             <FormMessage />
