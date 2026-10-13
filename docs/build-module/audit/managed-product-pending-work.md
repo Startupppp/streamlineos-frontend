@@ -53,6 +53,57 @@ The following evidence remains:
 - Record role, tenant, starting fixture, action, URL, visible result, network and
   console result, refresh result and screenshot for every claimed cell.
 
+## MP-11 re-verified, and the preflight that could not catch its rot
+
+Re-run on 2026-10-13 to capture the test count the earlier pass recorded only as
+an exit code. It did not reproduce: **all 118 tests failed**, every one with
+
+```
+PostgresError: column "roadmap_public_token_hash" of relation "organizations" does not exist
+```
+
+while the preflight immediately before reported `schema ok`. Two separate
+problems, neither a product defect:
+
+1. **`scratch_mp_access` had rotted 1032 columns behind production**, missing
+   whole tables (`build_insights_export_jobs`, `custom_field_registry`, …) and
+   migration `1999_organizations_roadmap_publication_token_hash`.
+2. **The preflight could not have caught it.** `REQUIRED_COLUMNS` carries a
+   `schema` per entry, but the query hardcoded `table_schema='build'`, so a
+   `public` column was unverifiable by construction — and the 14-column spot
+   check sampled none of the missing ones.
+
+The preflight now uses each entry's own schema and checks the two
+`organizations` columns, so a stale database is refused in seconds naming the
+missing column rather than failing 118 times four minutes in. With
+`scratch_mp_access` rebuilt from `prodshape`, the suite passes:
+
+```
+[preflight] schema ok — 14 tables, 16 columns verified on scratch_mp_access
+Test Suites: 1 passed, 1 total
+Tests:       118 passed, 118 total
+```
+
+The lesson generalises: an exit code is not a test count, and a spot-check
+preflight that samples the wrong schema reports health it never measured.
+
+## Validation re-measured — 2026-10-13
+
+| Check | Result |
+|---|---|
+| Focused frontend (`features/build/managed-products`, `hooks/api/build`) | **179 suites, 1741 tests, all passed** |
+| Focused backend (`managed-products`, `feedbucket`, `slo`) | **59 of 60 suites, 815 tests, 0 failed** |
+| Frontend typecheck (`--incremental false`) | **exit 0, no output** |
+| Backend typecheck (`tsconfig.build.json`) | **exit 0, no output** |
+| MP-11 authorization | **118 of 118 passed** |
+| Alert self-tests | ops 9 checks, db 7 checks, both pass |
+
+The one failing backend suite is `slo-catalogue.spec.ts`, which throws at module
+scope because `architecture-refactor/prd/completion-plan.md` is absent from this
+checkout. It contributes zero tests and is environmental, not a regression — but
+it is also the gate that validates every objective's `runbookFile` and
+`runbookAnchor`, so those are checked by `slo-managed-product.spec.ts` instead.
+
 ## Non-browser evidence — MP-13
 
 The six WOW workflows are implemented and have database/API evidence. Claims of
