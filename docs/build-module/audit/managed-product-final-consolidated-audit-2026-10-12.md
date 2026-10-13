@@ -323,5 +323,21 @@ carries `@UseRateLimit`, `@Validate` and `@ResponseSchema` — the shape
 same. The gate reports 0 undeclared and the application boots, proven by the
 118-test suite above, which boots the real `AppModule`.
 
-The lesson is narrow and worth keeping: **a push is a deploy**, so the gate that
-decides whether the process starts belongs before the push, not after it.
+Fixing the boot was necessary but not sufficient. The deploy then reported
+`success` and `failure` three minutes apart — a build that starts and then
+crash-loops. The second cause was schema: production's ledger stood at 1142
+while the deployed calendar code required fourteen tables that migrations
+2000-2013 create, and none of them existed. That is the pending-migration plus
+live-call-site landmine, and it is invisible to every static gate.
+
+All fourteen were replayed first against a database restored from production's
+own schema dump — zero failures — and then applied to production. A redeploy
+brought it back: `/health` returns `{"status":"ok"}` and `/health/ready` reports
+database, cache and queue `up`.
+
+Two lessons, both narrow and both worth keeping. **A push is a deploy**, so the
+gate that decides whether the process starts belongs before the push, not after
+it — `check:route-classification` costs seconds. And **a deploy that reports
+`success` has not finished**: this one reported success at 04:57:50 and failure
+at 05:00:11, so the status to trust is the one that comes after the container
+has been alive for a few minutes, or better, `/health` itself.
