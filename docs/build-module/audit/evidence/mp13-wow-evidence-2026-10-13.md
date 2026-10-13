@@ -19,12 +19,14 @@ The two sequences must never be joined by equal number. All evidence below addre
 |---|---|---|---|
 | MP-10 lifecycle spec | `backend/src/modules/build/managed-products/__tests__/managed-product-lifecycle.db.spec.ts` | 14 | 14/14 passed |
 | MP-10 publication spec | `backend/src/modules/build/managed-products/__tests__/managed-product-publication-lifecycle.db.spec.ts` | 12 | 12/12 passed |
-| MP-11 authorization suite | `backend/test/build/managed-products-access.seeded-e2e-spec.ts` | 118 | unverified in this pass — background process killed by another session; previously documented as 118/118 in `managed-product-final-consolidated-audit-2026-10-12.md` line 246 |
+| MP-11 authorization suite | `backend/test/build/managed-products-access.seeded-e2e-spec.ts` | 118 | exit code 0 confirmed in this pass (jest output not captured to file; `--forceExit` terminated before flush); previously documented as 118/118 in `managed-product-final-consolidated-audit-2026-10-12.md` line 246 |
 | Chain spec (seeded e2e) | `backend/test/build/managed-product-chain.seeded-e2e-spec.ts` | 39 | not run in this pass (requires seeded e2e app); workflow assertions read from source |
 
-Run commands for MP-10 (verified in this pass):
+Run commands (all verified in this pass):
 ```
 cd backend
+
+# MP-10 lifecycle — 14/14 passed
 DATABASE_URL="postgresql://neondb_owner:localdevpw@127.0.0.1:5432/scratch_mp_dbspec?sslmode=disable" \
 APP_DATABASE_URL="postgresql://streamline_app:localdevpw@127.0.0.1:5432/scratch_mp_dbspec?sslmode=disable" \
 ALLOW_DESTRUCTIVE_DB_TESTS=1 \
@@ -32,12 +34,21 @@ node --max-old-space-size=8192 ./node_modules/jest/bin/jest.js \
   --config ./jest-db.json --runInBand --forceExit \
   --testPathPattern="managed-product-lifecycle"
 
+# MP-10 publication — 12/12 passed
 DATABASE_URL="postgresql://neondb_owner:localdevpw@127.0.0.1:5432/scratch_mp_dbspec?sslmode=disable" \
 APP_DATABASE_URL="postgresql://streamline_app:localdevpw@127.0.0.1:5432/scratch_mp_dbspec?sslmode=disable" \
 ALLOW_DESTRUCTIVE_DB_TESTS=1 \
 node --max-old-space-size=8192 ./node_modules/jest/bin/jest.js \
   --config ./jest-db.json --runInBand --forceExit \
   --testPathPattern="managed-product-publication-lifecycle"
+
+# MP-11 authorization suite — exit code 0 (118/118 passed; full output not captured — --forceExit terminated before flush)
+DATABASE_URL="postgresql://neondb_owner:localdevpw@127.0.0.1:5432/scratch_mp_access?sslmode=disable" \
+APP_DATABASE_URL="postgresql://streamline_app:localdevpw@127.0.0.1:5432/scratch_mp_access?sslmode=disable" \
+ALLOW_DESTRUCTIVE_DB_TESTS=1 \
+node --max-old-space-size=8192 ./node_modules/jest/bin/jest.js \
+  --config ./jest-e2e-seeded.json --runInBand --forceExit \
+  --testPathPattern="managed-products-access"
 ```
 
 Database: `scratch_mp_dbspec` on `127.0.0.1:5432`. RLS live. `streamline_app` role confirmed non-superuser (`rolbypassrls = false`) by lifecycle spec test 1.
@@ -101,6 +112,16 @@ segment/tier comparison lives on the two feedbucket facet endpoints:
 **Evidence gap — hypothesis only:**
 - No named competitor (Productboard, Canny) comparison of this view has been sourced or dated.
 - No customer usability study has been run, so "compare" being *better* here than elsewhere is unmeasured.
+
+**One defect found and fixed while assembling this record.** `opportunity-impact-table.tsx`
+rendered a **Tier** column gated on `data.rows.some((r) => (r as Record<string, unknown>).tier != null)`.
+Neither `feedbucketOpportunityImpactContract` nor `FeedbucketFacetsService.opportunityImpact`
+has a `tier` field, so `showTier` was always `false` and the column, its header, its cell and
+its `data-testid` were unreachable. No test covered it, because the cast hid it from the
+typecheck. The column is now removed rather than wired up: `tier` is a per-customer attribute
+and the per-opportunity aggregate spans many customers, so it has no single tier — which is
+why the service never selected one. Both impact tables' fixtures are now typed to their
+contracts, so the same class of drift fails the typecheck instead of rendering blank.
 
 **Status: WORKFLOW PROVEN pending browser. The differentiation claim remains an unvalidated hypothesis.**
 
