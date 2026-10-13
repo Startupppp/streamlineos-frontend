@@ -216,3 +216,178 @@ Read-only against production (`ep-fancy-forest-b3ndkij4`, PG 18.6).
 **Production holds no managed-product data: 4 organizations, 6 users, 0 managed products, 0 junction rows, 0 share tokens.** Every number in sections C, D and E was therefore measured on a seeded local clone (`mp_ops14`, 20k products / 20k projects / 22k junctions), never on production. No production query plan for this feature is meaningful until the feature has rows.
 
 1996 and 1998 are pure expansions, so applying them ahead of the deploy cannot break the running backend. This is the opposite of 1993, which was a contraction and had to be deployed in the same session.
+
+---
+
+## G. Operational monitoring — 2026-10-13
+
+Ten SLOs defined in `backend/src/common/slo/slo-managed-product.ts` and registered in `SLO_CATALOGUE` via `backend/src/common/slo/index.ts`.
+
+### Signal table
+
+| # | Signal | Kind | Span / table | Alert ID | Threshold |
+|---|--------|------|--------------|----------|-----------|
+| 1 | Read route 5xx rate | outcome-rate | route SPAN `http.status_code` | managed-product-ops | >5%, ≥2 faults / 1h |
+| 2 | Write route 5xx rate | outcome-rate | route SPAN `http.status_code` | managed-product-ops | >5%, ≥2 faults / 1h |
+| 3 | Feedback ingestion stall | db-threshold | `product_opportunity_evidence.processed_at IS NULL` | managed-product-db | >50 rows older than 4h |
+| 4 | Opportunity op failures | outcome-rate | `mp.opportunity.operation` span `status` | managed-product-ops | >5%, ≥2 faults / 1h |
+| 5 | Roadmap publication stall | db-threshold | `roadmap_items` is_public=true, not updated | managed-product-db | >20 items older than 72h |
+| 6 | Release evidence stall | db-threshold | `managed_product_releases` non-terminal, not updated | managed-product-db | >10 rows older than 4h |
+| 7 | Optimistic-lock conflicts | outcome-rate | route SPAN `http.status_code = 409` | managed-product-ops | >10%, ≥5 conflicts / 1h |
+| 8 | Authz-denial anomaly | outcome-rate | route SPAN `http.status_code = 403` | managed-product-ops | >15%, ≥10 denials / 1h |
+| 9 | Share-token op failures | outcome-rate | `mp.share-token.operation` span `status` | managed-product-ops | >5%, ≥2 faults / 1h |
+| 10 | Link orphans | db-threshold | `planning_links` managed_product side missing | managed-product-db | >0 orphan rows |
+
+### Span sources
+
+- **Signals 1, 2, 7, 8** — correlation-id middleware emits one SPAN per route with the HTTP method, path template, `http.status_code`, and `latencyMs`. `managed-products.service.ts` is 592 lines (ratcheted) and was not modified; the existing route spans are sufficient.
+- **Signals 4** — `mp.opportunity.operation` span emitted by `opportunity-command.service.ts` via `withSpan("mp.opportunity.operation", ...)` wrapping `create`, `update`, `softDelete`.
+- **Signal 9** — `mp.share-token.operation` span emitted by `managed-product-share-token.service.ts` via `withSpan("mp.share-token.operation", ...)` wrapping `issueToken`, `resolveToken`.
+- **Signals 3, 5, 6, 10** — no span needed; `alert-managed-product-db.mjs` queries the tables directly against a local DB.
+
+### Alert scripts
+
+| Script | Self-test checks | pnpm entry |
+|--------|-----------------|------------|
+| `backend/src/scripts/alert-managed-product-ops.mjs` | 9 | `alert:managed-product-ops:self-test` |
+| `backend/src/scripts/alert-managed-product-db.mjs` | 6 | `alert:managed-product-db:self-test` |
+
+Both are registered in `check-alert-system.mjs`; `pnpm check:alert-system` verified all 21 scripts pass (2026-10-13).
+
+Both alertIds (`managed-product-ops`, `managed-product-db`) are registered in `alert-dispatch.mjs` REGISTRY with `owner: "delivery-team"`.
+
+### End-to-end proofs
+
+**Limitation:** `slo-catalogue.spec.ts` runs at module scope and throws immediately because `resolveRunbookRoot` cannot find `architecture-refactor/prd/completion-plan.md` in this checkout. That suite is the gate that would validate `runbookFile` and `runbookAnchor` for every SLO including these ten. It is pre-existingly broken and cannot run here. The anchors below (`#managed-product-ops`, `#managed-product-db`) are real headings in this document whose slugs match exactly; the heading list is in the "Heading list" subsection below.
+
+**Limitation:** no alert in this repository has a wired paging destination. Every script outputs `destination: "CONFIGURE_ME — wire exit-code 1 to your oncall system"`. MP-12 requires a paging route; this remains a manual wiring step after deployment.
+
+#### Proof A — read route 5xx spike (ops alert, predicate + synthetic log)
+
+Command used (run 2026-10-13 in `backend/`):
+
+```
+printf '{"timestamp":"2026-10-13T10:00:00Z","level":"info","message":"SPAN","name":"GET /v1/build/managed-products","status":"ok","http.status_code":200}\n%.0s' {1..5} \
+  > /tmp/mp-test.log
+printf '{"timestamp":"2026-10-13T10:00:00Z","level":"info","message":"SPAN","name":"GET /v1/build/managed-products/:managedProductId","status":"error","http.status_code":500}\n%.0s' {1..3} \
+  >> /tmp/mp-test.log
+node src/scripts/alert-managed-product-ops.mjs --log=/tmp/mp-test.log; echo "exit:$?"
+```
+
+Actual stdout:
+
+```json
+{"windowHours":1,"destination":"CONFIGURE_ME — wire exit-code 1 to your oncall system","fired":true,"readBreached":true,"writeBreached":false,"conflictBreached":false,"denialBreached":false,"oppBreached":false,"tokenBreached":false,"readRequests":8,"readFaults":3,"readFaultRatio":0.375,"writeRequests":0,"writeFaults":0,"writeFaultRatio":0,"writeConflicts":0,"conflictRatio":0,"mpRequests":8,"mpDenials":0,"denialRatio":0,"opportunityOps":0,"opportunityFaults":0,"oppFaultRatio":0,"shareTokenOps":0,"shareTokenFaults":0,"tokenFaultRatio":0}
+exit:1
+```
+
+After replacing the 3 error SPANs with 200s (healthy window):
+
+```
+exit:0  {"fired":false,...}
+```
+
+This proof is a predicate test using synthetic SPAN lines. It demonstrates that the script's log-parsing predicate fires and clears on log content. It does not prove the span is being emitted live — that requires an application boot, which was not performed.
+
+#### Proof B — planning_links orphan (db alert, real local DB)
+
+DB: `mp_ops14` at `127.0.0.1:5432`. All steps run 2026-10-13.
+
+**Step 1 — baseline (no orphans):**
+
+```sql
+SELECT COUNT(*)::int AS cnt
+FROM build.planning_links pl
+LEFT JOIN build.managed_products mp
+  ON mp.org_id = pl.org_id
+  AND (
+    (pl.link_kind = 'product_project' AND mp.id = pl.source_id)
+    OR
+    (pl.link_kind = 'goal_product' AND mp.id = pl.target_id)
+  )
+WHERE pl.link_kind IN ('product_project', 'goal_product')
+  AND mp.id IS NULL;
+-- Result: cnt = 0
+```
+
+**Step 2 — insert synthetic orphan** (source_id 999999999 does not exist in managed_products):
+
+```sql
+INSERT INTO build.planning_links (org_id, source_kind, source_id, target_kind, target_id, link_kind)
+VALUES ('kbcib-579c434f', 'managed_product', 999999999, 'project', 1, 'product_project');
+-- Result: INSERT 0 1
+```
+
+**Step 3 — orphan count after insert:**
+
+```sql
+-- same query as step 1
+-- Result: cnt = 1
+```
+
+**Step 4 — evaluate() with planningLinkOrphans=1 fires (self-test output):**
+
+```
+node src/scripts/alert-managed-product-db.mjs --self-test
+{"selfTest":true,"pass":true,"checks":{"allClearDoesNotFire":true,"feedbackBreachFires":true,"roadmapBreachFires":true,"releaseBreachFires":true,"planningLinkBreachFires":true,"atThresholdDoesNotFire":true}}
+exit:0
+```
+
+`planningLinkBreachFires: true` confirms `evaluate(0,0,0,1,defaults).fired === true`.
+
+**Step 5 — cleanup:**
+
+```sql
+DELETE FROM build.planning_links WHERE link_kind = 'product_project' AND source_id = 999999999;
+-- Result: DELETE 1
+```
+
+**Step 6 — orphan count after cleanup:**
+
+```sql
+-- same query
+-- Result: cnt = 0
+```
+
+The full `alert-managed-product-db.mjs` script requires `DATABASE_URL` and cannot be run against `mp_ops14` because that DB does not have `product_opportunity_evidence.processed_at` (a column from a later migration). The link-orphan arm was verified directly with psql; the other three arms were verified by the self-test using the `evaluate()` function.
+
+#### Heading list (proves anchors resolve)
+
+Headings in this document that serve as runbook anchors, extracted 2026-10-13:
+
+- `## G. Operational monitoring — 2026-10-13`
+- `### Signal table`
+- `### Span sources`
+- `### Alert scripts`
+- `### End-to-end proofs`
+- `#### Proof A — read route 5xx spike (ops alert, predicate + synthetic log)`
+- `#### Proof B — planning_links orphan (db alert, real local DB)`
+- `#### Heading list (proves anchors resolve)`
+- `#### managed-product-ops`
+- `#### managed-product-db`
+
+The anchor `#managed-product-ops` resolves to the `#### managed-product-ops` heading (slug match). The anchor `#managed-product-db` resolves to the `#### managed-product-db` heading (slug match). Both are real headings, not bold text.
+
+#### managed-product-ops
+
+Fired when `readBreached`, `writeBreached`, `conflictBreached`, `denialBreached`, `oppBreached`, or `tokenBreached`.
+
+1. Check recent deploys for route classification changes or permission-key renames.
+2. Review `opportunity-command.service.ts` and `managed-product-share-token.service.ts` for unhandled exceptions.
+3. A 409 spike without a code change indicates concurrent edits from an automated tool; back-off is needed in the caller.
+4. A 403 spike without a code change indicates a role-template drift; run `pnpm check:permission-keys`.
+
+**Paging destination:** `destination` in `alert-managed-product-ops.mjs` is set to `"CONFIGURE_ME — wire exit-code 1 to your oncall system"`. No paging route is wired. This matches the house pattern (all alert scripts in this repo share the same placeholder) but means no alert fires to an on-call system until this is wired.
+
+#### managed-product-db
+
+Fired when `feedbackFired`, `roadmapFired`, `releaseFired`, or `linkFired`.
+
+1. `feedbackFired`: the evidence-ingestion worker has stopped draining `product_opportunity_evidence`. Check background job queue age (`alert-job-queue-age`).
+2. `roadmapFired`: the publication-rotation pipeline has stalled. Check `managed_product_share_tokens` expiry and the rotation sweep heartbeat.
+3. `releaseFired`: a release is stuck non-terminal. Check the evidence-attachment service for an uncaught exception.
+4. `linkFired` (`planningLinkOrphans > 0`): a `planning_links` row with `link_kind IN ('product_project', 'goal_product')` references a managed_product that no longer exists. `project_managed_products` and `managed_product_memberships` have validated CASCADE FKs to `managed_products`, so orphans there are structurally impossible and are not queried. The `planning_links` table has no FK to entities and is the only table where orphans are possible. Run `SELECT * FROM build.planning_links WHERE link_kind IN ('product_project','goal_product')` against production to identify the dangling row; open a data-integrity incident.
+
+**Paging destination:** same placeholder as above — not wired.
+
+**Limitation:** `alert-managed-product-db.mjs` requires `DATABASE_URL` pointing at a live database. The full script cannot be run against local replay DBs (`mp_ops14`, `replay2`, etc.) because those DBs do not have the `product_opportunity_evidence.processed_at` column (added in a migration not replayed there). The script must be run against production or a fully-replayed schema once that column is present.

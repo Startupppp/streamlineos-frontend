@@ -58,7 +58,6 @@ import {
   useCalendarComputed,
 } from "./use-calendar-computed";
 import { useAttendanceCalendarEvents } from "./use-attendance-calendar-events";
-import { useHrCalendarEventsMapped } from "./use-hr-calendar-events";
 import { useCalendarViewState } from "./use-calendar-view-state";
 import { useAfterLoad } from "@/hooks/common/use-after-load";
 import { useShellVariant } from "@/components/layout/shell-variant-context";
@@ -246,6 +245,7 @@ export function CalendarView() {
   const savedViewUnavailable = Boolean(
     savedFilterId && !selectedSavedView && !savedViewResolving,
   );
+  const { hiddenIds } = useCalendarAccountFilters();
 
   const rangeStart = useMemo(
     () => startOfMonth(subMonths(currentDate, 1)),
@@ -291,6 +291,8 @@ export function CalendarView() {
           : selectedSavedView.definition.actionable
             ? "true"
             : "false",
+      hiddenConnectionIds:
+        hiddenIds.length > 0 ? hiddenIds.join(",") : undefined,
     },
     viewMode === "my-day" && !savedViewResolving && !savedViewUnavailable,
   );
@@ -322,7 +324,6 @@ export function CalendarView() {
     if (isMobile && viewMode === "calendar") setViewMode("list");
   }, [isMobile, setViewMode, viewMode]);
 
-  const { hiddenIds } = useCalendarAccountFilters();
   const toggleHrEvents = useCallback(
     () => setSourceVisibility("hr", !hrEventsVisible),
     [hrEventsVisible, setSourceVisibility],
@@ -341,11 +342,6 @@ export function CalendarView() {
     rangeStart,
     rangeEnd,
     attendanceEventsVisible && viewMode !== "history" && viewMode !== "my-day",
-  );
-  const hrCoverage = useHrCalendarEventsMapped(
-    rangeStart,
-    rangeEnd,
-    hrEventsVisible && viewMode !== "history" && viewMode !== "my-day",
   );
   const calendarEvents = useMemo(
     () => mergeSelfAttendanceEvents(events, attendanceCoverage.events),
@@ -439,7 +435,6 @@ export function CalendarView() {
     connections,
     currentDate,
     view,
-    hrCalEvents: hrCoverage.hrCalEvents,
     hrVisible: hrEventsVisible,
     crmVisible: crmEventsVisible,
     attendanceVisible: attendanceEventsVisible,
@@ -477,7 +472,6 @@ export function CalendarView() {
     !eventsIsLoading &&
     !externalIsLoading &&
     !attendanceCoverage.isLoading &&
-    !hrCoverage.isLoading &&
     (viewMode !== "history" || loadedHistoryPages >= historyPages) &&
     (viewMode !== "my-day" || !myDayQuery.isLoading);
   useEffect(() => {
@@ -521,13 +515,9 @@ export function CalendarView() {
     void refetchExternal();
   }, [refetchExternal]);
   const refetchAttendance = attendanceCoverage.refetch;
-  const refetchHr = hrCoverage.refetch;
   const handleRetryAttendance = useCallback(() => {
     void refetchAttendance();
   }, [refetchAttendance]);
-  const handleRetryHr = useCallback(() => {
-    void refetchHr();
-  }, [refetchHr]);
 
   const finalizeMutate = finalize.mutate;
   useEffect(() => {
@@ -570,8 +560,14 @@ export function CalendarView() {
           </div>
         ) : viewMode === "my-day" ? (
           <div className="flex flex-col">
-            <span className="text-base font-semibold">{selectedSavedView?.name ?? "My Day"}</span>
-            <span className="text-dense font-normal text-muted-foreground">{selectedSavedView ? "Saved calendar view" : format(currentDate, "EEEE, MMMM d")}</span>
+            <span className="text-base font-semibold">
+              {selectedSavedView?.name ?? "My Day"}
+            </span>
+            <span className="text-dense font-normal text-muted-foreground">
+              {selectedSavedView
+                ? "Saved calendar view"
+                : format(currentDate, "EEEE, MMMM d")}
+            </span>
           </div>
         ) : (
           <CalendarMonthYearPicker
@@ -611,7 +607,9 @@ export function CalendarView() {
           onToggleCrmEvents={toggleCrmEvents}
           onToggleAttendanceEvents={toggleAttendanceEvents}
           hidePrimaryActions
-          navigationDisabled={viewMode === "my-day" && Boolean(selectedSavedView)}
+          navigationDisabled={
+            viewMode === "my-day" && Boolean(selectedSavedView)
+          }
         />
 
         <div className="flex min-h-0 flex-1 gap-4">
@@ -627,7 +625,10 @@ export function CalendarView() {
             >
               {viewMode === "my-day" ? (
                 <div className="flex min-h-0 flex-1 flex-col">
-                  <CalendarSavedViewControls selectedId={savedFilterId} currentDate={currentDate} />
+                  <CalendarSavedViewControls
+                    selectedId={savedFilterId}
+                    currentDate={currentDate}
+                  />
                   {savedViewResolving || myDayQuery.isLoading ? (
                     <CalendarListFallback label="Loading My Day" />
                   ) : savedViewUnavailable ? (
@@ -646,7 +647,6 @@ export function CalendarView() {
                       onSelectEvent={handleSelectListEvent}
                       hasMore={Boolean(myDayQuery.hasNextPage)}
                       isLoadingMore={myDayQuery.isFetchingNextPage}
-                      connectedAccountCount={activeConnectionCount}
                       onLoadMore={() => {
                         void myDayQuery.fetchNextPage();
                       }}
@@ -774,18 +774,6 @@ export function CalendarView() {
             />
           )}
 
-        {viewMode !== "history" &&
-          hrEventsVisible &&
-          hrCoverage.access.denied && (
-            <NoPermissionState
-              compact
-              permission="hr:helpdesk:view"
-              title="HR events hidden"
-              description="You do not have permission to view supplemental HR calendar events."
-              className="shrink-0 rounded-xl border border-border"
-            />
-          )}
-
         {viewMode !== "history" && attendanceCoverage.isError && (
           <ErrorState
             compact
@@ -797,22 +785,9 @@ export function CalendarView() {
           />
         )}
 
-        {viewMode !== "history" && hrCoverage.isError && (
-          <ErrorState
-            compact
-            title="HR coverage is incomplete"
-            description={getErrorMessage(hrCoverage.error)}
-            error={hrCoverage.error}
-            onRetry={handleRetryHr}
-            className="shrink-0 border border-border rounded-xl"
-          />
-        )}
-
         {(surfaceIsLoading ||
           (viewMode !== "history" &&
-            (externalIsLoading ||
-              attendanceCoverage.isLoading ||
-              hrCoverage.isLoading))) && (
+            (externalIsLoading || attendanceCoverage.isLoading))) && (
           <div
             className="shrink-0 rounded-md border border-border bg-muted/40 px-3 py-1.5 text-dense text-muted-foreground"
             role="status"

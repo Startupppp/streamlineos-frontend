@@ -30,6 +30,13 @@ import { getChatMobileContentPaddingClassName } from "./mobile/chat-mobile-chrom
 import { MobileModuleBottomNav } from "./mobile/mobile-module-bottom-nav";
 import { MobileShellFab } from "./mobile/mobile-shell-fab";
 import { shouldShowMobileModuleBottomNav } from "./mobile/mobile-module-nav-items";
+import {
+  fabBottomCssPx,
+  launcherBottomCssPx,
+  scrollGutterCssPx,
+  FAB_MARGIN_PX,
+  FAB_SIZE_PX,
+} from "./mobile/mobile-bottom-chrome-geometry";
 import { isPortalChromelessPath } from "./sidebar/sidebar-nav-items";
 import type { BuildSidebarSlot } from "./sidebar/build-sidebar-slot";
 import { ShellOfflineBanner } from "./shell-offline-banner";
@@ -243,7 +250,13 @@ export function DashboardShell({
     );
 
   return (
-    <div className="flex h-dvh flex-col overflow-hidden overscroll-none md:pb-6">
+    <div
+      className="flex h-dvh flex-col overflow-hidden overscroll-none md:pb-6"
+      style={{
+        "--mb-fab-bottom": `${fabBottomCssPx(showAboveBottomNav)}px`,
+        "--mb-launcher-bottom": `${launcherBottomCssPx(showAboveBottomNav)}px`,
+      } as React.CSSProperties}
+    >
       <Link
         href="#dashboard-content"
         className="sr-only focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-[200] focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-lg focus:text-sm focus:font-medium"
@@ -293,6 +306,12 @@ export function DashboardShell({
                   <main
                     id="dashboard-content"
                     aria-label="Main content"
+                    style={{
+                      "--mb-scroll-gutter": `${scrollGutterCssPx(showAboveBottomNav)}px`,
+                      "--mb-fab-lane": showAboveBottomNav
+                        ? `${FAB_MARGIN_PX + FAB_SIZE_PX + FAB_MARGIN_PX}px`
+                        : `${scrollGutterCssPx(false)}px`,
+                    } as React.CSSProperties}
                     className={cn(
                       "flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden outline-none",
                       showModuleBottomNav && "mobile-nav-active",
@@ -301,10 +320,11 @@ export function DashboardShell({
                     <div
                       className={cn(
                         "flex h-full min-h-0 flex-1 flex-col overflow-hidden",
-                        isChatRoute &&
-                          getChatMobileContentPaddingClassName(
-                            isChatConversationOpen,
-                          ),
+                        isChatRoute
+                          ? getChatMobileContentPaddingClassName(
+                              isChatConversationOpen,
+                            )
+                          : "max-md:pb-[var(--mb-fab-lane)]",
                       )}
                     >
                       <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden [&>:first-child]:h-full [&>:first-child]:min-h-0 [&>:first-child]:flex-1">

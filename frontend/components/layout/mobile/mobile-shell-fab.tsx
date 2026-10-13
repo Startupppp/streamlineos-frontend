@@ -7,6 +7,7 @@ import { EllipsisIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { cn } from "@/lib/utils";
 import { useMobileShellFabPosition } from "./use-mobile-shell-fab-position";
+import { NAV_HEIGHT_PX } from "./mobile-bottom-chrome-geometry";
 
 const FabPanelBody = dynamic(
   () =>
@@ -85,7 +86,7 @@ export function MobileShellFab({
     consumeSuppressClick,
   } = useMobileShellFabPosition({
     onTap: handleToggleFab,
-    bottomObstructionPx: showAboveBottomNav ? 76 : 0,
+    bottomObstructionPx: showAboveBottomNav ? NAV_HEIGHT_PX : 0,
   });
 
   const handleFabClick = useCallback(
@@ -109,9 +110,7 @@ export function MobileShellFab({
           "fixed z-[60] md:hidden touch-none select-none [[data-scroll-locked]_&]:hidden",
           !isPositioned && "right-4",
           !isPositioned &&
-            (showAboveBottomNav
-              ? "bottom-[calc(4rem+0.75rem+env(safe-area-inset-bottom))]"
-              : "bottom-[calc(1rem+env(safe-area-inset-bottom))]"),
+            "bottom-[calc(var(--mb-fab-bottom,4.5rem)+env(safe-area-inset-bottom))]",
           isDragging ? "cursor-grabbing" : "cursor-grab",
           className,
         )}
@@ -121,7 +120,7 @@ export function MobileShellFab({
           iconSize={16}
           variant="default"
           size="icon"
-          className="size-10 rounded-full shadow-lg"
+          className="size-11 rounded-full shadow-lg"
           aria-label="Open quick actions"
           aria-expanded={fabOpen}
           onClick={handleFabClick}

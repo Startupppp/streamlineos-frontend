@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react";
+import type { FeedbucketOpportunityImpactRow } from "@/hooks/api/feedbucket/feedbucket-schema";
 import { OpportunityImpactTable } from "./opportunity-impact-table";
 
 jest.mock("@/hooks/api/feedbucket/use-feedbucket-product-stats", () => ({
@@ -10,7 +11,7 @@ const { useProductOpportunityImpact } = jest.requireMock(
 ) as { useProductOpportunityImpact: jest.Mock };
 
 const MANAGED_PRODUCT_ID = 5;
-const ROWS = [
+const ROWS: FeedbucketOpportunityImpactRow[] = [
   {
     opportunityId: 1,
     distinctCustomers: 3,

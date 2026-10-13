@@ -1,6 +1,5 @@
 import { fireEvent, render, renderHook, screen } from "@testing-library/react";
 import type { CalendarListItem, ExternalCalendarEventsResponse } from "@/hooks/api/calendar";
-import type { BigCalEvent } from "./big-calendar-wrapper";
 import { CalendarAgendaPreview } from "./calendar-lazy-fallbacks";
 import {
   calendarSourceFamily,
@@ -59,20 +58,12 @@ const EXTERNAL: ExternalCalendarEventsResponse = {
   accounts: [],
 };
 
-const HR_EVENT: BigCalEvent = {
-  id: "birthday-user-1",
-  title: "Birthday",
-  start: new Date("2026-10-15T12:00:00.000Z"),
-  end: new Date("2026-10-15T12:00:00.000Z"),
-  allDay: true,
-  resource: { source: "hr", hrEventType: "BIRTHDAY" },
-};
-
 describe("unified Calendar views", () => {
   const events = [
     event("event-1", "calendar"),
     event("deal-1", "tasks", { entityType: "DEAL", source: "task" }),
     event("attendance-1", "hr-attendance", { source: "attendance" }),
+    event("birthday-user-1", "hr-supplemental", { source: "hr", category: "birthday" }),
   ];
 
   it("uses the same canonical identities and action capabilities in Grid and List", () => {
@@ -83,7 +74,6 @@ describe("unified Calendar views", () => {
       connections: [],
       currentDate: CURRENT_DATE,
       view: "day",
-      hrCalEvents: [HR_EVENT],
     }));
     expect(result.current.visibleEvents.map((item) => item.id)).toEqual(
       result.current.allCalEvents.map((item) => String(item.id)),
@@ -99,7 +89,6 @@ describe("unified Calendar views", () => {
       connections: [],
       currentDate: CURRENT_DATE,
       view: "day",
-      hrCalEvents: [HR_EVENT],
       hrVisible: false,
       crmVisible: false,
       attendanceVisible: false,

@@ -6,6 +6,7 @@ import { renderWithProviders } from "@/test-utils/render";
 import { DashboardShell } from "./dashboard-shell";
 import { ChatMobileBottomNav } from "@/features/chat/chat-mobile-bottom-nav";
 import { getChatMobileBottomNavClassName } from "./mobile/chat-mobile-chrome-layout";
+import { scrollGutterCssPx } from "./mobile/mobile-bottom-chrome-geometry";
 
 const drawerCalls: Array<{ direction?: string; open?: boolean }> = [];
 const productSwitcherCalls: Array<{ drawerOnly?: boolean }> = [];
@@ -368,6 +369,24 @@ describe("DashboardShell /chat mobile bottom nav", () => {
     expect(layoutClient).toContain("chatMobileNavSlot={renderChatMobileNav}");
     expect(layoutClient).toMatch(
       /function renderChatMobileNav\([\s\S]*?<ChatMobileBottomNav onOpenMobileMenu=\{onOpenMobileMenu\} \/>/,
+    );
+  });
+});
+
+describe("DashboardShell mobile scroll gutter", () => {
+  beforeEach(() => {
+    currentPathname = "/build";
+  });
+
+  it("sets --mb-scroll-gutter on main#dashboard-content when module nav is shown", () => {
+    renderWithProviders(
+      <DashboardShell userId="user-1" defaultCollapsed={false} shellVariant="desktop">
+        <div>Content</div>
+      </DashboardShell>,
+    );
+    const main = document.getElementById("dashboard-content");
+    expect(main?.style?.getPropertyValue("--mb-scroll-gutter")).toBe(
+      `${scrollGutterCssPx(true)}px`,
     );
   });
 });

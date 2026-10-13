@@ -21,14 +21,10 @@ function opportunityInsightsHref(
 function ImpactRow({
   row,
   managedProductId,
-  showTier,
 }: {
   row: FeedbucketOpportunityImpactRow;
   managedProductId: number;
-  showTier: boolean;
 }) {
-  const tier = (row as Record<string, unknown>).tier as string | null | undefined;
-
   return (
     <tr className="border-b border-border/60 last:border-b-0">
       <td className="py-2 pl-4 pr-2">
@@ -49,15 +45,6 @@ function ImpactRow({
           </span>
         ) : null}
       </td>
-      {showTier ? (
-        <td className="hidden py-2 px-2 md:table-cell">
-          {tier ? (
-            <span className="text-xs text-muted-foreground" data-testid={`tier-${row.opportunityId}`}>
-              {tier}
-            </span>
-          ) : null}
-        </td>
-      ) : null}
       <td className="py-2 px-2 text-right text-xs font-mono tabular-nums text-muted-foreground">
         {row.requestCount}
       </td>
@@ -73,7 +60,8 @@ function ImpactRow({
 export function OpportunityImpactTable({
   managedProductId,
 }: OpportunityImpactTableProps) {
-  const { data, isLoading, isError, error, refetch } = useProductOpportunityImpact(managedProductId);
+  const { data, isLoading, isError, error, refetch } =
+    useProductOpportunityImpact(managedProductId);
   const handleRetry = useCallback(() => void refetch(), [refetch]);
 
   if (isLoading) {
@@ -89,12 +77,9 @@ export function OpportunityImpactTable({
     );
   }
 
-  if (isError) return <ErrorState compact onRetry={handleRetry} error={error} />;
+  if (isError)
+    return <ErrorState compact onRetry={handleRetry} error={error} />;
   if (!data || data.rows.length === 0) return null;
-
-  const showTier = data.rows.some(
-    (r) => (r as Record<string, unknown>).tier != null,
-  );
 
   return (
     <div className="rounded-xl border border-border bg-card shadow-sm">
@@ -116,11 +101,6 @@ export function OpportunityImpactTable({
               <th className="hidden py-1.5 px-2 text-left text-xs font-medium text-muted-foreground md:table-cell">
                 Segments
               </th>
-              {showTier ? (
-                <th className="hidden py-1.5 px-2 text-left text-xs font-medium text-muted-foreground md:table-cell">
-                  Tier
-                </th>
-              ) : null}
               <th className="py-1.5 px-2 text-right text-xs font-medium text-muted-foreground">
                 Requests
               </th>
@@ -135,7 +115,6 @@ export function OpportunityImpactTable({
                 key={row.opportunityId}
                 row={row}
                 managedProductId={managedProductId}
-                showTier={showTier}
               />
             ))}
           </tbody>

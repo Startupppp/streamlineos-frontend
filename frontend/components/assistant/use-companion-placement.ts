@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
 import { orgScopedStorageKey } from "@/lib/org-scoped-storage";
+import { launcherBottomCssPx } from "@/components/layout/mobile/mobile-bottom-chrome-geometry";
 
 type Position = { x: number; y: number };
 
@@ -42,7 +43,7 @@ export function useCompanionPlacement(scope: string, compact: boolean) {
     const height = rect?.height ?? 140;
     return {
       x: Math.max(EDGE_GAP, Math.min(next.x, window.innerWidth - width - EDGE_GAP)),
-      y: Math.max(TOP_GAP, Math.min(next.y, window.innerHeight - height - (compact ? 72 : EDGE_GAP))),
+      y: Math.max(TOP_GAP, Math.min(next.y, window.innerHeight - height - (compact ? launcherBottomCssPx(true) : EDGE_GAP))),
     };
   }, [compact]);
 

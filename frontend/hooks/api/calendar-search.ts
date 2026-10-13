@@ -24,6 +24,7 @@ export interface CalendarSearchFilters {
   ownerMembershipId?: string;
   location?: string;
   actionable?: "true" | "false";
+  hiddenConnectionIds?: string;
 }
 
 export function useCalendarSearch(

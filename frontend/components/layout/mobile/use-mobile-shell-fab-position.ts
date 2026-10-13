@@ -9,13 +9,13 @@ import {
   type CSSProperties,
   type PointerEvent as ReactPointerEvent,
 } from "react";
+import { FAB_SIZE_PX } from "./mobile-bottom-chrome-geometry";
 
 export const MOBILE_SHELL_FAB_POSITION_KEY =
   "streamlineos:mobile-shell-fab:position";
 
 const DRAG_THRESHOLD_PX = 8;
 const EDGE_PADDING_PX = 8;
-const FAB_SIZE_PX = 40;
 
 type FabCoords = { left: number; top: number };
 
@@ -171,7 +171,13 @@ export function useMobileShellFabPosition(
         const el = containerRef.current;
         const width = el?.offsetWidth || FAB_SIZE_PX;
         const height = el?.offsetHeight || FAB_SIZE_PX;
-        return clampCoords(prev.left, prev.top, width, height, bottomObstructionPx);
+        return clampCoords(
+          prev.left,
+          prev.top,
+          width,
+          height,
+          bottomObstructionPx,
+        );
       });
     }
 
@@ -276,7 +282,10 @@ export function useMobileShellFabPosition(
   );
 
   const endDrag = useCallback(
-    (event: ReactPointerEvent<HTMLDivElement>, opts?: { commitTap: boolean }) => {
+    (
+      event: ReactPointerEvent<HTMLDivElement>,
+      opts?: { commitTap: boolean },
+    ) => {
       const drag = dragRef.current;
       if (!drag || event.pointerId !== drag.pointerId) return;
 

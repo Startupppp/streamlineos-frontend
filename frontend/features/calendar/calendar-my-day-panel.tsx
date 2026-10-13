@@ -91,7 +91,6 @@ export function CalendarMyDayPanel({
   onLoadMore,
   hasMore,
   isLoadingMore,
-  connectedAccountCount,
 }: {
   events: CalendarListItem[];
   pages: CalendarSearchResponse[];
@@ -101,7 +100,6 @@ export function CalendarMyDayPanel({
   onLoadMore: () => void;
   hasMore: boolean;
   isLoadingMore: boolean;
-  connectedAccountCount: number;
 }) {
   const [now, setNow] = useState(() => Date.now());
 
@@ -140,15 +138,6 @@ export function CalendarMyDayPanel({
         >
           Some calendar sources are incomplete. Search results may be missing
           items.
-        </div>
-      ) : null}
-      {connectedAccountCount > 0 ? (
-        <div
-          role="status"
-          className="mb-4 rounded-md border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground"
-        >
-          Connected account events are available in Calendar view. My Day
-          currently shows workspace events.
         </div>
       ) : null}
       {events.length === 0 ? (
