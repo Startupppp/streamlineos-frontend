@@ -117,6 +117,26 @@ describe("Calendar offline cache identity", () => {
     unsubscribe();
   });
 
+  it("removes the current tab marker after a matching policy revocation event", () => {
+    const onClear = jest.fn();
+    const unsubscribe = subscribeOfflineCalendarClear(onClear);
+    sessionStorage.setItem("streamline-calendar-offline-session-identity", "org-1:user-1");
+    window.dispatchEvent(new StorageEvent("storage", {
+      key: "streamline-calendar-offline-policy-revocation:org-2:user-1",
+      oldValue: null,
+      newValue: '{"version":2,"enabled":false}',
+    }));
+    expect(sessionStorage.getItem("streamline-calendar-offline-session-identity")).toBe("org-1:user-1");
+    window.dispatchEvent(new StorageEvent("storage", {
+      key: "streamline-calendar-offline-policy-revocation:org-1:user-1",
+      oldValue: null,
+      newValue: '{"version":2,"enabled":false}',
+    }));
+    expect(sessionStorage.getItem("streamline-calendar-offline-session-identity")).toBeNull();
+    expect(onClear).toHaveBeenCalledTimes(2);
+    unsubscribe();
+  });
+
   it("writes when the current tab and device identity still match", async () => {
     const db = fakeIndexedDb();
     sessionStorage.setItem("streamline-calendar-offline-session-identity", "org-1:user-1");
@@ -147,6 +167,16 @@ describe("Calendar offline cache identity", () => {
     revokeOfflineCalendarPolicy("org-1:user-1", 2);
     expect(allowOfflineCalendarPolicy("org-1:user-1", 2)).toBe(false);
     expect(allowOfflineCalendarPolicy("org-1:user-1", 3)).toBe(true);
-    expect(localStorage.getItem("streamline-calendar-offline-policy-revocation")).toBeNull();
+    expect(allowOfflineCalendarPolicy("org-1:user-1", 1)).toBe(false);
+    revokeOfflineCalendarPolicy("org-1:user-1", 1);
+    expect(allowOfflineCalendarPolicy("org-1:user-1", 3)).toBe(true);
+  });
+
+  it("keeps each account policy state independent", () => {
+    revokeOfflineCalendarPolicy("org-1:user-1", 4);
+    revokeOfflineCalendarPolicy("org-2:user-1", 2);
+    expect(allowOfflineCalendarPolicy("org-1:user-1", 3)).toBe(false);
+    expect(allowOfflineCalendarPolicy("org-2:user-1", 3)).toBe(true);
+    expect(allowOfflineCalendarPolicy("org-1:user-1", 3)).toBe(false);
   });
 });

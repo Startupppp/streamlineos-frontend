@@ -29,6 +29,12 @@
     const status = document.getElementById("status");
     const coverage = document.getElementById("coverage");
     const windows = document.getElementById("windows");
+    addEventListener("storage", (event) => {
+      if (event.key !== "streamline-calendar-offline-identity" && !event.key?.startsWith("streamline-calendar-offline-policy-revocation:")) return;
+      coverage.replaceChildren();
+      windows.replaceChildren();
+      status.textContent = "Saved Calendar access changed. Reconnect to check your current permissions.";
+    });
     document.getElementById("retry").addEventListener("click", () => location.replace("/calendar"));
     addEventListener("online", () => location.replace("/calendar"));
     function line(parent, value, className) {
@@ -36,6 +42,14 @@
       element.textContent = value;
       if (className) element.className = className;
       parent.append(element);
+    }
+    function policyDenied(identity) {
+      try {
+        const raw = localStorage.getItem(`streamline-calendar-offline-policy-revocation:${identity}`);
+        if (!raw) return false;
+        const state = JSON.parse(raw);
+        return !state || !Number.isInteger(state.version) || state.version < 0 || typeof state.enabled !== "boolean" || !state.enabled;
+      } catch { return true; }
     }
     function readSnapshot() {
       return new Promise((resolve, reject) => {
@@ -60,14 +74,11 @@
       let deviceIdentity;
       try { deviceIdentity = localStorage.getItem("streamline-calendar-offline-identity"); }
       catch { deviceIdentity = null; }
-      let revoked;
-      try { const marker = JSON.parse(localStorage.getItem("streamline-calendar-offline-policy-revocation") || "null"); revoked = marker && marker.identity === identity; }
-      catch { revoked = true; }
-      if (!identity || identity !== deviceIdentity || revoked) { status.textContent = "This tab has no recent authenticated Calendar session. Reconnect to sign in."; return; }
+      if (!identity || identity !== deviceIdentity || policyDenied(identity)) { status.textContent = "This tab has no recent authenticated Calendar session. Reconnect to sign in."; return; }
       try {
         const snapshot = await readSnapshot();
         const age = snapshot && Date.now() - snapshot.fetchedAt;
-        if (!snapshot || snapshot.identity !== identity || localStorage.getItem("streamline-calendar-offline-identity") !== identity || localStorage.getItem("streamline-calendar-offline-policy-revocation") || !Number.isFinite(age) || age < 0 ||
+        if (!snapshot || snapshot.identity !== identity || localStorage.getItem("streamline-calendar-offline-identity") !== identity || policyDenied(identity) || !Number.isFinite(age) || age < 0 ||
           !Number.isInteger(snapshot.maxAgeDays) || snapshot.maxAgeDays < 1 || snapshot.maxAgeDays > 30 ||
           age > snapshot.maxAgeDays * 86400000 || !Array.isArray(snapshot.sources) || !Array.isArray(snapshot.windows)) {
           status.textContent = "No recent offline schedule is available for this tab. Reconnect to refresh it.";

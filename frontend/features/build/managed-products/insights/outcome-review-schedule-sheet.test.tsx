@@ -1,5 +1,5 @@
 import { createContext, forwardRef, useContext, type ReactNode } from "react";
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 const mockSelectContext = createContext<(value: string) => void>(() => {});
@@ -244,6 +244,10 @@ describe("OutcomeReviewScheduleSheet — measurement fields", () => {
     await user.type(screen.getByTestId("metric-period-input"), "Q1 2025");
     await user.type(screen.getByTestId("source-url-input"), "https://example.com/data");
     await user.click(screen.getByRole("option", { name: "Measured" }));
+    const dateInputs = screen.getAllByLabelText("Pick a date");
+    fireEvent.change(dateInputs[dateInputs.length - 1], {
+      target: { value: "2026-10-13" },
+    });
     await user.click(screen.getByRole("button", { name: "Schedule" }));
 
     await waitFor(() =>
@@ -253,9 +257,34 @@ describe("OutcomeReviewScheduleSheet — measurement fields", () => {
           measureKind: "measured",
           metricPeriod: "Q1 2025",
           sourceUrl: "https://example.com/data",
+          measuredAt: "2026-10-13T00:00:00.000Z",
         }),
       ),
     );
+  });
+
+  it("keeps measured reviews client-side until source URL and measured date are present", async () => {
+    withOpportunities([]);
+    const onSubmit = jest.fn();
+    const user = userEvent.setup();
+
+    render(
+      <OutcomeReviewScheduleSheet
+        managedProductId={39}
+        open
+        onOpenChange={jest.fn()}
+        onSubmit={onSubmit}
+        isSubmitting={false}
+      />,
+    );
+
+    await user.type(screen.getByLabelText("Title (required)"), "Measured review");
+    await user.click(screen.getByRole("option", { name: "Measured" }));
+    await user.click(screen.getByRole("button", { name: "Schedule" }));
+
+    expect(onSubmit).not.toHaveBeenCalled();
+    expect(screen.getByText("Source URL is required for measured results")).toBeInTheDocument();
+    expect(screen.getByText("Measured date is required for measured results")).toBeInTheDocument();
   });
 
   it("omits empty sourceUrl from submission so the API does not receive a blank string", async () => {
