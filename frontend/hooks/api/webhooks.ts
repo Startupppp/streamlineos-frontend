@@ -56,6 +56,8 @@ export interface WebhookSecretReveal {
 
 export interface WebhookLog {
   id: number;
+  deliveryId: string;
+  apiVersion: string;
   endpointId: number;
   orgId: string;
   event: string;

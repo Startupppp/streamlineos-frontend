@@ -130,6 +130,7 @@ function LogRow({ log, endpointId, canManage }: LogRowProps) {
           {log.responseBody}
         </p>
       )}
+      <p className="pl-4 text-micro text-muted-foreground">Delivery {log.deliveryId} · API {log.apiVersion} · {log.attempt} attempt{log.attempt === 1 ? "" : "s"}</p>
     </div>
   );
 }

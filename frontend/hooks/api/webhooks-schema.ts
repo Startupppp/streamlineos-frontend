@@ -42,6 +42,8 @@ export const webhookRotateSecretContract = z.object({
 
 const webhookLogSchema = z.object({
   id: z.number().int(),
+  deliveryId: z.string().uuid(),
+  apiVersion: z.string(),
   endpointId: z.number().int(),
   orgId: z.string(),
   event: z.string(),
