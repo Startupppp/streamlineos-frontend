@@ -69,6 +69,47 @@ describe("createManagedProductSchema", () => {
     const tags = Array.from({ length: 20 }, (_, i) => `tag${i}`);
     expect(createManagedProductSchema.safeParse({ ...BASE, tags }).success).toBe(true);
   });
+
+  it("normalizes and deduplicates tags and segments like the API", () => {
+    const result = createManagedProductSchema.parse({
+      ...BASE,
+      tags: [" enterprise ", "enterprise"],
+      segments: [" smb ", "smb"],
+    });
+
+    expect(result.tags).toEqual(["enterprise"]);
+    expect(result.segments).toEqual(["smb"]);
+  });
+
+  it("rejects empty tags and segments", () => {
+    expect(createManagedProductSchema.safeParse({ ...BASE, tags: [""] }).success).toBe(false);
+    expect(createManagedProductSchema.safeParse({ ...BASE, segments: ["   "] }).success).toBe(false);
+  });
+
+  it.each([
+    ["description", 2001],
+    ["northStarMetric", 501],
+    ["vision", 2001],
+    ["missionStatement", 2001],
+    ["targetCustomer", 2001],
+    ["differentiators", 2001],
+  ] as const)("rejects an oversized %s", (field, length) => {
+    expect(
+      createManagedProductSchema.safeParse({ ...BASE, [field]: "a".repeat(length) }).success,
+    ).toBe(false);
+  });
+
+  it("rejects invalid success metric text", () => {
+    for (const successMetrics of [
+      [{ label: "a".repeat(101) }],
+      [{ label: "   " }],
+      [{ label: "Metric", target: "a".repeat(101) }],
+    ]) {
+      expect(
+        createManagedProductSchema.safeParse({ ...BASE, successMetrics }).success,
+      ).toBe(false);
+    }
+  });
 });
 
 describe("editManagedProductSchema", () => {
@@ -82,5 +123,15 @@ describe("editManagedProductSchema", () => {
   it("accepts 10 success metrics", () => {
     const successMetrics = Array.from({ length: 10 }, (_, i) => ({ label: `m${i}` }));
     expect(editManagedProductSchema.safeParse({ ...BASE, successMetrics }).success).toBe(true);
+  });
+
+  it("applies the create limits to settings edits", () => {
+    expect(
+      editManagedProductSchema.safeParse({ ...BASE, vision: "a".repeat(2001) }).success,
+    ).toBe(false);
+    expect(
+      editManagedProductSchema.safeParse({ ...BASE, northStarMetric: "a".repeat(501) }).success,
+    ).toBe(false);
+    expect(editManagedProductSchema.safeParse({ ...BASE, tags: [" "] }).success).toBe(false);
   });
 });

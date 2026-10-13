@@ -37,13 +37,13 @@ export type ManagedProductReleasesPage = ManagedProductRelationsListReleasesResp
 export interface CreateManagedProductReleaseInput {
   name: string;
   version: string;
-  description?: string | null;
-  releaseDate?: string | null;
+  description?: string;
+  releaseDate?: string;
   status?: "draft" | "released" | "archived";
-  ownerUserId?: string | null;
-  qaState?: string | null;
-  deploymentEvidenceUrl?: string | null;
-  projectReleaseId?: number | null;
+  ownerUserId?: string;
+  qaState?: "pending" | "in_review" | "approved" | "rejected";
+  deploymentEvidenceUrl?: string;
+  projectReleaseId?: number;
 }
 
 export interface UpdateManagedProductReleaseInput {

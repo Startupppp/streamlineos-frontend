@@ -1,4 +1,4 @@
-import { clearOfflineCalendarSnapshot, saveOfflineCalendarSnapshot } from "./calendar-offline-cache";
+import { allowOfflineCalendarPolicy, clearOfflineCalendarSnapshot, readOfflineCalendarSnapshot, revokeOfflineCalendarPolicy, saveOfflineCalendarSnapshot, subscribeOfflineCalendarClear } from "./calendar-offline-cache";
 
 function fakeIndexedDb() {
   const opens: Array<{ result: unknown; onsuccess?: () => void }> = [];
@@ -88,6 +88,35 @@ describe("Calendar offline cache identity", () => {
     expect(db.puts).toEqual([]);
   });
 
+  it("invalidates a queued write when another tab removes the device identity", async () => {
+    const db = fakeIndexedDb();
+    sessionStorage.setItem("streamline-calendar-offline-session-identity", "org-1:user-1");
+    localStorage.setItem("streamline-calendar-offline-identity", "org-1:user-1");
+    const pending = save();
+    localStorage.removeItem("streamline-calendar-offline-identity");
+    window.dispatchEvent(new StorageEvent("storage", {
+      key: "streamline-calendar-offline-identity",
+      oldValue: "org-1:user-1",
+      newValue: null,
+    }));
+    db.openNext();
+    await pending;
+    expect(sessionStorage.getItem("streamline-calendar-offline-session-identity")).toBeNull();
+    expect(db.puts).toEqual([]);
+  });
+
+  it("notifies an open panel as soon as another tab changes identity", () => {
+    const onClear = jest.fn();
+    const unsubscribe = subscribeOfflineCalendarClear(onClear);
+    window.dispatchEvent(new StorageEvent("storage", {
+      key: "streamline-calendar-offline-identity",
+      oldValue: "org-1:user-1",
+      newValue: null,
+    }));
+    expect(onClear).toHaveBeenCalledTimes(1);
+    unsubscribe();
+  });
+
   it("writes when the current tab and device identity still match", async () => {
     const db = fakeIndexedDb();
     sessionStorage.setItem("streamline-calendar-offline-session-identity", "org-1:user-1");
@@ -96,5 +125,28 @@ describe("Calendar offline cache identity", () => {
     db.openNext();
     await pending;
     expect(db.puts).toEqual([expect.objectContaining({ identity: "org-1:user-1" })]);
+  });
+
+  it("rejects a stale enabled policy after another tab disables caching", async () => {
+    const db = fakeIndexedDb();
+    sessionStorage.setItem("streamline-calendar-offline-session-identity", "org-1:user-1");
+    localStorage.setItem("streamline-calendar-offline-identity", "org-1:user-1");
+    const pending = save();
+    revokeOfflineCalendarPolicy("org-1:user-1", 2);
+    expect(allowOfflineCalendarPolicy("org-1:user-1", 1)).toBe(false);
+    db.openNext();
+    await pending;
+    expect(db.puts).toEqual([]);
+    expect(await readOfflineCalendarSnapshot("org-1:user-1")).toBeNull();
+    sessionStorage.setItem("streamline-calendar-offline-session-identity", "org-1:user-1");
+    localStorage.setItem("streamline-calendar-offline-identity", "org-1:user-1");
+    expect(await readOfflineCalendarSnapshot("org-1:user-1")).toBeNull();
+  });
+
+  it("allows caching again only after a newer enabled policy arrives", async () => {
+    revokeOfflineCalendarPolicy("org-1:user-1", 2);
+    expect(allowOfflineCalendarPolicy("org-1:user-1", 2)).toBe(false);
+    expect(allowOfflineCalendarPolicy("org-1:user-1", 3)).toBe(true);
+    expect(localStorage.getItem("streamline-calendar-offline-policy-revocation")).toBeNull();
   });
 });

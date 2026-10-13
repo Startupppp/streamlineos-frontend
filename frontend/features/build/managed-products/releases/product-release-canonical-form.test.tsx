@@ -156,7 +156,7 @@ describe("ProductReleaseFormSheet — canonical project release", () => {
     };
     renderEditSheet(editTarget);
 
-    const clearButton = screen.getByRole("button", { name: "Clear canonical release link" });
+    const clearButton = screen.getByRole("button", { name: "Choose another project" });
     await user.click(clearButton);
 
     await user.click(screen.getByRole("button", { name: "Save changes" }));
@@ -206,11 +206,11 @@ describe("ProductReleaseFormSheet — canonical project release", () => {
     };
     renderEditSheet(editTarget);
 
-    const projectTrigger = screen.getByRole("combobox", { name: "Project for canonical release" });
-    expect(projectTrigger).toHaveTextContent("Billing Project");
-
     const releaseTrigger = screen.getByRole("combobox", { name: "Canonical release" });
     expect(releaseTrigger).toHaveTextContent("v2.0 Sprint 2.0.0");
+    expect(
+      screen.queryByRole("combobox", { name: "Project for canonical release" }),
+    ).not.toBeInTheDocument();
   });
 
   it("shows a failed linked-project read as an error with a retry instead of an empty project list", async () => {
@@ -254,12 +254,28 @@ describe("ProductReleaseFormSheet — canonical project release", () => {
     );
 
     expect(screen.getByText("Could not load that project's releases")).toBeInTheDocument();
-    expect(
-      screen.getByRole("combobox", { name: "Project for canonical release" }),
-    ).toHaveTextContent("BILL · Billing Project");
+    expect(screen.getByRole("button", { name: "Choose another project" })).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: /retry|try again/i }));
     expect(mockReleasesRefetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("omits empty optional values when creating because the create API accepts absent fields", async () => {
+    const user = userEvent.setup({ delay: null });
+    renderCreateSheet();
+
+    await user.type(screen.getByPlaceholderText("Release name"), "Minimal release");
+    await user.type(screen.getByPlaceholderText("1.0.0"), "1.0.0");
+    await user.click(screen.getByRole("button", { name: "Create release" }));
+
+    expect(mockCreateMutate).toHaveBeenCalledWith(
+      {
+        name: "Minimal release",
+        version: "1.0.0",
+        status: "draft",
+      },
+      expect.anything(),
+    );
   });
 
   it("continues past the first page of linked projects, so a product with more projects than one page can still be linked", async () => {

@@ -110,16 +110,10 @@ export function ProductReleaseFormSheet({
     (values: ReleaseFormValues) => {
       if (isPending) return;
       setConflictError(null);
-      const data = {
+      const commonData = {
         name: values.name,
         version: values.version,
-        description: values.description || null,
-        releaseDate: values.releaseDate || null,
         status: values.status,
-        ownerUserId: values.ownerUserId ?? null,
-        qaState: values.qaState ?? null,
-        deploymentEvidenceUrl: values.deploymentEvidenceUrl || null,
-        projectReleaseId: values.projectReleaseId ?? null,
       };
       const onSuccess = () => {
         toast.success(isEdit ? "Release updated." : "Release created.");
@@ -136,11 +130,36 @@ export function ProductReleaseFormSheet({
       };
       if (isEdit && editTarget) {
         updateRelease.mutate(
-          { releaseId: editTarget.id, expectedRevision: editTarget.recordRevision, ...data },
+          {
+            releaseId: editTarget.id,
+            expectedRevision: editTarget.recordRevision,
+            ...commonData,
+            description: values.description || null,
+            releaseDate: values.releaseDate || null,
+            ownerUserId: values.ownerUserId ?? null,
+            qaState: values.qaState ?? null,
+            deploymentEvidenceUrl: values.deploymentEvidenceUrl || null,
+            projectReleaseId: values.projectReleaseId ?? null,
+          },
           { onSuccess, onError },
         );
       } else {
-        createRelease.mutate(data, { onSuccess, onError });
+        createRelease.mutate(
+          {
+            ...commonData,
+            ...(values.description ? { description: values.description } : {}),
+            ...(values.releaseDate ? { releaseDate: values.releaseDate } : {}),
+            ...(values.ownerUserId ? { ownerUserId: values.ownerUserId } : {}),
+            ...(values.qaState ? { qaState: values.qaState } : {}),
+            ...(values.deploymentEvidenceUrl
+              ? { deploymentEvidenceUrl: values.deploymentEvidenceUrl }
+              : {}),
+            ...(values.projectReleaseId
+              ? { projectReleaseId: values.projectReleaseId }
+              : {}),
+          },
+          { onSuccess, onError },
+        );
       }
     },
     [isPending, isEdit, editTarget, createRelease, updateRelease, form, onOpenChange],
@@ -159,7 +178,7 @@ export function ProductReleaseFormSheet({
         </SheetHeader>
         <div className="min-h-0 flex-1 overflow-y-auto px-6 py-4">
           {conflictError ? (
-            <div className="mb-4 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200">
+            <div className="mb-4 rounded-md border border-status-warning-rule bg-status-warning-surface p-3 text-sm text-status-warning-ink">
               <p className="mb-2">{conflictError}</p>
               <Button type="button" variant="outline" size="sm" onClick={handleReloadRetry}>
                 Reload and retry
@@ -186,14 +205,15 @@ export function ProductReleaseFormSheet({
             </form>
           </Form>
         </div>
-        <SheetFooter className="flex flex-row justify-end gap-2 border-t border-border px-6 py-4">
-          <Button type="button" variant="outline" size="sm" onClick={handleCancel} disabled={isPending}>
+        <SheetFooter className="grid grid-cols-2 gap-2 border-t border-border px-6 py-4">
+          <Button type="button" variant="outline" size="sm" className="w-full" onClick={handleCancel} disabled={isPending}>
             Cancel
           </Button>
           <LoadingButton
             type="submit"
             form={FORM_ID}
             size="sm"
+            className="w-full"
             isPending={isPending}
             loadingText={isEdit ? "Saving…" : "Creating…"}
           >

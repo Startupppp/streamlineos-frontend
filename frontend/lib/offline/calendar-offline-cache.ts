@@ -17,15 +17,69 @@ const STORE = "snapshot";
 const KEY = "latest";
 const SESSION_IDENTITY_KEY = "streamline-calendar-offline-session-identity";
 const DEVICE_IDENTITY_KEY = "streamline-calendar-offline-identity";
+const POLICY_REVOCATION_KEY = "streamline-calendar-offline-policy-revocation";
 let cacheEpoch = 0;
+let crossTabListenerReady = false;
+
+function watchCrossTabIdentity(): void {
+  if (crossTabListenerReady || typeof window === "undefined") return;
+  window.addEventListener("storage", (event) => {
+    if (event.key !== DEVICE_IDENTITY_KEY && event.key !== POLICY_REVOCATION_KEY || event.oldValue === event.newValue) return;
+    cacheEpoch++;
+    try {
+      const identity = sessionStorage.getItem(SESSION_IDENTITY_KEY);
+      if (identity && (event.key === POLICY_REVOCATION_KEY || identity !== event.newValue)) sessionStorage.removeItem(SESSION_IDENTITY_KEY);
+    } catch {}
+  });
+  crossTabListenerReady = true;
+}
 
 function identityIsCurrent(identity: string): boolean {
   try {
     return sessionStorage.getItem(SESSION_IDENTITY_KEY) === identity &&
-      localStorage.getItem(DEVICE_IDENTITY_KEY) === identity;
+      localStorage.getItem(DEVICE_IDENTITY_KEY) === identity && !policyIsRevoked(identity);
   } catch {
     return false;
   }
+}
+
+function policyIsRevoked(identity: string, version?: number): boolean {
+  try {
+    const raw = localStorage.getItem(POLICY_REVOCATION_KEY);
+    if (!raw) return false;
+    const marker: unknown = JSON.parse(raw);
+    if (!marker || typeof marker !== "object") return true;
+    const revoked = marker as { identity?: unknown; version?: unknown };
+    if (revoked.identity !== identity) return false;
+    if (!Number.isInteger(revoked.version)) return true;
+    return version === undefined || version <= (revoked.version as number);
+  } catch {
+    return true;
+  }
+}
+
+export function allowOfflineCalendarPolicy(identity: string, version: number): boolean {
+  if (!identity || !Number.isInteger(version) || version < 0) return false;
+  if (policyIsRevoked(identity, version)) return false;
+  try {
+    const raw = localStorage.getItem(POLICY_REVOCATION_KEY);
+    if (raw) {
+      const marker = JSON.parse(raw) as { identity?: unknown };
+      if (marker.identity === identity) localStorage.removeItem(POLICY_REVOCATION_KEY);
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function revokeOfflineCalendarPolicy(identity: string, version: number): void {
+  cacheEpoch++;
+  try {
+    localStorage.setItem(POLICY_REVOCATION_KEY, JSON.stringify({ identity, version }));
+    localStorage.removeItem(DEVICE_IDENTITY_KEY);
+    sessionStorage.removeItem(SESSION_IDENTITY_KEY);
+  } catch {}
 }
 
 function openDb(): Promise<IDBDatabase> {
@@ -65,6 +119,7 @@ export async function saveOfflineCalendarSnapshot(
   result: CalendarEventsResponse,
   policy: { version: number; maxAgeDays: number },
 ): Promise<void> {
+  watchCrossTabIdentity();
   if (!identity || !Number.isFinite(start.getTime()) || !Number.isFinite(end.getTime())) return;
   const writeEpoch = cacheEpoch;
   const snapshot: OfflineCalendarSnapshot = {
@@ -84,14 +139,15 @@ export async function saveOfflineCalendarSnapshot(
     })),
   };
   await transact<void>("readwrite", (store, resolve) => {
-    if (writeEpoch !== cacheEpoch || !identityIsCurrent(identity)) return resolve();
+    if (writeEpoch !== cacheEpoch || !identityIsCurrent(identity) || !allowOfflineCalendarPolicy(identity, policy.version)) return resolve();
     const request = store.put(snapshot, KEY);
     request.onsuccess = () => resolve();
   });
 }
 
 export async function readOfflineCalendarSnapshot(identity: string): Promise<OfflineCalendarSnapshot | null> {
-  if (!identity) return null;
+  watchCrossTabIdentity();
+  if (!identity || !identityIsCurrent(identity)) return null;
   const snapshot = await transact<OfflineCalendarSnapshot | null>("readonly", (store, resolve) => {
     const request = store.get(KEY);
     request.onsuccess = () => {
@@ -100,7 +156,7 @@ export async function readOfflineCalendarSnapshot(identity: string): Promise<Off
       resolve(item as OfflineCalendarSnapshot);
     };
   });
-  if (!snapshot) return null;
+  if (!snapshot || !identityIsCurrent(identity)) return null;
   const age = Date.now() - snapshot.fetchedAt;
   if (!Number.isFinite(age) || age < 0 ||
     !Number.isInteger(snapshot.policyVersion) || !Number.isInteger(snapshot.maxAgeDays) ||
@@ -127,10 +183,17 @@ export async function clearOfflineCalendarSnapshot(): Promise<void> {
 }
 
 export function subscribeOfflineCalendarClear(onClear: () => void): () => void {
-  if (typeof BroadcastChannel === "undefined") return () => undefined;
-  const channel = new BroadcastChannel(DB_NAME);
-  channel.onmessage = (event: MessageEvent) => {
+  watchCrossTabIdentity();
+  const channel = typeof BroadcastChannel === "undefined" ? null : new BroadcastChannel(DB_NAME);
+  if (channel) channel.onmessage = (event: MessageEvent) => {
     if (event.data?.type === "cleared") onClear();
   };
-  return () => channel.close();
+  const onStorage = (event: StorageEvent) => {
+    if ((event.key === DEVICE_IDENTITY_KEY || event.key === POLICY_REVOCATION_KEY) && event.oldValue !== event.newValue) onClear();
+  };
+  if (typeof window !== "undefined") window.addEventListener("storage", onStorage);
+  return () => {
+    channel?.close();
+    if (typeof window !== "undefined") window.removeEventListener("storage", onStorage);
+  };
 }

@@ -100,6 +100,7 @@ export function OutcomeReviewScheduleSheet({
       ...(values.measureKind ? { measureKind: values.measureKind } : {}),
       ...(values.metricPeriod?.trim() ? { metricPeriod: values.metricPeriod } : {}),
       ...(values.sourceUrl?.trim() ? { sourceUrl: values.sourceUrl } : {}),
+      ...(values.measuredAt ? { measuredAt: new Date(values.measuredAt).toISOString() } : {}),
     };
     onSubmit(data);
   }

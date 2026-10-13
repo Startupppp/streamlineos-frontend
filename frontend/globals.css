@@ -398,6 +398,30 @@ html.app-neutral.dark:not([class*="theme-"]) {
   transform: scale(0.97);
 }
 
+.button-motion {
+  transition-property: color, background-color, border-color, box-shadow, transform;
+  transition-duration: 150ms;
+  transition-timing-function: ease-out;
+}
+@media (hover: hover) {
+  .button-motion:not(:disabled):hover {
+    transform: translateY(-1px);
+  }
+}
+.button-motion:not(:disabled):active {
+  transform: translateY(0) scale(0.97);
+  transition-duration: 80ms;
+}
+@media (prefers-reduced-motion: reduce) {
+  .button-motion {
+    transition-property: color, background-color, border-color, box-shadow;
+  }
+  .button-motion:not(:disabled):hover,
+  .button-motion:not(:disabled):active {
+    transform: none;
+  }
+}
+
 /* â”€â”€â”€ Backgrounds â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .noir-mesh {
   background:

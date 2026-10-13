@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import type { ControllerRenderProps, UseFormReturn } from "react-hook-form";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
-import { EntityFormSheet } from "@/components/shared/entity-form-sheet";
+import { EntityFormDialog } from "@/components/shared/entity-form-dialog";
 import { FIELD_CONTROL_CLASS } from "@/components/ui/field-control";
 import { useCreateProductUpdate } from "@/hooks/api/build/managed-product-updates";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -48,7 +48,7 @@ function renderFields(_form: UseFormReturn<FormValues>) {
   );
 }
 
-export function ManagedProductUpdateSheet({ managedProductId, open, onOpenChange }: Props) {
+export function ManagedProductUpdateDialog({ managedProductId, open, onOpenChange }: Props) {
   const mutation = useCreateProductUpdate(managedProductId);
 
   const handleSubmit = useCallback(
@@ -68,7 +68,7 @@ export function ManagedProductUpdateSheet({ managedProductId, open, onOpenChange
   );
 
   return (
-    <EntityFormSheet<FormValues>
+    <EntityFormDialog<FormValues>
       open={open}
       onOpenChange={onOpenChange}
       title="Post product update"
@@ -81,6 +81,6 @@ export function ManagedProductUpdateSheet({ managedProductId, open, onOpenChange
       resetOnOpen
     >
       {renderFields}
-    </EntityFormSheet>
+    </EntityFormDialog>
   );
 }

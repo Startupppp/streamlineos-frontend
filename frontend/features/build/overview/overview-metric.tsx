@@ -30,7 +30,7 @@ export function OverviewPanel({ title, description, action, children, className 
   return (
     <section
       aria-label={title}
-      className={cn("flex min-w-0 flex-col gap-4 rounded-xl border border-border bg-card p-4", className)}
+      className={cn("flex min-w-0 flex-col gap-3 rounded-xl border border-border bg-card p-4 shadow-sm", className)}
     >
       <header className="flex items-start justify-between gap-3">
         <div className="min-w-0">

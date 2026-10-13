@@ -37,6 +37,7 @@ interface DatePickerProps {
   dateFormat?: string;
   disablePast?: boolean;
   clearable?: boolean;
+  compactCalendar?: boolean;
   ariaLabel?: string;
   "aria-describedby"?: string;
   "aria-invalid"?: boolean;
@@ -63,6 +64,7 @@ export function DatePicker({
   dateFormat = "PPP",
   disablePast = false,
   clearable = false,
+  compactCalendar = false,
   ariaLabel,
   "aria-describedby": ariaDescribedBy,
   "aria-invalid": ariaInvalid,
@@ -142,7 +144,10 @@ export function DatePicker({
           </Button>
         </PopoverTrigger>
         <PopoverContent
-          className={cn(FIELD_DATE_POPOVER_CONTENT_CLASS, "p-0")}
+          className={cn(
+            compactCalendar ? "w-auto min-w-0" : FIELD_DATE_POPOVER_CONTENT_CLASS,
+            "p-0",
+          )}
           align="start"
         >
           <Calendar
@@ -156,6 +161,7 @@ export function DatePicker({
             defaultMonth={selected ?? effectiveFromDate}
             initialFocus
             disabled={hasDisabledDates ? isDateDisabled : undefined}
+            compact={compactCalendar}
           />
         </PopoverContent>
       </Popover>

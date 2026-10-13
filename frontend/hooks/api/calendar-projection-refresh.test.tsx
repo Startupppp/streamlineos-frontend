@@ -19,7 +19,8 @@ jest.mock("next-auth/react", () => ({
   }),
 }));
 
-jest.mock("@/hooks/api/access", () => ({ useCan: () => true }));
+jest.mock("@/hooks/api/access", () => ({ useCan: () => true, usePermissionGate: () => ({ allowed: true, pending: false, unavailable: false }) }));
+jest.mock("@/hooks/api/calendar-offline-policy", () => ({ useCalendarOfflinePolicy: () => ({ data: null }) }));
 
 jest.mock("@/lib/api-client", () => ({
   apiClient: {

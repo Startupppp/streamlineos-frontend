@@ -1,7 +1,6 @@
 export const PRODUCT_SETTINGS_TABS = [
   { id: "general", label: "General" },
   { id: "members", label: "Members" },
-  { id: "projects", label: "Projects" },
   { id: "publishing", label: "Publishing" },
   { id: "feedback-channels", label: "Feedback channels" },
 ] as const;

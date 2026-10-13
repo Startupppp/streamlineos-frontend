@@ -44,10 +44,10 @@ export const captureSubmissionSchema = z.object({
   consentStatus: z.enum(["granted", "denied", "unknown"], {
     error: "Consent status is required",
   }),
-  reporterName: z.string().max(100).optional(),
-  reporterEmail: z.string().email("Invalid email").max(200).optional().or(z.literal("")),
-  segment: z.string().max(200).optional(),
-  theme: z.string().max(200).optional(),
+  reporterName: z.string().trim().max(100).optional(),
+  reporterEmail: z.string().trim().email("Invalid email").max(200).optional().or(z.literal("")),
+  segment: z.string().trim().max(200).optional(),
+  theme: z.string().trim().max(200).optional(),
   sentiment: z.enum(["positive", "neutral", "negative", "mixed"]).optional(),
 });
 

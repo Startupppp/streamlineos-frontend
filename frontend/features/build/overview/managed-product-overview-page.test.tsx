@@ -67,9 +67,9 @@ jest.mock("@/features/build/managed-products/link-existing-goal-dialog", () => (
     open ? <div data-testid="link-goal-dialog" /> : null,
 }));
 
-jest.mock("./managed-product-update-sheet", () => ({
-  ManagedProductUpdateSheet: ({ open }: { open: boolean }) =>
-    open ? <div data-testid="post-update-sheet" /> : null,
+jest.mock("./managed-product-update-dialog", () => ({
+  ManagedProductUpdateDialog: ({ open }: { open: boolean }) =>
+    open ? <div data-testid="post-update-dialog" /> : null,
 }));
 
 beforeEach(() => {
@@ -276,12 +276,12 @@ describe("ManagedProductOverviewPage — link goal action (audit #14)", () => {
 });
 
 describe("ManagedProductOverviewPage — post product update action (audit #14)", () => {
-  it("opens the post-update sheet when the Post update action is triggered", () => {
+  it("opens the post-update dialog when the Post update action is triggered", () => {
     const { useCan } = jest.requireMock("@/hooks/api/access");
     (useCan as jest.Mock).mockReturnValue(true);
     render(<ManagedProductOverviewPage managedProductId={42} />);
     fireEvent.click(screen.getAllByRole("button", { name: /Post update/i })[0]!);
-    expect(screen.getByTestId("post-update-sheet")).toBeInTheDocument();
+    expect(screen.getByTestId("post-update-dialog")).toBeInTheDocument();
   });
 
   it("offers no post-update action to a viewer without update permission", () => {

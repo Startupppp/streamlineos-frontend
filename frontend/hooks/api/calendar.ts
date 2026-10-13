@@ -37,7 +37,7 @@ import type {
   CalendarHistoryResponse,
   ExternalCalendarEventsResponse,
 } from "./calendar-types";
-import { clearOfflineCalendarSnapshot, saveOfflineCalendarSnapshot } from "@/lib/offline/calendar-offline-cache";
+import { allowOfflineCalendarPolicy, clearOfflineCalendarSnapshot, revokeOfflineCalendarPolicy, saveOfflineCalendarSnapshot } from "@/lib/offline/calendar-offline-cache";
 import { useCalendarOfflinePolicy } from "./calendar-offline-policy";
 
 // ---- Re-exports — all public imports from this module remain intact ----
@@ -177,11 +177,18 @@ export function useCalendarEvents(start: Date, end: Date, enabled = true) {
   });
   useEffect(() => {
     if (offlinePolicy.data?.enabled === false) {
+      if (orgId && userId) revokeOfflineCalendarPolicy(`${orgId}:${userId}`, offlinePolicy.data.version);
       void clearOfflineCalendarSnapshot().catch(() => undefined);
       return;
     }
     if (offlinePolicy.data?.enabled && eventsQuery.data && orgId && userId && canView && navigator.onLine) {
-      void saveOfflineCalendarSnapshot(`${orgId}:${userId}`, start, end, eventsQuery.data, offlinePolicy.data).catch(() => undefined);
+      const identity = `${orgId}:${userId}`;
+      if (!allowOfflineCalendarPolicy(identity, offlinePolicy.data.version)) return;
+      try {
+        localStorage.setItem("streamline-calendar-offline-identity", identity);
+        sessionStorage.setItem("streamline-calendar-offline-session-identity", identity);
+      } catch { return; }
+      void saveOfflineCalendarSnapshot(identity, start, end, eventsQuery.data, offlinePolicy.data).catch(() => undefined);
       if ("serviceWorker" in navigator) void navigator.serviceWorker.register("/sw.js").catch(() => undefined);
     }
   }, [offlinePolicy.data, eventsQuery.data, orgId, userId, canView, start, end]);

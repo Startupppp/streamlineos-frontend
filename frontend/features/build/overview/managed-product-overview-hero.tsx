@@ -122,9 +122,9 @@ export function ManagedProductOverviewHero({ product, now }: HeroProps) {
   return (
     <section
       aria-label="Product identity"
-      className="flex min-w-0 flex-col gap-5 rounded-xl border border-border bg-card p-4 sm:p-5"
+      className="flex min-w-0 flex-col gap-4 rounded-xl border border-border bg-card p-4 shadow-sm"
     >
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+      <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
         <div className="flex min-w-0 max-w-prose flex-col gap-3">
           <div className="flex flex-wrap items-center gap-2">
             <HealthPill health={product.health} />
@@ -146,7 +146,7 @@ export function ManagedProductOverviewHero({ product, now }: HeroProps) {
             <p className="text-pretty text-sm text-muted-foreground">{product.description}</p>
           ) : null}
         </div>
-        <dl className="grid shrink-0 grid-cols-1 gap-4 sm:grid-cols-3 lg:w-[22rem] lg:grid-cols-1">
+        <dl className="grid shrink-0 grid-cols-1 gap-3 rounded-lg bg-muted/40 p-3 sm:grid-cols-3 md:w-72 md:grid-cols-1">
           <div className="flex items-start justify-between gap-3 sm:flex-col sm:justify-start sm:gap-1">
             <dt className="text-xs text-muted-foreground">Owner</dt>
             <dd>

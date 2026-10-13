@@ -8,7 +8,6 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
-import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { DirtyStateProvider } from "@/components/shared/dirty-state-context";
 import { BuildHeaderActions } from "@/features/build/shared/build-header-actions";
 import type { BuildHeaderAction } from "@/features/build/shared/build-header-actions";
@@ -63,15 +62,15 @@ export function ProductReleasesPage({ managedProductId }: ProductReleasesPagePro
         subtitle={releasesSubtitle(groups, hasMore)}
         onBack={handleBack}
         contentClassName={MANAGED_PRODUCT_DETAIL_CONTENT_CLASS}
-        actions={<BuildHeaderActions actions={headerActions} />}
-        filters={
-          <div className={FILTER_TOOLBAR_ROW}>
+        actions={
+          <div className="flex w-full flex-wrap items-center justify-end gap-2 sm:w-auto">
             <BuildFilterSelect
               label="View"
               value={page.view}
               onValueChange={page.handleViewChange}
               options={VIEW_OPTIONS}
             />
+            <BuildHeaderActions actions={headerActions} />
           </div>
         }
       >

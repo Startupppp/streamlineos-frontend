@@ -1,5 +1,11 @@
 # Calendar release evidence
 
+## Current local verification checkpoint
+
+On 2026-10-13, the complete backend Calendar Jest selection passed 127 suites and 978 tests. The frontend Calendar feature, hook, offline, and booking selection passed 66 suites and 402 tests; four Calendar route and accessibility suites passed another 22 tests. Frontend TypeScript passed. After the offline policy revocation fix, three focused frontend suites passed 14 tests, frontend TypeScript passed again, and targeted ESLint passed. The backend Nest build completed successfully and its compiled output contains `CalendarOfflinePolicyController` and `dist/main.js`.
+
+These checks do not prove production API routing, applied migration 2016, saved-view CRUD, provider sandbox behavior, or live offline and cross-tab behavior. The production Calendar browser tool failed before opening a tab with an OS kernel-asset path error, and a separate web request could not access the authenticated page. The earlier production `/calendar/saved-views` HTTP 500 remains unresolved without backend logs or database access. Migration-chain verification without `DATABASE_URL` reported six historical journal timestamp regressions outside the Calendar migration range; no historical migration was restamped.
+
 ## Core projection migration
 
 Evidence recorded on 2026-10-13 for tickets 01 through 12.

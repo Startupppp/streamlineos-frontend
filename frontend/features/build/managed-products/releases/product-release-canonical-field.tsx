@@ -143,7 +143,7 @@ export function ProductReleaseCanonicalField({
         <FormItem className="sm:col-span-2">
           <FormLabel>Canonical project release (optional)</FormLabel>
           <div className="flex flex-col gap-2">
-            {projects.isError ? (
+            {projectId === null && projects.isError ? (
               <ErrorState
                 compact
                 title="Could not load linked projects"
@@ -151,7 +151,7 @@ export function ProductReleaseCanonicalField({
                 onRetry={handleProjectsRetry}
                 error={projects.error}
               />
-            ) : (
+            ) : projectId === null ? (
               <Combobox
                 options={projectOptions}
                 value={projectId === null ? "" : String(projectId)}
@@ -170,8 +170,7 @@ export function ProductReleaseCanonicalField({
                   />
                 }
               />
-            )}
-            {projectId !== null && releases.isError ? (
+            ) : releases.isError ? (
               <ErrorState
                 compact
                 title="Could not load that project's releases"
@@ -185,8 +184,7 @@ export function ProductReleaseCanonicalField({
                 value={field.value == null ? "" : String(field.value)}
                 onChange={handleReleaseChange}
                 onSearchChange={handleReleaseSearch}
-                disabled={projectId === null}
-                placeholder={projectId === null ? "Pick a project first" : "Pick a release…"}
+                placeholder="Pick a release…"
                 searchPlaceholder="Search releases…"
                 emptyText={releases.isFetching ? "Loading releases…" : "No releases found."}
                 aria-label="Canonical release"
@@ -200,10 +198,22 @@ export function ProductReleaseCanonicalField({
                 }
               />
             )}
-            {field.value != null ? (
-              <Button type="button" variant="outline" size="sm" onClick={handleClearLink}>
-                Clear canonical release link
-              </Button>
+            {projectId !== null ? (
+              <div className="flex flex-wrap items-center gap-1">
+                <Button type="button" variant="ghost" size="sm" onClick={handleClearLink}>
+                  Choose another project
+                </Button>
+                {field.value != null ? (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleReleaseChange("")}
+                  >
+                    Clear release
+                  </Button>
+                ) : null}
+              </div>
             ) : null}
           </div>
           <FormMessage />

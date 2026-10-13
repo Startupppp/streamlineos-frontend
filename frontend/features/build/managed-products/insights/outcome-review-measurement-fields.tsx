@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { FIELD_CONTROL_CLASS } from "@/components/ui/field-control";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
   MEASURE_KIND_OPTIONS,
   type ScheduleOutcomeReviewValues,
@@ -93,6 +94,22 @@ export function OutcomeReviewMeasurementFields({ control }: OutcomeReviewMeasure
                 data-testid="source-url-input"
               />
             </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      <FormField
+        control={control}
+        name="measuredAt"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Measured at</FormLabel>
+            <DatePicker
+              id="scheduleMeasuredAt"
+              value={field.value ?? ""}
+              onChange={field.onChange}
+              clearable
+            />
             <FormMessage />
           </FormItem>
         )}

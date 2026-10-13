@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { renderHook } from "@testing-library/react";
-import { useCan } from "@/hooks/api/access";
+import { useCan, usePermissionGate } from "@/hooks/api/access";
 import { queryKeys } from "@/lib/query-keys";
 import { partialMatchKey } from "@tanstack/react-query";
 import type { QueryKey } from "@tanstack/react-query";
@@ -12,7 +12,8 @@ jest.mock("@tanstack/react-query", () => ({
   useQueryClient: jest.fn(() => ({ invalidateQueries: jest.fn() })),
   useMutation: jest.fn(),
 }));
-jest.mock("@/hooks/api/access", () => ({ useCan: jest.fn() }));
+jest.mock("@/hooks/api/access", () => ({ useCan: jest.fn(), usePermissionGate: jest.fn() }));
+jest.mock("@/hooks/api/calendar-offline-policy", () => ({ useCalendarOfflinePolicy: () => ({ data: null }) }));
 jest.mock("next-auth/react", () => ({
   useSession: () => ({ data: { orgId: "org-1", user: { id: "user-1" } } }),
 }));
@@ -20,6 +21,7 @@ jest.mock("@/lib/api-client", () => ({ apiClient: { get: jest.fn() } }));
 
 const mockQuery = useQuery as jest.Mock;
 const mockCan = useCan as jest.Mock;
+const mockGate = usePermissionGate as jest.Mock;
 
 const START = new Date("2027-03-01T00:00:00.000Z");
 const END = new Date("2027-03-31T00:00:00.000Z");
@@ -44,6 +46,7 @@ describe("the calendar events key fires immediately on permission", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockCan.mockReturnValue(true);
+    mockGate.mockReturnValue({ allowed: true, pending: false, unavailable: false });
   });
 
   it("fires as soon as the permission is granted — no source waterfall", () => {
@@ -87,6 +90,7 @@ describe("the calendar events key fires immediately on permission", () => {
 
   it("BITE: stays disabled when the permission is denied", () => {
     mockCan.mockReturnValue(false);
+    mockGate.mockReturnValue({ allowed: false, pending: false, unavailable: false });
     const opts = useCaptureEventsOptions();
 
     expect(opts.enabled).toBe(false);

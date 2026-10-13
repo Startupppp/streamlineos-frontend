@@ -38,7 +38,6 @@ import { ManagedProductEditFields } from "./managed-product-edit-fields";
 import { ProductSettingsDangerSection } from "./product-settings-danger-section";
 import { ProductSettingsMembersSection } from "./product-settings-members-section";
 import { ProductSettingsPublicationSection } from "./product-settings-publication-section";
-import { ProductSettingsProjectsSection } from "./product-settings-projects-section";
 import { ProductSettingsFeedbackChannelsSection } from "./product-settings-feedback-channels-section";
 import {
   PRODUCT_SETTINGS_TABS,
@@ -301,13 +300,6 @@ function ProductSettingsForm({ managedProductId }: ProductSettingsPageProps) {
 
           <TabsContent value="members" className="mt-0 outline-none">
             <ProductSettingsMembersSection
-              managedProductId={managedProductId}
-              canWrite={canUpdate}
-            />
-          </TabsContent>
-
-          <TabsContent value="projects" className="mt-0 outline-none">
-            <ProductSettingsProjectsSection
               managedProductId={managedProductId}
               canWrite={canUpdate}
             />

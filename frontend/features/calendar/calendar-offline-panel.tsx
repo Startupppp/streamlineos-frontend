@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { format } from "date-fns";
 import { useSession } from "next-auth/react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -8,11 +8,34 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { usePermissionGate } from "@/hooks/api/access";
+import { useHydrated } from "@/hooks/common/use-hydrated";
 import { clearOfflineCalendarSnapshot, readOfflineCalendarSnapshot, subscribeOfflineCalendarClear, type OfflineCalendarSnapshot } from "@/lib/offline/calendar-offline-cache";
 import type { CalendarListItem } from "@/hooks/api/calendar";
 import type { CalendarOfflineEditIntent, CalendarOfflineIntent } from "./calendar-offline-intent";
 
 const IDENTITY_KEY = "streamline-calendar-offline-identity";
+
+function subscribeClock(onChange: () => void): () => void {
+  const timer = window.setInterval(onChange, 60_000);
+  return () => window.clearInterval(timer);
+}
+
+function clockMinute(): number {
+  return Math.ceil(Date.now() / 60_000) * 60_000;
+}
+
+function serverClockMinute(): number {
+  return 0;
+}
+
+function cachedOfflineIdentity(): string {
+  try { return sessionStorage.getItem("streamline-calendar-offline-session-identity") ?? ""; }
+  catch { return ""; }
+}
+
+function serverOfflineIdentity(): string {
+  return "";
+}
 
 export function CalendarOfflinePanel({ onQueueIntent, queued, loadedEvents, onQueueEditIntent, editQueued }: {
   onQueueIntent: (intent: CalendarOfflineIntent) => void;
@@ -23,12 +46,13 @@ export function CalendarOfflinePanel({ onQueueIntent, queued, loadedEvents, onQu
 }) {
   const { data: session, status } = useSession();
   const access = usePermissionGate("calendar:read");
-  const [cachedIdentity, setCachedIdentity] = useState("");
-  const [markerReady, setMarkerReady] = useState(false);
+  const cachedIdentity = useSyncExternalStore(subscribeOfflineCalendarClear, cachedOfflineIdentity, serverOfflineIdentity);
+  const markerReady = useHydrated();
   const sessionIdentity = session?.orgId && session.user?.id ? `${session.orgId}:${session.user.id}` : "";
   const identity = sessionIdentity || cachedIdentity;
   const canRead = access.allowed || (typeof navigator !== "undefined" && !navigator.onLine && !access.denied && Boolean(cachedIdentity) && (!sessionIdentity || sessionIdentity === cachedIdentity));
   const [snapshot, setSnapshot] = useState<OfflineCalendarSnapshot | null>(null);
+  const now = useSyncExternalStore(subscribeClock, clockMinute, serverClockMinute);
   const [loading, setLoading] = useState(true);
   const [draftStart, setDraftStart] = useState(() => format(new Date(), "yyyy-MM-dd'T'HH:mm"));
   const [draftEnd, setDraftEnd] = useState(() => format(new Date(Date.now() + 60 * 60_000), "yyyy-MM-dd'T'HH:mm"));
@@ -37,11 +61,6 @@ export function CalendarOfflinePanel({ onQueueIntent, queued, loadedEvents, onQu
   const [editEnd, setEditEnd] = useState("");
   const editable = loadedEvents.filter((event) => event.source === "event" && event.actions.edit && event.timeKind === "timed" && !event.allDay && Boolean(event.sourceVersion) && event.freshness.state === "fresh");
   const selectedEdit = editable.find((event) => event.occurrenceId === editOccurrenceId);
-  useEffect(() => {
-    try { setCachedIdentity(sessionStorage.getItem("streamline-calendar-offline-session-identity") ?? ""); }
-    catch { setCachedIdentity(""); }
-    setMarkerReady(true);
-  }, []);
   useEffect(() => subscribeOfflineCalendarClear(() => setSnapshot(null)), []);
   useEffect(() => {
     let active = true;
@@ -54,8 +73,12 @@ export function CalendarOfflinePanel({ onQueueIntent, queued, loadedEvents, onQu
       }
       try {
         const previous = localStorage.getItem(IDENTITY_KEY);
+        if (!access.allowed && previous !== identity) {
+          await clearOfflineCalendarSnapshot();
+          if (active) { setSnapshot(null); setLoading(false); }
+          return;
+        }
         if (previous && previous !== identity) await clearOfflineCalendarSnapshot();
-        localStorage.setItem(IDENTITY_KEY, identity);
         const value = await readOfflineCalendarSnapshot(identity);
         if (active) { setSnapshot(value); setLoading(false); }
       } catch {
@@ -64,8 +87,8 @@ export function CalendarOfflinePanel({ onQueueIntent, queued, loadedEvents, onQu
     };
     void load();
     return () => { active = false; };
-  }, [identity, canRead, status, markerReady]);
-  const ageMs = snapshot ? Date.now() - snapshot.fetchedAt : null;
+  }, [identity, canRead, access.allowed, status, markerReady]);
+  const ageMs = snapshot ? now - snapshot.fetchedAt : null;
   const expired = ageMs === null || ageMs > (snapshot?.maxAgeDays ?? 0) * 86_400_000;
   const age = ageMs === null ? "" : ageMs < 3_600_000 ? `${Math.max(1, Math.floor(ageMs / 60_000))} minutes` :
     ageMs < 86_400_000 ? `${Math.floor(ageMs / 3_600_000)} hours` : `${Math.floor(ageMs / 86_400_000)} days`;

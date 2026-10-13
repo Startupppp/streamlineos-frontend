@@ -52,11 +52,19 @@ const completeSchema = z.object({
   result: z.enum(["met", "partially_met", "not_met", "inconclusive"], {
     error: "Result is required to complete a review",
   }),
-  notes: z.string().optional(),
-  version: z.number().int(),
+  notes: z.string().max(5000).optional(),
+  version: z.number().int().min(1),
   measureKind: z.enum(["self_reported", "measured"]).optional(),
-  sourceUrl: z.string().url("Enter a valid URL").max(2000).optional().or(z.literal("")),
-  measuredAt: z.string().optional(),
+  sourceUrl: z.string().trim().url("Enter a valid URL").max(2000).optional().or(z.literal("")),
+  measuredAt: z.union([z.iso.date(), z.literal("")]).optional(),
+}).superRefine((values, ctx) => {
+  if (values.measureKind !== "measured") return;
+  if (!values.sourceUrl) {
+    ctx.addIssue({ code: "custom", path: ["sourceUrl"], message: "Source URL is required for measured results" });
+  }
+  if (!values.measuredAt) {
+    ctx.addIssue({ code: "custom", path: ["measuredAt"], message: "Measured date is required for measured results" });
+  }
 });
 
 type CompleteFormValues = z.infer<typeof completeSchema>;

@@ -30,6 +30,8 @@ import { toast } from "sonner";
 function discardOfflineCalendarAccess() {
   try { sessionStorage.removeItem("streamline-calendar-offline-session-identity"); }
   catch {}
+  try { localStorage.removeItem("streamline-calendar-offline-identity"); }
+  catch {}
   void import("@/lib/offline/calendar-offline-cache")
     .then((module) => module.clearOfflineCalendarSnapshot())
     .catch(() => undefined);

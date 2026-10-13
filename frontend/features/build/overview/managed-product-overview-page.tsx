@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { ManagedProductFormSheet } from "@/features/build/managed-products/managed-product-form-sheet";
 import { LinkExistingGoalDialog } from "@/features/build/managed-products/link-existing-goal-dialog";
 import { OpportunityCreateSheet } from "@/features/build/managed-products/insights/opportunity-create-sheet";
-import { ManagedProductUpdateSheet } from "./managed-product-update-sheet";
+import { ManagedProductUpdateDialog } from "./managed-product-update-dialog";
 import { BuildHeaderActions } from "@/features/build/shared/build-header-actions";
 import { PageState } from "@/components/shared/page-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -126,7 +126,7 @@ export function ManagedProductOverviewPage({
         open={linkGoalOpen}
         onOpenChange={setLinkGoalOpen}
       />
-      <ManagedProductUpdateSheet
+      <ManagedProductUpdateDialog
         managedProductId={managedProductId}
         open={postUpdateOpen}
         onOpenChange={setPostUpdateOpen}
@@ -138,7 +138,7 @@ export function ManagedProductOverviewPage({
         className="h-auto flex-none"
       >
         <motion.div
-          className="flex w-full min-w-0 flex-col gap-4 pb-8"
+          className="flex w-full min-w-0 flex-col gap-3 pb-8 sm:gap-4"
           variants={staggerContainer}
           initial="hidden"
           animate="visible"
@@ -149,23 +149,26 @@ export function ManagedProductOverviewPage({
             <>
               <motion.div
                 variants={fadeUp}
-                className="grid grid-cols-1 items-start gap-4 xl:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)]"
+                className="grid grid-cols-1 items-start gap-3 lg:grid-cols-[minmax(0,1.45fr)_minmax(20rem,1fr)] sm:gap-4"
               >
                 <ManagedProductOverviewHero
                   product={summaryData.product}
                   now={now}
                 />
-                <ManagedProductOverviewAttention
-                  signals={attentionSignals}
-                  onMarkReviewed={markReviewed}
-                  isMarkingReviewed={isMarkingReviewed}
-                />
-              </motion.div>
-              <motion.div variants={fadeUp} className="min-w-0">
-                <ManagedProductOverviewPulse
-                  managedProductId={managedProductId}
-                  summary={summaryData}
-                />
+                <div className="min-w-0 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:h-full">
+                  <ManagedProductOverviewAttention
+                    signals={attentionSignals}
+                    onMarkReviewed={markReviewed}
+                    isMarkingReviewed={isMarkingReviewed}
+                    className="lg:h-full"
+                  />
+                </div>
+                <div className="min-w-0 lg:col-start-1 lg:row-start-2">
+                  <ManagedProductOverviewPulse
+                    managedProductId={managedProductId}
+                    summary={summaryData}
+                  />
+                </div>
               </motion.div>
               <ManagedProductOverviewStrategyCard
                 managedProductId={managedProductId}

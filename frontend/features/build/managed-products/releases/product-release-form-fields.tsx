@@ -38,7 +38,7 @@ export function ProductReleaseFormFields({
   const form = useFormContext<ReleaseFormValues>();
 
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+    <div className="grid grid-cols-1 items-start gap-4 sm:grid-cols-2">
       <FormField
         control={form.control}
         name="name"
@@ -100,6 +100,7 @@ export function ProductReleaseFormFields({
                 placeholder="Pick a date"
                 dateFormat="dd MMM yyyy"
                 clearable
+                compactCalendar
                 ariaLabel="Release date"
               />
             </FormControl>
