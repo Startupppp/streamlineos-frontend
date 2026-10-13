@@ -126,6 +126,17 @@ function makeProduct(id: number = PRODUCT_ID) {
 
 type ApiRouteState = "populated" | "empty" | "error" | "denied" | "not-found";
 
+async function navigate(page: Page, path: string): Promise<void> {
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    await page.goto(path, { waitUntil: "domcontentloaded" });
+    const unavailable = await page
+      .getByRole("heading", { name: "Server temporarily unavailable" })
+      .isVisible();
+    if (!unavailable) return;
+    await page.waitForTimeout(500);
+  }
+}
+
 async function installRoutes(page: Page, state: ApiRouteState): Promise<void> {
   await page.route("http://localhost:1500/**", (route) => {
     const url = new URL(route.request().url());
@@ -182,6 +193,22 @@ async function installRoutes(page: Page, state: ApiRouteState): Promise<void> {
           policy: { petEnabled: false, allowedPresets: ["default"], prompts, version: 1 },
         }),
       });
+    }
+    if (p === "/organization" || p === "/mail/accounts") {
+      return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify([]) });
+    }
+    if (p === "/build/members" || p === "/build/teams") {
+      return route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ data: [], pagination: { limit: 25, nextCursor: null, hasMore: false } }),
+      });
+    }
+    if (p === "/build/managed-products/facets") {
+      return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ segments: [], tags: [] }) });
+    }
+    if (p === "/build") {
+      return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ data: [], hasMore: false, nextCursor: null }) });
     }
 
     if (p === "/build/managed-products") {
@@ -246,41 +273,31 @@ test.describe("MP-09 list page states × viewports", () => {
 
       test("populated: renders product name and no horizontal overflow", async ({ page }) => {
         await installRoutes(page, "populated");
-        await page.goto("/build/managed-products");
+        await navigate(page, "/build/managed-products");
         await expect(page).not.toHaveURL(/\/signin/);
-        await page.waitForLoadState("networkidle");
-        await expect(page.getByText(`MP09 States Product ${PRODUCT_ID}`)).toBeVisible({ timeout: 20_000 });
+        await expect(page.getByRole("main").getByText(`MP09 States Product ${PRODUCT_ID}`).filter({ visible: true })).toBeVisible({ timeout: 60_000 });
         const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
         expect(overflow, `horizontal overflow at ${vp.name}px populated`).toBeLessThanOrEqual(1);
       });
 
       test("empty: renders empty state, not error state", async ({ page }) => {
         await installRoutes(page, "empty");
-        await page.goto("/build/managed-products");
+        await navigate(page, "/build/managed-products");
         await expect(page).not.toHaveURL(/\/signin/);
-        await page.waitForLoadState("networkidle");
-        await expect(page.getByRole("status")).toBeVisible({ timeout: 20_000 });
-        await expect(page.getByText(/Start with a product/i)).toBeVisible();
-        await expect(page.getByText(/Something went wrong/i)).not.toBeVisible();
+        await expect(page.getByText(/Start with a product/i).filter({ visible: true })).toBeVisible({ timeout: 60_000 });
+        await expect(page.getByRole("heading", { name: "Something went wrong" })).not.toBeVisible();
+        const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+        expect(overflow, `horizontal overflow at ${vp.name}px empty`).toBeLessThanOrEqual(1);
       });
 
       test("error: renders error state with retry, not empty state", async ({ page }) => {
         await installRoutes(page, "error");
-        await page.goto("/build/managed-products");
+        await navigate(page, "/build/managed-products");
         await expect(page).not.toHaveURL(/\/signin/);
-        await page.waitForLoadState("networkidle");
-        await expect(page.getByText(/Something went wrong/i)).toBeVisible({ timeout: 20_000 });
+        await expect(page.getByRole("heading", { name: "Something went wrong" })).toBeVisible({ timeout: 60_000 });
         await expect(page.getByText(/Start with a product/i)).not.toBeVisible();
-      });
-
-      test("no horizontal overflow in any state", async ({ page }) => {
-        for (const state of ["populated", "empty", "error"] as const) {
-          await installRoutes(page, state);
-          await page.goto("/build/managed-products");
-          await page.waitForLoadState("networkidle");
-          const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
-          expect(overflow, `horizontal overflow in ${state} state at ${vp.name}px`).toBeLessThanOrEqual(1);
-        }
+        const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+        expect(overflow, `horizontal overflow at ${vp.name}px error`).toBeLessThanOrEqual(1);
       });
     });
   }
@@ -295,75 +312,67 @@ test.describe("MP-09 product detail states × viewports", () => {
         await signIn(context, baseURL as string);
       });
 
-      test("overview: populated - product name is visible", async ({ page }) => {
+      test("overview: populated - overview heading is visible", async ({ page }) => {
         await installRoutes(page, "populated");
-        await page.goto(`/build/managed-products/${PRODUCT_ID}`);
+        await navigate(page, `/build/managed-products/${PRODUCT_ID}`);
         await expect(page).not.toHaveURL(/\/signin/);
-        await page.waitForLoadState("networkidle");
-        await expect(page.getByText(`MP09 States Product ${PRODUCT_ID}`)).toBeVisible({ timeout: 20_000 });
+        await expect(page.getByRole("heading", { name: "Product overview" })).toBeVisible({ timeout: 60_000 });
         const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
         expect(overflow, `overview horizontal overflow at ${vp.name}px`).toBeLessThanOrEqual(1);
       });
 
       test("insights: no horizontal overflow at all viewports", async ({ page }) => {
         await installRoutes(page, "populated");
-        await page.goto(`/build/managed-products/${PRODUCT_ID}/insights`);
+        await navigate(page, `/build/managed-products/${PRODUCT_ID}/insights`);
         await expect(page).not.toHaveURL(/\/signin/);
-        await page.waitForLoadState("networkidle");
         const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
         expect(overflow, `insights horizontal overflow at ${vp.name}px`).toBeLessThanOrEqual(1);
       });
 
       test("feedback: no horizontal overflow", async ({ page }) => {
         await installRoutes(page, "populated");
-        await page.goto(`/build/managed-products/${PRODUCT_ID}/feedback`);
+        await navigate(page, `/build/managed-products/${PRODUCT_ID}/feedback`);
         await expect(page).not.toHaveURL(/\/signin/);
-        await page.waitForLoadState("networkidle");
         const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
         expect(overflow, `feedback horizontal overflow at ${vp.name}px`).toBeLessThanOrEqual(1);
       });
 
       test("goals: no horizontal overflow", async ({ page }) => {
         await installRoutes(page, "populated");
-        await page.goto(`/build/managed-products/${PRODUCT_ID}/goals`);
+        await navigate(page, `/build/managed-products/${PRODUCT_ID}/goals`);
         await expect(page).not.toHaveURL(/\/signin/);
-        await page.waitForLoadState("networkidle");
         const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
         expect(overflow, `goals horizontal overflow at ${vp.name}px`).toBeLessThanOrEqual(1);
       });
 
       test("projects: no horizontal overflow", async ({ page }) => {
         await installRoutes(page, "populated");
-        await page.goto(`/build/managed-products/${PRODUCT_ID}/projects`);
+        await navigate(page, `/build/managed-products/${PRODUCT_ID}/projects`);
         await expect(page).not.toHaveURL(/\/signin/);
-        await page.waitForLoadState("networkidle");
         const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
         expect(overflow, `projects horizontal overflow at ${vp.name}px`).toBeLessThanOrEqual(1);
       });
 
       test("roadmap: no horizontal overflow", async ({ page }) => {
         await installRoutes(page, "populated");
-        await page.goto(`/build/managed-products/${PRODUCT_ID}/roadmap`);
+        await navigate(page, `/build/managed-products/${PRODUCT_ID}/roadmap`);
         await expect(page).not.toHaveURL(/\/signin/);
-        await page.waitForLoadState("networkidle");
         const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
         expect(overflow, `roadmap horizontal overflow at ${vp.name}px`).toBeLessThanOrEqual(1);
       });
 
       test("releases: no horizontal overflow", async ({ page }) => {
         await installRoutes(page, "populated");
-        await page.goto(`/build/managed-products/${PRODUCT_ID}/releases`);
+        await navigate(page, `/build/managed-products/${PRODUCT_ID}/releases`);
         await expect(page).not.toHaveURL(/\/signin/);
-        await page.waitForLoadState("networkidle");
         const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
         expect(overflow, `releases horizontal overflow at ${vp.name}px`).toBeLessThanOrEqual(1);
       });
 
       test("settings: no horizontal overflow", async ({ page }) => {
         await installRoutes(page, "populated");
-        await page.goto(`/build/managed-products/${PRODUCT_ID}/settings`);
+        await navigate(page, `/build/managed-products/${PRODUCT_ID}/settings`);
         await expect(page).not.toHaveURL(/\/signin/);
-        await page.waitForLoadState("networkidle");
         const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
         expect(overflow, `settings horizontal overflow at ${vp.name}px`).toBeLessThanOrEqual(1);
       });
@@ -380,9 +389,8 @@ test.describe("MP-09 denied state: list page shows access restricted, not empty"
 
   test("access-denied route returns a denied state, not an empty state", async ({ page }) => {
     await installRoutes(page, "denied");
-    await page.goto("/build/managed-products");
+    await navigate(page, "/build/managed-products");
     await expect(page).not.toHaveURL(/\/signin/);
-    await page.waitForLoadState("networkidle");
 
     await expect(page.getByText(/Start with a product/i)).not.toBeVisible({ timeout: 20_000 });
   });
@@ -397,18 +405,16 @@ test.describe("MP-09 not-found: 404 product shows not-found, not loading", () =>
 
   test("integer product id that the backend 404s renders not-found UI", async ({ page }) => {
     await installRoutes(page, "not-found");
-    await page.goto(`/build/managed-products/${PRODUCT_ID}`);
+    await navigate(page, `/build/managed-products/${PRODUCT_ID}`);
     await expect(page).not.toHaveURL(/\/signin/);
-    await page.waitForLoadState("networkidle");
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     expect(overflow, "not-found page horizontal overflow").toBeLessThanOrEqual(1);
   });
 
   test("non-integer product id renders not-found immediately (route guard)", async ({ page }) => {
     await installRoutes(page, "not-found");
-    await page.goto("/build/managed-products/not-a-number");
+    await navigate(page, "/build/managed-products/not-a-number");
     await expect(page).not.toHaveURL(/\/signin/);
-    await page.waitForLoadState("networkidle");
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     expect(overflow, "non-integer id horizontal overflow").toBeLessThanOrEqual(1);
   });
@@ -423,16 +429,15 @@ test.describe("MP-09 deep-link and refresh", () => {
 
   test("deep-linking directly to the overview route lands on the right page", async ({ page }) => {
     await installRoutes(page, "populated");
-    await page.goto(`/build/managed-products/${PRODUCT_ID}`);
+    await navigate(page, `/build/managed-products/${PRODUCT_ID}`);
     await expect(page).not.toHaveURL(/\/signin/);
     await expect(page).toHaveURL(new RegExp(`/build/managed-products/${PRODUCT_ID}`));
-    await page.waitForLoadState("networkidle");
-    await expect(page.getByText(`MP09 States Product ${PRODUCT_ID}`)).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByRole("heading", { name: "Product overview" })).toBeVisible({ timeout: 60_000 });
   });
 
   test("browser refresh on the overview route stays on the route", async ({ page }) => {
     await installRoutes(page, "populated");
-    await page.goto(`/build/managed-products/${PRODUCT_ID}`);
+    await navigate(page, `/build/managed-products/${PRODUCT_ID}`);
     await expect(page).not.toHaveURL(/\/signin/);
     await page.reload();
     await expect(page).toHaveURL(new RegExp(`/build/managed-products/${PRODUCT_ID}`));

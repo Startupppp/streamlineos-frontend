@@ -11,6 +11,7 @@ import type {
   CalendarExportPolicy,
   CalendarProviderWriteScope,
 } from "./calendar-admin-schema";
+import { platformHierarchyQueryKeys } from "@/lib/query-keys/platform-hierarchy";
 
 const policyContract = lazyContract(() => import("./calendar-admin-schema").then((module) => module.calendarAdminPolicyContract));
 const analyticsContract = lazyContract(() => import("./calendar-admin-schema").then((module) => module.calendarAnalyticsContract));
@@ -34,6 +35,8 @@ export interface CalendarAdminPolicyInput {
   minimumCompletionSeconds: number;
   maximumSessionAttempts: number;
   maximumActiveLinks: number;
+  offlineBusyCacheEnabled: boolean;
+  offlineBusyCacheMaxAgeDays: number;
 }
 
 export function useCalendarAdminPolicy() {
@@ -60,6 +63,7 @@ export function useUpdateCalendarAdminPolicy() {
     onSuccess: (policy) => {
       queryClient.setQueryData(keys.policy, policy);
       void queryClient.invalidateQueries({ queryKey: keys.analytics });
+      void queryClient.invalidateQueries({ queryKey: platformHierarchyQueryKeys.calendar.all });
     },
   });
 }

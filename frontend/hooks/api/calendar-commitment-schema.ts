@@ -15,6 +15,7 @@ export interface CommitmentChainNode {
   title: string;
   href: string;
   ownerMembershipId: number | null;
+  ownerName: string | null;
   sourceVersion: string;
   nextAction: string | null;
   risk: "healthy" | "at_risk" | "unknown";
@@ -40,6 +41,7 @@ const chainNodeContract: z.ZodType<CommitmentChainNode> = z.lazy(() => z.object(
   title: z.string(),
   href: z.string(),
   ownerMembershipId: z.number().int().positive().nullable(),
+  ownerName: z.string().nullable(),
   sourceVersion: z.string(),
   nextAction: z.string().nullable(),
   risk: z.enum(["healthy", "at_risk", "unknown"]),

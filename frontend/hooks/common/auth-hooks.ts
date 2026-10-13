@@ -27,6 +27,14 @@ import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import type { UserOrganization } from "@/hooks/api/organization-schema";
 import { toast } from "sonner";
 
+function discardOfflineCalendarAccess() {
+  try { sessionStorage.removeItem("streamline-calendar-offline-session-identity"); }
+  catch {}
+  void import("@/lib/offline/calendar-offline-cache")
+    .then((module) => module.clearOfflineCalendarSnapshot())
+    .catch(() => undefined);
+}
+
 const organizationsContract = lazyContract(() =>
   import("@/hooks/api/organization-schema").then(
     (m) => m.userOrganizationsContract,
@@ -257,6 +265,7 @@ export function useSignOut() {
         serverRevocationCompleted = false;
       }
       clearImpersonation();
+      discardOfflineCalendarAccess();
       clearBackendTokenCache();
       clearStreamToken();
       queryClient.clear();
@@ -410,6 +419,7 @@ export function useSwitchOrg() {
         toast.error(SWITCH_UNCONFIRMED_MESSAGE);
         return;
       }
+      discardOfflineCalendarAccess();
       queryClient.clear();
       router.replace(onMutateResult.sectionRoot);
       router.refresh();

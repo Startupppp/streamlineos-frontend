@@ -29,7 +29,7 @@ import {
   invalidateCalendarProjectionWindows,
   subscribeToCalendarProjectionChanges,
 } from "@/lib/calendar-projection-cache";
-import { useCan } from "@/hooks/api/access";
+import { useCan, usePermissionGate } from "@/hooks/api/access";
 import type {
   CalendarOrgMember,
   CalendarSource,
@@ -38,6 +38,7 @@ import type {
   ExternalCalendarEventsResponse,
 } from "./calendar-types";
 import { clearOfflineCalendarSnapshot, saveOfflineCalendarSnapshot } from "@/lib/offline/calendar-offline-cache";
+import { useCalendarOfflinePolicy } from "./calendar-offline-policy";
 
 // ---- Re-exports — all public imports from this module remain intact ----
 export type {
@@ -119,26 +120,43 @@ export function useCalendarEvents(start: Date, end: Date, enabled = true) {
   const { data: session, status: sessionStatus } = useSession();
   const orgId = session?.orgId ?? "";
   const userId = session?.user?.id ?? "";
-  const canView = useCan("calendar:read");
+  const access = usePermissionGate("calendar:read");
+  const canView = access.allowed;
+  const offlinePolicy = useCalendarOfflinePolicy(enabled);
   useEffect(() => {
     if (sessionStatus === "loading") return;
+    if (typeof navigator !== "undefined" && !navigator.onLine) return;
+    if (orgId && userId) {
+      try {
+        const previous = sessionStorage.getItem("streamline-calendar-offline-session-identity");
+        if (previous && previous !== `${orgId}:${userId}`) {
+          sessionStorage.removeItem("streamline-calendar-offline-session-identity");
+          void clearOfflineCalendarSnapshot().catch(() => undefined);
+        }
+      } catch {
+        void clearOfflineCalendarSnapshot().catch(() => undefined);
+      }
+    }
+    if (access.pending || access.unavailable) return;
     const identity = orgId && userId && canView ? `${orgId}:${userId}` : "";
     try {
       const previous = localStorage.getItem("streamline-calendar-offline-identity");
       if (previous && previous !== identity) void clearOfflineCalendarSnapshot().catch(() => undefined);
       if (identity) localStorage.setItem("streamline-calendar-offline-identity", identity);
       else localStorage.removeItem("streamline-calendar-offline-identity");
+      if (identity) sessionStorage.setItem("streamline-calendar-offline-session-identity", identity);
+      else sessionStorage.removeItem("streamline-calendar-offline-session-identity");
     } catch {
       void clearOfflineCalendarSnapshot().catch(() => undefined);
     }
-  }, [orgId, userId, canView, sessionStatus]);
+  }, [orgId, userId, canView, access.pending, access.unavailable, sessionStatus]);
   useEffect(
     () => subscribeToCalendarProjectionChanges(
       () => invalidateCalendarProjectionWindows(qc, false),
     ),
     [qc],
   );
-  return useQuery({
+  const eventsQuery = useQuery({
     queryKey: platformHierarchyQueryKeys.calendar.events(
       orgId,
       userId,
@@ -150,7 +168,6 @@ export function useCalendarEvents(start: Date, end: Date, enabled = true) {
         start: start.toISOString(),
         end: end.toISOString(),
       }, signal, calendarEventsResponseContract);
-      if (navigator.onLine) void saveOfflineCalendarSnapshot(`${orgId}:${userId}`, start, end, result).catch(() => undefined);
       return result;
     },
     staleTime: 2 * 60 * 1000,
@@ -158,6 +175,17 @@ export function useCalendarEvents(start: Date, end: Date, enabled = true) {
     refetchOnWindowFocus: "always",
     refetchOnReconnect: "always",
   });
+  useEffect(() => {
+    if (offlinePolicy.data?.enabled === false) {
+      void clearOfflineCalendarSnapshot().catch(() => undefined);
+      return;
+    }
+    if (offlinePolicy.data?.enabled && eventsQuery.data && orgId && userId && canView && navigator.onLine) {
+      void saveOfflineCalendarSnapshot(`${orgId}:${userId}`, start, end, eventsQuery.data, offlinePolicy.data).catch(() => undefined);
+      if ("serviceWorker" in navigator) void navigator.serviceWorker.register("/sw.js").catch(() => undefined);
+    }
+  }, [offlinePolicy.data, eventsQuery.data, orgId, userId, canView, start, end]);
+  return eventsQuery;
 }
 
 export function useCalendarHistory(before: string, enabled = true) {

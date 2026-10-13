@@ -28,6 +28,7 @@ export const calendarEventsResponseContract = z.object({
       myRsvpStatus: z.string().nullable().optional(),
       projectId: z.number().int().nullable().optional(),
       connectionId: z.number().int().optional(),
+      ownerMembershipId: z.number().int().nullable().optional(),
       accountEmail: z.string().nullable().optional(),
       meetingUrl: z.string().nullable().optional(),
       webLink: z.string().nullable().optional(),

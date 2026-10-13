@@ -16,6 +16,8 @@ export const calendarAdminPolicyContract = z.object({
   minimumCompletionSeconds: z.number().int().nonnegative(),
   maximumSessionAttempts: z.number().int().positive(),
   maximumActiveLinks: z.number().int().positive(),
+  offlineBusyCacheEnabled: z.boolean(),
+  offlineBusyCacheMaxAgeDays: z.number().int().min(1).max(30),
   updatedAt: z.string().nullable(),
 });
 

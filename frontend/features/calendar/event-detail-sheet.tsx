@@ -37,6 +37,7 @@ import {
 } from "./event-detail-content";
 import { CalendarListFallback } from "./calendar-lazy-fallbacks";
 import { CalendarSourceActionPanel } from "./calendar-source-action-panel";
+import type { CalendarScenarioDraftStep } from "./calendar-scenario-draft";
 import type { CommitmentReference } from "@/hooks/api/calendar-commitment-schema";
 
 const MeetingWorkspacePanel = dynamic(
@@ -63,9 +64,10 @@ const CommitmentRadarSheet = dynamic(
 interface EventDetailSheetProps {
   event: CalendarListItem | null;
   onClose: () => void;
+  onQueueScenarioStep?: (draft: CalendarScenarioDraftStep) => void;
 }
 
-export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
+export function EventDetailSheet({ event, onClose, onQueueScenarioStep }: EventDetailSheetProps) {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [cancelOccurrenceOpen, setCancelOccurrenceOpen] = useState(false);
   const [unlinkConfirmOpen, setUnlinkConfirmOpen] = useState(false);
@@ -223,7 +225,7 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
             onRequestUnlink={handleRequestUnlink}
             onRsvp={handleRsvp}
           />
-          {event ? <CalendarSourceActionPanel event={event} /> : null}
+          {event ? <CalendarSourceActionPanel event={event} onQueueScenarioStep={onQueueScenarioStep} /> : null}
           {event?.category === "huddle" && event.entityId ? (
             <div className="px-5 pt-3 pb-1 shrink-0">
               <Link href={`/chat?channel=${event.entityId}`} onClick={onClose}>

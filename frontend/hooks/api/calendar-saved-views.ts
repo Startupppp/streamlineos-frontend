@@ -47,6 +47,7 @@ export function useCalendarSavedViews(enabled = true) {
       ),
     getNextPageParam: (page) => page.nextCursor ?? undefined,
     staleTime: 30_000,
+    throwOnError: false,
     enabled: Boolean(session?.orgId && session.user?.id) && canRead && enabled,
   });
 }

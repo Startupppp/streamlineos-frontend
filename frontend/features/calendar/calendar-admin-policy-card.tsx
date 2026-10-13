@@ -82,6 +82,8 @@ export function CalendarAdminPolicyCard({
   const [maximumActiveLinks, setMaximumActiveLinks] = useState(
     String(policy.maximumActiveLinks),
   );
+  const [offlineBusyCacheEnabled, setOfflineBusyCacheEnabled] = useState(policy.offlineBusyCacheEnabled);
+  const [offlineBusyCacheMaxAgeDays, setOfflineBusyCacheMaxAgeDays] = useState(String(policy.offlineBusyCacheMaxAgeDays));
 
   useEffect(() => {
     setTimeZone(policy.analyticsTimeZone);
@@ -95,6 +97,8 @@ export function CalendarAdminPolicyCard({
     setMinimumCompletionSeconds(String(policy.minimumCompletionSeconds));
     setMaximumSessionAttempts(String(policy.maximumSessionAttempts));
     setMaximumActiveLinks(String(policy.maximumActiveLinks));
+    setOfflineBusyCacheEnabled(policy.offlineBusyCacheEnabled);
+    setOfflineBusyCacheMaxAgeDays(String(policy.offlineBusyCacheMaxAgeDays));
   }, [policy]);
 
   async function save() {
@@ -120,6 +124,8 @@ export function CalendarAdminPolicyCard({
         minimumCompletionSeconds: Number(minimumCompletionSeconds),
         maximumSessionAttempts: Number(maximumSessionAttempts),
         maximumActiveLinks: Number(maximumActiveLinks),
+        offlineBusyCacheEnabled,
+        offlineBusyCacheMaxAgeDays: Number(offlineBusyCacheMaxAgeDays),
       });
       toast.success("Calendar governance updated");
     } catch (error) {
@@ -236,6 +242,11 @@ export function CalendarAdminPolicyCard({
               onCheckedChange={setPublicLinksEnabled}
             />
           </div>
+          <div className="flex items-center justify-between gap-3 rounded-lg border p-3">
+            <div><Label htmlFor="calendar-offline-busy-cache">Offline busy-window cache</Label><p className="text-xs text-muted-foreground">Allows redacted, read-only busy windows on this device. Titles and record details are never stored.</p></div>
+            <Switch id="calendar-offline-busy-cache" checked={offlineBusyCacheEnabled} onCheckedChange={setOfflineBusyCacheEnabled} />
+          </div>
+          <div className="space-y-1.5"><Label htmlFor="calendar-offline-max-age">Maximum offline cache age in days</Label><Input id="calendar-offline-max-age" type="number" min={1} max={30} value={offlineBusyCacheMaxAgeDays} onChange={(event) => setOfflineBusyCacheMaxAgeDays(event.target.value)} /></div>
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="calendar-booking-domains">

@@ -1,9 +1,19 @@
-self.addEventListener("install", () => {
+self.addEventListener("install", (event) => {
+  event.waitUntil(caches.open("calendar-offline-shell-v1").then((cache) => cache.add("/calendar-offline.html")).catch(() => undefined));
   self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(self.clients.claim());
+});
+
+self.addEventListener("fetch", (event) => {
+  const url = new URL(event.request.url);
+  if (event.request.mode !== "navigate" || url.origin !== self.location.origin || url.pathname !== "/calendar") return;
+  event.respondWith(fetch(event.request).catch(async () => {
+    const shell = await caches.match("/calendar-offline.html");
+    return shell ?? new Response("Calendar is offline. Reconnect to continue.", { status: 503, headers: { "Content-Type": "text/plain" } });
+  }));
 });
 
 // RT-001. The payload carries an id, a category and a url — never record content.

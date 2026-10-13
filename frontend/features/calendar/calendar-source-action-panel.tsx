@@ -18,11 +18,15 @@ import type {
 } from "@/hooks/api/calendar-source-actions-schema";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
+import { useApplyCalendarScenario, usePreviewCalendarScenario } from "@/hooks/api/calendar-scenarios";
+import type { CalendarScenarioPreview } from "@/hooks/api/calendar-scenario-schema";
+import type { CommitmentReference } from "@/hooks/api/calendar-commitment-schema";
 import {
   actionConfig,
   inputValue,
   sourceValue,
 } from "./calendar-source-action-fields";
+import type { CalendarScenarioDraftStep } from "./calendar-scenario-draft";
 
 const repairLabels: Record<CalendarSourceActionRepair, string> = {
   retry: "Retry with owner",
@@ -31,10 +35,23 @@ const repairLabels: Record<CalendarSourceActionRepair, string> = {
   manual_review: "Mark for manual review",
 };
 
+function scenarioRoot(event: CalendarListItem): CommitmentReference | null {
+  const source = event.sourceKey === "build" ? "build" :
+    event.sourceKey === "tasks" ? "tasks" :
+      ["crm", "crm-deals"].includes(event.sourceKey) ? "crm" :
+        ["finance", "accounting", "accounting-receivables"].includes(event.sourceKey) ? "finance" :
+          ["inventory", "inventory-purchase-orders"].includes(event.sourceKey) ? "inventory" : null;
+  if (!source || !event.entityType) return null;
+  const type = source === "inventory" && event.entityType === "purchase-order" ? "purchase_order" : event.entityType;
+  return { source, type, recordId: event.sourceRecordId };
+}
+
 export function CalendarSourceActionPanel({
   event,
+  onQueueScenarioStep,
 }: {
   event: CalendarListItem;
+  onQueueScenarioStep?: (draft: CalendarScenarioDraftStep) => void;
 }) {
   const config = useMemo(() => actionConfig(event), [event]);
   const [value, setValue] = useState(() =>
@@ -43,6 +60,10 @@ export function CalendarSourceActionPanel({
   const [proposal, setProposal] = useState<CalendarSourceActionProposal | null>(
     null,
   );
+  const [scenario, setScenario] = useState<CalendarScenarioPreview | null>(null);
+  const previewScenarioMutation = usePreviewCalendarScenario();
+  const applyScenarioMutation = useApplyCalendarScenario();
+  const root = scenarioRoot(event);
   const capabilities = useCalendarSourceActionCapabilities();
   const createProposal = useCreateCalendarSourceActionProposal();
   const confirmProposal = useConfirmCalendarSourceActionProposal();
@@ -50,6 +71,7 @@ export function CalendarSourceActionPanel({
 
   useEffect(() => {
     setProposal(null);
+    setScenario(null);
     setValue(config ? inputValue(event, config) : "");
   }, [config, event, event.id, event.sourceVersion]);
 
@@ -66,6 +88,8 @@ export function CalendarSourceActionPanel({
   const step = proposal?.steps[0] ?? null;
   const pending =
     createProposal.isPending ||
+    previewScenarioMutation.isPending ||
+    applyScenarioMutation.isPending ||
     confirmProposal.isPending ||
     repairStep.isPending;
 
@@ -88,6 +112,60 @@ export function CalendarSourceActionPanel({
         ],
       });
       setProposal(next);
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    }
+  }
+
+  async function previewScenario() {
+    if (!value || !config || !root || !event.sourceVersion || !event.entityType) return;
+    try {
+      const next = await previewScenarioMutation.mutateAsync({
+        root,
+        steps: [{
+          sourceKey: event.sourceKey,
+          sourceRecordId: event.sourceRecordId,
+          entityType: event.entityType,
+          sourceActionId: "reschedule",
+          expectedSourceVersion: event.sourceVersion,
+          intendedEffect: `Reschedule ${event.title}`,
+          input: { [config.field]: sourceValue(value, config) },
+        }],
+      });
+      setScenario(next);
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    }
+  }
+
+  function queueScenarioStep() {
+    if (!value || !config || !root || !event.sourceVersion || !event.entityType || !onQueueScenarioStep) return;
+    onQueueScenarioStep({
+      root,
+      label: event.title,
+      step: {
+        sourceKey: event.sourceKey,
+        sourceRecordId: event.sourceRecordId,
+        entityType: event.entityType,
+        sourceActionId: "reschedule",
+        expectedSourceVersion: event.sourceVersion,
+        intendedEffect: `Reschedule ${event.title}`,
+        input: { [config.field]: sourceValue(value, config) },
+      },
+    });
+  }
+
+  async function applyScenario() {
+    if (!scenario) return;
+    try {
+      const next = await applyScenarioMutation.mutateAsync({
+        token: scenario.token,
+        selected: [0],
+        idempotencyKey: `calendar-scenario-${crypto.randomUUID()}`,
+      });
+      setProposal(next);
+      setScenario(null);
+      toast.success("Source owner processed the scenario");
     } catch (error) {
       toast.error(getErrorMessage(error));
     }
@@ -142,7 +220,16 @@ export function CalendarSourceActionPanel({
         ) : null}
       </div>
 
-      {!proposal ? (
+      {scenario ? <div className="space-y-3 rounded-md border p-3">
+        <p className="text-xs font-semibold">What-if preview · no changes made</p>
+        <p className="text-xs text-muted-foreground">Current commitment: {scenario.before.risk.replaceAll("_", " ")}. Projected outcome: {scenario.after.risk.replaceAll("_", " ")} ({scenario.confidence} confidence).</p>
+        {scenario.affected.commitments.length > 0 ? <p className="text-xs text-muted-foreground">Visible commitments in this chain: {scenario.affected.commitments.join(", ")}</p> : null}
+        {scenario.affected.people.length > 0 ? <p className="text-xs text-muted-foreground">Visible owners: {scenario.affected.people.join(", ")}</p> : null}
+        {scenario.scheduleChanges.map((change) => <p key={`${change.index}:${change.field}`} className="text-xs text-muted-foreground">{change.title} · {change.field}: {change.direction}{change.deltaMinutes === null ? "" : ` by ${Math.abs(change.deltaMinutes)} minutes`}</p>)}
+        {scenario.impacts.map((impact) => <div key={impact.index} className="space-y-1"><p className="text-sm font-medium">{impact.title}</p><p className="text-xs">{impact.summary}</p>{impact.changes.map((change) => <p key={change.field} className="text-xs text-muted-foreground">{change.field}: {change.before ?? "Not set"} → {change.after ?? "Not set"}</p>)}{impact.warnings.map((warning) => <p key={warning} className="text-xs text-status-warning-foreground">{warning}</p>)}</div>)}
+        <p className="text-xs text-muted-foreground">Expires {format(new Date(scenario.expiresAt), "PPp")}. Applying rechecks graph, permission, source version, and owner policy.</p>
+        <div className="flex justify-end gap-2"><Button size="sm" variant="ghost" disabled={pending} onClick={() => setScenario(null)}>Discard</Button><Button size="sm" disabled={pending} onClick={() => { void applyScenario(); }}>Apply selected change</Button></div>
+      </div> : !proposal ? (
         <div className="space-y-2">
           <label
             className="text-xs font-medium"
@@ -155,7 +242,7 @@ export function CalendarSourceActionPanel({
               id={`source-action-${event.id}`}
               type={config.inputType}
               value={value}
-              onChange={(change) => setValue(change.target.value)}
+              onChange={(change) => { setValue(change.target.value); setScenario(null); }}
               className="h-8 text-xs"
             />
             <Button
@@ -166,6 +253,8 @@ export function CalendarSourceActionPanel({
             >
               Preview
             </Button>
+            {root ? <Button size="sm" variant="outline" disabled={!value || pending} onClick={() => { void previewScenario(); }}>What if</Button> : null}
+            {root && onQueueScenarioStep ? <Button size="sm" variant="outline" disabled={!value || pending} onClick={queueScenarioStep}>Add to scenario</Button> : null}
           </div>
         </div>
       ) : step ? (

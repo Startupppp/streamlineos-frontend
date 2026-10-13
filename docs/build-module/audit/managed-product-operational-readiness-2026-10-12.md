@@ -1,5 +1,11 @@
 # Managed Product Operational Readiness — 2026-10-12
 
+## Delivery checklist
+
+- [x] Define and test Manage Product operational and database alert predicates.
+- [x] Deliver page and notify payloads to a real local HTTP receiver.
+- [ ] Configure production page/notify destinations and record trigger, acknowledgement and recovery evidence.
+
 Database: `mp_ops14` (local, `127.0.0.1:5432`). Role for RLS measurements: `streamline_app`. All SQL run directly; no application boot.
 
 ---
@@ -284,9 +290,19 @@ Signals 1, 2, 4, 7, 8, 9 are outcome-rate on log spans and touch no DB columns.
 
 ### End-to-end proofs
 
-**Limitation:** `slo-catalogue.spec.ts` runs at module scope and throws immediately because `resolveRunbookRoot` cannot find `architecture-refactor/prd/completion-plan.md` in this checkout. That suite is the gate that would validate `runbookFile` and `runbookAnchor` for every SLO including these ten. It is pre-existingly broken and cannot run here. The anchors below (`#managed-product-ops`, `#managed-product-db`) are real headings in this document whose slugs match exactly; the heading list is in the "Heading list" subsection below.
+**Resolved validation gap:** `slo-catalogue.spec.ts` still cannot resolve its
+general repository root in this checkout, but Manage Product no longer depends
+on that broken gate. `src/common/slo/slo-managed-product.spec.ts` validates all
+ten objectives' runbook files and anchors directly. The focused suite passed 28
+of 28 tests on 2026-10-13.
 
-**Limitation:** no alert in this repository has a wired paging destination. Every script outputs `destination: "CONFIGURE_ME — wire exit-code 1 to your oncall system"`. MP-12 requires a paging route; this remains a manual wiring step after deployment.
+**Current implementation:** both Manage Product alert scripts POST JSON to the
+configured page or notify URL, fail distinctly when delivery fails, and expose
+delivery status in their result. A synthetic page breach reached a real local
+HTTP receiver and the focused suite passed 29 of 29 tests on 2026-10-13.
+Production still needs real `MP_ALERT_PAGE_URL` and `MP_ALERT_NOTIFY_URL` values,
+plus received, acknowledged and recovered incident evidence from the deployed
+revision.
 
 #### Proof A — read route 5xx spike (ops alert, predicate + synthetic log)
 

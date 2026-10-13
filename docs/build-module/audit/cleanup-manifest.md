@@ -178,6 +178,18 @@ These seven files were created during the specification pass and later proved to
 
 ## Reference changes
 
+## Manage Product audit consolidation — 2026-10-13
+
+The completed source-review narratives
+`managed-product-code-audit-2026-10-12.md` and
+`managed-product-final-consolidated-audit-2026-10-12.md` were removed after
+their current product offering, verification baseline and testing instructions
+were consolidated into
+[`product/manage-product-tester-guide.md`](../product/manage-product-tester-guide.md).
+The operational runbook, browser evidence, WOW evidence and external pending
+list remain because they contain active deployment or external acceptance work.
+No product requirement was closed by deleting the superseded narratives.
+
 - Initial reference pass updated 26 Markdown files; an additional pass resolved imported CI cut-v1/cut-v2 historical archive references. Relative file/image references were then validated across all remaining Markdown.
 - Markdown links resolving to deleted duplicates point to retained source with a path relative to the referencing file.
 - Literal repository paths to deleted sources are mapped to retained paths.

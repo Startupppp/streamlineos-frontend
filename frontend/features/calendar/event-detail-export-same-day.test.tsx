@@ -4,6 +4,8 @@ import type { CalendarListItem } from "@/hooks/api/calendar";
 import { calendarProjectionFields } from "./calendar-projection-fixtures";
 import { downloadCalendarExport } from "./calendar-export";
 
+jest.mock("./calendar-source-action-panel", () => ({ CalendarSourceActionPanel: () => null }));
+
 jest.mock("./calendar-export", () => ({
   downloadCalendarExport: jest.fn().mockResolvedValue(undefined),
 }));

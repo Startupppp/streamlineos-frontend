@@ -72,6 +72,10 @@ import { CalendarSavedViewControls } from "./calendar-saved-view-controls";
 import { calendarSearchIsPartial } from "./calendar-search-coverage";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import { CalendarOfflinePanel } from "./calendar-offline-panel";
+import { CalendarOfflineIntentReview } from "./calendar-offline-intent-review";
+import { CalendarOfflineEditReview } from "./calendar-offline-edit-review";
+import type { CalendarOfflineEditIntent, CalendarOfflineIntent } from "./calendar-offline-intent";
+import type { CalendarScenarioDraftStep } from "./calendar-scenario-draft";
 
 const CalendarGridLayer = dynamic(
   () =>
@@ -166,12 +170,29 @@ const CalendarCoachSheet = dynamic(() => import("./calendar-coach-sheet").then((
   loading: () => <CalendarSheetFallback label="Loading personal insights" />,
 });
 
+const CalendarCapacitySheet = dynamic(() => import("./calendar-capacity-sheet").then((module) => ({ default: module.CalendarCapacitySheet })), {
+  ssr: false,
+  loading: () => <CalendarSheetFallback label="Loading resource capacity" />,
+});
+
+const CalendarScenarioWorkspace = dynamic(() => import("./calendar-scenario-workspace").then((module) => ({ default: module.CalendarScenarioWorkspace })), {
+  ssr: false,
+  loading: () => <CalendarSheetFallback label="Loading scenario" />,
+});
+
 const NO_CALENDAR_EVENTS: CalendarListItem[] = [];
 const NO_CALENDAR_SEARCH_PAGES: CalendarSearchResponse[] = [];
 
 export function CalendarView() {
   const online = useOnlineStatus();
+  const [offlineIntent, setOfflineIntent] = useState<CalendarOfflineIntent | null>(null);
+  const [offlineEditIntent, setOfflineEditIntent] = useState<CalendarOfflineEditIntent | null>(null);
+  const [offlineCreateSlot, setOfflineCreateSlot] = useState<{ start: Date; end: Date } | null>(null);
+  const [offlineEditEvent, setOfflineEditEvent] = useState<{ event: CalendarListItem; rrule: string | null } | null>(null);
+  const [capacityOpen, setCapacityOpen] = useState(false);
   const [coachOpen, setCoachOpen] = useState(false);
+  const [scenarioOpen, setScenarioOpen] = useState(false);
+  const [scenarioDrafts, setScenarioDrafts] = useState<CalendarScenarioDraftStep[]>([]);
   const [myDaySearch, setMyDaySearch] = useState("");
   const [clockNow, setClockNow] = useState(() => new Date());
   const debouncedMyDaySearch = useDebouncedValue(myDaySearch, 300);
@@ -229,7 +250,7 @@ export function CalendarView() {
   const selectedSavedView = savedViewsQuery.data?.pages
     .flatMap((page) => page.items)
     .find(
-      (item) => item.id === savedFilterId && item.definition.mode === viewMode,
+      (item) => Boolean(item && item.id === savedFilterId && item.definition.mode === viewMode),
     );
   const fetchNextSavedViewPage = savedViewsQuery.fetchNextPage;
   useEffect(() => {
@@ -662,7 +683,7 @@ export function CalendarView() {
     if (searchParams.get("accounts") === "1") setAccountsOpen(true);
   }, [searchParams, setAccountsOpen]);
 
-  if (!online) return <CalendarOfflinePanel />;
+  if (!online) return <CalendarOfflinePanel onQueueIntent={setOfflineIntent} queued={offlineIntent !== null} loadedEvents={events} onQueueEditIntent={setOfflineEditIntent} editQueued={offlineEditIntent !== null} />;
 
   return (
     <PageWrapper
@@ -705,7 +726,7 @@ export function CalendarView() {
       noInternalScroll
       actionsInline
       actions={
-        <div className="flex items-center gap-2"><Button variant="outline" onClick={() => setCoachOpen(true)}>My time insights</Button><CalendarToolbarPrimaryActions
+        <div className="flex items-center gap-2">{scenarioDrafts.length ? <Button variant="outline" onClick={() => setScenarioOpen(true)}>What if ({scenarioDrafts.length})</Button> : null}<Button variant="outline" onClick={() => setCapacityOpen(true)}>Capacity</Button><Button variant="outline" onClick={() => setCoachOpen(true)}>My time insights</Button><CalendarToolbarPrimaryActions
           activeConnectionCount={activeConnectionCount}
           onOpenAccounts={handleOpenAccounts}
           onOpenCreate={handleOpenCreate}
@@ -714,6 +735,12 @@ export function CalendarView() {
       }
     >
       {coachOpen ? <CalendarCoachSheet onClose={() => setCoachOpen(false)} /> : null}
+      {capacityOpen ? <CalendarCapacitySheet onClose={() => setCapacityOpen(false)} /> : null}
+      {scenarioOpen && scenarioDrafts.length ? <CalendarScenarioWorkspace key={JSON.stringify(scenarioDrafts)} drafts={scenarioDrafts} onRemove={(index) => setScenarioDrafts((current) => current.filter((_, position) => position !== index))} onClear={() => { setScenarioDrafts([]); setScenarioOpen(false); }} onClose={() => setScenarioOpen(false)} /> : null}
+      {offlineIntent ? <CalendarOfflineIntentReview intent={offlineIntent} onDiscard={() => setOfflineIntent(null)} onContinue={(slot) => { setOfflineCreateSlot(slot); setOfflineIntent(null); }} /> : null}
+      {offlineEditIntent ? <CalendarOfflineEditReview intent={offlineEditIntent} onDiscard={() => setOfflineEditIntent(null)} onContinue={(event, rrule) => { setOfflineEditEvent({ event, rrule }); setOfflineEditIntent(null); }} /> : null}
+      {offlineCreateSlot ? <EventCreateDialog open onOpenChange={(open) => { if (!open) setOfflineCreateSlot(null); }} defaultSlot={offlineCreateSlot} /> : null}
+      {offlineEditEvent ? <EventCreateDialog open onOpenChange={(open) => { if (!open) setOfflineEditEvent(null); }} event={offlineEditEvent.event} rrule={offlineEditEvent.rrule} /> : null}
       <div className="flex min-h-0 flex-1 flex-col gap-3">
         <CalendarToolbar
           view={displayedGridView}
@@ -1138,6 +1165,16 @@ export function CalendarView() {
           <EventDetailSheet
             event={selectedEvent}
             onClose={handleCloseSelected}
+            onQueueScenarioStep={(draft) => {
+              setScenarioDrafts((current) => {
+                const matching = current.findIndex((item) => item.step.sourceKey === draft.step.sourceKey && item.step.entityType === draft.step.entityType && item.step.sourceRecordId === draft.step.sourceRecordId);
+                if (matching >= 0) return current.map((item, index) => index === matching ? draft : item);
+                if (current.length >= 20) { toast.error("A scenario can contain at most 20 changes"); return current; }
+                return [...current, draft];
+              });
+              handleCloseSelected();
+              setScenarioOpen(true);
+            }}
           />
         )}
         {selectedExternal !== null && (

@@ -1,6 +1,8 @@
 import { render, screen } from "@testing-library/react";
 import React from "react";
 import { EventDetailSheet } from "./event-detail-sheet";
+
+jest.mock("./calendar-source-action-panel", () => ({ CalendarSourceActionPanel: () => null }));
 import type { CalendarListItem } from "@/hooks/api/calendar";
 import { calendarProjectionFields } from "./calendar-projection-fixtures";
 

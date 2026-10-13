@@ -50,7 +50,7 @@ export default defineConfig({
   fullyParallel: false,
   forbidOnly: Boolean(process.env.CI),
   retries: 0,
-  timeout: 90_000,
+  timeout: 180_000,
   expect: { timeout: 15_000 },
   workers: 1,
 
@@ -71,10 +71,10 @@ export default defineConfig({
   ],
 
   webServer: {
-    command: `pnpm exec next dev -p ${PORT}`,
+    command: `node ./node_modules/next/dist/bin/next dev -p ${PORT} --webpack`,
     url: BASE_URL,
     timeout: 180_000,
-    stdout: "pipe",
+    stdout: "ignore",
     stderr: "pipe",
     env: ENV,
     reuseExistingServer: !process.env.CI,

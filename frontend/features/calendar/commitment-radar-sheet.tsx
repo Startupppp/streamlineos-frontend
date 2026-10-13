@@ -22,7 +22,7 @@ function ChainNode({ node, depth, onRemove }: { node: CommitmentChainNode; depth
         <Badge variant={node.risk === "at_risk" ? "destructive" : "outline"}>{node.risk.replaceAll("_", " ")}</Badge>
       </div>
       {node.nextAction ? <p className="text-sm">Next action: {node.nextAction}</p> : null}
-      {node.ownerMembershipId ? <p className="text-xs text-muted-foreground">Owner membership #{node.ownerMembershipId}</p> : <p className="text-xs text-muted-foreground">Owner not assigned</p>}
+      {node.ownerName ? <p className="text-xs text-muted-foreground">Owner: {node.ownerName}</p> : <p className="text-xs text-muted-foreground">Owner name unavailable</p>}
       {node.diagnostics.length > 0 ? <p className="text-xs text-muted-foreground">Needs review: {node.diagnostics.map((item) => item.replaceAll("_", " ")).join(", ")}</p> : null}
       {depth < 9 && node.dependencies.length > 0 ? <ul className="space-y-2 border-l border-border pl-3">
         {node.dependencies.map((dependency, index) => <li key={`${node.key}-${index}`} className="space-y-1">

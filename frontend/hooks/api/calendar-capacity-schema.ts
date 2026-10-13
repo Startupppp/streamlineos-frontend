@@ -31,3 +31,33 @@ export const calendarCapacityContract = z.object({
 
 export type CalendarResource = z.infer<typeof calendarResourceListContract>[number];
 export type CalendarCapacity = z.infer<typeof calendarCapacityContract>;
+
+export const calendarPersonalCapacityContract = z.object({
+  evaluatedAt: z.string(),
+  coverage: z.enum(["complete", "partial"]),
+  slices: z.array(z.object({
+    start: z.string(),
+    end: z.string(),
+    state: z.enum(["available", "limited", "over_capacity", "unknown"]),
+    availableUnits: z.number().int().min(0).max(1).nullable(),
+    explanation: z.string(),
+  })),
+});
+
+export type CalendarPersonalCapacity = z.infer<typeof calendarPersonalCapacityContract>;
+
+export const calendarWarehouseCapacityContract = z.object({
+  warehouseId: z.number().int().positive(),
+  warehouseName: z.string(),
+  warehouseVersion: z.string(),
+  evaluatedAt: z.string(),
+  coverage: z.literal("partial"),
+  schedulingState: z.enum(["unscheduled", "unavailable"]),
+  pendingPicks: z.number().int().nonnegative(),
+  activePicks: z.number().int().nonnegative(),
+  pendingPutaways: z.number().int().nonnegative(),
+  activePutaways: z.number().int().nonnegative(),
+  explanation: z.string(),
+});
+
+export type CalendarWarehouseCapacity = z.infer<typeof calendarWarehouseCapacityContract>;

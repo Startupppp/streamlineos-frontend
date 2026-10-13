@@ -32,6 +32,21 @@ export function useUpdateCalendarCoachConsent() {
     mutationFn: (input: { enabled: boolean; expectedVersion: number }) => apiClient.put<{ enabled: boolean; version: number; changedAt: string | null }>(
       "/calendar/coach/consent", input, undefined, consentContract,
     ),
-    onSuccess: () => qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.calendar.coach(session?.orgId ?? "", session?.user?.id ?? "") }),
+    onSuccess: (consent) => {
+      const key = platformHierarchyQueryKeys.calendar.coach(session?.orgId ?? "", session?.user?.id ?? "");
+      if (!consent.enabled) qc.setQueryData<CalendarCoachInsight>(key, (current) => current ? {
+        ...current,
+        consent,
+        coverage: "disabled",
+        meetingMinutes: null,
+        protectedWorkMinutes: null,
+        missedCommitments: null,
+        repeatedReschedules: null,
+        overdueTasks: null,
+        overdueBuildTickets: null,
+        recommendations: [],
+      } : current);
+      void qc.invalidateQueries({ queryKey: key });
+    },
   });
 }

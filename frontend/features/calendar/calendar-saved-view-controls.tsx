@@ -54,7 +54,7 @@ export function CalendarSavedViewControls({
   const views =
     query.data?.pages
       .flatMap((page) => page.items)
-      .filter((view) => view.definition.mode === mode) ?? [];
+      .filter((view) => Boolean(view && view.definition.mode === mode)) ?? [];
   const selected = views.find((view) => view.id === selectedId);
   const [dialogMode, setDialogMode] = useState<"create" | "rename" | null>(
     null,
@@ -162,8 +162,9 @@ export function CalendarSavedViewControls({
           More views
         </Button>
       ) : null}
+      {query.isError ? <div role="alert" className="text-xs text-destructive">Saved views are unavailable. <Button type="button" size="sm" variant="ghost" onClick={() => { void query.refetch(); }}>Retry</Button></div> : null}
       {canWrite ? (
-        <Button type="button" size="sm" variant="outline" onClick={openCreate}>
+        <Button type="button" size="sm" variant="outline" disabled={query.isError} onClick={openCreate}>
           Save view
         </Button>
       ) : null}

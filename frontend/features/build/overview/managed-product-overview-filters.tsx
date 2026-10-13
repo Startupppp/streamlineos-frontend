@@ -112,7 +112,7 @@ interface FilterSlot {
 }
 
 function slotClass(min: number): string {
-  return cn("min-w-0 flex-1", min === DATE_MIN_PX ? "min-w-60" : "min-w-40");
+  return cn("min-w-0 flex-1", min === DATE_MIN_PX ? "md:min-w-60" : "md:min-w-40");
 }
 
 export function ManagedProductOverviewFilters(props: ManagedProductOverviewFiltersProps) {

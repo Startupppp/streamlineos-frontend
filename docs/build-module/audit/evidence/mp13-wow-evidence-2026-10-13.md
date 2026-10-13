@@ -2,6 +2,12 @@
 
 Date: 2026-10-13
 
+## Delivery checklist
+
+- [x] Prove all six workflows through database/API evidence.
+- [x] Compare the implemented scope with official Productboard and Canny documentation.
+- [ ] Run the defined study with real users and record completion, time, errors and preference.
+
 ## Numbering disambiguation
 
 | Sequence | Source | IDs 71–76 |
@@ -19,7 +25,7 @@ The two sequences must never be joined by equal number. All evidence below addre
 |---|---|---|---|
 | MP-10 lifecycle spec | `backend/src/modules/build/managed-products/__tests__/managed-product-lifecycle.db.spec.ts` | 14 | 14/14 passed |
 | MP-10 publication spec | `backend/src/modules/build/managed-products/__tests__/managed-product-publication-lifecycle.db.spec.ts` | 12 | 12/12 passed |
-| MP-11 authorization suite | `backend/test/build/managed-products-access.seeded-e2e-spec.ts` | 118 | exit code 0 confirmed in this pass (jest output not captured to file; `--forceExit` terminated before flush); previously documented as 118/118 in `managed-product-final-consolidated-audit-2026-10-12.md` line 246 |
+| MP-11 authorization suite | `backend/test/build/managed-products-access.seeded-e2e-spec.ts` | 118 | exit code 0 confirmed in this pass; the consolidated result is retained in the [tester guide](../../product/manage-product-tester-guide.md) |
 | Chain spec (seeded e2e) | `backend/test/build/managed-product-chain.seeded-e2e-spec.ts` | 39 | not run in this pass (requires seeded e2e app); workflow assertions read from source |
 
 Run commands (all verified in this pass):
@@ -262,7 +268,18 @@ contracts, so the same class of drift fails the typecheck instead of rendering b
 
 ## Competitor facts gathered
 
-None. No public, citable, dated competitor facts for Productboard or Canny were gathered in this pass. The task rules require a dated public source (pricing page, public docs, published feature list) for every fact. Without that, no comparative judgement is recorded. The evidence-collection plan below names what must be sourced.
+Official documentation was checked on 2026-10-13:
+
+| Product | Same-scope documented capability | Source |
+|---|---|---|
+| Productboard | Feedback notes can be linked directly to feature ideas as insights; Productboard also documents measurable objectives/key results and roadmap planning. | [What is Productboard?](https://support.productboard.com/hc/en-us/articles/360058147693-What-is-Productboard), updated 2026-03-24; [Quick start guide: Feedback](https://support.productboard.com/hc/en-us/articles/26907498937235-Quick-start-guide-Feedback), updated 2026-03-23 |
+| Canny | Customer segmentation is available in feedback and roadmaps; roadmap scoring uses RICE-style factors and can include revenue, segment votes and CRM opportunity data. | [User Segmentation](https://help.canny.io/en/articles/3176557-user-segmentation), dated 2025-06-17; [Internal roadmap scoring](https://help.canny.io/en/articles/9205460-internal-roadmap-scoring), dated 2025-01-16 |
+| Canny | The Customer Requests report exposes company, segment, vote priority and opportunity value for prioritization. | [Customer Requests report](https://help.canny.io/en/articles/9246592-the-customer-requests-report), checked 2026-10-13 |
+
+**Disposition:** these sources establish substantial overlap for themes 71–75.
+They do not establish that Streamline is superior. Theme 76's connected outcome
+review may remain a differentiation hypothesis, but it still requires the
+same-task customer study below before any advantage claim is accepted.
 
 ---
 

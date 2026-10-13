@@ -67,9 +67,7 @@ describe("calendar create conflicts — the server's work is not discarded", () 
     const source = fs.readFileSync(BACKEND_SERVICE, "utf8");
     // Anti-vacuity: if this return statement is reshaped, the whole premise
     // changes and this suite must be revisited rather than quietly pass.
-    expect(source).toContain(
-      "return { event, oooConflicts, eventConflicts, meetingUrl: null, syncQueued:",
-    );
+    expect(source).toMatch(/return\s*\{\s*event,\s*oooConflicts,\s*eventConflicts,\s*meetingUrl:\s*null,\s*syncQueued:/);
   });
 
   it("the client response type declares every conflict field the server sends", () => {

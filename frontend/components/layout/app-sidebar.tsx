@@ -106,6 +106,23 @@ export function AppSidebar({
   const scopes = access?.scopes;
   const canApproveLeaves = useCan("hr:leaves:approve");
   const canReadChat = useCan("chat:channels:read");
+  const canReadCalendar = useCan("calendar:read");
+  useEffect(() => {
+    if (!access || typeof navigator === "undefined" || !navigator.onLine) return;
+    try {
+      const stored = sessionStorage.getItem("streamline-calendar-offline-session-identity");
+      const current = session?.orgId && session.user?.id ? `${session.orgId}:${session.user.id}` : "";
+      if (!stored || (canReadCalendar && stored === current)) return;
+      sessionStorage.removeItem("streamline-calendar-offline-session-identity");
+      void import("@/lib/offline/calendar-offline-cache")
+        .then((module) => module.clearOfflineCalendarSnapshot())
+        .catch(() => undefined);
+    } catch {
+      void import("@/lib/offline/calendar-offline-cache")
+        .then((module) => module.clearOfflineCalendarSnapshot())
+        .catch(() => undefined);
+    }
+  }, [access, canReadCalendar, session?.orgId, session?.user?.id]);
   const enabledModules = useEnabledModules();
   const isHrModuleEnabled = isModuleEnabled("hrms", enabledModules);
   const { data: entitlements } = useEntitlements();
