@@ -24,9 +24,9 @@ import { usePeople } from "@/hooks/api/directory/people";
 import { useWarehouses } from "@/hooks/api/inventory/warehouses";
 
 export function CalendarCapacitySheet({ onClose }: { onClose: () => void }) {
-  const [mode, setMode] = useState<"resources" | "personal" | "team" | "warehouse">(
-    "resources",
-  );
+  const [mode, setMode] = useState<
+    "resources" | "personal" | "team" | "warehouse"
+  >("resources");
   const [warehouseId, setWarehouseId] = useState(0);
   const [memberSearch, setMemberSearch] = useState("");
   const [membershipId, setMembershipId] = useState(0);
@@ -82,7 +82,10 @@ export function CalendarCapacitySheet({ onClose }: { onClose: () => void }) {
     personalInput,
     mode === "team" && peopleScope === "all",
   );
-  const warehouse = useCalendarWarehouseCapacity(selectedWarehouseId, mode === "warehouse");
+  const warehouse = useCalendarWarehouseCapacity(
+    selectedWarehouseId,
+    mode === "warehouse",
+  );
   return (
     <Sheet
       open
@@ -120,7 +123,14 @@ export function CalendarCapacitySheet({ onClose }: { onClose: () => void }) {
                 People
               </Button>
             ) : null}
-            {canReadWarehouses ? <Button variant={mode === "warehouse" ? "default" : "outline"} onClick={() => setMode("warehouse")}>Warehouse work</Button> : null}
+            {canReadWarehouses ? (
+              <Button
+                variant={mode === "warehouse" ? "default" : "outline"}
+                onClick={() => setMode("warehouse")}
+              >
+                Warehouse work
+              </Button>
+            ) : null}
           </div>
           {mode === "resources" && resources.isError ? (
             <p className="text-sm text-destructive">
@@ -182,27 +192,56 @@ export function CalendarCapacitySheet({ onClose }: { onClose: () => void }) {
               ) : null}
             </div>
           ) : null}
-          {mode === "warehouse" ? <div className="space-y-2"><Label htmlFor="capacity-warehouse">Warehouse</Label><select id="capacity-warehouse" className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={selectedWarehouseId} onChange={(event) => setWarehouseId(Number(event.target.value))}>{warehouses.data?.items.map((item) => <option key={item.id} value={item.id}>{item.name} · {item.code}</option>)}</select>{warehouses.isError ? <p className="text-sm text-destructive">{getErrorMessage(warehouses.error)}</p> : null}{warehouses.data && warehouses.data.total > warehouses.data.items.length ? <p className="text-xs text-muted-foreground">The first 100 permitted warehouses are shown.</p> : null}</div> : null}
-          {mode !== "warehouse" ? <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <Label htmlFor="capacity-start">Start</Label>
-              <Input
-                id="capacity-start"
-                type="datetime-local"
-                value={start}
-                onChange={(event) => setStart(event.target.value)}
-              />
+          {mode === "warehouse" ? (
+            <div className="space-y-2">
+              <Label htmlFor="capacity-warehouse">Warehouse</Label>
+              <select
+                id="capacity-warehouse"
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                value={selectedWarehouseId}
+                onChange={(event) => setWarehouseId(Number(event.target.value))}
+              >
+                {warehouses.data?.items.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.name} · {item.code}
+                  </option>
+                ))}
+              </select>
+              {warehouses.isError ? (
+                <p className="text-sm text-destructive">
+                  {getErrorMessage(warehouses.error)}
+                </p>
+              ) : null}
+              {warehouses.data &&
+              warehouses.data.total > warehouses.data.items.length ? (
+                <p className="text-xs text-muted-foreground">
+                  The first 100 permitted warehouses are shown.
+                </p>
+              ) : null}
             </div>
-            <div className="space-y-1">
-              <Label htmlFor="capacity-end">End</Label>
-              <Input
-                id="capacity-end"
-                type="datetime-local"
-                value={end}
-                onChange={(event) => setEnd(event.target.value)}
-              />
+          ) : null}
+          {mode !== "warehouse" ? (
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label htmlFor="capacity-start">Start</Label>
+                <Input
+                  id="capacity-start"
+                  type="datetime-local"
+                  value={start}
+                  onChange={(event) => setStart(event.target.value)}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="capacity-end">End</Label>
+                <Input
+                  id="capacity-end"
+                  type="datetime-local"
+                  value={end}
+                  onChange={(event) => setEnd(event.target.value)}
+                />
+              </div>
             </div>
-          </div> : null}
+          ) : null}
           {mode === "resources" ? (
             <div className="space-y-1">
               <Label htmlFor="capacity-units">Units needed</Label>
@@ -236,7 +275,9 @@ export function CalendarCapacitySheet({ onClose }: { onClose: () => void }) {
               ? capacity.isLoading
               : mode === "personal"
                 ? personal.isLoading
-                : mode === "team" ? team.isLoading : warehouse.isLoading
+                : mode === "team"
+                  ? team.isLoading
+                  : warehouse.isLoading
           ) ? (
             <p className="text-sm text-muted-foreground">Checking capacity</p>
           ) : null}
@@ -285,8 +326,43 @@ export function CalendarCapacitySheet({ onClose }: { onClose: () => void }) {
               </Button>
             </div>
           ) : null}
-          {mode === "warehouse" && warehouse.isError ? <div className="space-y-2"><p className="text-sm text-destructive">{getErrorMessage(warehouse.error)}</p><Button variant="outline" onClick={() => { void warehouse.refetch(); }}>Retry</Button></div> : null}
-          {mode === "warehouse" && warehouse.data ? <div className="space-y-3 rounded-md border p-3"><p className="text-sm font-medium">{warehouse.data.warehouseName} · {warehouse.data.schedulingState}</p><p className="text-xs text-muted-foreground">{warehouse.data.explanation}</p><div className="grid grid-cols-2 gap-2 text-sm"><p>Pending picks: {warehouse.data.pendingPicks}</p><p>Active picks: {warehouse.data.activePicks}</p><p>Pending putaways: {warehouse.data.pendingPutaways}</p><p>Active putaways: {warehouse.data.activePutaways}</p></div><p className="text-xs text-muted-foreground">Read at {new Date(warehouse.data.evaluatedAt).toLocaleString()}. Time-slot capacity stays unknown until Inventory schedules this work.</p></div> : null}
+          {mode === "warehouse" && warehouse.isError ? (
+            <div className="space-y-2">
+              <p className="text-sm text-destructive">
+                {getErrorMessage(warehouse.error)}
+              </p>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  void warehouse.refetch();
+                }}
+              >
+                Retry
+              </Button>
+            </div>
+          ) : null}
+          {mode === "warehouse" && warehouse.data ? (
+            <div className="space-y-3 rounded-md border p-3">
+              <p className="text-sm font-medium">
+                {warehouse.data.warehouseName} ·{" "}
+                {warehouse.data.schedulingState}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {warehouse.data.explanation}
+              </p>
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <p>Pending picks: {warehouse.data.pendingPicks}</p>
+                <p>Active picks: {warehouse.data.activePicks}</p>
+                <p>Pending putaways: {warehouse.data.pendingPutaways}</p>
+                <p>Active putaways: {warehouse.data.activePutaways}</p>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Read at {new Date(warehouse.data.evaluatedAt).toLocaleString()}.
+                Time-slot capacity stays unknown until Inventory schedules this
+                work.
+              </p>
+            </div>
+          ) : null}
           {mode === "personal" && personal.data ? (
             <>
               <p className="text-xs text-muted-foreground">
@@ -360,7 +436,7 @@ export function CalendarCapacitySheet({ onClose }: { onClose: () => void }) {
                   <p className="text-xs text-muted-foreground">
                     {slice.availableUnits === null
                       ? "Availability unknown"
-                      : `${slice.availableUnits} units left after ${slice.confirmedUnits} confirmed`}
+                      : `${slice.availableUnits} usable units for this request · ${slice.confirmedUnits} confirmed`}
                     {slice.tentativeUnits
                       ? ` · ${slice.tentativeUnits} tentative`
                       : ""}
