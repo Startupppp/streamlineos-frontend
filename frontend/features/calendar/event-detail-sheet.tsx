@@ -36,6 +36,7 @@ import {
   RSVP_STATUS_LABELS,
 } from "./event-detail-content";
 import { CalendarListFallback } from "./calendar-lazy-fallbacks";
+import { CalendarSourceActionPanel } from "./calendar-source-action-panel";
 
 const MeetingFollowUpPanel = dynamic(
   () =>
@@ -221,6 +222,7 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
             onRequestUnlink={handleRequestUnlink}
             onRsvp={handleRsvp}
           />
+          {event ? <CalendarSourceActionPanel event={event} /> : null}
           {event?.category === "huddle" && event.entityId ? (
             <div className="px-5 pt-3 pb-1 shrink-0">
               <Link href={`/chat?channel=${event.entityId}`} onClick={onClose}>

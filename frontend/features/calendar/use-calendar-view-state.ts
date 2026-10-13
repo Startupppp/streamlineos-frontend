@@ -1,6 +1,13 @@
 "use client";
 
-import { useState, useCallback, useMemo, useRef, useEffect, type SetStateAction } from "react";
+import {
+  useState,
+  useCallback,
+  useMemo,
+  useRef,
+  useEffect,
+  type SetStateAction,
+} from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   addMonths,
@@ -25,7 +32,11 @@ export function useCalendarViewState() {
   const searchParams = useSearchParams();
   const [fallbackNow] = useState(() => new Date());
   const urlState = useMemo(
-    () => parseCalendarUrlState(new URLSearchParams(searchParams.toString()), fallbackNow),
+    () =>
+      parseCalendarUrlState(
+        new URLSearchParams(searchParams.toString()),
+        fallbackNow,
+      ),
     [fallbackNow, searchParams],
   );
   const currentDate = urlState.date;
@@ -52,51 +63,75 @@ export function useCalendarViewState() {
   } | null>(null);
   const [accountsOpen, setAccountsOpen] = useState(false);
 
-  const navigate = useCallback((
-    changes: Record<string, string | null>,
-    method: "push" | "replace" = "push",
-  ) => {
-    router[method](calendarUrl(new URLSearchParams(searchParams.toString()), changes));
-  }, [router, searchParams]);
+  const navigate = useCallback(
+    (
+      changes: Record<string, string | null>,
+      method: "push" | "replace" = "push",
+    ) => {
+      router[method](
+        calendarUrl(new URLSearchParams(searchParams.toString()), changes),
+      );
+    },
+    [router, searchParams],
+  );
 
   const isCreateOpen = createRequested || createOpenState;
   const shouldMountCreate = createRequested || hasMountedCreate;
-  const setIsCreateOpen = useCallback((open: boolean) => {
-    setCreateOpenState(open);
-    if (!open) setCreateSlot(null);
-    if (!open && createRequested) navigate({ create: null }, "replace");
-  }, [createRequested, navigate]);
+  const setIsCreateOpen = useCallback(
+    (open: boolean) => {
+      setCreateOpenState(open);
+      if (!open) setCreateSlot(null);
+      if (!open && createRequested) navigate({ create: null }, "replace");
+    },
+    [createRequested, navigate],
+  );
 
-  const setCurrentDate = useCallback((next: SetStateAction<Date>) => {
-    const resolved = typeof next === "function" ? next(currentDate) : next;
-    if (format(resolved, "yyyy-MM-dd") === format(currentDate, "yyyy-MM-dd")) return;
-    navigate({ date: format(resolved, "yyyy-MM-dd") });
-  }, [currentDate, navigate]);
+  const setCurrentDate = useCallback(
+    (next: SetStateAction<Date>) => {
+      const resolved = typeof next === "function" ? next(currentDate) : next;
+      if (format(resolved, "yyyy-MM-dd") === format(currentDate, "yyyy-MM-dd"))
+        return;
+      navigate({ date: format(resolved, "yyyy-MM-dd") });
+    },
+    [currentDate, navigate],
+  );
 
-  const setView = useCallback((next: View) => {
-    if (next === view) return;
-    navigate({ view: next });
-  }, [navigate, view]);
+  const setView = useCallback(
+    (next: View) => {
+      if (next === view) return;
+      navigate({ view: next });
+    },
+    [navigate, view],
+  );
 
-  const setViewMode = useCallback((next: CalendarViewMode) => {
-    if (next === viewMode) return;
-    navigate({
-      mode: next,
-      historyBefore: next === "history" ? urlState.historyBefore : null,
-      historyPages: next === "history" ? String(urlState.historyPages) : null,
-    });
-  }, [navigate, urlState.historyBefore, urlState.historyPages, viewMode]);
+  const setViewMode = useCallback(
+    (next: CalendarViewMode) => {
+      if (next === viewMode) return;
+      navigate({
+        mode: next,
+        historyBefore: next === "history" ? urlState.historyBefore : null,
+        historyPages: next === "history" ? String(urlState.historyPages) : null,
+      });
+    },
+    [navigate, urlState.historyBefore, urlState.historyPages, viewMode],
+  );
 
-  const setSourceVisibility = useCallback((
-    source: "hr" | "crm" | "attendance",
-    visible: boolean,
-  ) => {
-    navigate({ [source]: visible ? "1" : "0" });
-  }, [navigate]);
+  const setSourceVisibility = useCallback(
+    (source: "hr" | "crm" | "attendance", visible: boolean) => {
+      navigate({ [source]: visible ? "1" : "0" });
+    },
+    [navigate],
+  );
 
-  const setHistoryPages = useCallback((pages: number) => {
-    navigate({ historyPages: String(Math.min(120, Math.max(1, pages))) }, "replace");
-  }, [navigate]);
+  const setHistoryPages = useCallback(
+    (pages: number) => {
+      navigate(
+        { historyPages: String(Math.min(120, Math.max(1, pages))) },
+        "replace",
+      );
+    },
+    [navigate],
+  );
 
   useEffect(() => {
     const el = calContainerRef.current;
@@ -115,11 +150,20 @@ export function useCalendarViewState() {
 
   useEffect(() => {
     if (viewMode !== "history" || searchParams.has("historyBefore")) return;
-    navigate({
-      historyBefore: urlState.historyBefore,
-      historyPages: String(urlState.historyPages),
-    }, "replace");
-  }, [navigate, searchParams, urlState.historyBefore, urlState.historyPages, viewMode]);
+    navigate(
+      {
+        historyBefore: urlState.historyBefore,
+        historyPages: String(urlState.historyPages),
+      },
+      "replace",
+    );
+  }, [
+    navigate,
+    searchParams,
+    urlState.historyBefore,
+    urlState.historyPages,
+    viewMode,
+  ]);
 
   const isCalendarOverlayOpen =
     isCreateOpen ||
@@ -163,28 +207,15 @@ export function useCalendarViewState() {
 
   const handleSelectEvent = useCallback(
     (event: BigCalEvent) => {
-      if (
-        event.resource?.source === "task" &&
-        event.resource.entityType === "ticket" &&
-        event.resource.projectId != null &&
-        event.resource.entityId != null
-      ) {
-        router.push(
-          `/build/${event.resource.projectId}/issues?ticket=${event.resource.entityId}`,
-        );
-        return;
-      }
-      const source = (
-        event.resource?.sourceFamily ??
+      const source = (event.resource?.sourceFamily ??
         (event.resource?.source === "external"
           ? "external"
           : event.resource?.source === "hr"
             ? "hr"
-            : "calendar")
-      ) as CalendarSelectionSource;
+            : "calendar")) as CalendarSelectionSource;
       navigate({ event: String(event.id), eventSource: source });
     },
-    [navigate, router],
+    [navigate],
   );
 
   const handlePrev = useCallback(() => {
@@ -203,7 +234,10 @@ export function useCalendarViewState() {
     });
   }, [setCurrentDate, view]);
 
-  const handleToday = useCallback(() => setCurrentDate(new Date()), [setCurrentDate]);
+  const handleToday = useCallback(
+    () => setCurrentDate(new Date()),
+    [setCurrentDate],
+  );
   const handleCloseSelected = useCallback(() => {
     navigate({ event: null, eventSource: null }, "replace");
   }, [navigate]);

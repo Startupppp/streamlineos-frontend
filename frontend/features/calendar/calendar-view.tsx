@@ -60,7 +60,10 @@ const CalendarGridLayer = dynamic(
     import("./calendar-grid-layer").then((m) => ({
       default: m.CalendarGridLayer,
     })),
-  { ssr: false, loading: () => <CalendarListFallback label="Loading calendar" /> },
+  {
+    ssr: false,
+    loading: () => <CalendarListFallback label="Loading calendar" />,
+  },
 );
 
 const CalendarEventsPanel = dynamic(
@@ -68,7 +71,10 @@ const CalendarEventsPanel = dynamic(
     import("./calendar-events-panel").then((m) => ({
       default: m.CalendarEventsPanel,
     })),
-  { ssr: false, loading: () => <CalendarListFallback label="Loading events" /> },
+  {
+    ssr: false,
+    loading: () => <CalendarListFallback label="Loading events" />,
+  },
 );
 
 const EventCreateDialog = dynamic(
@@ -76,7 +82,10 @@ const EventCreateDialog = dynamic(
     import("./event-create-dialog").then((m) => ({
       default: m.EventCreateDialog,
     })),
-  { ssr: false, loading: () => <CalendarOverlayFallback label="Loading event form" /> },
+  {
+    ssr: false,
+    loading: () => <CalendarOverlayFallback label="Loading event form" />,
+  },
 );
 
 const CreateTicketFromCalendarDialog = dynamic(
@@ -84,7 +93,10 @@ const CreateTicketFromCalendarDialog = dynamic(
     import("./create-ticket-from-calendar-dialog").then((m) => ({
       default: m.CreateTicketFromCalendarDialog,
     })),
-  { ssr: false, loading: () => <CalendarOverlayFallback label="Loading ticket form" /> },
+  {
+    ssr: false,
+    loading: () => <CalendarOverlayFallback label="Loading ticket form" />,
+  },
 );
 
 const EventDetailSheet = dynamic(
@@ -92,7 +104,10 @@ const EventDetailSheet = dynamic(
     import("./event-detail-sheet").then((m) => ({
       default: m.EventDetailSheet,
     })),
-  { ssr: false, loading: () => <CalendarSheetFallback label="Loading event" /> },
+  {
+    ssr: false,
+    loading: () => <CalendarSheetFallback label="Loading event" />,
+  },
 );
 
 const ExternalEventDetailSheet = dynamic(
@@ -100,7 +115,10 @@ const ExternalEventDetailSheet = dynamic(
     import("./external-event-detail-sheet").then((m) => ({
       default: m.ExternalEventDetailSheet,
     })),
-  { ssr: false, loading: () => <CalendarSheetFallback label="Loading event" /> },
+  {
+    ssr: false,
+    loading: () => <CalendarSheetFallback label="Loading event" />,
+  },
 );
 
 const HrEventDetailSheet = dynamic(
@@ -108,7 +126,10 @@ const HrEventDetailSheet = dynamic(
     import("./hr-event-detail-sheet").then((m) => ({
       default: m.HrEventDetailSheet,
     })),
-  { ssr: false, loading: () => <CalendarSheetFallback label="Loading event" /> },
+  {
+    ssr: false,
+    loading: () => <CalendarSheetFallback label="Loading event" />,
+  },
 );
 
 const CalendarAccountsSheet = dynamic(
@@ -116,7 +137,10 @@ const CalendarAccountsSheet = dynamic(
     import("./calendar-accounts-sheet").then((m) => ({
       default: m.CalendarAccountsSheet,
     })),
-  { ssr: false, loading: () => <CalendarSheetFallback label="Loading calendar accounts" /> },
+  {
+    ssr: false,
+    loading: () => <CalendarSheetFallback label="Loading calendar accounts" />,
+  },
 );
 
 const NO_CALENDAR_EVENTS: CalendarListItem[] = [];
@@ -251,7 +275,10 @@ export function CalendarView() {
     viewMode !== "history" && (connectionsLoading || activeConnectionCount > 0),
   );
 
-  const historyQuery = useCalendarHistory(historyBefore, viewMode === "history");
+  const historyQuery = useCalendarHistory(
+    historyBefore,
+    viewMode === "history",
+  );
   const historyData = historyQuery.data;
   const historyError = historyQuery.error;
   const historyIsError = historyQuery.isError;
@@ -269,17 +296,25 @@ export function CalendarView() {
       }
     }
     return [...byIdentity.values()].sort(
-      (left, right) => new Date(right.end).getTime() - new Date(left.end).getTime(),
+      (left, right) =>
+        new Date(right.end).getTime() - new Date(left.end).getTime(),
     );
   }, [historyData?.pages]);
   const visibleHistoryEvents = useMemo(
-    () => filterCalendarEventsBySources(historyEvents, {
-      attendanceVisible: attendanceEventsVisible,
-      crmVisible: crmEventsVisible,
-      hrVisible: hrEventsVisible,
-      hiddenConnectionIds: hiddenIds,
-    }),
-    [attendanceEventsVisible, crmEventsVisible, hiddenIds, historyEvents, hrEventsVisible],
+    () =>
+      filterCalendarEventsBySources(historyEvents, {
+        attendanceVisible: attendanceEventsVisible,
+        crmVisible: crmEventsVisible,
+        hrVisible: hrEventsVisible,
+        hiddenConnectionIds: hiddenIds,
+      }),
+    [
+      attendanceEventsVisible,
+      crmEventsVisible,
+      hiddenIds,
+      historyEvents,
+      hrEventsVisible,
+    ],
   );
   const loadedHistoryPages = historyData?.pages.length ?? 0;
   useEffect(() => {
@@ -288,7 +323,8 @@ export function CalendarView() {
       loadedHistoryPages >= historyPages ||
       historyIsFetchingNextPage ||
       !historyHasNextPage
-    ) return;
+    )
+      return;
     void fetchNextHistoryPage();
   }, [
     fetchNextHistoryPage,
@@ -317,24 +353,35 @@ export function CalendarView() {
     crmVisible: crmEventsVisible,
     attendanceVisible: attendanceEventsVisible,
   });
-  const surfaceEvents = viewMode === "history" ? visibleHistoryEvents : rangeEvents;
+  const surfaceEvents =
+    viewMode === "history" ? visibleHistoryEvents : rangeEvents;
   const selectedListEvent = useMemo(() => {
     if (!selected) return null;
-    return [...visibleEvents, ...visibleHistoryEvents].find(
-      (event) => event.id === selected.id && calendarSourceFamily(event) === selected.source,
-    ) ?? null;
+    return (
+      [...visibleEvents, ...visibleHistoryEvents].find(
+        (event) =>
+          event.id === selected.id &&
+          calendarSourceFamily(event) === selected.source,
+      ) ?? null
+    );
   }, [selected, visibleEvents, visibleHistoryEvents]);
   const selectedBigEvent = useMemo(
-    () => selectedListEvent ? toBigCalEvent(selectedListEvent, connections) : null,
+    () =>
+      selectedListEvent ? toBigCalEvent(selectedListEvent, connections) : null,
     [connections, selectedListEvent],
   );
-  const selectedExternal = selected?.source === "external" ? selectedBigEvent : null;
-  const selectedHrEvent = selected?.source === "hr" || selected?.source === "attendance"
-    ? selectedBigEvent
-    : null;
-  const selectedEvent = selected !== null && selectedExternal === null && selectedHrEvent === null
-    ? selectedListEvent
-    : null;
+  const selectedExternal =
+    selected?.source === "external" ? selectedBigEvent : null;
+  const selectedHrEvent =
+    selected?.source === "attendance" ||
+    (selected?.source === "hr" &&
+      selectedListEvent?.sourceKey === "hr-supplemental")
+      ? selectedBigEvent
+      : null;
+  const selectedEvent =
+    selected !== null && selectedExternal === null && selectedHrEvent === null
+      ? selectedListEvent
+      : null;
   const selectedResolutionReady =
     !eventsIsLoading &&
     !externalIsLoading &&
@@ -344,9 +391,15 @@ export function CalendarView() {
   useEffect(() => {
     if (selected && selectedResolutionReady && !selectedListEvent)
       handleCloseSelected();
-  }, [handleCloseSelected, selected, selectedListEvent, selectedResolutionReady]);
+  }, [
+    handleCloseSelected,
+    selected,
+    selectedListEvent,
+    selectedResolutionReady,
+  ]);
   const handleSelectListEvent = useCallback(
-    (event: CalendarListItem) => handleSelectEvent(toBigCalEvent(event, connections)),
+    (event: CalendarListItem) =>
+      handleSelectEvent(toBigCalEvent(event, connections)),
     [connections, handleSelectEvent],
   );
   const handleLoadOlderHistory = useCallback(async () => {
@@ -364,10 +417,14 @@ export function CalendarView() {
   const historyIsPartial = (historyData?.pages ?? []).some(
     (page) => page.truncated || page.coverageState !== "complete",
   );
-  const displayedSourceFailures = viewMode === "history" ? historyFailures : sourceFailures;
-  const surfaceIsLoading = viewMode === "history" ? historyIsLoading : eventsIsLoading;
+  const displayedSourceFailures =
+    viewMode === "history" ? historyFailures : sourceFailures;
+  const surfaceIsLoading =
+    viewMode === "history" ? historyIsLoading : eventsIsLoading;
 
-  const handleRetryEvents = useCallback(() => { void refetchEvents(); }, [refetchEvents]);
+  const handleRetryEvents = useCallback(() => {
+    void refetchEvents();
+  }, [refetchEvents]);
   const handleRetryExternal = useCallback(() => {
     void refetchExternal();
   }, [refetchExternal]);
@@ -394,10 +451,13 @@ export function CalendarView() {
         setAccountsOpen(true);
       },
       onError: (error) => toast.error(getErrorMessage(error)),
-      onSettled: () => router.replace(calendarUrl(
-        new URLSearchParams(searchParams.toString()),
-        { connected_account_id: null, connectedAccountId: null },
-      )),
+      onSettled: () =>
+        router.replace(
+          calendarUrl(new URLSearchParams(searchParams.toString()), {
+            connected_account_id: null,
+            connectedAccountId: null,
+          }),
+        ),
     });
   }, [searchParams, finalizeMutate, router, setAccountsOpen]);
 
@@ -498,7 +558,11 @@ export function CalendarView() {
                     descending={viewMode === "history"}
                     hasMore={viewMode === "history" && historyHasNextPage}
                     isLoadingMore={historyIsFetchingNextPage}
-                    onLoadMore={viewMode === "history" ? handleLoadOlderHistory : undefined}
+                    onLoadMore={
+                      viewMode === "history"
+                        ? handleLoadOlderHistory
+                        : undefined
+                    }
                   />
                 )
               ) : surfaceIsLoading ? (
@@ -506,12 +570,18 @@ export function CalendarView() {
               ) : afterLoad ? (
                 <CalendarEventsPanel
                   mode={viewMode}
-                  events={viewMode === "history" ? visibleHistoryEvents : visibleEvents}
+                  events={
+                    viewMode === "history"
+                      ? visibleHistoryEvents
+                      : visibleEvents
+                  }
                   range={viewMode === "list" ? visibleRange : undefined}
                   onSelectEvent={handleSelectListEvent}
                   hasMore={viewMode === "history" && historyHasNextPage}
                   isLoadingMore={historyIsFetchingNextPage}
-                  onLoadMore={viewMode === "history" ? handleLoadOlderHistory : undefined}
+                  onLoadMore={
+                    viewMode === "history" ? handleLoadOlderHistory : undefined
+                  }
                 />
               ) : (
                 <CalendarAgendaPreview
@@ -521,7 +591,9 @@ export function CalendarView() {
                   descending={viewMode === "history"}
                   hasMore={viewMode === "history" && historyHasNextPage}
                   isLoadingMore={historyIsFetchingNextPage}
-                  onLoadMore={viewMode === "history" ? handleLoadOlderHistory : undefined}
+                  onLoadMore={
+                    viewMode === "history" ? handleLoadOlderHistory : undefined
+                  }
                 />
               )}
             </div>
@@ -544,30 +616,36 @@ export function CalendarView() {
             title="Couldn't load calendar history"
             description={getErrorMessage(historyError)}
             error={historyError}
-            onRetry={() => { void refetchHistory(); }}
+            onRetry={() => {
+              void refetchHistory();
+            }}
             className="shrink-0 border border-border rounded-xl"
           />
         )}
 
-        {viewMode !== "history" && attendanceEventsVisible && attendanceCoverage.access.denied && (
-          <NoPermissionState
-            compact
-            permission="self:attendance"
-            title="Attendance hidden"
-            description="You do not have permission to view attendance and work-from-home coverage."
-            className="shrink-0 rounded-xl border border-border"
-          />
-        )}
+        {viewMode !== "history" &&
+          attendanceEventsVisible &&
+          attendanceCoverage.access.denied && (
+            <NoPermissionState
+              compact
+              permission="self:attendance"
+              title="Attendance hidden"
+              description="You do not have permission to view attendance and work-from-home coverage."
+              className="shrink-0 rounded-xl border border-border"
+            />
+          )}
 
-        {viewMode !== "history" && hrEventsVisible && hrCoverage.access.denied && (
-          <NoPermissionState
-            compact
-            permission="hr:helpdesk:view"
-            title="HR events hidden"
-            description="You do not have permission to view supplemental HR calendar events."
-            className="shrink-0 rounded-xl border border-border"
-          />
-        )}
+        {viewMode !== "history" &&
+          hrEventsVisible &&
+          hrCoverage.access.denied && (
+            <NoPermissionState
+              compact
+              permission="hr:helpdesk:view"
+              title="HR events hidden"
+              description="You do not have permission to view supplemental HR calendar events."
+              className="shrink-0 rounded-xl border border-border"
+            />
+          )}
 
         {viewMode !== "history" && attendanceCoverage.isError && (
           <ErrorState
@@ -591,7 +669,11 @@ export function CalendarView() {
           />
         )}
 
-        {(surfaceIsLoading || (viewMode !== "history" && (externalIsLoading || attendanceCoverage.isLoading || hrCoverage.isLoading))) && (
+        {(surfaceIsLoading ||
+          (viewMode !== "history" &&
+            (externalIsLoading ||
+              attendanceCoverage.isLoading ||
+              hrCoverage.isLoading))) && (
           <div
             className="shrink-0 rounded-md border border-border bg-muted/40 px-3 py-1.5 text-dense text-muted-foreground"
             role="status"
@@ -622,40 +704,46 @@ export function CalendarView() {
           />
         )}
 
-        {viewMode !== "history" && externalData?.errors && externalData.errors.length > 0 && (
-          <div className="flex shrink-0 flex-col gap-2 rounded-md border border-status-warning-rule bg-status-warning-surface px-3 py-1.5 sm:flex-row sm:items-center">
-            <span className="min-w-0 flex-1 text-dense text-status-warning-ink">
-              {externalData.errors
-                .map((e) => `${e.accountEmail ?? "Account"}: ${e.message}`)
-                .join(" · ")}
-            </span>
-            <div className="flex shrink-0 items-center gap-3 self-start sm:self-auto">
-              <button
-                type="button"
-                onClick={handleRetryExternal}
-                className="text-dense font-medium text-status-warning-ink underline underline-offset-2"
-              >
-                Retry
-              </button>
-              <button
-                type="button"
-                onClick={handleOpenAccounts}
-                className="text-dense font-medium text-status-warning-ink underline underline-offset-2"
-              >
-                Manage accounts
-              </button>
+        {viewMode !== "history" &&
+          externalData?.errors &&
+          externalData.errors.length > 0 && (
+            <div className="flex shrink-0 flex-col gap-2 rounded-md border border-status-warning-rule bg-status-warning-surface px-3 py-1.5 sm:flex-row sm:items-center">
+              <span className="min-w-0 flex-1 text-dense text-status-warning-ink">
+                {externalData.errors
+                  .map((e) => `${e.accountEmail ?? "Account"}: ${e.message}`)
+                  .join(" · ")}
+              </span>
+              <div className="flex shrink-0 items-center gap-3 self-start sm:self-auto">
+                <button
+                  type="button"
+                  onClick={handleRetryExternal}
+                  className="text-dense font-medium text-status-warning-ink underline underline-offset-2"
+                >
+                  Retry
+                </button>
+                <button
+                  type="button"
+                  onClick={handleOpenAccounts}
+                  className="text-dense font-medium text-status-warning-ink underline underline-offset-2"
+                >
+                  Manage accounts
+                </button>
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {viewMode !== "history" && externalData && !externalData.complete && externalData.errors.length === 0 && (
-          <div
-            className="shrink-0 rounded-md border border-status-warning-rule bg-status-warning-surface px-3 py-1.5 text-dense text-status-warning-ink"
-            role="status"
-          >
-            Connected calendar coverage is partial. Retry before relying on this time window.
-          </div>
-        )}
+        {viewMode !== "history" &&
+          externalData &&
+          !externalData.complete &&
+          externalData.errors.length === 0 && (
+            <div
+              className="shrink-0 rounded-md border border-status-warning-rule bg-status-warning-surface px-3 py-1.5 text-dense text-status-warning-ink"
+              role="status"
+            >
+              Connected calendar coverage is partial. Retry before relying on
+              this time window.
+            </div>
+          )}
 
         {shouldMountCreate && (
           <EventCreateDialog
@@ -708,7 +796,10 @@ export function CalendarView() {
         </Dialog>
 
         {selectedEvent !== null && (
-          <EventDetailSheet event={selectedEvent} onClose={handleCloseSelected} />
+          <EventDetailSheet
+            event={selectedEvent}
+            onClose={handleCloseSelected}
+          />
         )}
         {selectedExternal !== null && (
           <ExternalEventDetailSheet

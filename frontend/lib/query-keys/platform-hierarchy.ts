@@ -6,29 +6,77 @@ export const platformHierarchyQueryKeys = {
     eventsAll: [...base, "calendar", "events"] as const,
     eventsForIdentity: (orgId: string, userId: string) =>
       [...base, "calendar", "events", orgId, userId] as const,
-    events: (orgId: string, userId: string, start: string, end: string, sources?: readonly string[]) =>
+    events: (
+      orgId: string,
+      userId: string,
+      start: string,
+      end: string,
+      sources?: readonly string[],
+    ) =>
       sources === undefined
         ? ([...base, "calendar", "events", orgId, userId, start, end] as const)
-        : ([...base, "calendar", "events", orgId, userId, start, end, sources] as const),
+        : ([
+            ...base,
+            "calendar",
+            "events",
+            orgId,
+            userId,
+            start,
+            end,
+            sources,
+          ] as const),
     history: (orgId: string, userId: string, before: string) =>
-      [...base, "calendar", "events", "history", orgId, userId, before] as const,
+      [
+        ...base,
+        "calendar",
+        "events",
+        "history",
+        orgId,
+        userId,
+        before,
+      ] as const,
     attendees: (eventId: number) =>
       [...base, "calendar", "attendees", eventId] as const,
-    orgMembers: (limit: number) => [...base, "calendar", "orgMembers", limit] as const,
+    orgMembers: (limit: number) =>
+      [...base, "calendar", "orgMembers", limit] as const,
     orgMembersAll: [...base, "calendar", "orgMembers"] as const,
     memberSearch: (search: string, limit: number) =>
       [...base, "calendar", "memberSearch", search, limit] as const,
     memberSearchAll: [...base, "calendar", "memberSearch"] as const,
     externalEventsAll: [...base, "calendar", "externalEvents"] as const,
-    externalEvents: (orgId: string, userId: string, start: string, end: string) =>
-      [...base, "calendar", "externalEvents", orgId, userId, start, end] as const,
+    externalEvents: (
+      orgId: string,
+      userId: string,
+      start: string,
+      end: string,
+    ) =>
+      [
+        ...base,
+        "calendar",
+        "externalEvents",
+        orgId,
+        userId,
+        start,
+        end,
+      ] as const,
     hrSupplemental: (orgId: string, from: string, to: string) =>
       [...base, "calendar", "hr-supplemental", orgId, from, to] as const,
     hrSupplementalAll: [...base, "calendar", "hr-supplemental"] as const,
     sourcesAll: [...base, "calendar", "sources"] as const,
     sources: (orgId: string, userId: string) =>
       [...base, "calendar", "sources", orgId, userId] as const,
-    eventDetail: (eventId: number) => [...base, "calendar", "event", eventId] as const,
+    eventDetail: (eventId: number) =>
+      [...base, "calendar", "event", eventId] as const,
+    sourceActionCapabilities: [
+      ...base,
+      "calendar",
+      "source-actions",
+      "capabilities",
+    ] as const,
+    sourceActionProposal: (proposalId: string) =>
+      [...base, "calendar", "source-actions", "proposal", proposalId] as const,
+    meetingWorkspace: (eventId: number) =>
+      [...base, "calendar", "meeting-workspace", eventId] as const,
   },
 
   integrations: {
@@ -65,7 +113,13 @@ export const platformHierarchyQueryKeys = {
         ? ([...base, "salesAnalytics", "repComparison"] as const)
         : rep2Id === undefined
           ? ([...base, "salesAnalytics", "repComparison", rep1Id] as const)
-          : ([...base, "salesAnalytics", "repComparison", rep1Id, rep2Id] as const),
+          : ([
+              ...base,
+              "salesAnalytics",
+              "repComparison",
+              rep1Id,
+              rep2Id,
+            ] as const),
     sourceReport: () => [...base, "salesAnalytics", "sourceReport"] as const,
   },
 
@@ -100,5 +154,4 @@ export const platformHierarchyQueryKeys = {
         : ([...base, "hierarchy", "costCenters"] as const),
     tree: () => [...base, "hierarchy", "tree"] as const,
   },
-
 } as const;
