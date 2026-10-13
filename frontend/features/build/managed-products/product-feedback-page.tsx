@@ -167,7 +167,7 @@ export function ProductFeedbackPage({
         contentClassName={MANAGED_PRODUCT_DETAIL_CONTENT_CLASS}
         actions={
           canCapture ? (
-            <div className="flex gap-2">
+            <div className="flex w-full min-w-0 flex-wrap gap-2">
               <Button type="button" variant="outline" onClick={handleOpenFeedbucket}>
                 Collect via Feedbucket
               </Button>

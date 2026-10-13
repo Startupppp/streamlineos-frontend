@@ -257,7 +257,7 @@ export function ProductRoadmapPage({
       contentClassName={MANAGED_PRODUCT_DETAIL_CONTENT_CLASS}
       noInternalScroll={viewMode === "board" || viewMode === "list"}
       actions={
-        <div className="flex items-center gap-2">
+        <div className="flex w-full min-w-0 flex-wrap items-center gap-2">
           <Tabs value={viewMode} onValueChange={handleSetView}>
             <TabsList>
               <TabsTrigger value="board">Board</TabsTrigger>

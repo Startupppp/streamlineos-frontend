@@ -31,6 +31,7 @@ export const calendarSavedViewContract = z.object({
 export const calendarSavedViewListContract = z.object({
   items: z.array(calendarSavedViewContract),
   nextCursor: z.uuid().nullable(),
+  actorMembershipId: z.number().int().positive(),
 });
 
 export const calendarSavedViewRemoveContract = z.object({ removed: z.boolean() });

@@ -4,18 +4,9 @@ import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -30,27 +21,12 @@ import {
   useDeleteCalendarSavedView,
   useUpdateCalendarSavedView,
 } from "@/hooks/api/calendar-saved-views";
-import type {
-  CalendarSavedView,
-  CalendarSavedViewDefinition,
-} from "@/hooks/api/calendar-saved-view-schema";
+import type { CalendarSavedView } from "@/hooks/api/calendar-saved-view-schema";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { calendarUrl } from "./calendar-url-state";
-import { calendarSavedViewDateLogic } from "./calendar-saved-view-date";
-
-const formSchema = z.object({
-  name: z.string().trim().min(1).max(100),
-  scope: z.enum(["personal", "team"]),
-  dateKind: z.enum([
-    "today",
-    "next-seven-days",
-    "this-week",
-    "this-month",
-    "custom",
-  ]),
-});
-
-type FormValues = z.infer<typeof formSchema>;
+import { CalendarSavedViewDialog } from "./calendar-saved-view-dialog";
+import { calendarSavedViewFormSchema, type CalendarSavedViewFormValues } from "./calendar-saved-view-form-schema";
+import { calendarSavedViewDefinition, calendarSavedViewFormValues } from "./calendar-saved-view-definition";
 
 export function CalendarSavedViewControls({
   selectedId,
@@ -67,6 +43,7 @@ export function CalendarSavedViewControls({
   const create = useCreateCalendarSavedView();
   const update = useUpdateCalendarSavedView();
   const remove = useDeleteCalendarSavedView();
+  const actorMembershipId = query.data?.pages[0]?.actorMembershipId ?? null;
   const views =
     query.data?.pages
       .flatMap((page) => page.items)
@@ -76,9 +53,9 @@ export function CalendarSavedViewControls({
     null,
   );
   const [deleteOpen, setDeleteOpen] = useState(false);
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues: { name: "", scope: "personal", dateKind: "today" },
+  const form = useForm<CalendarSavedViewFormValues>({
+    resolver: zodResolver(calendarSavedViewFormSchema),
+    defaultValues: calendarSavedViewFormValues(undefined, null),
   });
 
   const selectView = (id: string | null) => {
@@ -88,21 +65,13 @@ export function CalendarSavedViewControls({
   };
 
   const openCreate = () => {
-    form.reset({
-      name: "",
-      scope: "personal",
-      dateKind: selected?.definition.dateLogic.kind ?? "today",
-    });
+    form.reset({ ...calendarSavedViewFormValues(selected, actorMembershipId), name: "", scope: "personal" });
     setDialogMode("create");
   };
 
   const openRename = () => {
     if (!selected) return;
-    form.reset({
-      name: selected.name,
-      scope: selected.scope,
-      dateKind: selected.definition.dateLogic.kind,
-    });
+    form.reset(calendarSavedViewFormValues(selected, actorMembershipId));
     setDialogMode("rename");
   };
 
@@ -115,15 +84,7 @@ export function CalendarSavedViewControls({
           name: values.name,
         });
       } else {
-        const dateLogic = calendarSavedViewDateLogic(
-          values.dateKind,
-          currentDate,
-        );
-        const definition: CalendarSavedViewDefinition = {
-          ...(selected?.definition ?? {}),
-          dateLogic,
-          mode: "my-day",
-        };
+        const definition = calendarSavedViewDefinition(values, currentDate, actorMembershipId);
         const created = await create.mutateAsync({
           name: values.name,
           scope: values.scope,
@@ -207,84 +168,15 @@ export function CalendarSavedViewControls({
           Remove
         </Button>
       ) : null}
-      <Dialog
-        open={dialogMode !== null}
-        onOpenChange={(open) => {
-          if (!open) setDialogMode(null);
-        }}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
-              {dialogMode === "rename" ? "Rename view" : "Save My Day view"}
-            </DialogTitle>
-          </DialogHeader>
-          <form onSubmit={submit} className="space-y-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="calendar-view-name">Name</Label>
-              <Input
-                id="calendar-view-name"
-                {...form.register("name")}
-                maxLength={100}
-              />
-              {form.formState.errors.name ? (
-                <p className="text-xs text-destructive">
-                  {form.formState.errors.name.message}
-                </p>
-              ) : null}
-            </div>
-            {dialogMode === "create" ? (
-              <div className="space-y-1.5">
-                <Label>Date range</Label>
-                <Select
-                  value={form.watch("dateKind")}
-                  onValueChange={(value) =>
-                    form.setValue("dateKind", value as FormValues["dateKind"])
-                  }
-                >
-                  <SelectTrigger aria-label="Saved view date range">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="today">Today</SelectItem>
-                    <SelectItem value="next-seven-days">
-                      Next seven days
-                    </SelectItem>
-                    <SelectItem value="this-week">This week</SelectItem>
-                    <SelectItem value="this-month">This month</SelectItem>
-                    <SelectItem value="custom">Selected day</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            ) : null}
-            {dialogMode === "create" && canManageTeam ? (
-              <div className="space-y-1.5">
-                <Label>Visibility</Label>
-                <Select
-                  value={form.watch("scope")}
-                  onValueChange={(value) =>
-                    form.setValue("scope", value as FormValues["scope"])
-                  }
-                >
-                  <SelectTrigger aria-label="Saved view visibility">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="personal">Only me</SelectItem>
-                    <SelectItem value="team">Team</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            ) : null}
-            <Button
-              type="submit"
-              disabled={create.isPending || update.isPending}
-            >
-              {dialogMode === "rename" ? "Rename" : "Save view"}
-            </Button>
-          </form>
-        </DialogContent>
-      </Dialog>
+      <CalendarSavedViewDialog
+        mode={dialogMode}
+        form={form}
+        actorMembershipId={actorMembershipId}
+        canManageTeam={canManageTeam}
+        isPending={create.isPending || update.isPending}
+        onClose={() => setDialogMode(null)}
+        onSubmit={submit}
+      />
       <ConfirmDialog
         open={deleteOpen}
         onOpenChange={setDeleteOpen}
