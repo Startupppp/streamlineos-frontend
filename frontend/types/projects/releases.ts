@@ -30,6 +30,8 @@ export interface CreateReleaseInput {
   description?: string | null;
   status?: "draft" | "released" | "archived";
   releaseDate?: string | null;
+  readiness?: "not_started" | "in_progress" | "ready" | "blocked" | null;
+  riskLevel?: "low" | "medium" | "high" | "critical" | null;
 }
 
 export interface UpdateReleaseInput {
@@ -41,4 +43,6 @@ export interface UpdateReleaseInput {
   status?: "draft" | "released" | "archived";
   releaseDate?: string | null;
   previewConfirmed?: boolean;
+  readiness?: "not_started" | "in_progress" | "ready" | "blocked" | null;
+  riskLevel?: "low" | "medium" | "high" | "critical" | null;
 }

@@ -41,7 +41,7 @@ const STATUS_CONFIG = {
 
 interface MilestoneCardProps {
   milestone: ProjectMilestone;
-  onEdit: (milestone: ProjectMilestone) => void;
+  onEdit?: (milestone: ProjectMilestone) => void;
   onDelete?: (milestone: ProjectMilestone) => void;
   selected?: boolean;
   onSelect?: (milestone: ProjectMilestone, checked: boolean) => void;
@@ -63,7 +63,7 @@ export const MilestoneCard = memo(function MilestoneCard({
   const { iconRef, hoverHandlers } = useAnimatedIcon();
 
   const [menuOpen, setMenuOpen] = useState(false);
-  const handleEdit = useCallback(() => onEdit(milestone), [onEdit, milestone]);
+  const handleEdit = useCallback(() => onEdit?.(milestone), [onEdit, milestone]);
   const handleDelete = useCallback(() => onDelete?.(milestone), [onDelete, milestone]);
   const handleContextMenu = useCallback((event: MouseEvent<HTMLDivElement>) => {
     event.preventDefault();
@@ -178,7 +178,7 @@ export const MilestoneCard = memo(function MilestoneCard({
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem onSelect={handleEdit}>Edit</DropdownMenuItem>
+                  {onEdit ? <DropdownMenuItem onSelect={handleEdit}>Edit</DropdownMenuItem> : null}
                   {onDelete ? <DropdownMenuItem variant="destructive" onSelect={handleDelete}>Delete</DropdownMenuItem> : null}
                 </DropdownMenuContent>
               </DropdownMenu>

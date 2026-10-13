@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 const MEANINGFUL_TEXT_RE = /[a-zA-Z0-9À-ɏЀ-ӿ一-鿿]/;
-const VERSION_RE = /^v?\d+(\.\d+)*(-[\w.]+)?(\+[\w.]+)?$|^\d{4}\.\d{2}(\.\d+)?$/;
+const VERSION_RE = /^v?\d+(\.\d+){0,2}(-[\w.]+)?(\+[\w.]+)?$|^\d{4}\.\d{2}(\.\d+)?$/;
 
 export const releaseFormSchema = z.object({
   name: z

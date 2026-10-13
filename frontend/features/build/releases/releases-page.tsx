@@ -186,7 +186,7 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
             error={error}
             isFiltered={listFilters.isFiltered}
             getRowKey={(r) => r.id}
-            onRowClick={handleOpenEdit}
+            onRowClick={canManage ? handleOpenEdit : undefined}
             onRowContextMenu={handleRowContextMenu}
             mobileCard={renderMobileCard}
             pagination={{

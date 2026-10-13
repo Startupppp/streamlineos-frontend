@@ -300,7 +300,7 @@ export function ProjectMilestonesPage({
                     <MilestoneCard
                       key={m.id}
                       milestone={m}
-                      onEdit={actions.handleEditTarget}
+                      onEdit={canManage ? actions.handleEditTarget : undefined}
                       onDelete={
                         canManage ? actions.handleDeleteTarget : undefined
                       }
