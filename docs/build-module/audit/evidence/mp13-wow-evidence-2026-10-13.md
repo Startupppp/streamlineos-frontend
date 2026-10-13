@@ -116,8 +116,13 @@ segment/tier comparison lives on the two feedbucket facet endpoints:
 - **"Permitted commercial context" is enforced, and the enforcement is asymmetric by design.** `showCrmData` nulls `customerName`, `accountValue` and `tier` while leaving `submissionCount` and `opportunityCount` intact, so a caller without CRM reach still sees impact volume without learning who the customer is.
 
 **Evidence gap — hypothesis only:**
-- No named competitor (Productboard, Canny) comparison of this view has been sourced or dated.
-- No customer usability study has been run, so "compare" being *better* here than elsewhere is unmeasured.
+- A dated same-scope comparison against Productboard and Canny now exists in the
+  competitor table below, and it cuts against the claim rather than for it: Canny
+  documents customer segmentation in feedback and roadmaps, and a Customer Requests
+  report carrying company, segment, vote priority and opportunity value. So the
+  capability is not differentiating on documented feature overlap.
+- No customer usability study has been run, so "compare" being *better* here than
+  elsewhere is unmeasured. That is the only remaining route to this claim.
 
 **One defect found and fixed while assembling this record.** `opportunity-impact-table.tsx`
 rendered a **Tier** column gated on `data.rows.some((r) => (r as Record<string, unknown>).tier != null)`.

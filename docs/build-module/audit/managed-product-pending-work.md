@@ -65,15 +65,38 @@ shows substantial feature overlap, so it does not support a superiority claim.
 ## Operational limitation
 
 MP-12's monitoring definitions, JSON webhook delivery implementation and local
-firing/recovery proofs are complete. A real HTTP receiver test passed as part of
-the focused 29-of-29 backend suite. Deployment must supply real
-`MP_ALERT_PAGE_URL` and `MP_ALERT_NOTIFY_URL` values. Delivery was not executed
-against the deployed revision, so production paging proof remains open.
+firing/recovery proofs are complete. A real HTTP receiver test passes in the
+focused backend suite (`src/common/slo`: 34 tests, 2 suites). Deployment must
+supply real `MP_ALERT_PAGE_URL` and `MP_ALERT_NOTIFY_URL` values. Delivery was
+not executed against the deployed revision, so production paging proof remains
+open.
+
+Two gaps found and closed on 2026-10-13 after that paragraph was first written:
+
+- **Nothing scheduled the alerts.** `alerts.yml` is the only workflow that runs
+  alert checks and it contained zero references to managed-product, so the
+  monitoring would never have executed on its own however correct the scripts
+  were. Both self-tests are now registered there and pass exactly as the
+  workflow invokes them — ops 9 checks, db 7 checks.
+- **The db predicates were only ever checked against `prodshape`.** All four now
+  run as read-only `SELECT COUNT(*)` against the live production database, so
+  none can fail `42703`/`42P01` on the deployed revision.
+
+Two limits on the above, both measured rather than assumed. That workflow job
+runs only the `:self-test` variants — for every alert in it, not just these —
+so the schedule proves predicates evaluate, not that they are pointed at live
+data. And provisioning on this repo is **intermittent**: `alerts.yml` executed
+all 17 steps in 40 s at 15:23 on 2026-10-13 and then failed with `steps=0` in
+2 s at 16:29, as did every `Backend CI` and `Database gates` job. Registering
+there is necessary and does run on the runs that provision; it is not a
+guarantee, so confirm a specific run executed before trusting its colour.
 
 ## Delivery checklist
 
 - [x] Close every source-visible Manage Product implementation item.
 - [x] Repair and pass the intercepted product-state browser suite.
+- [x] Schedule the managed-product alerts so the monitoring can actually run.
+- [x] Prove every db-threshold predicate executes against the deployed revision.
 - [ ] Complete the real role, tenant, paging, offline and disposable-token browser evidence above.
 - [ ] Prove deployed alert delivery, acknowledgement and recovery.
 - [ ] Complete the real-customer validation study.
