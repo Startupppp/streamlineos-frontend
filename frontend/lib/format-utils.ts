@@ -137,15 +137,15 @@ export function formatINRCompact(amount: string | number): string {
   const abs = Math.abs(num);
   const sign = num < 0 ? "-" : "";
   if (abs >= 1_00_00_000) {
-    const val = abs / 1_00_00_000;
+    const val = Math.floor((abs / 1_00_00_000) * 10) / 10;
     return `${sign}₹${val % 1 === 0 ? val.toFixed(0) : val.toFixed(1)}Cr`;
   }
   if (abs >= 1_00_000) {
-    const val = abs / 1_00_000;
+    const val = Math.floor((abs / 1_00_000) * 10) / 10;
     return `${sign}₹${val % 1 === 0 ? val.toFixed(0) : val.toFixed(1)}L`;
   }
   if (abs >= 10_000) {
-    const val = abs / 1_000;
+    const val = Math.floor((abs / 1_000) * 10) / 10;
     return `${sign}₹${val % 1 === 0 ? val.toFixed(0) : val.toFixed(1)}K`;
   }
   const hasPaisa = abs % 1 !== 0;
