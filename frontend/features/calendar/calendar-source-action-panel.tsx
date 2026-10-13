@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -40,7 +40,8 @@ function scenarioRoot(event: CalendarListItem): CommitmentReference | null {
     event.sourceKey === "tasks" ? "tasks" :
       ["crm", "crm-deals"].includes(event.sourceKey) ? "crm" :
         ["finance", "accounting", "accounting-receivables"].includes(event.sourceKey) ? "finance" :
-          ["inventory", "inventory-purchase-orders"].includes(event.sourceKey) ? "inventory" : null;
+          ["inventory", "inventory-purchase-orders"].includes(event.sourceKey) ? "inventory" :
+            event.sourceKey === "hr-interviews" ? "hr" : null;
   if (!source || !event.entityType) return null;
   const type = source === "inventory" && event.entityType === "purchase-order" ? "purchase_order" : event.entityType;
   return { source, type, recordId: event.sourceRecordId };
@@ -68,12 +69,6 @@ export function CalendarSourceActionPanel({
   const createProposal = useCreateCalendarSourceActionProposal();
   const confirmProposal = useConfirmCalendarSourceActionProposal();
   const repairStep = useRepairCalendarSourceActionStep();
-
-  useEffect(() => {
-    setProposal(null);
-    setScenario(null);
-    setValue(config ? inputValue(event, config) : "");
-  }, [config, event, event.id, event.sourceVersion]);
 
   const supported = Boolean(
     config &&

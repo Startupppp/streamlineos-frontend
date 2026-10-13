@@ -225,7 +225,7 @@ export function EventDetailSheet({ event, onClose, onQueueScenarioStep }: EventD
             onRequestUnlink={handleRequestUnlink}
             onRsvp={handleRsvp}
           />
-          {event ? <CalendarSourceActionPanel event={event} onQueueScenarioStep={onQueueScenarioStep} /> : null}
+          {event ? <CalendarSourceActionPanel key={`${event.id}:${event.sourceVersion}`} event={event} onQueueScenarioStep={onQueueScenarioStep} /> : null}
           {event?.category === "huddle" && event.entityId ? (
             <div className="px-5 pt-3 pb-1 shrink-0">
               <Link href={`/chat?channel=${event.entityId}`} onClick={onClose}>
