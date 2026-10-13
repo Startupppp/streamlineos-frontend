@@ -2,31 +2,32 @@
 
 import { useCallback, useMemo, useState } from "react";
 import {
+  usePortalPreviewApprovals,
+  usePortalPreviewDeliverables,
   usePortalPreviewFiles,
+  usePortalPreviewInvoices,
+  usePortalPreviewMilestones,
   usePortalPreviewRequests,
+  usePortalPreviewTasks,
   usePortalPreviewUpdates,
   usePortalProjectOverview,
 } from "@/hooks/api/build/client-portal";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
 import { Badge } from "@/components/ui/badge";
-import { Diamond, CheckSquare } from "lucide-react";
+import { ErrorState } from "@/components/shared/error-state";
 import { PortalCrSheet } from "./portal-cr-sheet";
-import {
-  PmPageShell,
-  PmPanel,
-  PmSection,
-  PM_ROW,
-} from "@/components/pm-chrome";
-import { cn } from "@/lib/utils";
-import { TruncatedText } from "@/components/ui/truncated-text";
+import { PmPageShell } from "@/components/pm-chrome";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
-import { SectionTitle, DashboardSkeleton } from "./portal-dashboard-sections";
+import { DashboardSkeleton } from "./portal-dashboard-sections";
 import {
+  PreviewApprovalsSection,
+  PreviewDeliverablesSection,
   PreviewFilesSection,
+  PreviewInvoicesSection,
+  PreviewMilestonesSection,
   PreviewRequestsSection,
+  PreviewTasksSection,
   PreviewUpdatesSection,
 } from "./portal-dashboard-paged-sections";
 
@@ -48,6 +49,11 @@ export function PortalDashboardPage({ projectId }: PortalDashboardPageProps) {
   const filesQuery = usePortalPreviewFiles(projectId);
   const updatesQuery = usePortalPreviewUpdates(projectId);
   const requestsQuery = usePortalPreviewRequests(projectId);
+  const milestonesQuery = usePortalPreviewMilestones(projectId);
+  const tasksQuery = usePortalPreviewTasks(projectId);
+  const deliverablesQuery = usePortalPreviewDeliverables(projectId);
+  const approvalsQuery = usePortalPreviewApprovals(projectId);
+  const invoicesQuery = usePortalPreviewInvoices(projectId);
 
   const pageState = usePageState({
     permission: "build:portal:view",
@@ -56,61 +62,53 @@ export function PortalDashboardPage({ projectId }: PortalDashboardPageProps) {
       isErrorOverview ||
       filesQuery.isError ||
       updatesQuery.isError ||
-      requestsQuery.isError,
+      requestsQuery.isError ||
+      milestonesQuery.isError ||
+      tasksQuery.isError ||
+      deliverablesQuery.isError ||
+      approvalsQuery.isError ||
+      invoicesQuery.isError,
     error:
       overviewError ??
       filesQuery.error ??
       updatesQuery.error ??
       requestsQuery.error ??
+      milestonesQuery.error ??
+      tasksQuery.error ??
+      deliverablesQuery.error ??
+      approvalsQuery.error ??
+      invoicesQuery.error ??
       undefined,
   });
 
-  const handleLoadMoreFiles = useCallback(() => {
-    void filesQuery.fetchNextPage();
-  }, [filesQuery]);
-  const handleLoadMoreUpdates = useCallback(() => {
-    void updatesQuery.fetchNextPage();
-  }, [updatesQuery]);
-  const handleLoadMoreRequests = useCallback(() => {
-    void requestsQuery.fetchNextPage();
-  }, [requestsQuery]);
+  const handleLoadMoreFiles = useCallback(() => { void filesQuery.fetchNextPage(); }, [filesQuery]);
+  const handleLoadMoreUpdates = useCallback(() => { void updatesQuery.fetchNextPage(); }, [updatesQuery]);
+  const handleLoadMoreRequests = useCallback(() => { void requestsQuery.fetchNextPage(); }, [requestsQuery]);
+  const handleLoadMoreMilestones = useCallback(() => { void milestonesQuery.fetchNextPage(); }, [milestonesQuery]);
+  const handleLoadMoreTasks = useCallback(() => { void tasksQuery.fetchNextPage(); }, [tasksQuery]);
+  const handleLoadMoreDeliverables = useCallback(() => { void deliverablesQuery.fetchNextPage(); }, [deliverablesQuery]);
+  const handleLoadMoreApprovals = useCallback(() => { void approvalsQuery.fetchNextPage(); }, [approvalsQuery]);
+  const handleLoadMoreInvoices = useCallback(() => { void invoicesQuery.fetchNextPage(); }, [invoicesQuery]);
 
-  const filesPage = useMemo(
-    () => ({
-      items: filesQuery.items,
-      isLoading: filesQuery.isLoading,
-      hasMore: filesQuery.hasMore,
-      isFetchingNextPage: filesQuery.isFetchingNextPage,
-      onLoadMore: handleLoadMoreFiles,
-    }),
-    [filesQuery, handleLoadMoreFiles],
-  );
-  const updatesPage = useMemo(
-    () => ({
-      items: updatesQuery.items,
-      isLoading: updatesQuery.isLoading,
-      hasMore: updatesQuery.hasMore,
-      isFetchingNextPage: updatesQuery.isFetchingNextPage,
-      onLoadMore: handleLoadMoreUpdates,
-    }),
-    [updatesQuery, handleLoadMoreUpdates],
-  );
-  const requestsPage = useMemo(
-    () => ({
-      items: requestsQuery.items,
-      isLoading: requestsQuery.isLoading,
-      hasMore: requestsQuery.hasMore,
-      isFetchingNextPage: requestsQuery.isFetchingNextPage,
-      onLoadMore: handleLoadMoreRequests,
-    }),
-    [requestsQuery, handleLoadMoreRequests],
-  );
+  const filesPage = useMemo(() => ({ items: filesQuery.items, isLoading: filesQuery.isLoading, hasMore: filesQuery.hasMore, isFetchingNextPage: filesQuery.isFetchingNextPage, onLoadMore: handleLoadMoreFiles }), [filesQuery, handleLoadMoreFiles]);
+  const updatesPage = useMemo(() => ({ items: updatesQuery.items, isLoading: updatesQuery.isLoading, hasMore: updatesQuery.hasMore, isFetchingNextPage: updatesQuery.isFetchingNextPage, onLoadMore: handleLoadMoreUpdates }), [updatesQuery, handleLoadMoreUpdates]);
+  const requestsPage = useMemo(() => ({ items: requestsQuery.items, isLoading: requestsQuery.isLoading, hasMore: requestsQuery.hasMore, isFetchingNextPage: requestsQuery.isFetchingNextPage, onLoadMore: handleLoadMoreRequests }), [requestsQuery, handleLoadMoreRequests]);
+  const milestonesPage = useMemo(() => ({ items: milestonesQuery.items, isLoading: milestonesQuery.isLoading, hasMore: milestonesQuery.hasMore, isFetchingNextPage: milestonesQuery.isFetchingNextPage, onLoadMore: handleLoadMoreMilestones }), [milestonesQuery, handleLoadMoreMilestones]);
+  const tasksPage = useMemo(() => ({ items: tasksQuery.items, isLoading: tasksQuery.isLoading, hasMore: tasksQuery.hasMore, isFetchingNextPage: tasksQuery.isFetchingNextPage, onLoadMore: handleLoadMoreTasks }), [tasksQuery, handleLoadMoreTasks]);
+  const deliverablesPage = useMemo(() => ({ items: deliverablesQuery.items, isLoading: deliverablesQuery.isLoading, hasMore: deliverablesQuery.hasMore, isFetchingNextPage: deliverablesQuery.isFetchingNextPage, onLoadMore: handleLoadMoreDeliverables }), [deliverablesQuery, handleLoadMoreDeliverables]);
+  const approvalsPage = useMemo(() => ({ items: approvalsQuery.items, isLoading: approvalsQuery.isLoading, hasMore: approvalsQuery.hasMore, isFetchingNextPage: approvalsQuery.isFetchingNextPage, onLoadMore: handleLoadMoreApprovals }), [approvalsQuery, handleLoadMoreApprovals]);
+  const invoicesPage = useMemo(() => ({ items: invoicesQuery.items, isLoading: invoicesQuery.isLoading, hasMore: invoicesQuery.hasMore, isFetchingNextPage: invoicesQuery.isFetchingNextPage, onLoadMore: handleLoadMoreInvoices }), [invoicesQuery, handleLoadMoreInvoices]);
 
   function handleRetry() {
     void refetchOverview();
     void filesQuery.refetch();
     void updatesQuery.refetch();
     void requestsQuery.refetch();
+    void milestonesQuery.refetch();
+    void tasksQuery.refetch();
+    void deliverablesQuery.refetch();
+    void approvalsQuery.refetch();
+    void invoicesQuery.refetch();
   }
 
   function handleOpenCrSheet() {
@@ -143,119 +141,31 @@ export function PortalDashboardPage({ projectId }: PortalDashboardPageProps) {
           <>
             <PmPageShell>
               {overview.capabilities?.canViewMilestones && (
-                <PmSection index={0}>
-                  <SectionTitle
-                    icon={Diamond}
-                    title="Milestones & Deliverables"
-                  />
-                  {overview.milestones.length === 0 ? (
-                    <PmPanel className="flex items-center justify-center p-4">
-                      <EmptyState
-                        illustrationPreset="calendar"
-                        title="No milestones"
-                        description="No milestones have been shared yet."
-                        compact
-                        className="min-h-[100px]"
-                      />
-                    </PmPanel>
-                  ) : (
-                    <PmPanel>
-                      {overview.milestones.map((m) => (
-                        <div
-                          key={m.id}
-                          className={cn(PM_ROW, "overflow-hidden")}
-                        >
-                          <TruncatedText
-                            text={m.name}
-                            className="min-w-0 flex-1 text-dense font-medium"
-                          />
-                          {m.dueDate ? (
-                            <span className="shrink-0 text-micro text-muted-foreground">
-                              Due{" "}
-                              {new Date(m.dueDate).toLocaleDateString("en-IN", {
-                                day: "numeric",
-                                month: "short",
-                              })}
-                            </span>
-                          ) : null}
-                          {m.status ? (
-                            <Badge
-                              variant="outline"
-                              className="shrink-0 text-micro capitalize"
-                            >
-                              {m.status}
-                            </Badge>
-                          ) : null}
-                        </div>
-                      ))}
-                    </PmPanel>
-                  )}
-                </PmSection>
+                <PreviewMilestonesSection index={0} page={milestonesPage} />
               )}
-
               {overview.capabilities?.canViewTasks && (
-                <PmSection index={1}>
-                  <SectionTitle icon={CheckSquare} title="Tasks" />
-                  {overview.tasks.length === 0 ? (
-                    <PmPanel className="flex items-center justify-center p-4">
-                      <EmptyState
-                        illustrationPreset="ticket"
-                        title="No tasks"
-                        description="No tasks have been shared yet."
-                        compact
-                        className="min-h-[100px]"
-                      />
-                    </PmPanel>
-                  ) : (
-                    <PmPanel>
-                      {overview.tasks.map((t) => (
-                        <div
-                          key={t.id}
-                          className={cn(PM_ROW, "overflow-hidden")}
-                        >
-                          <span className="w-16 shrink-0 font-mono text-micro text-muted-foreground">
-                            #{t.ticketNumber}
-                          </span>
-                          <TruncatedText
-                            text={t.title}
-                            className="min-w-0 flex-1 text-dense"
-                          />
-                          {t.dueDate ? (
-                            <span className="hidden shrink-0 text-micro text-muted-foreground sm:block">
-                              {new Date(t.dueDate).toLocaleDateString("en-IN", {
-                                day: "numeric",
-                                month: "short",
-                              })}
-                            </span>
-                          ) : null}
-                          <Badge
-                            variant="outline"
-                            className="shrink-0 text-micro capitalize"
-                          >
-                            {t.status}
-                          </Badge>
-                        </div>
-                      ))}
-                    </PmPanel>
-                  )}
-                </PmSection>
+                <PreviewTasksSection index={1} page={tasksPage} />
               )}
-
+              {overview.capabilities?.canViewMilestones && (
+                <PreviewDeliverablesSection index={2} page={deliverablesPage} />
+              )}
+              {overview.capabilities?.canViewApprovals && (
+                <PreviewApprovalsSection index={3} page={approvalsPage} />
+              )}
+              {overview.capabilities?.canViewInvoices && (
+                <PreviewInvoicesSection index={4} page={invoicesPage} />
+              )}
               {overview.capabilities?.canViewAttachments && (
-                <PreviewFilesSection index={2} page={filesPage} />
+                <PreviewFilesSection index={5} page={filesPage} />
               )}
-
               {overview.capabilities?.canViewComments && (
-                <PreviewUpdatesSection index={3} page={updatesPage} />
+                <PreviewUpdatesSection index={6} page={updatesPage} />
               )}
-
               {overview.capabilities?.canViewRequests === true && (
                 <PreviewRequestsSection
-                  index={4}
+                  index={7}
                   page={requestsPage}
-                  canSubmit={
-                    overview.capabilities.canSubmitChangeRequests === true
-                  }
+                  canSubmit={overview.capabilities.canSubmitChangeRequests === true}
                   onSubmitRequest={handleOpenCrSheet}
                 />
               )}

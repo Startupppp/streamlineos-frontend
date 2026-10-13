@@ -1,6 +1,8 @@
 "use client";
 
-import { FileText, MessageSquare, Paperclip } from "lucide-react";
+import type { ReactNode } from "react";
+import type { LucideIcon } from "lucide-react";
+import { CheckSquare, ClipboardList, Diamond, FileText, MessageSquare, Package, Paperclip, Receipt } from "lucide-react";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -11,8 +13,13 @@ import { PmPanel, PmSection, PM_ROW } from "@/components/pm-chrome";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 import type {
+  PortalApproval,
+  PortalDeliverable,
   PortalFile,
+  PortalInvoice,
+  PortalMilestone,
   PortalRequest,
+  PortalTask,
   PortalUpdate,
 } from "@/features/portal/lib/portal-child-pages";
 import {
@@ -37,6 +44,40 @@ function RowsSkeleton() {
         <Skeleton key={i} className="h-10 w-full rounded-lg" />
       ))}
     </PmPanel>
+  );
+}
+
+function ChildPageSection<T extends { id: number | string }>({
+  index, page, icon, title, emptyTitle, emptyDescription, emptyPreset, loadMoreLabel, renderRow,
+}: {
+  index: number;
+  page: ChildPageView<T>;
+  icon: LucideIcon;
+  title: string;
+  emptyTitle: string;
+  emptyDescription: string;
+  emptyPreset: string;
+  loadMoreLabel: string;
+  renderRow: (item: T) => ReactNode;
+}) {
+  return (
+    <PmSection index={index}>
+      <SectionTitle icon={icon} title={title} />
+      {page.isLoading ? (
+        <RowsSkeleton />
+      ) : page.items.length === 0 ? (
+        <PmPanel className="flex items-center justify-center p-4">
+          <EmptyState illustrationPreset={emptyPreset} title={emptyTitle} description={emptyDescription} compact className="min-h-[100px]" />
+        </PmPanel>
+      ) : (
+        <PmPanel>
+          {page.items.map((item) => (
+            <div key={item.id} className={cn(PM_ROW, "overflow-hidden")}>{renderRow(item)}</div>
+          ))}
+          <InfiniteScrollSentinel hasNextPage={page.hasMore} isFetchingNextPage={page.isFetchingNextPage} onLoadMore={page.onLoadMore} label={loadMoreLabel} />
+        </PmPanel>
+      )}
+    </PmSection>
   );
 }
 
@@ -193,5 +234,45 @@ export function PreviewRequestsSection({
         </PmPanel>
       )}
     </PmSection>
+  );
+}
+
+export function PreviewMilestonesSection({ index, page }: { index: number; page: ChildPageView<PortalMilestone> }) {
+  return (
+    <ChildPageSection index={index} page={page} icon={Diamond} title="Milestones" emptyTitle="No milestones" emptyDescription="No milestones have been shared yet." emptyPreset="calendar" loadMoreLabel="Load more milestones"
+      renderRow={(m) => (<><TruncatedText text={m.name} className="min-w-0 flex-1 text-dense font-medium" />{m.dueDate ? <span className="shrink-0 text-micro text-muted-foreground">{m.dueDate.slice(0, 10)}</span> : null}<Badge variant="outline" className="shrink-0 text-micro capitalize">{m.status}</Badge></>)}
+    />
+  );
+}
+
+export function PreviewTasksSection({ index, page }: { index: number; page: ChildPageView<PortalTask> }) {
+  return (
+    <ChildPageSection index={index} page={page} icon={CheckSquare} title="Tasks" emptyTitle="No tasks" emptyDescription="No tasks have been shared yet." emptyPreset="ticket" loadMoreLabel="Load more tasks"
+      renderRow={(t) => (<><span className="w-16 shrink-0 font-mono text-micro text-muted-foreground">#{t.ticketNumber}</span><TruncatedText text={t.title} className="min-w-0 flex-1 text-dense" />{t.dueDate ? <span className="hidden shrink-0 text-micro text-muted-foreground sm:block">{t.dueDate.slice(0, 10)}</span> : null}<Badge variant="outline" className="shrink-0 text-micro capitalize">{t.status}</Badge></>)}
+    />
+  );
+}
+
+export function PreviewDeliverablesSection({ index, page }: { index: number; page: ChildPageView<PortalDeliverable> }) {
+  return (
+    <ChildPageSection index={index} page={page} icon={Package} title="Deliverables" emptyTitle="No deliverables" emptyDescription="Released deliverables will appear here." emptyPreset="documents" loadMoreLabel="Load more deliverables"
+      renderRow={(d) => (<><TruncatedText text={d.name} className="min-w-0 flex-1 text-dense font-medium" /><span className="shrink-0 font-mono text-micro text-muted-foreground">{d.version}</span>{d.releaseDate ? <span className="shrink-0 text-micro text-muted-foreground">{d.releaseDate.slice(0, 10)}</span> : null}<Badge variant="outline" className="shrink-0 text-micro capitalize">{d.status}</Badge></>)}
+    />
+  );
+}
+
+export function PreviewApprovalsSection({ index, page }: { index: number; page: ChildPageView<PortalApproval> }) {
+  return (
+    <ChildPageSection index={index} page={page} icon={ClipboardList} title="Approvals" emptyTitle="No approvals" emptyDescription="Approvals will appear here." emptyPreset="default" loadMoreLabel="Load more approvals"
+      renderRow={(a) => (<><TruncatedText text={a.title} className="min-w-0 flex-1 text-dense" />{a.dueAt ? <span className="shrink-0 text-micro text-muted-foreground">{a.dueAt.slice(0, 10)}</span> : null}<Badge variant="outline" className="shrink-0 text-micro capitalize">{a.status}</Badge></>)}
+    />
+  );
+}
+
+export function PreviewInvoicesSection({ index, page }: { index: number; page: ChildPageView<PortalInvoice> }) {
+  return (
+    <ChildPageSection index={index} page={page} icon={Receipt} title="Invoices" emptyTitle="No invoices" emptyDescription="Invoices will appear here." emptyPreset="default" loadMoreLabel="Load more invoices"
+      renderRow={(inv) => (<><TruncatedText text={inv.documentNumber ?? inv.id} className="min-w-0 flex-1 font-mono text-dense" /><span className="shrink-0 text-micro text-muted-foreground">{inv.issueDate.slice(0, 10)}</span><Badge variant="outline" className="shrink-0 text-micro capitalize">{inv.status}</Badge></>)}
+    />
   );
 }

@@ -26,6 +26,15 @@ const contextLabels = {
   TRANSCRIPT: "Transcript",
 } as const;
 
+const defaultSourceKeys: Record<keyof typeof contextLabels, string> = {
+  ENTITY: "deal",
+  DOCUMENT: "kb-linked-document",
+  MAIL: "mail-thread",
+  CHAT: "chat-message",
+  RECORDING: "hr-interview",
+  TRANSCRIPT: "hr-interview",
+};
+
 export function MeetingWorkspaceContext({ workspace }: { workspace: CalendarMeetingWorkspace }) {
   const [contextType, setContextType] = useState<keyof typeof contextLabels>("ENTITY");
   const [sourceKey, setSourceKey] = useState("deal");
@@ -70,7 +79,13 @@ export function MeetingWorkspaceContext({ workspace }: { workspace: CalendarMeet
   return (
     <div className="space-y-4">
       <div className="grid gap-2 rounded-lg border p-3 sm:grid-cols-2">
-        <Select value={contextType} onValueChange={(value) => setContextType(value as keyof typeof contextLabels)}>
+        <Select value={contextType} onValueChange={(value) => {
+          const next = value as keyof typeof contextLabels;
+          setContextType(next);
+          setSourceKey(defaultSourceKeys[next]);
+          setSourceRecordId("");
+          setScopeId("");
+        }}>
           <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
           <SelectContent>{Object.entries(contextLabels).map(([value, label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}</SelectContent>
         </Select>

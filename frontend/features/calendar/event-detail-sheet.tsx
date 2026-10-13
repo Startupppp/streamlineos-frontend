@@ -38,25 +38,14 @@ import {
 import { CalendarListFallback } from "./calendar-lazy-fallbacks";
 import { CalendarSourceActionPanel } from "./calendar-source-action-panel";
 
-const MeetingFollowUpPanel = dynamic(
+const MeetingWorkspacePanel = dynamic(
   () =>
-    import("./meeting-follow-up-panel").then((m) => ({
-      default: m.MeetingFollowUpPanel,
+    import("./meeting-workspace-panel").then((m) => ({
+      default: m.MeetingWorkspacePanel,
     })),
   {
     ssr: false,
-    loading: () => <CalendarListFallback label="Loading AI follow-up" />,
-  },
-);
-
-const MeetingPrepPanel = dynamic(
-  () =>
-    import("./meeting-prep-panel").then((m) => ({
-      default: m.MeetingPrepPanel,
-    })),
-  {
-    ssr: false,
-    loading: () => <CalendarListFallback label="Loading AI meeting prep" />,
+    loading: () => <CalendarListFallback label="Loading meeting workspace" />,
   },
 );
 
@@ -70,8 +59,7 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
   const [cancelOccurrenceOpen, setCancelOccurrenceOpen] = useState(false);
   const [unlinkConfirmOpen, setUnlinkConfirmOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
-  const [aiPrepOpen, setAiPrepOpen] = useState(false);
-  const [aiFollowUpOpen, setAiFollowUpOpen] = useState(false);
+  const [meetingWorkspaceOpen, setMeetingWorkspaceOpen] = useState(false);
   const { mutateAsync: deleteEvent, isPending: deleteEventIsPending } =
     useDeleteCalendarEvent();
   const {
@@ -172,11 +160,6 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
     }
   }, [event]);
 
-  const handleSwitchToFollowUp = useCallback(() => {
-    setAiPrepOpen(false);
-    setAiFollowUpOpen(true);
-  }, []);
-
   const handleSheetOpenChange = useCallback(
     (open: boolean) => {
       if (!open) onClose();
@@ -191,7 +174,7 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
   );
   const handleRequestUnlink = useCallback(() => setUnlinkConfirmOpen(true), []);
   const handleOpenEdit = useCallback(() => setEditOpen(true), []);
-  const handleOpenAiPrep = useCallback(() => setAiPrepOpen(true), []);
+  const handleOpenMeetingWorkspace = useCallback(() => setMeetingWorkspaceOpen(true), []);
 
   return (
     <>
@@ -273,11 +256,11 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={handleOpenAiPrep}
+                  onClick={handleOpenMeetingWorkspace}
                   className="gap-1.5"
                 >
                   <Sparkles className="h-3.5 w-3.5" />
-                  AI Prep
+                  Meeting workspace
                 </Button>
               ) : null}
               {canExport ? (
@@ -342,84 +325,37 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
         event={event}
         rrule={detail?.rrule}
       />
-      <AiMeetingSheets
+      <MeetingWorkspaceSheet
         event={event}
-        aiPrepOpen={aiPrepOpen}
-        aiFollowUpOpen={aiFollowUpOpen}
-        onAiPrepOpenChange={setAiPrepOpen}
-        onAiFollowUpOpenChange={setAiFollowUpOpen}
-        onSwitchToFollowUp={handleSwitchToFollowUp}
+        open={meetingWorkspaceOpen}
+        onOpenChange={setMeetingWorkspaceOpen}
       />
     </>
   );
 }
 
-interface AiMeetingSheetsProps {
+interface MeetingWorkspaceSheetProps {
   event: CalendarListItem | null;
-  aiPrepOpen: boolean;
-  aiFollowUpOpen: boolean;
-  onAiPrepOpenChange: (open: boolean) => void;
-  onAiFollowUpOpenChange: (open: boolean) => void;
-  onSwitchToFollowUp: () => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
-function AiMeetingSheets({
+function MeetingWorkspaceSheet({
   event,
-  aiPrepOpen,
-  aiFollowUpOpen,
-  onAiPrepOpenChange,
-  onAiFollowUpOpenChange,
-  onSwitchToFollowUp,
-}: AiMeetingSheetsProps) {
+  open,
+  onOpenChange,
+}: MeetingWorkspaceSheetProps) {
+  const eventId = event ? parseCalendarEventId(event.id).eventId : null;
   return (
-    <>
-      <Sheet open={aiPrepOpen} onOpenChange={onAiPrepOpenChange}>
-        <SheetContent className="flex flex-col p-0 w-[360px] sm:max-w-[360px]">
-          <SheetHeader className="px-5 py-4 border-b shrink-0">
-            <SheetTitle className="text-sm font-semibold">
-              AI Meeting Prep
-            </SheetTitle>
-          </SheetHeader>
-          <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
-            {event ? (
-              <>
-                <MeetingPrepPanel
-                  eventId={String(event.id)}
-                  eventTitle={event.title ?? ""}
-                />
-                <div className="pt-2 border-t">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="w-full text-xs text-muted-foreground hover:text-foreground gap-1.5"
-                    onClick={onSwitchToFollowUp}
-                  >
-                    <Sparkles className="h-3.5 w-3.5" />
-                    Draft Follow-up instead
-                  </Button>
-                </div>
-              </>
-            ) : null}
-          </div>
-        </SheetContent>
-      </Sheet>
-      <Sheet open={aiFollowUpOpen} onOpenChange={onAiFollowUpOpenChange}>
-        <SheetContent className="flex flex-col p-0 w-[360px] sm:max-w-[360px]">
-          <SheetHeader className="px-5 py-4 border-b shrink-0">
-            <SheetTitle className="text-sm font-semibold">
-              AI Follow-up
-            </SheetTitle>
-          </SheetHeader>
-          <div className="flex-1 overflow-y-auto px-5 py-4">
-            {event ? (
-              <MeetingFollowUpPanel
-                eventId={String(event.id)}
-                onClose={() => onAiFollowUpOpenChange(false)}
-              />
-            ) : null}
-          </div>
-        </SheetContent>
-      </Sheet>
-    </>
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent className="flex flex-col p-0 w-full sm:max-w-2xl">
+        <SheetHeader className="px-5 py-4 border-b shrink-0">
+          <SheetTitle className="text-sm font-semibold">Meeting workspace</SheetTitle>
+        </SheetHeader>
+        <div className="flex-1 overflow-y-auto px-5 py-4">
+          {event && eventId ? <MeetingWorkspacePanel eventId={eventId} eventTitle={event.title ?? ""} /> : null}
+        </div>
+      </SheetContent>
+    </Sheet>
   );
 }

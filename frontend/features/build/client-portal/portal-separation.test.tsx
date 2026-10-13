@@ -141,6 +141,12 @@ const emptyInfiniteResult = () => ({
   refetch: jest.fn(),
 });
 
+const mockUsePortalPreviewMilestones = jest.fn();
+const mockUsePortalPreviewTasks = jest.fn();
+const mockUsePortalPreviewDeliverables = jest.fn();
+const mockUsePortalPreviewApprovals = jest.fn();
+const mockUsePortalPreviewInvoices = jest.fn();
+
 jest.mock("@/hooks/api/build/client-portal", () => ({
   useClientVisibilityTicketsInfinite: (...args: [number]) => mockUseTicketsInfinite(...args),
   useClientVisibilityMilestonesInfinite: (...args: [number]) => mockUseMilestonesInfinite(...args),
@@ -152,6 +158,11 @@ jest.mock("@/hooks/api/build/client-portal", () => ({
   usePortalPreviewFiles: () => emptyChildPage(),
   usePortalPreviewUpdates: () => emptyChildPage(),
   usePortalPreviewRequests: (...args: [number]) => mockUsePortalPreviewRequests(...args),
+  usePortalPreviewMilestones: () => mockUsePortalPreviewMilestones(),
+  usePortalPreviewTasks: () => mockUsePortalPreviewTasks(),
+  usePortalPreviewDeliverables: () => mockUsePortalPreviewDeliverables(),
+  usePortalPreviewApprovals: () => mockUsePortalPreviewApprovals(),
+  usePortalPreviewInvoices: () => mockUsePortalPreviewInvoices(),
   useSubmitPortalChangeRequest: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
 }));
 
@@ -217,6 +228,11 @@ beforeEach(() => {
   mockUsePortalProjects.mockReturnValue(noData());
   mockUsePortalProjectOverview.mockReturnValue(noData());
   mockUsePortalChangeRequests.mockReturnValue({ data: [], isLoading: false, isError: false, error: undefined, refetch: jest.fn() });
+  mockUsePortalPreviewMilestones.mockReturnValue(emptyChildPage());
+  mockUsePortalPreviewTasks.mockReturnValue(emptyChildPage());
+  mockUsePortalPreviewDeliverables.mockReturnValue(emptyChildPage());
+  mockUsePortalPreviewApprovals.mockReturnValue(emptyChildPage());
+  mockUsePortalPreviewInvoices.mockReturnValue(emptyChildPage());
 });
 
 describe("BSN-03-052 — internal management and external portal identity separation", () => {

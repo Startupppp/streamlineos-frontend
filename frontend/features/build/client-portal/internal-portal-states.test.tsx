@@ -98,6 +98,11 @@ const mockUseSubmitPortalCR = jest.fn();
 const mockUsePortalPreviewFiles = jest.fn();
 const mockUsePortalPreviewUpdates = jest.fn();
 const mockUsePortalPreviewRequests = jest.fn();
+const mockUsePortalPreviewMilestones = jest.fn();
+const mockUsePortalPreviewTasks = jest.fn();
+const mockUsePortalPreviewDeliverables = jest.fn();
+const mockUsePortalPreviewApprovals = jest.fn();
+const mockUsePortalPreviewInvoices = jest.fn();
 
 const emptyChildPage = () => ({
   items: [],
@@ -118,6 +123,11 @@ jest.mock("@/hooks/api/build/client-portal", () => ({
   usePortalPreviewFiles: () => mockUsePortalPreviewFiles(),
   usePortalPreviewUpdates: () => mockUsePortalPreviewUpdates(),
   usePortalPreviewRequests: () => mockUsePortalPreviewRequests(),
+  usePortalPreviewMilestones: () => mockUsePortalPreviewMilestones(),
+  usePortalPreviewTasks: () => mockUsePortalPreviewTasks(),
+  usePortalPreviewDeliverables: () => mockUsePortalPreviewDeliverables(),
+  usePortalPreviewApprovals: () => mockUsePortalPreviewApprovals(),
+  usePortalPreviewInvoices: () => mockUsePortalPreviewInvoices(),
   useSubmitPortalChangeRequest: () => mockUseSubmitPortalCR(),
 }));
 
@@ -159,6 +169,11 @@ beforeEach(() => {
   mockUsePortalPreviewFiles.mockReturnValue(emptyChildPage());
   mockUsePortalPreviewUpdates.mockReturnValue(emptyChildPage());
   mockUsePortalPreviewRequests.mockReturnValue(emptyChildPage());
+  mockUsePortalPreviewMilestones.mockReturnValue(emptyChildPage());
+  mockUsePortalPreviewTasks.mockReturnValue(emptyChildPage());
+  mockUsePortalPreviewDeliverables.mockReturnValue(emptyChildPage());
+  mockUsePortalPreviewApprovals.mockReturnValue(emptyChildPage());
+  mockUsePortalPreviewInvoices.mockReturnValue(emptyChildPage());
   mockUseSubmitPortalCR.mockReturnValue({
     mutate: jest.fn(),
     isPending: false,

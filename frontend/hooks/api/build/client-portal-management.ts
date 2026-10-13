@@ -84,13 +84,16 @@ export function useUnpublishPortal(projectId: number) {
   });
 }
 
-export function usePortalPreview(projectId: number) {
+export function usePortalPreview(projectId: number, forPortalMembershipId?: string) {
   return useGatedQuery<PortalPreview>("build:clientvisibility:manage", {
-    queryKey: buildWorkQueryKeys.projects.clientPortal.preview(projectId),
+    queryKey: [
+      ...buildWorkQueryKeys.projects.clientPortal.preview(projectId),
+      forPortalMembershipId,
+    ] as const,
     queryFn: ({ signal }) =>
       apiClient.get<PortalPreview>(
         `/build/${projectId}/client-portal/preview`,
-        undefined,
+        forPortalMembershipId !== undefined ? { forPortalMembershipId } : undefined,
         signal,
         portalPreviewContract,
       ),

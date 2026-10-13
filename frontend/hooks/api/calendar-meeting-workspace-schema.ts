@@ -4,8 +4,8 @@ import { calendarSourceActionProposalContract } from "./calendar-source-actions-
 export const calendarMeetingContextContract = z.object({
   id: z.string().uuid(),
   contextType: z.enum(["ENTITY", "DOCUMENT", "MAIL", "CHAT", "RECORDING", "TRANSCRIPT"]),
-  sourceKey: z.string(),
-  sourceRecordId: z.string(),
+  sourceKey: z.string().nullable(),
+  sourceRecordId: z.string().nullable(),
   state: z.enum(["AVAILABLE", "UNAVAILABLE", "STALE", "CONSENT_REQUIRED", "EXPIRED", "REVOKED"]),
   title: z.string().nullable(),
   summary: z.string().nullable(),
