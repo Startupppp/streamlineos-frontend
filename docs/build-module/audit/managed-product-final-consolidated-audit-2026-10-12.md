@@ -13,8 +13,9 @@ Manage Product is substantially implemented but not complete. There are eight re
 > **Status as of 2026-10-13 — 11 of 13 closed.**
 > MP-01…MP-08 and MP-10, MP-11 are closed. MP-12 and MP-13 are partially
 > closed, each held open by one thing code cannot produce: operational
-> monitoring and an executed rollback drill for MP-12, current customer and
-> market evidence for MP-13. **MP-09 is the only item open on work a test
+> monitoring for MP-12, current customer and market evidence for MP-13.
+> MP-12's rollback drill was executed on 2026-10-13 — 21 of 21 managed-product
+> rollbacks run, 0 broken. **MP-09 is the only item open on work a test
 > runner could never do** — authenticated browser acceptance at 375/768/1280.
 > The per-item table below and the dated passes carry the evidence.
 
@@ -161,7 +162,7 @@ evidence was produced, so MP-09 through MP-13 are untouched by this pass.
 | MP-09 | Open — browser acceptance. Not closeable from a test runner. |
 | MP-10 | **Closed 2026-10-13.** Two db specs, 26 tests, driven through the real services against a local Postgres restored to production schema head with RLS live. See the pass below. |
 | MP-11 | **Closed 2026-10-13.** The suite ran: 118 of 118 passed against a listening server on loopback. The "five blocked tests" framing was wrong — it is one 118-test suite, and the blocker was never the tests. See the pass below. |
-| MP-12 | Partially closed 2026-10-13 — migration head, ledger parity, rollback coverage, concurrency and token revocation are proven; monitoring and an executed rollback drill are not. See the pass below. |
+| MP-12 | Partially closed 2026-10-13 — migration head, ledger parity, rollback coverage, concurrency, token revocation and an executed rollback drill (21/21, 0 broken) are proven; operational monitoring is not. See the pass below. |
 | MP-13 | Partially closed 2026-10-13 — the six persisted drill-downs are now evidenced by the MP-10 specs. The customer-value, adoption and competitor claims still need market evidence, which code cannot supply. |
 
 Three defects outside the original list were found and fixed while closing the
@@ -300,8 +301,36 @@ buffers). So keyset pages are index-ordered and sort-free, but walking to page N
 costs O(N). This is a property of every keyset list in the repository, not of
 this change, and it is recorded rather than fixed.
 
-Not closeable here: monitoring, and an actually-executed rollback drill
-(`check:migration-rollback` states plainly that it never executes one).
+**The rollback drill was executed on 2026-10-13.** `pnpm drill:rollback` could not
+reach a local database at all before this pass: it hard-coded
+`ssl: { rejectUnauthorized: false }` because it was written against Neon, so every
+statement against local Postgres died `ECONNRESET` with no output. SSL is now taken
+from the connection string, and the drill ran against `prodshape` — a restore of
+production's own schema dump, ledger at 1156 — with every statement inside a
+transaction that is rolled back.
+
+All **21 managed-product rollbacks execute**: 0427, 1093, 1125, 1176, 1392, 1423,
+1810, 1981, 1982, 1983, 1984, 1985, 1986, 1988, 1989, 1990, 1992, 1993, 1994, 1996,
+1997. Zero broken. The drill reports its own limit on most of them — they drop and
+alter rather than create, so what is proven is that the SQL runs, not that objects
+come back.
+
+Repo-wide the same run is **481 executed, 2 skipped, 84 broken**, while
+`check:migration-rollback` is green. That gap is not 84 bugs. A rollback is written
+to run against the schema **as of its own migration**, and the drill runs each one
+against head, so a later rename or drop breaks an older rollback by construction —
+`kb_articles`, `sprints`, `project_workspace_members` and `okr_links` account for
+most of the "relation does not exist" failures.
+
+Six of the 84 are recent enough to matter, and four are the calendar migrations
+applied to production today: **2000, 2001, 2007 and 2009 fail `2BP01` — "cannot drop
+table … because other objects depend on it"** — because migrations 2002-2014 added
+dependents. **1956 and 1957 fail `42703` on `file_url`**, a column a later migration
+dropped. All six are rollback-able only as a reverse-ordered group, not
+individually, so a single-step emergency rollback of the calendar work would fail.
+These are another session's migrations and are reported, not edited.
+
+Still not closeable here: operational monitoring.
 
 ### The outage this pass caused, and fixed
 
