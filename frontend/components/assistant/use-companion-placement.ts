@@ -156,6 +156,8 @@ const LAUNCHER_OVERLAY_SELECTOR = [
   '[role="alertdialog"]',
   '[data-slot="dialog-content"]',
   '[data-slot="sheet-content"]',
+  '[data-slot="drawer-content"]',
+  '[data-slot="mobile-shell-fab-sheet"][role="dialog"]',
 ].join(",");
 
 export function useOverlayOpen(): boolean {
