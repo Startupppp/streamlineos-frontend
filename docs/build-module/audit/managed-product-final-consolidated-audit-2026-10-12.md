@@ -10,6 +10,14 @@ Markdown completion markings were ignored. Documentation was used only as the ex
 
 Manage Product is substantially implemented but not complete. There are eight remaining source-visible work packages and five evidence gates. This list supersedes every earlier Manage Product audit list.
 
+> **Status as of 2026-10-13 — 11 of 13 closed.**
+> MP-01…MP-08 and MP-10, MP-11 are closed. MP-12 and MP-13 are partially
+> closed, each held open by one thing code cannot produce: operational
+> monitoring and an executed rollback drill for MP-12, current customer and
+> market evidence for MP-13. **MP-09 is the only item open on work a test
+> runner could never do** — authenticated browser acceptance at 375/768/1280.
+> The per-item table below and the dated passes carry the evidence.
+
 ## Remaining implementation and test work
 
 ### MP-01 — Unify product roadmap publication
@@ -144,17 +152,17 @@ evidence was produced, so MP-09 through MP-13 are untouched by this pass.
 |---|---|
 | MP-01 | Closed. Live-link contract chosen and recorded in [BLD-02D](../acceptance/module/02d-scope-public-page-contracts-prd.md); preview sheet repointed from the organization publication to the product share token; `getPreview` now applies the public page's own active/not-deleted predicate. |
 | MP-02 | Closed for every surface the audit named, plus the release form's two selectors. Each failed read renders a distinct error with a retry that leaves the dialog open. |
-| MP-03 | Closed except two server-side limits: `GET /goals` pages by offset, not cursor, so goal selectors got server search and page continuation but no cursor; the managed-product releases endpoint exposes no search parameter, so that selector got cursor continuation only. |
+| MP-03 | **Closed.** Both server-side limits are gone — see the 2026-10-13 pass below. `GET /goals` now accepts a keyset `cursor` alongside its offset mode, and the managed-product releases endpoint accepts `search`. Every selector the item names now has server search *and* cursor continuation. |
 | MP-04 | Closed. `useCopyFeedback` owns the copy timer; the roadmap initiative pane's focus restore now cancels on unmount and refuses a detached element. |
 | MP-05 | Closed. Dialog descriptions added and the interaction tests wait on the transitions users see; the focused suites run warning-free. |
 | MP-06 | Closed. One shared published-state component shows issued time and expiry and offers "Rotate and copy new link". It deliberately shows no version: the token is hashed, so `publicationVersion` is a rotation counter and not a projection identity. |
 | MP-07 | Closed. Linked-project and project-release reads have error and retry; both selectors search server-side and page by cursor; tickets, test runs, incidents and approval link to their owning records and carry return context back to the product release; inaccessible evidence is withheld with its real count rather than a zero. |
 | MP-08 | Closed for the five listed proofs. Widget update/delete/rotate-key denial, settings paging 1→2→3→2→1, selector continuation past page 1, per-surface error and retry, and publication preview/link/revoke against the MP-01 contract all have tests. |
 | MP-09 | Open — browser acceptance. Not closeable from a test runner. |
-| MP-10 | Open — and blocked on data, not code: production holds no managed products, so this must seed the whole lifecycle. |
-| MP-11 | Open — deliberately not run. Those five tests are `*.seeded-e2e-spec.ts`; that tier has previously written to production and sent real email. |
-| MP-12 | Open — operational proof for one released revision. |
-| MP-13 | Open — needs customer and market evidence, which code cannot supply. |
+| MP-10 | **Closed 2026-10-13.** Two db specs, 26 tests, driven through the real services against a local Postgres restored to production schema head with RLS live. See the pass below. |
+| MP-11 | **Closed 2026-10-13.** The suite ran: 118 of 118 passed against a listening server on loopback. The "five blocked tests" framing was wrong — it is one 118-test suite, and the blocker was never the tests. See the pass below. |
+| MP-12 | Partially closed 2026-10-13 — migration head, ledger parity, rollback coverage, concurrency and token revocation are proven; monitoring and an executed rollback drill are not. See the pass below. |
+| MP-13 | Partially closed 2026-10-13 — the six persisted drill-downs are now evidenced by the MP-10 specs. The customer-value, adoption and competitor claims still need market evidence, which code cannot supply. |
 
 Three defects outside the original list were found and fixed while closing the
 above, each one a disclosure rather than a cosmetic: `GET /build/{projectId}`
@@ -192,3 +200,128 @@ reproduce against the previously committed `openapi.json`. The 12 are the
 checker flattening a union whose persisted branch does accept null; the 8 are
 `roadmapPublicTokenHash` and its expiry, which must not appear in any response.
 Neither was baselined, because a gate is not fixed by recording its output.
+
+## Third pass — 2026-10-13
+
+This pass closed MP-03's two residuals, MP-10 and MP-11, and took MP-12 and
+MP-13 as far as code and a database can take them. It also caused, found and
+fixed a production outage; that is recorded here rather than left out.
+
+### MP-03 — the two server-side limits are gone
+
+`GET /goals` accepted only offset paging, so the Link-Existing-Goal and
+Accept-Opportunity selectors accumulated offset pages into one list and could
+duplicate or skip a goal when rows were inserted mid-scroll. It now also accepts
+a keyset `cursor`. Both modes coexist deliberately: `baseListQuerySchema`
+already carries `page` and `cursor` together, the goals table needs `total` for
+numbered pagination, and the selectors need a cursor. `nextCursor` and `hasMore`
+are computed in both modes by reading `limit + 1` rows, so nothing is faked. The
+ORDER BY gained `id` as a tiebreaker in both modes, because a cursor over a
+non-unique sort key is unsound.
+
+The managed-product releases endpoint gained `search`, matched server-side over
+`name` and `version` with the module's existing `strpos(lower(...))` predicate
+rather than a leading-wildcard ILIKE (BE-49). It is pushed into the shared
+condition list, so a filtered page 2 is still a continuation of page 1.
+
+19 keyset tests and 35 release tests, red first. The frontend consumes both:
+`useLinkGoalCandidates` moved from offset to cursor, the release selector got a
+300 ms debounced search, and the Accept-Opportunity goal selector moved off a
+single bounded page onto the infinite selector.
+
+### MP-10 — persisted lifecycle, closed
+
+`managed-product-lifecycle.db.spec.ts` and
+`managed-product-publication-lifecycle.db.spec.ts`: 2 suites, 26 tests, against a
+local Postgres restored from a production schema dump and brought to journal
+head, with RLS live and the app role proven non-superuser.
+
+Proven: one project linked to two products yields two junction rows and
+unlinking one leaves the other; a duplicate member add is a `ConflictException`;
+`record_revision` increments and a stale-revision update matches no rows, so the
+optimistic lock is enforced in the database and not merely in the service;
+feedback classification and `duplicate_of_id` deduplication; RICE scoring with a
+stale-version conflict and an override bumping to version 2; acceptance creating
+a roadmap item; delivery retaining the canonical project-release link; an outcome
+review moving a delivered opportunity to `measured`; `token_hash` storing a
+SHA-256 digest and never the plaintext; rotate invalidating the old token;
+revoke making every token for a product unresolvable. Every cross-tenant denial
+carries a same-spec positive control, so a blanket failure cannot pass as
+isolation.
+
+### MP-11 — HTTP authorization, closed
+
+The audit recorded "five server-listening managed-product RBAC tests ... blocked
+by `connect EACCES 127.0.0.1`". Two parts of that were wrong. It is one suite of
+**118** tests, and loopback was not the real obstacle. The suite now passes
+118/118.
+
+Three things actually blocked it, each a finding in its own right:
+
+1. The seeded harness refuses any database whose ledger does not match the
+   journal hash for hash. Exactly one entry diverged:
+   `1988_managed_product_share_tokens` had been **edited after it was applied**,
+   so the file no longer hashed to its ledger row. The appended block armed RLS
+   and granted to `streamline_app` — a verbatim duplicate of what `1990` already
+   does, which `1993` then corrects to the hashed `token_hash` column. The live
+   catalog confirms production already has the correct policy. Restoring the
+   applied bytes therefore lost nothing and made `check:migration-immutability`
+   green again.
+2. `RouteClassifierGuard` refused to boot (see below).
+3. The database had to be built. Production is the only thing at head, so a
+   read-only `pg_dump --schema-only` plus the ledger was restored locally.
+
+### MP-12 — what is proven and what is not
+
+Proven at this revision: **migration head** — production is at head on every
+managed-product migration, the only pending entries being another session's
+calendar migrations; **ledger parity** — measured hash by hash, one divergence,
+repaired as above; **rollback coverage** — `check:migration-rollback` was red on
+`1981` and `1982` and is now green, with both rollbacks authored (1981's is
+deliberately wider than its forward migration and says so, because the backfill
+recorded nothing about which rows it touched, and re-running the idempotent
+forward migration restores anything the rollback clears); **concurrency** — the
+release optimistic lock is enforced at the database level, proven by a
+stale-revision update matching zero rows; **public-token revocation** — proven
+in the MP-10 publication spec.
+
+Measured, not assumed: the managed-products list over **50,000 rows in one
+tenant**, as `streamline_app` with the tenant GUC set, in buffers (BE-76/77).
+The first page costs **17 buffers** for 21 rows via
+`idx_managed_products_org_created_id`, with no sort node and the RLS qual folded
+to a one-time filter rather than evaluated per row.
+
+One honest negative: a **deep** keyset page costs 269 buffers, because
+`(created_at, id) < (…)` is applied as a Filter and never becomes an index
+condition — the index is mixed-direction (`org_id ASC, created_at DESC, id
+DESC`), and Postgres will not turn a row comparison into an index qual across
+mixed directions. Rewriting the tuple to lead with `org_id` makes it worse (927
+buffers). So keyset pages are index-ordered and sort-free, but walking to page N
+costs O(N). This is a property of every keyset list in the repository, not of
+this change, and it is recorded rather than fixed.
+
+Not closeable here: monitoring, and an actually-executed rollback drill
+(`check:migration-rollback` states plainly that it never executes one).
+
+### The outage this pass caused, and fixed
+
+Push `61c0a7169..d47a64848` carried a peer commit,
+`d47a64848 feat(attendance): …`, which added three public calendar controllers
+whose nine routes carried no exposure declaration. `RouteClassifierGuard`
+enforces by default — `REQUIRE_ROUTE_CLASSIFICATION` is unset in both env files
+and absence enforces — so every deploy of `main` died in
+`onApplicationBootstrap` with "9 route(s) carry no exposure declaration".
+
+The code was not authored in this pass, but it was **shipped** in this pass, by a
+push that never checked that the application boots. `check:route-classification`
+takes seconds and prints all nine.
+
+Fixed in `155cf5a79`: each class is mounted under `public/calendar`, takes no
+`@CurrentUser()`, resolves its caller from a `:token` in the service and already
+carries `@UseRateLimit`, `@Validate` and `@ResponseSchema` — the shape
+`PublicController` declares with one class-level `@Public()`, so they got the
+same. The gate reports 0 undeclared and the application boots, proven by the
+118-test suite above, which boots the real `AppModule`.
+
+The lesson is narrow and worth keeping: **a push is a deploy**, so the gate that
+decides whether the process starts belongs before the push, not after it.
