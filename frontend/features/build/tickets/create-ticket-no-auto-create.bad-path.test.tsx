@@ -70,6 +70,10 @@ function renderDialog() {
   );
 }
 
+beforeEach(() => {
+  sessionStorage.clear();
+});
+
 describe("Create Issue never auto-creates (E1)", () => {
   beforeEach(() => {
     mockCreateTicket.mockReset();
@@ -141,6 +145,27 @@ describe("Create Issue title field contract", () => {
     expect(src).toMatch(/onKeyDown/);
     expect(src).toMatch(/Enter/);
     expect(src).toMatch(/preventDefault/);
+  });
+});
+
+describe("Create Issue double-submit guard (B-001)", () => {
+  beforeEach(() => {
+    mockCreateTicket.mockReset();
+    mockCreateTicket.mockResolvedValue({ id: 1 });
+  });
+
+  it("two rapid clicks on Create issue send exactly one POST request", async () => {
+    renderDialog();
+    fireEvent.click(screen.getByRole("button", { name: /create issue/i }));
+    const title = await screen.findByPlaceholderText("Issue title");
+    fireEvent.change(title, { target: { value: "Double click guard test" } });
+    const createBtn = screen.getByRole("button", { name: "Create issue" });
+    fireEvent.click(createBtn);
+    fireEvent.click(createBtn);
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 100));
+    });
+    expect(mockCreateTicket).toHaveBeenCalledTimes(1);
   });
 });
 

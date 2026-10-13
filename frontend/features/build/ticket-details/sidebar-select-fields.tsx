@@ -133,7 +133,7 @@ export function SidebarSelectFields({
         <div className="min-w-0">
           <FieldLabel>Status</FieldLabel>
           <Select value={ticket.status || "TODO"} onValueChange={onStatusChange} disabled={disabled}>
-            <SelectTrigger className={CONTROL_CLASS}>
+            <SelectTrigger className={CONTROL_CLASS} aria-label="Status">
               <SelectValue />
             </SelectTrigger>
             <SelectContent className={FIELD_SELECT_CONTENT_CLASS}>
@@ -171,7 +171,7 @@ export function SidebarSelectFields({
         <div className="min-w-0">
           <FieldLabel>Priority</FieldLabel>
           <Select value={ticket.priority || "MEDIUM"} onValueChange={onPriorityChange} disabled={disabled}>
-            <SelectTrigger className={CONTROL_CLASS}>
+            <SelectTrigger className={CONTROL_CLASS} aria-label="Priority">
               <SelectValue />
             </SelectTrigger>
             <SelectContent className={FIELD_SELECT_CONTENT_CLASS}>
@@ -188,7 +188,7 @@ export function SidebarSelectFields({
         <div className="min-w-0">
           <FieldLabel>Type</FieldLabel>
           <Select value={ticket.type || "TASK"} onValueChange={onTypeChange} disabled={disabled}>
-            <SelectTrigger className={CONTROL_CLASS}>
+            <SelectTrigger className={CONTROL_CLASS} aria-label="Type">
               <SelectValue />
             </SelectTrigger>
             <SelectContent className={FIELD_SELECT_CONTENT_CLASS}>
@@ -212,6 +212,7 @@ export function SidebarSelectFields({
             className={CONTROL_CLASS}
             placeholder="0"
             disabled={disabled}
+            aria-label="Points"
             aria-invalid={pointsError ? true : undefined}
           />
           {pointsError ? (
@@ -229,7 +230,7 @@ export function SidebarSelectFields({
             Epic
           </FieldLabel>
           <Select value={ticket.epicId?.toString() || "none"} onValueChange={onEpicChange} disabled={disabled}>
-            <SelectTrigger className={CONTROL_CLASS}>
+            <SelectTrigger className={CONTROL_CLASS} aria-label="Epic">
               <SelectValue placeholder="None" />
             </SelectTrigger>
             <SelectContent className={FIELD_SELECT_CONTENT_CLASS}>
@@ -248,7 +249,7 @@ export function SidebarSelectFields({
             Workstream
           </FieldLabel>
           <Select value={ticket.moduleId?.toString() || "none"} onValueChange={onModuleChange} disabled={disabled}>
-            <SelectTrigger className={CONTROL_CLASS}>
+            <SelectTrigger className={CONTROL_CLASS} aria-label="Workstream">
               <SelectValue placeholder="None" />
             </SelectTrigger>
             <SelectContent className={FIELD_SELECT_CONTENT_CLASS}>
@@ -267,7 +268,7 @@ export function SidebarSelectFields({
             Cycle
           </FieldLabel>
           <Select value={ticket.cycleId?.toString() || "none"} onValueChange={onCycleChange} disabled={disabled}>
-            <SelectTrigger className={CONTROL_CLASS}>
+            <SelectTrigger className={CONTROL_CLASS} aria-label="Cycle">
               <SelectValue placeholder="None" />
             </SelectTrigger>
             <SelectContent className={FIELD_SELECT_CONTENT_CLASS}>

@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useLayoutEffect, useState, useMemo, useRef } from "react";
+import { useCallback, useEffect, useLayoutEffect, useState, useMemo, useRef } from "react";
+import { useSubmitGuard } from "@/hooks/common/use-submit-guard";
 import { useProjects } from "@/hooks/api/build/projects";
 import { useSourceOverride } from "@/hooks/common/use-source-override";
 import {
@@ -57,11 +58,17 @@ export function useCreateTicketDialogState({
         ? (projects[0]?.id ?? null)
         : null;
 
+  const effectiveProjectIdRef = useRef(effectiveProjectId);
+  useLayoutEffect(() => {
+    effectiveProjectIdRef.current = effectiveProjectId;
+  }, [effectiveProjectId]);
+
   const [showLinksEditor, setShowLinksEditor] = useState(false);
   const [descriptionEditorKey, setDescriptionEditorKey] = useState(0);
   const [pointsError, setPointsError] = useState<string | null>(null);
 
   const handleFormReset = useCallback(() => {
+    sessionStorage.removeItem(`ticket-draft-title-${effectiveProjectIdRef.current ?? "none"}`);
     setDescriptionEditorKey((k) => k + 1);
     setShowLinksEditor(false);
     setPointsError(null);
@@ -122,6 +129,17 @@ export function useCreateTicketDialogState({
 
   const watchedTitle = form.watch("title") ?? "";
   const watchedDescription = form.watch("description") ?? "";
+
+  useEffect(() => {
+    if (!resolvedOpen) return;
+    const draftKey = `ticket-draft-title-${effectiveProjectId ?? "none"}`;
+    if (watchedTitle) {
+      sessionStorage.setItem(draftKey, watchedTitle);
+    } else {
+      sessionStorage.removeItem(draftKey);
+    }
+  }, [resolvedOpen, effectiveProjectId, watchedTitle]);
+
   const duplicates = useDuplicateTitleWarning(watchedTitle, effectiveProjectId);
 
   const handleApplyAiTitle = useCallback(
@@ -177,10 +195,15 @@ export function useCreateTicketDialogState({
   const handleOpenTrigger = useCallback(() => {
     if (isExternallyControlled) {
       onExternalOpenChange?.(true);
-      return;
+    } else {
+      setOpen(true);
     }
-    setOpen(true);
-  }, [isExternallyControlled, onExternalOpenChange]);
+    const draftKey = `ticket-draft-title-${effectiveProjectIdRef.current ?? "none"}`;
+    const draft = sessionStorage.getItem(draftKey);
+    if (draft) {
+      form.setValue("title", draft, { shouldDirty: true });
+    }
+  }, [isExternallyControlled, onExternalOpenChange, form]);
 
   const finalizeClose = useCallback(() => {
     titleInlineSession?.reject();
@@ -191,6 +214,7 @@ export function useCreateTicketDialogState({
     setFieldsInlineSession(null);
     setDiscardConfirmOpen(false);
     pendingCloseRef.current = false;
+    sessionStorage.removeItem(`ticket-draft-title-${effectiveProjectIdRef.current ?? "none"}`);
     resetForm(false);
     if (isExternallyControlled) {
       onExternalOpenChange?.(false);
@@ -269,10 +293,15 @@ export function useCreateTicketDialogState({
 
   const canSubmit = effectiveProjectId != null && pointsError === null;
 
-  const handleExplicitSubmit = useCallback(() => {
+  const handleExplicitSubmitInner = useCallback(async () => {
     if (!canSubmit) return;
-    void form.handleSubmit(handleSubmit)();
+    await form.handleSubmit(handleSubmit)();
   }, [canSubmit, form, handleSubmit]);
+  const createSubmitGuard = useSubmitGuard(handleExplicitSubmitInner);
+
+  const handleExplicitSubmit = useCallback(() => {
+    void createSubmitGuard.submit().catch(() => {});
+  }, [createSubmitGuard]);
   const projectSelectValue =
     effectiveProjectId != null ? String(effectiveProjectId) : undefined;
   const projectTriggerLabel =
@@ -291,7 +320,7 @@ export function useCreateTicketDialogState({
     relatedLinks,
     setRelatedLinks,
     isUploading,
-    isPending,
+    isPending: isPending || createSubmitGuard.isSubmitting,
     properties,
     handlePropertiesChange,
     createMore,

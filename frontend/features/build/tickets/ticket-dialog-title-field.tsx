@@ -75,6 +75,7 @@ export function TicketDialogTitleField({
                     field.ref(el);
                     titleRef.current = el;
                   }}
+                  maxLength={TICKET_TITLE_MAX}
                   autoCapitalize="off"
                   autoCorrect="off"
                   spellCheck={false}

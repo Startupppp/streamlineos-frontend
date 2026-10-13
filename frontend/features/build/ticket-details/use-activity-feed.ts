@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
+import { useSubmitGuard } from "@/hooks/common/use-submit-guard";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -130,7 +131,7 @@ export function useActivityFeed({
   const addReaction = useAddReaction(projectId, ticketId);
   const removeReaction = useRemoveReaction(projectId, ticketId);
 
-  const handleSubmit = useCallback(() => {
+  const handleSubmitInner = useCallback(async () => {
     const content = newComment.trim();
     if (!content) return;
     const optimisticAuthor = session?.user?.id
@@ -140,8 +141,14 @@ export function useActivityFeed({
           image: session.user.image ?? null,
         }
       : undefined;
-    addComment.mutate({ ticketId, projectId, content, optimisticAuthor });
+    return addComment.mutateAsync({ ticketId, projectId, content, optimisticAuthor });
   }, [newComment, ticketId, projectId, addComment, session]);
+  const commentSubmitGuard = useSubmitGuard(handleSubmitInner);
+  const isPostingComment = addComment.isPending || commentSubmitGuard.isSubmitting;
+
+  const handleSubmit = useCallback(() => {
+    void commentSubmitGuard.submit().catch(() => {});
+  }, [commentSubmitGuard]);
 
   const handleReplySubmit = useCallback(
     (commentId: number) => {
@@ -414,6 +421,7 @@ export function useActivityFeed({
     deletingId,
     commentNotFound,
     addComment,
+    isPostingComment,
     addReply,
     repliesMap,
     sortedTopLevel,
