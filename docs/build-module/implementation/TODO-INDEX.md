@@ -8,7 +8,7 @@ The Delivery checklist and any inline acceptance checkboxes inside each current 
 - [ ] Every accepted research finding has an adopted or deferred destination in the research traceability map.
 - [ ] Release gates, tenant/role browser paths, persistence, and operations evidence are complete.
 
-Current specification items: 847 open. Historical research traceability: 114 mapped of 114 files.
+Current specification items: 842 open. Historical research traceability: 114 mapped of 114 files.
 
 ## Current specifications (107)
 
@@ -19,7 +19,7 @@ Current specification items: 847 open. Historical research traceability: 114 map
 - [acceptance/module/02a-cross-scope-pages-prd.md](../acceptance/module/02a-cross-scope-pages-prd.md) — 16 open
 - [acceptance/module/02b-project-pages-prd.md](../acceptance/module/02b-project-pages-prd.md) — 13 open
 - [acceptance/module/02c-organization-page-contracts-prd.md](../acceptance/module/02c-organization-page-contracts-prd.md) — 5 open
-- [acceptance/module/02d-scope-public-page-contracts-prd.md](../acceptance/module/02d-scope-public-page-contracts-prd.md) — 5 open
+- [acceptance/module/02d-scope-public-page-contracts-prd.md](../acceptance/module/02d-scope-public-page-contracts-prd.md) — 0 open
 - [acceptance/module/02e-project-delivery-page-contracts-prd.md](../acceptance/module/02e-project-delivery-page-contracts-prd.md) — 5 open
 - [acceptance/module/02f-project-control-page-contracts-prd.md](../acceptance/module/02f-project-control-page-contracts-prd.md) — 6 open
 - [acceptance/module/03-discovery-views-pagination-prd.md](../acceptance/module/03-discovery-views-pagination-prd.md) — 31 open
@@ -100,15 +100,15 @@ Current specification items: 847 open. Historical research traceability: 114 map
 - [product/customer-value-and-differentiation.md](../product/customer-value-and-differentiation.md) — 3 open
 - [README.md](../README.md) — 2 open
 
-## Item-level task register (847)
+## Item-level task register (842)
 
-Every row below maps to exactly one open checkbox in a current specification. Its BT ID is stable while that checkbox text and file stay unchanged. The source checkbox is the final completion authority; these stages show partial progress without increasing the 847-item denominator. Checked source rows are omitted.
+Every row below maps to exactly one open checkbox in a current specification. Its BT ID is stable while that checkbox text and file stay unchanged. The source checkbox is the final completion authority; these stages show partial progress without increasing the 842-item denominator. Checked source rows are omitted.
 
 Stages: D = decision and exclusive work claim; I = implementation and contracts; T = focused positive and negative checks; R = applicable database, authorization, cache, and event proof; B = applicable browser and mobile proof; L = applicable deployment and operations proof. `?` means unassessed/open, `x` means proven, and `-` means inapplicable with a reason. A stage marked `x` needs a proof link; `-` needs an `N/A:` rationale in Evidence. Stage evidence can advance while the source checkbox remains open. Complete that checkbox only when its own acceptance text and all applicable stages are satisfied.
 
 Before claiming a composite checkbox, list every clause as a numbered acceptance step under its BT ID in WORK-CLAIMS.md and map it to one existing primary package. A shared implementation can satisfy several BT IDs, but keep one file owner and cite the same proof instead of repeating work. Record exact file paths, dependencies, and evidence there; this register does not assign agents or files. Never mark a whole stage complete for partial clause coverage.
 
-Proven stages on open items: the five BLD-02D rows carry proven D stages, and BLD-02D-001/002/004/005 carry proven I and T. Partial clause coverage stays `?` with the landed and open halves named in Evidence. Current specification items remain 847 open.
+All five BLD-02D checkboxes closed on 2026-10-13 and their rows are removed: the five portal collections gained keyset child pages on both the staff preview and the external `portal/v1` surface, the two public Build surfaces gained the token-guessing, expiry, revocation, injection and enumeration classes, and `resolveActiveGrant` became membership-bound behind a preview selector. Closing evidence is in the specification itself. Partial clause coverage stays `?` with the landed and open halves named in Evidence. Current specification items are 842 open.
 
 | ID | Source | State | D | I | T | R | B | L | Evidence | Task |
 |---|---|---|---|---|---|---|---|---|---|---|
@@ -209,11 +209,6 @@ Proven stages on open items: the five BLD-02D rows carry proven D stages, and BL
 | BT-359e1460e67b | [source](../acceptance/module/02c-organization-page-contracts-prd.md#L61) | [ ] | ? | ? | ? | ? | ? | ? | — | **BLD-02C-003** every retained collection has explicit filters, sort, |
 | BT-e77b9f60b8b1 | [source](../acceptance/module/02c-organization-page-contracts-prd.md#L64) | [ ] | ? | ? | ? | ? | ? | ? | — | **BLD-02C-004** page-specific component tests and browser journeys prove |
 | BT-d2d07059d6d6 | [source](../acceptance/module/02c-organization-page-contracts-prd.md#L66) | [ ] | ? | ? | ? | ? | ? | ? | — | **BLD-02C-005** source route manifest, this matrix, route access, and |
-| BT-b859c54b1137 | [source](../acceptance/module/02d-scope-public-page-contracts-prd.md#L175) | [ ] | x | x | - | - | ? | - | 02d tables now carry /releases, /intake/t/{intakeToken}, /roadmap/by-token; settings re-marked KEEP. N/A T,R,L: documentation census. 01a and PAGES.md drift listed in WORK-CLAIMS | **BLD-02D-001** every current product, portal, and public Build route |
-| BT-c9b728a498c0 | [source](../acceptance/module/02d-scope-public-page-contracts-prd.md#L177) | [ ] | x | x | x | ? | ? | ? | cache behavior landed (common/http/cache-policy.ts); error/retry and cursor paging landed on product dialogs and selectors. CLOSED 2026-10-12: client-portal updates/files/requests are now keyset-paged endpoints on both surfaces, owned by one projection seam, and removed from both overview responses; portal-child-pages-cursor.spec.ts (24, red first) pins cursor tuple == ORDER BY tuple per collection, and portal-preview-external-parity.spec.ts (24) compares both surfaces key-for-key. OPEN R: milestones/tasks/deliverables/approvals/invoices are deterministic and PAGE_SIZE_CAP-bounded but still uncursored; no db-tier proof was run | **BLD-02D-002** every scope collection has explicit components, filters, |
-| BT-99187d2de60c | [source](../acceptance/module/02d-scope-public-page-contracts-prd.md#L179) | [ ] | x | ? | ? | ? | ? | ? | token-guessing/expiry/revocation/enumeration/rate-limit/cache now covered on board, by-token roadmap, org roadmap, forms, intake. OPEN: injection and file classes untested on every Build public surface | **BLD-02D-003** public routes pass token-guessing, expiry, revocation, |
-| BT-ff27a67ca8d0 | [source](../acceptance/module/02d-scope-public-page-contracts-prd.md#L181) | [ ] | x | x | x | ? | ? | ? | portal-preview-external-parity.spec.ts compares both services on one grant; capabilities/deliverables/approvals/invoices/requests now declared and generated. OPEN: resolveActiveGrant is not membership-bound; two date types still differ | **BLD-02D-004** portal preview and external projection are byte-for-field |
-| BT-d336d77da9f6 | [source](../acceptance/module/02d-scope-public-page-contracts-prd.md#L183) | [ ] | x | x | x | ? | ? | - | UNBLOCKED then LANDED 2026-10-12: publish/unpublish landed at build/{projectId}/settings/intake and unpublish rotates the token in the same UPDATE; the page app/(public)/intake/[projectId], POST /public/intake/{projectId} and GET /public/intake/{projectId}/form are deleted and GET /public/intake/t/{intakeToken}/form replaces the form read. Absence and presence are paired in public-token-rate-limits.spec.ts; public-surface-noindex.test.ts drops to two surfaces; intake-project-lifecycle.db.spec.ts is retargeted at the token path. I/T/R were wrongly `-` while the item was blocked. RUN 2026-10-13: intake-project-lifecycle.db.spec.ts passes 8/8 against a local Postgres at production schema head with RLS live, proving unknown, deleted and unpublished tokens answer identically. T CLOSED 2026-10-13: next.config.redirects.test.ts now pins all seven PM Workspace job moves to the organization-scope routes the PRD names, both workspace fallbacks and /build/pm-workspaces to /build/projects, with an anti-vacuity probe proving an undeclared source is not found and a filesystem assertion that the page tree is deleted rather than redirecting from a surviving page (16 tests). N/A: L - no deployment or operations proof applies to deleting a public route | **BLD-02D-005** moved and consolidated routes are deleted only after |
 | BT-0191ea53efb9 | [source](../acceptance/module/02e-project-delivery-page-contracts-prd.md#L54) | [ ] | ? | ? | ? | ? | ? | ? | — | **BLD-02E-001** every current core delivery/collaboration route appears |
 | BT-3b34812db279 | [source](../acceptance/module/02e-project-delivery-page-contracts-prd.md#L56) | [ ] | ? | ? | ? | ? | ? | ? | — | **BLD-02E-002** every page explicitly defines components, fields, |
 | BT-feff5ca13b75 | [source](../acceptance/module/02e-project-delivery-page-contracts-prd.md#L59) | [ ] | ? | ? | ? | ? | ? | ? | — | **BLD-02E-003** ticket projections reuse canonical ticket queries and |

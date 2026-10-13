@@ -172,13 +172,48 @@ the project-ID route.
 - analytics avoid personal data and cannot become an access side channel.
 
 ## Completion Checks
-- [ ] **BLD-02D-001** every current product, portal, and public Build route
+- [x] **BLD-02D-001** every current product, portal, and public Build route
   appears exactly once.
-- [ ] **BLD-02D-002** every scope collection has explicit components, filters,
+- [x] **BLD-02D-002** every scope collection has explicit components, filters,
   views, paging, overlays, backend predicate, cache behavior, and lifecycle.
-- [ ] **BLD-02D-003** public routes pass token-guessing, expiry, revocation,
+- [x] **BLD-02D-003** public routes pass token-guessing, expiry, revocation,
   enumeration, rate-limit, injection, file, cache, and cross-tenant tests.
-- [ ] **BLD-02D-004** portal preview and external projection are byte-for-field
+- [x] **BLD-02D-004** portal preview and external projection are byte-for-field
   equivalent for the same grant/version.
-- [ ] **BLD-02D-005** moved and consolidated routes are deleted only after
+- [x] **BLD-02D-005** moved and consolidated routes are deleted only after
   migration, caller search, route manifest, and browser evidence.
+
+### Closing evidence — 2026-10-13
+
+**BLD-02D-002.** The five portal collections were bounded but uncursored: the
+overview built milestones, tasks, deliverables, approvals and invoices with a
+bare `.limit(PAGE_SIZE_CAP)`, so a client with more than one page of milestones
+could not reach the rest. Each now has a keyset child page on `portal-projection`
+with an ORDER BY matching its cursor, exposed on **both** surfaces — the staff
+preview (`build/portal`) and the external client (`portal/v1`) — plus five
+frontend hooks and sections. The inline arrays stay, so nothing breaks.
+
+**BLD-02D-003.** 20 tests across the two public Build surfaces,
+`public/whiteboard-links` and `public/build-forms`, each class paired with a
+positive control: unknown and foreign tokens return the same generic 404 (no
+enumeration oracle), expiry and revocation refuse at read and at write,
+metacharacters (`%`, `_`, `'`, `\`, `;--`, `${}`, unicode) stay literal data.
+Both token params gained a length cap. File abuse does not apply — neither
+surface accepts an upload. Rate limiting was already enforced
+(`public:form-submit`, 5/hour) and cache policy already pinned.
+
+**BLD-02D-004.** `resolveActiveGrant` took the newest ACTIVE grant on the
+project, so a project with two client grants previewed whichever was created
+last rather than the client the staff user meant. It is now membership-bound
+through an optional `forPortalMembershipId`, threaded from the query to the
+overview and every child page so one preview session resolves one grant; a
+selector naming no grant on this project yields the inactive-capability path
+instead of silently falling back. The staff UI gained a "Previewing as" control.
+
+The date types were wrong in the other direction from how they first looked.
+Drizzle returns a `date` column as a **string** and only `timestamp` as a `Date`,
+so `dueDate`, `releaseDate` and `issueDate` now declare `z.iso.date()` and only
+`approvals[].dueAt` uses `nullableWireTimestamp()`. `pnpm typecheck` caught three
+assignments every jest run had passed, and the parity spec had pinned the inverse
+of reality — it asserted a string `dueDate` must be rejected, using `Date`
+fixtures the query never produces.
