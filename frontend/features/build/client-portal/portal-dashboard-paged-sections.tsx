@@ -6,6 +6,7 @@ import { CheckSquare, ClipboardList, Diamond, FileText, MessageSquare, Package, 
 import { PlusIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { EmptyState } from "@/components/ui/empty-state";
+import type { StateIllustrationPreset } from "@/components/illustrations";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
@@ -56,7 +57,7 @@ function ChildPageSection<T extends { id: number | string }>({
   title: string;
   emptyTitle: string;
   emptyDescription: string;
-  emptyPreset: string;
+  emptyPreset: StateIllustrationPreset;
   loadMoreLabel: string;
   renderRow: (item: T) => ReactNode;
 }) {

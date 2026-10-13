@@ -125,7 +125,8 @@ describe("ClientPortalManagementPage — error + loading states do not render ba
 describe("ClientPortalManagementPage — URL-backed grant filter axes (FE-86)", () => {
   function lastGrantParams() {
     const calls = mockUseProjectClientGrants.mock.calls;
-    return calls[calls.length - 1]?.[0] as Record<string, unknown> | undefined;
+    const mgmtCall = calls.find(([p]) => Object.prototype.hasOwnProperty.call(p, "grantId"));
+    return mgmtCall?.[0] as Record<string, unknown> | undefined;
   }
 
   it("sends no filter axis to the grants read when the URL carries none", () => {
