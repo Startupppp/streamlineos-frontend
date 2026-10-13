@@ -68,15 +68,15 @@ Unchanged: no code comments, no gate or ratchet weakened to pass (FE-136), no `a
 
 | Lane | Domain | Bugs | Stage |
 |---|---|---|---|
-| L1 | storage, attachments, project files, ticket page shell | B-013, B-016, B-024, B-030, B-031, B-017, NEW-27, B-020 | RUNNING |
+| L1 | storage, attachments, project files, ticket page shell | B-013, B-016, B-024, B-030, B-031, B-017, NEW-27, B-020 | CODE DONE except B-031's server 403, sent back |
 | L2 | board rank, list/table ordering, display options, search limits | B-027, B-037, B-028, B-025, B-034, B-035, B-029, B-005, B-036, B-081, B-006 | RUNNING |
 | L3 | create-issue dialog, ticket activity, comments, timer, a11y, mobile | B-001, B-003, B-004, B-008, B-019, B-060, B-023, B-038, NEW-06 | CODE DONE |
 | L4 | releases, milestones, project updates | B-039, B-065, B-044, B-045, B-048, B-049, B-059, B-066, B-085, B-053, B-068 | CODE DONE |
 | L5 | portfolios, programs, roadmap timeline | B-014, B-015, B-074, B-075, B-069, B-080 | CODE DONE |
 | L6 | project settings, budget, CSV import, create-project wizard | B-007, B-010, B-046, B-002, B-050, B-051, B-052, NEW-11, NEW-26, NEW-10, B-012, B-083 | CODE DONE |
 | L7 | epics, triage, ticket relations, parents, history, sub-issues | B-043, B-047, B-062, B-070, B-041, B-063, B-064, B-071, B-072, B-073, B-079, B-082 | RUNNING |
-| L8 | approvals, inbox | B-084, B-061, B-056, B-076, B-054, B-055, B-057, B-077, B-040 | RUNNING |
-| L9 | calendar source, navigation, dead links, org-setup invite | B-011, B-022, B-042, B-033, B-009 | RUNNING |
+| L8 | approvals, inbox | B-084, B-061, B-056, B-076, B-054, B-055, B-057, B-077, B-040 | CODE DONE — B-040 reassigned to L9 |
+| L9 | calendar source, navigation, dead links, org-setup invite | B-011, B-022, B-042, B-033, B-009, B-040 | RUNNING |
 
 ## Territory
 
@@ -115,7 +115,7 @@ final summary.
 
 | ID | Decision |
 |---|---|
-| B-061 | Owner may no longer decide another person's approval; only the assigned approver or an active delegate may. |
+| B-061 | Owner and project managers may no longer decide another person's approval — only the currently assigned approver. An admin who needs to decide must first delegate it to themselves (that path requires `build:approvals:manage`). Verified no automation or escalation path decides on a user's behalf: the only caller of `decideApproval` is the controller. |
 | B-063 | An epic may be set Done with open linked items, but the confirm dialog states the open count. |
 | B-069 | Bars stay click-only with a tooltip and a drag no longer opens the ticket — the brief's own recommended fix. Drag-to-reschedule was deliberately NOT built; the timeline has no drag support to wire up. |
 | B-073 | "Add subtask" accepts an existing ticket key as well as a new title. |
