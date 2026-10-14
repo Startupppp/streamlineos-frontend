@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { loadCheckoutScript, openCheckout } from "@/features/billing/lib/checkout-script";
 import {
   useConfirmPublicCalendarBookingPayment,
@@ -33,15 +33,20 @@ export function usePaidCalendarBooking(
 ) {
   const prepare = usePreparePublicCalendarBookingPayment(token);
   const confirm = useConfirmPublicCalendarBookingPayment(token);
-  const [idempotencyKey] = useState(paymentIdempotencyKey);
+  const prepareKeys = useRef(new Map<string, string>());
   const [flowError, setFlowError] = useState<string | null>(null);
 
   async function submit(hold: PublicCalendarBookingHold, values: PaidBookingValues) {
     setFlowError(null);
+    let key = prepareKeys.current.get(hold.id);
+    if (!key) {
+      key = paymentIdempotencyKey();
+      prepareKeys.current.set(hold.id, key);
+    }
     const payment = await prepare.mutateAsync({
       holdId: hold.id,
       sessionToken: session.sessionToken,
-      idempotencyKey,
+      idempotencyKey: key,
       expectedFencingToken: hold.fencingToken,
       expectedRuleVersion: offering.version,
       consentAccepted: values.consentAccepted,

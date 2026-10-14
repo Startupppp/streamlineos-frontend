@@ -1,9 +1,9 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { format } from "date-fns";
 import { Clock3, ShieldCheck } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useEffect, useMemo, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -43,7 +43,37 @@ function idempotencyKey(): string {
 function outcomeTitle(outcome: string): string {
   if (outcome === "confirmed") return "Your booking is confirmed";
   if (outcome === "pending") return "Your booking request was received";
+  if (outcome === "expired") return "The time reservation expired";
+  if (outcome === "cancelled") return "The booking was cancelled";
+  if (outcome === "uncertain") return "We could not confirm availability yet";
   return "Your booking needs attention";
+}
+
+function bookingTime(value: string, timeZone: string): string {
+  return new Intl.DateTimeFormat(undefined, {
+    dateStyle: "full",
+    timeStyle: "short",
+    timeZone,
+  }).format(new Date(value));
+}
+
+function slotTime(value: string, timeZone: string): string {
+  return new Intl.DateTimeFormat(undefined, {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    timeZone,
+  }).format(new Date(value));
+}
+
+function keyFor(keys: Map<string, string>, identity: string): string {
+  const existing = keys.get(identity);
+  if (existing) return existing;
+  const next = idempotencyKey();
+  keys.set(identity, next);
+  return next;
 }
 
 export function PublicCalendarBookingForm({
@@ -59,6 +89,7 @@ export function PublicCalendarBookingForm({
 }) {
   const acquireHold = useCreatePublicCalendarBookingHold(token);
   const confirmBooking = useConfirmPublicCalendarBooking(token);
+  const queryClient = useQueryClient();
   const paidBooking = usePaidCalendarBooking(token, offering, session);
   const paymentResult = paidBooking.result;
   const receipt = paymentResult?.receipt ?? confirmBooking.data;
@@ -68,8 +99,8 @@ export function PublicCalendarBookingForm({
     session.channel === "embed" &&
       (receipt?.outcome === "confirmed" || receipt?.outcome === "pending"),
   );
-  const [holdIdempotencyKey] = useState(idempotencyKey);
-  const [commitIdempotencyKey] = useState(idempotencyKey);
+  const holdKeys = useRef(new Map<string, string>());
+  const commitKeys = useRef(new Map<string, string>());
   const form = useForm<BookingFormValues>({
     resolver: zodResolver(bookingFormSchema),
     defaultValues: {
@@ -102,7 +133,7 @@ export function PublicCalendarBookingForm({
     const hold = await acquireHold.mutateAsync({
       start: values.slotStart,
       sessionToken: session.sessionToken,
-      idempotencyKey: holdIdempotencyKey,
+      idempotencyKey: keyFor(holdKeys.current, values.slotStart),
       consentAccepted: values.consentAccepted,
       honeypot: values.website,
     });
@@ -113,7 +144,7 @@ export function PublicCalendarBookingForm({
     await confirmBooking.mutateAsync({
       holdId: hold.id,
       sessionToken: session.sessionToken,
-      idempotencyKey: commitIdempotencyKey,
+      idempotencyKey: keyFor(commitKeys.current, hold.id),
       expectedFencingToken: hold.fencingToken,
       expectedRuleVersion: offering.version,
       guestName: values.guestName,
@@ -126,6 +157,16 @@ export function PublicCalendarBookingForm({
 
   function handleConsentChange(checked: boolean | "indeterminate") {
     form.setValue("consentAccepted", checked === true, { shouldValidate: true });
+  }
+
+  function chooseAnotherTime() {
+    const currentSlot = form.getValues("slotStart");
+    if (currentSlot) holdKeys.current.delete(currentSlot);
+    if (acquireHold.data?.id) commitKeys.current.delete(acquireHold.data.id);
+    acquireHold.reset();
+    confirmBooking.reset();
+    form.setValue("slotStart", "");
+    void queryClient.invalidateQueries({ queryKey: ["public", "calendar", "booking", token, "offering"] });
   }
 
   if (
@@ -146,13 +187,21 @@ export function PublicCalendarBookingForm({
           {outcomeTitle(receipt.outcome)}
         </h2>
         <p className="text-sm text-muted-foreground">
-          {format(new Date(receipt.startAt), "PPPP 'at' p")} · {offering.timeZone}
+          {bookingTime(receipt.startAt, offering.timeZone)} · {offering.timeZone}
         </p>
         {receipt.reasonCode && (
           <p className="text-sm text-muted-foreground">
             {receipt.reasonCode.replaceAll("_", " ")}
           </p>
         )}
+        {receipt.providerSyncStatus === "pending" && <p className="text-sm text-muted-foreground">Calendar synchronization is in progress.</p>}
+        {receipt.providerSyncStatus === "failed" && <p className="text-sm text-muted-foreground">Calendar synchronization needs attention. Your local booking status is shown above.</p>}
+        {receipt.providerSyncStatus === "uncertain" && <p className="text-sm text-muted-foreground">Calendar synchronization has not been confirmed yet.</p>}
+        {receipt.externalEffectsStatus === "pending" && <p className="text-sm text-muted-foreground">Invitations and other follow-ups are in progress.</p>}
+        {receipt.externalEffectsStatus === "failed" && <p className="text-sm text-muted-foreground">A booking follow-up needs attention.</p>}
+        {receipt.externalEffectsStatus === "uncertain" && <p className="text-sm text-muted-foreground">Booking follow-ups have not been confirmed yet.</p>}
+        {receipt.alternatives.length > 0 && <div className="space-y-2"><p className="text-sm font-medium">Other available times</p>{receipt.alternatives.map((alternative) => <p key={alternative.start} className="text-sm text-muted-foreground">{slotTime(alternative.start, offering.timeZone)}</p>)}</div>}
+        {["rejected", "expired", "cancelled"].includes(receipt.outcome) && <button type="button" className="text-sm font-medium text-primary underline" onClick={chooseAnotherTime}>Choose another time</button>}
       </div>
     );
   }
@@ -187,7 +236,7 @@ export function PublicCalendarBookingForm({
                   {...form.register("slotStart")}
                 />
                 <span className="text-sm font-medium text-foreground">
-                  {format(new Date(slot.start), "EEE, MMM d · p")}
+                  {slotTime(slot.start, offering.timeZone)}
                 </span>
               </label>
             ))}

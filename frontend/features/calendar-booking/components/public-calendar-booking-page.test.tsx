@@ -198,6 +198,52 @@ describe("public calendar booking page", () => {
     postMessage.mockRestore();
   });
 
+  it("uses a new idempotency identity after a rejected slot while preserving retries for each slot", async () => {
+    const secondSlot = {
+      start: "2026-10-20T11:00:00.000Z",
+      end: "2026-10-20T11:30:00.000Z",
+      localStart: "2026-10-20T16:30:00+05:30",
+      localEnd: "2026-10-20T17:00:00+05:30",
+    };
+    const secondHoldId = "7c3108af-c12f-463c-a1c1-61302db73b3a";
+    mockedGet.mockImplementation(async (path) => {
+      if (String(path).includes("/callback")) return { type: "streamline.calendar.booking.completed", signature: "signed-callback-state", facts: { outcome: "confirmed" } };
+      return { ...offering, slots: [...offering.slots, secondSlot] };
+    });
+    mockedPost.mockImplementation(async (path, input) => {
+      const value = String(path);
+      if (value.endsWith("/sessions")) return { ...session, channel: "page", targetOrigin: null };
+      if (value.endsWith("/holds")) return { ...hold, id: (input as { start: string }).start === secondSlot.start ? secondHoldId : hold.id };
+      if (value.endsWith("/confirm")) return (input as { holdId: string }).holdId === secondHoldId
+        ? receipt
+        : { ...receipt, bookingId: null, outcome: "rejected", reasonCode: "slot_unavailable", alternatives: [{ start: secondSlot.start, end: secondSlot.end }] };
+      throw new Error("Unexpected request");
+    });
+    const user = userEvent.setup();
+    renderPage();
+    await screen.findByRole("heading", { name: "Meet Northwind" });
+    await user.click(screen.getAllByRole("radio")[0]);
+    await user.type(screen.getByLabelText("Name"), "Ada Lovelace");
+    await user.type(screen.getByLabelText("Email"), "ada@example.com");
+    await user.type(screen.getByLabelText("Organization"), "Analytical Engines");
+    await user.click(screen.getByRole("checkbox"));
+    await user.click(screen.getByRole("button", { name: "Confirm booking" }));
+    expect(await screen.findByRole("heading", { name: "Your booking needs attention" })).toBeInTheDocument();
+    expect(screen.getByText("Other available times")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Choose another time" }));
+    await user.click(screen.getAllByRole("radio")[1]);
+    await user.click(screen.getByRole("button", { name: "Confirm booking" }));
+    expect(await screen.findByRole("heading", { name: "Your booking is confirmed" })).toBeInTheDocument();
+    const holdCalls = mockedPost.mock.calls.filter(([path]) => String(path).endsWith("/holds"));
+    const commitCalls = mockedPost.mock.calls.filter(([path]) => String(path).endsWith("/confirm"));
+    expect(holdCalls).toHaveLength(2);
+    expect(commitCalls).toHaveLength(2);
+    expect((holdCalls[0][1] as { idempotencyKey: string }).idempotencyKey)
+      .not.toBe((holdCalls[1][1] as { idempotencyKey: string }).idempotencyKey);
+    expect((commitCalls[0][1] as { idempotencyKey: string }).idempotencyKey)
+      .not.toBe((commitCalls[1][1] as { idempotencyKey: string }).idempotencyKey);
+  });
+
   it("confirms a paid booking only after provider success", async () => {
     const paidSession = { ...session, channel: "page", targetOrigin: null, payment: { amountMinor: 2500, currency: "INR" } };
     mockedPost.mockImplementation(async (path) => {
