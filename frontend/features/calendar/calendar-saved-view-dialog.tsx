@@ -3,6 +3,7 @@
 import type { FormEvent } from "react";
 import { FormProvider, type UseFormReturn } from "react-hook-form";
 import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -31,12 +32,13 @@ export function CalendarSavedViewDialog({
 }) {
   return (
     <Dialog open={mode !== null} onOpenChange={(open) => { if (!open) onClose(); }}>
-      <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
+      <DialogContent className="max-h-[85vh] overflow-hidden sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>{mode === "rename" ? "Rename view" : `Save ${viewMode === "my-day" ? "My Day" : viewMode} view`}</DialogTitle>
         </DialogHeader>
         <FormProvider {...form}>
-          <form onSubmit={onSubmit} className="space-y-4">
+          <ScrollArea className="max-h-[65vh]">
+          <form onSubmit={onSubmit} className="space-y-4 pr-3">
             <div className="space-y-1.5">
               <Label htmlFor="calendar-view-name">Name</Label>
               <Input id="calendar-view-name" {...form.register("name")} maxLength={100} />
@@ -74,6 +76,7 @@ export function CalendarSavedViewDialog({
             ) : null}
             <Button type="submit" disabled={isPending}>{mode === "rename" ? "Rename" : "Save view"}</Button>
           </form>
+          </ScrollArea>
         </FormProvider>
       </DialogContent>
     </Dialog>

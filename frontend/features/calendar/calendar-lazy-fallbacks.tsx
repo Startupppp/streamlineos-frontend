@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { CalendarListItem } from "@/hooks/api/calendar";
 import { formatEventDate, formatEventTimeRange } from "@/lib/date-utils";
@@ -35,7 +37,8 @@ export function CalendarAgendaPreview({
     );
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto p-3">
+    <ScrollArea className="min-h-0 flex-1">
+    <div className="flex flex-col gap-1.5 p-3">
       {upcoming.map((event) => (
         <button
           type="button"
@@ -61,6 +64,7 @@ export function CalendarAgendaPreview({
         </button>
       ))}
     </div>
+    </ScrollArea>
   );
 }
 
@@ -100,19 +104,31 @@ export function CalendarSheetFallback({ label }: { label: string }) {
   );
 }
 
+export function CalendarLoadingStatus({ label }: { label: string }) {
+  return (
+    <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+      <span className="inline-flex size-3.5 shrink-0 animate-spin motion-reduce:animate-none">
+        <Image
+          src="/logo.svg"
+          alt=""
+          width={14}
+          height={14}
+          className="size-3.5 rounded-sm"
+        />
+      </span>
+      {label}
+    </span>
+  );
+}
+
 export function CalendarListFallback({ label }: { label: string }) {
   return (
     <div
       role="status"
       aria-live="polite"
-      aria-label={label}
-      className="flex min-h-0 flex-1 flex-col gap-2 p-4"
+      className="flex min-h-0 flex-1 items-center justify-center"
     >
-      <Skeleton className="h-10 w-full" />
-      <Skeleton className="h-10 w-full" />
-      <Skeleton className="h-10 w-full" />
-      <Skeleton className="h-10 w-5/6" />
-      <Skeleton className="h-10 w-4/6" />
+      <CalendarLoadingStatus label={label} />
     </div>
   );
 }

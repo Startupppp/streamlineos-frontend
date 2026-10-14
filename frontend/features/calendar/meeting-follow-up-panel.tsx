@@ -11,6 +11,7 @@ import {
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -90,12 +91,12 @@ function ActionItemRow({
         className="h-3.5 w-3.5 text-muted-foreground shrink-0"
         aria-hidden
       />
-      <input
+      <Input
         type="text"
         value={value}
         onChange={handleChange}
         placeholder={`Action item ${index + 1}`}
-        className="flex-1 h-7 min-w-0 rounded-md border border-input bg-transparent px-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+        className="min-w-0 flex-1"
       />
       <button
         type="button"

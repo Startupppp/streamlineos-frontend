@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -111,7 +112,7 @@ export function ProtectedWorkDialog({
             {showSuggestions && suggestions.isLoading ? <p className="text-muted-foreground">Checking available times</p> : null}
             {showSuggestions && suggestions.isError ? <div className="space-y-2"><p className="text-destructive">{getErrorMessage(suggestions.error)}</p><Button variant="outline" onClick={() => { void suggestions.refetch(); }}>Retry</Button></div> : null}
             {showSuggestions && suggestions.data ? <div className="space-y-2">
-              {suggestions.data.coverageState === "partial" ? <p className="text-amber-700">Some calendar sources are incomplete. Only fully checked slots appear here.</p> : null}
+              {suggestions.data.coverageState === "partial" ? <p className="text-status-warning-ink">Some calendar sources are incomplete. Only fully checked slots appear here.</p> : null}
               {suggestions.data.slots.length === 0 ? <p>No safe time was found in the checked window.</p> : null}
               {suggestions.data.slots.map((slot) => <Button key={slot.start} variant="outline" disabled={move.isPending} className="w-full justify-start" onClick={() => { void moveTo(slot.start, slot.end); }}>Move to {new Date(slot.start).toLocaleString()}</Button>)}
               {suggestions.data.horizonTruncated ? <p className="text-muted-foreground">The search covered up to seven days or the first five available times.</p> : null}
@@ -123,7 +124,7 @@ export function ProtectedWorkDialog({
             <div className="space-y-1.5"><Label htmlFor="protected-work-priority">Priority (0 to 100)</Label><Input id="protected-work-priority" type="number" min={0} max={100} required value={priority} onChange={(event) => setPriority(Number(event.target.value))} /></div>
             <div className="space-y-1.5"><Label htmlFor="protected-work-moves">Maximum moves per day</Label><Input id="protected-work-moves" type="number" min={0} max={20} required value={maxMovesPerDay} onChange={(event) => setMaxMovesPerDay(Number(event.target.value))} /></div>
             <div className="space-y-1.5"><Label htmlFor="protected-work-load">Maximum protected minutes per day</Label><Input id="protected-work-load" type="number" min={15} max={1440} required value={maxDailyMinutes} onChange={(event) => setMaxDailyMinutes(Number(event.target.value))} /></div>
-            <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={locked} onChange={(event) => setLocked(event.target.checked)} />Lock this time block</label>
+            <label className="flex items-center gap-2 text-sm"><Checkbox checked={locked} onCheckedChange={(checked) => setLocked(checked === true)} />Lock this time block</label>
             <Button type="submit" disabled={register.isPending}>Protect time</Button>
           </form>}
       </DialogContent>

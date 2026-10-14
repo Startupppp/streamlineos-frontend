@@ -14,6 +14,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { EmptyCalendarIllustration } from "@/components/illustrations";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { RefreshCw, Unplug } from "lucide-react";
@@ -316,9 +317,9 @@ export function CalendarAccountsSheet({ open, onClose }: CalendarAccountsSheetPr
             <DrawerHeader className="px-4 py-3 border-b shrink-0">
               <DrawerTitle className="text-base">Calendar accounts</DrawerTitle>
             </DrawerHeader>
-            <div className="min-h-0 flex-1 overflow-y-auto px-4 py-2">
-              {accountsContent}
-            </div>
+            <ScrollArea className="min-h-0 flex-1">
+              <div className="px-4 py-2">{accountsContent}</div>
+            </ScrollArea>
             {connectActions}
           </DrawerContent>
         </Drawer>

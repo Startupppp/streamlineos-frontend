@@ -3,6 +3,7 @@
 import { memo, useState, useCallback } from "react";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { Loader2 } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { SearchInput } from "@/components/ui/search-input";
 import {
   Dialog,
@@ -65,7 +66,8 @@ function TicketPickerBody({
         placeholder="Search by ticket key or title…"
         aria-label="Search tickets"
       />
-      <div className="overflow-y-auto space-y-0.5 max-h-[min(40dvh,20rem)]">
+      <ScrollArea className="max-h-[min(40dvh,20rem)]">
+      <div className="space-y-0.5">
         {isLoading ? (
           <div className="flex items-center gap-2 py-2 text-xs text-muted-foreground">
             <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -81,6 +83,7 @@ function TicketPickerBody({
           ))
         )}
       </div>
+      </ScrollArea>
     </div>
   );
 }

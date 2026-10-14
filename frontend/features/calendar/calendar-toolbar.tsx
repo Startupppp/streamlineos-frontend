@@ -1,13 +1,13 @@
 "use client";
 
 import { memo, useCallback, type ReactNode } from "react";
+import { motion, useReducedMotion } from "framer-motion";
 import {
   Share2,
   Calendar as CalendarIcon,
   List,
   History,
   Link2,
-  Ticket,
   Building2,
   Handshake,
   Clock3,
@@ -59,6 +59,7 @@ const VIEW_PERIOD_LABEL: Record<View, string> = {
 };
 
 const NO_SOURCE_FAILURES: ReadonlyArray<{ key: string; label: string }> = [];
+const TOOL_ROW_EASE = [0.22, 1, 0.36, 1] as const;
 
 const VIEW_MODE_OPTIONS: ViewOption<ViewMode>[] = [
   { value: "calendar", icon: CalendarIcon, label: "Calendar View" },
@@ -69,10 +70,24 @@ const VIEW_MODE_OPTIONS: ViewOption<ViewMode>[] = [
 
 interface CalendarToolbarPrimaryActionsProps {
   activeConnectionCount: number;
-  canCreateTicket: boolean;
   onOpenAccounts: () => void;
   onOpenCreate: () => void;
-  onOpenCreateTicket: () => void;
+}
+
+function AddEventButton({ onOpenCreate }: { onOpenCreate: () => void }) {
+  return (
+    <AnimatedIconButton
+      icon={PlusIcon}
+      iconSize={14}
+      iconClassName="mr-0"
+      size="sm"
+      aria-label="Add to calendar"
+      className="gap-1 bg-primary font-semibold text-primary-foreground hover:bg-primary/90"
+      onClick={onOpenCreate}
+    >
+      <span className="hidden sm:inline">Add</span>
+    </AnimatedIconButton>
+  );
 }
 
 function ShareMenuItems() {
@@ -88,10 +103,8 @@ function ShareMenuItems() {
 export const CalendarToolbarPrimaryActions = memo(
   function CalendarToolbarPrimaryActions({
     activeConnectionCount,
-    canCreateTicket,
     onOpenAccounts,
     onOpenCreate,
-    onOpenCreateTicket,
   }: CalendarToolbarPrimaryActionsProps) {
     return (
       <div className="flex shrink-0 items-center gap-2">
@@ -99,11 +112,10 @@ export const CalendarToolbarPrimaryActions = memo(
           <DropdownMenuTrigger asChild>
             <Button
               variant="outline"
-              size="sm"
-              className="gap-1 px-3"
+              size="icon"
+              aria-label="Share"
             >
               <Share2 className="h-3.5 w-3.5" />
-              <span className="sr-only sm:not-sr-only">Share</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-40">
@@ -126,32 +138,7 @@ export const CalendarToolbarPrimaryActions = memo(
           ) : null}
         </Button>
 
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <AnimatedIconButton
-              icon={PlusIcon}
-              iconSize={14}
-              iconClassName="mr-0"
-              size="sm"
-              aria-label="Add to calendar"
-              className="gap-1 bg-primary font-semibold text-primary-foreground hover:bg-primary/90"
-            >
-              <span className="hidden sm:inline">Add</span>
-            </AnimatedIconButton>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-44">
-            <DropdownMenuItem onClick={onOpenCreate}>
-              <PlusIcon size={14} className="mr-2 text-muted-foreground" />
-              Add event
-            </DropdownMenuItem>
-            {canCreateTicket ? (
-              <DropdownMenuItem onClick={onOpenCreateTicket}>
-                <Ticket className="mr-2 h-3.5 w-3.5 text-muted-foreground" />
-                Add ticket due date
-              </DropdownMenuItem>
-            ) : null}
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <AddEventButton onOpenCreate={onOpenCreate} />
       </div>
     );
   },
@@ -166,7 +153,6 @@ interface CalendarToolbarProps {
   isHrEnabled: boolean;
   isCrmEnabled: boolean;
   isAttendanceEnabled: boolean;
-  canCreateTicket: boolean;
   sourceFailures?: ReadonlyArray<{ key: string; label: string }>;
   onPrev: () => void;
   onNext: () => void;
@@ -174,7 +160,6 @@ interface CalendarToolbarProps {
   onViewChange: (v: View) => void;
   onViewModeChange: (v: ViewMode) => void;
   onOpenCreate: () => void;
-  onOpenCreateTicket: () => void;
   onToggleHrEvents: () => void;
   onToggleCrmEvents: () => void;
   onToggleAttendanceEvents: () => void;
@@ -196,7 +181,6 @@ export const CalendarToolbar = memo(function CalendarToolbar({
   isHrEnabled,
   isCrmEnabled,
   isAttendanceEnabled,
-  canCreateTicket,
   sourceFailures,
   onPrev,
   onNext,
@@ -204,7 +188,6 @@ export const CalendarToolbar = memo(function CalendarToolbar({
   onViewChange,
   onViewModeChange,
   onOpenCreate,
-  onOpenCreateTicket,
   onToggleHrEvents,
   onToggleCrmEvents,
   onToggleAttendanceEvents,
@@ -220,127 +203,55 @@ export const CalendarToolbar = memo(function CalendarToolbar({
     (v: string) => onViewChange(v as View),
     [onViewChange],
   );
+  const reduceMotion = useReducedMotion() === true;
+  const showPeriod = viewMode === "calendar" || viewMode === "list";
+  const showCapacity = viewMode === "calendar" && Boolean(onOpenCapacity);
+  const showInsights =
+    (viewMode === "calendar" || viewMode === "my-day") && Boolean(onOpenCoach);
 
   return (
     <div className="flex w-full min-w-0 shrink-0 flex-col gap-2">
-      <div className="flex min-w-0 select-none flex-row flex-wrap items-center justify-between gap-2 border-b border-border pb-2">
-        <div className="flex min-w-0 flex-wrap items-center gap-1.5 sm:gap-2">
-          {viewMode === "history" ? (
-            <span className="px-1 text-muted-foreground">
-              Newest to oldest
-            </span>
-          ) : (
-            <>
+      <div className="flex min-w-0 select-none flex-col gap-2 border-b border-border pb-2">
+        <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
+          <ViewToggle<ViewMode>
+            value={viewMode}
+            options={VIEW_MODE_OPTIONS}
+            onChange={onViewModeChange}
+            size="sm"
+          />
+          <div className="flex min-w-0 flex-wrap items-center justify-end gap-1.5 sm:gap-2">
+            {showCapacity ? (
               <Button
                 variant="outline"
                 size="sm"
-                className="shrink-0 px-2.5 sm:px-3"
-                onClick={onToday}
-                disabled={navigationDisabled}
+                className="shrink-0 px-2.5"
+                onClick={onOpenCapacity}
               >
-                Today
+                Capacity
               </Button>
-
-              <div
-                role="group"
-                aria-label="Date navigation"
-                className="flex shrink-0 items-center"
+            ) : null}
+            {showInsights ? (
+              <Button
+                variant="outline"
+                size="sm"
+                className="shrink-0 px-2.5"
+                aria-label="My time insights"
+                onClick={onOpenCoach}
               >
-                <AnimatedIconButton
-                  icon={ChevronLeftIcon}
-                  iconSize={16}
-                  variant="outline"
-                  size="icon"
-                  className="rounded-r-none border-r-0"
-                  aria-label={`Previous ${viewMode === "my-day" ? "day" : VIEW_PERIOD_LABEL[view]}`}
-                  disabled={navigationDisabled}
-                  onClick={onPrev}
-                />
-                <AnimatedIconButton
-                  icon={ChevronRightIcon}
-                  iconSize={16}
-                  variant="outline"
-                  size="icon"
-                  className="rounded-l-none"
-                  aria-label={`Next ${viewMode === "my-day" ? "day" : VIEW_PERIOD_LABEL[view]}`}
-                  disabled={navigationDisabled}
-                  onClick={onNext}
-                />
-              </div>
-            </>
-          )}
-          {scenarioCount > 0 && onOpenScenario ? (
-            <Button
-              variant="outline"
-              size="sm"
-              className="shrink-0 px-2.5"
-              onClick={onOpenScenario}
-            >
-              What if ({scenarioCount})
-            </Button>
-          ) : null}
-          {onOpenCapacity ? (
-            <Button
-              variant="outline"
-              size="sm"
-              className="shrink-0 px-2.5"
-              onClick={onOpenCapacity}
-            >
-              Capacity
-            </Button>
-          ) : null}
-          {onOpenCoach ? (
-            <Button
-              variant="outline"
-              size="sm"
-              className="shrink-0 px-2.5"
-              aria-label="My time insights"
-              onClick={onOpenCoach}
-            >
-              <span className="sm:hidden">Insights</span>
-              <span className="hidden sm:inline">My time insights</span>
-            </Button>
-          ) : null}
-          {filters}
-        </div>
-
-        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-          {viewMode !== "history" && viewMode !== "my-day" ? (
-            <Select value={view} onValueChange={handleViewChange}>
-              <SelectTrigger
-                aria-label="Calendar view"
-                className={cn(
-                  "w-fit min-w-[4.5rem]",
-                  FILTER_SELECT_TRIGGER,
-                )}
-              >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
-                <SelectItem value="day">
-                  Day
-                </SelectItem>
-                <SelectItem value="week">
-                  Week
-                </SelectItem>
-                <SelectItem value="month">
-                  Month
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          ) : null}
-
+                <span className="sm:hidden">Insights</span>
+                <span className="hidden sm:inline">My time insights</span>
+              </Button>
+            ) : null}
           <div className="hidden items-center gap-1.5 lg:flex sm:gap-2">
             {!hidePrimaryActions ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="outline"
-                    size="sm"
-                    className="gap-1 px-3"
+                    size="icon"
+                    aria-label="Share"
                   >
                     <Share2 className="h-3.5 w-3.5" />
-                    <span className="sr-only xl:not-sr-only">Share</span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-40">
@@ -449,46 +360,94 @@ export const CalendarToolbar = memo(function CalendarToolbar({
             </DropdownMenu>
           </div>
 
-          {!hidePrimaryActions ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <AnimatedIconButton
-                  icon={PlusIcon}
-                  iconSize={14}
-                  iconClassName="mr-0"
-                  size="sm"
-                  aria-label="Add to calendar"
-                  className="gap-1 bg-primary font-semibold text-primary-foreground hover:bg-primary/90"
-                >
-                  <span className="hidden sm:inline">Add</span>
-                </AnimatedIconButton>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-44">
-                <DropdownMenuItem onClick={onOpenCreate}>
-                  <PlusIcon size={14} className="mr-2 text-muted-foreground" />
-                  Add event
-                </DropdownMenuItem>
-                {canCreateTicket ? (
-                  <DropdownMenuItem
-                    onClick={onOpenCreateTicket}
-                  >
-                    <Ticket className="mr-2 h-3.5 w-3.5 text-muted-foreground" />
-                    Add ticket due date
-                  </DropdownMenuItem>
-                ) : null}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ) : null}
-
-          <div className="mx-0.5 hidden h-4 border-l border-border sm:block" />
-
-          <ViewToggle<ViewMode>
-            value={viewMode}
-            options={VIEW_MODE_OPTIONS}
-            onChange={onViewModeChange}
-            size="sm"
-          />
+          {!hidePrimaryActions ? <AddEventButton onOpenCreate={onOpenCreate} /> : null}
+          </div>
         </div>
+
+        <motion.div
+          key={viewMode}
+          className="flex min-h-9 min-w-0 flex-wrap items-center gap-1.5 sm:gap-2"
+          initial={reduceMotion ? false : { opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={
+            reduceMotion
+              ? { duration: 0 }
+              : { duration: 0.2, ease: TOOL_ROW_EASE }
+          }
+        >
+          {viewMode === "history" ? (
+            <span className="px-1 text-sm text-muted-foreground">
+              Newest to oldest
+            </span>
+          ) : (
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                className="shrink-0 px-2.5 sm:px-3"
+                onClick={onToday}
+                disabled={navigationDisabled}
+              >
+                Today
+              </Button>
+              <div
+                role="group"
+                aria-label="Date navigation"
+                className="flex shrink-0 items-center"
+              >
+                <AnimatedIconButton
+                  icon={ChevronLeftIcon}
+                  iconSize={16}
+                  variant="outline"
+                  size="icon"
+                  className="rounded-r-none border-r-0"
+                  aria-label={`Previous ${viewMode === "my-day" ? "day" : VIEW_PERIOD_LABEL[view]}`}
+                  disabled={navigationDisabled}
+                  onClick={onPrev}
+                />
+                <AnimatedIconButton
+                  icon={ChevronRightIcon}
+                  iconSize={16}
+                  variant="outline"
+                  size="icon"
+                  className="rounded-l-none"
+                  aria-label={`Next ${viewMode === "my-day" ? "day" : VIEW_PERIOD_LABEL[view]}`}
+                  disabled={navigationDisabled}
+                  onClick={onNext}
+                />
+              </div>
+              {showPeriod ? (
+                <Select value={view} onValueChange={handleViewChange}>
+                  <SelectTrigger
+                    aria-label="Calendar view"
+                    className={cn(
+                      "w-fit min-w-[4.5rem]",
+                      FILTER_SELECT_TRIGGER,
+                    )}
+                  >
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
+                    <SelectItem value="day">Day</SelectItem>
+                    <SelectItem value="week">Week</SelectItem>
+                    <SelectItem value="month">Month</SelectItem>
+                  </SelectContent>
+                </Select>
+              ) : null}
+            </>
+          )}
+          {viewMode === "calendar" && scenarioCount > 0 && onOpenScenario ? (
+            <Button
+              variant="outline"
+              size="sm"
+              className="shrink-0 px-2.5"
+              onClick={onOpenScenario}
+            >
+              What if ({scenarioCount})
+            </Button>
+          ) : null}
+          {filters}
+        </motion.div>
       </div>
 
       <SourceFailureBanner failures={sourceFailures ?? NO_SOURCE_FAILURES} />

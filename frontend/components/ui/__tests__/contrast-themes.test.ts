@@ -15,7 +15,7 @@ import { WCAG_AA_NORMAL, WCAG_NON_TEXT } from "@/test-utils/globals-css-tokens";
 
 /**
  * `contrast-tokens.test.ts` and `contrast-status-tokens.test.ts` read
- * `globals.css` — the ONE palette a user sees only until they pick a theme. `themes.css` carries seventeen more, each of
+ * `globals.css` — the ONE palette a user sees only until they pick a theme. `themes.css` carries eighteen more, each of
  * which replaces `--primary` and `--ring` outright and then rewrites every
  * neutral surface beneath them with `color-mix`. Judging the default and
  * calling the product accessible measures the palette that has no defect in
@@ -43,9 +43,9 @@ function ratioBetween(
 }
 
 describe("the theme census sees every palette a user can select", () => {
-  it("loads all seventeen selectable themes in both modes", () => {
-    expect(new Set(palettes.map((palette) => palette.id)).size).toBe(17);
-    expect(palettes).toHaveLength(34);
+  it("loads all eighteen selectable themes in both modes", () => {
+    expect(new Set(palettes.map((palette) => palette.id)).size).toBe(18);
+    expect(palettes).toHaveLength(36);
   });
 
   it("keeps themed canvas and cards on the shared surface ladder", () => {

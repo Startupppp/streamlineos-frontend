@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { BookmarkPlus } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -164,8 +165,9 @@ export function CalendarSavedViewControls({
       ) : null}
       {query.isError ? <div role="alert" className="text-xs text-destructive">Saved views are unavailable. <Button type="button" size="sm" variant="ghost" onClick={() => { void query.refetch(); }}>Retry</Button></div> : null}
       {canWrite ? (
-        <Button type="button" size="sm" variant="outline" disabled={query.isError} onClick={openCreate}>
-          Save view
+        <Button type="button" size="sm" variant="outline" disabled={query.isError} onClick={openCreate} aria-label="Save view" className="px-2.5 sm:px-3">
+          <BookmarkPlus className="size-4 sm:hidden" aria-hidden />
+          <span className="sr-only sm:not-sr-only">Save view</span>
         </Button>
       ) : null}
       {canWrite &&

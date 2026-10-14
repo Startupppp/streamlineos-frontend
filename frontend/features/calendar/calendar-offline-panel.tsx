@@ -7,6 +7,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { usePermissionGate } from "@/hooks/api/access";
 import { useHydrated } from "@/hooks/common/use-hydrated";
 import {
@@ -306,35 +307,26 @@ export function CalendarOfflinePanel({
                   and record IDs stay hidden offline. The current occurrence and
                   permission will be checked again after reconnecting.
                 </p>
-                <select
-                  aria-label="Previously loaded event"
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                  value={editOccurrenceId}
-                  onChange={(change) => {
-                    const next = editable.find(
-                      (event) => event.occurrenceId === change.target.value,
-                    );
-                    setEditOccurrenceId(change.target.value);
-                    setEditStart(
-                      next
-                        ? format(new Date(next.start), "yyyy-MM-dd'T'HH:mm")
-                        : "",
-                    );
-                    setEditEnd(
-                      next
-                        ? format(new Date(next.end), "yyyy-MM-dd'T'HH:mm")
-                        : "",
-                    );
+                <Select
+                  value={editOccurrenceId || undefined}
+                  onValueChange={(value) => {
+                    const next = editable.find((event) => event.occurrenceId === value);
+                    setEditOccurrenceId(value);
+                    setEditStart(next ? format(new Date(next.start), "yyyy-MM-dd'T'HH:mm") : "");
+                    setEditEnd(next ? format(new Date(next.end), "yyyy-MM-dd'T'HH:mm") : "");
                   }}
                 >
-                  <option value="">Select a busy window</option>
-                  {editable.map((event, index) => (
-                    <option key={event.occurrenceId} value={event.occurrenceId}>
-                      Calendar event {index + 1} ·{" "}
-                      {new Date(event.start).toLocaleString()}
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger aria-label="Previously loaded event" className="w-full">
+                    <SelectValue placeholder="Select a busy window" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {editable.map((event, index) => (
+                      <SelectItem key={event.occurrenceId} value={event.occurrenceId}>
+                        Calendar event {index + 1} · {new Date(event.start).toLocaleString()}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <div className="grid grid-cols-2 gap-2">
                   <div className="space-y-1">
                     <Label htmlFor="offline-edit-start">New start</Label>

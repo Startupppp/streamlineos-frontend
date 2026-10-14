@@ -36,10 +36,8 @@ describe("CalendarToolbarPrimaryActions", () => {
     render(
       <CalendarToolbarPrimaryActions
         activeConnectionCount={1}
-        canCreateTicket
         onOpenAccounts={onOpenAccounts}
         onOpenCreate={jest.fn()}
-        onOpenCreateTicket={jest.fn()}
       />,
     );
 
@@ -64,7 +62,6 @@ function renderToolbar(
     isHrEnabled?: boolean;
     isCrmEnabled?: boolean;
     isAttendanceEnabled?: boolean;
-    canCreateTicket?: boolean;
   } = {},
 ) {
   render(
@@ -77,7 +74,6 @@ function renderToolbar(
       isHrEnabled={overrides.isHrEnabled ?? true}
       isCrmEnabled={overrides.isCrmEnabled ?? true}
       isAttendanceEnabled={overrides.isAttendanceEnabled ?? true}
-      canCreateTicket={overrides.canCreateTicket ?? true}
       sourceFailures={sourceFailures}
       onPrev={jest.fn()}
       onNext={jest.fn()}
@@ -85,7 +81,6 @@ function renderToolbar(
       onViewChange={jest.fn()}
       onViewModeChange={jest.fn()}
       onOpenCreate={jest.fn()}
-      onOpenCreateTicket={jest.fn()}
       onToggleHrEvents={jest.fn()}
       onToggleCrmEvents={jest.fn()}
       onToggleAttendanceEvents={jest.fn()}
@@ -238,41 +233,84 @@ describe("B-011 — server-driven toggle visibility", () => {
   });
 });
 
-describe("CalendarToolbarPrimaryActions — canCreateTicket gate", () => {
-  it("shows Add ticket due date when canCreateTicket is true", async () => {
+describe("CalendarToolbar — controls follow the active tab", () => {
+  function renderMode(viewMode: "calendar" | "list" | "history" | "my-day") {
     render(
-      <CalendarToolbarPrimaryActions
-        activeConnectionCount={0}
-        canCreateTicket
-        onOpenAccounts={jest.fn()}
+      <CalendarToolbar
+        view="week"
+        viewMode={viewMode}
+        hrEventsVisible
+        crmEventsVisible
+        attendanceEventsVisible={false}
+        isHrEnabled
+        isCrmEnabled
+        isAttendanceEnabled
+        onPrev={jest.fn()}
+        onNext={jest.fn()}
+        onToday={jest.fn()}
+        onViewChange={jest.fn()}
+        onViewModeChange={jest.fn()}
         onOpenCreate={jest.fn()}
-        onOpenCreateTicket={jest.fn()}
+        onToggleHrEvents={jest.fn()}
+        onToggleCrmEvents={jest.fn()}
+        onToggleAttendanceEvents={jest.fn()}
+        onOpenCapacity={jest.fn()}
+        onOpenCoach={jest.fn()}
+        hidePrimaryActions
       />,
     );
+  }
 
-    const trigger = screen.getByRole("button", { name: "Add to calendar" });
-    fireEvent.keyDown(trigger, { key: "Enter" });
-    await waitFor(() => {
-      expect(screen.getByRole("menuitem", { name: /Add ticket due date/i })).toBeInTheDocument();
-    });
+  it("keeps planning tools and the period on the calendar tab", () => {
+    renderMode("calendar");
+    expect(screen.getByRole("button", { name: "Capacity" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "My time insights" })).toBeInTheDocument();
+    expect(screen.getByRole("combobox", { name: "Calendar view" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Today" })).toBeInTheDocument();
   });
 
-  it("hides Add ticket due date when canCreateTicket is false", async () => {
+  it("keeps the period on the list tab and hides planning tools", () => {
+    renderMode("list");
+    expect(screen.queryByRole("button", { name: "Capacity" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "My time insights" })).toBeNull();
+    expect(screen.getByRole("combobox", { name: "Calendar view" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Today" })).toBeInTheDocument();
+  });
+
+  it("replaces date controls with the history order", () => {
+    renderMode("history");
+    expect(screen.getByText("Newest to oldest")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Today" })).toBeNull();
+    expect(screen.queryByRole("combobox", { name: "Calendar view" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Capacity" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "My time insights" })).toBeNull();
+  });
+
+  it("keeps day stepping and insights on My Day", () => {
+    renderMode("my-day");
+    expect(screen.getByRole("button", { name: "Today" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /previous day/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "My time insights" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Capacity" })).toBeNull();
+    expect(screen.queryByRole("combobox", { name: "Calendar view" })).toBeNull();
+  });
+});
+
+describe("CalendarToolbarPrimaryActions — Add opens an event", () => {
+  it("creates a calendar event directly and does not offer a ticket", () => {
+    const onOpenCreate = jest.fn();
     render(
       <CalendarToolbarPrimaryActions
         activeConnectionCount={0}
-        canCreateTicket={false}
         onOpenAccounts={jest.fn()}
-        onOpenCreate={jest.fn()}
-        onOpenCreateTicket={jest.fn()}
+        onOpenCreate={onOpenCreate}
       />,
     );
 
-    const trigger = screen.getByRole("button", { name: "Add to calendar" });
-    fireEvent.keyDown(trigger, { key: "Enter" });
-    await waitFor(() => {
-      expect(screen.getByRole("menuitem", { name: /Add event/i })).toBeInTheDocument();
-    });
+    fireEvent.click(screen.getByRole("button", { name: "Add to calendar" }));
+
+    expect(onOpenCreate).toHaveBeenCalledTimes(1);
     expect(screen.queryByRole("menuitem", { name: /Add ticket due date/i })).toBeNull();
+    expect(screen.queryByRole("menuitem", { name: /Add event/i })).toBeNull();
   });
 });

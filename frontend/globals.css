@@ -56,6 +56,9 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  /* Surface roles used by shared controls and nested work items. */
+  --color-surface-inset: var(--muted);
+  --color-surface-raised: var(--popover);
   /* Below `sm`, for controls too small for a 6px corner: a checkbox reads as a
      circle at 6px, and a heatmap cell loses its grid. Added because both were
      already being written by hand. */
@@ -104,9 +107,9 @@
   /* Harbor: a cool canvas, crisp work surfaces, and blue action hierarchy. */
   --background: #f4f7fb;
   --foreground: #172638;
-  --card: oklch(1 0 0);
+  --card: #ffffff;
   --card-foreground: #172638;
-  --popover: oklch(1 0 0);
+  --popover: #ffffff;
   --popover-foreground: #172638;
   --muted: #edf2f7;
   --muted-foreground: #526479;
@@ -221,9 +224,9 @@ html.app-neutral {
   --app-font-mono: var(--font-plex-mono, "IBM Plex Mono"), "IBM Plex Mono";
   --background: #f4f7fb;
   --foreground: #172638;
-  --card: oklch(1 0 0);
+  --card: #ffffff;
   --card-foreground: #172638;
-  --popover: oklch(1 0 0);
+  --popover: #ffffff;
   --popover-foreground: #172638;
   --muted: #edf2f7;
   --muted-foreground: #526479;
@@ -306,6 +309,13 @@ html.app-neutral.dark:not([class*="theme-"]) {
   );
   --gold: #86b9f5;
   --blue: #9ac8fa;
+}
+
+/* A metric inside a panel needs its own plane; the same card fill disappears
+   against its parent in dark mode. Featured metrics retain their action color. */
+:where([data-slot="card"], [data-slot="content-fill-panel"])
+  [data-slot="stat-card"]:not([data-featured="true"]) {
+  background: var(--muted);
 }
 
 /* â”€â”€â”€ Shadow override for dark mode â€” light glass-highlight instead of dark drop â”€â”€â”€ */
@@ -1203,8 +1213,19 @@ button.goal-everything-chip[aria-checked="true"]::before {
 .calendar-container .rbc-event-label,
 .calendar-container .rbc-event-content {
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: 400;
   line-height: 1.25;
+}
+
+.calendar-virtual-scroll {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.calendar-virtual-scroll::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 .calendar-container .rbc-event {

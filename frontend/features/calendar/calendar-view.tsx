@@ -13,19 +13,9 @@ import {
   differenceInCalendarDays,
   format,
 } from "date-fns";
-import { Plus, Ticket } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { toast } from "sonner";
-import { useCan } from "@/hooks/api/access";
 import {
   useCalendarEvents,
   useCalendarHistory,
@@ -37,6 +27,7 @@ import type { CalendarSearchResponse } from "@/hooks/api/calendar-types";
 import {
   CalendarAgendaPreview,
   CalendarListFallback,
+  CalendarLoadingStatus,
   CalendarOverlayFallback,
   CalendarSheetFallback,
 } from "./calendar-lazy-fallbacks";
@@ -115,17 +106,6 @@ const EventCreateDialog = dynamic(
   {
     ssr: false,
     loading: () => <CalendarOverlayFallback label="Loading event form" />,
-  },
-);
-
-const CreateTicketFromCalendarDialog = dynamic(
-  () =>
-    import("./create-ticket-from-calendar-dialog").then((m) => ({
-      default: m.CreateTicketFromCalendarDialog,
-    })),
-  {
-    ssr: false,
-    loading: () => <CalendarOverlayFallback label="Loading ticket form" />,
   },
 );
 
@@ -259,18 +239,11 @@ export function CalendarView() {
     attendanceEventsVisible,
     setSourceVisibility,
     setHistoryPages,
-    isSlotChoiceOpen,
-    setIsSlotChoiceOpen,
-    isCreateTicketOpen,
-    createTicketSlot,
     accountsOpen,
     setAccountsOpen,
     isCalendarOverlayOpen,
     guardedSelectSlot,
-    handleSlotChooseEvent,
-    handleSlotChooseTicket,
     handleOpenCreate,
-    handleOpenCreateTicket,
     handleSelectEvent,
     handlePrev,
     handleNext,
@@ -278,7 +251,6 @@ export function CalendarView() {
     handleCloseSelected,
     handleOpenAccounts,
     handleCloseAccounts,
-    handleCloseCreateTicket,
   } = useCalendarViewState();
 
   const { data: calendarSources } = useCalendarSources();
@@ -291,8 +263,6 @@ export function CalendarView() {
   const isAttendanceEnabled =
     calendarSources !== undefined &&
     calendarSources.some((s) => s.key === "hr-attendance");
-  const canCreateTicket = useCan("build:tickets:create");
-
   useEffect(() => {
     const interval = window.setInterval(() => setClockNow(new Date()), 60_000);
     return () => window.clearInterval(interval);
@@ -853,10 +823,8 @@ export function CalendarView() {
       actions={
         <CalendarToolbarPrimaryActions
           activeConnectionCount={activeConnectionCount}
-          canCreateTicket={canCreateTicket}
           onOpenAccounts={handleOpenAccounts}
           onOpenCreate={handleOpenCreate}
-          onOpenCreateTicket={handleOpenCreateTicket}
         />
       }
     >
@@ -931,7 +899,6 @@ export function CalendarView() {
           isHrEnabled={isHrEnabled}
           isCrmEnabled={isCrmEnabled}
           isAttendanceEnabled={isAttendanceEnabled}
-          canCreateTicket={canCreateTicket}
           sourceFailures={displayedSourceFailures}
           onPrev={handlePrev}
           onNext={handleNext}
@@ -939,7 +906,6 @@ export function CalendarView() {
           onViewChange={handleGridViewChange}
           onViewModeChange={setViewMode}
           onOpenCreate={handleOpenCreate}
-          onOpenCreateTicket={handleOpenCreateTicket}
           onToggleHrEvents={toggleHrEvents}
           onToggleCrmEvents={toggleCrmEvents}
           onToggleAttendanceEvents={toggleAttendanceEvents}
@@ -967,7 +933,7 @@ export function CalendarView() {
             <div
               ref={calContainerRef}
               className={cn(
-                "calendar-container flex min-h-0 flex-1 flex-col rounded-lg border border-border bg-card",
+                "calendar-container relative flex min-h-0 flex-1 flex-col rounded-xl border border-border bg-card",
                 viewMode === "calendar" && view === "month"
                   ? "overflow-y-scroll"
                   : "overflow-hidden",
@@ -1179,8 +1145,22 @@ export function CalendarView() {
                     className="h-px w-full"
                   />
                   {myDayQuery.isFetchingNextPage ? (
-                    <span role="status">Loading additional results…</span>
+                    <span role="status">
+                      <CalendarLoadingStatus label="Loading additional results…" />
+                    </span>
                   ) : null}
+                </div>
+              ) : null}
+              {regularSourcesActive &&
+              !surfaceIsLoading &&
+              (externalIsLoading || attendanceCoverage.isLoading) ? (
+                <div
+                  className="pointer-events-none absolute inset-x-0 bottom-2 z-10 flex justify-center"
+                  role="status"
+                  aria-live="polite"
+                  aria-busy="true"
+                >
+                  <CalendarLoadingStatus label="Loading calendar sources…" />
                 </div>
               ) : null}
             </div>
@@ -1246,22 +1226,6 @@ export function CalendarView() {
             onRetry={handleRetryAttendance}
             className="shrink-0 border border-border rounded-xl"
           />
-        )}
-
-        {(((viewMode === "history" || regularSourcesActive) &&
-          surfaceIsLoading) ||
-          (regularSourcesActive &&
-            (externalIsLoading || attendanceCoverage.isLoading))) && (
-          <div
-            className="flex shrink-0 justify-center"
-            role="status"
-            aria-live="polite"
-            aria-busy="true"
-          >
-            <p className="max-w-sm rounded-md border border-border bg-card px-4 py-2 text-center text-sm font-medium text-foreground shadow-panel">
-              Loading calendar sources…
-            </p>
-          </div>
         )}
 
         {(viewMode === "history"
@@ -1354,48 +1318,6 @@ export function CalendarView() {
             defaultSlot={createSlot}
           />
         )}
-
-        {isCreateTicketOpen && (
-          <CreateTicketFromCalendarDialog
-            open
-            onClose={handleCloseCreateTicket}
-            defaultSlot={createTicketSlot}
-          />
-        )}
-
-        <Dialog open={isSlotChoiceOpen} onOpenChange={setIsSlotChoiceOpen}>
-          <DialogContent
-            className="max-w-none p-4 md:max-w-xs"
-            showCloseButton={false}
-          >
-            <DialogHeader>
-              <DialogTitle className="text-sm font-semibold">
-                What would you like to create?
-              </DialogTitle>
-              <DialogDescription className="text-xs text-muted-foreground">
-                Choose the type of item to add for the selected time.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="flex flex-col gap-1.5">
-              <Button
-                variant="outline"
-                className="h-8 justify-start gap-2 text-xs"
-                onClick={handleSlotChooseEvent}
-              >
-                <Plus className="h-3.5 w-3.5 text-muted-foreground" />
-                Calendar event
-              </Button>
-              <Button
-                variant="outline"
-                className="h-8 justify-start gap-2 text-xs"
-                onClick={handleSlotChooseTicket}
-              >
-                <Ticket className="h-3.5 w-3.5 text-muted-foreground" />
-                Ticket due date
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
 
         {selectedEvent !== null && (
           <EventDetailSheet

@@ -2,12 +2,14 @@
 
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { Switch } from "@/components/ui/switch";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useCalendarCoach,
@@ -43,7 +45,8 @@ export function CalendarCoachSheet({ onClose }: { onClose: () => void }) {
         <SheetHeader className="border-b px-5 py-4">
           <SheetTitle>My time insights</SheetTitle>
         </SheetHeader>
-        <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-5 py-4">
+        <ScrollArea className="min-h-0 flex-1">
+        <div className="space-y-5 px-5 py-4">
           <p className="text-sm text-muted-foreground">
             Private, optional schedule guidance for you. These totals are not an
             employee score.
@@ -70,22 +73,21 @@ export function CalendarCoachSheet({ onClose }: { onClose: () => void }) {
           ) : null}
           {insight ? (
             <>
-              <div className="flex items-center justify-between gap-3 rounded-md border p-3">
+              <div className="flex items-center justify-between gap-3 rounded-lg bg-muted p-3 dark:border dark:border-background">
                 <div>
-                  <p className="font-medium">Personal insights</p>
+                  <p className="text-sm font-medium">Personal insights</p>
                   <p className="text-xs text-muted-foreground">
                     Only you can open this view.
                   </p>
                 </div>
-                <Button
-                  variant={insight.consent.enabled ? "outline" : "default"}
+                <Switch
+                  checked={insight.consent.enabled}
                   disabled={update.isPending}
-                  onClick={() => {
-                    void changeConsent(!insight.consent.enabled);
+                  aria-label={insight.consent.enabled ? "Turn off personal insights" : "Turn on personal insights"}
+                  onCheckedChange={(checked) => {
+                    void changeConsent(checked);
                   }}
-                >
-                  {insight.consent.enabled ? "Turn off" : "Turn on"}
-                </Button>
+                />
               </div>
               {insight.consent.enabled ? (
                 <>
@@ -96,54 +98,19 @@ export function CalendarCoachSheet({ onClose }: { onClose: () => void }) {
                       : "Partial or unavailable source coverage"}
                   </p>
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="rounded-md border p-3">
-                      <p className="text-xs text-muted-foreground">
-                        Scheduled meeting time
-                      </p>
-                      <p className="text-lg font-semibold">
-                        {insight.meetingMinutes === null
-                          ? "Unavailable"
-                          : `${insight.coverage === "complete" ? "" : "At least "}${Math.round(insight.meetingMinutes / 60)} h`}
-                      </p>
-                    </div>
-                    <div className="rounded-md border p-3">
-                      <p className="text-xs text-muted-foreground">
-                        Protected work time
-                      </p>
-                      <p className="text-lg font-semibold">
-                        {insight.protectedWorkMinutes === null
-                          ? "Unavailable"
-                          : `${insight.coverage === "complete" ? "" : "At least "}${Math.round(insight.protectedWorkMinutes / 60)} h`}
-                      </p>
-                    </div>
-                    <div className="rounded-md border p-3">
-                      <p className="text-xs text-muted-foreground">
-                        Calendar no-shows
-                      </p>
-                      <p className="text-lg font-semibold">
-                        {insight.missedCommitments === null
-                          ? "Unavailable"
-                          : insight.missedCommitments}
-                      </p>
-                    </div>
-                    <div className="rounded-md border p-3">
-                      <p className="text-xs text-muted-foreground">
-                        Repeated reschedules
-                      </p>
-                      <p className="text-lg font-semibold">
-                        {insight.repeatedReschedules === null
-                          ? "Unavailable"
-                          : insight.repeatedReschedules}
-                      </p>
-                    </div>
-                    <div className="rounded-md border p-3">
-                      <p className="text-xs text-muted-foreground">Currently overdue Tasks</p>
-                      <p className="text-lg font-semibold">{insight.overdueTasks === null ? "Unavailable" : insight.overdueTasks}</p>
-                    </div>
-                    <div className="rounded-md border p-3">
-                      <p className="text-xs text-muted-foreground">Currently overdue Build tickets</p>
-                      <p className="text-lg font-semibold">{insight.overdueBuildTickets === null ? "Unavailable" : insight.overdueBuildTickets}</p>
-                    </div>
+                    {[
+                      ["Scheduled meeting time", insight.meetingMinutes === null ? "Unavailable" : `${insight.coverage === "complete" ? "" : "At least "}${Math.round(insight.meetingMinutes / 60)} h`],
+                      ["Protected work time", insight.protectedWorkMinutes === null ? "Unavailable" : `${insight.coverage === "complete" ? "" : "At least "}${Math.round(insight.protectedWorkMinutes / 60)} h`],
+                      ["Calendar no-shows", insight.missedCommitments === null ? "Unavailable" : String(insight.missedCommitments)],
+                      ["Repeated reschedules", insight.repeatedReschedules === null ? "Unavailable" : String(insight.repeatedReschedules)],
+                      ["Currently overdue Tasks", insight.overdueTasks === null ? "Unavailable" : String(insight.overdueTasks)],
+                      ["Currently overdue Build tickets", insight.overdueBuildTickets === null ? "Unavailable" : String(insight.overdueBuildTickets)],
+                    ].map(([label, value]) => (
+                      <div key={label} className="rounded-lg bg-muted p-3 dark:border dark:border-background">
+                        <p className="text-xs text-muted-foreground">{label}</p>
+                        <p className="text-lg font-semibold">{value}</p>
+                      </div>
+                    ))}
                   </div>
                   <div className="space-y-2">
                     <h3 className="text-sm font-semibold">
@@ -155,7 +122,7 @@ export function CalendarCoachSheet({ onClose }: { onClose: () => void }) {
                       </p>
                     ) : (
                       insight.recommendations.map((item) => (
-                        <div key={item.code} className="rounded-md border p-3">
+                        <div key={item.code} className="rounded-lg bg-muted p-3 dark:border dark:border-background">
                           <p className="text-sm font-medium">{item.proposal}</p>
                           <p className="text-xs text-muted-foreground">
                             {item.evidence}
@@ -177,6 +144,7 @@ export function CalendarCoachSheet({ onClose }: { onClose: () => void }) {
             </>
           ) : null}
         </div>
+        </ScrollArea>
       </SheetContent>
     </Sheet>
   );

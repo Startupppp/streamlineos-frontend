@@ -12,7 +12,7 @@ export const PAGE_CHROME_BOTTOM = "pb-0";
 export const STICKY_FOOTER_ABOVE_MOBILE_NAV = "sticky bottom-0";
 
 export const FILTER_SELECT_TRIGGER =
-  "min-w-0 border-input bg-card text-foreground font-normal data-[placeholder]:font-normal *:data-[slot=select-value]:font-normal [&_svg]:text-muted-foreground [&_[data-slot=select-value]]:min-w-0 [&_[data-slot=select-value]]:truncate";
+  "min-w-0 border-input bg-background text-foreground font-normal data-[placeholder]:font-normal *:data-[slot=select-value]:font-normal [&_svg]:text-muted-foreground [&_[data-slot=select-value]]:min-w-0 [&_[data-slot=select-value]]:truncate";
 
 export const FILTER_TOOLBAR_ROW =
   "flex w-full min-w-0 max-w-full flex-nowrap items-center gap-2 overflow-x-auto overscroll-x-contain scrollbar-hide touch-pan-x [&>[data-slot=search-input]]:min-w-[12rem] [&>[data-slot=search-input]]:flex-1 [&>[data-slot=search-input]]:basis-[12rem] [&>[data-slot=select-trigger]]:shrink-0 [&>*:not([data-slot=search-input])]:shrink-0";
@@ -39,6 +39,7 @@ export function ContentFillPanel({
 }: ContentFillPanelProps) {
   return (
     <div
+      data-slot="content-fill-panel"
       className={cn(
         CONTENT_PANEL_SOLID,
         CONTENT_FILL_PANEL,

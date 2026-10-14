@@ -5,6 +5,14 @@ import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Sheet,
   SheetContent,
@@ -97,7 +105,8 @@ export function CalendarCapacitySheet({ onClose }: { onClose: () => void }) {
         <SheetHeader className="border-b px-5 py-4">
           <SheetTitle>Capacity</SheetTitle>
         </SheetHeader>
-        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-4">
+        <ScrollArea className="min-h-0 flex-1">
+        <div className="space-y-4 px-5 py-4">
           <p className="text-sm text-muted-foreground">
             Inspect confirmed allocations, tentative holds, and maintenance
             before choosing a time. Capacity is read only here.
@@ -140,19 +149,21 @@ export function CalendarCapacitySheet({ onClose }: { onClose: () => void }) {
           {mode === "resources" ? (
             <div className="space-y-1">
               <Label htmlFor="capacity-resource">Resource</Label>
-              <select
-                id="capacity-resource"
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                value={selectedId}
-                onChange={(event) => setResourceId(Number(event.target.value))}
+              <Select
+                value={selectedId ? String(selectedId) : undefined}
+                onValueChange={(value) => setResourceId(Number(value))}
               >
-                {resources.data?.map((resource) => (
-                  <option key={resource.id} value={resource.id}>
-                    {resource.name} · {resource.kind} ·{" "}
-                    {resource.location ?? "No location"}
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger id="capacity-resource" className="w-full">
+                  <SelectValue placeholder="Select a resource" />
+                </SelectTrigger>
+                <SelectContent>
+                  {resources.data?.map((resource) => (
+                    <SelectItem key={resource.id} value={String(resource.id)}>
+                      {resource.name} · {resource.kind} · {resource.location ?? "No location"}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           ) : null}
           {mode === "team" ? (
@@ -164,27 +175,27 @@ export function CalendarCapacitySheet({ onClose }: { onClose: () => void }) {
                 onChange={(event) => setMemberSearch(event.target.value)}
                 placeholder="Search people"
               />
-              <select
-                aria-label="Select person"
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                value={membershipId}
-                onChange={(event) =>
-                  setMembershipId(Number(event.target.value))
-                }
+              <Select
+                value={membershipId ? String(membershipId) : undefined}
+                onValueChange={(value) => setMembershipId(Number(value))}
               >
-                <option value={0}>Select a person</option>
-                {(people.data?.data ?? [])
-                  .filter((person) => person.organizationMembershipId !== null)
-                  .map((person) => (
-                    <option
-                      key={person.organizationPersonId}
-                      value={person.organizationMembershipId!}
-                    >
-                      {person.displayName ??
-                        `${person.firstName} ${person.lastName}`.trim()}
-                    </option>
-                  ))}
-              </select>
+                <SelectTrigger aria-label="Select person" className="w-full">
+                  <SelectValue placeholder="Select a person" />
+                </SelectTrigger>
+                <SelectContent>
+                  {(people.data?.data ?? [])
+                    .filter((person) => person.organizationMembershipId !== null)
+                    .map((person) => (
+                      <SelectItem
+                        key={person.organizationPersonId}
+                        value={String(person.organizationMembershipId)}
+                      >
+                        {person.displayName ??
+                          `${person.firstName} ${person.lastName}`.trim()}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
               {people.data?.pageInfo.hasMore ? (
                 <p className="text-xs text-muted-foreground">
                   Search by name to find more people.
@@ -195,18 +206,21 @@ export function CalendarCapacitySheet({ onClose }: { onClose: () => void }) {
           {mode === "warehouse" ? (
             <div className="space-y-2">
               <Label htmlFor="capacity-warehouse">Warehouse</Label>
-              <select
-                id="capacity-warehouse"
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                value={selectedWarehouseId}
-                onChange={(event) => setWarehouseId(Number(event.target.value))}
+              <Select
+                value={selectedWarehouseId ? String(selectedWarehouseId) : undefined}
+                onValueChange={(value) => setWarehouseId(Number(value))}
               >
-                {warehouses.data?.items.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.name} · {item.code}
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger id="capacity-warehouse" className="w-full">
+                  <SelectValue placeholder="Select a warehouse" />
+                </SelectTrigger>
+                <SelectContent>
+                  {warehouses.data?.items.map((item) => (
+                    <SelectItem key={item.id} value={String(item.id)}>
+                      {item.name} · {item.code}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               {warehouses.isError ? (
                 <p className="text-sm text-destructive">
                   {getErrorMessage(warehouses.error)}
@@ -457,6 +471,7 @@ export function CalendarCapacitySheet({ onClose }: { onClose: () => void }) {
             </>
           ) : null}
         </div>
+        </ScrollArea>
       </SheetContent>
     </Sheet>
   );

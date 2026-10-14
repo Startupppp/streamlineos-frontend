@@ -10,7 +10,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 export type SeriesScope = "occurrence" | "series";
 
@@ -29,8 +31,9 @@ export function EventSeriesScopeDialog({
 }: EventSeriesScopeDialogProps) {
   const [scope, setScope] = useState<SeriesScope>("series");
 
-  const handleOccurrenceChange = useCallback(() => setScope("occurrence"), []);
-  const handleSeriesChange = useCallback(() => setScope("series"), []);
+  const handleScopeChange = useCallback((value: string) => {
+    if (value === "occurrence" || value === "series") setScope(value);
+  }, []);
 
   const handleConfirm = useCallback(() => {
     onConfirm(scope);
@@ -54,30 +57,20 @@ export function EventSeriesScopeDialog({
             This is a recurring event. Which occurrences do you want to change?
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-2">
-          <label className="flex items-center gap-2 text-xs cursor-pointer">
-            <input
-              type="radio"
-              name="series-scope"
-              value="occurrence"
-              checked={scope === "occurrence"}
-              onChange={handleOccurrenceChange}
-              className="accent-primary"
-            />
-            This occurrence only
-          </label>
-          <label className="flex items-center gap-2 text-xs cursor-pointer">
-            <input
-              type="radio"
-              name="series-scope"
-              value="series"
-              checked={scope === "series"}
-              onChange={handleSeriesChange}
-              className="accent-primary"
-            />
-            All occurrences
-          </label>
-        </div>
+        <RadioGroup value={scope} onValueChange={handleScopeChange} className="gap-2">
+          <div className="flex items-center gap-2">
+            <RadioGroupItem value="occurrence" id="series-scope-occurrence" />
+            <Label htmlFor="series-scope-occurrence" className="text-xs font-normal">
+              This occurrence only
+            </Label>
+          </div>
+          <div className="flex items-center gap-2">
+            <RadioGroupItem value="series" id="series-scope-series" />
+            <Label htmlFor="series-scope-series" className="text-xs font-normal">
+              All occurrences
+            </Label>
+          </div>
+        </RadioGroup>
         <DialogFooter>
           <Button
             variant="outline"

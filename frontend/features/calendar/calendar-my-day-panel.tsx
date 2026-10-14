@@ -3,11 +3,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type Key } from "react";
 import { Search } from "lucide-react";
 import { List, useDynamicRowHeight, type RowComponentProps } from "react-window";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { EVENT_COLORS } from "./calendar-event-constants";
 import type { CalendarListItem, CalendarSearchResponse } from "@/hooks/api/calendar-types";
 import { formatEventTimeRange } from "@/lib/date-utils";
 import { calendarSearchIsPartial } from "./calendar-search-coverage";
+import { CalendarVirtualScroll } from "./calendar-virtual-scroll";
+import { CalendarLoadingStatus } from "./calendar-lazy-fallbacks";
 
 type MyDayRow =
   | { type: "header"; title: string }
@@ -16,6 +20,12 @@ type MyDayRow =
 interface MyDayRowData {
   rows: MyDayRow[];
   onSelectEvent: (event: CalendarListItem) => void;
+}
+
+function freshnessLabel(event: CalendarListItem): string {
+  if (event.freshness.state === "stale") return "May be stale";
+  if (event.freshness.state === "unknown") return "Freshness unknown";
+  return "Current";
 }
 
 function nextAction(event: CalendarListItem): string {
@@ -45,32 +55,34 @@ function MyDayVirtualRow({ index, style, ariaAttributes, rows, onSelectEvent }: 
   if (!row) return <div style={style} {...ariaAttributes} />;
   if (row.type === "header")
     return (
-      <div style={style} {...ariaAttributes} className="flex items-end px-4 pb-2">
-        <h3 className="text-sm font-semibold">{row.title}</h3>
+      <div style={style} {...ariaAttributes} className="flex items-end gap-3 px-4 pb-2">
+        <h3 className="shrink-0 text-xs font-medium text-muted-foreground">{row.title}</h3>
+        <div className="mb-1 h-px min-w-8 flex-1 bg-border" />
       </div>
     );
 
   const event = row.event;
+  const rail = EVENT_COLORS[event.color ?? "blue"] ?? EVENT_COLORS.blue;
   return (
     <div style={{ ...style, padding: "0 16px 8px", boxSizing: "border-box" }} {...ariaAttributes}>
-      <div className="flex items-start justify-between gap-3 rounded-lg border border-border bg-card p-3">
-        <div className="min-w-0 space-y-1">
-          <div className="truncate text-sm font-medium">{event.title}</div>
-          <div className="text-xs text-muted-foreground">
-            {event.timeKind === "date" ? "All day" : formatEventTimeRange(event.start, event.end, event.timezone)}{" "}
-            · {event.source} · {event.status ?? "Scheduled"}
+      <div className="flex overflow-hidden rounded-lg border bg-card shadow-xs transition-[border-color,box-shadow] hover:border-primary/40 hover:shadow-sm">
+        <div className="w-1 shrink-0" style={{ backgroundColor: rail }} />
+        <div className="flex min-w-0 flex-1 items-start justify-between gap-3 p-3">
+          <div className="min-w-0 space-y-1.5">
+            <div className="truncate text-sm font-medium">{event.title}</div>
+            <p className="text-xs text-muted-foreground">
+              {event.timeKind === "date" ? "All day" : formatEventTimeRange(event.start, event.end, event.timezone)}
+            </p>
+            <div className="flex flex-wrap gap-1">
+              <Badge variant="secondary" className="capitalize">{event.source}</Badge>
+              <Badge variant="outline">{event.status ?? "Scheduled"}</Badge>
+              <Badge variant="outline">{freshnessLabel(event)}</Badge>
+            </div>
           </div>
-          <div className="text-xs text-muted-foreground">
-            {event.freshness.state === "stale"
-              ? "Source may be stale"
-              : event.freshness.state === "unknown"
-                ? "Source freshness unknown"
-                : "Source current"}
-          </div>
+          <Button type="button" variant="outline" size="sm" className="shrink-0" onClick={() => onSelectEvent(event)}>
+            {nextAction(event)}
+          </Button>
         </div>
-        <Button type="button" variant="outline" size="sm" onClick={() => onSelectEvent(event)}>
-          {nextAction(event)}
-        </Button>
       </div>
     </div>
   );
@@ -157,11 +169,15 @@ export function CalendarMyDayPanel({
         </div>
       ) : null}
       {rows.length === 0 ? (
-        <div className="flex min-h-0 flex-1 flex-col justify-center px-4 text-sm text-muted-foreground">
-          {hasMore ? "Searching more calendar items…" : "No matching items in this day."}
+        <div className="flex min-h-0 flex-1 flex-col items-center justify-center px-4 text-sm text-muted-foreground">
+          {hasMore ? (
+            <CalendarLoadingStatus label="Searching more calendar items…" />
+          ) : (
+            "No matching items in this day."
+          )}
         </div>
       ) : (
-        <div className="min-h-0 flex-1">
+        <CalendarVirtualScroll>
           <List<MyDayRowData>
             aria-label="My Day items"
             tabIndex={0}
@@ -172,14 +188,15 @@ export function CalendarMyDayPanel({
             rowKey={rowKey}
             defaultHeight={600}
             overscanCount={5}
+            className="calendar-virtual-scroll"
             style={{ height: "100%" }}
             onRowsRendered={handleRowsRendered}
           />
-        </div>
+        </CalendarVirtualScroll>
       )}
-      {hasMore ? (
-        <div className="shrink-0 px-4 py-2 text-xs text-muted-foreground" role={isLoadingMore ? "status" : undefined}>
-          {isLoadingMore ? "Loading more calendar items…" : null}
+      {hasMore && isLoadingMore ? (
+        <div className="flex shrink-0 justify-center py-1" role="status">
+          <CalendarLoadingStatus label="Loading more calendar items…" />
         </div>
       ) : null}
     </div>

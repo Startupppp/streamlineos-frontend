@@ -51,16 +51,6 @@ export function useCalendarViewState() {
   } | null>(null);
   const [createOpenState, setCreateOpenState] = useState(false);
   const [hasMountedCreate, setHasMountedCreate] = useState(false);
-  const [isSlotChoiceOpen, setIsSlotChoiceOpen] = useState(false);
-  const [pendingSlot, setPendingSlot] = useState<{
-    start: Date;
-    end: Date;
-  } | null>(null);
-  const [isCreateTicketOpen, setIsCreateTicketOpen] = useState(false);
-  const [createTicketSlot, setCreateTicketSlot] = useState<{
-    start: Date;
-    end: Date;
-  } | null>(null);
   const [accountsOpen, setAccountsOpen] = useState(false);
 
   const navigate = useCallback(
@@ -168,14 +158,13 @@ export function useCalendarViewState() {
 
   const isCalendarOverlayOpen =
     isCreateOpen ||
-    isSlotChoiceOpen ||
-    isCreateTicketOpen ||
     accountsOpen ||
     urlState.selected !== null;
 
   const handleSelectSlot = useCallback((slotInfo: SlotInfo) => {
-    setPendingSlot({ start: slotInfo.start, end: slotInfo.end });
-    setIsSlotChoiceOpen(true);
+    setHasMountedCreate(true);
+    setCreateSlot({ start: slotInfo.start, end: slotInfo.end });
+    setCreateOpenState(true);
   }, []);
 
   const guardedSelectSlot = useCalendarSlotSelectionGuard(
@@ -183,28 +172,11 @@ export function useCalendarViewState() {
     isCalendarOverlayOpen,
   );
 
-  const handleSlotChooseEvent = useCallback(() => {
-    setIsSlotChoiceOpen(false);
-    setCreateSlot(pendingSlot);
-    setIsCreateOpen(true);
-  }, [pendingSlot, setIsCreateOpen]);
-
-  const handleSlotChooseTicket = useCallback(() => {
-    setIsSlotChoiceOpen(false);
-    setCreateTicketSlot(pendingSlot);
-    setIsCreateTicketOpen(true);
-  }, [pendingSlot]);
-
   const handleOpenCreate = useCallback(() => {
     setCreateSlot(null);
     setHasMountedCreate(true);
     setIsCreateOpen(true);
   }, [setIsCreateOpen]);
-
-  const handleOpenCreateTicket = useCallback(() => {
-    setCreateTicketSlot(null);
-    setIsCreateTicketOpen(true);
-  }, []);
 
   const handleSelectEvent = useCallback(
     (event: BigCalEvent) => {
@@ -246,11 +218,6 @@ export function useCalendarViewState() {
   }, [navigate]);
   const handleOpenAccounts = useCallback(() => setAccountsOpen(true), []);
   const handleCloseAccounts = useCallback(() => setAccountsOpen(false), []);
-  const handleCloseCreateTicket = useCallback(
-    () => setIsCreateTicketOpen(false),
-    [],
-  );
-
   return {
     currentDate,
     setCurrentDate,
@@ -273,18 +240,11 @@ export function useCalendarViewState() {
     attendanceEventsVisible: urlState.attendanceVisible,
     setSourceVisibility,
     setHistoryPages,
-    isSlotChoiceOpen,
-    setIsSlotChoiceOpen,
-    isCreateTicketOpen,
-    createTicketSlot,
     accountsOpen,
     setAccountsOpen,
     isCalendarOverlayOpen,
     guardedSelectSlot,
-    handleSlotChooseEvent,
-    handleSlotChooseTicket,
     handleOpenCreate,
-    handleOpenCreateTicket,
     handleSelectEvent,
     handlePrev,
     handleNext,
@@ -292,6 +252,5 @@ export function useCalendarViewState() {
     handleCloseSelected,
     handleOpenAccounts,
     handleCloseAccounts,
-    handleCloseCreateTicket,
   };
 }

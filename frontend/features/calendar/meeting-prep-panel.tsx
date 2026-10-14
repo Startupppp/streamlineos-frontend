@@ -5,6 +5,7 @@ import { Sparkles, CalendarDays, AlertCircle, StopCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { AiDraftCard } from "@/components/ai/ai-draft-card";
 import { AiFailureBody } from "@/components/ai/ai-failure-body";
@@ -101,12 +102,12 @@ export function MeetingPrepPanel({ eventId, eventTitle }: MeetingPrepPanelProps)
     setCitations([]);
   }, []);
 
-  const handleToggleCrm = useCallback(() => {
-    setIncludeCrm((prev) => !prev);
+  const handleCrmChecked = useCallback((checked: boolean | "indeterminate") => {
+    setIncludeCrm(checked === true);
   }, []);
 
-  const handleToggleProject = useCallback(() => {
-    setIncludeProject((prev) => !prev);
+  const handleProjectChecked = useCallback((checked: boolean | "indeterminate") => {
+    setIncludeProject(checked === true);
   }, []);
 
   if (!canUse) return <AiPermissionDenied />;
@@ -160,24 +161,26 @@ export function MeetingPrepPanel({ eventId, eventTitle }: MeetingPrepPanelProps)
               Include context from
             </p>
             <div className="flex flex-col gap-1.5">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="meeting-prep-crm"
                   checked={includeCrm}
-                  onChange={handleToggleCrm}
-                  className="h-3.5 w-3.5 rounded border-border accent-primary"
+                  onCheckedChange={handleCrmChecked}
                 />
-                <Label className="text-xs cursor-pointer font-normal">CRM (deals, contacts)</Label>
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
+                <Label htmlFor="meeting-prep-crm" className="text-xs font-normal">
+                  CRM (deals, contacts)
+                </Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="meeting-prep-project"
                   checked={includeProject}
-                  onChange={handleToggleProject}
-                  className="h-3.5 w-3.5 rounded border-border accent-primary"
+                  onCheckedChange={handleProjectChecked}
                 />
-                <Label className="text-xs cursor-pointer font-normal">Projects & tickets</Label>
-              </label>
+                <Label htmlFor="meeting-prep-project" className="text-xs font-normal">
+                  Projects & tickets
+                </Label>
+              </div>
             </div>
           </div>
 

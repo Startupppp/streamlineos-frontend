@@ -6,6 +6,7 @@ import { format, addDays } from "date-fns";
 import { motion, useReducedMotion } from "framer-motion";
 import { Tag } from "lucide-react";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Sheet,
   SheetContent,
@@ -345,9 +346,11 @@ function MeetingWorkspaceSheet({
         <SheetHeader className="px-5 py-4 border-b shrink-0">
           <SheetTitle className="text-sm font-semibold">Meeting workspace</SheetTitle>
         </SheetHeader>
-        <div className="flex-1 overflow-y-auto px-5 py-4">
-          {event && eventId ? <MeetingWorkspacePanel eventId={eventId} eventTitle={event.title ?? ""} /> : null}
-        </div>
+        <ScrollArea className="min-h-0 flex-1">
+          <div className="px-5 py-4">
+            {event && eventId ? <MeetingWorkspacePanel eventId={eventId} eventTitle={event.title ?? ""} /> : null}
+          </div>
+        </ScrollArea>
       </SheetContent>
     </Sheet>
   );

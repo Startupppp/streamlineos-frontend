@@ -2,13 +2,15 @@
 
 import { useCallback, useEffect, useMemo, useRef, type CSSProperties, type Key } from "react";
 import { format } from "date-fns";
-import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { List, useDynamicRowHeight, type RowComponentProps } from "react-window";
 import type { CalendarListItem } from "@/hooks/api/calendar";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { formatEventTimeRange } from "@/lib/date-utils";
 import { EVENT_COLORS } from "./calendar-event-constants";
+import { CalendarVirtualScroll } from "./calendar-virtual-scroll";
+import { CalendarLoadingStatus } from "./calendar-lazy-fallbacks";
 import { eventOverlapsRange } from "./use-calendar-computed";
 
 interface CalendarEventsPanelProps {
@@ -82,10 +84,11 @@ function PanelVirtualRow({
 
   if (row.type === "header") {
     return (
-      <div style={style} {...ariaAttributes} className="flex items-end px-4 pt-5 pb-1">
-        <h3 className="text-sm font-semibold text-muted-foreground">
+      <div style={style} {...ariaAttributes} className="flex items-end gap-3 px-4 pt-5 pb-1">
+        <h3 className="shrink-0 text-xs font-semibold text-foreground">
           {format(new Date(`${row.dateKey}T12:00:00`), "EEEE, MMMM d, yyyy")}
         </h3>
+        <div className="mb-1 h-px min-w-8 flex-1 bg-border" />
       </div>
     );
   }
@@ -104,34 +107,31 @@ function PanelVirtualRow({
         aria-label={event.title}
         onClick={handleSelectEvent}
         disabled={!event.actions.view}
-        className={cn(
-          /* impeccable-disable side-tab -- Colored left border is intentional calendar event category indicator (standard pattern in Google Calendar, Outlook) */
-          "w-full rounded-lg border border-l-4 bg-card p-3 text-left shadow-xs transition-colors hover:bg-muted/40 overflow-hidden min-w-0 disabled:cursor-not-allowed disabled:opacity-60",
-        )}
-        style={{ borderLeftColor: color }}
+        className="flex w-full overflow-hidden rounded-xl border border-border bg-muted text-left transition-[background-color,border-color,box-shadow] hover:border-primary/40 hover:bg-accent hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card dark:border-background disabled:cursor-not-allowed disabled:opacity-60"
       >
-        <div className="flex items-start justify-between gap-2 min-w-0">
-          <div className="min-w-0 flex-1 overflow-hidden">
+        <span className="w-1 shrink-0" style={{ backgroundColor: color }} />
+        <span className="flex min-w-0 flex-1 items-start justify-between gap-3 p-3">
+          <span className="min-w-0 flex-1">
             <TruncatedText
               text={event.title}
-              className="text-sm font-semibold text-foreground"
+              className="text-sm font-medium text-foreground"
             />
-            <p className="mt-0.5 text-xs text-muted-foreground break-words">
+            <span className="mt-1 block text-xs text-muted-foreground">
               {event.allDay
                 ? "All day"
                 : formatEventTimeRange(event.start, event.end, event.timezone)}
-            </p>
+            </span>
             {event.location ? (
               <TruncatedText
                 text={event.location}
                 className="mt-1 text-dense text-muted-foreground"
               />
             ) : null}
-          </div>
-          <span className="shrink-0 text-xs font-medium text-muted-foreground whitespace-nowrap">
-            {event.category}
           </span>
-        </div>
+          <Badge variant="outline" className="shrink-0 capitalize">
+            {event.category}
+          </Badge>
+        </span>
       </button>
     </div>
   );
@@ -237,7 +237,7 @@ export function CalendarEventsPanel({
           }
           className="min-h-0 flex-1 border-0 bg-transparent shadow-none"
         />
-        {mode === "history" && isLoadingMore ? <div role="status" className="p-3 text-center text-xs text-muted-foreground">Loading older events…</div> : null}
+        {mode === "history" && isLoadingMore ? <div role="status" className="flex justify-center py-1"><CalendarLoadingStatus label="Loading older events…" /></div> : null}
         {loadOlderControl}
       </div>
     );
@@ -245,7 +245,7 @@ export function CalendarEventsPanel({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="min-h-0 flex-1">
+      <CalendarVirtualScroll>
         <List<PanelRowData>
           aria-label={mode === "history" ? "Calendar history events" : "Calendar list events"}
           tabIndex={0}
@@ -256,11 +256,12 @@ export function CalendarEventsPanel({
           rowKey={getPanelRowKey}
           defaultHeight={DEFAULT_LIST_HEIGHT}
           overscanCount={OVERSCAN_COUNT}
+          className="calendar-virtual-scroll"
           style={{ height: "100%" }}
           onRowsRendered={handleRowsRendered}
         />
-      </div>
-      {mode === "history" && isLoadingMore ? <div role="status" className="shrink-0 border-t border-border p-3 text-center text-xs text-muted-foreground">Loading older events…</div> : null}
+      </CalendarVirtualScroll>
+      {mode === "history" && isLoadingMore ? <div role="status" className="flex shrink-0 justify-center py-1"><CalendarLoadingStatus label="Loading older events…" /></div> : null}
       {loadOlderControl}
     </div>
   );

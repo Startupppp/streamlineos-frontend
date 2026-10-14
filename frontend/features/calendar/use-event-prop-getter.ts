@@ -10,7 +10,7 @@ import {
 
 const EVENT_TYPE = {
   fontSize: "0.875rem",
-  fontWeight: 500,
+  fontWeight: 400,
 } as const;
 
 const RSVP_BORDER_COLORS: Record<string, string> = {

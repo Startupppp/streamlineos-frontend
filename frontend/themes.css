@@ -119,6 +119,25 @@
   --blue: #047857;
 }
 
+:root.theme-maia {
+  --radius: 0.75rem;
+  --primary: #4338ca;
+  --primary-foreground: #ffffff;
+  --ring: #4338ca;
+  --sidebar-primary: #4338ca;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent-foreground: #3730a3;
+  --sidebar-ring: #4338ca;
+  --brand-deep: #3730a3;
+  --brand-core: #4f46e5;
+  --brand-bright: #a5b4fc;
+  --gradient-signature: linear-gradient(135deg, #3730a3 0%, #4f46e5 50%, #a5b4fc 100%);
+  --chart-1: #4338ca;
+  --chart-3: #818cf8;
+  --gold: #4f46e5;
+  --blue: #4338ca;
+}
+
 :root.theme-teal {
   --primary: #0f766e;
   --primary-foreground: #ffffff;
@@ -361,6 +380,18 @@
   --sidebar-accent-foreground: #6ee7b7;
   --chart-1: #10b981;
   --blue: #10b981;
+}
+
+:root.dark.theme-maia {
+  --primary: #a5b4fc;
+  --primary-foreground: #1e1b4b;
+  --ring: #a5b4fc;
+  --sidebar-primary: #a5b4fc;
+  --sidebar-primary-foreground: #1e1b4b;
+  --sidebar-ring: #a5b4fc;
+  --sidebar-accent-foreground: #c7d2fe;
+  --chart-1: #a5b4fc;
+  --blue: #a5b4fc;
 }
 
 :root.dark.theme-teal {
