@@ -15,7 +15,7 @@ import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel
 import { ViewToggle } from "@/components/ui/view-toggle";
 import { EmployeesDirectoryStats } from "@/features/hr/employees/employees-directory-stats";
 import { EmployeeExportAction } from "@/features/hr/employees/employee-export-action";
-import { EmployeesFilters, type Department } from "@/features/hr/employees/employees-filters";
+import { EmployeesFilters } from "@/features/hr/employees/employees-filters";
 import {
   toHrEmployeesApiParams,
   hasActiveEmployeeFilters,
@@ -50,12 +50,11 @@ export function EmployeesListPage() {
   const urlState = useEmployeeListUrlState(PAGE_SIZE);
   const { filters, search, updateSearch, updateParams, statusHref, clearFilters } = urlState;
 
-  const [view, setView] = useState<EmployeesListView>(
-    () => VIEW_MODES.find((candidate) => candidate === searchParams.get("view")) ?? "grid",
-  );
+  const view: EmployeesListView =
+    VIEW_MODES.find((candidate) => candidate === searchParams.get("view")) ?? "grid";
   const [debouncedSearch, flushSearch] = useFlushableDebouncedValue(search, 300);
   const { data: departments } = useHrDepartments();
-  const deptList = departments as Department[] | undefined;
+  const deptList = departments;
 
   const apiParams = useMemo(
     () => toHrEmployeesApiParams({ ...filters, q: debouncedSearch }),
@@ -156,7 +155,6 @@ export function EmployeesListPage() {
 
   const handleViewChange = useCallback(
     (next: EmployeesListView) => {
-      setView(next);
       updateParams({ view: next === "grid" ? null : next });
     },
     [updateParams],

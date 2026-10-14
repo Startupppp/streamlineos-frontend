@@ -38,8 +38,6 @@ export function useSearchIntegrity(input: SearchIntegrityInput): boolean {
 
   useEffect(() => {
     if (!isSettled || isSearching || rowCount === 0) return;
-    // A settled query is an external observation; retain it for later integrity checks.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setKnownNonEmptyScopes((known) =>
       known.has(scopeKey) ? known : new Set(known).add(scopeKey),
     );
