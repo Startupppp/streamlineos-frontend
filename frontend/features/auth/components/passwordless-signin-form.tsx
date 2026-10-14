@@ -13,6 +13,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { isApiError } from "@/lib/api-client";
 import { readRetryAfterSeconds } from "@/lib/parse-auth-error";
 import { signInWithMagicToken } from "@/hooks/common/auth-hooks";
+import { useHydrated } from "@/hooks/common/use-hydrated";
 import { useRequestOtp, useVerifyOtp, useSendMagicLink } from "@/hooks/api/auth";
 import { cn } from "@/lib/utils";
 
@@ -32,9 +33,10 @@ const OTP_SUPERSEDED_NOTICE =
 
 interface PasswordlessSigninFormProps {
   getCallbackUrl: () => string;
+  initialEmail?: string;
 }
 
-export function PasswordlessSigninForm({ getCallbackUrl }: PasswordlessSigninFormProps) {
+export function PasswordlessSigninForm({ getCallbackUrl, initialEmail }: PasswordlessSigninFormProps) {
   const [stage, setStage] = useState<"email" | "code">("email");
   const [submittedEmail, setSubmittedEmail] = useState("");
   const [otpValue, setOtpValue] = useState("");
@@ -46,10 +48,11 @@ export function PasswordlessSigninForm({ getCallbackUrl }: PasswordlessSigninFor
   const codeStageActiveRef = useRef(false);
   const resendRequestedRef = useRef(false);
   const otpFieldRef = useRef<HTMLInputElement>(null);
+  const isHydrated = useHydrated();
 
   const emailForm = useForm<EmailValues>({
     resolver: zodResolver(emailSchema),
-    defaultValues: { email: "" },
+    defaultValues: { email: initialEmail ?? "" },
   });
 
   useEffect(() => {
@@ -348,6 +351,7 @@ export function PasswordlessSigninForm({ getCallbackUrl }: PasswordlessSigninFor
         type="submit"
         className="w-full h-9 text-sm font-medium"
         isPending={requestOtpMutation.isPending}
+        disabled={!isHydrated}
         loadingText="Sending code..."
       >
         Continue

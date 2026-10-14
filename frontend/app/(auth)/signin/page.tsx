@@ -15,10 +15,13 @@ export default async function SignInPage({ searchParams }: PageProps) {
     typeof params.error === "string" ? params.error : undefined;
   const sessionParam =
     typeof params.session === "string" ? params.session : undefined;
+  const emailParam =
+    typeof params.email === "string" ? params.email : undefined;
   return (
     <SignInPageClient
       hasGoogle={hasGoogle}
       errorParam={errorParam}
+      emailParam={emailParam}
       sessionParam={sessionParam}
     />
   );

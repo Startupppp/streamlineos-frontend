@@ -12,12 +12,14 @@ interface SignInPageClientProps {
   hasGoogle: boolean;
   errorParam?: string;
   sessionParam?: string;
+  emailParam?: string;
 }
 
 export function SignInPageClient({
   hasGoogle,
   errorParam,
   sessionParam,
+  emailParam,
 }: SignInPageClientProps) {
   const sessionExpired = sessionParam === SESSION_EXPIRED_VALUE;
   const parsedError = errorParam ? parseAuthErrorCode(errorParam) : null;
@@ -111,7 +113,7 @@ export function SignInPageClient({
           />
         )}
 
-        <PasswordlessSigninForm getCallbackUrl={getCallbackUrl} />
+        <PasswordlessSigninForm getCallbackUrl={getCallbackUrl} initialEmail={emailParam} />
       </div>
     </div>
   );

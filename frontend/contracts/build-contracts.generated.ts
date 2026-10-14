@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const OPENAPI_HASH = "sha256:0bf6ccd37e4bfbdb56fd1d242b25a02bf29d47e021fa805fe466baf7d6a2572f" as const;
+export const OPENAPI_HASH = "sha256:a4443bdf6d1ba2ea9f34771e55ba9031962fad2f055d254540846105511800b7" as const;
 
 export const agentTokensListResponseSchema = z.array(z.object({
   id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
@@ -5959,7 +5959,7 @@ export const ticketImportExportCommitImportResponseSchema = z.object({
   issues: z.array(z.object({
     rowNumber: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     field: z.string().nullable(),
-    kind: z.enum(["INVALID", "DUPLICATE_IN_FILE", "DUPLICATE_EXISTING"]),
+    kind: z.enum(["INVALID", "DUPLICATE_IN_FILE", "DUPLICATE_EXISTING", "STATUS_DEFAULTED"]),
     message: z.string(),
   })),
 });
@@ -6023,7 +6023,7 @@ export const ticketImportExportPreviewImportResponseSchema = z.object({
   issues: z.array(z.object({
     rowNumber: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     field: z.string().nullable(),
-    kind: z.enum(["INVALID", "DUPLICATE_IN_FILE", "DUPLICATE_EXISTING"]),
+    kind: z.enum(["INVALID", "DUPLICATE_IN_FILE", "DUPLICATE_EXISTING", "STATUS_DEFAULTED"]),
     message: z.string(),
   })),
   confirmationToken: z.string().nullable(),

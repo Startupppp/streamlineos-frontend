@@ -85248,7 +85248,8 @@
                                 "enum": [
                                   "INVALID",
                                   "DUPLICATE_IN_FILE",
-                                  "DUPLICATE_EXISTING"
+                                  "DUPLICATE_EXISTING",
+                                  "STATUS_DEFAULTED"
                                 ]
                               },
                               "message": {
@@ -85855,7 +85856,8 @@
                                 "enum": [
                                   "INVALID",
                                   "DUPLICATE_IN_FILE",
-                                  "DUPLICATE_EXISTING"
+                                  "DUPLICATE_EXISTING",
+                                  "STATUS_DEFAULTED"
                                 ]
                               },
                               "message": {

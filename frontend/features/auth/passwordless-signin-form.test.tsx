@@ -10,6 +10,11 @@ jest.mock("@/hooks/api/auth");
 jest.mock("@/hooks/common/auth-hooks", () => ({
   signInWithMagicToken: jest.fn(),
 }));
+jest.mock("@/hooks/common/use-hydrated", () => ({
+  useHydrated: jest.fn(() => true),
+}));
+const mockUseHydrated = jest.requireMock("@/hooks/common/use-hydrated")
+  .useHydrated as jest.Mock;
 jest.mock("sonner", () => ({
   toast: { error: jest.fn(), success: jest.fn() },
 }));
@@ -100,6 +105,7 @@ describe("PasswordlessSigninForm", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockLocation.assign.mockClear();
+    mockUseHydrated.mockReturnValue(true);
     mockedSignInWithMagicToken.mockResolvedValue({ status: "signed-in" });
   });
 
@@ -144,6 +150,32 @@ describe("PasswordlessSigninForm", () => {
         expect(mockRequestOtpMutate).toHaveBeenCalledTimes(1);
       });
       expect(screen.queryByRole("alert")).toBeNull();
+    });
+
+    it("prefills initialEmail but never sends a code without the visitor submitting", async () => {
+      setupMocks();
+      render(<PasswordlessSigninForm getCallbackUrl={() => "/dashboard"} initialEmail="victim@example.com" />);
+      expect(screen.getByLabelText(/email/i)).toHaveValue("victim@example.com");
+      await waitFor(() => new Promise((r) => setTimeout(r, 50)));
+      expect(mockRequestOtpMutate).not.toHaveBeenCalled();
+    });
+
+    it("sends exactly one code for a prefilled email when the visitor submits once", async () => {
+      setupMocks();
+      render(<PasswordlessSigninForm getCallbackUrl={() => "/dashboard"} initialEmail="prefilled@example.com" />);
+      const emailInput = screen.getByLabelText(/email/i);
+      fireEvent.submit(emailInput.closest("form")!);
+      await waitFor(() => {
+        expect(mockRequestOtpMutate).toHaveBeenCalledTimes(1);
+        expect(mockRequestOtpMutate).toHaveBeenCalledWith("prefilled@example.com");
+      });
+    });
+
+    it("keeps Continue disabled until hydration, so a pre-hydration click cannot submit the form natively", () => {
+      setupMocks();
+      mockUseHydrated.mockReturnValue(false);
+      render(<PasswordlessSigninForm getCallbackUrl={() => "/dashboard"} />);
+      expect(screen.getByRole("button", { name: /continue/i })).toBeDisabled();
     });
   });
 
