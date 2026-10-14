@@ -1,5 +1,9 @@
 # Calendar release evidence
 
+On 2026-10-14, ticket 13 availability's approved-leave lookup was found to reject the entire request on source failure. A failing regression proved the prior behavior. Backend commit `311c521af` now marks `hr-leaves` coverage failed and the slot unknown while keeping guest diagnostics private. The existing source entry is reused when present. Availability engine, service, and booking availability suites passed 21 tests; targeted ESLint and whitespace checks passed. The commit was pushed, and deployment and live provider/leave failure behavior remain to be checked.
+
+Ticket 12 backend source-registration and wire-shape suites passed 14 tests, and frontend range and detail-contract suites passed 13 tests. Ticket 14 booking rule lifecycle, security, public-policy, and public-controller suites passed 18 tests. Their deployed cross-role and public booking journeys remain open.
+
 On 2026-10-14, ticket 02 mutation validation, moved occurrence identity, and exception reminder cancellation suites passed 28 tests across three suites. The rejected paths make no exception insert; the wrong-date, expired-series, and cancelled cases do not bump the series. A second edit of a moved occurrence writes the original nominal key. Authenticated rejection behavior remains to be checked.
 
 Ticket 03 projection, source registry, and wire-shape suites passed 37 tests across three suites. Live multi-source completeness and version behavior remain to be checked.
