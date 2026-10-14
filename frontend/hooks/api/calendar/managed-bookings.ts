@@ -79,5 +79,6 @@ export function useMarkManagedBookingNoShow(ruleId: number, bookingId: string, c
       } : current);
       void queryClient.invalidateQueries({ queryKey: calendarBookingQueryKeys.invitationsPrefix(scope.orgId, scope.userId, scope.membershipId, scope.accessVersion, scope.canRead, bookingId) });
     },
+    onError: () => queryClient.invalidateQueries({ queryKey: calendarBookingQueryKeys.bookings(scope.orgId, scope.userId, scope.membershipId, scope.accessVersion, scope.canRead, ruleId, cursor) }),
   });
 }
