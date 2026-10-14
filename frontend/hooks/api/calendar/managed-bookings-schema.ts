@@ -33,6 +33,34 @@ export const routingAssignmentContract = z.object({
   createdAt: z.string(),
 });
 
+export const bookingInvitationsContract = z.object({
+  items: z.array(z.object({
+    id: z.string().uuid(),
+    membershipId: z.number().int().positive().nullable(),
+    guestEmail: z.string().nullable(),
+    guestName: z.string().nullable(),
+    attendeeRole: z.enum(["organizer", "required", "optional"]),
+    rsvpStatus: z.enum(["pending", "accepted", "tentative", "declined"]),
+    lifecycleState: z.enum(["current", "removed", "cancelled"]),
+    noShowAt: z.string().nullable(),
+    endAt: z.string(),
+  })),
+  nextCursor: z.string().uuid().nullable(),
+});
+
+export const invitationActionContract = z.object({
+  id: z.string().uuid(),
+  title: z.string(),
+  startAt: z.string(),
+  endAt: z.string(),
+  role: z.enum(["organizer", "required", "optional"]),
+  rsvpStatus: z.enum(["pending", "accepted", "tentative", "declined"]),
+  meetingUrl: z.string().nullable(),
+});
+
 export type ManagedBooking = z.infer<typeof managedBookingsContract>["items"][number];
 export type ManagedBookingPage = z.infer<typeof managedBookingsContract>;
 export type RoutingAssignment = z.infer<typeof routingAssignmentContract>;
+export type BookingInvitationPage = z.infer<typeof bookingInvitationsContract>;
+export type BookingInvitation = BookingInvitationPage["items"][number];
+export type InvitationAction = z.infer<typeof invitationActionContract>;
