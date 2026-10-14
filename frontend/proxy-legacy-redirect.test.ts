@@ -78,3 +78,26 @@ describe("proxy observes the two code-owned Build compatibility redirects", () =
     );
   });
 });
+
+describe("public Calendar pages", () => {
+  it.each([
+    "/calendar/book/booking-token",
+    "/calendar/polls/poll-token",
+    "/calendar/invitations/rsvp?token=invitation-token",
+    "/calendar/invitations/join?token=invitation-token",
+  ])("allows an anonymous visitor to open %s", async (path) => {
+    const response = await proxy(request(`https://app.test${path}`));
+    expect(response.status).toBe(200);
+    expect(response.headers.get("location")).toBeNull();
+  });
+
+  it.each([
+    "/calendar",
+    "/calendar/book/booking-token/manage",
+    "/calendar/invitations/admin",
+  ])("keeps %s behind sign-in", async (path) => {
+    const response = await proxy(request(`https://app.test${path}`));
+    expect(response.status).toBe(307);
+    expect(new URL(response.headers.get("location") ?? "https://app.test").pathname).toBe("/signin");
+  });
+});

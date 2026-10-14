@@ -67,7 +67,8 @@ function isPublicPath(path: string): boolean {
   return (
     PUBLIC_AUTH_PATHS.has(clean) ||
     clean.startsWith("/public/calendar/invitations/") ||
-    clean.startsWith("/public/calendar/polls/")
+    clean.startsWith("/public/calendar/polls/") ||
+    clean.startsWith("/public/calendar/booking/")
   );
 }
 

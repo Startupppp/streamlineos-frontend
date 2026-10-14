@@ -142,6 +142,11 @@ function matchesAny(pathname: string, routes: string[]): boolean {
   return routes.some((route) => matchesRoute(pathname, route));
 }
 
+function isPublicCalendarPage(pathname: string): boolean {
+  return /^\/calendar\/(?:book|polls)\/[^/]+\/?$/.test(pathname) ||
+    /^\/calendar\/invitations\/(?:rsvp|join)\/?$/.test(pathname);
+}
+
 function isBlogAdminPath(pathname: string): boolean {
   return matchesRoute(pathname, "/blogs/admin");
 }
@@ -216,8 +221,9 @@ export async function proxy(req: NextRequest) {
     if (token) break;
   }
 
+  const publicCalendarPage = isPublicCalendarPage(pathname);
   const isProtected =
-    matchesAny(pathname, PROTECTED_ROUTES) || isBlogAdminPath(pathname);
+    (matchesAny(pathname, PROTECTED_ROUTES) && !publicCalendarPage) || isBlogAdminPath(pathname);
 
   if (!token && isProtected) {
     const hasSessionCookie = req.cookies
@@ -233,7 +239,7 @@ export async function proxy(req: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  if (token) {
+  if (token && !publicCalendarPage) {
     if (token.isActive === false)
       return withExpiredSessionCookies(
         redirectTo(
