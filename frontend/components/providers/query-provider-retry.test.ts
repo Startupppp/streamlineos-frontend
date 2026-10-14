@@ -3,7 +3,8 @@ import { installAbortSignalPolyfill } from "@/test-utils/abort-signal-polyfill";
 installAbortSignalPolyfill();
 process.env.NEXT_PUBLIC_API_URL ??= "http://api.test";
 
-import { apiClient, clearBackendTokenCache, outageCircuitRemainingMs, resetOutageCircuit } from "@/lib/api-client";
+import { apiClient, clearBackendTokenCache } from "@/lib/api-client";
+import { outageCircuitRemainingMs, resetOutageCircuit } from "@/lib/api-outage-circuit";
 import { retryDelayPastOutageCircuit } from "./query-provider";
 
 describe("retryDelayPastOutageCircuit", () => {

@@ -38,7 +38,6 @@ jest.mock("@/lib/api-client", () => ({
     post: jest.fn(),
   },
   isApiError: (error: unknown) => error instanceof Error && error.name === "ApiError",
-  outageCircuitRemainingMs: () => 0,
 }));
 
 import { apiClient } from "@/lib/api-client";

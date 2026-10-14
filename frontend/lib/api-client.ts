@@ -12,6 +12,7 @@ import {
 import { newCorrelationId, noteCorrelationId } from "./observability";
 import { IDEMPOTENCY_HEADER, newIdempotencyKey } from "@/lib/idempotency-key";
 import { assertRequestIdentity, type ExpectedRequestIdentity } from "./api-request-identity";
+import { noteOriginOutage, outageCircuitRemainingMs, resetOutageCircuit } from "./api-outage-circuit";
 
 if (!process.env.NEXT_PUBLIC_API_URL)
   throw new Error("NEXT_PUBLIC_API_URL is not set");
@@ -357,27 +358,7 @@ export async function authedFetch(
   return res;
 }
 
-const OUTAGE_BASE_MS = 5_000;
-const OUTAGE_CEILING_MS = 60_000;
 const OUTAGE_STATUSES = new Set([502, 503, 504]);
-let outageUntil = 0;
-let outageBackoffMs = OUTAGE_BASE_MS;
-
-function noteOriginOutage(): void {
-  if (Date.now() < outageUntil) return;
-  outageUntil = Date.now() + outageBackoffMs;
-  outageBackoffMs = Math.min(OUTAGE_CEILING_MS, outageBackoffMs * 2);
-}
-
-/** Time left before the outage circuit lets requests through again (0 when closed). */
-export function outageCircuitRemainingMs(): number {
-  return Math.max(0, outageUntil - Date.now());
-}
-
-export function resetOutageCircuit(): void {
-  outageUntil = 0;
-  outageBackoffMs = OUTAGE_BASE_MS;
-}
 
 function networkError(
   url: string,
@@ -404,7 +385,7 @@ async function fetchOrThrowTransportError(
   signal: AbortSignal,
   path: string,
 ): Promise<Response> {
-  if (Date.now() < outageUntil)
+  if (outageCircuitRemainingMs() > 0)
     throw networkError(url, requestInit, path, "Server unavailable; retrying shortly.");
   try {
     const res = await fetch(url, { ...requestInit, headers, credentials: "omit", signal });

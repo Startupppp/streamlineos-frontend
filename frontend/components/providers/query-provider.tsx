@@ -9,7 +9,8 @@ import {
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { isApiError, outageCircuitRemainingMs } from "@/lib/api-client";
+import { isApiError } from "@/lib/api-client";
+import { outageCircuitRemainingMs } from "@/lib/api-outage-circuit";
 import { isContractViolation } from "@/lib/api-envelope";
 import { growthAndSignQueryKeys } from "@/lib/query-keys/growth-and-sign";
 import { registerQueryCacheClearer } from "@/lib/query-cache-control";
