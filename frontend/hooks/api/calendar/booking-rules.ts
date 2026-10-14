@@ -39,6 +39,13 @@ export interface CalendarBookingRuleInput {
   rescheduleNoticeMinutes: number;
   requiresApproval: boolean;
   linkExpiresAt: string | null;
+  resources?: Array<{
+    resourceId: number;
+    units: number;
+    minimumCapacity: number;
+    requiredLocation: string | null;
+    requiredAccessibility: string[];
+  }>;
 }
 
 export function useBookingScope() {

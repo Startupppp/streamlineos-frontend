@@ -20,6 +20,8 @@ import {
   type CalendarBookingRuleInput,
 } from "@/hooks/api/calendar/booking-rules";
 import type { CalendarBookingRule } from "@/hooks/api/calendar/booking-rules-schema";
+import { useCalendarBookingResources, useCalendarBookingRuleResources } from "@/hooks/api/calendar/booking-resources";
+import type { BookingRuleResource } from "@/hooks/api/calendar/booking-resources-schema";
 import { CalendarBookingDistributionPanel } from "./calendar-booking-distribution-panel";
 
 const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
@@ -42,6 +44,7 @@ function initialRule(): CalendarBookingRuleInput {
     rescheduleNoticeMinutes: 60,
     requiresApproval: false,
     linkExpiresAt: null,
+    resources: [],
   };
 }
 
@@ -86,20 +89,29 @@ export function CalendarBookingRulesSheet({ onClose }: { onClose: () => void }) 
 }
 
 function CalendarBookingRulesSheetInner({ identity, onClose }: { identity: string; onClose: () => void }) {
+  const [editing, setEditing] = useState<CalendarBookingRule | null>(null);
+  const [form, setForm] = useState<CalendarBookingRuleInput | null>(null);
   const canWrite = useCan("calendar:write");
   const rules = useCalendarBookingRules();
+  const resources = useCalendarBookingResources(form !== null);
+  const ruleResources = useCalendarBookingRuleResources(editing?.id ?? null, form !== null);
   const create = useCreateCalendarBookingRule();
   const update = useUpdateCalendarBookingRule();
   const activate = useActivateCalendarBookingRule();
   const pause = useChangeCalendarBookingRuleStatus("pause");
   const revoke = useChangeCalendarBookingRuleStatus("revoke");
-  const [editing, setEditing] = useState<CalendarBookingRule | null>(null);
-  const [form, setForm] = useState<CalendarBookingRuleInput | null>(null);
   const [publicLink, setPublicLink] = useState<{ identity: string; href: string } | null>(null);
   const [busyId, setBusyId] = useState<number | null>(null);
   const [previewRule, setPreviewRule] = useState<CalendarBookingRule | null>(null);
   const [distributionRule, setDistributionRule] = useState<CalendarBookingRule | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const selectedResources = form?.resources ?? ruleResources.data ?? [];
+
+  function setResourceRequirement(resourceId: number, requirement: BookingRuleResource | null) {
+    if (!form) return;
+    const without = selectedResources.filter((item) => item.resourceId !== resourceId);
+    setForm({ ...form, resources: requirement ? [...without, requirement] : without });
+  }
 
   function edit(rule: CalendarBookingRule | null) {
     setEditing(rule);
@@ -114,6 +126,7 @@ function CalendarBookingRulesSheetInner({ identity, onClose }: { identity: strin
     if (!form.workingHours.length) return setError("Choose at least one working day.");
     if (form.workingHours.some((window) => window.start >= window.end)) return setError("Working hours must end after they start.");
     if (form.intakeFields.some((field) => !field.label.trim() || (field.type === "select" && !field.options?.length))) return setError("Complete each visitor question and its choices.");
+    if (editing && (!ruleResources.access.allowed || ruleResources.isPending || ruleResources.isError)) return setError("Load the booking page resources before saving.");
     setError(null);
     try {
       if (editing) await update.mutateAsync({ id: editing.id, expectedVersion: editing.version, input: form });
@@ -166,6 +179,21 @@ function CalendarBookingRulesSheetInner({ identity, onClose }: { identity: strin
           <div className="space-y-1"><Label htmlFor="booking-timezone">Time zone</Label><Input id="booking-timezone" value={form.timeZone} onChange={(event) => setForm({ ...form, timeZone: event.target.value })} /></div>
           <div className="space-y-1"><Label htmlFor="booking-expiry">Link expires (optional)</Label><Input id="booking-expiry" type="datetime-local" value={localDateTime(form.linkExpiresAt)} onChange={(event) => setForm({ ...form, linkExpiresAt: event.target.value ? new Date(event.target.value).toISOString() : null })} /></div>
           <fieldset className="space-y-3"><legend className="text-sm font-medium">Working hours</legend>{form.workingHours.map((window, index) => <div key={index} className="flex items-center gap-2"><select aria-label={`Window ${index + 1} day`} className="rounded-md border bg-background p-2 text-sm" value={window.weekday} onChange={(event) => setForm({ ...form, workingHours: form.workingHours.map((item, position) => position === index ? { ...item, weekday: Number(event.target.value) } : item) })}>{days.map((day, dayIndex) => <option key={day} value={dayIndex + 1}>{day}</option>)}</select><Input type="time" aria-label={`Window ${index + 1} start`} value={window.start} onChange={(event) => setForm({ ...form, workingHours: form.workingHours.map((item, position) => position === index ? { ...item, start: event.target.value } : item) })} /><Input type="time" aria-label={`Window ${index + 1} end`} value={window.end} onChange={(event) => setForm({ ...form, workingHours: form.workingHours.map((item, position) => position === index ? { ...item, end: event.target.value } : item) })} /><Button type="button" variant="outline" onClick={() => setForm({ ...form, workingHours: form.workingHours.filter((_, position) => position !== index) })}>Remove</Button></div>)}<Button type="button" variant="outline" disabled={form.workingHours.length >= 28} onClick={() => setForm({ ...form, workingHours: [...form.workingHours, { weekday: 1, start: "09:00", end: "17:00" }] })}>Add hours</Button></fieldset>
+          <fieldset className="space-y-3"><legend className="text-sm font-medium">Rooms and equipment</legend>
+            {editing && ruleResources.access.denied ? <p className="text-sm text-muted-foreground">Required resources are unavailable to this account.</p> : editing && (ruleResources.access.pending || ruleResources.isPending) ? <p role="status" className="text-sm">Loading required resources…</p> : editing && (ruleResources.access.unavailable || ruleResources.isError) ? <ErrorState title="Required resources unavailable" error={ruleResources.error} onRetry={() => void ruleResources.refetch()} /> : resources.access.unavailable || resources.isError ? <ErrorState title="Rooms and equipment unavailable" error={resources.error} onRetry={() => void resources.refetch()} /> : resources.access.pending || resources.isPending ? <p role="status" className="text-sm">Loading rooms and equipment…</p> : resources.data?.length ? resources.data.filter((resource) => resource.status === "active" || selectedResources.some((item) => item.resourceId === resource.id)).map((resource) => {
+              const selected = selectedResources.find((item) => item.resourceId === resource.id);
+              return <div key={resource.id} className="space-y-2 rounded-md border p-2">
+                <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={!!selected} disabled={!selected && (resource.status !== "active" || selectedResources.length >= 20)} onChange={(event) => setResourceRequirement(resource.id, event.target.checked ? { resourceId: resource.id, units: 1, minimumCapacity: 1, requiredLocation: null, requiredAccessibility: [] } : null)} /><span>{resource.name} · {resource.kind} · capacity {resource.capacity}{resource.ownership === "source" ? " · source owned" : ""}{resource.requiresApproval ? " · approval required" : ""}</span></label>
+                {selected ? <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1"><Label htmlFor={`resource-${resource.id}-units`}>Units</Label><Input id={`resource-${resource.id}-units`} type="number" min={1} max={resource.divisible ? Math.min(resource.capacity, 100) : 1} value={selected.units} onChange={(event) => setResourceRequirement(resource.id, { ...selected, units: Number(event.target.value) })} /></div>
+                  <div className="space-y-1"><Label htmlFor={`resource-${resource.id}-capacity`}>Minimum capacity</Label><Input id={`resource-${resource.id}-capacity`} type="number" min={1} max={Math.min(resource.capacity, 10000)} value={selected.minimumCapacity} onChange={(event) => setResourceRequirement(resource.id, { ...selected, minimumCapacity: Number(event.target.value) })} /></div>
+                  <div className="space-y-1"><Label htmlFor={`resource-${resource.id}-location`}>Required location</Label><Input id={`resource-${resource.id}-location`} value={selected.requiredLocation ?? ""} onChange={(event) => setResourceRequirement(resource.id, { ...selected, requiredLocation: event.target.value || null })} /></div>
+                  <div className="space-y-1"><Label htmlFor={`resource-${resource.id}-accessibility`}>Accessibility needs</Label><Input id={`resource-${resource.id}-accessibility`} value={selected.requiredAccessibility.join(", ")} onChange={(event) => setResourceRequirement(resource.id, { ...selected, requiredAccessibility: event.target.value.split(",").map((value) => value.trim()).filter(Boolean) })} /></div>
+                </div> : null}
+              </div>;
+            }) : <p className="text-sm text-muted-foreground">No rooms or equipment are available for this organization.</p>}
+            {resources.data ? selectedResources.filter((requirement) => !resources.data.some((resource) => resource.id === requirement.resourceId)).map((requirement) => <div key={requirement.resourceId} className="flex items-center justify-between rounded-md border p-2 text-sm"><span>Unavailable resource #{requirement.resourceId}</span><Button type="button" variant="outline" onClick={() => setResourceRequirement(requirement.resourceId, null)}>Remove</Button></div>) : null}
+          </fieldset>
           <fieldset className="space-y-3"><legend className="text-sm font-medium">Visitor questions</legend>{form.intakeFields.map((field, index) => <div key={index} className="space-y-2 rounded-md border p-2"><div className="flex gap-2"><Input aria-label={`Question ${index + 1} label`} placeholder="Question label" value={field.label} onChange={(event) => setForm({ ...form, intakeFields: form.intakeFields.map((item, position) => position === index ? { ...item, label: event.target.value } : item) })} /><Button type="button" variant="outline" onClick={() => setForm({ ...form, intakeFields: form.intakeFields.filter((_, position) => position !== index) })}>Remove</Button></div><div className="flex items-center gap-2"><select aria-label={`Question ${index + 1} type`} className="rounded-md border bg-background p-2 text-sm" value={field.type} onChange={(event) => setForm({ ...form, intakeFields: form.intakeFields.map((item, position) => position === index ? { ...item, type: event.target.value as typeof field.type, options: event.target.value === "select" ? ["Option 1"] : undefined } : item) })}><option value="text">Short text</option><option value="textarea">Long text</option><option value="email">Email</option><option value="phone">Phone</option><option value="select">Choice</option></select><label className="flex items-center gap-1 text-sm"><input type="checkbox" checked={field.required} onChange={(event) => setForm({ ...form, intakeFields: form.intakeFields.map((item, position) => position === index ? { ...item, required: event.target.checked } : item) })} />Required</label></div>{field.type === "select" ? <Input aria-label={`Question ${index + 1} choices`} placeholder="Choices separated by commas" value={field.options?.join(", ") ?? ""} onChange={(event) => setForm({ ...form, intakeFields: form.intakeFields.map((item, position) => position === index ? { ...item, options: event.target.value.split(",").map((value) => value.trim()).filter(Boolean) } : item) })} /> : null}</div>)}<Button type="button" variant="outline" disabled={form.intakeFields.length >= 12} onClick={() => setForm({ ...form, intakeFields: [...form.intakeFields, { key: `question_${Date.now().toString(36)}`, label: "", type: "text", required: false }] })}>Add question</Button></fieldset>
           <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.requiresApproval} onChange={(event) => setForm({ ...form, requiresApproval: event.target.checked })} />Require approval before confirming</label>
           <div className="flex gap-2"><Button type="submit" disabled={create.isPending || update.isPending}>Save booking page</Button><Button type="button" variant="outline" onClick={() => setForm(null)}>Cancel</Button></div>
