@@ -101,7 +101,8 @@ describe("the calendar events key fires immediately on permission", () => {
   it("the sources read itself is permission-gated", () => {
     mockCan.mockReturnValue(false);
     mockQuery.mockImplementation((opts: unknown) => opts);
-    const sources = useCalendarSources() as unknown as { enabled: boolean };
+    renderHook(() => useCalendarSources());
+    const sources = mockQuery.mock.calls.at(-1)?.[0] as { enabled: boolean };
 
     expect(sources.enabled).toBe(false);
   });
