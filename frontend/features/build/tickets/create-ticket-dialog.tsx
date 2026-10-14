@@ -99,6 +99,7 @@ function CreateTicketDialogContent({
     handleDrop,
     handleFormSubmit,
     handleExplicitSubmit,
+    handleTitleChange,
     canSubmit,
     projectSelectValue,
     projectTriggerLabel,
@@ -195,6 +196,7 @@ function CreateTicketDialogContent({
                 titleTriggerProps={createTicketAi.titleTrigger}
                 titleInlineSession={titleInlineSession}
                 duplicates={duplicates}
+                onTitleChange={handleTitleChange}
               />
 
               <TicketDialogDescriptionSection

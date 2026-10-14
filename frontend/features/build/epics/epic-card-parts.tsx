@@ -19,7 +19,7 @@ import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import type { ProjectStatusRecord, Ticket } from "@/types/projects";
 
 interface LinkStoryItemProps {
-  story: { id: number; title: string };
+  story: { id: number; title: string; type: string };
   onSelect: (id: number) => void;
 }
 
@@ -28,8 +28,11 @@ const LinkStoryItem = memo(function LinkStoryItem({ story, onSelect }: LinkStory
   return (
     <button
       onClick={handleClick}
-      className="w-full min-w-0 rounded-md p-2 text-left text-xs transition-colors hover:bg-primary/[0.06]"
+      className="flex w-full min-w-0 items-center gap-1.5 rounded-md p-2 text-left text-xs transition-colors hover:bg-primary/[0.06]"
     >
+      <span className="shrink-0 rounded bg-muted px-1 text-micro text-muted-foreground">
+        {story.type.charAt(0) + story.type.slice(1).toLowerCase()}
+      </span>
       <TruncatedText text={story.title} />
     </button>
   );
@@ -115,7 +118,7 @@ interface EpicStoriesPanelProps {
   projectStatuses?: ProjectStatusRecord[];
   canCreate: boolean;
   canUpdate: boolean;
-  unlinkedItems: Array<{ id: number; title: string }>;
+  unlinkedItems: Array<{ id: number; title: string; type: string }>;
   onCreateStory: (title: string, epicId: number) => void;
   onLinkStory: (storyId: number, epicId: number) => void;
 }

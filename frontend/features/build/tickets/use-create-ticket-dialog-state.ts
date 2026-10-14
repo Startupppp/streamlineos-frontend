@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useLayoutEffect, useState, useMemo, useRef } from "react";
+import { useCallback, useLayoutEffect, useState, useMemo, useRef } from "react";
 import { useSubmitGuard } from "@/hooks/common/use-submit-guard";
 import { useProjects } from "@/hooks/api/build/projects";
 import { useSourceOverride } from "@/hooks/common/use-source-override";
@@ -130,15 +130,30 @@ export function useCreateTicketDialogState({
   const watchedTitle = form.watch("title") ?? "";
   const watchedDescription = form.watch("description") ?? "";
 
-  useEffect(() => {
-    if (!resolvedOpen) return;
-    const draftKey = `ticket-draft-title-${effectiveProjectId ?? "none"}`;
-    if (watchedTitle) {
-      sessionStorage.setItem(draftKey, watchedTitle);
-    } else {
-      sessionStorage.removeItem(draftKey);
+  const handleTitleChange = useCallback(
+    (value: string) => {
+      if (!resolvedOpen) return;
+      const draftKey = `ticket-draft-title-${effectiveProjectIdRef.current ?? "none"}`;
+      if (value) {
+        sessionStorage.setItem(draftKey, value);
+      } else {
+        sessionStorage.removeItem(draftKey);
+      }
+    },
+    [resolvedOpen],
+  );
+
+  const prevOpenRef = useRef(false);
+  useLayoutEffect(() => {
+    if (resolvedOpen && !prevOpenRef.current) {
+      const draftKey = `ticket-draft-title-${effectiveProjectIdRef.current ?? "none"}`;
+      const draft = sessionStorage.getItem(draftKey);
+      if (draft && !form.getValues("title")) {
+        form.setValue("title", draft, { shouldDirty: true });
+      }
     }
-  }, [resolvedOpen, effectiveProjectId, watchedTitle]);
+    prevOpenRef.current = resolvedOpen;
+  }, [resolvedOpen, form]);
 
   const duplicates = useDuplicateTitleWarning(watchedTitle, effectiveProjectId);
 
@@ -357,6 +372,7 @@ export function useCreateTicketDialogState({
     handleDrop,
     handleFormSubmit,
     handleExplicitSubmit,
+    handleTitleChange,
     canSubmit,
     projectSelectValue,
     projectTriggerLabel,

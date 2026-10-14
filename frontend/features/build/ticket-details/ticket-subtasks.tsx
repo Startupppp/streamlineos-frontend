@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import type { InfiniteData } from "@tanstack/react-query";
+import type { CursorPageResponse } from "@/types/projects";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -54,7 +56,7 @@ function ExistingTicketLinker({
 }) {
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
-  const debounced = useDebouncedValue(q, 250);
+  const debounced = useDebouncedValue(q, 300);
   const updateTicket = useUpdateTicket(projectId);
   const queryClient = useQueryClient();
 
@@ -75,9 +77,42 @@ function ExistingTicketLinker({
       { ticketId: result.id, version: result.version, parentTicketId: ticketId },
       {
         onSuccess: () => {
-          void queryClient.invalidateQueries({
-            queryKey: buildWorkQueryKeys.projects.subtasks(ticketId, projectId),
-          });
+          const subtaskKey = buildWorkQueryKeys.projects.subtasks(ticketId, projectId);
+          const cachedTicket = queryClient.getQueryData<Ticket>(
+            buildWorkQueryKeys.projects.ticket(projectId, result.id),
+          );
+          if (cachedTicket) {
+            queryClient.setQueryData<Ticket[]>(
+              subtaskKey,
+              (prev) => (prev ? [...prev, cachedTicket] : [cachedTicket]),
+            );
+          } else {
+            const ticketCollections = queryClient.getQueriesData<
+              CursorPageResponse<Ticket> | InfiniteData<CursorPageResponse<Ticket>>
+            >({ queryKey: buildWorkQueryKeys.projects.tickets({ projectId }) });
+            let foundTicket: Ticket | undefined;
+            for (const [, col] of ticketCollections) {
+              if (!col) continue;
+              const pageTickets = "pages" in col
+                ? col.pages.flatMap((p) => p.data)
+                : col.data;
+              const match = pageTickets.find((t) => t.id === result.id);
+              if (match) { foundTicket = match; break; }
+            }
+            const ticketToAdd = foundTicket;
+            if (ticketToAdd !== undefined) {
+              queryClient.setQueryData<Ticket[]>(
+                subtaskKey,
+                (prev) => (prev ? [...prev, ticketToAdd] : [ticketToAdd]),
+              );
+            } else {
+              void queryClient.invalidateQueries({
+                queryKey: subtaskKey,
+                exact: true,
+                refetchType: "active",
+              });
+            }
+          }
           toast.success("Subtask linked");
           setOpen(false);
           setQ("");
@@ -173,6 +208,7 @@ export function TicketSubtasks({
   const canCreate = useCan("build:tickets:create");
   const canUpdate = useCan("build:tickets:update");
   const { data: projectData, isLoading: projectLoading } = useProject(projectId);
+  const queryClient = useQueryClient();
 
   const projectKey = projectData?.key ?? null;
   const projectStatuses: ProjectStatusRecord[] = projectData?.statuses ?? [];
@@ -184,9 +220,16 @@ export function TicketSubtasks({
   const excludeIds = useMemo(() => {
     const ids = new Set(subtasks.map((s) => s.id));
     ids.add(ticketId);
-    if (parentTicketId != null) ids.add(parentTicketId);
+    let ancestorId: number | null | undefined = parentTicketId;
+    while (ancestorId != null) {
+      ids.add(ancestorId);
+      const ancestor = queryClient.getQueryData<Ticket>(
+        buildWorkQueryKeys.projects.ticket(projectId, ancestorId),
+      );
+      ancestorId = ancestor?.parentTicketId;
+    }
     return ids;
-  }, [subtasks, ticketId, parentTicketId]);
+  }, [subtasks, ticketId, parentTicketId, queryClient, projectId]);
 
   return (
     <div className="pt-2">

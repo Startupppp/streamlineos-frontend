@@ -59,7 +59,7 @@ export interface EpicCardProps {
   projectId: number;
   projectKey?: string | null;
   projectStatuses?: ProjectStatusRecord[];
-  unlinkedItems: Array<{ id: number; title: string }>;
+  unlinkedItems: Array<{ id: number; title: string; type: string }>;
   onDeleteEpic: (epicId: number) => void;
   onLinkStory: (storyId: number, epicId: number) => void;
   onCreateStory: (title: string, epicId: number) => void;

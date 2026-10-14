@@ -30,6 +30,7 @@ interface TicketDialogTitleFieldProps {
   titleTriggerProps: AiTriggerProps;
   titleInlineSession: AiInlineSession | null;
   duplicates: TicketSearchResult[];
+  onTitleChange?: (value: string) => void;
 }
 
 export function TicketDialogTitleField({
@@ -39,6 +40,7 @@ export function TicketDialogTitleField({
   titleTriggerProps,
   titleInlineSession,
   duplicates,
+  onTitleChange,
 }: TicketDialogTitleFieldProps) {
   const { setError, clearErrors, getFieldState } = useFormContext<CreateTicketFormValues>();
   return (
@@ -57,6 +59,7 @@ export function TicketDialogTitleField({
                   onChange={(event) => {
                     const value = event.target.value;
                     field.onChange(value);
+                    onTitleChange?.(value);
                     if (value.length > TICKET_TITLE_MAX) {
                       setError("title", {
                         type: "max",
