@@ -118,6 +118,9 @@ describe("calendar projection refresh", () => {
       START.toISOString(),
       END.toISOString(),
     );
+    const historyKey = platformHierarchyQueryKeys.calendar.history("org-1", "user-1", END.toISOString());
+    const historyPage = { pages: [{ events: [{ id: "history-1", sourceKey: "tasks" }], nextCursor: null }], pageParams: [null] };
+    client.setQueryData(historyKey, historyPage);
     client.setQueryData(sourceKey, [
       { key: "tasks", label: "Tasks", module: "tasks", enabled: true },
     ]);
@@ -142,6 +145,7 @@ describe("calendar projection refresh", () => {
     await waitFor(() => {
       expect(client.getQueryData<Array<{ enabled: boolean }>>(sourceKey)?.[0]?.enabled).toBe(false);
       expect(client.getQueryData<{ events: Array<{ id: string }> }>(eventsKey)?.events).toHaveLength(1);
+      expect(client.getQueryData(historyKey)).toEqual(historyPage);
     });
 
     settle?.({ sourceKey: "tasks", enabled: false });

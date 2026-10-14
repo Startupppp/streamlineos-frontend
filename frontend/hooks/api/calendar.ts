@@ -296,8 +296,8 @@ export function useSetCalendarSourcePreference() {
       if (!enabled) {
         qc.setQueriesData<CalendarEventsResponse>(
           { queryKey: platformHierarchyQueryKeys.calendar.eventsAll },
-          (current) => current === undefined
-            ? undefined
+          (current) => current === undefined || !Array.isArray(current.events)
+            ? current
             : {
                 ...current,
                 events: current.events.filter((event) => event.sourceKey !== sourceKey),
