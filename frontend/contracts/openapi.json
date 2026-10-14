@@ -905916,12 +905916,12 @@
           "Exit"
         ],
         "x-exposure": "permissioned",
-        "x-permission": "hr:exit:create",
+        "x-permission": "hr:exit:manage",
         "x-permission-any": [
-          "hr:exit:create",
-          "hr:exit:manage"
+          "hr:exit:manage",
+          "hr:exit:create"
         ],
-        "description": "Exposure: permission — any of hr:exit:create, hr:exit:manage",
+        "description": "Exposure: permission — any of hr:exit:manage, hr:exit:create",
         "requestBody": {
           "required": true,
           "content": {
