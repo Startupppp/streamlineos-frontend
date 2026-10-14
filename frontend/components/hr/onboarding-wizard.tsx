@@ -37,6 +37,7 @@ import {
   loadAdminWizardDraft,
   saveAdminWizardDraft,
   clearAdminWizardDraft,
+  toAdminWizardDraft,
 } from "./_onboarding/wizard-draft";
 
 type FormValues = z.infer<typeof onboardEmployeeInputSchema>;
@@ -115,28 +116,7 @@ export function OnboardingWizard() {
   useEffect(() => {
     if (!userId || !orgId) return;
     const subscription = form.watch((values) => {
-      saveAdminWizardDraft(
-        {
-          step: currentStep,
-          firstName: values.firstName,
-          lastName: values.lastName,
-          email: values.email,
-          phone: values.phone,
-          gender: values.gender,
-          dateOfBirth: values.dateOfBirth instanceof Date ? values.dateOfBirth.toISOString() : undefined,
-          designation: values.designation,
-          departmentId: values.departmentId,
-          employeeId: typeof values.employeeId === "string" ? values.employeeId : undefined,
-          role: values.role,
-          joiningDate: values.joiningDate instanceof Date ? values.joiningDate.toISOString() : undefined,
-          taxId: typeof values.taxId === "string" ? values.taxId : undefined,
-          monthlySalary: values.monthlySalary,
-          locationId: values.locationId,
-          workerType: values.workerType,
-        },
-        userId,
-        orgId,
-      );
+      saveAdminWizardDraft(toAdminWizardDraft(values, currentStep), userId, orgId);
     });
     return () => subscription.unsubscribe();
   }, [form, userId, orgId, currentStep]);

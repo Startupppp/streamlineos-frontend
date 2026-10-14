@@ -52,6 +52,7 @@ jest.mock("@/components/hr/_onboarding/wizard-draft", () => ({
   loadAdminWizardDraft: () => null,
   saveAdminWizardDraft: jest.fn(),
   clearAdminWizardDraft: jest.fn(),
+  toAdminWizardDraft: (values, step) => ({ ...values, step }),
 }));
 
 const toastError = jest.fn();
