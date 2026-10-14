@@ -1,7 +1,6 @@
 import type { RouteAccessExtension } from "./route-access-extension-types";
 
 const BUILD_PROJECT_VIEW_ROUTES: readonly string[] = [
-  "/build/[projectId]/agile-reports",
   "/build/[projectId]/intake",
   "/build/[projectId]/milestones",
   "/build/[projectId]/modules",
