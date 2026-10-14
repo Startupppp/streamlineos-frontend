@@ -36,7 +36,8 @@ import { useCalendarSourceDeepLink } from "./use-calendar-source-deeplink";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { ErrorState } from "@/components/shared/error-state";
 import { NoPermissionState } from "@/components/shared/no-permission-state";
-import { usePermissionGate } from "@/hooks/api/access";
+import { ModuleDisabledView } from "@/components/shared/page-state-views";
+import { useModuleEnabled, usePermissionGate } from "@/hooks/api/access";
 import { useFinalizeIntegrationConnection } from "@/hooks/api/integrations";
 import { useCalendarConnections } from "./use-calendar-connections";
 import {
@@ -188,6 +189,7 @@ const NO_CALENDAR_SEARCH_PAGES: CalendarSearchResponse[] = [];
 export function CalendarView() {
   const online = useOnlineStatus();
   const calendarAccess = usePermissionGate("calendar:read");
+  const calendarModuleEnabled = useModuleEnabled("calendar");
   const [offlineIntent, setOfflineIntent] =
     useState<CalendarOfflineIntent | null>(null);
   const [offlineEditIntent, setOfflineEditIntent] =
@@ -250,7 +252,7 @@ export function CalendarView() {
     handleCloseAccounts,
   } = useCalendarViewState();
 
-  const { data: calendarSources } = useCalendarSources();
+  const { data: calendarSources } = useCalendarSources(calendarModuleEnabled);
   const isHrEnabled =
     calendarSources !== undefined &&
     calendarSources.some((s) => s.module === "hr");
@@ -264,7 +266,9 @@ export function CalendarView() {
     const interval = window.setInterval(() => setClockNow(new Date()), 60_000);
     return () => window.clearInterval(interval);
   }, []);
-  const savedViewsQuery = useCalendarSavedViews(viewMode !== "history");
+  const savedViewsQuery = useCalendarSavedViews(
+    calendarModuleEnabled && viewMode !== "history",
+  );
   const selectedSavedView = savedViewsQuery.data?.pages
     .flatMap((page) => page.items)
     .find((item) =>
@@ -323,7 +327,10 @@ export function CalendarView() {
   } = useCalendarEvents(
     rangeStart,
     rangeEnd,
-    viewMode !== "history" && viewMode !== "my-day" && !savedFilterId,
+    calendarModuleEnabled &&
+      viewMode !== "history" &&
+      viewMode !== "my-day" &&
+      !savedFilterId,
   );
   const myDayStart = startOfDay(currentDate);
   const myDayWindow = selectedSavedView
@@ -355,7 +362,8 @@ export function CalendarView() {
       hiddenConnectionIds:
         hiddenIds.length > 0 ? hiddenIds.join(",") : undefined,
     },
-    viewMode !== "history" &&
+    calendarModuleEnabled &&
+      viewMode !== "history" &&
       (viewMode === "my-day" || Boolean(savedFilterId)) &&
       !savedViewResolving &&
       !savedViewLookupFailed &&
@@ -431,7 +439,7 @@ export function CalendarView() {
     [connections],
   );
 
-  useCalendarSourceDeepLink();
+  useCalendarSourceDeepLink(calendarModuleEnabled);
 
   const afterLoad = useAfterLoad();
 
@@ -470,6 +478,7 @@ export function CalendarView() {
     rangeStart,
     rangeEnd,
     attendanceEventsVisible &&
+      calendarModuleEnabled &&
       viewMode !== "history" &&
       viewMode !== "my-day" &&
       !savedFilterId,
@@ -488,7 +497,8 @@ export function CalendarView() {
   } = useExternalCalendarEvents(
     rangeStart,
     rangeEnd,
-    viewMode !== "history" &&
+    calendarModuleEnabled &&
+      viewMode !== "history" &&
       viewMode !== "my-day" &&
       !savedFilterId &&
       (connectionsLoading || activeConnectionCount > 0),
@@ -496,7 +506,7 @@ export function CalendarView() {
 
   const historyQuery = useCalendarHistory(
     historyBefore,
-    viewMode === "history",
+    calendarModuleEnabled && viewMode === "history",
   );
   const historyData = historyQuery.data;
   const historyError = historyQuery.error;
@@ -776,20 +786,23 @@ export function CalendarView() {
   if (online && calendarAccess.pending)
     return <CalendarListFallback label="Checking Calendar access" />;
 
+  if (online && calendarAccess.unavailable)
+    return (
+      <ErrorState
+        title="Calendar access unavailable"
+        description="Calendar permissions could not be checked. Try again shortly."
+      />
+    );
+
+  if (online && !calendarModuleEnabled)
+    return <ModuleDisabledView moduleKey="calendar" />;
+
   if (online && calendarAccess.denied)
     return (
       <NoPermissionState
         permission="calendar:read"
         title="Calendar access denied"
         description="You do not have permission to view Calendar events."
-      />
-    );
-
-  if (online && calendarAccess.unavailable)
-    return (
-      <ErrorState
-        title="Calendar access unavailable"
-        description="Calendar permissions could not be checked. Try again shortly."
       />
     );
 

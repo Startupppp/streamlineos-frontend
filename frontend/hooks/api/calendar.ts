@@ -244,7 +244,7 @@ export function useCalendarHistory(before: string, enabled = true) {
   });
 }
 
-export function useCalendarSources() {
+export function useCalendarSources(enabled = true) {
   const qc = useQueryClient();
   const { data: session } = useSession();
   const orgId = session?.orgId ?? "";
@@ -261,7 +261,7 @@ export function useCalendarSources() {
     queryFn: ({ signal }) =>
       apiClient.get<CalendarSource[]>("/calendar/sources", undefined, signal, calendarSourcesContract),
     staleTime: 30_000,
-    enabled: Boolean(orgId && userId) && canView,
+    enabled: Boolean(orgId && userId) && canView && enabled,
   });
 }
 

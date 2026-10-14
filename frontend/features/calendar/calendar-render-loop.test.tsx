@@ -11,6 +11,7 @@ let mockCalendarPermission = {
   pending: false,
   unavailable: false,
 };
+let mockCalendarModuleEnabled = true;
 
 jest.mock("./big-calendar-wrapper", () => ({
   BigCalendarWrapper: () => null,
@@ -36,6 +37,8 @@ jest.mock("@/hooks/api/access", () => ({
   useScope: () => "all",
   useModuleEnabled: () => true,
   usePermissionGate: () => mockCalendarPermission,
+  useModuleEnabled: (moduleKey: string) =>
+    moduleKey === "calendar" ? mockCalendarModuleEnabled : true,
   useAccess: () => ({ data: undefined, isLoading: false }),
 }));
 
@@ -123,6 +126,7 @@ beforeEach(() => {
     pending: false,
     unavailable: false,
   };
+  mockCalendarModuleEnabled = true;
   mockRenderCount = 0;
   mockShellVariant = "desktop";
   mockReplace.mockReset();
@@ -152,6 +156,27 @@ async function renderCalendar() {
 }
 
 describe("/calendar render stability", () => {
+  it("shows a disabled module separately from denied access and empty events", async () => {
+    mockCalendarModuleEnabled = false;
+    mockCalendarPermission = {
+      allowed: true,
+      denied: false,
+      pending: false,
+      unavailable: false,
+    };
+
+    await renderCalendar();
+
+    expect(
+      screen.getByRole("status", { name: "Module not enabled: Calendar" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Calendar access denied")).not.toBeInTheDocument();
+    expect(screen.queryByText("No events in this period")).not.toBeInTheDocument();
+    const paths = mockApiGet.mock.calls.map((call) => call[0]);
+    expect(paths).not.toContain("/calendar/events");
+    expect(paths).not.toContain("/calendar/sources");
+  });
+
   it("shows every authorized event in the mobile list after the first fifty", async () => {
     mockShellVariant = "mobile";
     mockSearchParams = new URLSearchParams("mode=list");
