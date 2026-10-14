@@ -208,20 +208,22 @@ export async function proxy(req: NextRequest) {
 
   if (pathname.startsWith("/api/")) return NextResponse.next();
 
+  const publicCalendarPage = isPublicCalendarPage(pathname);
   const secret = process.env.NEXTAUTH_SECRET;
   let token: JWT | null = null;
-  for (const cookieName of sessionCookieBases()) {
-    token = await getToken({
-      req,
-      secret,
-      cookieName,
-      salt: cookieName,
-      secureCookie: cookieName.startsWith("__Secure-"),
-    });
-    if (token) break;
+  if (!publicCalendarPage) {
+    for (const cookieName of sessionCookieBases()) {
+      token = await getToken({
+        req,
+        secret,
+        cookieName,
+        salt: cookieName,
+        secureCookie: cookieName.startsWith("__Secure-"),
+      });
+      if (token) break;
+    }
   }
 
-  const publicCalendarPage = isPublicCalendarPage(pathname);
   const isProtected =
     (matchesAny(pathname, PROTECTED_ROUTES) && !publicCalendarPage) || isBlogAdminPath(pathname);
 
@@ -239,7 +241,7 @@ export async function proxy(req: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  if (token && !publicCalendarPage) {
+  if (token) {
     if (token.isActive === false)
       return withExpiredSessionCookies(
         redirectTo(
