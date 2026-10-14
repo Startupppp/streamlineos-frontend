@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogBody } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter, DialogBody } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -268,6 +268,7 @@ export function SuccessionTab() {
         <DialogContent className="flex max-h-[90dvh] flex-col gap-0 p-0">
           <DialogHeader className="shrink-0 border-b border-border px-6 py-4">
             <DialogTitle>New Succession Plan</DialogTitle>
+            <DialogDescription className="sr-only">Assign a successor to a key role and set their readiness timeline.</DialogDescription>
           </DialogHeader>
           <DialogBody className="space-y-3 px-6 py-4">
             <div className="space-y-1">

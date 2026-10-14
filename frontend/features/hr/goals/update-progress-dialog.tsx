@@ -7,6 +7,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -36,6 +37,7 @@ export function UpdateProgressDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Update Progress</DialogTitle>
+          <DialogDescription className="sr-only">Set the current completion percentage for this goal.</DialogDescription>
         </DialogHeader>
         {goal && (
           <div className="space-y-4 pt-2">

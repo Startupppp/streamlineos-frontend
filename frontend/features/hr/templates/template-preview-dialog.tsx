@@ -7,6 +7,7 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -53,6 +54,7 @@ export function TemplatePreviewDialog({ template }: TemplatePreviewDialogProps) 
       <DialogContent className="max-w-3xl max-h-[80dvh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-sm">{template.name} — Preview</DialogTitle>
+          <DialogDescription className="sr-only">Preview the rendered output of this HR template.</DialogDescription>
         </DialogHeader>
         {render.isPending && (
           <div className="flex items-center justify-center py-12">

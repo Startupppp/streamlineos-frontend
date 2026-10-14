@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetBody } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetBody } from "@/components/ui/sheet";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { ErrorState } from "@/components/shared/error-state";
 import { NoPermissionState } from "@/components/shared/no-permission-state";
@@ -76,6 +76,7 @@ export function DrilldownSheet({ open, onClose, metric, title, departmentId }: D
       <SheetContent side="right" className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl">
         <SheetHeader className="shrink-0 border-b border-border px-6 py-4 text-left">
           <SheetTitle>{title} — Details</SheetTitle>
+          <SheetDescription className="sr-only">Detailed employee records for the selected analytics metric.</SheetDescription>
         </SheetHeader>
 
         <SheetBody className="px-6 py-4">

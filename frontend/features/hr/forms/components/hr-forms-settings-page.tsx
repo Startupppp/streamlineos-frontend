@@ -3,7 +3,7 @@
 import { useCallback, useState } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
@@ -92,6 +92,7 @@ export function HrFormsSettingsPage() {
         <SheetContent className="w-full sm:max-w-3xl overflow-hidden flex flex-col">
           <SheetHeader className="shrink-0 pb-3 border-b">
             <SheetTitle className="text-base">Create Form</SheetTitle>
+            <SheetDescription className="sr-only">Build and configure the fields for a new HR form.</SheetDescription>
           </SheetHeader>
           <div className="flex-1 min-h-0 overflow-hidden py-4">
             <FormBuilder onSave={handleCreate} isPending={create.isPending} />

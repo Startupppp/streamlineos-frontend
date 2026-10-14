@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Textarea } from "@/components/ui/textarea";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 
 interface RejectReasonSheetProps {
   open: boolean;
@@ -46,7 +46,7 @@ export function RejectReasonSheet({
       <SheetContent className="flex flex-col p-0 sm:max-w-sm">
         <SheetHeader className="border-b p-5 pb-4">
           <SheetTitle className="text-base font-semibold">{title}</SheetTitle>
-          <p className="text-sm text-muted-foreground">{description}</p>
+          <SheetDescription className="text-sm text-muted-foreground">{description}</SheetDescription>
         </SheetHeader>
         <div className="flex-1 space-y-4 p-5">
           <div className="space-y-1.5">

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { DataTable, type DataTableColumn, type DataTableProps } from "@/components/ui/data-table";
 import { formatShortDate } from "@/lib/date-utils";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { toast } from "sonner";
@@ -145,6 +145,7 @@ export function SubmissionsDataTable({ formId, submissions, canManage, paginatio
         <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
           <SheetHeader className="mb-4">
             <SheetTitle className="text-base">Submission #{viewSub?.id}</SheetTitle>
+            <SheetDescription className="sr-only">View the submitted form responses for this entry.</SheetDescription>
           </SheetHeader>
           {viewSub && (
             <FormRenderer

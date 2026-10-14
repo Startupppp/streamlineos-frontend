@@ -10,6 +10,7 @@ import { getValidationFieldErrors, type ValidationFieldError } from "@/lib/api-e
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
   SheetFooter,
@@ -215,6 +216,7 @@ export function PolicyFormSheet({
             <SheetTitle>
               {editingPolicy ? "Edit leave policy" : "Create leave policy"}
             </SheetTitle>
+            <SheetDescription className="sr-only">Configure the allowance, accrual rules, and carry-forward limits for this leave policy.</SheetDescription>
           </SheetHeader>
           <Form {...form}>
             <form

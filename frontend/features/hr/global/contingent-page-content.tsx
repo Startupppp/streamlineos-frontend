@@ -9,6 +9,7 @@ import {
   AlertDialog,
   AlertDialogCancel,
   AlertDialogContent,
+  AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
@@ -92,6 +93,7 @@ function CertificateViewer({ contractId }: { contractId: number }) {
           <AlertDialogContent className="max-w-2xl">
             <AlertDialogHeader>
               <AlertDialogTitle>Internship Certificate</AlertDialogTitle>
+              <AlertDialogDescription className="sr-only">Internship completion certificate issued for this engagement.</AlertDialogDescription>
             </AlertDialogHeader>
             {isLoading ? (
               <Skeleton className="h-48 w-full rounded-lg" />

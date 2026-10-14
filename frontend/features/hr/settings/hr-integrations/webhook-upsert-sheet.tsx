@@ -9,6 +9,7 @@ import { CopyIcon, EyeIcon, EyeOffIcon } from "@animateicons/react/lucide";
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
   SheetFooter,
@@ -150,6 +151,7 @@ export function WebhookUpsertSheet({ open, onOpenChange, subscription }: Props) 
       <SheetContent className="w-full sm:max-w-lg flex flex-col gap-0 p-0">
         <SheetHeader className="px-6 pt-6 pb-4 border-b shrink-0">
           <SheetTitle>{isEdit ? "Edit Webhook" : "New Webhook Subscription"}</SheetTitle>
+          <SheetDescription className="sr-only">Configure the name, endpoint URL, and subscribed events for this webhook.</SheetDescription>
         </SheetHeader>
 
         {revealedSecret ? (

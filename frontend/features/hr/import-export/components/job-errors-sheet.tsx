@@ -4,6 +4,7 @@ import { useCallback } from "react";
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
   SheetFooter,
@@ -83,6 +84,7 @@ export function JobErrorsSheet({ jobId, open, onOpenChange }: JobErrorsSheetProp
       <SheetContent className="w-full sm:max-w-lg flex flex-col gap-0 p-0">
         <SheetHeader className="px-6 pt-6 pb-4 border-b border-border shrink-0">
           <SheetTitle>Import Details</SheetTitle>
+          <SheetDescription className="sr-only">Row-level validation and commit errors for this import job.</SheetDescription>
           {job && (
             <TruncatedText text={job.fileName} className="text-xs text-muted-foreground mt-0.5" />
           )}

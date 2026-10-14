@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetBody } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetFooter, SheetBody } from "@/components/ui/sheet";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -72,6 +72,7 @@ export function DeviceSheet({ open, onOpenChange, device }: Props) {
       <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-md">
         <SheetHeader className="shrink-0 border-b border-border px-6 py-4 text-left">
           <SheetTitle>{isEdit ? "Edit Device" : "Add Time Clock Device"}</SheetTitle>
+          <SheetDescription className="sr-only">Register or update a time clock device for attendance tracking.</SheetDescription>
         </SheetHeader>
 
         <Form {...form}>

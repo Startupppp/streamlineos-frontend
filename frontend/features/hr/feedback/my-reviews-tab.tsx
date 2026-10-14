@@ -18,6 +18,7 @@ import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -175,6 +176,7 @@ export function MyReviewsTab() {
         <DialogContent className="max-w-lg max-h-[90dvh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Submit Feedback</DialogTitle>
+            <DialogDescription className="sr-only">Rate and write responses for each question in this review cycle.</DialogDescription>
           </DialogHeader>
           {reviewingRequest && (
             <div className="space-y-5 pt-2">

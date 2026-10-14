@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PlusIcon } from "@animateicons/react/lucide";
@@ -158,6 +158,7 @@ function PlanSheet({ open, plan, onClose }: PlanSheetProps) {
       <SheetContent side="right" className="w-full sm:max-w-md">
         <SheetHeader className="border-b border-border/50 pb-3">
           <SheetTitle>{plan ? "Edit Headcount Plan" : "Add Headcount Plan"}</SheetTitle>
+          <SheetDescription className="sr-only">Set the fiscal year, budgeted headcount, and notes for this workforce plan.</SheetDescription>
         </SheetHeader>
         <form onSubmit={handleSubmit} className="space-y-4 pt-4">
           <div className="space-y-1.5">
