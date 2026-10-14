@@ -180713,6 +180713,14 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "timeZone",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -199737,6 +199745,14 @@
             "name": "end",
             "in": "query",
             "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "timeZone",
+            "in": "query",
+            "required": false,
             "schema": {
               "type": "string"
             }
@@ -851551,6 +851567,11 @@
                                   }
                                 ]
                               },
+                              "version": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
                               "createdAt": {
                                 "type": "string",
                                 "format": "date-time"
@@ -851576,6 +851597,7 @@
                               "location",
                               "notes",
                               "expectedReturnDate",
+                              "version",
                               "createdAt",
                               "updatedAt"
                             ]
@@ -851825,6 +851847,11 @@
                             }
                           ]
                         },
+                        "version": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
                         "createdAt": {
                           "type": "string",
                           "format": "date-time"
@@ -851850,6 +851877,7 @@
                         "location",
                         "notes",
                         "expectedReturnDate",
+                        "version",
                         "createdAt",
                         "updatedAt"
                       ]
@@ -854097,6 +854125,41 @@
                               "updatedAt": {
                                 "type": "string",
                                 "format": "date-time"
+                              },
+                              "requesterName": {
+                                "type": "string"
+                              },
+                              "requesterImage": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "originalCheckIn": {
+                                "anyOf": [
+                                  {
+                                    "type": "string",
+                                    "format": "date-time"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "originalCheckOut": {
+                                "anyOf": [
+                                  {
+                                    "type": "string",
+                                    "format": "date-time"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
                               }
                             },
                             "required": [
@@ -854119,7 +854182,11 @@
                               "attendanceId",
                               "userMembershipId",
                               "createdAt",
-                              "updatedAt"
+                              "updatedAt",
+                              "requesterName",
+                              "requesterImage",
+                              "originalCheckIn",
+                              "originalCheckOut"
                             ]
                           }
                         },
@@ -854222,7 +854289,39 @@
                       "type": "string"
                     },
                     "payrollInputRebuild": {
-                      "type": "boolean"
+                      "type": "object",
+                      "properties": {
+                        "rebuilt": {
+                          "type": "boolean"
+                        },
+                        "periodId": {
+                          "anyOf": [
+                            {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "status": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "rebuilt",
+                        "periodId",
+                        "status"
+                      ]
                     }
                   },
                   "required": [
@@ -881424,6 +881523,7 @@
                   },
                   "designation": {
                     "type": "string",
+                    "minLength": 1,
                     "maxLength": 200
                   },
                   "departmentId": {
@@ -907712,6 +907812,521 @@
         "x-bodyless": true
       }
     },
+    "/hr/exit/admin-record": {
+      "post": {
+        "operationId": "ExitController_adminRecord",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "orgId": {
+                          "type": "string"
+                        },
+                        "userId": {
+                          "type": "string"
+                        },
+                        "reason": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "reasonCategory": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "lastWorkingDate": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "noticePeriodDays": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "status": {
+                          "type": "string"
+                        },
+                        "approvedBy": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "approvedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "hrReviewedBy": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "hrReviewedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "hrRemarks": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "finalReviewedBy": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "finalReviewedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "finalRemarks": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "willingForExitInterview": {
+                          "type": "boolean"
+                        },
+                        "companyFeedback": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "exitInterviewNotes": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "exitInterviewDate": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "exitInterviewConductedBy": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "feedback": {
+                          "anyOf": [
+                            {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "question": {
+                                    "type": "string"
+                                  },
+                                  "answer": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "question",
+                                  "answer"
+                                ]
+                              }
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "userMembershipId": {
+                          "anyOf": [
+                            {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "rowVersion": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "updatedAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "hasResignationLetter": {
+                          "type": "boolean"
+                        },
+                        "user": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "name": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "email": {
+                                  "type": "string"
+                                },
+                                "image": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "designation": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "joiningDate": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "id",
+                                "name",
+                                "email",
+                                "image",
+                                "designation",
+                                "joiningDate"
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "hrReviewer": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "name": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "id",
+                                "name"
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "finalReviewer": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "name": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "id",
+                                "name"
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "orgId",
+                        "userId",
+                        "reason",
+                        "reasonCategory",
+                        "lastWorkingDate",
+                        "noticePeriodDays",
+                        "status",
+                        "approvedBy",
+                        "approvedAt",
+                        "hrReviewedBy",
+                        "hrReviewedAt",
+                        "hrRemarks",
+                        "finalReviewedBy",
+                        "finalReviewedAt",
+                        "finalRemarks",
+                        "willingForExitInterview",
+                        "companyFeedback",
+                        "exitInterviewNotes",
+                        "exitInterviewDate",
+                        "exitInterviewConductedBy",
+                        "feedback",
+                        "userMembershipId",
+                        "rowVersion",
+                        "createdAt",
+                        "updatedAt",
+                        "hasResignationLetter",
+                        "user",
+                        "hrReviewer",
+                        "finalReviewer"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "tags": [
+          "Exit"
+        ],
+        "x-exposure": "permissioned",
+        "x-permission": "hr:exit:manage",
+        "description": "Exposure: permission — hr:exit:manage",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "reason": {
+                    "type": "string",
+                    "minLength": 50,
+                    "maxLength": 2000
+                  },
+                  "reasonCategory": {
+                    "type": "string",
+                    "enum": [
+                      "Career growth opportunities",
+                      "Higher education or further studies",
+                      "Better salary or benefits",
+                      "Relocation (family/personal reasons)",
+                      "Work-life balance issues",
+                      "Change in career path",
+                      "Health reasons",
+                      "Personal commitments",
+                      "Job dissatisfaction",
+                      "Starting own business",
+                      "Other"
+                    ]
+                  },
+                  "lastWorkingDate": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "noticePeriodDays": {
+                    "default": 30,
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 180
+                  },
+                  "willingForExitInterview": {
+                    "default": true,
+                    "type": "boolean"
+                  },
+                  "companyFeedback": {
+                    "type": "string",
+                    "maxLength": 2000
+                  },
+                  "resignationLetterUrl": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2048
+                  },
+                  "targetUserId": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "reason",
+                  "reasonCategory",
+                  "lastWorkingDate",
+                  "targetUserId"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      }
+    },
     "/hr/exit/analytics": {
       "get": {
         "operationId": "ExitController_getAnalytics",
@@ -908742,7 +909357,8 @@
                   "amount": {
                     "type": "number",
                     "exclusiveMinimum": 0,
-                    "maximum": 999999999
+                    "maximum": 1000000,
+                    "multipleOf": 0.01
                   },
                   "description": {
                     "type": "string",
@@ -908884,7 +909500,8 @@
                       "amount": {
                         "type": "number",
                         "exclusiveMinimum": 0,
-                        "maximum": 999999999
+                        "maximum": 1000000,
+                        "multipleOf": 0.01
                       },
                       "description": {
                         "type": "string",
@@ -1189231,7 +1189848,8 @@
                   "amount": {
                     "type": "number",
                     "exclusiveMinimum": 0,
-                    "maximum": 999999999
+                    "maximum": 1000000,
+                    "multipleOf": 0.01
                   },
                   "description": {
                     "type": "string",
@@ -1189353,7 +1189971,8 @@
                   "amount": {
                     "type": "number",
                     "exclusiveMinimum": 0,
-                    "maximum": 999999999
+                    "maximum": 1000000,
+                    "multipleOf": 0.01
                   },
                   "description": {
                     "type": "string",
@@ -1217025,7 +1217644,11 @@
                           "type": "string"
                         },
                         "mode": {
-                          "type": "string"
+                          "type": "string",
+                          "enum": [
+                            "archive",
+                            "retire"
+                          ]
                         },
                         "dependencies": {
                           "type": "array",
