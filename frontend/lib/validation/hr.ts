@@ -84,7 +84,7 @@ function validateReportingChoice(
 
 export const MIN_EMPLOYMENT_AGE_YEARS = 16;
 
-const UNICODE_NAME_PATTERN = /^[\p{L}\p{M}\s'\-]+$/u;
+const UNNAMEABLE_CHARACTER = /[\p{Extended_Pictographic}\p{C}]/u;
 
 export const onboardEmployeeInputSchema = z.object({
   firstName: z
@@ -94,8 +94,8 @@ export const onboardEmployeeInputSchema = z.object({
     .max(80, "First name must be at most 80 characters")
     .refine(hasLetterOrDigit, "First name must contain a letter or number")
     .refine(
-      (v) => UNICODE_NAME_PATTERN.test(v),
-      "Name may only contain letters, spaces, apostrophes, and hyphens",
+      (v) => !UNNAMEABLE_CHARACTER.test(v),
+      "Name cannot contain emoji or invisible characters",
     )
     .transform(normalizeNamePart),
   lastName: z
@@ -105,8 +105,8 @@ export const onboardEmployeeInputSchema = z.object({
     .max(80, "Last name must be at most 80 characters")
     .refine(hasLetterOrDigit, "Last name must contain a letter or number")
     .refine(
-      (v) => UNICODE_NAME_PATTERN.test(v),
-      "Name may only contain letters, spaces, apostrophes, and hyphens",
+      (v) => !UNNAMEABLE_CHARACTER.test(v),
+      "Name cannot contain emoji or invisible characters",
     )
     .transform(normalizeNamePart),
   email: z
