@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 
 import {
   DropdownMenu,
@@ -29,6 +30,7 @@ import {
 import { EllipsisIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import {
+  useAccess,
   useCan,
   useCanManageOrganizationMembership,
 } from "@/hooks/api/access";
@@ -58,6 +60,7 @@ export function UserActionsMenu({ user, onView }: UserActionsMenuProps) {
   const { mutate: removeMember, isPending: isRemoving } = useRemoveOrgMember();
   const canManage = useCan("settings:organization:manage");
   const canChangeRole = useCanManageOrganizationMembership();
+  const viewerIsOwner = useAccess().data?.isOrgOwner === true;
   const [pendingAction, setPendingAction] = useState<PendingAction | null>(
     null,
   );
@@ -286,10 +289,20 @@ export function UserActionsMenu({ user, onView }: UserActionsMenuProps) {
           {user.isOwner && canManage && (
             <>
               <DropdownMenuSeparator />
-              <DropdownMenuItem disabled>
-                <ShieldCheck className="h-3.5 w-3.5 mr-2" />
-                Owner — transfer ownership first
-              </DropdownMenuItem>
+              {/* The start-transfer flow lives in Organization settings → Danger Zone. */}
+              {viewerIsOwner ? (
+                <DropdownMenuItem asChild>
+                  <Link href="/settings/organization">
+                    <ShieldCheck className="h-3.5 w-3.5 mr-2" />
+                    Transfer ownership…
+                  </Link>
+                </DropdownMenuItem>
+              ) : (
+                <DropdownMenuItem disabled>
+                  <ShieldCheck className="h-3.5 w-3.5 mr-2" />
+                  Owner — only the owner can transfer ownership
+                </DropdownMenuItem>
+              )}
             </>
           )}
         </DropdownMenuContent>

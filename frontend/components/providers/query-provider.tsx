@@ -9,7 +9,7 @@ import {
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { isApiError } from "@/lib/api-client";
+import { isApiError, outageCircuitRemainingMs } from "@/lib/api-client";
 import { isContractViolation } from "@/lib/api-envelope";
 import { growthAndSignQueryKeys } from "@/lib/query-keys/growth-and-sign";
 import { registerQueryCacheClearer } from "@/lib/query-cache-control";
@@ -38,6 +38,17 @@ function shouldRetryQuery(failureCount: number, error: unknown): boolean {
     }
   }
   return true;
+}
+
+/**
+ * One transient network failure opens the client's outage circuit for >=5s, and
+ * every read on the page then failed fast inside it -- including its single retry,
+ * which the default 1s delay fired while the circuit was still open. That is the
+ * "Network error" panel on Account Settings right after re-login (QA 2026-10-13).
+ * Holding the retry until the circuit closes lets it reach the origin.
+ */
+export function retryDelayPastOutageCircuit(failureCount: number, error: unknown): number {
+  return Math.max(queryRetryDelay(failureCount, error), outageCircuitRemainingMs());
 }
 
 function carriesAiCharge(data: unknown): boolean {
@@ -70,7 +81,7 @@ export function createAppQueryClient(scope = "unscoped"): QueryClient {
         gcTime: 1000 * 60 * 10,
         refetchOnWindowFocus: false,
         retry: shouldRetryQuery,
-        retryDelay: queryRetryDelay,
+        retryDelay: retryDelayPastOutageCircuit,
         throwOnError: readErrorReachesBoundary,
         queryKeyHashFn: scopedQueryKeyHashFn(scope),
       },

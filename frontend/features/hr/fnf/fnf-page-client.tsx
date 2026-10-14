@@ -334,11 +334,21 @@ export function FnfPageClient() {
           <label className="text-sm font-semibold text-foreground">
             Employee <span className="text-destructive">*</span>
           </label>
+          {/* Termination deactivates the account; the default active-only list hid
+              exactly the people a settlement is for. */}
           <EmployeePicker
             value={userId}
             onChange={handleUserIdChange}
             placeholder="Select employee…"
+            includeInactive
           />
+          <p className="text-xs text-muted-foreground">
+            Settle for an employee who has resigned or been terminated. No exit recorded yet?{" "}
+            <Link href="/hr/exit" className="font-medium text-primary underline underline-offset-2">
+              Record the exit first
+            </Link>
+            .
+          </p>
           {userIdError ? (
             <p id="fnf-employee-error" role="alert" className="text-xs text-destructive">
               {userIdError}

@@ -99,7 +99,12 @@ export function DocumentFormFields({
 
   return (
     <div className="space-y-4">
-      {filesCount <= 1 && (
+      {filesCount > 1 ? (
+        <div className="space-y-1">
+          <p className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">Document Name</p>
+          <p className="text-sm text-muted-foreground">Each file is saved under its own file name.</p>
+        </div>
+      ) : (
         <FormField
           control={form.control}
           name="name"

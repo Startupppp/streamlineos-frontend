@@ -46,6 +46,20 @@ function getFileTypeConfig(file: File): { icon: React.ComponentType<{ className?
   return { icon: File, bg: "bg-muted", text: "text-muted-foreground", badge: "FILE" };
 }
 
+/** Mirrors the backend `/storage/upload` allowlist (it re-checks MIME + magic bytes). */
+const ACCEPTED_EXTENSIONS = [".pdf", ".doc", ".docx", ".xls", ".xlsx", ".png", ".jpg", ".jpeg", ".gif", ".webp"];
+const MAX_FILE_BYTES = 10 * 1024 * 1024;
+
+/** Why a file can't be queued, or null when it can. */
+export function uploadRejectionReason(file: Pick<File, "name" | "size">): string | null {
+  const dot = file.name.lastIndexOf(".");
+  const ext = dot >= 0 ? file.name.slice(dot).toLowerCase() : "";
+  if (!ACCEPTED_EXTENSIONS.includes(ext)) return "File type not allowed (PDF, DOC, XLS, PNG, JPG, GIF, WEBP only)";
+  if (file.size === 0) return "File is empty";
+  if (file.size > MAX_FILE_BYTES) return "File is larger than 10MB";
+  return null;
+}
+
 function formatBytes(bytes: number): string {
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
@@ -91,6 +105,9 @@ export function UploadDocumentDialog({
   const [tags, setTags] = useState<string[]>([]);
   const [isDragOver, setIsDragOver] = useState(false);
   const [employeeSearch, setEmployeeSearch] = useState("");
+  // Inline, not toast-only: a toast in an occluded corner reads as a silent failure.
+  const [rejected, setRejected] = useState<{ name: string; reason: string }[]>([]);
+  const [fileErrors, setFileErrors] = useState<Map<File, string>>(new Map());
   const titleAutoPopulated = useRef(false);
 
   const debouncedEmployeeSearch = useDebouncedValue(employeeSearch, 300);
@@ -138,6 +155,8 @@ export function UploadDocumentDialog({
       setTags([]);
       setTagInput("");
       setEmployeeSearch("");
+      setRejected([]);
+      setFileErrors(new Map());
       titleAutoPopulated.current = false;
     }
   }, [open, form]);
@@ -155,18 +174,19 @@ export function UploadDocumentDialog({
 
   const addValidFiles = useCallback((incoming: File[]) => {
     const valid: File[] = [];
+    const refused: { name: string; reason: string }[] = [];
     for (const f of incoming) {
-      if (f.size > 10 * 1024 * 1024) {
-        toast.error(`"${f.name}" exceeds 10MB limit`);
-        continue;
-      }
-      valid.push(f);
+      const reason = uploadRejectionReason(f);
+      if (reason) refused.push({ name: f.name, reason });
+      else valid.push(f);
     }
+    setRejected(refused);
     if (valid.length > 0) setFiles((prev) => [...prev, ...valid]);
   }, []);
 
   const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     addValidFiles(Array.from(e.target.files ?? []));
+    e.target.value = "";
   }, [addValidFiles]);
 
   const handleDragOver = useCallback((e: React.DragEvent<HTMLLabelElement>) => {
@@ -199,6 +219,7 @@ export function UploadDocumentDialog({
 
   const handleClearAllFiles = useCallback(() => {
     setFiles([]);
+    setFileErrors(new Map());
     if (titleAutoPopulated.current) {
       form.setValue("name", "");
       titleAutoPopulated.current = false;
@@ -238,14 +259,11 @@ export function UploadDocumentDialog({
   }, []);
 
   const uploadFileFn = useCallback(
-    async (file: File): Promise<{ key: string; size: number; mimeType: string } | null> => {
+    async (file: File): Promise<{ key: string; size: number; mimeType: string }> => {
       try {
         setUploading(true);
         const result = await uploadFileMutation.mutateAsync({ file, folder: "hr-documents" });
         return { key: result.key, size: result.size, mimeType: result.mimeType };
-      } catch (error) {
-        toast.error(getErrorMessage(error));
-        return null;
       } finally {
         setUploading(false);
       }
@@ -258,18 +276,17 @@ export function UploadDocumentDialog({
     if (files.length === 1 && !data.name.trim()) { toast.error("Document name is required"); return; }
 
     setIsLoading(true);
+    setFileErrors(new Map());
     let successCount = 0;
-    let failCount = 0;
-    let lastError: unknown = null;
+    const failures = new Map<File, string>();
 
     try {
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
         setUploadProgress(`Uploading ${i + 1} of ${files.length}: ${file.name}`);
-        const uploaded = await uploadFileFn(file);
-        if (!uploaded) { failCount++; continue; }
         const docName = files.length === 1 ? data.name : file.name.replace(/\.[^/.]+$/, "");
         try {
+          const uploaded = await uploadFileFn(file);
           await createDocumentMutation.mutateAsync({
             name: docName,
             description: data.description,
@@ -286,16 +303,15 @@ export function UploadDocumentDialog({
           });
           successCount++;
         } catch (error) {
-          failCount++;
-          lastError = error;
+          failures.set(file, getErrorMessage(error));
         }
       }
 
-      if (successCount > 0) {
+      if (failures.size === 0) {
         toast.success(
           files.length === 1
             ? "Document uploaded successfully"
-            : `${successCount} document${successCount > 1 ? "s" : ""} uploaded${failCount > 0 ? `, ${failCount} failed` : ""}`,
+            : `${successCount} documents uploaded`,
         );
         form.reset();
         setFiles([]);
@@ -303,7 +319,10 @@ export function UploadDocumentDialog({
         titleAutoPopulated.current = false;
         onSuccess();
       } else {
-        toast.error(lastError ? getErrorMessage(lastError) : "Failed to upload documents");
+        // Keep the dialog open on the failed files with each one's reason inline.
+        setFiles((prev) => prev.filter((f) => failures.has(f)));
+        setFileErrors(failures);
+        if (successCount > 0) toast.success(`${successCount} uploaded, ${failures.size} failed`);
       }
     } catch (error) {
       toast.error(getErrorMessage(error));
@@ -361,6 +380,16 @@ export function UploadDocumentDialog({
             />
           </label>
 
+          {rejected.length > 0 && (
+            <ul role="alert" className="space-y-1 rounded-lg border border-status-danger-rule bg-status-danger-surface p-2">
+              {rejected.map((r, i) => (
+                <li key={`${r.name}-${i}`} className="text-xs text-status-danger-ink">
+                  <span className="font-medium">{r.name}</span> — not added: {r.reason}
+                </li>
+              ))}
+            </ul>
+          )}
+
           {files.length > 0 && (
             <div className="space-y-2">
               <div className="flex items-center justify-between">
@@ -403,6 +432,9 @@ export function UploadDocumentDialog({
                           </span>
                           <span className="text-micro text-muted-foreground">{formatBytes(f.size)}</span>
                         </div>
+                        {fileErrors.get(f) && (
+                          <p role="alert" className="text-micro text-status-danger-ink mt-0.5">{fileErrors.get(f)}</p>
+                        )}
                       </div>
                       <RemoveFileButton index={i} onClick={handleRemoveFileAtIndex} />
                     </div>

@@ -14,6 +14,8 @@ interface EmployeePickerProps {
   placeholder?: string;
   excludeUserIds?: string[];
   className?: string;
+  /** Also list deactivated employees (e.g. terminated, for a final settlement). */
+  includeInactive?: boolean;
 }
 
 /**
@@ -45,8 +47,11 @@ export function EmployeePicker({
   placeholder = "Select employee…",
   excludeUserIds,
   className,
+  includeInactive,
 }: EmployeePickerProps) {
-  const { employees, isFetching } = useHrEmployeeOptions();
+  const { employees, isFetching } = useHrEmployeeOptions(
+    includeInactive ? { isActive: "all" } : undefined,
+  );
 
   const options = useMemo(
     () =>

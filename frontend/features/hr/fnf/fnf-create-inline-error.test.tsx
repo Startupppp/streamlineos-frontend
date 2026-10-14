@@ -15,8 +15,8 @@ jest.mock("@/components/ui/page-wrapper", () => ({
 }));
 
 jest.mock("@/features/hr/shared/employee-picker", () => ({
-  EmployeePicker: ({ onChange }: { onChange: (id: string) => void }) => (
-    <button type="button" onClick={() => onChange("user_1")}>
+  EmployeePicker: ({ onChange, includeInactive }: { onChange: (id: string) => void; includeInactive?: boolean }) => (
+    <button type="button" data-include-inactive={String(!!includeInactive)} onClick={() => onChange("user_1")}>
       pick employee
     </button>
   ),
@@ -113,5 +113,13 @@ describe("filling suggested amounts puts gratuity in its own field, counted in n
       expect.objectContaining({ userId: "user_1", gratuity: 90000, leaveEncashment: 12500, notes: undefined }),
       expect.anything(),
     );
+  });
+});
+
+describe("who the final settlement picker offers (QA 2026-10-13)", () => {
+  it("lists deactivated (terminated) employees and points at the Exit page", () => {
+    openCreateDrawer();
+    expect(screen.getByRole("button", { name: "pick employee" })).toHaveAttribute("data-include-inactive", "true");
+    expect(screen.getByRole("link", { name: "Record the exit first" })).toHaveAttribute("href", "/hr/exit");
   });
 });
