@@ -54,6 +54,7 @@ export interface KanbanTicket {
   cycleId?: number | null;
   moduleId?: number | null;
   rank?: string | null;
+  parentTicketId?: number | null;
   dueDate?: string | null;
   startDate?: string | null;
   timeSpent?: string | null;
