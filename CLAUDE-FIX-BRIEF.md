@@ -112,6 +112,7 @@ Each section gives: where, steps, expected, actual (from the QA run), likely cau
 
 ## B-013: Attaching any image (PNG) breaks the whole ticket page ("Ticket Error / Failed to load ticket details.")
 **Severity:** Critical
+**Status:** FIXED — code and tests landed; browser verification pending
 **Shared root cause group:** G2 Attachment storage/download signing
 
 **Where:** Ticket attachments — https://www.streamlineos.in/build/7/tickets/QAB-84 (Attach files to ticket, then reload) | Role/account: Owner qaown1012b (Owner). Viewer/Member who can attach would hit the same path.
@@ -139,6 +140,7 @@ Each section gives: where, steps, expected, actual (from the QA run), likely cau
 
 ## B-016: JPEG, GIF and WebP attachments also break the ticket page (B-013 is not PNG-only)
 **Severity:** Critical
+**Status:** FIXED — code and tests landed; browser verification pending
 **Shared root cause group:** G2 Attachment storage/download signing
 
 **Where:** Ticket Activity composer — https://www.streamlineos.in/build/7/tickets/QAB-88 (and QAB-89, QAB-90, QAB-91): "Attach files to ticket" (file input with no accept attribute) | Role/account: Owner qaown1012b (Owner).
@@ -170,6 +172,7 @@ Each section gives: where, steps, expected, actual (from the QA run), likely cau
 
 ## B-024: PDF attachments cannot be opened or downloaded (`storage/download` 500; single click is inert)
 **Severity:** High
+**Status:** FIXED — code and tests landed; browser verification pending
 **Shared root cause group:** G2 Attachment storage/download signing
 
 **Where:** Ticket Attachments list — https://www.streamlineos.in/build/7/tickets/QAB-97 (ATTACHMENTS, items shown as buttons named `multi-pdf-NN-0913.pdf`) | Role/account: Owner qaown1012b (Owner). Ticket QAB-97 "R3 PDF attach 10 files 1013" with 10 PDFs attached (see B-018 retest).
@@ -196,6 +199,7 @@ Each section gives: where, steps, expected, actual (from the QA run), likely cau
 
 ## B-001: Double-click on "Create issue" creates duplicate tickets
 **Severity:** High
+**Status:** FIXED — code and tests landed; browser verification pending
 **Shared root cause group:** G1 Submit in-flight guard
 
 **Where:** Create Issue dialog — https://www.streamlineos.in/build/7/issues?create=1 (Board view, QA Project Alpha) | Role/account: Owner qaown1012b (Owner role). Any role with create rights reproduces (Org Admin/Build Admin qaadm1012d too).
@@ -222,6 +226,7 @@ Each section gives: where, steps, expected, actual (from the QA run), likely cau
 
 ## B-014: Double-click on "Create Portfolio" creates two portfolios
 **Severity:** High
+**Status:** FIXED — code and tests landed; browser verification pending
 **Shared root cause group:** G1 Submit in-flight guard
 
 **Where:** Portfolios — https://www.streamlineos.in/build/portfolios → "New portfolio" → dialog "New Portfolio" → "Create Portfolio" | Role/account: Owner qaown1012b (Owner). Admin/Member not tested.
@@ -248,6 +253,7 @@ Each section gives: where, steps, expected, actual (from the QA run), likely cau
 
 ## B-015: Double-click on "Create Program" creates two programs
 **Severity:** High
+**Status:** FIXED — code and tests landed; browser verification pending
 **Shared root cause group:** G1 Submit in-flight guard
 
 **Where:** Programs — https://www.streamlineos.in/build/programs → "New program" → dialog → "Create Program" | Role/account: Owner qaown1012b (Owner).
@@ -274,6 +280,7 @@ Each section gives: where, steps, expected, actual (from the QA run), likely cau
 
 ## B-043: Double-click on "Create epic" creates two epics
 **Severity:** High
+**Status:** UNDER REVIEW — claimed fixed, being re-verified against the code
 **Shared root cause group:** G1 Submit in-flight guard
 
 **Where:** Epics — https://www.streamlineos.in/build/7/epics → "Create Epic" → dialog "Create new epic" → "Create epic" | Role/account: Owner qaown1012b (Owner).
@@ -300,6 +307,7 @@ Each section gives: where, steps, expected, actual (from the QA run), likely cau
 
 ## B-044: Double-click on "Create Milestone" creates two milestones
 **Severity:** High
+**Status:** FIXED — code and tests landed; browser verification pending
 **Shared root cause group:** G1 Submit in-flight guard
 
 **Where:** Milestones — https://www.streamlineos.in/build/7/milestones → "New Milestone" → dialog "New Milestone" → "Create Milestone" | Role/account: Owner qaown1012b (Owner).
@@ -325,6 +333,7 @@ Each section gives: where, steps, expected, actual (from the QA run), likely cau
 
 ## B-045: Double-click on "Create Release" creates two releases
 **Severity:** High
+**Status:** FIXED — code and tests landed; browser verification pending
 **Shared root cause group:** G1 Submit in-flight guard
 
 **Where:** Releases — https://www.streamlineos.in/build/7/releases → "New Release" → dialog "New Release" → "Create Release" | Role/account: Owner qaown1012b (Owner).
@@ -349,6 +358,7 @@ Each section gives: where, steps, expected, actual (from the QA run), likely cau
 
 ## B-027: Dragging a card into an empty column returns 409 "Board order changed; refresh and retry"
 **Severity:** High
+**Status:** FIXED — code and tests landed; browser verification pending
 **Shared root cause group:** G3 Board rank/move endpoint and board state
 
 **Where:** Board drag-and-drop — https://www.streamlineos.in/build/7/issues?q=crash (search with 9 probe cards; columns Todo / In progress / In review / Done) | Role/account: Owner qaown1012b (Owner). Board state: Todo 6, In progress 3, In review 0, Done 0. Cards QAB-101 and QAB-104 are in Todo.
@@ -375,6 +385,7 @@ Each section gives: where, steps, expected, actual (from the QA run), likely cau
 
 ## B-037: Reordering a card within the same column returns 409 and the card snaps back
 **Severity:** High
+**Status:** FIXED — code and tests landed; browser verification pending
 **Shared root cause group:** G3 Board rank/move endpoint and board state
 
 **Where:** https://www.streamlineos.in/build/7/issues?q=crash (Board, Todo column, Ordering = Manual) | Role/account: Owner qaown1012b (Owner). Todo has 4 cards (QAB-103, 104, 105, 106).
@@ -400,6 +411,7 @@ Each section gives: where, steps, expected, actual (from the QA run), likely cau
 
 ## B-039: Posting one project update breaks the Updates page
 **Severity:** High
+**Status:** FIXED — code and tests landed; browser verification pending
 **Shared root cause group:** G8 Server errors mapped to visible, plain-language messages
 
 **Where:** https://www.streamlineos.in/build/7/updates. Role: Owner (QA account qaown1012b).
@@ -428,6 +440,7 @@ Each section gives: where, steps, expected, actual (from the QA run), likely cau
 
 ## B-065: Release "Readiness" and "Risk Level" are not saved on create or edit
 **Severity:** High
+**Status:** FIXED — code and tests landed; browser verification pending
 
 **Where:** Releases → "New Release" (https://www.streamlineos.in/build/7/releases) and release "Edit" → Readiness / Risk Level → "Create Release" / "Save Changes" | Role/account: Owner qaown1012b (Owner).
 
@@ -452,6 +465,7 @@ Each section gives: where, steps, expected, actual (from the QA run), likely cau
 
 ## B-084: The assigned approver (Member with Build Member) has no Decide control
 **Severity:** High (CONFIRM INTENDED: implement the recommended behavior and flag it in your summary)
+**Status:** FIXED — code and tests landed; browser verification pending
 **Shared root cause group:** G6 Permission checks: UI must match server
 
 **Where:** Approvals — https://www.streamlineos.in/build/7/approvals (list) and the Inbox item "Approval requested" — https://www.streamlineos.in/build/inbox | Role/account: Member qamem1012c (Member + Build Member, project 7). Approvals assigned to qamem1012c created by owner qaown1012b: "R10 milestone approval" (approval id 9, entity milestone 7) and "R10 task approval" (approval id 10, entity task QAB-4).
@@ -482,6 +496,7 @@ Each section gives: where, steps, expected, actual (from the QA run), likely cau
 
 ## B-003: Double-click on "Post comment" posts the comment twice
 **Severity:** Medium
+**Status:** FIXED — code and tests landed; browser verification pending
 **Shared root cause group:** G1 Submit in-flight guard
 
 **Where:** Ticket Activity composer — https://www.streamlineos.in/build/7/tickets/QAB-84 (Activity section) | Role/account: Owner qaown1012b (Owner). Any role that can comment.
@@ -508,6 +523,7 @@ Each section gives: where, steps, expected, actual (from the QA run), likely cau
 
 ## B-004: Ticket detail controls have no accessible names
 **Severity:** Medium
+**Status:** FIXED — code and tests landed; browser verification pending
 
 **Where:** Ticket details side panel — https://www.streamlineos.in/build/7/tickets/QAB-84 (Details panel) | Role/account: Owner qaown1012b; any ticket.
 
@@ -530,6 +546,7 @@ Each section gives: where, steps, expected, actual (from the QA run), likely cau
 
 ## B-005: A search longer than 255 characters replaces the board with "Something went wrong"
 **Severity:** Medium
+**Status:** FIXED — code and tests landed; browser verification pending
 **Shared root cause group:** G8 Server errors mapped to visible, plain-language messages
 
 **Where:** Issues search — https://www.streamlineos.in/build/7/issues (Board, List, Table all share it) | Role/account: Owner qaown1012b; any role with view access.
@@ -558,6 +575,7 @@ Each section gives: where, steps, expected, actual (from the QA run), likely cau
 
 ## B-007: A project name made only of spaces is saved (project settings)
 **Severity:** Medium
+**Status:** FIXED — code and tests landed; browser verification pending
 **Shared root cause group:** G4 Shared field validation (client AND server)
 
 **Where:** Project settings > General — https://www.streamlineos.in/build/7/settings | Role/account: Owner qaown1012b (Owner). Project Admin / Build Admin also has settings edit (build:update) and should be checked the same way.
@@ -584,6 +602,7 @@ Each section gives: where, steps, expected, actual (from the QA run), likely cau
 
 ## B-074: Portfolio and Program accept a whitespace-only name
 **Severity:** Medium
+**Status:** FIXED — code and tests landed; browser verification pending
 **Shared root cause group:** G4 Shared field validation (client AND server)
 
 **Where:** https://www.streamlineos.in/build/portfolios ("New portfolio") and https://www.streamlineos.in/build/programs ("New program"), Create dialog. Role: Owner (QA account qaown1012b).
@@ -608,6 +627,7 @@ Each section gives: where, steps, expected, actual (from the QA run), likely cau
 
 ## B-008: Ticket timer "Stop" discards the tracked time
 **Severity:** Medium
+**Status:** FIXED — code and tests landed; browser verification pending
 
 **Where:** Ticket Details > Time Tracking — https://www.streamlineos.in/build/7/tickets/QAB-84 | Role/account: Owner qaown1012b. Any role that can log time on the ticket (Member with Build Member on the project to be checked).
 
@@ -633,6 +653,7 @@ Each section gives: where, steps, expected, actual (from the QA run), likely cau
 
 ## B-019: Double-clicking "Save" in Time Tracking while the timer runs loses the time
 **Severity:** Medium
+**Status:** FIXED — code and tests landed; browser verification pending
 **Shared root cause group:** G1 Submit in-flight guard
 
 **Where:** Ticket Details > Time Tracking — https://www.streamlineos.in/build/7/tickets/QAB-91 | Role/account: Owner qaown1012b (Owner).
@@ -657,6 +678,7 @@ Each section gives: where, steps, expected, actual (from the QA run), likely cau
 
 ## B-010: CSV import accepts story points above 100
 **Severity:** Medium
+**Status:** FIXED — code and tests landed; browser verification pending
 **Shared root cause group:** G4 Shared field validation (client AND server)
 
 **Where:** Issues > Import / Export (Import tab) — https://www.streamlineos.in/build/7/issues (dialog). Endpoints: `POST /build/7/import-export/tickets/preview` and the import request. | Role/account: Owner qaown1012b (Owner). Any role with import permission (Org Admin/Build Admin too).
@@ -687,6 +709,7 @@ Each section gives: where, steps, expected, actual (from the QA run), likely cau
 
 ## B-011: Project Calendar shows no Build tickets
 **Severity:** Medium
+**Status:** FIXED — code and tests landed; browser verification pending
 **Shared root cause group:** G11 Navigation, routes and dead links
 
 **Where:** Project issues view switcher — https://www.streamlineos.in/build/7/issues → "Calendar" button → https://www.streamlineos.in/calendar?source=build&projectId=7 | Role/account: Owner qaown1012b. The org has Build enabled; HR/CRM modules are not used by this org (HR was never enabled in the org setup per prior run).
@@ -714,6 +737,7 @@ Each section gives: where, steps, expected, actual (from the QA run), likely cau
 
 ## B-022: The "Join" button on the org-setup invite banner does nothing
 **Severity:** Medium
+**Status:** FIXED — code and tests landed; browser verification pending
 
 **Where:** https://www.streamlineos.in/org-setup (after sign-in as an invitee) | Role/account: Invitee qadbl1013@sharklasers.com (invited by qaown1012b as Member, Build Member preset; invite sent 201 this round). Owner qaown1012b.
 
@@ -737,6 +761,7 @@ Each section gives: where, steps, expected, actual (from the QA run), likely cau
 
 ## B-025: Board ignores "Ordering", and list "Created" ignores direction (newest is last)
 **Severity:** Medium
+**Status:** FIXED — code and tests landed; browser verification pending
 **Shared root cause group:** G7 List/board query options (sort, columns, sub-issues, filters)
 
 **Where:** Issues board and list — https://www.streamlineos.in/build/7/issues (Display options > Ordering: Manual / Created / Updated / Priority / Due date) | Role/account: Owner qaown1012b (Owner). Project has about 80 tickets; QAB-97 was created at 15:5x today.
@@ -764,6 +789,7 @@ Each section gives: where, steps, expected, actual (from the QA run), likely cau
 
 ## B-034: Table/List: Priority and Due date orderings return the same sequence, and "Updated" does nothing
 **Severity:** Medium
+**Status:** FIXED — code and tests landed; browser verification pending
 **Shared root cause group:** G7 List/board query options (sort, columns, sub-issues, filters)
 
 **Where:** https://www.streamlineos.in/build/7/issues?view=table and ?view=list (Display options → Ordering) | Role/account: Owner qaown1012b (Owner).
@@ -788,6 +814,7 @@ Each section gives: where, steps, expected, actual (from the QA run), likely cau
 
 ## B-035: Board "Columns" option is ignored (always Status columns)
 **Severity:** Medium
+**Status:** IN PROGRESS
 **Shared root cause group:** G7 List/board query options (sort, columns, sub-issues, filters)
 
 **Where:** https://www.streamlineos.in/build/7/issues (Board) → Display options → Columns | Role/account: Owner qaown1012b (Owner).
@@ -813,6 +840,7 @@ Each section gives: where, steps, expected, actual (from the QA run), likely cau
 
 ## B-028: Board stays stale after a successful move
 **Severity:** Medium
+**Status:** FIXED — code and tests landed; browser verification pending
 **Shared root cause group:** G5 Query invalidation after mutations
 
 **Where:** Board — https://www.streamlineos.in/build/7/issues?q=crash | Role/account: Owner qaown1012b (Owner). Target column not empty (In progress with 2–3 cards).
@@ -838,6 +866,7 @@ Each section gives: where, steps, expected, actual (from the QA run), likely cau
 
 ## B-029: At 768 px the board filter bar is off-screen
 **Severity:** Medium
+**Status:** FIXED — code and tests landed; browser verification pending
 **Shared root cause group:** G9 Narrow-viewport layout (375/768 px) and long text
 
 **Where:** Issues toolbar — https://www.streamlineos.in/build/7/issues (Board and Table) at viewport width 768 px (DevTools device toolbar, Responsive, 768 × 1026) | Role/account: Owner qaown1012b (Owner). Desktop-class browser window narrowed to 768 px.
@@ -861,6 +890,7 @@ Each section gives: where, steps, expected, actual (from the QA run), likely cau
 
 ## B-030: The project Files page shows "Project error" for the owner
 **Severity:** Medium
+**Status:** FIXED — code and tests landed; browser verification pending
 
 **Where:** https://www.streamlineos.in/build/7/files (sidebar "Files" under PROJECT) | Role/account: Owner qaown1012b (Owner). Also expected for Build Admin/Member if the Files module is shown to them (not checked).
 
@@ -886,6 +916,7 @@ Each section gives: where, steps, expected, actual (from the QA run), likely cau
 
 ## B-031: A member can upload to storage through a hidden file input
 **Severity:** Medium
+**Status:** FIXED — code and tests landed; browser verification pending
 **Shared root cause group:** G6 Permission checks: UI must match server
 
 **Where:** Ticket detail (Member view) — https://www.streamlineos.in/build/7/tickets/QAB-97 | Role/account: Member qamem1012c (Member + Build Member on QA Project Alpha). The Activity composer and "Attach files" control are not rendered for this role.
@@ -912,6 +943,7 @@ Each section gives: where, steps, expected, actual (from the QA run), likely cau
 
 ## B-033: The member's "Add ticket due date" calendar option does nothing
 **Severity:** Medium
+**Status:** FIXED — code and tests landed; browser verification pending
 **Shared root cause group:** G6 Permission checks: UI must match server
 
 **Where:** https://www.streamlineos.in/calendar?source=build&projectId=7 → "Add to calendar" (header, button "Add") → menuitem "Add ticket due date" → dialog "Add ticket due date" → "Create ticket" | Role/account: Member qamem1012c (Member + Build Member on QA Project Alpha).
@@ -937,6 +969,7 @@ Each section gives: where, steps, expected, actual (from the QA run), likely cau
 
 ## B-042: The Agile reports link is a 404
 **Severity:** Medium
+**Status:** FIXED — code and tests landed; browser verification pending
 **Shared root cause group:** G11 Navigation, routes and dead links
 
 **Where:** The "Agile reports" link in the Build project (project 7). Role: Owner.
@@ -959,6 +992,7 @@ Each section gives: where, steps, expected, actual (from the QA run), likely cau
 
 ## B-046: A 23-digit budget returns 500
 **Severity:** Medium
+**Status:** FIXED — code and tests landed; browser verification pending
 **Shared root cause group:** G4 Shared field validation (client AND server)
 
 **Where:** Budget — https://www.streamlineos.in/build/7/budget → "Set Budget" (inline editor, number input, Save/Cancel) | Role/account: Owner qaown1012b (Owner). Budget was "Not set".
@@ -983,6 +1017,7 @@ Each section gives: where, steps, expected, actual (from the QA run), likely cau
 
 ## B-047: Triage "Decline" always fails
 **Severity:** Medium
+**Status:** FIXED — code and tests landed; browser verification pending
 
 **Where:** Triage — https://www.streamlineos.in/build/7/triage → "Decline" on any row | Role/account: Owner qaown1012b (Owner). Triage had unassigned tickets (QAB-109, QAB-110 in this run).
 
@@ -1007,6 +1042,7 @@ Each section gives: where, steps, expected, actual (from the QA run), likely cau
 
 ## B-048: Release "Delete" opens "Edit Release" underneath it
 **Severity:** Medium
+**Status:** FIXED — code and tests landed; browser verification pending
 
 **Where:** Releases — https://www.streamlineos.in/build/7/releases → row "Actions" menu → "Delete" | Role/account: Owner qaown1012b (Owner).
 
@@ -1033,6 +1069,7 @@ Each section gives: where, steps, expected, actual (from the QA run), likely cau
 
 ## B-049: Duplicate release versions are allowed in one project
 **Severity:** Medium
+**Status:** FIXED — code and tests landed; browser verification pending
 **Shared root cause group:** G4 Shared field validation (client AND server)
 
 **Where:** Releases — https://www.streamlineos.in/build/7/releases → "New Release" | Role/account: Owner qaown1012b (Owner).
@@ -1057,6 +1094,7 @@ Each section gives: where, steps, expected, actual (from the QA run), likely cau
 
 ## B-056: The approval task picker cannot find new tickets
 **Severity:** Medium
+**Status:** FIXED — code and tests landed; browser verification pending
 
 **Where:** Approvals → "Request approval" → "Request task approval" → "Search tasks…" | Role/account: Owner qaown1012b (Owner).
 
@@ -1082,6 +1120,7 @@ Each section gives: where, steps, expected, actual (from the QA run), likely cau
 
 ## B-059: At 375 px the release notes editor overflows (fixed 639 px width)
 **Severity:** Medium
+**Status:** FIXED — code and tests landed; browser verification pending
 **Shared root cause group:** G9 Narrow-viewport layout (375/768 px) and long text
 
 **Where:** Releases → "New Release" dialog (https://www.streamlineos.in/build/7/releases, dialog open), Release Notes rich-text editor, viewport 375 px (DevTools device mode, width 375). | Role/account: Owner qaown1012b (Owner). No record is saved (dialog cancelled).
@@ -1108,6 +1147,7 @@ Each section gives: where, steps, expected, actual (from the QA run), likely cau
 
 ## B-060: At 375 px the ticket Activity action row overflows and the page scrolls sideways
 **Severity:** Medium
+**Status:** FIXED — code and tests landed; browser verification pending
 **Shared root cause group:** G9 Narrow-viewport layout (375/768 px) and long text
 
 **Where:** Ticket detail → ACTIVITY section header row ("Summarize comments", "Handoff", "Draft comment"), e.g. https://www.streamlineos.in/build/7/tickets/QAB-3, viewport 375 px. | Role/account: Owner qaown1012b (Owner). Read-only check; nothing was posted.
@@ -1132,6 +1172,7 @@ Each section gives: where, steps, expected, actual (from the QA run), likely cau
 
 ## B-061: The owner can decide another person's approval
 **Severity:** Medium (CONFIRM INTENDED: implement the recommended behavior and flag it in your summary)
+**Status:** FIXED — code and tests landed; browser verification pending
 **Shared root cause group:** G6 Permission checks: UI must match server
 
 **Where:** Approvals — https://www.streamlineos.in/build/7/approvals → row "Approval actions" → "Decide" | Role/account: Owner qaown1012b (Owner, project 7). Approver set to qamem1012c (Build Member). The signed-in user is NOT the approver.
@@ -1156,6 +1197,7 @@ Each section gives: where, steps, expected, actual (from the QA run), likely cau
 
 ## B-062: The epic card does not refresh after "Save changes"
 **Severity:** Medium
+**Status:** UNDER REVIEW — claimed fixed, being re-verified against the code
 **Shared root cause group:** G5 Query invalidation after mutations
 
 **Where:** Epics — https://www.streamlineos.in/build/7/epics → epic card "More actions" → "Edit" → "Save changes" (epic "R6 epic 1013") | Role/account: Owner qaown1012b (Owner). Epic with 3 linked items (1 Done, 2 To Do).
@@ -1180,6 +1222,7 @@ Each section gives: where, steps, expected, actual (from the QA run), likely cau
 
 ## B-066: Release notes: 10,000 characters pass the counter but the server rejects them
 **Severity:** Medium
+**Status:** FIXED — code and tests landed; browser verification pending
 **Shared root cause group:** G4 Shared field validation (client AND server)
 
 **Where:** Releases → release "Edit" → Release Notes → "Save Changes" (https://www.streamlineos.in/build/7/releases) | Role/account: Owner qaown1012b (Owner). Release "R6 release 1013".
@@ -1206,6 +1249,7 @@ Each section gives: where, steps, expected, actual (from the QA run), likely cau
 
 ## B-070: "Blocks" and "Duplicate of" are not inverted on the other ticket
 **Severity:** Medium
+**Status:** UNDER REVIEW — claimed fixed, being re-verified against the code
 **Shared root cause group:** G10 Ticket relations, parents and history
 
 **Where:** Ticket Relations section — https://www.streamlineos.in/build/7/tickets/QAB-113, /QAB-114, /QAB-115, /QAB-117 | Role/account: Owner qaown1012b (Owner, project 7).
@@ -1235,6 +1279,7 @@ Each section gives: where, steps, expected, actual (from the QA run), likely cau
 
 ## B-085: Members see Edit on milestones and releases, but Save fails with "Missing permission"
 **Severity:** Medium
+**Status:** FIXED — code and tests landed; browser verification pending
 **Shared root cause group:** G6 Permission checks: UI must match server
 
 **Where:** Milestones — https://www.streamlineos.in/build/7/milestones → row "Actions for R10 milestone" → "Edit" → dialog "Edit Milestone" → "Save Changes" | Role/account: Member qamem1012c (Member + Build Member, project 7). Milestone "R10 milestone" (id 7) created by owner qaown1012b.
@@ -1267,6 +1312,7 @@ Each section gives: where, steps, expected, actual (from the QA run), likely cau
 
 ## B-002: Bidi-override and zero-width characters are accepted in titles
 **Severity:** Low
+**Status:** FIXED — code and tests landed; browser verification pending
 **Shared root cause group:** G4 Shared field validation (client AND server)
 
 **Where:** Create Issue dialog — https://www.streamlineos.in/build/7/issues?create=1 | Role/account: Owner qaown1012b.
@@ -1290,6 +1336,7 @@ Each section gives: where, steps, expected, actual (from the QA run), likely cau
 
 ## B-006: `%` and `_` act as wildcards in search
 **Severity:** Low
+**Status:** FIXED — code and tests landed; browser verification pending
 
 **Where:** Issues search — https://www.streamlineos.in/build/7/issues?q=%25 (encoded `%`) and `?q=_` | Role/account: Owner qaown1012b.
 
@@ -1315,6 +1362,7 @@ Each section gives: where, steps, expected, actual (from the QA run), likely cau
 
 ## B-009: The "Log time" link is a dead end when Timesheets is off
 **Severity:** Low
+**Status:** FIXED — code and tests landed; browser verification pending
 **Shared root cause group:** G11 Navigation, routes and dead links
 
 **Where:** https://www.streamlineos.in/build/7/issues (header "Log time" link) → https://www.streamlineos.in/timesheets?projectId=7 | Role/account: Owner qaown1012b; org where Timesheets module is not enabled (current org).
@@ -1338,6 +1386,7 @@ Each section gives: where, steps, expected, actual (from the QA run), likely cau
 
 ## B-012: Wizard step 7 repeats step 6's text and has no summary
 **Severity:** Low
+**Status:** FIXED — code and tests landed; browser verification pending
 
 **Where:** New Project wizard — https://www.streamlineos.in/build/projects → "New Project" | Role/account: Owner qaown1012b (Owner); project creation rights (Org Admin also).
 
@@ -1361,6 +1410,7 @@ Each section gives: where, steps, expected, actual (from the QA run), likely cau
 
 ## B-017: A 0-byte file gives no message
 **Severity:** Low
+**Status:** FIXED — code and tests landed; browser verification pending
 **Shared root cause group:** G8 Server errors mapped to visible, plain-language messages
 
 **Where:** Ticket Activity composer — https://www.streamlineos.in/build/7/tickets/QAB-92 (and QAB-94) | Role/account: Owner qaown1012b (Owner).
@@ -1384,6 +1434,7 @@ Each section gives: where, steps, expected, actual (from the QA run), likely cau
 
 ## B-020: The ticket heading sticks on "Loading..."
 **Severity:** Low
+**Status:** FIXED — code and tests landed; browser verification pending
 
 **Where:** https://www.streamlineos.in/build/7/tickets/QAB-96 (two tabs open on the same ticket) | Role/account: Owner qaown1012b (Owner).
 
@@ -1405,6 +1456,7 @@ Each section gives: where, steps, expected, actual (from the QA run), likely cau
 
 ## B-023: Browser Back drops the Create dialog's typed title
 **Severity:** Low
+**Status:** FIXED — code and tests landed; browser verification pending
 
 **Where:** https://www.streamlineos.in/build/7/issues → Create Issue (URL …?create=1) | Role/account: Owner qaown1012b (Owner).
 
@@ -1427,6 +1479,7 @@ Each section gives: where, steps, expected, actual (from the QA run), likely cau
 
 ## NEW-06: Title limit differs between Create (no client max) and ticket detail (500)
 **Severity:** Low
+**Status:** FIXED — code and tests landed; browser verification pending
 **Shared root cause group:** G4 Shared field validation (client AND server)
 
 **Where:** Create Issue — https://www.streamlineos.in/build/7/issues?create=1 ; Ticket title — https://www.streamlineos.in/build/7/tickets/QAB-96 (Edit title) | Role/account: Owner qaown1012b (Owner). Admin/Member not re-run.
@@ -1452,6 +1505,7 @@ Each section gives: where, steps, expected, actual (from the QA run), likely cau
 
 ## NEW-10: The scope switcher shows "Organization" instead of the org name
 **Severity:** Low
+**Status:** FIXED — code and tests landed; browser verification pending
 
 **Where:** Build sidebar scope switcher — https://www.streamlineos.in/build/projects (compare https://www.streamlineos.in/build/7/issues) | Role/account: Owner qaown1012b (Owner).
 
@@ -1474,6 +1528,7 @@ Each section gives: where, steps, expected, actual (from the QA run), likely cau
 
 ## NEW-11: The project key is silently rewritten ("qa-1!" becomes "QA1")
 **Severity:** Low
+**Status:** FIXED — code and tests landed; browser verification pending
 
 **Where:** New Project wizard, step 1 — https://www.streamlineos.in/build/projects → "New Project" → Key field | Role/account: Owner qaown1012b (Owner). Wizard closed without creating (Escape).
 
@@ -1496,6 +1551,7 @@ Each section gives: where, steps, expected, actual (from the QA run), likely cau
 
 ## NEW-26: The wizard name error stays after the name is fixed
 **Severity:** Low
+**Status:** FIXED — code and tests landed; browser verification pending
 
 **Where:** New Project wizard, step 1 — https://www.streamlineos.in/build/projects → "New Project" → Name field | Role/account: Owner qaown1012b (Owner). Not created.
 
@@ -1519,6 +1575,7 @@ Each section gives: where, steps, expected, actual (from the QA run), likely cau
 
 ## NEW-27: .exe in the image-only input gives no message
 **Severity:** Low
+**Status:** FIXED — code and tests landed; browser verification pending
 **Shared root cause group:** G8 Server errors mapped to visible, plain-language messages
 
 **Where:** https://www.streamlineos.in/build/7/tickets/<key>, the hidden image-only file input (`accept="image/jpeg,image/png,image/gif,image/webp"`). Role: Owner (QA account qaown1012b).
@@ -1542,6 +1599,7 @@ Each section gives: where, steps, expected, actual (from the QA run), likely cau
 
 ## B-036: The Priority filter is dropped after navigating away and back
 **Severity:** Low
+**Status:** IN PROGRESS
 **Shared root cause group:** G7 List/board query options (sort, columns, sub-issues, filters)
 
 **Where:** https://www.streamlineos.in/build/7/issues (filter bar: Add filter) | Role/account: Owner qaown1012b (Owner).
@@ -1568,6 +1626,7 @@ Each section gives: where, steps, expected, actual (from the QA run), likely cau
 
 ## B-038: At 375 px the ticket sheet stays half-loaded
 **Severity:** Low
+**Status:** FIXED — code and tests landed; browser verification pending
 
 **Where:** https://www.streamlineos.in/build/7/issues?q=crash (Board) at 375 px (DevTools device mode, 375 × 1026) → card "R3 crash probe 6 1013" (QAB-103) | Role/account: Owner qaown1012b (Owner).
 
@@ -1592,6 +1651,7 @@ Each section gives: where, steps, expected, actual (from the QA run), likely cau
 
 ## B-040: Long "Draft awaiting review" text overflows the sidebar
 **Severity:** Low
+**Status:** FIXED — code and tests landed; browser verification pending
 **Shared root cause group:** G9 Narrow-viewport layout (375/768 px) and long text
 
 **Where:** Build sidebar, the "Draft awaiting review" item. Role: Owner.
@@ -1614,6 +1674,7 @@ Each section gives: where, steps, expected, actual (from the QA run), likely cau
 
 ## B-041: A long unbroken ticket title overflows the Triage row
 **Severity:** Low
+**Status:** UNDER REVIEW — claimed fixed, being re-verified against the code
 **Shared root cause group:** G9 Narrow-viewport layout (375/768 px) and long text
 
 **Where:** https://www.streamlineos.in/build/7/triage, a row whose ticket (QAB-2 in the run) has a long unbroken title. Role: Owner.
@@ -1636,6 +1697,7 @@ Each section gives: where, steps, expected, actual (from the QA run), likely cau
 
 ## B-050: A negative budget is blocked with no visible message
 **Severity:** Low
+**Status:** FIXED — code and tests landed; browser verification pending
 **Shared root cause group:** G8 Server errors mapped to visible, plain-language messages
 
 **Where:** Budget — https://www.streamlineos.in/build/7/budget → "Set Budget" → Planned Budget | Role/account: Owner qaown1012b (Owner).
@@ -1656,6 +1718,7 @@ Each section gives: where, steps, expected, actual (from the QA run), likely cau
 
 ## B-051: Budget decimals are rounded inconsistently
 **Severity:** Low
+**Status:** FIXED — code and tests landed; browser verification pending
 **Shared root cause group:** G4 Shared field validation (client AND server)
 
 **Where:** Budget — https://www.streamlineos.in/build/7/budget | Role/account: Owner qaown1012b (Owner).
@@ -1678,6 +1741,7 @@ Each section gives: where, steps, expected, actual (from the QA run), likely cau
 
 ## B-052: Large budgets show an unclear "₹1KCr" label
 **Severity:** Low
+**Status:** FIXED — code and tests landed; browser verification pending
 
 **Where:** Budget — https://www.streamlineos.in/build/7/budget | Role/account: Owner qaown1012b (Owner).
 
@@ -1700,6 +1764,7 @@ Each section gives: where, steps, expected, actual (from the QA run), likely cau
 
 ## B-053: The release version rule is inconsistent
 **Severity:** Low
+**Status:** FIXED — code and tests landed; browser verification pending
 **Shared root cause group:** G4 Shared field validation (client AND server)
 
 **Where:** Releases — https://www.streamlineos.in/build/7/releases → "New Release" / "Edit" → Version | Role/account: Owner qaown1012b (Owner).
@@ -1724,6 +1789,7 @@ Each section gives: where, steps, expected, actual (from the QA run), likely cau
 
 ## B-054: Delegating to the requester gives no message
 **Severity:** Low
+**Status:** FIXED — code and tests landed; browser verification pending
 **Shared root cause group:** G8 Server errors mapped to visible, plain-language messages
 
 **Where:** Approvals — https://www.streamlineos.in/build/7/approvals → row "Approval actions" → "Delegate" → "New Approver" | Role/account: Owner qaown1012b (Owner, also the requester).
@@ -1747,6 +1813,7 @@ Each section gives: where, steps, expected, actual (from the QA run), likely cau
 
 ## B-055: Escalate keeps Level 1
 **Severity:** Low
+**Status:** FIXED — code and tests landed; browser verification pending
 
 **Where:** Approvals — https://www.streamlineos.in/build/7/approvals → row "Approval actions" → "Escalate" | Role/account: Owner qaown1012b (Owner).
 
@@ -1771,6 +1838,7 @@ Each section gives: where, steps, expected, actual (from the QA run), likely cau
 
 ## B-057: Double-click on Save/Delegate sends a second PATCH
 **Severity:** Low
+**Status:** FIXED — code and tests landed; browser verification pending
 **Shared root cause group:** G1 Submit in-flight guard
 
 **Where:** Budget (Save), Epic edit (Save changes), Milestone edit (Save Changes), Approval Delegate (Delegate) | Role/account: Owner qaown1012b (Owner).
@@ -1792,6 +1860,7 @@ Double-click the Save button of each dialog after changing one field.
 
 ## B-063: An epic can be set to Done while linked items are open
 **Severity:** Low (CONFIRM INTENDED: implement the recommended behavior and flag it in your summary)
+**Status:** UNDER REVIEW — claimed fixed, being re-verified against the code
 
 **Where:** Epics → "Edit" → Status → Done → "Save changes" (https://www.streamlineos.in/build/7/epics) | Role/account: Owner qaown1012b (Owner). Epic "R6 epic 1013" with linked items: "R6 epic child 1013" (Done, 3 pts), "R6 parent 1013" (To Do, 5 pts), "R6 link target 1013" (To Do, 2 pts).
 
@@ -1814,6 +1883,7 @@ Double-click the Save button of each dialog after changing one field.
 
 ## B-064: The epic Link picker lists only stories
 **Severity:** Low
+**Status:** UNDER REVIEW — claimed fixed, being re-verified against the code
 
 **Where:** Epics → epic card "Link" (https://www.streamlineos.in/build/7/epics); ticket Details → Epic (https://www.streamlineos.in/build/7/tickets/QAB-115) | Role/account: Owner qaown1012b (Owner). QAB-115 "R6 epic child 1013" is type Task and unlinked (and QAB-116 / QAB-117 are Tasks too).
 
@@ -1836,6 +1906,7 @@ Double-click the Save button of each dialog after changing one field.
 
 ## B-068: The release list preview shows escaped HTML entities
 **Severity:** Low
+**Status:** FIXED — code and tests landed; browser verification pending
 
 **Where:** Releases list → row preview under the version (https://www.streamlineos.in/build/7/releases) | Role/account: Owner qaown1012b (Owner). Release "R6 release 1013" with notes typed as `"><img src=x onerror=alert(1)> R6 XSS probe`.
 
@@ -1857,6 +1928,7 @@ Double-click the Save button of each dialog after changing one field.
 
 ## B-069: Timeline bars cannot be dragged
 **Severity:** Low (CONFIRM INTENDED: implement the recommended behavior and flag it in your summary)
+**Status:** FIXED — code and tests landed; browser verification pending
 
 **Where:** /build/7 Timeline view. Role: Owner.
 
@@ -1878,6 +1950,7 @@ Double-click the Save button of each dialog after changing one field.
 
 ## B-071: Deleting a parent gives no warning about its children
 **Severity:** Low
+**Status:** NOT FIXED — the delete confirmation still omits the child count
 **Shared root cause group:** G10 Ticket relations, parents and history
 
 **Where:** Ticket page → "Delete ticket" (trash icon) → "Delete Ticket" popover (https://www.streamlineos.in/build/7/tickets/QAB-117) | Role/account: Owner qaown1012b (Owner). QAB-117 "R6 link target 1013" had one child, QAB-115 "R6 epic child 1013" (1/1 Done in the Subtasks header), plus a Blocks/Relates-to link set.
@@ -1902,6 +1975,7 @@ Double-click the Save button of each dialog after changing one field.
 
 ## B-072: The parent picker offers the ticket's own child
 **Severity:** Low
+**Status:** FIXED — code and tests landed; browser verification pending
 **Shared root cause group:** G10 Ticket relations, parents and history
 
 **Where:** Ticket Details → Parent picker (https://www.streamlineos.in/build/7/tickets/QAB-113 and /QAB-116) | Role/account: Owner qaown1012b (Owner). QAB-114 is a child of QAB-113 (set from QAB-114 → Parent). QAB-115 is a child of QAB-116.
@@ -1925,6 +1999,7 @@ Double-click the Save button of each dialog after changing one field.
 
 ## B-073: "Add subtask" cannot attach an existing ticket
 **Severity:** Low (CONFIRM INTENDED: implement the recommended behavior and flag it in your summary)
+**Status:** UNDER REVIEW — claimed fixed, being re-verified against the code
 **Shared root cause group:** G10 Ticket relations, parents and history
 
 **Where:** Ticket Subtasks section — https://www.streamlineos.in/build/7/tickets/QAB-113 | Role/account: Owner qaown1012b (Owner).
@@ -1948,6 +2023,7 @@ Double-click the Save button of each dialog after changing one field.
 
 ## B-075: Product, portfolio and program lists do not refresh after create or delete
 **Severity:** Low
+**Status:** FIXED — code and tests landed; browser verification pending
 **Shared root cause group:** G5 Query invalidation after mutations
 
 **Where:** https://www.streamlineos.in/build/managed-products, /build/portfolios and /build/programs. Role: Owner.
@@ -1970,6 +2046,7 @@ Double-click the Save button of each dialog after changing one field.
 
 ## B-076: The approvals list keeps the old status after Decide or Escalate
 **Severity:** Low
+**Status:** FIXED — code and tests landed; browser verification pending
 **Shared root cause group:** G5 Query invalidation after mutations
 
 **Where:** https://www.streamlineos.in/build/7/approvals. Role: Owner (and the approver once B-084 is fixed).
@@ -1992,6 +2069,7 @@ Double-click the Save button of each dialog after changing one field.
 
 ## B-077: A past approval due date is accepted, and the date format is inconsistent
 **Severity:** Low
+**Status:** FIXED — code and tests landed; browser verification pending
 **Shared root cause group:** G4 Shared field validation (client AND server)
 
 **Where:** https://www.streamlineos.in/build/7/approvals, "Request approval" dialog (due date) and the approvals list. Role: Owner.
@@ -2016,6 +2094,7 @@ Double-click the Save button of each dialog after changing one field.
 
 ## B-079: Links added in the Create dialog cannot be removed
 **Severity:** Low
+**Status:** FIXED — code and tests landed; browser verification pending
 **Shared root cause group:** G10 Ticket relations, parents and history
 
 **Where:** Create Issue dialog (Links), then the ticket page right-hand "Links" list. Role: Owner.
@@ -2040,6 +2119,7 @@ Double-click the Save button of each dialog after changing one field.
 
 ## B-080: The Timeline month label is off by one
 **Severity:** Low
+**Status:** FIXED — code and tests landed; browser verification pending
 
 **Where:** /build/7 Timeline view, month dropdown. Role: Owner.
 
@@ -2060,6 +2140,7 @@ Double-click the Save button of each dialog after changing one field.
 
 ## B-081: The Sub-issues toggle has no effect
 **Severity:** Low
+**Status:** FIXED — code and tests landed; browser verification pending
 **Shared root cause group:** G7 List/board query options (sort, columns, sub-issues, filters)
 
 **Where:** https://www.streamlineos.in/build/7/issues?view=table, Display options, SHOW, "Sub-issues" switch. Role: Owner.
@@ -2083,6 +2164,7 @@ Double-click the Save button of each dialog after changing one field.
 
 ## B-082: Parent and relation changes leave no history entry
 **Severity:** Low
+**Status:** UNDER REVIEW — claimed fixed, being re-verified against the code
 **Shared root cause group:** G10 Ticket relations, parents and history
 
 **Where:** Ticket page history/activity — https://www.streamlineos.in/build/7/tickets/QAB-120, /QAB-121, /QAB-122 (round 8, owner qaown1012b). | Role/account: Owner qaown1012b (Owner, project 7).
@@ -2109,6 +2191,7 @@ Double-click the Save button of each dialog after changing one field.
 
 ## B-083: At 375 px "Completed" is cut off in Statuses
 **Severity:** Low
+**Status:** FIXED — code and tests landed; browser verification pending
 **Shared root cause group:** G9 Narrow-viewport layout (375/768 px) and long text
 
 **Where:** Build settings — https://www.streamlineos.in/build/7/settings (tab "Statuses"), Chrome device mode 375 px. | Role/account: Owner qaown1012b.
