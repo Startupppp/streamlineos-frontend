@@ -69,11 +69,10 @@ const EXISTING_PAGE: ProgramsPage = {
       createdBy: "user-1",
       createdAt: "2026-09-01T00:00:00.000Z",
       updatedAt: "2026-09-01T00:00:00.000Z",
-      deletedAt: null,
       projectCount: 0,
     },
   ],
-  pagination: { hasMore: false, nextCursor: null },
+  pagination: { limit: 25, hasMore: false, nextCursor: null },
 };
 
 describe("useCreateProgram — B-075: new program appears in the list without reload", () => {

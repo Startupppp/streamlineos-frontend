@@ -73,10 +73,9 @@ const EXISTING_PAGE: PortfoliosPage = {
       updatedAt: "2026-09-01T00:00:00.000Z",
       deletedAt: null,
       projectCount: 0,
-      programCount: 0,
     },
   ],
-  pagination: { hasMore: false, nextCursor: null },
+  pagination: { limit: 25, hasMore: false, nextCursor: null },
 };
 
 describe("useCreatePortfolio — B-075: new portfolio appears in the list without reload", () => {
@@ -95,7 +94,7 @@ describe("useCreatePortfolio — B-075: new portfolio appears in the list withou
     const { result } = renderHook(() => useCreatePortfolio(), { wrapper: wrap(client) });
 
     await act(async () => {
-      await result.current.mutateAsync({ name: "Alpha Portfolio" });
+      await result.current.mutateAsync({ name: "Alpha Portfolio", status: "active" });
     });
 
     const cached = client.getQueryData<PortfoliosPage>(listKey);
@@ -110,7 +109,7 @@ describe("useCreatePortfolio — B-075: new portfolio appears in the list withou
     const { result } = renderHook(() => useCreatePortfolio(), { wrapper: wrap(client) });
 
     await act(async () => {
-      await result.current.mutateAsync({ name: "Beta Portfolio" });
+      await result.current.mutateAsync({ name: "Beta Portfolio", status: "active" });
     });
 
     const cached = client.getQueryData<PortfoliosPage>(filteredKey);
