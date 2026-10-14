@@ -48,6 +48,7 @@ export function ProjectBoardHeaderActions({
     setImportOpen(open);
   }, []);
 
+  /* eslint-disable react-hooks/refs */
   const actions = useMemo(() => {
     const next: BuildHeaderAction[] = [];
     if (isTimesheetsEnabled) {
@@ -84,6 +85,7 @@ export function ProjectBoardHeaderActions({
       });
     }
     return next;
+  /* eslint-enable react-hooks/refs */
   }, [
     projectId,
     isTimesheetsEnabled,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useEffectEvent, useMemo, useRef } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { boardCollectionSearchParams } from "@/features/build/ticket-details/build-ticket-detail-url";
 import {
@@ -133,8 +133,10 @@ export function useBoardFilterParams() {
   const isOnIssuesPath = pathname === issuesPath;
   const currentFilterQuery = buildIssuesFilterQuery(rawSearchParams);
   const wasOnIssuesRef = useRef(false);
-  const routerRef = useRef(router);
-  routerRef.current = router;
+
+  const restoreIssuesFilters = useEffectEvent((stored: string) => {
+    router.replace(`${issuesPath}?${stored}`, { scroll: false });
+  });
 
   useEffect(() => {
     if (!isOnIssuesPath) {
@@ -150,12 +152,12 @@ export function useBoardFilterParams() {
       const stored = loadIssuesFilterQuery(projectId, scope);
       if (stored) {
         saveIssuesFilterQuery(projectId, "", scope);
-        routerRef.current.replace(`${issuesPath}?${stored}`, { scroll: false });
+        restoreIssuesFilters(stored);
       }
       return;
     }
     saveIssuesFilterQuery(projectId, currentFilterQuery, scope);
-  }, [currentFilterQuery, isOnIssuesPath, issuesPath, projectId, scope]);
+  }, [currentFilterQuery, isOnIssuesPath, projectId, scope]);
 
   const hasActiveFilters = !!(
     q ||

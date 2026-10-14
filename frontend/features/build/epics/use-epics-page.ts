@@ -130,6 +130,10 @@ export function useEpicsPage(projectIdStr: string) {
   const allEpics = useMemo(() => tickets.filter((t) => t.type === "EPIC"), [tickets]);
   const stories = useMemo(() => tickets.filter((t) => t.type === "STORY"), [tickets]);
   const tasks = useMemo(() => tickets.filter((t) => t.type === "TASK"), [tickets]);
+  const unlinkedItems = useMemo(
+    () => [...stories, ...tasks].filter((t) => !t.epicId),
+    [stories, tasks],
+  );
 
   const handleDeleteEpic = useCallback(
     (epicId: number) =>
@@ -226,6 +230,7 @@ export function useEpicsPage(projectIdStr: string) {
     allEpics,
     stories,
     tasks,
+    unlinkedItems,
     hasMoreEpics,
     visitedCursors: history,
     cycles,

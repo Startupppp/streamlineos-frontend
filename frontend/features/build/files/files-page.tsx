@@ -63,7 +63,7 @@ function FileDownloadButton({ projectId, file }: { projectId: number; file: Proj
   useEffect(() => {
     if (isError) {
       toast.error("Couldn't get download link. Please try again.");
-      setEnabled(false);
+      afterDownload();
     }
   }, [isError]);
 

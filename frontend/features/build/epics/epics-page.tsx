@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useMemo } from "react";
+import { use } from "react";
 import { WifiOff, Layers, AlertCircle, BookOpen, Wrench, CheckCircle2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -49,6 +49,7 @@ export function EpicsPage({ params }: PageProps) {
     allEpics,
     stories,
     tasks,
+    unlinkedItems,
     hasMoreEpics,
     visitedCursors,
     cycles,
@@ -127,10 +128,6 @@ export function EpicsPage({ params }: PageProps) {
     );
   }
 
-  const unlinkedItems = useMemo(
-    () => [...stories, ...tasks].filter((t) => !t.epicId),
-    [stories, tasks],
-  );
   const completedStatusNames = getCompletedStatusNames(project?.statuses);
 
   return (

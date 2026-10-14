@@ -1,7 +1,6 @@
 import React from "react";
 import { render, screen, act, fireEvent, waitFor } from "@testing-library/react";
 import { ActivityFeed } from "./activity-feed";
-import { PROJECT_FILE_TYPES_LABEL } from "@/hooks/api/build/project-files";
 import { ApiError } from "@/lib/api-envelope";
 import type { StagedCommentDraft } from "@/hooks/api/build/comment-draft-commands";
 

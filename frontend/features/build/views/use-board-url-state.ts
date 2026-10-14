@@ -29,7 +29,7 @@ import {
   computeDoneCount,
 } from "./board-filter-model";
 import { useBoardViewApply } from "./use-board-view-apply";
-import { parseBoardOrderBy, parseBoardOrderDir } from "./board-filter-params";
+import { parseBoardOrderBy } from "./board-filter-params";
 import { orderDirectionFor } from "./use-display-options";
 
 const SEARCH_TERM_MAX_LENGTH = 200;

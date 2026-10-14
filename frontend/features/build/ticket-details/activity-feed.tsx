@@ -60,7 +60,6 @@ export function ActivityFeed({
     editingSaveId,
     deletingId,
     commentNotFound,
-    addComment,
     isPostingComment,
     addReply,
     repliesMap,
