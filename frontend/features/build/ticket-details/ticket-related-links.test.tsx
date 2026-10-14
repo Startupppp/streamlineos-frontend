@@ -1,10 +1,30 @@
 const mockUseTicketRelatedLinks = jest.fn();
+const mockRemoveMutate = jest.fn();
+let mockRemoveIsPending = false;
+let mockCanUpdate = true;
+
 jest.mock("@/hooks/api/build/ticket-related-links", () => ({
   useTicketRelatedLinks: (...args: unknown[]) => mockUseTicketRelatedLinks(...args),
+  useRemoveRelatedLink: () => ({
+    mutate: mockRemoveMutate,
+    isPending: mockRemoveIsPending,
+  }),
 }));
 
-import { render, screen } from "@testing-library/react";
+jest.mock("@/hooks/api/access", () => ({
+  useCan: () => mockCanUpdate,
+}));
+
+jest.mock("sonner", () => ({ toast: { error: jest.fn(), success: jest.fn() } }));
+
+import { fireEvent, render, screen } from "@testing-library/react";
 import { TicketRelatedLinks, resolveLinkTarget } from "./ticket-related-links";
+
+beforeEach(() => {
+  mockRemoveMutate.mockClear();
+  mockRemoveIsPending = false;
+  mockCanUpdate = true;
+});
 
 const row = (id: number, url: string, title: string | null) => ({
   id, orgId: "o", projectId: 9, ticketId: 1, url, title, description: null,
@@ -104,5 +124,45 @@ describe("TicketRelatedLinks", () => {
     expect(screen.getByText(name)).toBeVisible();
     expect(screen.queryByRole("link", { name })).toBeNull();
     expect(resolveLinkTarget(url, window.location.origin)).toBeNull();
+  });
+});
+
+describe("TicketRelatedLinks — removing a link", () => {
+  it("gives each link its own named remove control and sends that link's id", () => {
+    mockUseTicketRelatedLinks.mockReturnValue({
+      data: [row(1, "https://example.com/a", "Spec A"), row(2, "https://example.com/b", "Spec B")],
+    });
+
+    render(<TicketRelatedLinks projectId={9} ticketId={1} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Remove link Spec B" }));
+
+    expect(mockRemoveMutate).toHaveBeenCalledTimes(1);
+    expect(mockRemoveMutate).toHaveBeenCalledWith({ projectId: 9, ticketId: 1, linkId: 2 });
+  });
+
+  it("offers no remove control without the ticket update permission", () => {
+    mockCanUpdate = false;
+    mockUseTicketRelatedLinks.mockReturnValue({
+      data: [row(1, "https://example.com/a", "Spec A")],
+    });
+
+    render(<TicketRelatedLinks projectId={9} ticketId={1} />);
+
+    expect(screen.queryByRole("button", { name: /remove link/i })).toBeNull();
+    expect(screen.getByRole("link", { name: "Spec A" })).toBeVisible();
+  });
+
+  it("refuses a second click while the first removal is in flight", () => {
+    mockRemoveIsPending = true;
+    mockUseTicketRelatedLinks.mockReturnValue({
+      data: [row(1, "https://example.com/a", "Spec A")],
+    });
+
+    render(<TicketRelatedLinks projectId={9} ticketId={1} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Remove link Spec A" }));
+
+    expect(mockRemoveMutate).not.toHaveBeenCalled();
   });
 });

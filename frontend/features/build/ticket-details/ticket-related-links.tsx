@@ -99,7 +99,7 @@ export function TicketRelatedLinks({
                   size="icon"
                   icon={XIcon}
                   iconSize={12}
-                  aria-label="Remove link"
+                  aria-label={`Remove link ${label}`}
                   className="h-5 w-5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
                   onClick={() =>
                     removeLink.mutate({ projectId, ticketId, linkId: link.id })
