@@ -130,6 +130,7 @@ export function useAttendanceCalendarEvents(
     );
     for (const page of attendance.pages) {
       for (const log of page ?? []) {
+        if (log.date < from || log.date > to) continue;
         const logs = logsByDate.get(log.date) ?? [];
         logs.push(log);
         logsByDate.set(log.date, logs);

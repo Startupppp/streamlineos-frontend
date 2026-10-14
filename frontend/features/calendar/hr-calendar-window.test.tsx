@@ -12,6 +12,7 @@ import {
   HR_CALENDAR_MAX_WINDOW_DAYS,
   clampToHrCalendarWindow,
   parseHrCalendarDay,
+  splitHrCalendarWindow,
   useHrCalendarEventsMapped,
 } from "./use-hr-calendar-events";
 
@@ -58,6 +59,13 @@ jest.mock("@tanstack/react-query", () => {
         error: null,
         refetch: jest.fn(),
       };
+    }),
+    useQueries: jest.fn((opts: {
+      queries: { queryFn: (ctx: { signal: undefined }) => unknown }[];
+      combine: (results: unknown[]) => unknown;
+    }) => {
+      opts.queries.forEach((query) => void query.queryFn({ signal: undefined }));
+      return opts.combine(opts.queries.map(() => ({ data: undefined, isLoading: false, isError: false, error: null, refetch: jest.fn() })));
     }),
   };
 });
@@ -168,5 +176,23 @@ describe("useHrCalendarEventsMapped — what it actually puts on the wire", () =
     const from = requestedParams?.from ?? "";
     const to = requestedParams?.to ?? "";
     expect(backendDiffDays(from, to)).toBeLessThanOrEqual(HR_CALENDAR_MAX_WINDOW_DAYS);
+  });
+
+  it("covers every day of the view range without gaps or oversized requests", () => {
+    for (const anchor of anchors()) {
+      const { rangeStart, rangeEnd } = viewWindow(anchor);
+      const windows = splitHrCalendarWindow(rangeStart, rangeEnd);
+      expect(windows[0]?.from).toBe(format(rangeStart, "yyyy-MM-dd"));
+      expect(windows.at(-1)?.to).toBe(format(rangeEnd, "yyyy-MM-dd"));
+      for (const [index, window] of windows.entries()) {
+        expect(backendDiffDays(window.from, window.to)).toBeLessThanOrEqual(HR_CALENDAR_MAX_WINDOW_DAYS);
+        if (index > 0) {
+          const priorEnd = windows[index - 1]?.to ?? "";
+          const nextDay = new Date(`${priorEnd}T00:00:00.000Z`);
+          nextDay.setUTCDate(nextDay.getUTCDate() + 1);
+          expect(window.from).toBe(format(nextDay, "yyyy-MM-dd"));
+        }
+      }
+    }
   });
 });

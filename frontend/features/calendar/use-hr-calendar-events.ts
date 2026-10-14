@@ -1,14 +1,23 @@
 "use client";
 
 import { useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQueries } from "@tanstack/react-query";
+import type { UseQueryResult } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
-import { addDays, differenceInCalendarDays, format, parseISO, subDays } from "date-fns";
+import {
+  addDays,
+  differenceInCalendarDays,
+  format,
+  parseISO,
+  subDays,
+} from "date-fns";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 
 const hrCalendarEventListContract = lazyContract(() =>
-  import("@/hooks/api/calendar-schema").then((m) => m.hrCalendarEventListContract),
+  import("@/hooks/api/calendar-schema").then(
+    (m) => m.hrCalendarEventListContract,
+  ),
 );
 import type { HrCalendarEvent } from "@/hooks/api/hr/hr-calendar";
 import type { BigCalEvent } from "./big-calendar-wrapper";
@@ -16,18 +25,6 @@ import { platformHierarchyQueryKeys } from "@/lib/query-keys/platform-hierarchy"
 import { useModuleEnabled, usePermissionGate } from "@/hooks/api/access";
 import type { PermissionGate } from "@/lib/rbac/permission-gate";
 
-/**
- * `/hr/calendar` refuses a window wider than 62 days, and the calendar view asks
- * every source for three whole months — up to 92 days. That is deliberate for
- * `/calendar/events`, whose own limit is 120 and whose backend spec pins the
- * three-month worst case, so the window that has to give is this one, not the
- * shared one and not the cap.
- *
- * Half-windows of 30 days keep the request at 60, two days under the cap so a
- * DST shift cannot round it over, and still reach at least a week past the
- * widest six-week month grid the view can render in either week-start
- * convention — `hr-calendar-window.test.ts` derives both bounds.
- */
 export const HR_CALENDAR_MAX_WINDOW_DAYS = 62;
 const HR_CALENDAR_HALF_WINDOW_DAYS = 30;
 
@@ -35,13 +32,33 @@ export function clampToHrCalendarWindow(
   rangeStart: Date,
   rangeEnd: Date,
 ): { from: Date; to: Date } {
-  if (differenceInCalendarDays(rangeEnd, rangeStart) <= HR_CALENDAR_MAX_WINDOW_DAYS)
+  if (
+    differenceInCalendarDays(rangeEnd, rangeStart) <=
+    HR_CALENDAR_MAX_WINDOW_DAYS
+  )
     return { from: rangeStart, to: rangeEnd };
   const midpoint = new Date((rangeStart.getTime() + rangeEnd.getTime()) / 2);
   return {
     from: subDays(midpoint, HR_CALENDAR_HALF_WINDOW_DAYS),
     to: addDays(midpoint, HR_CALENDAR_HALF_WINDOW_DAYS),
   };
+}
+
+export function splitHrCalendarWindow(
+  rangeStart: Date,
+  rangeEnd: Date,
+): { from: string; to: string }[] {
+  const finalDay = new Date(rangeEnd.getTime() - 1);
+  if (finalDay < rangeStart) return [];
+  const windows: { from: string; to: string }[] = [];
+  let cursor = rangeStart;
+  while (cursor <= finalDay) {
+    const end = addDays(cursor, HR_CALENDAR_MAX_WINDOW_DAYS - 1);
+    const to = end < finalDay ? end : finalDay;
+    windows.push({ from: format(cursor, "yyyy-MM-dd"), to: format(to, "yyyy-MM-dd") });
+    cursor = addDays(to, 1);
+  }
+  return windows;
 }
 
 const HR_TYPE_COLORS: Record<string, string> = {
@@ -77,27 +94,35 @@ export function useHrCalendarEventsMapped(
   const access = usePermissionGate("hr:helpdesk:view");
   const hrModuleEnabled = useModuleEnabled("hr");
 
-  const window = useMemo(
-    () => clampToHrCalendarWindow(rangeStart, rangeEnd),
+  const windows = useMemo(
+    () => splitHrCalendarWindow(rangeStart, rangeEnd),
     [rangeStart, rangeEnd],
   );
-  const from = format(window.from, "yyyy-MM-dd");
-  const to = format(window.to, "yyyy-MM-dd");
 
-  const query = useQuery({
-    queryKey: platformHierarchyQueryKeys.calendar.hrSupplemental(orgId, from, to),
-    queryFn: ({ signal }) =>
-      apiClient.get<HrCalendarEvent[]>("/hr/calendar", {
-        from,
-        to,
-        types: "BIRTHDAY,ANNIVERSARY,REVIEW_CYCLE,TRAVEL",
-      }, signal, hrCalendarEventListContract),
-    staleTime: 5 * 60_000,
-    retry: (failureCount, error) =>
-      (error as { status?: number } | null)?.status !== 403 && failureCount < 2,
-    enabled: Boolean(orgId) && hrVisible && access.allowed && hrModuleEnabled,
-    refetchOnWindowFocus: "always",
-    refetchOnReconnect: "always",
+  const query = useQueries({
+    queries: windows.map(({ from, to }) => ({
+      queryKey: platformHierarchyQueryKeys.calendar.hrSupplemental(orgId, from, to),
+      queryFn: ({ signal }: { signal: AbortSignal }) =>
+        apiClient.get<HrCalendarEvent[]>(
+          "/hr/calendar",
+          { from, to, types: "BIRTHDAY,ANNIVERSARY,REVIEW_CYCLE,TRAVEL" },
+          signal,
+          hrCalendarEventListContract,
+        ),
+      staleTime: 5 * 60_000,
+      retry: (failureCount: number, error: unknown) =>
+        (error as { status?: number } | null)?.status !== 403 && failureCount < 2,
+      enabled: Boolean(orgId) && hrVisible && access.allowed && hrModuleEnabled,
+      refetchOnWindowFocus: "always" as const,
+      refetchOnReconnect: "always" as const,
+    })),
+    combine: (results: UseQueryResult<HrCalendarEvent[]>[]) => ({
+      data: results.flatMap((result) => result.data ?? []),
+      isLoading: results.some((result) => result.isLoading),
+      isError: results.some((result) => result.isError),
+      error: results.find((result) => result.isError)?.error ?? null,
+      refetch: () => Promise.all(results.map((result) => result.refetch())),
+    }),
   });
 
   const hrCalEvents = useMemo<BigCalEvent[]>(
