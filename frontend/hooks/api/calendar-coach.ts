@@ -29,6 +29,7 @@ export function useUpdateCalendarCoachConsent() {
   const qc = useQueryClient();
   const { data: session } = useSession();
   return useMutation({
+    mutationKey: [...platformHierarchyQueryKeys.calendar.coach(session?.orgId ?? "", session?.user?.id ?? ""), "consent"],
     mutationFn: (input: { enabled: boolean; expectedVersion: number }) => apiClient.put<{ enabled: boolean; version: number; changedAt: string | null }>(
       "/calendar/coach/consent", input, undefined, consentContract,
     ),
