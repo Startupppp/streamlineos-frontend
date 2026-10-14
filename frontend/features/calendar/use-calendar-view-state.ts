@@ -180,6 +180,7 @@ export function useCalendarViewState() {
 
   const handleSelectEvent = useCallback(
     (event: BigCalEvent) => {
+      if (event.resource?.actions?.view !== true) return;
       const source = (event.resource?.sourceFamily ??
         (event.resource?.source === "external"
           ? "external"

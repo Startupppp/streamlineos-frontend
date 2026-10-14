@@ -72,7 +72,11 @@ describe("useCalendarViewState URL navigation", () => {
       title: "Old provider event",
       start: new Date("2026-01-01T09:00:00.000Z"),
       end: new Date("2026-01-01T10:00:00.000Z"),
-      resource: { source: "external", sourceFamily: "external" },
+      resource: {
+        source: "external",
+        sourceFamily: "external",
+        actions: { view: true, edit: false, delete: false, rsvp: false, complete: false },
+      },
     };
 
     act(() => result.current.handleSelectEvent(event));
@@ -87,5 +91,24 @@ describe("useCalendarViewState URL navigation", () => {
     expect(replace).toHaveBeenLastCalledWith(
       "/calendar?mode=history&historyPages=3",
     );
+  });
+
+  it("does not open a Grid event whose projection denies viewing", () => {
+    const { result } = renderHook(() => useCalendarViewState());
+    const event: BigCalEvent = {
+      id: "restricted",
+      title: "Restricted event",
+      start: new Date("2026-01-01T09:00:00.000Z"),
+      end: new Date("2026-01-01T10:00:00.000Z"),
+      resource: {
+        source: "event",
+        sourceFamily: "calendar",
+        actions: { view: false, edit: false, delete: false, rsvp: false, complete: false },
+      },
+    };
+
+    act(() => result.current.handleSelectEvent(event));
+
+    expect(push).not.toHaveBeenCalled();
   });
 });
