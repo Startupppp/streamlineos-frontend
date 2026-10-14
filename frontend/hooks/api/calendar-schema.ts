@@ -86,7 +86,7 @@ export const calendarHistoryResponseContract =
   calendarEventsResponseContract.extend({
     windowStart: z.string(),
     windowEnd: z.string(),
-    nextCursor: z.string().min(1),
+    nextCursor: z.string().min(1).nullable(),
   });
 
 export const calendarSearchResponseContract =

@@ -22,6 +22,9 @@ export function invalidateCalendarProjectionWindows(
     queryKey: platformHierarchyQueryKeys.calendar.eventsAll,
   });
   void queryClient.invalidateQueries({
+    queryKey: platformHierarchyQueryKeys.calendar.searchAll,
+  });
+  void queryClient.invalidateQueries({
     queryKey: platformHierarchyQueryKeys.calendar.hrSupplementalAll,
   });
   void queryClient.invalidateQueries({

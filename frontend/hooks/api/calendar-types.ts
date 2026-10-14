@@ -155,7 +155,7 @@ export interface CalendarEventsResponse {
 export interface CalendarHistoryResponse extends CalendarEventsResponse {
   windowStart: string;
   windowEnd: string;
-  nextCursor: string;
+  nextCursor: string | null;
 }
 
 export interface CalendarSearchResponse extends CalendarEventsResponse {

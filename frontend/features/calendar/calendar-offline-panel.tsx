@@ -117,7 +117,7 @@ export function CalendarOfflinePanel({
   const selectedEdit = editable.find(
     (event) => event.occurrenceId === editOccurrenceId,
   );
-  useEffect(() => subscribeOfflineCalendarClear(() => setSnapshot(null)), []);
+  useEffect(() => subscribeOfflineCalendarClear(() => setSnapshot(null), identity), [identity]);
   useEffect(() => {
     let active = true;
     const load = async () => {

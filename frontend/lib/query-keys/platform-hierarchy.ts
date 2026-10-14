@@ -35,8 +35,9 @@ export const platformHierarchyQueryKeys = {
         userId,
         before,
       ] as const,
-    search: (filters: Readonly<object>) =>
-      [...base, "calendar", "search", filters] as const,
+    searchAll: [...base, "calendar", "search"] as const,
+    search: (orgId: string, userId: string, filters: Readonly<object>, canView: boolean) =>
+      [...base, "calendar", "search", orgId, userId, canView, filters] as const,
     savedViews: [...base, "calendar", "saved-views"] as const,
     protectedWork: [...base, "calendar", "protected-work"] as const,
     commitments: [...base, "calendar", "commitments"] as const,

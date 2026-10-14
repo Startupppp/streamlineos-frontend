@@ -140,8 +140,10 @@ export function revokeOfflineCalendarPolicy(
       policyKey(identity),
       JSON.stringify({ version, enabled: false }),
     );
-    localStorage.removeItem(DEVICE_IDENTITY_KEY);
-    sessionStorage.removeItem(SESSION_IDENTITY_KEY);
+    if (localStorage.getItem(DEVICE_IDENTITY_KEY) === identity)
+      localStorage.removeItem(DEVICE_IDENTITY_KEY);
+    if (sessionStorage.getItem(SESSION_IDENTITY_KEY) === identity)
+      sessionStorage.removeItem(SESSION_IDENTITY_KEY);
   } catch {}
 }
 
@@ -297,7 +299,7 @@ export async function clearOfflineCalendarSnapshot(): Promise<void> {
   }
 }
 
-export function subscribeOfflineCalendarClear(onClear: () => void): () => void {
+export function subscribeOfflineCalendarClear(onClear: () => void, identity?: string): () => void {
   watchCrossTabIdentity();
   const channel =
     typeof BroadcastChannel === "undefined"
@@ -309,8 +311,10 @@ export function subscribeOfflineCalendarClear(onClear: () => void): () => void {
     };
   const onStorage = (event: StorageEvent) => {
     if (
-      (event.key === DEVICE_IDENTITY_KEY ||
-        event.key?.startsWith(`${POLICY_REVOCATION_KEY}:`)) &&
+      ((!identity && event.key?.startsWith(`${POLICY_REVOCATION_KEY}:`)) ||
+        (identity && event.key === policyKey(identity)) ||
+        (event.key === DEVICE_IDENTITY_KEY &&
+          (!identity || event.oldValue === identity || event.newValue === identity))) &&
       event.oldValue !== event.newValue
     )
       onClear();

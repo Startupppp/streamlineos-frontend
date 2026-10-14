@@ -1064,9 +1064,20 @@ export function CalendarView() {
           <div className="flex shrink-0 items-center gap-2 rounded-md border border-status-warning-rule bg-status-warning-surface px-3 py-1.5">
             <span className="min-w-0 flex-1 text-dense text-status-warning-ink">
               {viewMode === "history"
-                ? "Some history sources are partial. Loaded events remain available while you retry or continue to older periods."
+                ? historyHasNextPage
+                  ? "Some history sources are partial. Retry this period before relying on its events; continuing to older periods may skip omitted events."
+                  : "This history period remains incomplete, and older periods cannot be loaded safely. Retry this period later."
                 : CALENDAR_TRUNCATED_WARNING}
             </span>
+            {viewMode === "history" ? (
+              <button
+                type="button"
+                onClick={() => void refetchHistory()}
+                className="shrink-0 text-dense font-medium text-status-warning-ink underline underline-offset-2"
+              >
+                Retry
+              </button>
+            ) : null}
           </div>
         )}
 

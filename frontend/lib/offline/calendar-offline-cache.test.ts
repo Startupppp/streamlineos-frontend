@@ -108,7 +108,7 @@ describe("Calendar offline cache identity", () => {
 
   it("notifies an open panel as soon as another tab changes identity", () => {
     const onClear = jest.fn();
-    const unsubscribe = subscribeOfflineCalendarClear(onClear);
+    const unsubscribe = subscribeOfflineCalendarClear(onClear, "org-1:user-1");
     window.dispatchEvent(new StorageEvent("storage", {
       key: "streamline-calendar-offline-identity",
       oldValue: "org-1:user-1",
@@ -120,7 +120,7 @@ describe("Calendar offline cache identity", () => {
 
   it("removes the current tab marker after a matching policy revocation event", () => {
     const onClear = jest.fn();
-    const unsubscribe = subscribeOfflineCalendarClear(onClear);
+    const unsubscribe = subscribeOfflineCalendarClear(onClear, "org-1:user-1");
     sessionStorage.setItem("streamline-calendar-offline-session-identity", "org-1:user-1");
     window.dispatchEvent(new StorageEvent("storage", {
       key: "streamline-calendar-offline-policy-revocation:org-2:user-1",
@@ -134,7 +134,7 @@ describe("Calendar offline cache identity", () => {
       newValue: '{"version":2,"enabled":false}',
     }));
     expect(sessionStorage.getItem("streamline-calendar-offline-session-identity")).toBeNull();
-    expect(onClear).toHaveBeenCalledTimes(2);
+    expect(onClear).toHaveBeenCalledTimes(1);
     unsubscribe();
   });
 
@@ -199,6 +199,16 @@ describe("Calendar offline cache identity", () => {
     expect(allowOfflineCalendarPolicy("org-1:user-1", 3)).toBe(false);
     expect(allowOfflineCalendarPolicy("org-2:user-1", 3)).toBe(true);
     expect(allowOfflineCalendarPolicy("org-1:user-1", 3)).toBe(false);
+  });
+
+  it("keeps another account's active markers when a policy is revoked", () => {
+    sessionStorage.setItem("streamline-calendar-offline-session-identity", "org-2:user-1");
+    localStorage.setItem("streamline-calendar-offline-identity", "org-2:user-1");
+    allowOfflineCalendarPolicy("org-2:user-1", 3);
+    revokeOfflineCalendarPolicy("org-1:user-1", 4);
+    expect(offlineCalendarIdentityIsCurrent("org-2:user-1")).toBe(true);
+    expect(sessionStorage.getItem("streamline-calendar-offline-session-identity")).toBe("org-2:user-1");
+    expect(localStorage.getItem("streamline-calendar-offline-identity")).toBe("org-2:user-1");
   });
 
   it("requires the active account and its enabled policy before rendering", () => {

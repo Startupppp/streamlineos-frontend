@@ -177,8 +177,12 @@ export function useCalendarEvents(start: Date, end: Date, enabled = true) {
   });
   useEffect(() => {
     if (offlinePolicy.data?.enabled === false) {
-      if (orgId && userId) revokeOfflineCalendarPolicy(`${orgId}:${userId}`, offlinePolicy.data.version);
-      void clearOfflineCalendarSnapshot().catch(() => undefined);
+      const identity = orgId && userId ? `${orgId}:${userId}` : null;
+      let activeIdentity = false;
+      try { activeIdentity = Boolean(identity && localStorage.getItem("streamline-calendar-offline-identity") === identity); }
+      catch {}
+      if (identity) revokeOfflineCalendarPolicy(identity, offlinePolicy.data.version);
+      if (activeIdentity) void clearOfflineCalendarSnapshot().catch(() => undefined);
       return;
     }
     if (offlinePolicy.data?.enabled && eventsQuery.data && orgId && userId && canView && navigator.onLine) {
