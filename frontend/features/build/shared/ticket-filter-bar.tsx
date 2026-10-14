@@ -28,6 +28,7 @@ interface TicketFilterBarProps {
   trailing?: ReactNode;
   mobileSearchFirst?: boolean;
   mobileSearchFirstBreakpoint?: "sm" | "md" | "lg";
+  wrapActions?: boolean;
   mobileCompactToolbar?: boolean;
   searchInputRef?: RefObject<HTMLInputElement | null>;
   presentation?: "default" | "all-work";
@@ -60,6 +61,7 @@ export function TicketFilterBar({
   trailing,
   mobileSearchFirst = false,
   mobileSearchFirstBreakpoint = "sm",
+  wrapActions = false,
   mobileCompactToolbar = false,
   searchInputRef,
   presentation = "default",
@@ -208,7 +210,10 @@ export function TicketFilterBar({
       </div>
       <div
         className={cn(
-          "order-2 flex w-full min-w-0 flex-nowrap items-center gap-1 overflow-x-auto overscroll-x-contain scrollbar-hide",
+          "order-2 flex w-full min-w-0 items-center gap-1",
+          wrapActions
+            ? "flex-wrap"
+            : "flex-nowrap overflow-x-auto overscroll-x-contain scrollbar-hide",
           MOBILE_SEARCH_FIRST_LAYOUT[mobileSearchFirstBreakpoint].actionsRow,
           !leading && "justify-start",
         )}
@@ -217,6 +222,7 @@ export function TicketFilterBar({
           <div
             className={cn(
               "order-1 min-w-0",
+              wrapActions && "flex-1",
               MOBILE_SEARCH_FIRST_LAYOUT[mobileSearchFirstBreakpoint].leading,
             )}
           >
