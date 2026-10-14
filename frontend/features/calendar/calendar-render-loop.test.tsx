@@ -5,6 +5,13 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { CalendarView } from "./calendar-view";
 import { calendarProjectionFields } from "./calendar-projection-fixtures";
 
+let mockCalendarPermission = {
+  allowed: true,
+  denied: false,
+  pending: false,
+  unavailable: false,
+};
+
 jest.mock("./big-calendar-wrapper", () => ({
   BigCalendarWrapper: () => null,
 }));
@@ -27,13 +34,7 @@ jest.mock("@/hooks/api/access", () => ({
   useCan: () => true,
   useScope: () => "all",
   useModuleEnabled: () => true,
-  usePermissionGate: () => ({
-    permission: "self:attendance",
-    allowed: true,
-    denied: false,
-    pending: false,
-    unavailable: false,
-  }),
+  usePermissionGate: () => mockCalendarPermission,
   useAccess: () => ({ data: undefined, isLoading: false }),
 }));
 
@@ -113,6 +114,12 @@ function routeGet(path: unknown): unknown {
 }
 
 beforeEach(() => {
+  mockCalendarPermission = {
+    allowed: true,
+    denied: false,
+    pending: false,
+    unavailable: false,
+  };
   mockRenderCount = 0;
   mockReplace.mockReset();
   mockApiPut.mockReset();
@@ -163,6 +170,49 @@ describe("/calendar render stability", () => {
     const { getByText, queryByText } = await renderCalendar();
 
     expect(getByText("Loading events")).toBeInTheDocument();
+    expect(queryByText("No events in this period")).not.toBeInTheDocument();
+  });
+
+  it("shows denial instead of an empty grid when Calendar read access is refused", async () => {
+    mockCalendarPermission = {
+      allowed: false,
+      denied: true,
+      pending: false,
+      unavailable: false,
+    };
+
+    const { getByText, queryByText } = await renderCalendar();
+
+    expect(getByText("Calendar access denied")).toBeInTheDocument();
+    expect(queryByText("No events in this period")).not.toBeInTheDocument();
+    expect(mockApiGet.mock.calls.map((call) => call[0])).not.toContain("/calendar/events");
+  });
+
+  it("shows pending access distinctly from an empty calendar", async () => {
+    mockCalendarPermission = {
+      allowed: false,
+      denied: false,
+      pending: true,
+      unavailable: false,
+    };
+
+    const { getByText, queryByText } = await renderCalendar();
+
+    expect(getByText("Checking Calendar access")).toBeInTheDocument();
+    expect(queryByText("No events in this period")).not.toBeInTheDocument();
+  });
+
+  it("shows an access-check failure distinctly from an empty calendar", async () => {
+    mockCalendarPermission = {
+      allowed: false,
+      denied: false,
+      pending: false,
+      unavailable: true,
+    };
+
+    const { getByText, queryByText } = await renderCalendar();
+
+    expect(getByText("Calendar access unavailable")).toBeInTheDocument();
     expect(queryByText("No events in this period")).not.toBeInTheDocument();
   });
 
