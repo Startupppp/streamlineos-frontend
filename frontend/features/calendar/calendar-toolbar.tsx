@@ -71,6 +71,7 @@ const VIEW_MODE_OPTIONS: ViewOption<ViewMode>[] = [
 interface CalendarToolbarPrimaryActionsProps {
   activeConnectionCount: number;
   onOpenAccounts: () => void;
+  onOpenBookingPages?: () => void;
   onOpenCreate: () => void;
 }
 
@@ -104,6 +105,7 @@ export const CalendarToolbarPrimaryActions = memo(
   function CalendarToolbarPrimaryActions({
     activeConnectionCount,
     onOpenAccounts,
+    onOpenBookingPages,
     onOpenCreate,
   }: CalendarToolbarPrimaryActionsProps) {
     return (
@@ -115,6 +117,7 @@ export const CalendarToolbarPrimaryActions = memo(
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-40">
+            {onOpenBookingPages ? <DropdownMenuItem onSelect={onOpenBookingPages}>Booking pages</DropdownMenuItem> : null}
             <ShareMenuItems />
           </DropdownMenuContent>
         </DropdownMenu>

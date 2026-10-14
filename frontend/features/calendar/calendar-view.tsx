@@ -150,6 +150,11 @@ const CalendarAccountsSheet = dynamic(
   },
 );
 
+const CalendarBookingRulesSheet = dynamic(
+  () => import("./calendar-booking-rules-sheet").then((module) => ({ default: module.CalendarBookingRulesSheet })),
+  { ssr: false, loading: () => <CalendarSheetFallback label="Loading booking pages" /> },
+);
+
 const CalendarCoachSheet = dynamic(
   () =>
     import("./calendar-coach-sheet").then((module) => ({
@@ -187,6 +192,7 @@ const NO_CALENDAR_EVENTS: CalendarListItem[] = [];
 const NO_CALENDAR_SEARCH_PAGES: CalendarSearchResponse[] = [];
 
 export function CalendarView() {
+  const [bookingPagesOpen, setBookingPagesOpen] = useState(false);
   const online = useOnlineStatus();
   const calendarAccess = usePermissionGate("calendar:read");
   const calendarModuleEnabled = useModuleEnabled("calendar");
@@ -893,6 +899,7 @@ export function CalendarView() {
         <CalendarToolbarPrimaryActions
           activeConnectionCount={activeConnectionCount}
           onOpenAccounts={handleOpenAccounts}
+          onOpenBookingPages={() => setBookingPagesOpen(true)}
           onOpenCreate={handleOpenCreate}
         />
       }
@@ -1460,6 +1467,7 @@ export function CalendarView() {
         {accountsOpen && (
           <CalendarAccountsSheet open onClose={handleCloseAccounts} />
         )}
+        {bookingPagesOpen && <CalendarBookingRulesSheet onClose={() => setBookingPagesOpen(false)} />}
       </div>
     </PageWrapper>
   );
