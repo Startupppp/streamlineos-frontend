@@ -179,20 +179,15 @@ export function useBoardUrlState(
     return new Set(qaMatches.map((bug) => bug.id));
   }, [qaFilterActive, qaMatches]);
 
-  const nonEpicTickets = useMemo(
-    () => allTickets.filter((t) => t.type !== "EPIC"),
-    [allTickets],
-  );
-
   const filteredTickets = useMemo(
     () => filterBoardTickets({
-      allTickets: nonEpicTickets,
+      allTickets,
       hideCompleted,
       completedIssues: displayOptions.completedIssues,
       statuses,
       qaMatchIds,
     }),
-    [nonEpicTickets, hideCompleted, displayOptions.completedIssues, statuses, qaMatchIds],
+    [allTickets, hideCompleted, displayOptions.completedIssues, statuses, qaMatchIds],
   );
 
   const members = useMemo(() => computeBoardMembers(data?.members), [data?.members]);
