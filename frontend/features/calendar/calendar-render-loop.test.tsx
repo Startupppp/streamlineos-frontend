@@ -17,9 +17,10 @@ jest.mock("./big-calendar-wrapper", () => ({
 }));
 
 const mockReplace = jest.fn();
+let mockSearchParams = new URLSearchParams();
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ replace: mockReplace, push: jest.fn(), refresh: jest.fn() }),
-  useSearchParams: () => new URLSearchParams(),
+  useSearchParams: () => mockSearchParams,
   usePathname: () => "/calendar",
 }));
 
@@ -114,6 +115,7 @@ function routeGet(path: unknown): unknown {
 }
 
 beforeEach(() => {
+  mockSearchParams = new URLSearchParams();
   mockCalendarPermission = {
     allowed: true,
     denied: false,
@@ -214,6 +216,17 @@ describe("/calendar render stability", () => {
 
     expect(getByText("Calendar access unavailable")).toBeInTheDocument();
     expect(queryByText("No events in this period")).not.toBeInTheDocument();
+  });
+
+  it("removes an inaccessible real event ID from the URL without opening detail", async () => {
+    mockSearchParams = new URLSearchParams("event=event-42&eventSource=calendar");
+    mockApiGet.mockImplementation((path: unknown) => Promise.resolve(
+      path === "/calendar/events" ? { ...CALENDAR_EVENTS, events: [] } : routeGet(path),
+    ));
+
+    await renderCalendar();
+
+    expect(mockReplace).toHaveBeenCalledWith("/calendar");
   });
 
   it("announces the range at the granularity of the active view, not month-only", async () => {

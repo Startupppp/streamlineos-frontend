@@ -118,6 +118,8 @@ Ticket 10 access-state follow-up: the online Calendar view now distinguishes pen
 
 Ticket 10 action-parity follow-up: the shared Grid/List event selection handler now requires `actions.view === true` before writing an event deep link. List already disables non-viewable rows; Grid no longer opens them through its click handler. Four focused URL-state tests and targeted lint passed.
 
+Ticket 11 URL follow-up: an inaccessible, well-formed event ID in the Calendar URL now has a focused render regression. Once the authorized event window completes without that occurrence, the page replaces the URL with `/calendar` and does not open detail. Eight focused Calendar render tests passed. Ticket 11 remains dependent on Ticket 10's remaining acceptance evidence.
+
 Ticket 36 follow-up: root commit 7c9573652 forces an offline-policy recheck when the review mounts, including when TanStack Query already has a fresh cached policy. A cached-policy regression passed, targeted lint passed, and the full frontend TypeScript check hit Node's 4 GB heap limit before completion. Live offline navigation, revocation, and reconnect flows remain open.
 
 Authenticated localhost follow-up on 2026-10-14: Calendar Week loaded both retained synthetic review events and connected standup occurrences; My time insights loaded private enabled consent, complete 28-day source coverage, 12 hours scheduled meeting time, zero protected-work time, and the definitions; My capacity loaded evaluated 15-minute intervals and over-capacity explanations. This is single-actor read evidence only and does not close Tickets 34 or 35's cross-role, owner-allocation, or correction acceptance checks.
