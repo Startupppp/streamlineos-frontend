@@ -32,6 +32,7 @@ import {
   useDeleteProjectFile,
   useUploadProjectFile,
 } from "@/hooks/api/build/project-files";
+import { validatePreUpload } from "@/lib/build-upload-validator";
 
 const COMMENT_RENDER_PAGE_SIZE = 20;
 
@@ -299,25 +300,18 @@ export function useActivityFeed({
   }, [retryPersistence]);
   const handleAttachFiles = useCallback(
     async (files: File[]) => {
-      const disallowed = files.find(
-        (file) => !isAllowedProjectFileType(file.type),
-      );
-      if (disallowed) {
-        toast.error(
-          `${disallowed.name} is not an allowed file type.`,
-        );
-        return;
+      for (const file of files) {
+        const error = validatePreUpload(file, (f) => isAllowedProjectFileType(f.type));
+        if (error) {
+          toast.error(error);
+          return;
+        }
       }
       const oversized = files.find(
         (file) => file.size > MAX_PROJECT_FILE_BYTES,
       );
       if (oversized) {
         toast.error(`${oversized.name} exceeds the 2 MB file limit.`);
-        return;
-      }
-      const empty = files.find((file) => file.size === 0);
-      if (empty) {
-        toast.error(`${empty.name} is empty and cannot be uploaded.`);
         return;
       }
       let attachedCount = 0;

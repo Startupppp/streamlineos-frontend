@@ -27,6 +27,7 @@ import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { validatePreUpload } from "@/lib/build-upload-validator";
 import { formatDateTime } from "@/lib/date-utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { CONTENT_PANEL_SOLID } from "@/components/ui/content-fill-panel";
@@ -167,15 +168,13 @@ export function FilesPage({ projectId }: FilesPageProps) {
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (!file) return;
-      if (file.size === 0) {
-        toast.error(`${file.name} is empty and cannot be uploaded.`);
-        e.target.value = "";
-        return;
-      }
-      if (!isAllowedProjectFileType(file.type)) {
-        toast.error(
-          `${file.name} is not an accepted file type. Accepted: ${PROJECT_FILE_TYPES_LABEL}.`,
-        );
+      const preUploadError = validatePreUpload(
+        file,
+        (f) => isAllowedProjectFileType(f.type),
+        PROJECT_FILE_TYPES_LABEL,
+      );
+      if (preUploadError) {
+        toast.error(preUploadError);
         e.target.value = "";
         return;
       }

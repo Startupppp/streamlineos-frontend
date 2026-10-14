@@ -202,7 +202,7 @@ it("refuses a 0-byte attachment with a message rather than uploading nothing", a
   const blank = new File([], "blank.pdf", { type: "application/pdf" });
   fireEvent.change(input, { target: { files: [blank] } });
   await waitFor(() =>
-    expect(mockToastError).toHaveBeenCalledWith("blank.pdf is empty and cannot be uploaded."),
+    expect(mockToastError).toHaveBeenCalledWith("blank.pdf is empty"),
   );
   expect(mockUploadFile).not.toHaveBeenCalled();
 });

@@ -10,6 +10,7 @@ import {
   ALLOWED_ATTACHMENT_EXTENSIONS,
   isImageMime,
 } from "./ticket-attachment-preview";
+import { validatePreUpload } from "@/lib/build-upload-validator";
 
 function isAllowedAttachment(file: File): boolean {
   if (ALLOWED_ATTACHMENT_MIME_TYPES.has(file.type)) return true;
@@ -48,19 +49,13 @@ export function useTicketFileDrop({ files, addFiles, handleRemoveFile }: UseTick
 
   const validateAndAddFiles = useCallback(
     (selected: File[]) => {
-      const empty = selected.find((f) => f.size === 0);
-      if (empty) {
-        const msg = `${empty.name} is empty and cannot be uploaded.`;
-        setFileError(msg);
-        toast.error(msg);
-        return;
-      }
-      const disallowed = selected.find((f) => !isAllowedAttachment(f));
-      if (disallowed) {
-        const msg = `${disallowed.name} is not an allowed file type.`;
-        setFileError(msg);
-        toast.error(msg);
-        return;
+      for (const f of selected) {
+        const error = validatePreUpload(f, isAllowedAttachment);
+        if (error) {
+          setFileError(error);
+          toast.error(error);
+          return;
+        }
       }
       const nextCount = files.length + selected.length;
       if (nextCount > MAX_FILES) {
