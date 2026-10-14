@@ -6,6 +6,7 @@ import { platformHierarchyQueryKeys } from "@/lib/query-keys/platform-hierarchy"
 import { CALENDAR_PROJECTION_SIGNAL_KEY } from "@/lib/calendar-projection-cache";
 import {
   useCalendarEvents,
+  useCalendarSources,
   useSetCalendarSourcePreference,
 } from "@/hooks/api/calendar";
 
@@ -56,6 +57,20 @@ describe("calendar projection refresh", () => {
   afterEach(() => {
     focusManager.setFocused(undefined);
     onlineManager.setOnline(true);
+  });
+
+  it("refreshes source metadata after a source change in another tab", async () => {
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    mockedGet.mockResolvedValue([{ key: "tasks", label: "Tasks", module: "tasks", enabled: true }]);
+    renderHook(() => useCalendarSources(), { wrapper: wrapperFor(client) });
+    await waitFor(() => expect(mockedGet).toHaveBeenCalledTimes(1));
+
+    act(() => window.dispatchEvent(new StorageEvent("storage", {
+      key: CALENDAR_PROJECTION_SIGNAL_KEY,
+      newValue: "1728777600000:0.5",
+    })));
+
+    await waitFor(() => expect(mockedGet).toHaveBeenCalledTimes(2));
   });
 
   it("refreshes on focus, reconnect, organization switch, and a second tab signal", async () => {

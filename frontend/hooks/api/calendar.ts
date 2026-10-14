@@ -245,10 +245,17 @@ export function useCalendarHistory(before: string, enabled = true) {
 }
 
 export function useCalendarSources() {
+  const qc = useQueryClient();
   const { data: session } = useSession();
   const orgId = session?.orgId ?? "";
   const userId = session?.user?.id ?? "";
   const canView = useCan("calendar:read");
+  useEffect(
+    () => subscribeToCalendarProjectionChanges(
+      () => { void qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.calendar.sourcesAll }); },
+    ),
+    [qc],
+  );
   return useQuery({
     queryKey: platformHierarchyQueryKeys.calendar.sources(orgId, userId),
     queryFn: ({ signal }) =>
