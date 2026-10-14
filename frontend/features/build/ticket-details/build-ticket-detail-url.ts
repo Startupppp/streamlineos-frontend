@@ -25,6 +25,7 @@ const TICKET_COLLECTION_QUERY_KEYS = [
   "qaState",
   "groupBy",
   "orderBy",
+  "orderDir",
   "rowBy",
   "columnBy",
   "completed",
