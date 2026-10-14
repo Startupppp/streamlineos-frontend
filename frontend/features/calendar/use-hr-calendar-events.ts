@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
-import { addDays, differenceInCalendarDays, format, subDays } from "date-fns";
+import { addDays, differenceInCalendarDays, format, parseISO, subDays } from "date-fns";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 
@@ -55,6 +55,10 @@ const HR_TYPE_COLORS: Record<string, string> = {
 };
 const HR_ACCESS_ERROR = new Error("HR calendar access could not be verified.");
 
+export function parseHrCalendarDay(value: string): Date {
+  return parseISO(value);
+}
+
 export function useHrCalendarEventsMapped(
   rangeStart: Date,
   rangeEnd: Date,
@@ -101,8 +105,8 @@ export function useHrCalendarEventsMapped(
       (query.data ?? []).map((ev) => ({
         id: `hr-${ev.id}`,
         title: ev.title,
-        start: new Date(ev.date),
-        end: new Date(ev.endDate ?? ev.date),
+        start: parseHrCalendarDay(ev.date),
+        end: parseHrCalendarDay(ev.endDate ?? ev.date),
         allDay: true,
         resource: {
           source: "hr",
