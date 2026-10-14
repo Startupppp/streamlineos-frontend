@@ -191,8 +191,7 @@ export default function InvitationPage() {
             }
             const confirmed = await claimsRun.confirmOrWarn();
             if (!confirmed) {
-              acceptingRef.current = false;
-              setIsCompletingAcceptance(false);
+              router.push("/signin");
               return;
             }
             persistPartialGrants(data.skippedGrants ?? []);
@@ -387,10 +386,10 @@ export default function InvitationPage() {
       <div className="w-full max-w-[480px]">
         <InvitationCard>
           <InvitationHero
-            title={isExpired ? "Invitation expired" : "Invitation unavailable"}
+            title={isExpired ? "Invitation link unavailable" : "Invitation unavailable"}
             description={
               isExpired
-                ? "This invitation link has expired or was already used."
+                ? "This invitation link has expired, was already used, or was replaced by a newer one."
                 : getErrorMessage(invitationError)
             }
             verified={false}
@@ -398,8 +397,8 @@ export default function InvitationPage() {
           <CardContent className="px-6 py-5">
             <p className="mb-4 text-center text-sm text-muted-foreground">
               {isExpired
-                ? "Ask an organization administrator to send a new invitation."
-                : "Ask an organization administrator to send a new invitation if this link has expired or was replaced."}
+                ? "Check your inbox for a newer invitation email, or ask an administrator to resend it."
+                : "Ask an organization administrator to send a new invitation."}
             </p>
             <Button className="w-full" onClick={goToSignIn}>
               Go to sign in

@@ -19,7 +19,10 @@ import { cn } from "@/lib/utils";
 const OTP_RESEND_COOLDOWN = 30;
 
 const emailSchema = z.object({
-  email: z.string().email("Please enter a valid email"),
+  email: z
+    .string()
+    .min(1, "Email is required")
+    .email("Enter a valid email, e.g. name@company.com"),
 });
 
 type EmailValues = z.infer<typeof emailSchema>;

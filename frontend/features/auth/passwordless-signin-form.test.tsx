@@ -110,6 +110,41 @@ describe("PasswordlessSigninForm", () => {
       expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
       expect(screen.getByRole("button", { name: /continue/i })).toBeInTheDocument();
     });
+
+    it("shows 'Email is required' when the field is empty on submit", async () => {
+      setupMocks();
+      render(<PasswordlessSigninForm getCallbackUrl={() => "/dashboard"} />);
+      fireEvent.submit(screen.getByRole("button", { name: /continue/i }).closest("form")!);
+      await waitFor(() => {
+        expect(screen.getByRole("alert")).toHaveTextContent("Email is required");
+      });
+      expect(mockRequestOtpMutate).not.toHaveBeenCalled();
+    });
+
+    it("shows the example-address message for a malformed email on submit", async () => {
+      setupMocks();
+      render(<PasswordlessSigninForm getCallbackUrl={() => "/dashboard"} />);
+      fireEvent.change(screen.getByLabelText(/email/i), { target: { value: "notanemail" } });
+      fireEvent.submit(screen.getByRole("button", { name: /continue/i }).closest("form")!);
+      await waitFor(() => {
+        expect(screen.getByRole("alert")).toHaveTextContent(
+          "Enter a valid email, e.g. name@company.com",
+        );
+      });
+      expect(mockRequestOtpMutate).not.toHaveBeenCalled();
+    });
+
+    it("does not show any validation error for a valid email", async () => {
+      setupMocks();
+      render(<PasswordlessSigninForm getCallbackUrl={() => "/dashboard"} />);
+      const emailInput = screen.getByLabelText(/email/i);
+      fireEvent.change(emailInput, { target: { value: "user@example.com" } });
+      fireEvent.submit(emailInput.closest("form")!);
+      await waitFor(() => {
+        expect(mockRequestOtpMutate).toHaveBeenCalledTimes(1);
+      });
+      expect(screen.queryByRole("alert")).toBeNull();
+    });
   });
 
   describe("Resend while pending", () => {
