@@ -41,7 +41,7 @@ export interface CalendarBookingRuleInput {
   linkExpiresAt: string | null;
 }
 
-function useBookingScope() {
+export function useBookingScope() {
   const { data: session } = useSession();
   const { data: access } = useAccess();
   return {

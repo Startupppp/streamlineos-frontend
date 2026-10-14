@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Sheet, SheetBody, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { ErrorState } from "@/components/shared/error-state";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useCan } from "@/hooks/api/access";
 import {
   useActivateCalendarBookingRule,
   useCalendarBookingRules,
@@ -19,6 +20,7 @@ import {
   type CalendarBookingRuleInput,
 } from "@/hooks/api/calendar/booking-rules";
 import type { CalendarBookingRule } from "@/hooks/api/calendar/booking-rules-schema";
+import { CalendarBookingDistributionPanel } from "./calendar-booking-distribution-panel";
 
 const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
@@ -84,6 +86,7 @@ export function CalendarBookingRulesSheet({ onClose }: { onClose: () => void }) 
 }
 
 function CalendarBookingRulesSheetInner({ identity, onClose }: { identity: string; onClose: () => void }) {
+  const canWrite = useCan("calendar:write");
   const rules = useCalendarBookingRules();
   const create = useCreateCalendarBookingRule();
   const update = useUpdateCalendarBookingRule();
@@ -95,6 +98,7 @@ function CalendarBookingRulesSheetInner({ identity, onClose }: { identity: strin
   const [publicLink, setPublicLink] = useState<{ identity: string; href: string } | null>(null);
   const [busyId, setBusyId] = useState<number | null>(null);
   const [previewRule, setPreviewRule] = useState<CalendarBookingRule | null>(null);
+  const [distributionRule, setDistributionRule] = useState<CalendarBookingRule | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   function edit(rule: CalendarBookingRule | null) {
@@ -155,7 +159,7 @@ function CalendarBookingRulesSheetInner({ identity, onClose }: { identity: strin
       <SheetBody className="space-y-5 overflow-y-auto px-4 py-3">
         {error ? <div role="alert" className="rounded-md border border-destructive p-3 text-sm text-destructive">{error}</div> : null}
         {publicLink?.identity === identity ? <div className="space-y-2 rounded-md border p-3"><p className="text-sm font-medium">Your public booking link</p><Input readOnly value={publicLink.href} aria-label="Public booking link" /><Button type="button" variant="outline" onClick={async () => { try { await navigator.clipboard.writeText(publicLink.href); toast.success("Link copied"); } catch { toast.error("Could not copy the link"); } }}>Copy link</Button><p className="text-xs text-muted-foreground">Save this link now. It is shown only when the page is first activated.</p></div> : null}
-        {previewRule ? <BookingRulePreview rule={previewRule} onBack={() => setPreviewRule(null)} /> : form ? <form className="space-y-4" onSubmit={(event) => { event.preventDefault(); void save(); }}>
+        {distributionRule ? <CalendarBookingDistributionPanel key={distributionRule.id} rule={distributionRule} onBack={() => setDistributionRule(null)} /> : previewRule ? <BookingRulePreview rule={previewRule} onBack={() => setPreviewRule(null)} /> : form ? <form className="space-y-4" onSubmit={(event) => { event.preventDefault(); void save(); }}>
           <div className="space-y-1"><Label htmlFor="booking-title">Title</Label><Input id="booking-title" maxLength={160} value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} required /></div>
           <div className="space-y-1"><Label htmlFor="booking-description">Description</Label><Input id="booking-description" maxLength={2000} value={form.description ?? ""} onChange={(event) => setForm({ ...form, description: event.target.value || null })} /></div>
           <div className="grid grid-cols-2 gap-3">{numeric("durationMinutes", "Duration (minutes)", 5, 480)}{numeric("slotIntervalMinutes", "Slot interval (minutes)", 5, 240)}{numeric("minimumNoticeMinutes", "Minimum notice (minutes)", 0, 525600)}{numeric("maximumAdvanceDays", "Book ahead (days)", 1, 365)}{numeric("bufferBeforeMinutes", "Buffer before (minutes)", 0, 1440)}{numeric("bufferAfterMinutes", "Buffer after (minutes)", 0, 1440)}{numeric("dailyLimit", "Daily limit", 1, 100)}{numeric("cancellationNoticeMinutes", "Cancellation notice (minutes)", 0, 525600)}{numeric("rescheduleNoticeMinutes", "Reschedule notice (minutes)", 0, 525600)}</div>
@@ -166,8 +170,8 @@ function CalendarBookingRulesSheetInner({ identity, onClose }: { identity: strin
           <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.requiresApproval} onChange={(event) => setForm({ ...form, requiresApproval: event.target.checked })} />Require approval before confirming</label>
           <div className="flex gap-2"><Button type="submit" disabled={create.isPending || update.isPending}>Save booking page</Button><Button type="button" variant="outline" onClick={() => setForm(null)}>Cancel</Button></div>
         </form> : <>
-          {rules.access.allowed ? <Button onClick={() => edit(null)}>New booking page</Button> : null}
-          {rules.access.denied ? <p className="text-sm text-muted-foreground">You do not have access to booking pages.</p> : rules.access.unavailable ? <ErrorState title="Booking pages unavailable" onRetry={() => void rules.refetch()} /> : rules.access.pending || rules.isPending ? <p role="status">Loading booking pages…</p> : rules.isError ? <ErrorState error={rules.error} onRetry={() => void rules.refetch()} /> : rules.data?.length ? <div className="space-y-3">{rules.data.map((rule) => <div key={rule.id} className="space-y-2 rounded-md border p-3"><div className="flex items-center justify-between gap-2"><p className="font-medium">{rule.title}</p><span className="text-xs capitalize text-muted-foreground">{rule.status}</span></div><p className="text-sm text-muted-foreground">{rule.durationMinutes} minutes · {rule.timeZone} · Version {rule.version}</p><div className="flex flex-wrap gap-2"><Button size="sm" variant="outline" onClick={() => edit(rule)} disabled={rule.status === "revoked"}>Edit</Button><Button size="sm" variant="outline" onClick={() => setPreviewRule(rule)}>Preview</Button>{rule.status === "draft" || rule.status === "paused" ? <Button size="sm" onClick={() => void changeStatus(rule, "activate")} disabled={busyId === rule.id}>Activate</Button> : null}{rule.status === "active" ? <Button size="sm" variant="outline" onClick={() => void changeStatus(rule, "pause")} disabled={busyId === rule.id}>Pause</Button> : null}{rule.status !== "revoked" ? <Button size="sm" variant="destructive" onClick={() => void changeStatus(rule, "revoke")} disabled={busyId === rule.id}>Revoke</Button> : null}</div></div>)}</div> : <p className="text-sm text-muted-foreground">Create a booking page to offer available time slots.</p>}
+          {rules.access.allowed && canWrite ? <Button onClick={() => edit(null)}>New booking page</Button> : null}
+          {rules.access.denied ? <p className="text-sm text-muted-foreground">You do not have access to booking pages.</p> : rules.access.unavailable ? <ErrorState title="Booking pages unavailable" onRetry={() => void rules.refetch()} /> : rules.access.pending || rules.isPending ? <p role="status">Loading booking pages…</p> : rules.isError ? <ErrorState error={rules.error} onRetry={() => void rules.refetch()} /> : rules.data?.length ? <div className="space-y-3">{rules.data.map((rule) => <div key={rule.id} className="space-y-2 rounded-md border p-3"><div className="flex items-center justify-between gap-2"><p className="font-medium">{rule.title}</p><span className="text-xs capitalize text-muted-foreground">{rule.status}</span></div><p className="text-sm text-muted-foreground">{rule.durationMinutes} minutes · {rule.timeZone} · Version {rule.version}</p><div className="flex flex-wrap gap-2"><Button size="sm" variant="outline" onClick={() => edit(rule)} disabled={rule.status === "revoked"}>Edit</Button><Button size="sm" variant="outline" onClick={() => setPreviewRule(rule)}>Preview</Button>{rule.status === "active" ? <Button size="sm" variant="outline" onClick={() => setDistributionRule(rule)}>Publish links</Button> : null}{rule.status === "draft" || rule.status === "paused" ? <Button size="sm" onClick={() => void changeStatus(rule, "activate")} disabled={busyId === rule.id}>Activate</Button> : null}{rule.status === "active" ? <Button size="sm" variant="outline" onClick={() => void changeStatus(rule, "pause")} disabled={busyId === rule.id}>Pause</Button> : null}{rule.status !== "revoked" ? <Button size="sm" variant="destructive" onClick={() => void changeStatus(rule, "revoke")} disabled={busyId === rule.id}>Revoke</Button> : null}</div></div>)}</div> : <p className="text-sm text-muted-foreground">Create a booking page to offer available time slots.</p>}
         </>}
       </SheetBody>
     </SheetContent>
