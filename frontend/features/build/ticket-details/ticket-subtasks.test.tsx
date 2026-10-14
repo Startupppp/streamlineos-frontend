@@ -2,6 +2,9 @@ import type { ReactNode } from "react";
 
 const mockMutate = jest.fn();
 const mockInvalidateQueries = jest.fn();
+const mockGetQueryData = jest.fn();
+const mockSetQueryData = jest.fn();
+const mockGetQueriesData = jest.fn(() => []);
 let mockSearchResults: Array<{
   id: number;
   projectId: number;
@@ -12,7 +15,12 @@ let mockSearchResults: Array<{
 }> = [];
 
 jest.mock("@tanstack/react-query", () => ({
-  useQueryClient: () => ({ invalidateQueries: mockInvalidateQueries }),
+  useQueryClient: () => ({
+    invalidateQueries: mockInvalidateQueries,
+    getQueryData: mockGetQueryData,
+    setQueryData: mockSetQueryData,
+    getQueriesData: mockGetQueriesData,
+  }),
 }));
 jest.mock("@/hooks/api/access", () => ({ useCan: () => true }));
 jest.mock("@/hooks/api/build/projects", () => ({
@@ -113,6 +121,8 @@ describe("B-073 — linking an existing ticket as a subtask", () => {
 
     expect(mockInvalidateQueries).toHaveBeenCalledWith({
       queryKey: buildWorkQueryKeys.projects.subtasks(10, 7),
+      exact: true,
+      refetchType: "active",
     });
   });
 

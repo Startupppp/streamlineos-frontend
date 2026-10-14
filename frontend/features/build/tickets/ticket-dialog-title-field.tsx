@@ -48,7 +48,23 @@ export function TicketDialogTitleField({
       <FormField
         control={control}
         name="title"
-        render={({ field }) => (
+        render={({ field }) => {
+          function handleTitleInputChange(
+            event: React.ChangeEvent<HTMLInputElement>,
+          ) {
+            const value = event.target.value;
+            field.onChange(value);
+            onTitleChange?.(value);
+            if (value.length > TICKET_TITLE_MAX) {
+              setError("title", {
+                type: "max",
+                message: `Title must be ${TICKET_TITLE_MAX} characters or fewer`,
+              });
+            } else if (getFieldState("title").error?.type === "max") {
+              clearErrors("title");
+            }
+          }
+          return (
           <FormItem>
             <div className="flex items-start gap-1.5">
               <FormControl>
@@ -56,19 +72,7 @@ export function TicketDialogTitleField({
                   name={field.name}
                   value={field.value ?? ""}
                   onBlur={field.onBlur}
-                  onChange={(event) => {
-                    const value = event.target.value;
-                    field.onChange(value);
-                    onTitleChange?.(value);
-                    if (value.length > TICKET_TITLE_MAX) {
-                      setError("title", {
-                        type: "max",
-                        message: `Title must be ${TICKET_TITLE_MAX} characters or fewer`,
-                      });
-                    } else if (getFieldState("title").error?.type === "max") {
-                      clearErrors("title");
-                    }
-                  }}
+                  onChange={handleTitleInputChange}
                   onKeyDown={(event) => {
                     if (event.key === "Enter") {
                       event.preventDefault();
@@ -128,7 +132,8 @@ export function TicketDialogTitleField({
               </div>
             )}
           </FormItem>
-        )}
+          );
+        }}
       />
     </div>
   );
