@@ -14,7 +14,7 @@ export const EVENT_CATEGORY_COLORS: Record<string, string> = {
 export const EVENT_INK = "#ffffff";
 
 export const CALENDAR_TRUNCATED_WARNING =
-  "This period has more events than the calendar can load at once, so some are not shown — including occurrences of a very frequent repeating event. Pick a shorter date range to see them all.";
+  "Some events are missing because this period reached a source or occurrence limit. Narrow the date range or retry. Very dense recurring series may still have partial coverage.";
 
 export const EVENT_CATEGORIES = [
   "general",

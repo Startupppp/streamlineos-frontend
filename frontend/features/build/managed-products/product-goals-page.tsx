@@ -140,18 +140,15 @@ export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
 
   const viewToggle = (
     <Tabs value={viewMode} onValueChange={handleViewTabChange} aria-label="View mode">
-      <TabsList className="h-8 min-h-8 border-0 bg-muted/60 p-0.5 [&_[data-slot=tabs-trigger]]:h-7 [&_[data-slot=tabs-trigger]]:min-h-7 [&_[data-slot=tabs-trigger]]:px-2.5">
-        <TabsTrigger value="tree" {...groupedHoverHandlers}>
+      <TabsList className="h-10 min-h-10 w-auto gap-0.5 border border-input bg-card p-1 [&_[data-slot=tabs-trigger]]:h-8 [&_[data-slot=tabs-trigger]]:min-h-8 [&_[data-slot=tabs-trigger]]:min-w-8 [&_[data-slot=tabs-trigger]]:px-2">
+        <TabsTrigger value="tree" aria-label="Grouped" title="Grouped" {...groupedHoverHandlers}>
           <LayoutGridIcon ref={groupedIconRef} size={16} aria-hidden />
-          Grouped
         </TabsTrigger>
-        <TabsTrigger value="list" {...listHoverHandlers}>
+        <TabsTrigger value="list" aria-label="List" title="List" {...listHoverHandlers}>
           <LayoutListIcon ref={listIconRef} size={16} aria-hidden />
-          List
         </TabsTrigger>
-        <TabsTrigger value="table" {...tableHoverHandlers}>
+        <TabsTrigger value="table" aria-label="Table" title="Table" {...tableHoverHandlers}>
           <ChartColumnIcon ref={tableIconRef} size={16} aria-hidden />
-          Table
         </TabsTrigger>
       </TabsList>
     </Tabs>

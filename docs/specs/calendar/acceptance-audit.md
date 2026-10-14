@@ -1,6 +1,6 @@
 # Calendar acceptance audit
 
-This audit uses the approved 36-ticket breakdown, the current code, and [release evidence](./release-evidence.md). The original local `.scratch/calendar/issues/` tracker is absent from the current workspace, so the approved ticket summaries and the PRD remain the recoverable scope. A local implementation or passing fixture does not close a ticket whose acceptance needs a database, provider, or authenticated workflow.
+This audit uses the approved 36-ticket breakdown, the current code, and [release evidence](./release-evidence.md). All 36 original ticket bodies were recovered from this chat's saved publishing output into `.scratch/calendar/issues/` on 2026-10-14. Those exact acceptance criteria govern ticket completion. A local implementation or passing fixture does not close a ticket whose acceptance needs a database, provider, or authenticated workflow.
 
 | # | Approved outcome | Current evidence | Remaining acceptance evidence |
 | --- | --- | --- | --- |
