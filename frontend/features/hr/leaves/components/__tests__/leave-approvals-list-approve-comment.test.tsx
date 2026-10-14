@@ -1,5 +1,5 @@
 import * as React from "react";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
 const mockApproveMutate = jest.fn();
@@ -138,20 +138,26 @@ describe("LeaveApprovalsList — optional manager comment on Approve (decision #
     expect(mockToastSuccess).toHaveBeenCalledWith("Request approved successfully");
   });
 
-  it("leaves Reject's required reason untouched — a blank reason never reaches the mutation", () => {
+  it("leaves Reject's required reason untouched — a blank reason never reaches the mutation", async () => {
     renderList();
     fireEvent.click(screen.getByRole("button", { name: /^Reject$/ }));
 
     const confirmReject = screen.getAllByRole("button", { name: /^Reject$/ }).at(-1);
-    expect(confirmReject).toBeDisabled();
+    await act(async () => {
+      fireEvent.click(confirmReject as HTMLElement);
+    });
+
     expect(mockRejectMutate).not.toHaveBeenCalled();
+    expect(await screen.findByText(/reason is required/i)).toBeInTheDocument();
 
     fireEvent.change(screen.getByPlaceholderText(/Insufficient notice/i), {
       target: { value: "Conflicting deadlines" },
     });
-    const enabledReject = screen.getAllByRole("button", { name: /^Reject$/ }).at(-1);
-    expect(enabledReject).not.toBeDisabled();
-    fireEvent.click(enabledReject as HTMLElement);
+    await act(async () => {
+      fireEvent.click(
+        screen.getAllByRole("button", { name: /^Reject$/ }).at(-1) as HTMLElement,
+      );
+    });
 
     expect(mockRejectMutate).toHaveBeenCalledTimes(1);
     expect(mockRejectMutate.mock.calls[0][0]).toEqual({
