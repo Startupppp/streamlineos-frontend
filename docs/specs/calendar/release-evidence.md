@@ -16,6 +16,10 @@ Outlook continuation URLs are now validated before the Composio proxy request. O
 
 The current backend production TypeScript check exits with TS2353 in `src/modules/hr/time/attendance-regularization.service.ts` at line 243 (`name` is not a `PersonNameFields` property). It reported no Calendar diagnostic, but the full check is not green. That HR file is outside the Calendar scope and was not edited here.
 
+The what-if scenario apply path now derives its source-action proposal key from the signed preview token and the canonical selected step indexes. Reordering the same selected steps keeps the same key; applying a different subset receives a different key. The focused scenario suite passed 17 tests, including distinct subsets from one preview, and targeted ESLint passed.
+
+The current frontend TypeScript check exits with TS2345 diagnostics in `features/hr/employees/detail/employee-form-schema.ts` and `features/hr/policies/policy-form-types.ts`, all outside Calendar. It reported no Calendar diagnostic, but the full frontend check is not green. Those HR files were not edited here.
+
 The user reported `/calendar/events` HTTP 500 with correlation ID `a41242e7-fca0-41e4-889f-e5c9d6601b05`. They later said they think it is fixed. Automatic approval review rejected direct localhost browser verification due the existing browser-security denial. The local frontend points to `https://api.streamlineos.in`; its backend log for that correlation ID was not available in this workspace. The reported 500 remains unverified.
 
 ## Linked-record access fallback, 2026-10-14

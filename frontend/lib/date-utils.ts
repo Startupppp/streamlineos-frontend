@@ -290,6 +290,24 @@ export function hoursInOrgTz(instant: Date, orgTz: string | null): number {
   return wall.getUTCHours();
 }
 
+export function formatClockInOrgTz(instant: Date, orgTz: string | null): string {
+  if (!orgTz) return "";
+  const tz = resolveTimeZone(orgTz, readerTimeZone());
+  const parts = new Intl.DateTimeFormat("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+    weekday: "short",
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    timeZone: tz,
+  }).formatToParts(instant);
+  const get = (type: Intl.DateTimeFormatPartTypes): string =>
+    parts.find((p) => p.type === type)?.value ?? "";
+  return `${get("hour")}:${get("minute")} ${get("dayPeriod")} - ${get("weekday")} ${get("day")}, ${get("month")} ${get("year")}`.toUpperCase();
+}
+
 /** `YYYY-MM-DDTHH:mm` in the reader's own zone, for a `datetime-local` input default. */
 export function datetimeLocalAfterDays(days: number): string {
   const value = new Date(Date.now() + days * 24 * 60 * 60 * 1000);

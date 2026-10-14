@@ -193,6 +193,8 @@ export function useCompleteTermination() {
         queryKey: terminationKeys.detail(terminationId),
       });
       void invalidateHrWorkforceQueries(qc);
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.fnfList() });
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.assetReturnsList() });
     },
   });
 }

@@ -99,6 +99,24 @@ export function useCreateResignation() {
   });
 }
 
+export function useAdminRecordResignation() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("hr:exit:manage", {
+    mutationKey: ["hr", "exit", "admin-record"],
+    mutationFn: (data: {
+      targetUserId: string;
+      reason: string;
+      reasonCategory?: string;
+      lastWorkingDate: string;
+      noticePeriodDays?: number;
+      willingForExitInterview?: boolean;
+      companyFeedback?: string;
+      resignationLetterUrl?: string;
+    }) => apiClient.post("/hr/exit/admin-record", data, undefined, _resignationContract),
+    onSuccess: () => qc.invalidateQueries({ queryKey: exitKeys.all }),
+  });
+}
+
 export function useHrReviewResignation() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:exit:manage", {

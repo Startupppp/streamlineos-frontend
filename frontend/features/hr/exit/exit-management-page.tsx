@@ -24,6 +24,7 @@ import { useSession } from "next-auth/react";
 import { useCan } from "@/hooks/api/access";
 import { ResignationCard } from "@/features/hr/exit/resignation-card";
 import { ResignationFormSheet } from "@/features/hr/exit/resignation-form-sheet";
+import { AdminResignationFormSheet } from "@/features/hr/exit/admin-resignation-form-sheet";
 import { ResignationReviewSheets } from "@/features/hr/exit/resignation-review-sheets";
 import { useResignationReview } from "@/features/hr/exit/use-resignation-review";
 import { ExitPathStrip } from "@/features/hr/exit/exit-path-strip";
@@ -51,6 +52,7 @@ export function ExitManagementPage() {
   const canSubmit = useCan("hr:exit:create");
 
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [adminSheetOpen, setAdminSheetOpen] = useState(false);
   const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set());
 
   const hasActiveResignation =
@@ -89,6 +91,7 @@ export function ExitManagementPage() {
   }, []);
 
   const handleOpenSheet = useCallback(() => setSheetOpen(true), []);
+  const handleOpenAdminSheet = useCallback(() => setAdminSheetOpen(true), []);
 
   function handleNextPage() {
     pager.goNext(pagination?.nextCursor);
@@ -107,9 +110,14 @@ export function ExitManagementPage() {
       Submit resignation
     </AnimatedIconButton>
   ) : isAdmin ? (
-    <AnimatedIconButton icon={UserXIcon} iconSize={14} size="sm" className="gap-1.5" onClick={handleInitiateTermination}>
-      Initiate termination
-    </AnimatedIconButton>
+    <div className="flex items-center gap-2">
+      <AnimatedIconButton icon={PlusIcon} iconSize={14} size="sm" variant="outline" className="gap-1.5" onClick={handleOpenAdminSheet}>
+        Record resignation
+      </AnimatedIconButton>
+      <AnimatedIconButton icon={UserXIcon} iconSize={14} size="sm" className="gap-1.5" onClick={handleInitiateTermination}>
+        Initiate termination
+      </AnimatedIconButton>
+    </div>
   ) : null;
 
   if (pageState.kind === "loading") {
@@ -202,6 +210,7 @@ export function ExitManagementPage() {
       )}
 
       <ResignationFormSheet open={sheetOpen} onOpenChange={setSheetOpen} />
+      <AdminResignationFormSheet open={adminSheetOpen} onOpenChange={setAdminSheetOpen} />
       <ResignationReviewSheets review={review} />
     </PageWrapper>
   );
