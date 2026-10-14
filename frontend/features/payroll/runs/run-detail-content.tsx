@@ -4,6 +4,8 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
+import { Button } from "@/components/ui/button";
 import {
   Tabs,
   TabsContent,
@@ -36,7 +38,9 @@ export function RunDetailContent({ runId }: RunDetailContentProps) {
   const router = useRouter();
   const activeTab = searchParams.get("tab") ?? "employees";
 
-  const { data, isLoading, error, refetch } = usePayrollRun(runId);
+  // isPending, not isLoading: while access resolves the query is disabled (not fetching), and
+  // isLoading=false there fell through to "Run not found" before the run ever loaded.
+  const { data, isPending, error, refetch, isRefetching } = usePayrollRun(runId);
   const run = data?.run;
 
   const isLocked = run ? LOCKED_STATUSES.has(run.status) : false;
@@ -49,19 +53,9 @@ export function RunDetailContent({ runId }: RunDetailContentProps) {
 
   const openExceptions = run?.exceptionCount ?? 0;
 
-  if (isLoading) {
-    return (
-      <PageWrapper title="Payroll Run" backHref="/payroll/runs">
-        <div className="space-y-4">
-          <Skeleton className="h-24 rounded-xl" />
-          <StatCardGridSkeleton cols={4} count={4} />
-          <Skeleton className="h-64 rounded-xl" />
-        </div>
-      </PageWrapper>
-    );
-  }
-
-  if (error) {
+  // A failed background refetch (e.g. right after Recalculate) keeps the last good run on screen;
+  // only a run that never loaded swaps the page for an error.
+  if (error && !run) {
     return (
       <PageWrapper title="Payroll Run" backHref="/payroll/runs">
         <ErrorState
@@ -69,6 +63,24 @@ export function RunDetailContent({ runId }: RunDetailContentProps) {
           description="This payroll run could not be loaded. You may not have access or it may not exist."
           onRetry={refetch}
         />
+      </PageWrapper>
+    );
+  }
+
+  if (isPending) {
+    return (
+      <PageWrapper title="Payroll Run" subtitle="Loading run…" backHref="/payroll/runs">
+        <div className="flex flex-1 min-h-0 flex-col gap-4">
+          <Skeleton className="h-24 rounded-xl" />
+          <StatCardGridSkeleton cols={4} count={4} />
+          <div className="flex gap-1 border-b border-border pb-0">
+            <Skeleton className="h-9 w-28 rounded-t-md" />
+            <Skeleton className="h-9 w-28 rounded-t-md" />
+            <Skeleton className="h-9 w-24 rounded-t-md" />
+            <Skeleton className="h-9 w-24 rounded-t-md" />
+          </div>
+          <DataTableSkeleton rows={8} headers={["Employee", "Type", "Gross", "Deductions", "Net", "Status"]} />
+        </div>
       </PageWrapper>
     );
   }
@@ -100,6 +112,17 @@ export function RunDetailContent({ runId }: RunDetailContentProps) {
       }
     >
       <div className="flex flex-1 min-h-0 flex-col gap-4 pb-20 sm:pb-0">
+        {error && (
+          <div
+            role="alert"
+            className="flex items-center gap-2 px-3 py-2 rounded-lg border border-status-danger-rule bg-status-danger-surface text-dense text-status-danger-ink"
+          >
+            <span className="flex-1">Couldn&apos;t refresh this run. Showing the last loaded figures.</span>
+            <Button size="sm" variant="outline" onClick={() => void refetch()} disabled={isRefetching}>
+              Retry
+            </Button>
+          </div>
+        )}
         <ReadinessRail
           canPay={
             openExceptions === 0 &&
