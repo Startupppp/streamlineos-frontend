@@ -23,6 +23,10 @@ jest.mock("@/hooks/api/build/projects", () => ({
   useProject: () => ({ data: { key: "BLD", statuses: [] } }),
 }));
 
+jest.mock("./related-ticket-card", () => ({
+  RelatedTicketCard: ({ ticket }: { ticket: { title: string } }) => <span>{ticket.title}</span>,
+}));
+
 jest.mock("@/hooks/api/access", () => ({
   useCan: () => mockCanUpdate,
 }));
@@ -114,4 +118,55 @@ it("shows a retry instead of a false empty state when the relations read fails, 
 
   fireEvent.click(screen.getByRole("button", { name: "Try again" }));
   expect(refetch).toHaveBeenCalledTimes(1);
+});
+
+function incoming(id: number, relationType: string, title: string) {
+  return {
+    id,
+    relationType,
+    direction: "incoming" as const,
+    relatedTicket: { id, ticketNumber: id, title, status: "TODO", type: "TASK" },
+  };
+}
+
+function outgoing(id: number, relationType: string, title: string) {
+  return {
+    id,
+    relationType,
+    direction: "outgoing" as const,
+    relatedTicket: { id, ticketNumber: id, title, status: "TODO", type: "TASK" },
+  };
+}
+
+it("B-070 — reads an incoming blocks relation as Blocked by and an incoming duplicate_of as Duplicated by, so the other ticket does not claim the same side of the link", () => {
+  mockRelationsResult = {
+    data: [
+      incoming(1, "blocks", "Blocker"),
+      incoming(2, "duplicate_of", "Original"),
+      incoming(3, "blocked_by", "Blocked peer"),
+    ],
+    isLoading: false,
+    refetch: jest.fn(),
+  };
+
+  render(<TicketRelations ticketId={10} projectId={42} />);
+
+  expect(screen.getByText("Blocked by")).toBeInTheDocument();
+  expect(screen.getByText("Duplicated by")).toBeInTheDocument();
+  expect(screen.getByText("Blocks")).toBeInTheDocument();
+});
+
+it("B-070 — leaves an outgoing relation on the side it was written, so inversion applies to the target only", () => {
+  mockRelationsResult = {
+    data: [outgoing(1, "blocks", "Downstream"), outgoing(2, "duplicate_of", "Original")],
+    isLoading: false,
+    refetch: jest.fn(),
+  };
+
+  render(<TicketRelations ticketId={10} projectId={42} />);
+
+  expect(screen.getByText("Blocks")).toBeInTheDocument();
+  expect(screen.getByText("Duplicate of")).toBeInTheDocument();
+  expect(screen.queryByText("Blocked by")).not.toBeInTheDocument();
+  expect(screen.queryByText("Duplicated by")).not.toBeInTheDocument();
 });

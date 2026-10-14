@@ -363,6 +363,7 @@ export function TicketDetailMainSection({
               ticketId={ticketId}
               projectId={projectId}
               subtasks={subtasks}
+              parentTicketId={ticket.parentTicketId ?? null}
               canUseAI={ticketDetailAi.canUseAI}
             />
           </div>

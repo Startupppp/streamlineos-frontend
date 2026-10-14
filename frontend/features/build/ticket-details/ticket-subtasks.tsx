@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -15,6 +16,7 @@ import { isCompletedTicketStatus } from "@/features/build/shared/completed-statu
 import { useCan } from "@/hooks/api/access";
 import { useUpdateTicket } from "@/hooks/api/build/tickets";
 import { useTicketSearch } from "@/hooks/api/build/ticket-search";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { LinkIcon } from "@animateicons/react/lucide";
@@ -37,22 +39,24 @@ interface TicketSubtasksProps {
   ticketId: number;
   projectId: number;
   subtasks: Ticket[];
+  parentTicketId?: number | null;
   canUseAI?: boolean;
 }
 
 function ExistingTicketLinker({
   ticketId,
   projectId,
-  subtaskIds,
+  excludeIds,
 }: {
   ticketId: number;
   projectId: number;
-  subtaskIds: Set<number>;
+  excludeIds: Set<number>;
 }) {
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
   const debounced = useDebouncedValue(q, 250);
   const updateTicket = useUpdateTicket(projectId);
+  const queryClient = useQueryClient();
 
   const { data: results, isFetching } = useTicketSearch(debounced, {
     enabled: open && debounced.trim().length > 0,
@@ -61,12 +65,9 @@ function ExistingTicketLinker({
   const candidates = useMemo(
     () =>
       (results ?? []).filter(
-        (r) =>
-          r.projectId === projectId &&
-          r.id !== ticketId &&
-          !subtaskIds.has(r.id),
+        (r) => r.projectId === projectId && !excludeIds.has(r.id),
       ),
-    [results, projectId, ticketId, subtaskIds],
+    [results, projectId, excludeIds],
   );
 
   function handleSelect(result: NonNullable<typeof results>[number]) {
@@ -74,6 +75,9 @@ function ExistingTicketLinker({
       { ticketId: result.id, version: result.version, parentTicketId: ticketId },
       {
         onSuccess: () => {
+          void queryClient.invalidateQueries({
+            queryKey: buildWorkQueryKeys.projects.subtasks(ticketId, projectId),
+          });
           toast.success("Subtask linked");
           setOpen(false);
           setQ("");
@@ -163,6 +167,7 @@ export function TicketSubtasks({
   ticketId,
   projectId,
   subtasks,
+  parentTicketId = null,
   canUseAI = false,
 }: TicketSubtasksProps) {
   const canCreate = useCan("build:tickets:create");
@@ -176,10 +181,12 @@ export function TicketSubtasks({
   const subtasksTotal = subtasks.length;
   const subtaskProgress = subtasksTotal > 0 ? (subtasksDone / subtasksTotal) * 100 : 0;
 
-  const subtaskIds = useMemo(
-    () => new Set(subtasks.map((s) => s.id)),
-    [subtasks],
-  );
+  const excludeIds = useMemo(() => {
+    const ids = new Set(subtasks.map((s) => s.id));
+    ids.add(ticketId);
+    if (parentTicketId != null) ids.add(parentTicketId);
+    return ids;
+  }, [subtasks, ticketId, parentTicketId]);
 
   return (
     <div className="pt-2">
@@ -202,7 +209,7 @@ export function TicketSubtasks({
           <ExistingTicketLinker
             ticketId={ticketId}
             projectId={projectId}
-            subtaskIds={subtaskIds}
+            excludeIds={excludeIds}
           />
         ) : null}
       </div>
