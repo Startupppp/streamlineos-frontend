@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/date-picker";
-import { type ExpenseFormData } from "./expense-form-schema";
+import { EXPENSE_AMOUNT_MAX, type ExpenseFormData } from "./expense-form-schema";
 import { MAX_EXPENSE_RECEIPTS, type ExpenseReceipt } from "@/lib/expense-constants";
 import { ReceiptManager, type PendingReceipt } from "./receipt-manager";
 
@@ -33,9 +33,8 @@ export function AmountInput({ value, onChange }: { value: number; onChange: (v: 
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value;
-    if (raw === "" || /^\d{0,12}(\.\d{0,2})?$/.test(raw)) {
+    if (raw === "" || /^\d{0,20}(\.\d{0,2})?$/.test(raw)) {
       const num = parseFloat(raw);
-      if (!isNaN(num) && num > 999_999_999.99) return;
       const nextValue = isNaN(num) ? 0 : num;
       setDraft({ sourceValue: nextValue, display: raw });
       onChange(nextValue);
@@ -44,7 +43,7 @@ export function AmountInput({ value, onChange }: { value: number; onChange: (v: 
 
   const handleBlur = () => {
     const num = parseFloat(display);
-    if (!isNaN(num) && num > 0) {
+    if (!isNaN(num) && num > 0 && num <= EXPENSE_AMOUNT_MAX) {
       setDraft({
         sourceValue: value,
         display: num % 1 === 0 ? String(num) : num.toFixed(2),

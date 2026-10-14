@@ -1,11 +1,11 @@
 "use client";
 
 import { keepPreviousData, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiClient } from "@/lib/api-client";
+import { apiClient, type RequestConfig } from "@/lib/api-client";
 import { downloadExport } from "@/lib/download-export";
 import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
-import { useCan, useModuleEnabled } from "@/hooks/api/access";
+import { useCan } from "@/hooks/api/access";
 import type {
   Expense,
   CreateExpenseInput,
@@ -54,13 +54,12 @@ export function useExpensePageData(
   options?: { enabled?: boolean; selfService?: boolean },
 ) {
   const canExpenses = useCan("hr:expenses:view");
-  const accountingEnabled = useModuleEnabled("accounting");
   const params: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(filters)) {
     if (v !== undefined && v !== "" && v !== null) params[k] = v;
   }
   return useQuery({
-    enabled: (options?.selfService === true || (canExpenses && accountingEnabled)) && (options?.enabled ?? true),
+    enabled: (options?.selfService === true || canExpenses) && (options?.enabled ?? true),
     // The scope segment is load-bearing: `selfService` selects between a
     // one-person endpoint and an org-wide one, and without it in the key the
     // approver's first render (permissions still in flight -> selfService true)
@@ -88,8 +87,8 @@ export function useCreateExpense() {
   const qc = useQueryClient();
   return useAuthorizedMutation("self:expenses", {
     mutationKey: ["hr", "expenses", "create"],
-    mutationFn: (data: CreateExpenseInput) =>
-      apiClient.post("/me/expenses", data, undefined, _expenseRowContract),
+    mutationFn: ({ body, config }: { body: CreateExpenseInput; config?: RequestConfig }) =>
+      apiClient.post("/me/expenses", body, config, _expenseRowContract),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.expenses() }),
   });

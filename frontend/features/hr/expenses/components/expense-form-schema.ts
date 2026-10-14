@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+export const EXPENSE_AMOUNT_MAX = 999_999_999;
+
 const LABEL_CHARS_RE = /^[\p{L}\p{N}\s'.-]+$/u;
 const CONSECUTIVE_SPECIAL_RE = /[^\p{L}\p{N}\s]{2,}/u;
 
@@ -57,7 +59,7 @@ export const expenseFormSchema = z.object({
   amount: z
     .number()
     .positive("Amount must be greater than 0")
-    .max(999_999_999.99, "Amount cannot exceed ₹99,99,99,999.99"),
+    .max(EXPENSE_AMOUNT_MAX, "Amount cannot exceed ₹9,99,99,999"),
   description: z
     .string()
     .max(1000, "Description must be at most 1000 characters")
