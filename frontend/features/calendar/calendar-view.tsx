@@ -25,11 +25,12 @@ import {
 } from "@/components/ui/dialog";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { toast } from "sonner";
-import { useCan, useModuleEnabled } from "@/hooks/api/access";
+import { useCan } from "@/hooks/api/access";
 import {
   useCalendarEvents,
   useCalendarHistory,
   useExternalCalendarEvents,
+  useCalendarSources,
 } from "@/hooks/api/calendar";
 import type { CalendarListItem } from "@/hooks/api/calendar";
 import type { CalendarSearchResponse } from "@/hooks/api/calendar-types";
@@ -277,9 +278,16 @@ export function CalendarView() {
     handleCloseCreateTicket,
   } = useCalendarViewState();
 
-  const isHrEnabled = useModuleEnabled("hr");
-  const isCrmEnabled = useModuleEnabled("crm");
-  const isAttendanceEnabled = useModuleEnabled("attendance");
+  const { data: calendarSources } = useCalendarSources();
+  const isHrEnabled =
+    calendarSources !== undefined &&
+    calendarSources.some((s) => s.module === "hr");
+  const isCrmEnabled =
+    calendarSources !== undefined &&
+    calendarSources.some((s) => s.module === "crm");
+  const isAttendanceEnabled =
+    calendarSources !== undefined &&
+    calendarSources.some((s) => s.key === "hr-attendance");
   const canCreateTicket = useCan("build:tickets:create");
 
   useEffect(() => {
