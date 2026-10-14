@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const OPENAPI_HASH = "sha256:12328e9bae7828615f31d015e0750110965552a860e922968923f8402eaa4835" as const;
+export const OPENAPI_HASH = "sha256:0bf6ccd37e4bfbdb56fd1d242b25a02bf29d47e021fa805fe466baf7d6a2572f" as const;
 
 export const agentTokensListResponseSchema = z.array(z.object({
   id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
@@ -2569,6 +2569,21 @@ export const clientPortalListPortalProjectsResponseSchema = z.array(z.object({
 }));
 export type ClientPortalListPortalProjectsResponse = z.infer<typeof clientPortalListPortalProjectsResponseSchema>;
 
+export const clientPortalListPreviewApprovalsResponseSchema = z.object({
+  data: z.array(z.object({
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    title: z.string(),
+    status: z.string(),
+    dueAt: z.iso.datetime({ offset: true }).nullable(),
+  })),
+  pagination: z.object({
+    limit: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    hasMore: z.boolean(),
+    nextCursor: z.string().nullable(),
+  }),
+});
+export type ClientPortalListPreviewApprovalsResponse = z.infer<typeof clientPortalListPreviewApprovalsResponseSchema>;
+
 export const clientPortalListPortalChangeRequestsResponseSchema = z.array(z.object({
   id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   crNumber: z.number().int().gte(-9007199254740991).lte(9007199254740991),
@@ -2609,6 +2624,22 @@ export const clientPortalCreatePortalChangeRequestBodySchema = z.strictObject({
 });
 export type ClientPortalCreatePortalChangeRequestBody = z.input<typeof clientPortalCreatePortalChangeRequestBodySchema>;
 
+export const clientPortalListPreviewDeliverablesResponseSchema = z.object({
+  data: z.array(z.object({
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    name: z.string(),
+    version: z.string(),
+    releaseDate: z.iso.date().nullable(),
+    status: z.string(),
+  })),
+  pagination: z.object({
+    limit: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    hasMore: z.boolean(),
+    nextCursor: z.string().nullable(),
+  }),
+});
+export type ClientPortalListPreviewDeliverablesResponse = z.infer<typeof clientPortalListPreviewDeliverablesResponseSchema>;
+
 export const clientPortalListPreviewFilesResponseSchema = z.object({
   data: z.array(z.object({
     id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
@@ -2623,6 +2654,39 @@ export const clientPortalListPreviewFilesResponseSchema = z.object({
 });
 export type ClientPortalListPreviewFilesResponse = z.infer<typeof clientPortalListPreviewFilesResponseSchema>;
 
+export const clientPortalListPreviewInvoicesResponseSchema = z.object({
+  data: z.array(z.object({
+    id: z.string(),
+    documentNumber: z.string().nullable(),
+    issueDate: z.iso.date(),
+    dueDate: z.iso.date().nullable(),
+    grossMinor: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    currency: z.string(),
+    status: z.string(),
+  })),
+  pagination: z.object({
+    limit: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    hasMore: z.boolean(),
+    nextCursor: z.string().nullable(),
+  }),
+});
+export type ClientPortalListPreviewInvoicesResponse = z.infer<typeof clientPortalListPreviewInvoicesResponseSchema>;
+
+export const clientPortalListPreviewMilestonesResponseSchema = z.object({
+  data: z.array(z.object({
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    name: z.string(),
+    dueDate: z.iso.date().nullable(),
+    status: z.string(),
+  })),
+  pagination: z.object({
+    limit: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    hasMore: z.boolean(),
+    nextCursor: z.string().nullable(),
+  }),
+});
+export type ClientPortalListPreviewMilestonesResponse = z.infer<typeof clientPortalListPreviewMilestonesResponseSchema>;
+
 export const clientPortalGetProjectOverviewResponseSchema = z.object({
   project: z.object({
     id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
@@ -2635,7 +2699,7 @@ export const clientPortalGetProjectOverviewResponseSchema = z.object({
   milestones: z.array(z.object({
     id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     name: z.string(),
-    dueDate: z.string().nullable(),
+    dueDate: z.iso.date().nullable(),
     status: z.string(),
   })),
   tasks: z.array(z.object({
@@ -2643,13 +2707,13 @@ export const clientPortalGetProjectOverviewResponseSchema = z.object({
     ticketNumber: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     title: z.string(),
     status: z.string(),
-    dueDate: z.string().nullable(),
+    dueDate: z.iso.date().nullable(),
   })),
   deliverables: z.array(z.object({
     id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     name: z.string(),
     version: z.string(),
-    releaseDate: z.string().nullable(),
+    releaseDate: z.iso.date().nullable(),
     status: z.string(),
   })),
   approvals: z.array(z.object({
@@ -2661,8 +2725,8 @@ export const clientPortalGetProjectOverviewResponseSchema = z.object({
   invoices: z.array(z.object({
     id: z.string(),
     documentNumber: z.string().nullable(),
-    issueDate: z.string(),
-    dueDate: z.string().nullable(),
+    issueDate: z.iso.date(),
+    dueDate: z.iso.date().nullable(),
     grossMinor: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     currency: z.string(),
     status: z.string(),
@@ -2702,6 +2766,22 @@ export const clientPortalListPreviewRequestsResponseSchema = z.object({
   }),
 });
 export type ClientPortalListPreviewRequestsResponse = z.infer<typeof clientPortalListPreviewRequestsResponseSchema>;
+
+export const clientPortalListPreviewTasksResponseSchema = z.object({
+  data: z.array(z.object({
+    id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    ticketNumber: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    title: z.string(),
+    status: z.string(),
+    dueDate: z.iso.date().nullable(),
+  })),
+  pagination: z.object({
+    limit: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+    hasMore: z.boolean(),
+    nextCursor: z.string().nullable(),
+  }),
+});
+export type ClientPortalListPreviewTasksResponse = z.infer<typeof clientPortalListPreviewTasksResponseSchema>;
 
 export const clientPortalListPreviewUpdatesResponseSchema = z.object({
   data: z.array(z.object({
@@ -4850,7 +4930,7 @@ export const projectsBudgetUpdateBudgetResponseSchema = z.object({
 export type ProjectsBudgetUpdateBudgetResponse = z.infer<typeof projectsBudgetUpdateBudgetResponseSchema>;
 
 export const projectsBudgetUpdateBudgetBodySchema = z.strictObject({
-  budget: z.number().gte(0),
+  budget: z.number().gte(0).lte(1000000000000),
 });
 export type ProjectsBudgetUpdateBudgetBody = z.input<typeof projectsBudgetUpdateBudgetBodySchema>;
 
@@ -5093,7 +5173,7 @@ export const clientPortalManagementGetPreviewResponseSchema = z.object({
   milestones: z.array(z.object({
     id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     name: z.string(),
-    dueDate: z.string().nullable(),
+    dueDate: z.iso.date().nullable(),
     status: z.string(),
   })),
   tasks: z.array(z.object({
@@ -5101,13 +5181,13 @@ export const clientPortalManagementGetPreviewResponseSchema = z.object({
     ticketNumber: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     title: z.string(),
     status: z.string(),
-    dueDate: z.string().nullable(),
+    dueDate: z.iso.date().nullable(),
   })),
   deliverables: z.array(z.object({
     id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     name: z.string(),
     version: z.string(),
-    releaseDate: z.string().nullable(),
+    releaseDate: z.iso.date().nullable(),
     status: z.string(),
   })),
   approvals: z.array(z.object({
@@ -5119,8 +5199,8 @@ export const clientPortalManagementGetPreviewResponseSchema = z.object({
   invoices: z.array(z.object({
     id: z.string(),
     documentNumber: z.string().nullable(),
-    issueDate: z.string(),
-    dueDate: z.string().nullable(),
+    issueDate: z.iso.date(),
+    dueDate: z.iso.date().nullable(),
     grossMinor: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     currency: z.string(),
     status: z.string(),
@@ -7736,7 +7816,7 @@ export const projectsTicketsCreateTicketResponseSchema = z.object({
 export type ProjectsTicketsCreateTicketResponse = z.infer<typeof projectsTicketsCreateTicketResponseSchema>;
 
 export const projectsTicketsCreateTicketBodySchema = z.strictObject({
-  title: z.string(),
+  title: z.string().optional(),
   description: z.string().optional(),
   type: z.enum(["EPIC", "STORY", "TASK", "BUG"]).optional(),
   priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]).optional(),
@@ -9500,11 +9580,16 @@ export const BUILD_CONTRACT_OPERATIONS = [
   { operationId: "BuildMembersController_remove", method: "DELETE", path: "/build/members/{userId}" },
   { operationId: "ProjectResourcesController_listOrgCustomStates", method: "GET", path: "/build/org-custom-states", response: "projectResourcesListOrgCustomStatesResponseSchema" },
   { operationId: "ClientPortalController_listPortalProjects", method: "GET", path: "/build/portal/projects", response: "clientPortalListPortalProjectsResponseSchema" },
+  { operationId: "ClientPortalController_listPreviewApprovals", method: "GET", path: "/build/portal/projects/{projectId}/approvals", response: "clientPortalListPreviewApprovalsResponseSchema" },
   { operationId: "ClientPortalController_listPortalChangeRequests", method: "GET", path: "/build/portal/projects/{projectId}/change-requests", response: "clientPortalListPortalChangeRequestsResponseSchema" },
   { operationId: "ClientPortalController_createPortalChangeRequest", method: "POST", path: "/build/portal/projects/{projectId}/change-requests", response: "clientPortalCreatePortalChangeRequestResponseSchema", body: "clientPortalCreatePortalChangeRequestBodySchema" },
+  { operationId: "ClientPortalController_listPreviewDeliverables", method: "GET", path: "/build/portal/projects/{projectId}/deliverables", response: "clientPortalListPreviewDeliverablesResponseSchema" },
   { operationId: "ClientPortalController_listPreviewFiles", method: "GET", path: "/build/portal/projects/{projectId}/files", response: "clientPortalListPreviewFilesResponseSchema" },
+  { operationId: "ClientPortalController_listPreviewInvoices", method: "GET", path: "/build/portal/projects/{projectId}/invoices", response: "clientPortalListPreviewInvoicesResponseSchema" },
+  { operationId: "ClientPortalController_listPreviewMilestones", method: "GET", path: "/build/portal/projects/{projectId}/milestones", response: "clientPortalListPreviewMilestonesResponseSchema" },
   { operationId: "ClientPortalController_getProjectOverview", method: "GET", path: "/build/portal/projects/{projectId}/overview", response: "clientPortalGetProjectOverviewResponseSchema" },
   { operationId: "ClientPortalController_listPreviewRequests", method: "GET", path: "/build/portal/projects/{projectId}/requests", response: "clientPortalListPreviewRequestsResponseSchema" },
+  { operationId: "ClientPortalController_listPreviewTasks", method: "GET", path: "/build/portal/projects/{projectId}/tasks", response: "clientPortalListPreviewTasksResponseSchema" },
   { operationId: "ClientPortalController_listPreviewUpdates", method: "GET", path: "/build/portal/projects/{projectId}/updates", response: "clientPortalListPreviewUpdatesResponseSchema" },
   { operationId: "PortfoliosController_listPortfolios", method: "GET", path: "/build/portfolios", response: "portfoliosListPortfoliosResponseSchema" },
   { operationId: "PortfoliosController_createPortfolio", method: "POST", path: "/build/portfolios", response: "portfoliosCreatePortfolioResponseSchema", body: "portfoliosCreatePortfolioBodySchema" },
@@ -9738,6 +9823,7 @@ export const BUILD_CONTRACT_OPERATIONS = [
   { operationId: "ProjectsTicketsController_rankTicket", method: "PATCH", path: "/build/{projectId}/tickets/{ticketId}/rank", response: "projectsTicketsRankTicketResponseSchema", body: "projectsTicketsRankTicketBodySchema" },
   { operationId: "ProjectsTicketAssociationsController_listRelatedLinks", method: "GET", path: "/build/{projectId}/tickets/{ticketId}/related-links", response: "projectsTicketAssociationsListRelatedLinksResponseSchema" },
   { operationId: "ProjectsTicketAssociationsController_addRelatedLink", method: "POST", path: "/build/{projectId}/tickets/{ticketId}/related-links", response: "projectsTicketAssociationsAddRelatedLinkResponseSchema", body: "projectsTicketAssociationsAddRelatedLinkBodySchema" },
+  { operationId: "ProjectsTicketAssociationsController_deleteRelatedLink", method: "DELETE", path: "/build/{projectId}/tickets/{ticketId}/related-links/{linkId}" },
   { operationId: "ProjectsTicketAssociationsController_listRelations", method: "GET", path: "/build/{projectId}/tickets/{ticketId}/relations", response: "projectsTicketAssociationsListRelationsResponseSchema" },
   { operationId: "ProjectsTicketAssociationsController_addRelation", method: "POST", path: "/build/{projectId}/tickets/{ticketId}/relations", response: "projectsTicketAssociationsAddRelationResponseSchema", body: "projectsTicketAssociationsAddRelationBodySchema" },
   { operationId: "ProjectsTicketAssociationsController_removeRelation", method: "DELETE", path: "/build/{projectId}/tickets/{ticketId}/relations" },
