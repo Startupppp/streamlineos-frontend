@@ -348,11 +348,26 @@ export function CalendarView() {
       !savedViewUnavailable,
   );
   const myDayPages = myDayQuery.data?.pages ?? NO_CALENDAR_SEARCH_PAGES;
+  const savedSearchSentinelRef = useRef<HTMLDivElement | null>(null);
+  const savedSearchRequestedUpdateRef = useRef<number | null>(null);
   const myDayEvents = useMemo(
     () => myDayPages.flatMap((page) => page.events),
     [myDayPages],
   );
   const savedViewActive = viewMode !== "my-day" && Boolean(selectedSavedView);
+  useEffect(() => {
+    if (!savedViewActive || !myDayQuery.hasNextPage || myDayQuery.isFetchingNextPage || !myDayQuery.dataUpdatedAt) return;
+    const sentinel = savedSearchSentinelRef.current;
+    if (!sentinel || typeof IntersectionObserver === "undefined") return;
+    const update = myDayQuery.dataUpdatedAt;
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry?.isIntersecting || savedSearchRequestedUpdateRef.current === update) return;
+      savedSearchRequestedUpdateRef.current = update;
+      void myDayQuery.fetchNextPage();
+    });
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [savedViewActive, myDayQuery.hasNextPage, myDayQuery.isFetchingNextPage, myDayQuery.dataUpdatedAt, myDayQuery.fetchNextPage]);
   const visibleSearchEvents = useMemo(
     () =>
       filterCalendarEventsBySources(myDayEvents, {
@@ -893,25 +908,29 @@ export function CalendarView() {
               ) : isMobile ? (
                 surfaceIsLoading ? (
                   <CalendarListFallback label="Loading events" />
+                ) : viewMode === "history" ? (
+                  <CalendarEventsPanel
+                    key={`history:${historyBefore ?? "now"}`}
+                    mode="history"
+                    events={visibleHistoryEvents}
+                    onSelectEvent={handleSelectListEvent}
+                    hasMore={historyHasNextPage && loadedHistoryPages >= historyPages}
+                    isLoadingMore={historyIsFetchingNextPage}
+                    onLoadMore={handleLoadOlderHistory}
+                    loadedPageCount={loadedHistoryPages}
+                  />
                 ) : (
                   <CalendarAgendaPreview
                     events={surfaceEvents}
                     maxEvents={50}
                     onSelectEvent={handleSelectListEvent}
-                    descending={viewMode === "history"}
-                    hasMore={viewMode === "history" && historyHasNextPage}
-                    isLoadingMore={historyIsFetchingNextPage}
-                    onLoadMore={
-                      viewMode === "history"
-                        ? handleLoadOlderHistory
-                        : undefined
-                    }
                   />
                 )
               ) : surfaceIsLoading ? (
                 <CalendarListFallback label="Loading events" />
               ) : afterLoad ? (
                 <CalendarEventsPanel
+                  key={viewMode === "history" ? `history:${historyBefore ?? "now"}` : "list"}
                   mode={viewMode}
                   events={
                     viewMode === "history"
@@ -931,23 +950,29 @@ export function CalendarView() {
                       : undefined
                   }
                   onSelectEvent={handleSelectListEvent}
-                  hasMore={viewMode === "history" && historyHasNextPage}
+                  hasMore={viewMode === "history" && historyHasNextPage && loadedHistoryPages >= historyPages}
                   isLoadingMore={historyIsFetchingNextPage}
+                  loadedPageCount={viewMode === "history" ? loadedHistoryPages : 0}
                   onLoadMore={
                     viewMode === "history" ? handleLoadOlderHistory : undefined
                   }
+                />
+              ) : viewMode === "history" ? (
+                <CalendarEventsPanel
+                  key={`history:${historyBefore ?? "now"}`}
+                  mode="history"
+                  events={visibleHistoryEvents}
+                  onSelectEvent={handleSelectListEvent}
+                  hasMore={historyHasNextPage && loadedHistoryPages >= historyPages}
+                  isLoadingMore={historyIsFetchingNextPage}
+                  onLoadMore={handleLoadOlderHistory}
+                  loadedPageCount={loadedHistoryPages}
                 />
               ) : (
                 <CalendarAgendaPreview
                   events={surfaceEvents}
                   maxEvents={20}
                   onSelectEvent={handleSelectListEvent}
-                  descending={viewMode === "history"}
-                  hasMore={viewMode === "history" && historyHasNextPage}
-                  isLoadingMore={historyIsFetchingNextPage}
-                  onLoadMore={
-                    viewMode === "history" ? handleLoadOlderHistory : undefined
-                  }
                 />
               )}
               {savedViewActive ? (
@@ -961,25 +986,13 @@ export function CalendarView() {
                     Boolean(myDayQuery.hasNextPage),
                   ) ? (
                     <span role="status">
-                      Results are incomplete until all pages load or sources
-                      recover.
+                      {myDayQuery.hasNextPage
+                        ? "More results are available and load as you reach this section."
+                        : "Some sources returned incomplete results. Try a shorter date range or refresh after they recover."}
                     </span>
                   ) : null}
-                  {myDayQuery.hasNextPage ? (
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      disabled={myDayQuery.isFetchingNextPage}
-                      onClick={() => {
-                        void myDayQuery.fetchNextPage();
-                      }}
-                    >
-                      {myDayQuery.isFetchingNextPage
-                        ? "Loading more"
-                        : "Load more results"}
-                    </Button>
-                  ) : null}
+                  <div ref={savedSearchSentinelRef} aria-hidden="true" className="h-px w-full" />
+                  {myDayQuery.isFetchingNextPage ? <span role="status">Loading additional results…</span> : null}
                 </div>
               ) : null}
             </div>
@@ -1016,7 +1029,8 @@ export function CalendarView() {
             description={getErrorMessage(historyError)}
             error={historyError}
             onRetry={() => {
-              void refetchHistory();
+              if (historyQuery.isFetchNextPageError) void handleLoadOlderHistory();
+              else void refetchHistory();
             }}
             className="shrink-0 border border-border rounded-xl"
           />

@@ -5,6 +5,7 @@ export interface OfflineCalendarSnapshot {
   fetchedAt: number;
   windowStart: string;
   windowEnd: string;
+  timeZone: string;
   coverage: "complete" | "partial" | "failed" | "continued";
   policyVersion: number;
   maxAgeDays: number;
@@ -201,10 +202,12 @@ export async function saveOfflineCalendarSnapshot(
   end: Date,
   result: CalendarEventsResponse,
   policy: { version: number; maxAgeDays: number },
+  timeZone: string,
 ): Promise<void> {
   watchCrossTabIdentity();
   if (
     !identity ||
+    !timeZone ||
     !Number.isFinite(start.getTime()) ||
     !Number.isFinite(end.getTime())
   )
@@ -217,6 +220,7 @@ export async function saveOfflineCalendarSnapshot(
     fetchedAt: Date.now(),
     windowStart: start.toISOString(),
     windowEnd: end.toISOString(),
+    timeZone,
     coverage: truncated && result.coverageState === "complete" ? "partial" : result.coverageState,
     policyVersion: policy.version,
     maxAgeDays: policy.maxAgeDays,
@@ -277,6 +281,8 @@ export async function readOfflineCalendarSnapshot(
     snapshot.maxAgeDays < 1 ||
     snapshot.maxAgeDays > 30 ||
     age > snapshot.maxAgeDays * 86_400_000 ||
+    typeof snapshot.timeZone !== "string" ||
+    !snapshot.timeZone ||
     !Array.isArray(snapshot.windows) ||
     !Array.isArray(snapshot.sources)
   ) {

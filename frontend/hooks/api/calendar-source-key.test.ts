@@ -64,6 +64,8 @@ describe("the calendar events key fires immediately on permission", () => {
         "user-1",
         START.toISOString(),
         END.toISOString(),
+        undefined,
+        Intl.DateTimeFormat().resolvedOptions().timeZone,
       ),
     );
     expect(opts.queryKey).not.toContain(undefined);

@@ -56,7 +56,7 @@ function save() {
   allowOfflineCalendarPolicy("org-1:user-1", 1);
   return saveOfflineCalendarSnapshot("org-1:user-1", new Date("2026-10-13T09:00:00.000Z"), new Date("2026-10-13T10:00:00.000Z"), {
     events: [], coverageState: "complete", coverage: [],
-  } as never, { version: 1, maxAgeDays: 1 });
+  } as never, { version: 1, maxAgeDays: 1 }, "Asia/Kolkata");
 }
 
 describe("Calendar offline cache identity", () => {
@@ -145,7 +145,7 @@ describe("Calendar offline cache identity", () => {
     const pending = save();
     db.openNext();
     await pending;
-    expect(db.puts).toEqual([expect.objectContaining({ identity: "org-1:user-1" })]);
+    expect(db.puts).toEqual([expect.objectContaining({ identity: "org-1:user-1", timeZone: "Asia/Kolkata" })]);
   });
 
   it("marks offline coverage partial when the busy-window cache limit is reached", async () => {
@@ -157,7 +157,7 @@ describe("Calendar offline cache identity", () => {
       events: Array.from({ length: 2001 }, () => ({ start: "2026-10-13T09:00:00.000Z", end: "2026-10-13T09:01:00.000Z", allDay: false, availability: "busy" })),
       coverageState: "complete",
       coverage: [{ sourceKey: "native", state: "complete" }],
-    } as never, { version: 1, maxAgeDays: 1 });
+    } as never, { version: 1, maxAgeDays: 1 }, "Asia/Kolkata");
     db.openNext();
     await pending;
     expect(db.puts).toEqual([expect.objectContaining({

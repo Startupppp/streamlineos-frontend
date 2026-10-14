@@ -69,6 +69,7 @@ export function CalendarOfflinePanel({
 }) {
   const { data: session, status } = useSession();
   const access = usePermissionGate("calendar:read");
+  const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
   const cachedIdentity = useSyncExternalStore(
     subscribeOfflineCalendarClear,
     cachedOfflineIdentity,
@@ -165,6 +166,7 @@ export function CalendarOfflinePanel({
   }, [identity, canRead, access.allowed, status, markerReady]);
   const visibleSnapshot =
     snapshot?.identity === identity &&
+    snapshot.timeZone === timeZone &&
     offlineCalendarIdentityIsCurrent(identity)
       ? snapshot
       : null;

@@ -2,11 +2,16 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { CalendarEventsPanel } from "./calendar-events-panel";
 import type { CalendarListItem } from "@/hooks/api/calendar";
 import { calendarProjectionFields } from "./calendar-projection-fixtures";
+import { List } from "react-window";
 
 jest.mock("react-window", () => ({
   List: jest.fn(
-    ({ rowCount }: { rowCount: number }) => (
-      <div data-testid="virtual-list" data-row-count={String(rowCount)} />
+    ({ rowCount, onRowsRendered }: { rowCount: number; onRowsRendered?: (range: { startIndex: number; stopIndex: number }) => void }) => (
+      <div
+        data-testid="virtual-list"
+        data-row-count={String(rowCount)}
+        onClick={() => onRowsRendered?.({ startIndex: 0, stopIndex: rowCount - 1 })}
+      />
     ),
   ),
   useDynamicRowHeight: jest.requireActual("react-window").useDynamicRowHeight,
@@ -60,6 +65,22 @@ describe("CalendarEventsPanel", () => {
     expect(list.getAttribute("data-row-count")).toBe("4");
   });
 
+  it("groups date-only events under their explicit calendar date", () => {
+    const event: CalendarListItem = {
+      ...makeEvent("all-day", "2027-01-25T10:00:00.000Z"),
+      allDay: true,
+      timeKind: "date",
+      time: { kind: "date", startDate: "2027-01-26", endDate: "2027-01-26" },
+    };
+    render(<CalendarEventsPanel mode="list" events={[event]} onSelectEvent={noop} />);
+
+    const props = (List as jest.Mock).mock.calls.at(-1)?.[0] as {
+      rowKey: (index: number, data: { rows: unknown[] }) => string;
+      rowProps: { rows: unknown[] };
+    };
+    expect(props.rowKey(0, props.rowProps)).toBe("hdr:2027-01-26");
+  });
+
   it("keeps an overnight event whose interval overlaps the visible day", () => {
     const overnight = {
       ...makeEvent("overnight", "2026-09-01T23:00:00.000Z"),
@@ -91,7 +112,7 @@ describe("CalendarEventsPanel", () => {
     expect(list).toBeNull();
   });
 
-  it("lets an empty history page continue to an older cursor", () => {
+  it("continues an empty history page automatically", () => {
     const onLoadMore = jest.fn();
     render(
       <CalendarEventsPanel
@@ -100,10 +121,46 @@ describe("CalendarEventsPanel", () => {
         onSelectEvent={jest.fn()}
         hasMore
         onLoadMore={onLoadMore}
+        loadedPageCount={1}
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Load older events" }));
     expect(onLoadMore).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole("button", { name: "Load older events" })).toBeNull();
+  });
+
+  it("requests one older page when the virtual history tail enters view", () => {
+    const onLoadMore = jest.fn();
+    render(
+      <CalendarEventsPanel
+        mode="history"
+        events={[makeEvent("past", "2020-09-02T12:00:00.000Z")]}
+        onSelectEvent={noop}
+        hasMore
+        onLoadMore={onLoadMore}
+        loadedPageCount={1}
+      />,
+    );
+
+    fireEvent.click(screen.getByTestId("virtual-list"));
+    fireEvent.click(screen.getByTestId("virtual-list"));
+    expect(onLoadMore).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not request another cursor while URL history pages are being restored", () => {
+    const onLoadMore = jest.fn();
+    render(
+      <CalendarEventsPanel
+        mode="history"
+        events={[makeEvent("past", "2020-09-02T12:00:00.000Z")]}
+        onSelectEvent={noop}
+        hasMore={false}
+        onLoadMore={onLoadMore}
+        loadedPageCount={1}
+      />,
+    );
+
+    fireEvent.click(screen.getByTestId("virtual-list"));
+    expect(onLoadMore).not.toHaveBeenCalled();
   });
 });

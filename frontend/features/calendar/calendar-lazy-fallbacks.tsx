@@ -4,11 +4,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import type { CalendarListItem } from "@/hooks/api/calendar";
 import { formatEventDate, formatEventTimeRange } from "@/lib/date-utils";
 import { EVENT_COLORS } from "./calendar-event-constants";
-import { Button } from "@/components/ui/button";
 
 function agendaWhen(event: CalendarListItem): string {
   if (event.allDay)
-    return `${formatEventDate(event.start, event.timezone ?? "UTC")} · All day`;
+    return `${event.time.kind === "date"
+      ? formatEventDate(`${event.time.startDate}T12:00:00.000Z`, "UTC")
+      : formatEventDate(event.start, event.timezone ?? "UTC")} · All day`;
   return formatEventTimeRange(event.start, event.end, event.timezone);
 }
 
@@ -16,35 +17,20 @@ export function CalendarAgendaPreview({
   events,
   maxEvents = 6,
   onSelectEvent,
-  descending = false,
-  hasMore = false,
-  isLoadingMore = false,
-  onLoadMore,
 }: {
   events: CalendarListItem[];
   maxEvents?: number;
   onSelectEvent?: (event: CalendarListItem) => void;
-  descending?: boolean;
-  hasMore?: boolean;
-  isLoadingMore?: boolean;
-  onLoadMore?: () => void;
 }) {
   const upcoming = events
     .slice()
-    .sort((a, b) => descending
-      ? new Date(b.end).getTime() - new Date(a.end).getTime()
-      : new Date(a.start).getTime() - new Date(b.start).getTime())
+    .sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime())
     .slice(0, maxEvents);
 
   if (upcoming.length === 0)
     return (
       <div className="flex min-h-0 flex-1 flex-col items-center justify-center p-6">
         <p className="text-sm text-muted-foreground">No events in this period</p>
-        {hasMore && onLoadMore ? (
-          <Button className="mt-3" variant="outline" size="sm" onClick={onLoadMore} disabled={isLoadingMore}>
-            {isLoadingMore ? "Loading older events…" : "Load older events"}
-          </Button>
-        ) : null}
       </div>
     );
 
@@ -74,11 +60,6 @@ export function CalendarAgendaPreview({
           </div>
         </button>
       ))}
-      {hasMore && onLoadMore ? (
-        <Button className="mt-2 self-center" variant="outline" size="sm" onClick={onLoadMore} disabled={isLoadingMore}>
-          {isLoadingMore ? "Loading older events…" : "Load older events"}
-        </Button>
-      ) : null}
     </div>
   );
 }

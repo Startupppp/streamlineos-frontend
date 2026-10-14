@@ -61,9 +61,14 @@ export function calendarSourceFamily(
 }
 
 export function eventOverlapsRange(
-  event: Pick<CalendarListItem, "start" | "end">,
+  event: Pick<CalendarListItem, "start" | "end" | "time">,
   range: { start: Date; end: Date },
 ): boolean {
+  if (event.time.kind === "date") {
+    const firstDate = format(range.start, "yyyy-MM-dd");
+    const lastDate = format(range.end, "yyyy-MM-dd");
+    return event.time.startDate <= lastDate && event.time.endDate >= firstDate;
+  }
   const eventStart = new Date(event.start).getTime();
   const eventEnd = new Date(event.end).getTime();
   const rangeStart = range.start.getTime();
@@ -108,12 +113,16 @@ export function mergeSelfAttendanceEvents(
   const aggregateAttendanceDates = new Set(
     events
       .filter((event) => calendarSourceFamily(event) === "attendance")
-      .map((event) => format(new Date(event.start), "yyyy-MM-dd")),
+      .map((event) => event.time.kind === "date"
+        ? event.time.startDate
+        : format(new Date(event.start), "yyyy-MM-dd")),
   );
   const additions = selfAttendanceEvents.filter(
     (event) =>
       !aggregateAttendanceDates.has(
-        format(new Date(event.start), "yyyy-MM-dd"),
+        event.time.kind === "date"
+          ? event.time.startDate
+          : format(new Date(event.start), "yyyy-MM-dd"),
       ),
   );
   if (additions.length === 0) return events;

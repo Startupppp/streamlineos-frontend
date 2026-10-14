@@ -122,6 +122,7 @@ export function useCalendarEvents(start: Date, end: Date, enabled = true) {
   const userId = session?.user?.id ?? "";
   const access = usePermissionGate("calendar:read");
   const canView = access.allowed;
+  const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
   const offlinePolicy = useCalendarOfflinePolicy(enabled);
   useEffect(() => {
     if (sessionStatus === "loading") return;
@@ -162,11 +163,14 @@ export function useCalendarEvents(start: Date, end: Date, enabled = true) {
       userId,
       start.toISOString(),
       end.toISOString(),
+      undefined,
+      timeZone,
     ),
     queryFn: async ({ signal }) => {
       const result = await apiClient.get<CalendarEventsResponse>("/calendar/events", {
         start: start.toISOString(),
         end: end.toISOString(),
+        timeZone,
       }, signal, calendarEventsResponseContract);
       return result;
     },
@@ -176,6 +180,17 @@ export function useCalendarEvents(start: Date, end: Date, enabled = true) {
     refetchOnReconnect: "always",
   });
   useEffect(() => {
+    if (offlinePolicy.isError && navigator.onLine) {
+      const identity = orgId && userId ? `${orgId}:${userId}` : "";
+      try {
+        if (sessionStorage.getItem("streamline-calendar-offline-session-identity") === identity)
+          sessionStorage.removeItem("streamline-calendar-offline-session-identity");
+        if (localStorage.getItem("streamline-calendar-offline-identity") === identity)
+          localStorage.removeItem("streamline-calendar-offline-identity");
+      } catch {}
+      void clearOfflineCalendarSnapshot().catch(() => undefined);
+      return;
+    }
     if (offlinePolicy.data?.enabled === false) {
       const identity = orgId && userId ? `${orgId}:${userId}` : null;
       let activeIdentity = false;
@@ -192,10 +207,10 @@ export function useCalendarEvents(start: Date, end: Date, enabled = true) {
         localStorage.setItem("streamline-calendar-offline-identity", identity);
         sessionStorage.setItem("streamline-calendar-offline-session-identity", identity);
       } catch { return; }
-      void saveOfflineCalendarSnapshot(identity, start, end, eventsQuery.data, offlinePolicy.data).catch(() => undefined);
+      void saveOfflineCalendarSnapshot(identity, start, end, eventsQuery.data, offlinePolicy.data, timeZone).catch(() => undefined);
       if ("serviceWorker" in navigator) void navigator.serviceWorker.register("/sw.js").catch(() => undefined);
     }
-  }, [offlinePolicy.data, eventsQuery.data, orgId, userId, canView, start, end]);
+  }, [offlinePolicy.data, offlinePolicy.isError, eventsQuery.data, orgId, userId, canView, start, end, timeZone]);
   return eventsQuery;
 }
 

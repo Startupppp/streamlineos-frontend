@@ -12,9 +12,12 @@ export const platformHierarchyQueryKeys = {
       start: string,
       end: string,
       sources?: readonly string[],
+      timeZone?: string,
     ) =>
       sources === undefined
-        ? ([...base, "calendar", "events", orgId, userId, start, end] as const)
+        ? (timeZone === undefined
+            ? ([...base, "calendar", "events", orgId, userId, start, end] as const)
+            : ([...base, "calendar", "events", orgId, userId, start, end, timeZone] as const))
         : ([
             ...base,
             "calendar",
@@ -24,6 +27,7 @@ export const platformHierarchyQueryKeys = {
             start,
             end,
             sources,
+            ...(timeZone === undefined ? [] : [timeZone]),
           ] as const),
     history: (orgId: string, userId: string, before: string) =>
       [
@@ -36,8 +40,8 @@ export const platformHierarchyQueryKeys = {
         before,
       ] as const,
     searchAll: [...base, "calendar", "search"] as const,
-    search: (orgId: string, userId: string, filters: Readonly<object>, canView: boolean) =>
-      [...base, "calendar", "search", orgId, userId, canView, filters] as const,
+    search: (orgId: string, userId: string, membershipId: number | null, accessVersion: number, readScope: string, canView: boolean, filters: Readonly<object>) =>
+      [...base, "calendar", "search", orgId, userId, membershipId, accessVersion, readScope, canView, filters] as const,
     savedViews: [...base, "calendar", "saved-views"] as const,
     protectedWork: [...base, "calendar", "protected-work"] as const,
     commitments: [...base, "calendar", "commitments"] as const,

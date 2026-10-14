@@ -4,6 +4,7 @@ import { CalendarAgendaPreview } from "./calendar-lazy-fallbacks";
 import {
   calendarSourceFamily,
   eventOverlapsRange,
+  mergeSelfAttendanceEvents,
   useCalendarComputed,
 } from "./use-calendar-computed";
 import { calendarProjectionFields, externalProjectionFields } from "./calendar-projection-fixtures";
@@ -115,6 +116,30 @@ describe("unified Calendar views", () => {
       start: "2026-10-16T00:00:00.000Z",
       end: "2026-10-16T01:00:00.000Z",
     }), day)).toBe(false);
+  });
+
+  it("uses explicit dates for date-only range inclusion and attendance deduplication", () => {
+    const attendance: CalendarListItem = {
+      ...event("attendance-utc-boundary", "hr-attendance", { source: "attendance" }),
+      start: "2026-10-14T10:00:00.000Z",
+      end: "2026-10-14T10:00:00.000Z",
+      allDay: true,
+      timeKind: "date",
+      time: { kind: "date", startDate: "2026-10-15", endDate: "2026-10-15" },
+    };
+    const overlay: CalendarListItem = {
+      ...attendance,
+      id: "attendance-overlay",
+      start: "2026-10-15T12:00:00.000Z",
+      end: "2026-10-15T12:00:00.000Z",
+    };
+    const day = {
+      start: new Date("2026-10-15T00:00:00.000Z"),
+      end: new Date("2026-10-15T23:59:59.999Z"),
+    };
+
+    expect(eventOverlapsRange(attendance, day)).toBe(true);
+    expect(mergeSelfAttendanceEvents([attendance], [overlay])).toEqual([attendance]);
   });
 
   it("makes mobile rows use the same event selection contract and capability gate", () => {

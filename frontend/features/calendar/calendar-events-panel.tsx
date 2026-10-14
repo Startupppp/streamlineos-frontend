@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, type CSSProperties, type Key } from "react";
+import { useCallback, useEffect, useMemo, useRef, type CSSProperties, type Key } from "react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -10,7 +10,6 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import { formatEventTimeRange } from "@/lib/date-utils";
 import { EVENT_COLORS } from "./calendar-event-constants";
 import { eventOverlapsRange } from "./use-calendar-computed";
-import { Button } from "@/components/ui/button";
 
 interface CalendarEventsPanelProps {
   mode: "list" | "history";
@@ -20,6 +19,7 @@ interface CalendarEventsPanelProps {
   hasMore?: boolean;
   isLoadingMore?: boolean;
   onLoadMore?: () => void;
+  loadedPageCount?: number;
 }
 
 type PanelRow =
@@ -39,7 +39,9 @@ const DEFAULT_LIST_HEIGHT = 600;
 function groupByDate(events: CalendarListItem[]): Map<string, CalendarListItem[]> {
   const groups = new Map<string, CalendarListItem[]>();
   for (const event of events) {
-    const key = format(new Date(event.start), "yyyy-MM-dd");
+    const key = event.time.kind === "date"
+      ? event.time.startDate
+      : format(new Date(event.start), "yyyy-MM-dd");
     const existing = groups.get(key);
     if (existing) {
       existing.push(event);
@@ -81,7 +83,7 @@ function PanelVirtualRow({
     return (
       <div style={style} {...ariaAttributes} className="flex items-end px-4 pt-5 pb-1">
         <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          {format(new Date(row.dateKey), "EEEE, MMMM d, yyyy")}
+          {format(new Date(`${row.dateKey}T12:00:00`), "EEEE, MMMM d, yyyy")}
         </h3>
       </div>
     );
@@ -142,7 +144,10 @@ export function CalendarEventsPanel({
   hasMore = false,
   isLoadingMore = false,
   onLoadMore,
+  loadedPageCount = 0,
 }: CalendarEventsPanelProps) {
+  const requestedPageRef = useRef<number | null>(null);
+  const tailVisibleRef = useRef(false);
   const filteredEvents = useMemo(() => {
     const now = new Date();
 
@@ -192,6 +197,21 @@ export function CalendarEventsPanel({
     key: heightKey,
   });
 
+  const requestMore = useCallback(() => {
+    if (mode !== "history" || !hasMore || isLoadingMore || !onLoadMore || requestedPageRef.current === loadedPageCount) return;
+    requestedPageRef.current = loadedPageCount;
+    onLoadMore();
+  }, [mode, hasMore, isLoadingMore, onLoadMore, loadedPageCount]);
+
+  const handleRowsRendered = useCallback(({ stopIndex }: { startIndex: number; stopIndex: number }) => {
+    tailVisibleRef.current = stopIndex >= rows.length - 1;
+    if (tailVisibleRef.current) requestMore();
+  }, [rows.length, requestMore]);
+
+  useEffect(() => {
+    if (filteredEvents.length === 0 || tailVisibleRef.current) requestMore();
+  }, [filteredEvents.length, loadedPageCount, requestMore]);
+
   if (filteredEvents.length === 0) {
     return (
       <div className="flex h-full min-h-0 flex-1 flex-col">
@@ -205,13 +225,7 @@ export function CalendarEventsPanel({
           }
           className="min-h-0 flex-1 border-0 bg-transparent shadow-none"
         />
-        {mode === "history" && hasMore && onLoadMore ? (
-          <div className="shrink-0 border-t border-border p-3 text-center">
-            <Button variant="outline" size="sm" onClick={onLoadMore} disabled={isLoadingMore}>
-              {isLoadingMore ? "Loading older events…" : "Load older events"}
-            </Button>
-          </div>
-        ) : null}
+        {mode === "history" && isLoadingMore ? <div role="status" className="p-3 text-center text-xs text-muted-foreground">Loading older events…</div> : null}
       </div>
     );
   }
@@ -220,6 +234,8 @@ export function CalendarEventsPanel({
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="min-h-0 flex-1">
         <List<PanelRowData>
+          aria-label={mode === "history" ? "Calendar history events" : "Calendar list events"}
+          tabIndex={0}
           rowComponent={PanelVirtualRow}
           rowCount={rows.length}
           rowHeight={rowHeight}
@@ -228,15 +244,10 @@ export function CalendarEventsPanel({
           defaultHeight={DEFAULT_LIST_HEIGHT}
           overscanCount={OVERSCAN_COUNT}
           style={{ height: "100%" }}
+          onRowsRendered={handleRowsRendered}
         />
       </div>
-      {mode === "history" && hasMore && onLoadMore ? (
-        <div className="shrink-0 border-t border-border p-3 text-center">
-          <Button variant="outline" size="sm" onClick={onLoadMore} disabled={isLoadingMore}>
-            {isLoadingMore ? "Loading older events…" : "Load older events"}
-          </Button>
-        </div>
-      ) : null}
+      {mode === "history" && isLoadingMore ? <div role="status" className="shrink-0 border-t border-border p-3 text-center text-xs text-muted-foreground">Loading older events…</div> : null}
     </div>
   );
 }

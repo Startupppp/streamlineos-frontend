@@ -109,7 +109,7 @@ export function ManagedProductsToolbar({
     <div className="flex w-full min-w-0 flex-col gap-2">
       <BuildListToolbar
         collapseActionsOnSearchFocus
-        row={{ mobile: 1, tablet: 3, desktop: 5 }}
+        row={{ mobile: 0, tablet: 0, desktop: 0 }}
         search={{
           value: listFilters.search,
           onValueChange: listFilters.setSearch,

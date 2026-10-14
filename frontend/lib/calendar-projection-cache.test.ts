@@ -19,7 +19,7 @@ describe("calendar projection cache", () => {
     const orgTwo = platformHierarchyQueryKeys.calendar.events("org-2", "user-2", START, END);
     const hr = platformHierarchyQueryKeys.calendar.hrSupplemental("org-1", "2026-10-01", "2026-10-31");
     const external = platformHierarchyQueryKeys.calendar.externalEvents("org-1", "user-1", START, END);
-    const search = platformHierarchyQueryKeys.calendar.search("org-1", "user-1", { start: START, end: END }, true);
+    const search = platformHierarchyQueryKeys.calendar.search("org-1", "user-1", 7, 1, "all", true, { start: START, end: END });
     const detail = platformHierarchyQueryKeys.calendar.eventDetail(7);
     const attendance = humanResourcesQueryKeys.hr.monthlyAttendance({
       orgId: "org-1",
