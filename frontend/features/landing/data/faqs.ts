@@ -7,32 +7,32 @@ export const faqs: FAQ[] = [
   {
     question: "How long does setup take?",
     answer:
-      "Most teams are live in under 30 minutes. Database schema is pushed in one command, the onboarding wizard walks you through your first organization, and seed scripts populate sample data so you can explore the product before inviting your team.",
+      "Most teams are live in under 30 minutes. A setup guide walks you through your organisation, and you can explore with sample data before you invite your team.",
   },
   {
     question: "Can I use only the modules I need?",
     answer:
-      "Yes. HR, Projects, CRM, Chat, Calendar, Analytics, Recruitment, Accounting, and Support are all opt-in. Turn on what you need today; enable the rest from settings when you're ready. Permissions follow modules — users only see what their role unlocks.",
+      "Yes. HR, Projects, CRM, Chat, Calendar, Analytics, Recruitment, Accounting, and Support are all opt-in. Turn on what you need today; enable the rest from settings when you’re ready. Each person only sees the modules their role needs.",
   },
   {
-    question: "Is StreamlineOS suitable for multiple legal entities?",
+    question: "Can we run more than one company in StreamlineOS?",
     answer:
-      "Built for it. Run subsidiaries or business units as isolated organizations sharing one platform. Each has its own employees, projects, pipelines, branding, and policies — with optional roll-up reporting to a parent organization.",
+      "Yes. Each company or branch gets its own separate space, with its own staff, projects, sales and branding. The parent company can see combined reports across all of them.",
   },
   {
     question: "What about security and compliance?",
     answer:
-      "Role-based access control, multi-factor authentication, IP allow-listing, full audit logs, encrypted secrets, and encrypted-at-rest storage. We provide the building blocks for SOC 2 and ISO 27001 readiness; certification audits sit on top of these.",
+      "You decide who sees what, by role. Sign-in can ask for a second code, access can be limited to your office network, every change is logged, and your data is encrypted. These are the controls SOC 2 and ISO 27001 audits look for; the certifications themselves are a separate step.",
   },
   {
-    question: "How does the AI work — is my data sent to OpenAI or Google?",
+    question: "How does the AI work, and is my data sent to OpenAI or Google?",
     answer:
-      "AI features (lead scoring, smart summaries, draft generation) route through configurable providers (Google Gemini, OpenAI). Prompts are scoped to the minimum context required. You can disable AI globally or per-module from organization settings, and bring your own API key.",
+      "AI features, such as ranking your best leads, summarising long threads and drafting replies, run on Google Gemini or OpenAI, and you choose which. Only the details a task needs are sent. You can switch AI off for the whole company or for single modules, and you can use your own account with the provider.",
   },
   {
     question: "Can we self-host?",
     answer:
-      "Yes. StreamlineOS runs anywhere Node, PostgreSQL, and an S3-compatible store run. The reference deployment is Vercel + Neon + Cloudflare R2, but the stack is portable to any cloud — or to your own VPCs.",
+      "Yes. StreamlineOS can run in your own cloud account or private network as well as on our hosted service. Talk to us and we will help you plan the setup.",
   },
 ];
 

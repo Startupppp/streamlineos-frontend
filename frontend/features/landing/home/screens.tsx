@@ -62,11 +62,11 @@ export function DeliveryScreen() {
         </div>
         <Row title="Map warehouse zones to stock locations" sub="Anika Rao" right={<Tag tone="good">Done</Tag>} />
         <Row title="Import item master, 4,200 rows" sub="Dev Malhotra" right={<Tag tone="accent">In progress</Tag>} />
-        <Row title="Configure scanner sync for Pune DC" sub="Anika Rao" right={<Tag tone="accent">In progress</Tag>} />
+        <Row title="Fix warehouse scanners in Pune" sub="Anika Rao" right={<Tag tone="accent">In progress</Tag>} />
         <Row title="Train floor supervisors" sub="Unassigned" right={<Tag>To do</Tag>} />
       </Panel>
       <div className="space-y-3">
-        <Panel title="Cycle progress" meta="9 of 16 tasks">
+        <Panel title="This week’s progress" meta="9 of 16 tasks">
           <Bar pct={56} />
           <div className="mt-2 text-dense text-(--lpf-dim)">Ends Friday</div>
         </Panel>
@@ -119,7 +119,7 @@ export function FinanceScreen() {
   return (
     <div className="grid gap-3 p-3 sm:grid-cols-2 sm:p-4">
       <Panel title="Invoices" meta="₹11.4L outstanding">
-        <Row title={<Rec>Kestrel Foods</Rec>} sub="INV-0142, milestone 1" right="₹6.13L" />
+        <Row title={<Rec>Kestrel Foods</Rec>} sub="Stage 1 of Kestrel rollout" right="₹6.13L" />
         <Row title="Harbour Textiles" sub="INV-0139, overdue" right="₹2.40L" />
         <Row title="Nimbus Clinics" sub="INV-0137" right="₹2.87L" />
         <Row title="Tamarind Labs" sub="INV-0133" right={<Tag tone="good">Paid</Tag>} />
@@ -140,10 +140,10 @@ export function FinanceScreen() {
 export function SupportScreen() {
   return (
     <div className="grid gap-3 p-3 sm:grid-cols-3 sm:p-4">
-      <Panel title="#2281 Scanner sync failing at Pune DC" meta={<Tag tone="warn">High</Tag>} className="sm:col-span-2">
+      <Panel title="#2281 Pune warehouse scanners not updating" meta={<Tag tone="warn">High</Tag>} className="sm:col-span-2">
         <div className="space-y-2">
           <div className="rounded-lg bg-(--lpf-raise) p-3 text-xs leading-relaxed">
-            Scanners at the Pune DC stopped syncing after this morning&apos;s stock count. Receiving is on paper for now.
+            Scanners at the Pune warehouse stopped updating stock after this morning’s count. Receiving is on paper for now.
             <div className="mt-2 text-dense text-(--lpf-dim)">Kestrel Foods, 09:14</div>
           </div>
           <div className="rounded-lg border border-(--lpf-rule) p-3 text-xs leading-relaxed">
@@ -152,7 +152,7 @@ export function SupportScreen() {
           </div>
         </div>
       </Panel>
-      <Panel title="Customer" meta="Shared record">
+      <Panel title="Customer" meta="Same customer">
         <div className="mb-3 text-xs">
           <Rec>Kestrel Foods</Rec>
         </div>
