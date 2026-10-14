@@ -37,7 +37,6 @@ jest.mock("@/components/command-palette/hooks/use-people-search", () => ({
     isSearching: false,
     isError: false,
   }),
-  PEOPLE_SEARCH_INTEGRITY_MESSAGE: "",
 }));
 
 jest.mock("@/components/command-palette/hooks/use-global-search", () => ({

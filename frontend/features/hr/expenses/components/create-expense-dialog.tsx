@@ -83,7 +83,7 @@ export function CreateExpenseDialog({
     defaultValues: {
       category: initialCategory.selected,
       customCategory: initialCategory.custom,
-      amount: editExpense ? Number(editExpense.amount) : 0,
+      amount: editExpense ? String(editExpense.amount) : "",
       description: editExpense?.description || "",
       merchant: editExpense?.merchant || "",
       paymentMethod: initialPayment.selected,
@@ -115,7 +115,7 @@ export function CreateExpenseDialog({
       form.reset({
         category: cat.selected,
         customCategory: cat.custom,
-        amount: editExpense ? Number(editExpense.amount) : 0,
+        amount: editExpense ? String(editExpense.amount) : "",
         description: editExpense?.description || "",
         merchant: editExpense?.merchant || "",
         paymentMethod: pay.selected,
@@ -194,7 +194,7 @@ export function CreateExpenseDialog({
 
         const expenseData = {
           category: categoryRaw,
-          amount: data.amount,
+          amount: Number(data.amount),
           description: data.description?.trim()
             ? capitalize(data.description.trim())
             : isEditMode

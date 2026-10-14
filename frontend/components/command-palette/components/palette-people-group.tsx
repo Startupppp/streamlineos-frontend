@@ -4,17 +4,15 @@ import { ArrowRight, UserRound } from "lucide-react";
 import { CommandGroup, CommandItem } from "@/components/ui/command";
 import { statusToneClasses } from "@/lib/design-tokens";
 import { cn } from "@/lib/utils";
-import {
-  PEOPLE_SEARCH_INTEGRITY_MESSAGE,
-  type PalettePeopleSearch,
-  type PalettePerson,
-} from "../hooks/use-people-search";
+import type { PalettePeopleSearch, PalettePerson } from "../hooks/use-people-search";
 import {
   COMMAND_ARROW_CLASS,
   COMMAND_GROUP_CLASS,
   COMMAND_ITEM_CLASS,
   ItemIcon,
 } from "./palette-item";
+
+const PEOPLE_SEARCH_ERROR_MESSAGE = "People search is unavailable right now. Try again.";
 
 function PalettePersonRow({
   person,
@@ -71,7 +69,7 @@ export function PalettePeopleGroup({
             danger.rule,
           )}
         >
-          {PEOPLE_SEARCH_INTEGRITY_MESSAGE}
+          {PEOPLE_SEARCH_ERROR_MESSAGE}
         </p>
       </CommandGroup>
     );

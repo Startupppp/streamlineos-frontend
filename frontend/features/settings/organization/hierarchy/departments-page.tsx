@@ -83,49 +83,33 @@ export function OrgDepartmentsPage() {
   );
 
   const handleCreate = useCallback(
-    (values: DepartmentFormValues) => {
-      createDepartment.mutate(
-        {
-          name: values.name,
-          code: values.code.toUpperCase(),
-          branchId: values.branchId || undefined,
-          headUserId: values.headUserId || undefined,
-          description: values.description || undefined,
-        },
-        {
-          onSuccess: () => {
-            toast.success("Department created");
-            setCreateSheetOpen(false);
-          },
-          onError: (mutationError) =>
-            toast.error(getErrorMessage(mutationError)),
-        },
-      );
+    async (values: DepartmentFormValues) => {
+      await createDepartment.mutateAsync({
+        name: values.name,
+        code: values.code.toUpperCase(),
+        branchId: values.branchId || undefined,
+        headUserId: values.headUserId || undefined,
+        description: values.description || undefined,
+      });
+      toast.success("Department created");
+      setCreateSheetOpen(false);
     },
     [createDepartment],
   );
 
   const handleUpdate = useCallback(
-    (values: DepartmentFormValues) => {
+    async (values: DepartmentFormValues) => {
       if (!editingDepartment) return;
-      updateDepartment.mutate(
-        {
-          departmentId: editingDepartment.id,
-          name: values.name,
-          code: values.code.toUpperCase(),
-          branchId: values.branchId || null,
-          headUserId: values.headUserId || null,
-          description: values.description || null,
-        },
-        {
-          onSuccess: () => {
-            toast.success("Department updated");
-            setEditingDepartment(null);
-          },
-          onError: (mutationError) =>
-            toast.error(getErrorMessage(mutationError)),
-        },
-      );
+      await updateDepartment.mutateAsync({
+        departmentId: editingDepartment.id,
+        name: values.name,
+        code: values.code.toUpperCase(),
+        branchId: values.branchId || null,
+        headUserId: values.headUserId || null,
+        description: values.description || null,
+      });
+      toast.success("Department updated");
+      setEditingDepartment(null);
     },
     [editingDepartment, updateDepartment],
   );
@@ -413,7 +397,13 @@ export function OrgDepartmentsPage() {
 
         <HierarchyArchiveDialog
           open={!!archiveFlow.target}
-          unitName={archiveFlow.target?.name ?? ""}
+          unitName={
+            archiveFlow.target
+              ? archiveFlow.target.code
+                ? `${archiveFlow.target.name} (${archiveFlow.target.code})`
+                : archiveFlow.target.name
+              : ""
+          }
           unitLabel="department"
           isPending={updateDepartment.isPending}
           error={archiveFlow.error}

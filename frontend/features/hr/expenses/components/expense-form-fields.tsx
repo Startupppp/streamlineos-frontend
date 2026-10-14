@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { type UseFormReturn } from "react-hook-form";
 import {
   Form,
@@ -20,49 +19,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/date-picker";
-import { EXPENSE_AMOUNT_MAX, type ExpenseFormData } from "./expense-form-schema";
+import { type ExpenseFormData } from "./expense-form-schema";
 import { MAX_EXPENSE_RECEIPTS, type ExpenseReceipt } from "@/lib/expense-constants";
 import { ReceiptManager, type PendingReceipt } from "./receipt-manager";
-
-export function AmountInput({ value, onChange }: { value: number; onChange: (v: number) => void }) {
-  const [draft, setDraft] = useState(() => ({
-    sourceValue: value,
-    display: value ? String(value) : "",
-  }));
-  const display = draft.sourceValue === value ? draft.display : value ? String(value) : "";
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const raw = e.target.value;
-    if (raw === "" || /^\d{0,20}(\.\d{0,2})?$/.test(raw)) {
-      const num = parseFloat(raw);
-      const nextValue = isNaN(num) ? 0 : num;
-      setDraft({ sourceValue: nextValue, display: raw });
-      onChange(nextValue);
-    }
-  };
-
-  const handleBlur = () => {
-    const num = parseFloat(display);
-    if (!isNaN(num) && num > 0 && num <= EXPENSE_AMOUNT_MAX) {
-      setDraft({
-        sourceValue: value,
-        display: num % 1 === 0 ? String(num) : num.toFixed(2),
-      });
-    }
-  };
-
-  return (
-    <Input
-      type="text"
-      inputMode="decimal"
-      placeholder="0.00"
-      value={display}
-      onChange={handleChange}
-      onBlur={handleBlur}
-      className="text-right font-semibold"
-    />
-  );
-}
 
 interface ExpenseFormFieldsProps {
   form: UseFormReturn<ExpenseFormData>;
@@ -138,17 +97,30 @@ export function ExpenseFormFields({
           <FormField
             control={form.control}
             name="amount"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-xs font-medium">
-                  Amount (₹) <span className="text-destructive">*</span>
-                </FormLabel>
-                <FormControl>
-                  <AmountInput value={field.value} onChange={field.onChange} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            render={({ field }) => {
+              const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+                field.onChange(e);
+                void form.trigger("amount");
+              };
+              return (
+                <FormItem>
+                  <FormLabel className="text-xs font-medium">
+                    Amount (₹) <span className="text-destructive">*</span>
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      type="text"
+                      inputMode="decimal"
+                      placeholder="0.00"
+                      className="text-right font-semibold"
+                      {...field}
+                      onChange={handleAmountChange}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              );
+            }}
           />
         </div>
 

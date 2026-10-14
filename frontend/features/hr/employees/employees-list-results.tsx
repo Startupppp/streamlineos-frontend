@@ -1,6 +1,5 @@
 "use client";
 
-import { AlertTriangle } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { DataTable } from "@/components/ui/data-table";
 import { EmployeeCard } from "@/features/hr/employees/employee-card";
@@ -9,9 +8,7 @@ import {
   buildEmployeeListColumns,
   employeeDepartmentName,
 } from "@/features/hr/employees/employee-list-columns";
-import { SEARCH_INTEGRITY_MESSAGE } from "@/features/hr/employees/search-integrity";
 import { PAGE_BODY_EMPTY_CLASS } from "@/components/ui/content-fill-panel";
-import { statusToneClasses } from "@/lib/design-tokens";
 import { cn } from "@/lib/utils";
 import type { EmployeeListItem } from "@/types/hr";
 
@@ -24,27 +21,8 @@ interface EmployeesListResultsProps {
   isFetching: boolean;
   hasFilters: boolean;
   canOnboard: boolean;
-  integrityFailed: boolean;
   onClearFilters: () => void;
   onOpenPerson: (employee: EmployeeListItem) => void;
-}
-
-function SearchIntegrityBanner() {
-  const tone = statusToneClasses("danger");
-  return (
-    <div
-      role="alert"
-      className={cn(
-        "mb-3 flex items-start gap-2 rounded-lg border px-3 py-2",
-        tone.surface,
-        tone.rule,
-        tone.inkStrong,
-      )}
-    >
-      <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
-      <p className="text-label font-medium">{SEARCH_INTEGRITY_MESSAGE}</p>
-    </div>
-  );
 }
 
 export function EmployeesListResults({
@@ -54,7 +32,6 @@ export function EmployeesListResults({
   isFetching,
   hasFilters,
   canOnboard,
-  integrityFailed,
   onClearFilters,
   onOpenPerson,
 }: EmployeesListResultsProps) {
@@ -81,7 +58,6 @@ export function EmployeesListResults({
 
   return (
     <>
-      {integrityFailed ? <SearchIntegrityBanner /> : null}
       {view === "grid" ? (
         <div
           aria-busy={isFetching}

@@ -5,9 +5,9 @@ export const teamFormSchema = z.object({
     .string()
     .trim()
     .min(1, "Name is required")
-    .max(100)
+    .max(100, "Name must be at most 100 characters")
     .refine(
-      (teamName) => /[\p{L}\p{N}]/u.test(teamName),
+      (teamName) => teamName.length === 0 || /[\p{L}\p{N}]/u.test(teamName),
       "Name must contain at least one letter or number",
     ),
   code: z
@@ -18,7 +18,7 @@ export const teamFormSchema = z.object({
     .regex(/^[A-Za-z0-9]+$/, "Letters and numbers only"),
   departmentId: z.string().min(1, "Department is required"),
   leadUserId: z.string().optional(),
-  description: z.string().trim().max(500).optional(),
+  description: z.string().trim().max(500, "Description must be at most 500 characters").optional(),
   capacity: z.string().optional(),
 });
 

@@ -1,48 +1,134 @@
 import React from "react";
-import { fireEvent, render, screen } from "@testing-library/react";
-import { AmountInput } from "./expense-form-fields";
-import { EXPENSE_AMOUNT_MAX } from "./expense-form-schema";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { ExpenseFormFields } from "./expense-form-fields";
+import {
+  EXPENSE_AMOUNT_MAX,
+  expenseFormSchema,
+  type ExpenseFormData,
+} from "./expense-form-schema";
 
-function ControlledAmount({ initial = 0 }: { initial?: number }) {
-  const [value, setValue] = React.useState(initial);
-  return <AmountInput value={value} onChange={setValue} />;
+const baseValues: ExpenseFormData = {
+  category: "Travel",
+  customCategory: "",
+  amount: "",
+  description: "",
+  merchant: "",
+  paymentMethod: "",
+  customPaymentMethod: "",
+  expenseDate: "2026-01-01",
+};
+
+function parseAmount(amount: string) {
+  return expenseFormSchema.safeParse({ ...baseValues, amount });
 }
 
-describe("AmountInput prop synchronization", () => {
-  it("preserves an in-progress decimal while reflecting a genuinely new external value", () => {
-    const onChange = jest.fn();
-    const { rerender } = render(<AmountInput value={12} onChange={onChange} />);
-    const input = screen.getByRole("textbox");
+function amountMessages(amount: string): string[] {
+  const result = parseAmount(amount);
+  if (result.success) return [];
+  return result.error.issues
+    .filter((issue) => issue.path[0] === "amount")
+    .map((issue) => issue.message);
+}
 
-    fireEvent.change(input, { target: { value: "12." } });
-    expect(input).toHaveValue("12.");
-    expect(onChange).toHaveBeenLastCalledWith(12);
+function Harness({ onValid }: { onValid: (data: ExpenseFormData) => void }) {
+  const form = useForm<ExpenseFormData>({
+    resolver: zodResolver(expenseFormSchema),
+    defaultValues: baseValues,
+  });
+  const handleValid = (data: ExpenseFormData) => onValid(data);
+  return (
+    <form onSubmit={form.handleSubmit(handleValid)}>
+      <ExpenseFormFields
+        form={form}
+        categories={["Travel"]}
+        paymentMethods={["Cash"]}
+        existingReceipts={[]}
+        pendingReceipts={[]}
+        onAddPendingReceipts={jest.fn()}
+        onRemoveExistingReceipt={jest.fn()}
+        onRemovePendingReceipt={jest.fn()}
+      />
+      <button type="submit">Submit</button>
+    </form>
+  );
+}
 
-    rerender(<AmountInput value={99} onChange={onChange} />);
-    expect(input).toHaveValue("99");
+function amountInput() {
+  return screen.getByPlaceholderText("0.00");
+}
+
+describe("expense amount schema", () => {
+  it("accepts a two-decimal amount such as 250.50", () => {
+    expect(amountMessages("250.50")).toEqual([]);
+    expect(parseAmount("250.50").success).toBe(true);
+  });
+
+  it("accepts the cap exactly and rejects one paisa above it", () => {
+    expect(amountMessages(String(EXPENSE_AMOUNT_MAX))).toEqual([]);
+    expect(amountMessages(`${EXPENSE_AMOUNT_MAX}.01`)).toEqual([
+      "Amount must be ₹10,00,000 or less",
+    ]);
+  });
+
+  it("rejects three decimal places", () => {
+    expect(amountMessages("1.234")).toEqual(["Amount can have at most 2 decimal places"]);
+  });
+
+  it("rejects a minus sign, letters and trailing junk as not a positive number", () => {
+    expect(amountMessages("-5")).toEqual(["Amount must be a positive number"]);
+    expect(amountMessages("abc")).toEqual(["Amount must be a positive number"]);
+    expect(amountMessages("5-")).toEqual(["Amount must be a positive number"]);
+    expect(amountMessages("250.50")).toEqual([]);
+  });
+
+  it("keeps zero and empty on the greater-than-zero message", () => {
+    expect(amountMessages("0")).toEqual(["Amount must be greater than 0"]);
+    expect(amountMessages("")).toEqual(["Amount must be greater than 0"]);
+    expect(amountMessages("0.01")).toEqual([]);
   });
 });
 
-describe("AmountInput large-value handling", () => {
-  it("calls onChange with the over-limit value instead of silently rejecting it", () => {
-    const onChange = jest.fn();
-    render(<AmountInput value={0} onChange={onChange} />);
-    const input = screen.getByRole("textbox");
+describe("expense amount field", () => {
+  it("keeps a typed minus sign visible and explains why it is invalid", async () => {
+    render(<Harness onValid={jest.fn()} />);
 
-    const overLimit = String(EXPENSE_AMOUNT_MAX + 1);
-    fireEvent.change(input, { target: { value: overLimit } });
+    fireEvent.change(amountInput(), { target: { value: "-5" } });
 
-    expect(onChange).toHaveBeenLastCalledWith(EXPENSE_AMOUNT_MAX + 1);
+    expect(amountInput()).toHaveValue("-5");
+    expect(await screen.findByText("Amount must be a positive number")).toBeInTheDocument();
   });
 
-  it("does not normalize an over-limit value on blur so the display stays readable", () => {
-    render(<ControlledAmount />);
-    const input = screen.getByRole("textbox");
+  it("keeps pasted letters visible and explains why they are invalid", async () => {
+    render(<Harness onValid={jest.fn()} />);
 
-    const overLimit = String(EXPENSE_AMOUNT_MAX + 1);
-    fireEvent.change(input, { target: { value: overLimit } });
-    fireEvent.blur(input);
+    fireEvent.change(amountInput(), { target: { value: "abc" } });
 
-    expect(input).toHaveValue(overLimit);
+    expect(amountInput()).toHaveValue("abc");
+    expect(await screen.findByText("Amount must be a positive number")).toBeInTheDocument();
+  });
+
+  it("shows the limit message and does not submit an over-limit amount", async () => {
+    const onValid = jest.fn();
+    render(<Harness onValid={onValid} />);
+
+    fireEvent.change(amountInput(), { target: { value: String(EXPENSE_AMOUNT_MAX + 1) } });
+    fireEvent.click(screen.getByRole("button", { name: "Submit" }));
+
+    expect(await screen.findByText("Amount must be ₹10,00,000 or less")).toBeInTheDocument();
+    expect(onValid).not.toHaveBeenCalled();
+  });
+
+  it("submits 250.50 as typed", async () => {
+    const onValid = jest.fn();
+    render(<Harness onValid={onValid} />);
+
+    fireEvent.change(amountInput(), { target: { value: "250.50" } });
+    fireEvent.click(screen.getByRole("button", { name: "Submit" }));
+
+    await waitFor(() => expect(onValid).toHaveBeenCalledTimes(1));
+    expect(onValid.mock.calls[0][0].amount).toBe("250.50");
+    expect(screen.queryByText(/Amount must/)).not.toBeInTheDocument();
   });
 });

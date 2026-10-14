@@ -36,6 +36,8 @@ interface WorkerEngagementsSheetProps {
   worker: Worker;
 }
 
+const ENGAGEMENT_SKELETON_HEADERS = ["Period", "Type", "Designation", "Primary", "Status", ""] as const;
+
 export function WorkerEngagementsSheet({
   open,
   onOpenChange,
@@ -192,7 +194,7 @@ export function WorkerEngagementsSheet({
               description="You no longer hold workforce access, so this worker's engagements cannot be shown."
             />
           ) : isLoading || engagementsQuery.access.pending ? (
-            <DataTableSkeleton rows={5} columns={6} />
+            <DataTableSkeleton rows={5} headers={ENGAGEMENT_SKELETON_HEADERS} />
           ) : isError || engagementsQuery.access.unavailable ? (
             <ErrorState compact onRetry={handleRetry} />
           ) : engagementRows.length === 0 ? (

@@ -26,7 +26,6 @@ import {
 import { EmployeesGridSkeleton } from "@/features/hr/employees/employees-loading-skeleton";
 import { EmployeesListResults, type EmployeesListView } from "@/features/hr/employees/employees-list-results";
 import { EmployeePersonDrawer } from "@/features/hr/employees/employee-person-drawer";
-import { employeeSearchScopeKey, useSearchIntegrity } from "@/features/hr/employees/search-integrity";
 import { useEmployeeListUrlState } from "@/features/hr/employees/use-employee-list-url-state";
 import { StatCardGridSkeleton } from "@/components/ui/stat-card";
 import type { EmployeeListItem } from "@/types/hr";
@@ -60,7 +59,6 @@ export function EmployeesListPage() {
     () => toHrEmployeesApiParams({ ...filters, q: debouncedSearch }),
     [filters, debouncedSearch],
   );
-  const scopedParams = useMemo(() => ({ ...apiParams, search: undefined }), [apiParams]);
 
   const {
     data: employeePages,
@@ -74,33 +72,14 @@ export function EmployeesListPage() {
     refetch,
   } = useInfiniteHrEmployees(apiParams);
 
-  const searchedEmployees = useMemo(
+  const employees = useMemo(
     () => employeePages?.pages.flatMap((page) => page.data) ?? [],
     [employeePages],
   );
 
-  const integrityFailed = useSearchIntegrity({
-    scopeKey: employeeSearchScopeKey(apiParams),
-    isSearching: Boolean(apiParams.search),
-    isSettled: !isLoading && !isFetching && !isError,
-    rowCount: searchedEmployees.length,
-  });
-
-  const scopedFallback = useInfiniteHrEmployees(scopedParams, { enabled: integrityFailed });
-  const fallbackEmployees = useMemo(
-    () => scopedFallback.data?.pages.flatMap((page) => page.data) ?? [],
-    [scopedFallback.data],
-  );
-
-  const employees = integrityFailed ? fallbackEmployees : searchedEmployees;
-  const activeParams = integrityFailed ? scopedParams : apiParams;
-  const activeHasNextPage = integrityFailed
-    ? Boolean(scopedFallback.hasNextPage)
-    : Boolean(hasNextPage);
-
   const countsFilters = useMemo(
-    () => ({ search: activeParams.search, departmentId: activeParams.departmentId, role: activeParams.role }),
-    [activeParams.search, activeParams.departmentId, activeParams.role],
+    () => ({ search: apiParams.search, departmentId: apiParams.departmentId, role: apiParams.role }),
+    [apiParams.search, apiParams.departmentId, apiParams.role],
   );
   useHrEmployeeCounts(countsFilters);
 
@@ -146,12 +125,8 @@ export function EmployeesListPage() {
       setGridPagesShown((shown) => shown + 1);
       return;
     }
-    if (integrityFailed) {
-      void scopedFallback.fetchNextPage();
-      return;
-    }
     void fetchNextPage();
-  }, [hasUnrenderedEmployees, integrityFailed, scopedFallback, fetchNextPage]);
+  }, [hasUnrenderedEmployees, fetchNextPage]);
 
   const handleViewChange = useCallback(
     (next: EmployeesListView) => {
@@ -184,7 +159,7 @@ export function EmployeesListPage() {
     );
   }, [debouncedSearch, searchParams, updateParams]);
 
-  const hasFilters = hasActiveEmployeeFilters(filters, { status: "all" });
+  const hasFilters = hasActiveEmployeeFilters({ ...filters, q: debouncedSearch }, { status: "all" });
 
   return (
     <PageWrapper
@@ -215,10 +190,10 @@ export function EmployeesListPage() {
           {canExport && (
             <EmployeeExportAction
               filters={{
-                search: activeParams.search,
-                departmentId: activeParams.departmentId,
-                isActive: activeParams.isActive,
-                role: activeParams.role,
+                search: apiParams.search,
+                departmentId: apiParams.departmentId,
+                isActive: apiParams.isActive,
+                role: apiParams.role,
               }}
             />
           )}
@@ -254,7 +229,7 @@ export function EmployeesListPage() {
           <div className="mb-3 shrink-0 md:mb-0">
             <EmployeesDirectoryStats
               loadedCount={employees.length}
-              hasMore={activeHasNextPage}
+              hasMore={Boolean(hasNextPage)}
               statusFilter={filters.status}
               filters={countsFilters}
               statusHref={statusHref}
@@ -269,7 +244,6 @@ export function EmployeesListPage() {
               isFetching={isFetching}
               hasFilters={hasFilters}
               canOnboard={canOnboard}
-              integrityFailed={integrityFailed}
               onClearFilters={clearFilters}
               onOpenPerson={handleOpenPerson}
             />
@@ -278,8 +252,8 @@ export function EmployeesListPage() {
 
         {!isError && (
           <InfiniteScrollSentinel
-            hasNextPage={activeHasNextPage || hasUnrenderedEmployees}
-            isFetchingNextPage={isFetchingNextPage || scopedFallback.isFetchingNextPage}
+            hasNextPage={Boolean(hasNextPage) || hasUnrenderedEmployees}
+            isFetchingNextPage={isFetchingNextPage}
             onLoadMore={handleLoadMore}
             label="Load more employees"
           />
