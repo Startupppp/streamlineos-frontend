@@ -34,10 +34,10 @@ export function useUpdateCalendarCoachConsent() {
     ),
     onSuccess: (consent) => {
       const key = platformHierarchyQueryKeys.calendar.coach(session?.orgId ?? "", session?.user?.id ?? "");
-      if (!consent.enabled) qc.setQueryData<CalendarCoachInsight>(key, (current) => current ? {
+      qc.setQueryData<CalendarCoachInsight>(key, (current) => current ? {
         ...current,
         consent,
-        coverage: "disabled",
+        coverage: consent.enabled ? "unavailable" : "disabled",
         meetingMinutes: null,
         protectedWorkMinutes: null,
         missedCommitments: null,
