@@ -64,6 +64,7 @@ export function LeaveRequestFormFields({
   validation,
 }: LeaveRequestFormFieldsProps) {
   const noApproverAction = useNoApproverFix(approvalRoute);
+  const halfDay = form.watch("halfDay");
 
   return (
     <div className="space-y-5">
@@ -140,29 +141,31 @@ export function LeaveRequestFormFields({
               </FormItem>
             )}
           />
-          <FormField
-            control={form.control}
-            name="endDate"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-xs font-medium text-muted-foreground">
-                  To
-                </FormLabel>
-                <FormControl>
-                  <DatePicker
-                    value={field.value}
-                    onChange={field.onChange}
-                    fromDate={leaveEndBounds.fromDate}
-                    fromYear={leaveEndBounds.fromYear}
-                    toYear={leaveEndBounds.toYear}
-                    placeholder="End date"
-                    disabledDays={isWeekend}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          {halfDay ? null : (
+            <FormField
+              control={form.control}
+              name="endDate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs font-medium text-muted-foreground">
+                    To
+                  </FormLabel>
+                  <FormControl>
+                    <DatePicker
+                      value={field.value}
+                      onChange={field.onChange}
+                      fromDate={leaveEndBounds.fromDate}
+                      fromYear={leaveEndBounds.fromYear}
+                      toYear={leaveEndBounds.toYear}
+                      placeholder="End date"
+                      disabledDays={isWeekend}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
         </div>
       </div>
 

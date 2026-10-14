@@ -24,7 +24,8 @@ import { useCursorPager } from "@/components/ui/table-pagination";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCan } from "@/hooks/api/access";
-import { useHrPolicies, useSeedDefaultPolicies, useOrgPolicyConflicts } from "@/hooks/api/hr/policies";
+import { useActivatePolicy, useHrPolicies, useSeedDefaultPolicies, useOrgPolicyConflicts } from "@/hooks/api/hr/policies";
+import { isApiError } from "@/lib/api-envelope";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { usePageState } from "@/hooks/api/use-page-state";
 import {
@@ -50,13 +51,28 @@ interface PolicyRowActionsProps {
   canManage: boolean;
   onPreview: (id: number) => void;
   onEdit: (policy: HrPolicy) => void;
+  onActivate: (id: number) => void;
+  activatingId: number | null;
 }
 
-function PolicyRowActions({ row, canManage, onPreview, onEdit }: PolicyRowActionsProps) {
+function PolicyRowActions({ row, canManage, onPreview, onEdit, onActivate, activatingId }: PolicyRowActionsProps) {
   function handlePreview() { onPreview(row.id); }
   function handleEdit() { onEdit(row); }
+  function handleActivate() { onActivate(row.id); }
   return (
     <div className="flex items-center gap-1 justify-end">
+      {/* QA 2026-10-13: a draft was only activatable from the edit sheet's version history, which read as "no way to publish". */}
+      {canManage && row.status === "draft" && (
+        <LoadingButton
+          variant="outline"
+          size="sm"
+          className="h-7 text-xs"
+          isPending={activatingId === row.id}
+          onClick={handleActivate}
+        >
+          Activate
+        </LoadingButton>
+      )}
       <TooltipIconButton
         icon={EyeIcon}
         label="Preview"
@@ -87,6 +103,19 @@ export function HrPoliciesPage() {
   const [previewPolicyId, setPreviewPolicyId] = useState<number | null>(null);
 
   const seed = useSeedDefaultPolicies();
+  const activate = useActivatePolicy();
+  const activatingId = activate.isPending && typeof activate.variables === "number" ? activate.variables : null;
+  const handleActivate = useCallback((id: number) => {
+    activate.mutate(id, {
+      onSuccess: () => toast.success("Policy activated"),
+      onError: (err) =>
+        toast.error(
+          isApiError(err) && err.status === 409
+            ? `${getErrorMessage(err)} Open the policy to review the conflict or force-activate it.`
+            : getErrorMessage(err),
+        ),
+    });
+  }, [activate]);
 
   const pager = useCursorPager(
     `${debouncedSearch.trim()}|${typeFilter}|${statusFilter}`,
@@ -226,6 +255,8 @@ export function HrPoliciesPage() {
           canManage={canManage}
           onPreview={handlePreview}
           onEdit={handleOpenEdit}
+          onActivate={handleActivate}
+          activatingId={activatingId}
         />
       ),
     },

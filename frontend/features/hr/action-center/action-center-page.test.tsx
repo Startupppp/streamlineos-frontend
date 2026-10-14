@@ -9,6 +9,7 @@ import {
   mockPageWrapperModule,
   mockQueryClientModule,
   mockQueueState,
+  mockSessionModule,
   mockRegularizationModule,
   mockRegularizationRow,
   mockSonnerModule,
@@ -34,6 +35,7 @@ jest.mock("@/hooks/api/hr/expenses", () => mockExpensesModule());
 jest.mock("@/hooks/api/payroll/payroll-cutoff", () => mockCutoffModule());
 jest.mock("@/components/ui/page-wrapper", () => mockPageWrapperModule());
 jest.mock("sonner", () => mockSonnerModule());
+jest.mock("next-auth/react", () => mockSessionModule());
 jest.mock("@/features/hr/workflows/instance-detail-sheet", () => ({
   InstanceDetailSheet: () => null,
 }));
@@ -148,6 +150,17 @@ describe("HR Action Center — the clear claim", () => {
 
     expect(screen.queryByText(/you're clear/i)).not.toBeInTheDocument();
     expect(screen.getByText("Ben Rao")).toBeInTheDocument();
+  });
+
+  it("does not claim clear, or print zero counts, while the leave read has not started (QA 2026-10-13)", () => {
+    // A query disabled while the session identity loads is pending but not `isLoading`.
+    mockQueueState.leavePending = true;
+
+    render(<HrActionCenterPage />);
+
+    expect(screen.queryByText(/you're clear/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/no results match/i)).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^All types/ })).toHaveTextContent("–");
   });
 
   it("claims clear only when every source is settled, allowed and empty", () => {

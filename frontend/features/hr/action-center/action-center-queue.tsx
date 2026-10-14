@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
+import { useSession } from "next-auth/react";
 import { AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -50,6 +51,14 @@ export function ActionCenterQueueView({
   const [selectedIds, setSelectedIds] = useState<readonly string[]>([]);
   const [decidedIds, setDecidedIds] = useState<readonly string[]>([]);
   const decisions = useActionCenterDecisions();
+  const { data: session } = useSession();
+  const myUserId = session?.user?.id;
+  // QA 2026-10-13 P0: nobody decides their own leave — the server refuses it.
+  const isOwnLeave = useCallback(
+    (item: ActionCenterItem): boolean =>
+      item.source === "leave" && !!myUserId && item.requester?.userId === myUserId,
+    [myUserId],
+  );
 
   const live = useMemo(
     () => queue.items.filter((item) => !decidedIds.includes(item.id)),
@@ -163,9 +172,9 @@ export function ActionCenterQueueView({
       <div className="flex flex-wrap items-center gap-2 px-3 py-2">
         <ActionCenterFilters
           state={filters}
-          counts={counts}
+          counts={queue.isLoading ? null : counts}
           cutoffAvailable={queue.cutoff !== null}
-          cutoffCount={cutoffCount}
+          cutoffCount={queue.isLoading ? null : cutoffCount}
           onFacetChange={handleFacetChange}
           onCutoffToggle={handleCutoffToggle}
         />
@@ -200,8 +209,9 @@ export function ActionCenterQueueView({
                   item={item}
                   index={index}
                   selected={selectedIds.includes(item.id)}
-                  selectable={decisions.canDecide(item.source)}
-                  decidable={decisions.canDecide(item.source)}
+                  selectable={decisions.canDecide(item.source) && !isOwnLeave(item)}
+                  decidable={decisions.canDecide(item.source) && !isOwnLeave(item)}
+                  ownRequest={isOwnLeave(item)}
                   isDeciding={decisions.isDeciding(item.id)}
                   onToggleSelected={handleToggleSelected}
                   onOpenRequester={onOpenRequester}

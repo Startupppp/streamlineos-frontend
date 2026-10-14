@@ -22,13 +22,14 @@ function pending(): LeaveRequest {
   };
 }
 
-describe("BUG-HRMS-017/018: own pending leave row", () => {
-  it("points a sole owner at the Action Center, where their own request is decided", () => {
+describe("own pending leave row (QA 2026-10-13 P0)", () => {
+  it("tells a sole owner nobody else can approve yet, instead of pointing them at a self-approval", () => {
     mockedRoute.mockReturnValue({ data: { ownerSelfApproval: true } });
 
     render(<RequestActionCell request={pending()} onCancel={jest.fn()} />);
 
-    expect(screen.getByRole("link", { name: /decide in action center/i })).toHaveAttribute("href", "/hr/approvals");
+    expect(screen.getByText(/no other approver is available — add an hr admin or manager/i)).toBeInTheDocument();
+    expect(screen.queryByRole("link")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: /cancel request/i })).toBeInTheDocument();
   });
 
@@ -37,7 +38,7 @@ describe("BUG-HRMS-017/018: own pending leave row", () => {
 
     render(<RequestActionCell request={pending()} onCancel={jest.fn()} />);
 
-    expect(screen.queryByRole("link")).not.toBeInTheDocument();
+    expect(screen.queryByText(/no other approver/i)).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: /cancel request/i })).toBeInTheDocument();
   });
 });

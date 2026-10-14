@@ -9,6 +9,7 @@ import {
   mockPageWrapperModule,
   mockQueryClientModule,
   mockQueueState,
+  mockSessionModule,
   mockRegularizationModule,
   mockSonnerModule,
   mockWfhRow,
@@ -33,6 +34,7 @@ jest.mock("@/hooks/api/hr/expenses", () => mockExpensesModule());
 jest.mock("@/hooks/api/payroll/payroll-cutoff", () => mockCutoffModule());
 jest.mock("@/components/ui/page-wrapper", () => mockPageWrapperModule());
 jest.mock("sonner", () => mockSonnerModule());
+jest.mock("next-auth/react", () => mockSessionModule());
 jest.mock("@/features/hr/workflows/instance-detail-sheet", () => ({
   InstanceDetailSheet: () => null,
 }));
@@ -53,6 +55,17 @@ beforeEach(() => {
 });
 
 describe("HR Action Center — inline decide", () => {
+  it("offers no Approve or Reject on the viewer's own leave (QA 2026-10-13 P0)", () => {
+    mockQueueState.sessionUserId = "usr-member";
+    mockQueueState.leavePages = mockLeavePage([mockLeaveRow]);
+
+    render(<HrActionCenterPage />);
+
+    expect(screen.getByText("Needs another approver")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Approve" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Reject" })).not.toBeInTheDocument();
+  });
+
   it("approves on the row itself, with no drawer round trip", async () => {
     mockQueueState.leavePages = mockLeavePage([mockLeaveRow]);
 

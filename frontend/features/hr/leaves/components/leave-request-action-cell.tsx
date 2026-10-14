@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -23,9 +22,9 @@ interface RequestActionCellProps {
  * leave request"), since this list is the caller's own — and a "View Details"
  * item with no handler. Approvals live in the Approvals tab.
  *
- * BUG-HRMS-017/018: a sole owner's own request is routed back to them, and the
- * Action Center is where it is decided. Without a pointer this row offered only
- * "Cancel request", which read as "nobody can approve this".
+ * QA 2026-10-13 P0: a sole owner's request is no longer routed back to them —
+ * nobody decides their own leave. It waits pending with no approver, and the row
+ * says so instead of pointing them at an Approve button the server refuses.
  */
 export function RequestActionCell({ request, isCancelling = false, onCancel }: RequestActionCellProps) {
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -46,9 +45,9 @@ export function RequestActionCell({ request, isCancelling = false, onCancel }: R
   return (
     <>
       {route?.ownerSelfApproval === true && (
-        <Button asChild variant="link" size="sm">
-          <Link href="/hr/approvals">You are the approver — decide in Action Center</Link>
-        </Button>
+        <span className="text-xs text-muted-foreground">
+          No other approver is available — add an HR admin or manager
+        </span>
       )}
       <Button
         type="button"

@@ -17,6 +17,8 @@ interface MockQueueState {
   processWfh: jest.Mock;
   toastSuccess: jest.Mock;
   toastError: jest.Mock;
+  sessionUserId: string;
+  leavePending: boolean;
 }
 
 export const mockQueueState: MockQueueState = {
@@ -38,6 +40,8 @@ export const mockQueueState: MockQueueState = {
   processWfh: jest.fn(() => Promise.resolve({ success: true })),
   toastSuccess: jest.fn(),
   toastError: jest.fn(),
+  sessionUserId: "usr-approver",
+  leavePending: false,
 };
 
 export const ALL_QUEUE_PERMISSIONS = [
@@ -61,6 +65,8 @@ export function resetMockQueueState(): void {
   mockQueueState.cutoff = null;
   mockQueueState.inboxDenied = false;
   mockQueueState.granted = new Set(ALL_QUEUE_PERMISSIONS);
+  mockQueueState.sessionUserId = "usr-approver";
+  mockQueueState.leavePending = false;
   mockQueueState.approveLeave.mockImplementation((input) =>
     Promise.resolve({ success: true, leaveId: input.leaveId }),
   );
@@ -182,8 +188,9 @@ export function mockQueryClientModule() {
 export function mockHrModule() {
   return {
     useHrLeaveApprovals: () => ({
-      data: { pages: mockQueueState.leavePages },
+      data: mockQueueState.leavePending ? undefined : { pages: mockQueueState.leavePages },
       isLoading: false,
+      isPending: mockQueueState.leavePending,
       isError: false,
       refetch: jest.fn(),
     }),
@@ -293,5 +300,11 @@ export function mockSonnerModule() {
       success: (...args: unknown[]) => mockQueueState.toastSuccess(...args),
       error: (...args: unknown[]) => mockQueueState.toastError(...args),
     },
+  };
+}
+
+export function mockSessionModule() {
+  return {
+    useSession: () => ({ data: { user: { id: mockQueueState.sessionUserId } }, status: "authenticated" }),
   };
 }

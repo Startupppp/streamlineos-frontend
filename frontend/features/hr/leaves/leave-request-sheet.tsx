@@ -16,7 +16,7 @@ import {
   startOfLocalDay,
 } from "@/lib/date-constraints";
 import { useRequestLeave, useLeavePolicy } from "@/hooks/api/hr";
-import { leaveFormSchema, type LeaveFormValues } from "./leave-request-schema";
+import { effectiveLeaveEnd, leaveFormSchema, type LeaveFormValues } from "./leave-request-schema";
 import { LeaveRequestFormFields } from "./leave-request-form-fields";
 import { useLeaveRequestValidation } from "./use-leave-request-validation";
 import type { LeaveSpan } from "./leave-overlap";
@@ -47,7 +47,10 @@ export function LeaveRequestSheet({
   balances = [],
   existingRequests = NO_EXISTING_REQUESTS,
 }: LeaveRequestSheetProps) {
-  const approverAvailable = approvalRoute !== undefined && approvalRoute.rung !== null;
+  // A sole owner's leave has no other approver yet (ownerSelfApproval with no
+  // rung) but is still accepted and waits pending; the route panel says why.
+  const approverAvailable =
+    approvalRoute !== undefined && (approvalRoute.rung !== null || approvalRoute.ownerSelfApproval);
   const requestLeaveMutation = useRequestLeave();
   const { data: policy } = useLeavePolicy();
   const leaveMaxDays = useMemo<Record<string, number>>(
@@ -116,7 +119,7 @@ export function LeaveRequestSheet({
   const validation = useLeaveRequestValidation({
     leaveTypeId: watchedLeaveTypeId,
     startDate: watchedStartDate,
-    endDate: watchedEndDate,
+    endDate: effectiveLeaveEnd({ halfDay: watchedHalfDay, startDate: watchedStartDate, endDate: watchedEndDate }),
     halfDay: watchedHalfDay,
     leaveTypes,
     balances,
@@ -143,7 +146,7 @@ export function LeaveRequestSheet({
         {
           leaveTypeId: parseInt(data.leaveTypeId),
           startDate: data.startDate,
-          endDate: data.endDate,
+          endDate: effectiveLeaveEnd(data),
           reason: data.reason,
           priority: data.priority,
           attachmentUrl: attachmentUrl || undefined,
