@@ -39,7 +39,8 @@ import { cn } from "@/lib/utils";
 import { TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useOrgDisplay } from "@/hooks/api/org-display";
-import { formatMoneyCompact, formatINRCompact } from "@/lib/format-utils";
+import { formatMoneyCompact, formatINRCompact, formatINR, formatMoney } from "@/lib/format-utils";
+import { useSubmitGuard } from "@/hooks/common/use-submit-guard";
 import { budgetFormSchema } from "@/lib/validation/projects";
 import {
   useMemberCostColumns,
@@ -121,21 +122,31 @@ export function ProjectBudgetPage({
     budgetForm.reset({ budget: "" });
   }
 
-  const handleSaveBudget = budgetForm.handleSubmit((data) => {
-    updateBudget.mutate(data.budget, {
-      onSuccess: () => {
+  const handleSaveBudgetInner = useCallback(async () => {
+    await budgetForm.handleSubmit(async (data) => {
+      try {
+        await updateBudget.mutateAsync(data.budget);
         toast.success("Budget updated");
         setEditMode(false);
         budgetForm.reset({ budget: "" });
-      },
-      onError: (err) => toast.error(getErrorMessage(err)),
-    });
-  });
+      } catch (err) {
+        toast.error(getErrorMessage(err));
+      }
+    })();
+  }, [budgetForm, updateBudget, setEditMode]);
+
+  const budgetSaveGuard = useSubmitGuard(handleSaveBudgetInner);
 
   const formatBudget = useCallback((value: number | null | undefined): string => {
     const v = value ?? 0;
     if (!display || display.currency === "INR") return formatINRCompact(v);
     return formatMoneyCompact(v, display);
+  }, [display]);
+
+  const formatBudgetFull = useCallback((value: number | null | undefined): string => {
+    const v = value ?? 0;
+    if (!display || display.currency === "INR") return formatINR(v);
+    return formatMoney(v, display);
   }, [display]);
 
   const memberColumns = useMemberCostColumns({
@@ -172,8 +183,8 @@ export function ProjectBudgetPage({
         />
         <LoadingButton
           size="sm"
-          onClick={() => void handleSaveBudget()}
-          isPending={updateBudget.isPending}
+          onClick={() => void budgetSaveGuard.submit()}
+          isPending={budgetSaveGuard.isSubmitting}
           loadingText="Saving…"
         >
           Save
@@ -232,13 +243,15 @@ export function ProjectBudgetPage({
         >
           <PmSection index={0}>
             <StatCardGrid cols={3}>
-              <StatCard
-                label="Planned Budget"
-                value={formatBudget(budget?.plannedBudget ?? 0)}
-                icon={IndianRupee}
-                hint={budget?.plannedBudget ? "Project budget" : "Not set"}
-                tone="default"
-              />
+              <div title={formatBudgetFull(budget?.plannedBudget ?? 0)}>
+                <StatCard
+                  label="Planned Budget"
+                  value={formatBudget(budget?.plannedBudget ?? 0)}
+                  icon={IndianRupee}
+                  hint={budget?.plannedBudget ? "Project budget" : "Not set"}
+                  tone="default"
+                />
+              </div>
               <StatCard
                 label="Actual Cost"
                 value={formatBudget(budget?.actualCost ?? 0)}
@@ -250,19 +263,21 @@ export function ProjectBudgetPage({
                 }
                 tone={overBudget ? "red" : "default"}
               />
-              <StatCard
-                label="Remaining"
-                value={formatBudget(Math.abs(budget?.remaining ?? 0))}
-                icon={IndianRupee}
-                hint={
-                  overBudget
-                    ? "Over budget"
-                    : uncostedHours > 0
-                      ? "Before uncosted hours"
-                      : "Available"
-                }
-                tone={overBudget ? "red" : "emerald"}
-              />
+              <div title={formatBudgetFull(Math.abs(budget?.remaining ?? 0))}>
+                <StatCard
+                  label="Remaining"
+                  value={formatBudget(Math.abs(budget?.remaining ?? 0))}
+                  icon={IndianRupee}
+                  hint={
+                    overBudget
+                      ? "Over budget"
+                      : uncostedHours > 0
+                        ? "Before uncosted hours"
+                        : "Available"
+                  }
+                  tone={overBudget ? "red" : "emerald"}
+                />
+              </div>
             </StatCardGrid>
           </PmSection>
 
