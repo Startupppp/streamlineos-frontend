@@ -171,6 +171,11 @@ const nextConfig: NextConfig = {
       permanent: false,
     },
     {
+      source: "/hrms",
+      destination: "/hr",
+      permanent: false,
+    },
+    {
       source: "/hr/dashboard",
       destination: "/hr",
       permanent: false,

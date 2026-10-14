@@ -215,7 +215,7 @@ export function MobileModuleBottomNav({ className }: { className?: string }) {
     <>
       <nav
         className={cn(
-          "fixed inset-x-0 bottom-0 z-50 border-t border-border bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md md:hidden",
+          "fixed inset-x-0 bottom-0 z-50 border-t border-border bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md lg:hidden",
           className,
         )}
         aria-label="Module navigation"
