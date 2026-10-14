@@ -76,3 +76,27 @@ export function useReconcileCalendarBookingPayment(ruleId: number, cursor: strin
     } : item) } : current),
   });
 }
+
+export function useCancelCalendarBookingPayment(ruleId: number, cursor: string | null) {
+  const queryClient = useQueryClient();
+  const scope = useBookingScope();
+  return useAuthorizedMutation("calendar:write", {
+    mutationKey: calendarBookingQueryKeys.mutation("cancel-payment-booking"),
+    mutationFn: ({ sagaId, expectedVersion }: { sagaId: string; expectedVersion: number }) =>
+      apiClient.post<PublicCalendarBookingPayment>(`/calendar/booking-payments/${encodeURIComponent(sagaId)}/cancel`, { expectedVersion }, undefined, sagaContract),
+    onSuccess: (value) => queryClient.setQueryData<BookingPaymentSagaPage>(calendarBookingQueryKeys.payments(scope.orgId, scope.userId, scope.membershipId, scope.accessVersion, scope.canRead, ruleId, cursor), (current) => current ? { ...current, items: current.items.map((item) => item.sagaId === value.sagaId ? {
+      sagaId: value.sagaId,
+      bookingId: value.bookingId,
+      providerKey: value.providerKey,
+      providerOrderId: value.providerOrderId,
+      amountMinor: value.amountMinor,
+      currency: value.currency,
+      paymentState: value.paymentState,
+      bookingState: value.bookingState,
+      repairState: value.repairState,
+      refundedAmountMinor: value.refundedAmountMinor,
+      chargebackAmountMinor: value.chargebackAmountMinor,
+      version: value.version,
+    } : item) } : current),
+  });
+}

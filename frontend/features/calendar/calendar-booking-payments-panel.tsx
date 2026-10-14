@@ -12,6 +12,7 @@ import { useCan } from "@/hooks/api/access";
 import {
   useCalendarBookingPaymentPolicy,
   useCalendarBookingPayments,
+  useCancelCalendarBookingPayment,
   useReconcileCalendarBookingPayment,
   useSaveCalendarBookingPaymentPolicy,
 } from "@/hooks/api/calendar/booking-payments";
@@ -93,6 +94,7 @@ export function CalendarBookingPaymentsPanel({ rule, onBack }: { rule: CalendarB
   const [previousCursors, setPreviousCursors] = useState<Array<string | null>>([]);
   const payments = useCalendarBookingPayments(rule.id, cursor);
   const reconcile = useReconcileCalendarBookingPayment(rule.id, cursor);
+  const cancelPayment = useCancelCalendarBookingPayment(rule.id, cursor);
   const canWrite = useCan("calendar:write");
   const [error, setError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -111,9 +113,23 @@ export function CalendarBookingPaymentsPanel({ rule, onBack }: { rule: CalendarB
     }
   }
 
+  async function cancelPaidBooking(sagaId: string, expectedVersion: number) {
+    if (!window.confirm("Cancel this paid booking and apply its refund policy? This action cannot be undone.")) return;
+    setBusyId(sagaId);
+    try {
+      await cancelPayment.mutateAsync({ sagaId, expectedVersion });
+      setError(null);
+      toast.success("Paid booking cancellation processed");
+    } catch (cause) {
+      setError(getErrorMessage(cause));
+    } finally {
+      setBusyId(null);
+    }
+  }
+
   return <div className="space-y-4"><Button variant="outline" onClick={onBack}>Back to booking pages</Button><div><h3 className="font-medium">Paid appointments</h3><p className="text-sm text-muted-foreground">{rule.title}</p></div>
     {error ? <p role="alert" className="rounded-md border border-destructive p-2 text-sm text-destructive">{error}</p> : null}
     {policy.access.denied ? <p className="text-sm text-muted-foreground">You do not have access to payment policy.</p> : policy.access.unavailable || policy.isError ? <ErrorState title="Payment policy unavailable" error={policy.error} onRetry={() => void policy.refetch()} /> : policy.access.pending || policy.isPending ? <p role="status">Loading payment policy…</p> : <PaymentPolicyEditor key={`${rule.id}:${policy.data?.version ?? 0}`} rule={rule} current={policy.data ?? null} />}
-    <div className="space-y-2"><h4 className="font-medium">Payment and booking states</h4>{payments.access.denied ? <p className="text-sm text-muted-foreground">You do not have access to payment records.</p> : payments.access.unavailable || payments.isError ? <ErrorState title="Payments unavailable" error={payments.error} onRetry={() => void payments.refetch()} /> : payments.access.pending || payments.isPending ? <p role="status">Loading payments…</p> : payments.data?.items.length ? <div className="space-y-2">{payments.data.items.map((payment) => <div key={payment.sagaId} className="space-y-2 rounded-md border p-3 text-sm"><div className="flex items-center justify-between gap-2"><span className="font-medium">{formatMinor(payment.amountMinor, payment.currency)}</span><span>Payment {payment.paymentState.replaceAll("_", " ")}</span></div><p>Booking {payment.bookingState} · Repair {payment.repairState.replaceAll("_", " ")}</p><p className="break-all text-xs text-muted-foreground">Payment {payment.sagaId}{payment.bookingId ? ` · Booking ${payment.bookingId}` : ""}</p>{payment.refundedAmountMinor ? <p>Refunded {formatMinor(payment.refundedAmountMinor, payment.currency)}</p> : null}{payment.repairState !== "none" && payment.repairState !== "resolved" && canWrite ? <Button size="sm" variant="outline" disabled={busyId === payment.sagaId} onClick={() => void reconcilePayment(payment.sagaId)}>Reconcile</Button> : null}</div>)}</div> : <p className="text-sm text-muted-foreground">No paid appointments for this booking page.</p>}<div className="flex gap-2">{previousCursors.length ? <Button variant="outline" onClick={() => { setCursor(previousCursors.at(-1) ?? null); setPreviousCursors(previousCursors.slice(0, -1)); }}>Newer</Button> : null}{payments.data?.nextCursor ? <Button variant="outline" onClick={() => { setPreviousCursors([...previousCursors, cursor]); setCursor(payments.data.nextCursor); }}>Older</Button> : null}</div></div>
+    <div className="space-y-2"><h4 className="font-medium">Payment and booking states</h4>{payments.access.denied ? <p className="text-sm text-muted-foreground">You do not have access to payment records.</p> : payments.access.unavailable || payments.isError ? <ErrorState title="Payments unavailable" error={payments.error} onRetry={() => void payments.refetch()} /> : payments.access.pending || payments.isPending ? <p role="status">Loading payments…</p> : payments.data?.items.length ? <div className="space-y-2">{payments.data.items.map((payment) => <div key={payment.sagaId} className="space-y-2 rounded-md border p-3 text-sm"><div className="flex items-center justify-between gap-2"><span className="font-medium">{formatMinor(payment.amountMinor, payment.currency)}</span><span>Payment {payment.paymentState.replaceAll("_", " ")}</span></div><p>Booking {payment.bookingState} · Repair {payment.repairState.replaceAll("_", " ")}</p><p className="break-all text-xs text-muted-foreground">Payment {payment.sagaId}{payment.bookingId ? ` · Booking ${payment.bookingId}` : ""}</p>{payment.refundedAmountMinor ? <p>Refunded {formatMinor(payment.refundedAmountMinor, payment.currency)}</p> : null}<div className="flex flex-wrap gap-2">{payment.repairState !== "none" && payment.repairState !== "resolved" && canWrite ? <Button size="sm" variant="outline" disabled={busyId === payment.sagaId} onClick={() => void reconcilePayment(payment.sagaId)}>Reconcile</Button> : null}{payment.bookingState === "confirmed" && canWrite ? <Button size="sm" variant="outline" disabled={busyId === payment.sagaId} onClick={() => void cancelPaidBooking(payment.sagaId, payment.version)}>Cancel paid booking</Button> : null}</div></div>)}</div> : <p className="text-sm text-muted-foreground">No paid appointments for this booking page.</p>}<div className="flex gap-2">{previousCursors.length ? <Button variant="outline" onClick={() => { setCursor(previousCursors.at(-1) ?? null); setPreviousCursors(previousCursors.slice(0, -1)); }}>Newer</Button> : null}{payments.data?.nextCursor ? <Button variant="outline" onClick={() => { setPreviousCursors([...previousCursors, cursor]); setCursor(payments.data.nextCursor); }}>Older</Button> : null}</div></div>
   </div>;
 }
