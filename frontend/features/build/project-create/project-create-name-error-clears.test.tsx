@@ -2,6 +2,7 @@ import { createRef } from "react";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { StepBasics } from "./steps/step-basics";
 import type { BasicsHandle } from "./steps/step-basics";
+import type { WizardDraft } from "./use-project-create";
 
 jest.mock("@/hooks/api/build/projects", () => ({
   useProjects: () => ({ data: undefined }),
@@ -14,7 +15,7 @@ jest.mock("./steps/step-basics-manager-field", () => ({
   charCounter: () => null,
 }));
 
-const EMPTY_DRAFT = {
+const EMPTY_DRAFT: WizardDraft = {
   name: "",
   key: "",
   description: "",
@@ -22,6 +23,12 @@ const EMPTY_DRAFT = {
   clientId: "",
   startDate: "",
   endDate: "",
+  projectType: "",
+  templateId: null,
+  modules: { epics: true, timeTracking: true, wiki: true },
+  features: {},
+  workflow: "simple",
+  memberIds: [],
 };
 
 const NAME_TOO_SHORT = "Name must be at least 2 characters";

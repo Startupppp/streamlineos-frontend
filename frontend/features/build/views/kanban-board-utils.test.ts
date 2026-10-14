@@ -70,14 +70,14 @@ describe("columnBy grouping covers every option the Columns menu offers (B-035)"
       makeTicket({
         id: 1,
         labels: [{ label: { id: 1, name: "bug", color: "#000" } }],
-        cycle: { id: 1, name: "Cycle 1" },
-        project: { id: 7, name: "QA Project Alpha" },
+        cycle: { id: 1, name: "Cycle 1", status: "active", startDate: "2026-10-01", endDate: "2026-10-14" },
+        project: { id: 7, name: "QA Project Alpha", key: "QAB" },
       }),
       makeTicket({
         id: 2,
         labels: [{ label: { id: 1, name: "bug", color: "#000" } }],
-        cycle: { id: 2, name: "Cycle 2" },
-        project: { id: 7, name: "QA Project Alpha" },
+        cycle: { id: 2, name: "Cycle 2", status: "active", startDate: "2026-10-15", endDate: "2026-10-28" },
+        project: { id: 7, name: "QA Project Alpha", key: "QAB" },
       }),
       makeTicket({ id: 3 }),
     ];
@@ -104,8 +104,8 @@ describe("columnBy grouping covers every option the Columns menu offers (B-035)"
         priority: "HIGH",
         assignee: { id: "u1", name: "Alice" },
         labels: [{ label: { id: 1, name: "bug", color: "#000" } }],
-        cycle: { id: 1, name: "Cycle 1" },
-        project: { id: 7, name: "QA Project Alpha" },
+        cycle: { id: 1, name: "Cycle 1", status: "active", startDate: "2026-10-01", endDate: "2026-10-14" },
+        project: { id: 7, name: "QA Project Alpha", key: "QAB" },
       }),
       makeTicket({ id: 2, status: "DONE", priority: "LOW" }),
     ];
