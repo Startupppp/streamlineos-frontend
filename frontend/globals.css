@@ -101,17 +101,17 @@
 
   --radius: 0.625rem;
 
-  /* Surface — shadcn mist (cool), not zinc */
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.148 0.004 228.8);
+  /* Harbor: a cool canvas, crisp work surfaces, and blue action hierarchy. */
+  --background: #f4f7fb;
+  --foreground: #172638;
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.148 0.004 228.8);
+  --card-foreground: #172638;
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.148 0.004 228.8);
-  --muted: oklch(0.963 0.002 197.1);
-  --muted-foreground: oklch(0.56 0.021 213.5);
-  --border: oklch(0.925 0.005 214.3);
-  --input: oklch(0.925 0.005 214.3);
+  --popover-foreground: #172638;
+  --muted: #edf2f7;
+  --muted-foreground: #526479;
+  --border: #d6e0ea;
+  --input: #c7d4e2;
   /* â”€â”€â”€ CTA & Action (Ink-style â€” Linear/Stripe feel) â”€â”€â”€ */
   --primary: #0b1220; /* slate-900 â€” primary CTAs */
   --primary-foreground: #ffffff;
@@ -144,11 +144,11 @@
   --border-glass: rgba(30, 64, 175, 0.1);
 
   /* â”€â”€â”€ Charts â”€â”€â”€ */
-  --chart-1: #1d4ed8;
-  --chart-2: #06b6d4;
-  --chart-3: #60a5fa;
-  --chart-4: #8b5cf6;
-  --chart-5: #ec4899;
+  --chart-1: #1856a3;
+  --chart-2: #087e85;
+  --chart-3: #a45b13;
+  --chart-4: #7547a6;
+  --chart-5: #b34065;
 
   /* â”€â”€â”€ Dashboard sidebar (white panel â€” matches landing card surfaces) â”€â”€â”€ */
   --sidebar: #ffffff;
@@ -170,17 +170,17 @@
 }
 
 .dark {
-  /* â”€â”€â”€ Surface (neutral zinc blacks â€” Ink stays monochrome in dark) â”€â”€â”€ */
-  --background: oklch(0.148 0.004 228.8);
-  --foreground: oklch(0.987 0.002 197.1);
-  --card: oklch(0.218 0.008 223.9);
-  --card-foreground: oklch(0.987 0.002 197.1);
-  --popover: oklch(0.218 0.008 223.9);
-  --popover-foreground: oklch(0.987 0.002 197.1);
-  --muted: oklch(0.275 0.011 216.9);
-  --muted-foreground: oklch(0.723 0.014 214.4);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
+  /* Blue charcoal keeps data panels distinct without a black void. */
+  --background: #0d1726;
+  --foreground: #eef4fb;
+  --card: #142337;
+  --card-foreground: #eef4fb;
+  --popover: #1a2b42;
+  --popover-foreground: #eef4fb;
+  --muted: #203248;
+  --muted-foreground: #afc0d3;
+  --border: #34475d;
+  --input: #41546b;
 
   /* â”€â”€â”€ CTA & Action â€” invert ink to white for dark â”€â”€â”€ */
   --primary: #f4f4f5;
@@ -192,11 +192,11 @@
   --destructive-foreground: #ffffff;
 
   /* â”€â”€â”€ Charts (slightly punchier in dark for legibility) â”€â”€â”€ */
-  --chart-1: #3b82f6;
-  --chart-2: #06b6d4;
-  --chart-3: #60a5fa;
-  --chart-4: #8b5cf6;
-  --chart-5: #ec4899;
+  --chart-1: #86b9f5;
+  --chart-2: #5fd1d0;
+  --chart-3: #f0bb72;
+  --chart-4: #c1a3ee;
+  --chart-5: #f294ae;
 
   /* â”€â”€â”€ Sidebar (deepest layer â€” same dark-on-dark Linear/Vercel pattern) â”€â”€â”€ */
   --sidebar: #0e0e10;
@@ -219,93 +219,93 @@
 html.app-neutral {
   --app-font-sans: var(--font-plex-sans, "IBM Plex Sans"), "IBM Plex Sans";
   --app-font-mono: var(--font-plex-mono, "IBM Plex Mono"), "IBM Plex Mono";
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.148 0.004 228.8);
+  --background: #f4f7fb;
+  --foreground: #172638;
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.148 0.004 228.8);
+  --card-foreground: #172638;
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.148 0.004 228.8);
-  --muted: oklch(0.963 0.002 197.1);
-  --muted-foreground: oklch(0.56 0.021 213.5);
-  --border: oklch(0.925 0.005 214.3);
-  --input: oklch(0.925 0.005 214.3);
-  --secondary: oklch(0.963 0.002 197.1);
-  --secondary-foreground: oklch(0.218 0.008 223.9);
-  --accent: oklch(0.963 0.002 197.1);
-  --accent-foreground: oklch(0.218 0.008 223.9);
-  --sidebar: oklch(0.987 0.002 197.1);
-  --sidebar-foreground: oklch(0.148 0.004 228.8);
-  --sidebar-accent: oklch(0.963 0.002 197.1);
-  --sidebar-accent-foreground: oklch(0.218 0.008 223.9);
-  --sidebar-border: oklch(0.925 0.005 214.3);
+  --popover-foreground: #172638;
+  --muted: #edf2f7;
+  --muted-foreground: #526479;
+  --border: #d6e0ea;
+  --input: #c7d4e2;
+  --secondary: #edf2f7;
+  --secondary-foreground: #172638;
+  --accent: #e7f0fb;
+  --accent-foreground: #173e70;
+  --sidebar: #eaf1f8;
+  --sidebar-foreground: #172638;
+  --sidebar-accent: #dce9f6;
+  --sidebar-accent-foreground: #173e70;
+  --sidebar-border: #d2deea;
   --bg-glass: rgba(255, 255, 255, 0.78);
   --border-glass: rgba(28, 25, 23, 0.08);
 }
 
 html.app-neutral:not([class*="theme-"]) {
-  --primary: oklch(0.218 0.008 223.9);
-  --primary-foreground: oklch(0.987 0.002 197.1);
-  --ring: oklch(0.723 0.014 214.4);
-  --sidebar-primary: oklch(0.218 0.008 223.9);
-  --sidebar-primary-foreground: oklch(0.987 0.002 197.1);
-  --sidebar-ring: oklch(0.723 0.014 214.4);
-  --brand-deep: oklch(0.218 0.008 223.9);
-  --brand-core: oklch(0.45 0.017 213.2);
-  --brand-bright: oklch(0.723 0.014 214.4);
-  --brand-cyan: oklch(0.56 0.021 213.5);
+  --primary: #1856a3;
+  --primary-foreground: #ffffff;
+  --ring: #1856a3;
+  --sidebar-primary: #1856a3;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-ring: #1856a3;
+  --brand-deep: #17467f;
+  --brand-core: #2467b5;
+  --brand-bright: #58a4e8;
+  --brand-cyan: #178ca5;
   --gradient-signature: linear-gradient(
     135deg,
-    oklch(0.218 0.008 223.9) 0%,
-    oklch(0.45 0.017 213.2) 55%,
-    oklch(0.723 0.014 214.4) 100%
+    #17467f 0%,
+    #2467b5 55%,
+    #178ca5 100%
   );
-  --gold: oklch(0.45 0.017 213.2);
-  --blue: oklch(0.218 0.008 223.9);
+  --gold: #2467b5;
+  --blue: #1856a3;
 }
 
 html.app-neutral.dark {
-  --background: oklch(0.148 0.004 228.8);
-  --foreground: oklch(0.987 0.002 197.1);
-  --card: oklch(0.218 0.008 223.9);
-  --card-foreground: oklch(0.987 0.002 197.1);
-  --popover: oklch(0.218 0.008 223.9);
-  --popover-foreground: oklch(0.987 0.002 197.1);
-  --muted: oklch(0.275 0.011 216.9);
-  --muted-foreground: oklch(0.723 0.014 214.4);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --secondary: oklch(0.275 0.011 216.9);
-  --secondary-foreground: oklch(0.987 0.002 197.1);
-  --accent: oklch(0.275 0.011 216.9);
-  --accent-foreground: oklch(0.987 0.002 197.1);
-  --sidebar: oklch(0.218 0.008 223.9);
-  --sidebar-foreground: oklch(0.987 0.002 197.1);
-  --sidebar-accent: oklch(0.275 0.011 216.9);
-  --sidebar-accent-foreground: oklch(0.987 0.002 197.1);
-  --sidebar-border: oklch(1 0 0 / 10%);
+  --background: #0d1726;
+  --foreground: #eef4fb;
+  --card: #142337;
+  --card-foreground: #eef4fb;
+  --popover: #1a2b42;
+  --popover-foreground: #eef4fb;
+  --muted: #203248;
+  --muted-foreground: #afc0d3;
+  --border: #34475d;
+  --input: #41546b;
+  --secondary: #203248;
+  --secondary-foreground: #eef4fb;
+  --accent: #243b56;
+  --accent-foreground: #eef4fb;
+  --sidebar: #111f31;
+  --sidebar-foreground: #eef4fb;
+  --sidebar-accent: #203753;
+  --sidebar-accent-foreground: #eef4fb;
+  --sidebar-border: #34475d;
   --bg-glass: rgba(12, 10, 9, 0.78);
   --border-glass: rgba(250, 250, 249, 0.12);
 }
 
 html.app-neutral.dark:not([class*="theme-"]) {
-  --primary: oklch(0.925 0.005 214.3);
-  --primary-foreground: oklch(0.218 0.008 223.9);
-  --ring: oklch(0.56 0.021 213.5);
-  --sidebar-primary: oklch(0.925 0.005 214.3);
-  --sidebar-primary-foreground: oklch(0.218 0.008 223.9);
-  --sidebar-ring: oklch(0.56 0.021 213.5);
-  --brand-deep: oklch(0.987 0.002 197.1);
-  --brand-core: oklch(0.925 0.005 214.3);
-  --brand-bright: oklch(0.723 0.014 214.4);
-  --brand-cyan: oklch(0.56 0.021 213.5);
+  --primary: #86b9f5;
+  --primary-foreground: #10243b;
+  --ring: #86b9f5;
+  --sidebar-primary: #86b9f5;
+  --sidebar-primary-foreground: #10243b;
+  --sidebar-ring: #86b9f5;
+  --brand-deep: #9ac8fa;
+  --brand-core: #86b9f5;
+  --brand-bright: #66d3dd;
+  --brand-cyan: #66d3dd;
   --gradient-signature: linear-gradient(
     135deg,
-    oklch(0.987 0.002 197.1) 0%,
-    oklch(0.925 0.005 214.3) 55%,
-    oklch(0.723 0.014 214.4) 100%
+    #9ac8fa 0%,
+    #86b9f5 55%,
+    #66d3dd 100%
   );
-  --gold: oklch(0.925 0.005 214.3);
-  --blue: oklch(0.987 0.002 197.1);
+  --gold: #86b9f5;
+  --blue: #9ac8fa;
 }
 
 /* â”€â”€â”€ Shadow override for dark mode â€” light glass-highlight instead of dark drop â”€â”€â”€ */

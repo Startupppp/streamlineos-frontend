@@ -289,34 +289,34 @@
   --blue: #be123c;
 }
 
-/* Whole-surface tinting — selected accent tints all neutral chrome, light mode */
+/* Selected accents tint navigation and selection, while work surfaces stay legible. */
 :root:not(.dark)[class*="theme-"] {
-  --background: color-mix(in srgb, var(--brand-core) 4%, oklch(1 0 0));
-  --card: color-mix(in srgb, var(--brand-core) 2%, oklch(1 0 0));
-  --popover: color-mix(in srgb, var(--brand-core) 2%, oklch(1 0 0));
-  --muted: color-mix(in srgb, var(--brand-core) 8%, oklch(0.963 0.002 197.1));
-  --secondary: color-mix(in srgb, var(--brand-core) 8%, oklch(0.963 0.002 197.1));
-  --accent: color-mix(in srgb, var(--brand-core) 8%, oklch(0.963 0.002 197.1));
-  --border: color-mix(in srgb, var(--brand-core) 12%, oklch(0.925 0.005 214.3));
-  --input: color-mix(in srgb, var(--brand-core) 12%, oklch(0.925 0.005 214.3));
-  --sidebar: color-mix(in srgb, var(--brand-core) 3%, oklch(0.987 0.002 197.1));
-  --sidebar-border: color-mix(in srgb, var(--brand-core) 12%, oklch(0.925 0.005 214.3));
+  --background: #f4f7fb;
+  --card: #ffffff;
+  --popover: #ffffff;
+  --muted: #edf2f7;
+  --secondary: #edf2f7;
+  --accent: color-mix(in srgb, var(--brand-core) 9%, #edf2f7);
+  --border: #d6e0ea;
+  --input: #c7d4e2;
+  --sidebar: color-mix(in srgb, var(--brand-core) 3%, #eaf1f8);
+  --sidebar-border: #d2deea;
   --ring: var(--brand-deep);
   --sidebar-ring: var(--brand-deep);
 }
 
-/* Whole-surface tinting — dark mode */
+/* The same elevation ladder holds for every accent in dark mode. */
 :root.dark[class*="theme-"] {
-  --background: color-mix(in srgb, var(--brand-core) 8%, oklch(0.148 0.004 228.8));
-  --card: color-mix(in srgb, var(--brand-core) 8%, oklch(0.218 0.008 223.9));
-  --popover: color-mix(in srgb, var(--brand-core) 8%, oklch(0.218 0.008 223.9));
-  --muted: color-mix(in srgb, var(--brand-core) 8%, oklch(0.275 0.011 216.9));
-  --secondary: color-mix(in srgb, var(--brand-core) 8%, oklch(0.275 0.011 216.9));
-  --accent: color-mix(in srgb, var(--brand-core) 8%, oklch(0.275 0.011 216.9));
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --sidebar: color-mix(in srgb, var(--brand-core) 6%, oklch(0.218 0.008 223.9));
-  --sidebar-border: oklch(1 0 0 / 10%);
+  --background: #0d1726;
+  --card: #142337;
+  --popover: #1a2b42;
+  --muted: #203248;
+  --secondary: #203248;
+  --accent: color-mix(in srgb, var(--brand-core) 8%, #243b56);
+  --border: #34475d;
+  --input: #41546b;
+  --sidebar: color-mix(in srgb, var(--brand-core) 4%, #111f31);
+  --sidebar-border: #34475d;
 }
 
 /* Dark-mode reconciliation — accent foregrounds lifted for contrast on dark surfaces */
@@ -421,4 +421,21 @@
   --sidebar-accent-foreground: #fda4af;
   --chart-1: #f43f5e;
   --blue: #f43f5e;
+}
+
+/* Reports retain distinct categorical hues when the interface accent changes. */
+:root:not(.dark)[class*="theme-"] {
+  --chart-1: #1856a3;
+  --chart-2: #087e85;
+  --chart-3: #a45b13;
+  --chart-4: #7547a6;
+  --chart-5: #b34065;
+}
+
+:root.dark[class*="theme-"] {
+  --chart-1: #86b9f5;
+  --chart-2: #5fd1d0;
+  --chart-3: #f0bb72;
+  --chart-4: #c1a3ee;
+  --chart-5: #f294ae;
 }

@@ -55,6 +55,16 @@ jest.mock("@tanstack/react-query", () => {
         refetch: jest.fn(),
       };
     }),
+    useQueries: jest.fn((opts: {
+      queries: { enabled?: boolean; queryKey?: readonly unknown[]; queryFn?: (ctx: { signal: AbortSignal }) => unknown }[];
+      combine: (results: unknown[]) => unknown;
+    }) => {
+      const first = opts.queries[0];
+      lastQueryEnabled = first?.enabled;
+      lastQueryKey = first?.queryKey;
+      lastQueryFn = first?.queryFn;
+      return opts.combine(opts.queries.map(() => ({ data: undefined, isLoading: false, isError: false, error: null, refetch: jest.fn() })));
+    }),
     useMutation: jest.fn((opts: { onSuccess?: () => void }) => {
       lastMutationOnSuccess = opts.onSuccess;
       return { mutate: mockMutate, mutateAsync: mockMutate, isPending: false };
