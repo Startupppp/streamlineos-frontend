@@ -29,6 +29,12 @@ const DEVICE_IDENTITY_KEY = "streamline-calendar-offline-identity";
 const POLICY_REVOCATION_KEY = "streamline-calendar-offline-policy-revocation";
 let cacheEpoch = 0;
 let crossTabListenerReady = false;
+const clearListeners = new Map<() => void, string | undefined>();
+
+function notifyOfflineCalendarClear(identity?: string): void {
+  for (const [listener, subscribedIdentity] of clearListeners)
+    if (!identity || !subscribedIdentity || subscribedIdentity === identity) listener();
+}
 
 function watchCrossTabIdentity(): void {
   if (crossTabListenerReady || typeof window === "undefined") return;
@@ -145,6 +151,7 @@ export function revokeOfflineCalendarPolicy(
       localStorage.removeItem(DEVICE_IDENTITY_KEY);
     if (sessionStorage.getItem(SESSION_IDENTITY_KEY) === identity)
       sessionStorage.removeItem(SESSION_IDENTITY_KEY);
+    notifyOfflineCalendarClear(identity);
   } catch {}
 }
 
@@ -294,6 +301,7 @@ export async function readOfflineCalendarSnapshot(
 
 export async function clearOfflineCalendarSnapshot(): Promise<void> {
   cacheEpoch++;
+  notifyOfflineCalendarClear();
   await transact<void>("readwrite", (store, resolve) => {
     const request = store.delete(KEY);
     request.onsuccess = () => resolve();
@@ -307,6 +315,7 @@ export async function clearOfflineCalendarSnapshot(): Promise<void> {
 
 export function subscribeOfflineCalendarClear(onClear: () => void, identity?: string): () => void {
   watchCrossTabIdentity();
+  clearListeners.set(onClear, identity);
   const channel =
     typeof BroadcastChannel === "undefined"
       ? null
@@ -328,6 +337,7 @@ export function subscribeOfflineCalendarClear(onClear: () => void, identity?: st
   if (typeof window !== "undefined")
     window.addEventListener("storage", onStorage);
   return () => {
+    clearListeners.delete(onClear);
     channel?.close();
     if (typeof window !== "undefined")
       window.removeEventListener("storage", onStorage);

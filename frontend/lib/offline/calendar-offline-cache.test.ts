@@ -138,6 +138,33 @@ describe("Calendar offline cache identity", () => {
     unsubscribe();
   });
 
+  it("notifies the current tab immediately when its policy is revoked", () => {
+    const current = jest.fn();
+    const other = jest.fn();
+    const unsubscribeCurrent = subscribeOfflineCalendarClear(current, "org-1:user-1");
+    const unsubscribeOther = subscribeOfflineCalendarClear(other, "org-2:user-1");
+    sessionStorage.setItem("streamline-calendar-offline-session-identity", "org-1:user-1");
+    localStorage.setItem("streamline-calendar-offline-identity", "org-1:user-1");
+    allowOfflineCalendarPolicy("org-1:user-1", 1);
+    revokeOfflineCalendarPolicy("org-1:user-1", 2);
+    expect(current).toHaveBeenCalledTimes(1);
+    expect(other).not.toHaveBeenCalled();
+    expect(offlineCalendarIdentityIsCurrent("org-1:user-1")).toBe(false);
+    unsubscribeCurrent();
+    unsubscribeOther();
+  });
+
+  it("notifies the current tab before its IndexedDB snapshot is deleted", async () => {
+    const db = fakeIndexedDb();
+    const onClear = jest.fn();
+    const unsubscribe = subscribeOfflineCalendarClear(onClear, "org-1:user-1");
+    const pending = clearOfflineCalendarSnapshot();
+    expect(onClear).toHaveBeenCalledTimes(1);
+    db.openNext();
+    await pending;
+    unsubscribe();
+  });
+
   it("writes when the current tab and device identity still match", async () => {
     const db = fakeIndexedDb();
     sessionStorage.setItem("streamline-calendar-offline-session-identity", "org-1:user-1");
