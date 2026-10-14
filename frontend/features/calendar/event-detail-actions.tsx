@@ -53,10 +53,6 @@ interface ActionTool {
   tone: keyof typeof TILE_TONE;
 }
 
-function isActionTool(tool: ActionTool | null): tool is ActionTool {
-  return tool !== null;
-}
-
 export function EventDetailActions({
   showMeeting,
   showHuddle,
@@ -134,7 +130,7 @@ export function EventDetailActions({
                 ? { key: "radar", icon: Radar, label: "Commitment radar", onClick: onRadar, tone: "default" }
                 : null,
             ] satisfies Array<ActionTool | null>
-          ).filter(isActionTool)}
+          ).flatMap((tool) => tool === null ? [] : [tool])}
         />
       ) : null}
     </div>

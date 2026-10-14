@@ -5,6 +5,7 @@ import { useInfiniteQuery, useQuery, useMutation, useQueryClient, keepPreviousDa
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
 const calendarEventsResponseContract = lazyContract(() =>
   import("@/hooks/api/calendar-schema").then((m) => m.calendarEventsResponseContract),
@@ -158,6 +159,7 @@ export function useCalendarEvents(start: Date, end: Date, enabled = true) {
     [qc],
   );
   const eventsQuery = useQuery({
+    ...INLINE_READ_ERROR,
     queryKey: platformHierarchyQueryKeys.calendar.events(
       orgId,
       userId,
@@ -227,6 +229,7 @@ export function useCalendarHistory(before: string, enabled = true) {
     [qc],
   );
   return useInfiniteQuery({
+    ...INLINE_READ_ERROR,
     queryKey: platformHierarchyQueryKeys.calendar.history(orgId, userId, before),
     queryFn: ({ pageParam, signal }) =>
       apiClient.get<CalendarHistoryResponse>(
@@ -257,6 +260,7 @@ export function useCalendarSources(enabled = true) {
     [qc],
   );
   return useQuery({
+    ...INLINE_READ_ERROR,
     queryKey: platformHierarchyQueryKeys.calendar.sources(orgId, userId),
     queryFn: ({ signal }) =>
       apiClient.get<CalendarSource[]>("/calendar/sources", undefined, signal, calendarSourcesContract),
@@ -327,6 +331,7 @@ export function useExternalCalendarEvents(start: Date, end: Date, enabled: boole
   const userId = session?.user?.id ?? "";
   const canView = useCan("calendar:read");
   return useQuery({
+    ...INLINE_READ_ERROR,
     queryKey: platformHierarchyQueryKeys.calendar.externalEvents(
       orgId,
       userId,

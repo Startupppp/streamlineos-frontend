@@ -4,6 +4,7 @@ import { CalendarAgendaPreview } from "./calendar-lazy-fallbacks";
 import {
   calendarSourceFamily,
   eventOverlapsRange,
+  filterCalendarEventsBySources,
   mergeSelfAttendanceEvents,
   toBigCalEvent,
   useCalendarComputed,
@@ -121,6 +122,32 @@ describe("unified Calendar views", () => {
     expect(result.current.visibleEvents.map((item) => item.id)).toEqual(["event-1"]);
     expect(calendarSourceFamily(events[1])).toBe("crm");
     expect(calendarSourceFamily(events[2])).toBe("attendance");
+  });
+
+  it("keeps every enabled source identity in Grid and List and applies the History source filter", () => {
+    const allSources = [
+      ...events,
+      event("build-1", "build", { source: "build", entityType: "TICKET" }),
+      event("task-1", "tasks", { source: "task" }),
+    ];
+    const { result } = renderHook(() => useCalendarComputed({
+      events: allSources,
+      externalData: EXTERNAL,
+      hiddenIds: [],
+      connections: [],
+      currentDate: CURRENT_DATE,
+      view: "day",
+    }));
+    const identities = ["event-1", "deal-1", "attendance-1", "birthday-user-1", "build-1", "task-1", "external-4-provider-1"];
+
+    expect(result.current.visibleEvents.map((item) => item.id)).toEqual(identities);
+    expect(result.current.allCalEvents.map((item) => item.id)).toEqual(identities);
+    expect(filterCalendarEventsBySources(result.current.visibleEvents, {
+      hrVisible: false,
+      crmVisible: false,
+      attendanceVisible: false,
+      hiddenConnectionIds: [4],
+    }).map((item) => item.id)).toEqual(["event-1", "build-1", "task-1"]);
   });
 
   it("includes overnight and multi-day items by interval overlap", () => {

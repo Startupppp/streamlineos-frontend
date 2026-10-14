@@ -4,6 +4,7 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { useAccess } from "@/hooks/api/access";
 import { grantsPermission } from "@/lib/rbac/permission-gate";
 import { platformHierarchyQueryKeys } from "@/lib/query-keys/platform-hierarchy";
@@ -43,6 +44,7 @@ export function useCalendarSearch(
     timeZone: filters.timeZone ?? Intl.DateTimeFormat().resolvedOptions().timeZone ?? "UTC",
   };
   return useInfiniteQuery({
+    ...INLINE_READ_ERROR,
     queryKey: platformHierarchyQueryKeys.calendar.search(
       orgId,
       userId,

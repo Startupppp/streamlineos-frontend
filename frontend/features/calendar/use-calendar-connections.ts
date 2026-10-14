@@ -11,8 +11,8 @@ export function isCalendarToolkit(toolkit: IntegrationToolkit): boolean {
   return CALENDAR_TOOLKITS.includes(toolkit);
 }
 
-export function useCalendarConnections() {
-  const query = useIntegrationConnections();
+export function useCalendarConnections(enabled = true) {
+  const query = useIntegrationConnections({ enabled, inlineErrors: true });
   const data = useMemo<IntegrationConnection[] | undefined>(
     () => query.data?.filter((c) => isCalendarToolkit(c.toolkit)),
     [query.data],

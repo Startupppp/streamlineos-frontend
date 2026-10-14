@@ -9,6 +9,7 @@ import { usePermissionGate } from "@/hooks/api/access";
 import type { CalendarListItem } from "@/hooks/api/calendar";
 import { useHrWfhRequests } from "@/hooks/api/hr";
 import { apiClient } from "@/lib/api-client";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { lazyContract } from "@/lib/api-envelope";
 import type { PermissionGate } from "@/lib/rbac/permission-gate";
 
@@ -91,6 +92,7 @@ export function useAttendanceCalendarEvents(
         month: month.getMonth(),
       };
       return {
+        ...INLINE_READ_ERROR,
         queryKey: humanResourcesQueryKeys.hr.monthlyAttendance(params),
         queryFn: ({ signal }) =>
           apiClient.get<AttendanceLog[]>(

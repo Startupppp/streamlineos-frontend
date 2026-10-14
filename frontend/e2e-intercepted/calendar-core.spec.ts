@@ -1,4 +1,4 @@
-import { expect, test, type BrowserContext, type Page } from "@playwright/test";
+import { expect, test, type BrowserContext, type Page, type Route } from "@playwright/test";
 import { encode } from "@auth/core/jwt";
 
 const VIEWPORTS = [
@@ -11,6 +11,13 @@ const ORGANIZATIONS = [
   { id: "calendar-org-a", userId: "calendar-user-a", email: "owner-a@example.test" },
   { id: "calendar-org-b", userId: "calendar-user-b", email: "owner-b@example.test" },
 ] as const;
+
+type CalendarScenario = {
+  accessState: "allowed" | "denied" | "disabled";
+  eventState: "normal" | "loading" | "empty" | "partial" | "failed";
+  connectionsFailed?: boolean;
+  pendingRoutes?: Route[];
+};
 
 function backendJwt(orgId: string, userId: string): string {
   const encode = (value: object) => Buffer.from(JSON.stringify(value)).toString("base64url");
@@ -80,7 +87,11 @@ function externalEvent(connectionId: number, toolkit: "googlecalendar" | "outloo
   };
 }
 
-async function installRoutes(page: Page, org: typeof ORGANIZATIONS[number]) {
+async function installRoutes(
+  page: Page,
+  org: typeof ORGANIZATIONS[number],
+  scenario?: CalendarScenario,
+) {
   const token = backendJwt(org.id, org.userId);
   await page.route("**/api/auth/session", (route) => route.fulfill({
     status: 200,
@@ -97,21 +108,23 @@ async function installRoutes(page: Page, org: typeof ORGANIZATIONS[number]) {
     const url = new URL(route.request().url());
     let body: unknown = [];
     if (url.pathname === "/me/access") {
+      const scopes: Record<string, string> = {
+        "calendar:read": "all",
+        "calendar:events:create": "all",
+        "calendar:events:export": "all",
+        "integrations:connections:view": "all",
+        "integrations:connections:manage": "all",
+        "hr:helpdesk:view": "all",
+        "self:attendance": "own",
+        "build:tickets:create": "all",
+      };
+      if (scenario?.accessState === "denied") delete scopes["calendar:read"];
       body = {
         membershipId: 1,
-        scopes: {
-          "calendar:read": "all",
-          "calendar:events:create": "all",
-          "calendar:events:export": "all",
-          "integrations:connections:view": "all",
-          "integrations:connections:manage": "all",
-          "hr:helpdesk:view": "all",
-          "self:attendance": "own",
-          "build:tickets:create": "all",
-        },
+        scopes,
         isOrgOwner: false,
         canManageOrganizationMembership: true,
-        modules: { calendar: true, hr: true, build: true, tasks: true, integrations: true },
+        modules: { calendar: scenario?.accessState !== "disabled", hr: true, build: true, tasks: true, integrations: true },
       };
     } else if (url.pathname === "/billing/entitlements") {
       const unlimited = { limit: null, used: 0 };
@@ -162,6 +175,8 @@ async function installRoutes(page: Page, org: typeof ORGANIZATIONS[number]) {
         policy: { petEnabled: false, allowedPresets: ["default"], prompts, version: 1 },
       };
     } else if (url.pathname === "/integrations/connections") {
+      if (scenario?.connectionsFailed)
+        return route.fulfill({ status: 500, contentType: "application/json", body: JSON.stringify({ message: "Fixture account failure" }) });
       body = [
         { id: 11, toolkit: "googlecalendar", accountEmail: "google@example.test", accountLabel: null, status: "active", isPrimary: true, createdAt: "2026-10-01T00:00:00.000Z" },
         { id: 12, toolkit: "outlook", accountEmail: "outlook@example.test", accountLabel: null, status: "active", isPrimary: false, createdAt: "2026-10-01T00:00:00.000Z" },
@@ -172,17 +187,30 @@ async function installRoutes(page: Page, org: typeof ORGANIZATIONS[number]) {
         { key: "build", label: "Build", module: "build", enabled: true },
         { key: "tasks", label: "Tasks", module: "tasks", enabled: true },
       ];
+    } else if (url.pathname === "/calendar/saved-views") {
+      body = { items: [], nextCursor: null, actorMembershipId: 1 };
+    } else if (url.pathname === "/calendar/offline-policy") {
+      body = { enabled: false, maxAgeDays: 1, version: 0 };
     } else if (url.pathname === "/calendar/events") {
+      if (scenario?.eventState === "loading") {
+        scenario.pendingRoutes?.push(route);
+        return;
+      }
+      if (scenario?.eventState === "failed")
+        return route.fulfill({ status: 500, contentType: "application/json", body: JSON.stringify({ message: "Fixture failure" }) });
+      const partial = scenario?.eventState === "partial";
       body = {
-        events: [projection(org.id)],
+        events: scenario?.eventState === "empty" ? [] : [projection(org.id)],
         failures: [],
-        truncated: false,
-        coverageState: "complete",
-        coverage: [{ sourceKey: "calendar-events", state: "complete", nextCursor: null }],
+        truncated: partial,
+        coverageState: partial ? "partial" : "complete",
+        coverage: [{ sourceKey: "calendar-events", state: partial ? "partial" : "complete", nextCursor: null }],
       };
     } else if (url.pathname === "/calendar/external-events") {
       body = {
-        events: [externalEvent(11, "googlecalendar"), externalEvent(12, "outlook")],
+        events: scenario?.eventState === "empty" || scenario?.eventState === "loading"
+          ? []
+          : [externalEvent(11, "googlecalendar"), externalEvent(12, "outlook")],
         errors: [],
         complete: true,
         accounts: [
@@ -267,4 +295,68 @@ for (const org of ORGANIZATIONS) {
       expect(overflow).toBeLessThanOrEqual(1);
     });
   }
+}
+
+for (const viewport of VIEWPORTS) {
+  test(`Calendar states remain distinct at ${viewport.width}px`, async ({ context, page, baseURL }) => {
+    const org = ORGANIZATIONS[0];
+    const scenario: CalendarScenario = { accessState: "allowed", eventState: "loading", pendingRoutes: [] };
+    await signInCalendarSession(context, org, baseURL as string);
+    await context.addCookies([{
+      name: `org-setup-done--${org.id}`,
+      value: "1",
+      domain: new URL(baseURL as string).hostname,
+      path: "/",
+      sameSite: "Lax",
+      secure: false,
+    }]);
+    await installRoutes(page, org, scenario);
+    await page.setViewportSize(viewport);
+    await page.goto("/calendar?date=2026-10-15&view=day&mode=list");
+    await expect(page.getByText("Loading events")).toBeVisible();
+
+    if (!scenario.pendingRoutes?.length) throw new Error("Expected a pending Calendar events request");
+    const pendingRoutes = scenario.pendingRoutes.splice(0);
+    scenario.eventState = "empty";
+    for (const route of pendingRoutes)
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          events: [],
+          failures: [],
+          truncated: false,
+          coverageState: "complete",
+          coverage: [{ sourceKey: "calendar-events", state: "complete", nextCursor: null }],
+        }),
+      });
+    await expect(page.getByText("No events in this period")).toBeVisible();
+
+    scenario.eventState = "partial";
+    await page.reload();
+    await expect(page.getByText(/Some events are missing because this period reached/)).toBeVisible();
+
+    scenario.eventState = "failed";
+    await page.reload();
+    await expect(page.getByText("Couldn't load calendar events")).toBeVisible();
+    await expect(page.getByText("No events in this period")).toHaveCount(0);
+
+    scenario.eventState = "empty";
+    scenario.accessState = "denied";
+    await page.reload();
+    await expect(page.getByText("Calendar access denied")).toBeVisible();
+
+    scenario.accessState = "disabled";
+    await page.reload();
+    await expect(page.getByRole("status", { name: "Module not enabled: Calendar" })).toBeVisible();
+
+    scenario.accessState = "allowed";
+    scenario.eventState = "normal";
+    scenario.connectionsFailed = true;
+    await page.reload();
+    await expect(page.getByText(`Planning review ${org.id}`)).toBeVisible();
+    await expect(page.getByText("Couldn't load calendar accounts")).toBeVisible();
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    expect(overflow).toBeLessThanOrEqual(1);
+  });
 }

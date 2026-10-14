@@ -425,8 +425,13 @@ export function CalendarView() {
   const events = eventsResponse?.events ?? NO_CALENDAR_EVENTS;
   const sourceFailures = eventsResponse?.failures ?? [];
   const eventsTruncated = eventsResponse?.truncated ?? false;
-  const { data: connections = [], isLoading: connectionsLoading } =
-    useCalendarConnections();
+  const {
+    data: connections = [],
+    isLoading: connectionsLoading,
+    isError: connectionsIsError,
+    error: connectionsError,
+    refetch: refetchConnections,
+  } = useCalendarConnections(calendarModuleEnabled);
   const savedGridEvents = useMemo(
     () => visibleSearchEvents.map((event) => toBigCalEvent(event, connections)),
     [connections, visibleSearchEvents],
@@ -739,6 +744,17 @@ export function CalendarView() {
       : savedViewActive
         ? myDayQuery.isLoading
         : eventsIsLoading;
+  const calendarWindowFailedEmpty =
+    regularSourcesActive &&
+    eventsIsError &&
+    surfaceEvents.length === 0 &&
+    !externalIsLoading &&
+    !attendanceCoverage.isLoading;
+  const calendarConnectionsFailedEmpty =
+    regularSourcesActive &&
+    connectionsIsError &&
+    surfaceEvents.length === 0 &&
+    !eventsIsLoading;
 
   const handleRetryEvents = useCallback(() => {
     void refetchEvents();
@@ -746,10 +762,30 @@ export function CalendarView() {
   const handleRetryExternal = useCallback(() => {
     void refetchExternal();
   }, [refetchExternal]);
+  const handleRetryConnections = useCallback(() => {
+    void refetchConnections();
+  }, [refetchConnections]);
   const refetchAttendance = attendanceCoverage.refetch;
   const handleRetryAttendance = useCallback(() => {
     void refetchAttendance();
   }, [refetchAttendance]);
+  const calendarWindowErrorState = calendarWindowFailedEmpty ? (
+    <ErrorState
+      compact
+      title="Couldn't load calendar events"
+      description={getErrorMessage(eventsError)}
+      onRetry={handleRetryEvents}
+      className="m-4"
+    />
+  ) : calendarConnectionsFailedEmpty ? (
+    <ErrorState
+      compact
+      title="Couldn't load calendar accounts"
+      description={getErrorMessage(connectionsError)}
+      onRetry={handleRetryConnections}
+      className="m-4"
+    />
+  ) : null;
 
   const finalizeMutate = finalize.mutate;
   useEffect(() => {
@@ -795,7 +831,7 @@ export function CalendarView() {
     );
 
   if (online && !calendarModuleEnabled)
-    return <ModuleDisabledView moduleKey="calendar" />;
+    return <ModuleDisabledView moduleKey="calendar" compact={false} />;
 
   if (online && calendarAccess.denied)
     return (
@@ -1034,6 +1070,8 @@ export function CalendarView() {
                   <CalendarListFallback label="Loading saved view" />
                 ) : regularSourcesActive && eventsIsLoading ? (
                   <CalendarListFallback label="Loading events" />
+                ) : calendarWindowErrorState ? (
+                  calendarWindowErrorState
                 ) : gridActive ? (
                   <CalendarGridLayer
                     events={savedViewActive ? savedGridEvents : allCalEvents}
@@ -1074,6 +1112,8 @@ export function CalendarView() {
               ) : isMobile ? (
                 surfaceIsLoading ? (
                   <CalendarListFallback label="Loading events" />
+                ) : calendarWindowErrorState ? (
+                  calendarWindowErrorState
                 ) : viewMode === "history" ? (
                   <CalendarEventsPanel
                     key={`history:${historyBefore ?? "now"}`}
@@ -1105,6 +1145,8 @@ export function CalendarView() {
                 )
               ) : surfaceIsLoading ? (
                 <CalendarListFallback label="Loading events" />
+              ) : calendarWindowErrorState ? (
+                calendarWindowErrorState
               ) : afterLoad ? (
                 <CalendarEventsPanel
                   key={
@@ -1223,7 +1265,7 @@ export function CalendarView() {
           />
         )}
 
-        {regularSourcesActive && eventsIsError && (
+        {regularSourcesActive && eventsIsError && !calendarWindowFailedEmpty && (
           <ErrorState
             compact
             title="Couldn't load calendar events"
@@ -1303,6 +1345,17 @@ export function CalendarView() {
             description={getErrorMessage(externalError)}
             error={externalError}
             onRetry={handleRetryExternal}
+            className="shrink-0 border border-border rounded-xl"
+          />
+        )}
+
+        {regularSourcesActive && connectionsIsError && !calendarConnectionsFailedEmpty && (
+          <ErrorState
+            compact
+            title="Couldn't load calendar accounts"
+            description={getErrorMessage(connectionsError)}
+            error={connectionsError}
+            onRetry={handleRetryConnections}
             className="shrink-0 border border-border rounded-xl"
           />
         )}

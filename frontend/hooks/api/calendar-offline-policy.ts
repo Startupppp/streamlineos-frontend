@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import { z } from "zod";
 import { apiClient } from "@/lib/api-client";
 import { isApiError } from "@/lib/api-envelope";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { useCan } from "@/hooks/api/access";
 import { platformHierarchyQueryKeys } from "@/lib/query-keys/platform-hierarchy";
 
@@ -20,6 +21,7 @@ export function useCalendarOfflinePolicy(enabled = true) {
   const orgId = session?.orgId ?? "";
   const userId = session?.user?.id ?? "";
   return useQuery({
+    ...INLINE_READ_ERROR,
     queryKey: platformHierarchyQueryKeys.calendar.offlinePolicy(orgId, userId),
     queryFn: async ({ signal }) => {
       try {

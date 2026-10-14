@@ -156,6 +156,30 @@ async function renderCalendar() {
 }
 
 describe("/calendar render stability", () => {
+  it("keeps a non-viewable event disabled in the primary mobile list", async () => {
+    mockShellVariant = "mobile";
+    mockSearchParams = new URLSearchParams("mode=list&date=2026-09-15");
+    mockApiGet.mockImplementation((path: unknown) =>
+      Promise.resolve(
+        path === "/calendar/events"
+          ? {
+              ...CALENDAR_EVENTS,
+              events: [{
+                ...CALENDAR_EVENTS.events[0],
+                actions: { view: false, edit: false, delete: false, rsvp: false, complete: false },
+              }],
+            }
+          : routeGet(path),
+      ),
+    );
+
+    await renderCalendar();
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Standup" })).toBeDisabled();
+    });
+  });
+
   it("shows a disabled module separately from denied access and empty events", async () => {
     mockCalendarModuleEnabled = false;
     mockCalendarPermission = {
