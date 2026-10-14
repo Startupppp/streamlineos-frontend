@@ -41,8 +41,8 @@ describe("DeferredOnboardingReminder — /hr does not forget a deferred wizard",
 
     render(<DeferredOnboardingReminder />);
 
-    expect(screen.getByText(/your own employee profile is still incomplete/i)).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /finish your details/i })).toHaveAttribute(
+    expect(screen.getByText(/add bank details to receive salary/i)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /add now/i })).toHaveAttribute(
       "href",
       "/employee-onboarding",
     );

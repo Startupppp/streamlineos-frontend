@@ -36,11 +36,6 @@ function isRealCalendarDate(iso: string): boolean {
   return !Number.isNaN(d.getTime()) && formatDateOnly(d) === iso;
 }
 
-function currentTimeHhMm(): string {
-  const d = new Date();
-  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
-}
-
 const regularizationSchema = z
   .object({
     attendanceDate: z
@@ -82,15 +77,15 @@ const regularizationSchema = z
       });
     }
     if (values.attendanceDate === getTodayString()) {
-      const now = currentTimeHhMm();
-      if (checkIn && checkIn > now) {
+      const nowIso = new Date().toISOString();
+      if (checkIn && toIsoOnDate(values.attendanceDate, checkIn) > nowIso) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           message: "Check-in cannot be later than the current time",
           path: ["requestedCheckIn"],
         });
       }
-      if (checkOut && checkOut > now) {
+      if (checkOut && toIsoOnDate(values.attendanceDate, checkOut) > nowIso) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           message: "Check-out cannot be later than the current time",
@@ -102,7 +97,7 @@ const regularizationSchema = z
 
 type RegularizationFormValues = z.infer<typeof regularizationSchema>;
 
-function toIsoOnDate(date: string, time: string): string {
+export function toIsoOnDate(date: string, time: string): string {
   const [h, m] = time.split(":");
   const d = new Date(`${date}T00:00:00`);
   d.setHours(Number(h), Number(m), 0, 0);
