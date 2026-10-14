@@ -259,6 +259,7 @@ export function useUnpublishRoadmap() {
 }
 
 export function useRoadmapPreview(managedProductId: number) {
+  const canView = useCan("build:roadmap:view");
   return useQuery({
     queryKey:
       buildWorkQueryKeys.projects.managedProducts.roadmapPreview(
@@ -271,6 +272,7 @@ export function useRoadmapPreview(managedProductId: number) {
         signal,
         productRoadmapPreviewLazy,
       ),
+    enabled: canView,
     staleTime: 30_000,
   });
 }
