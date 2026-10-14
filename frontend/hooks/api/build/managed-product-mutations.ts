@@ -112,7 +112,7 @@ export function useCreateManagedProduct() {
         })
         .filter(([k]) => JSON.stringify(k) !== JSON.stringify(defaultKey));
       for (const [key] of otherKeys) {
-        qc.invalidateQueries({ queryKey: key, exact: true, refetchType: "none" });
+        qc.invalidateQueries({ queryKey: key, exact: true, refetchType: "active" });
       }
       qc.invalidateQueries({
         queryKey: buildWorkQueryKeys.projects.scopeDirectory.all,

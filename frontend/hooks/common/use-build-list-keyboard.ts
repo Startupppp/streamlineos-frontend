@@ -3,6 +3,17 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { claimBuildListSearchTarget } from "@/lib/build/build-list-search-target";
 
+const OPEN_OVERLAY_SELECTOR = [
+  '[role="dialog"][data-state="open"]',
+  '[role="alertdialog"][data-state="open"]',
+  '[role="menu"][data-state="open"]',
+  '[data-state="open"][data-slot$="overlay"]',
+].join(",");
+
+function isOverlayOpen(): boolean {
+  return document.querySelector(OPEN_OVERLAY_SELECTOR) !== null;
+}
+
 function isInputTarget(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false;
   const tag = target.tagName;
@@ -96,6 +107,7 @@ export function useBuildListKeyboard({
     function handleKeyDown(e: KeyboardEvent) {
       if (e.metaKey || e.ctrlKey || e.altKey) return;
       if (isInputTarget(e.target)) return;
+      if (isOverlayOpen()) return;
 
       switch (e.key) {
         case "j":
