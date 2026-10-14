@@ -82,6 +82,13 @@ const CountrySelect = ({
   const [searchValue, setSearchValue] = React.useState("");
   const [isOpen, setIsOpen] = React.useState(false);
 
+  const selectedCountryLabel = React.useMemo(() => {
+    const name =
+      countryList.find((entry) => entry.value === selectedCountry)?.label ?? selectedCountry;
+    if (!selectedCountry) return `Country code, ${name}`;
+    return `Country code, ${name} (+${RPNInput.getCountryCallingCode(selectedCountry)})`;
+  }, [countryList, selectedCountry]);
+
   function handleCountrySearchChange(value: string): void {
     setSearchValue(value);
     setTimeout(() => {
@@ -107,6 +114,7 @@ const CountrySelect = ({
           variant="outline"
           className="flex h-9 gap-1 rounded-e-none rounded-s-lg border border-input border-r-0 bg-card px-3 focus:z-10 outline-none focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring"
           disabled={disabled}
+          aria-label={selectedCountryLabel}
         >
           <FlagComponent
             country={selectedCountry}
