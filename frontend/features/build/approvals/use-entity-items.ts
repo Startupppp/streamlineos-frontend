@@ -32,7 +32,7 @@ export function useEntityItems(
 
   const { data: ticketsData, isFetching: ticketsFetching } = useTickets(
     idFor("task"),
-    { limit: 50, ...(search ? { search } : {}) },
+    { limit: 50, ...(search ? { search } : { orderBy: "created", orderDir: "desc" }) },
   );
   const { data: milestonesPage, isFetching: milestonesFetching } =
     useProjectMilestones(idFor("milestone"));

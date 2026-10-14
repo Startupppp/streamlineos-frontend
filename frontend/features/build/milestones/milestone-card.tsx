@@ -170,19 +170,21 @@ export const MilestoneCard = memo(function MilestoneCard({
                 </span>
               ) : null}
             </div>
-            <div className="flex shrink-0 items-center gap-0.5 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100">
-              <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="w-7" aria-label={`Actions for ${milestone.name}`} {...hoverHandlers}>
-                    <EllipsisIcon ref={iconRef} size={14} />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  {onEdit ? <DropdownMenuItem onSelect={handleEdit}>Edit</DropdownMenuItem> : null}
-                  {onDelete ? <DropdownMenuItem variant="destructive" onSelect={handleDelete}>Delete</DropdownMenuItem> : null}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
+            {(onEdit || onDelete) ? (
+              <div className="flex shrink-0 items-center gap-0.5 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100">
+                <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="w-7" aria-label={`Actions for ${milestone.name}`} {...hoverHandlers}>
+                      <EllipsisIcon ref={iconRef} size={14} />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    {onEdit ? <DropdownMenuItem onSelect={handleEdit}>Edit</DropdownMenuItem> : null}
+                    {onDelete ? <DropdownMenuItem variant="destructive" onSelect={handleDelete}>Delete</DropdownMenuItem> : null}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            ) : null}
           </div>
         </div>
       </div>

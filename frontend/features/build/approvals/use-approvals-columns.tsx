@@ -57,7 +57,7 @@ function ApprovalsActionsCell({
     APPROVAL_STATUS_VALUES.find((v) => v === row.status) ?? "pending";
   const { data: access } = useAccess();
   const assigned = access?.membershipId != null && access.membershipId === row.approverMembershipId;
-  const canDecideRow = canDecide && DECIDABLE.has(narrowStatus) && (assigned || canManage);
+  const canDecideRow = canDecide && DECIDABLE.has(narrowStatus) && assigned;
 
   const handleDecide = useCallback(
     () => setDecideTarget(row),

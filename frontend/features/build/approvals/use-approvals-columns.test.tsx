@@ -79,6 +79,22 @@ it("does not offer an unrelated own-scope decision without management standing",
   expect(screen.queryByRole("button", { name: "Decide" })).not.toBeInTheDocument();
 });
 
+it("does not offer a decide action to a managing decider who is not the assigned approver", () => {
+  membershipId = 23;
+  const { result } = renderHook(() => useApprovalsColumns({ canDecide: true, canManage: true,
+    memberName: () => "Manager", setDecideTarget: jest.fn(), setDelegateTarget: jest.fn(), handleEscalate: jest.fn(), setCancelTarget: jest.fn(), setDeleteTarget: jest.fn() }));
+  render(<>{result.current.find((column) => column.key === "actions")?.cell?.(approval)}</>);
+  expect(screen.queryByRole("button", { name: "Decide" })).not.toBeInTheDocument();
+});
+
+it("offers a decide action to the assigned approver regardless of management standing", () => {
+  membershipId = 22;
+  const { result } = renderHook(() => useApprovalsColumns({ canDecide: true, canManage: false,
+    memberName: () => "Assigned Approver", setDecideTarget: jest.fn(), setDelegateTarget: jest.fn(), handleEscalate: jest.fn(), setCancelTarget: jest.fn(), setDeleteTarget: jest.fn() }));
+  render(<>{result.current.find((column) => column.key === "actions")?.cell?.(approval)}</>);
+  expect(screen.getByRole("button", { name: "Decide" })).toBeInTheDocument();
+});
+
 it("retains requested management actions while refusing a decision", async () => {
   const { ApprovalActions } = jest.requireActual<typeof import("./approvals-toolbar")>("./approvals-toolbar");
   render(<ApprovalActions canDecideRow={false} canManage status="requested" onDecide={jest.fn()}

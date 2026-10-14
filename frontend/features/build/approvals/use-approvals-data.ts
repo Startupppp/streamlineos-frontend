@@ -8,6 +8,7 @@ import {
   useBuildListFilters,
 } from "@/features/build/shared/use-build-list-filters";
 import { STATUS_OPTIONS, ENTITY_OPTIONS } from "./approvals-constants";
+import { getUserDisplayName } from "@/lib/person-display";
 
 const FILTER_DEFINITIONS = [
   { param: "status", options: STATUS_OPTIONS.map((o) => o.value) },
@@ -64,10 +65,11 @@ export function useApprovalsData(projectId: number) {
   const memberName = useCallback(
     (membershipId: number | null): string => {
       if (membershipId == null) return "—";
-      const m = members.find((x) => x.membershipId === membershipId);
-      return m?.name ?? m?.email ?? "Unknown";
+      const m = buildMembers.find((x) => x.membershipId === membershipId);
+      if (!m) return "—";
+      return getUserDisplayName(m);
     },
-    [members],
+    [buildMembers],
   );
 
   const ownerOf = useCallback(

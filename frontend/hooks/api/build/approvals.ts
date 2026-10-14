@@ -245,6 +245,23 @@ function patchApprovalInPages(updated: BuildApprovalsCreateApprovalResponse) {
   };
 }
 
+function isApprovalFlatPage(v: unknown): v is ApprovalListPage {
+  return (
+    typeof v === "object" &&
+    v !== null &&
+    "data" in v &&
+    Array.isArray((v as Record<string, unknown>).data) &&
+    !("pages" in v)
+  );
+}
+
+function patchApprovalInFlatPage(updated: BuildApprovalsCreateApprovalResponse) {
+  return (old: unknown): unknown => {
+    if (!isApprovalFlatPage(old)) return old;
+    return { ...old, data: old.data.map((item) => (item.id === updated.id ? updated : item)) };
+  };
+}
+
 function removeApprovalFromPages(approvalId: number) {
   return (old: unknown): unknown => {
     if (!isApprovalListPage(old)) return old;
@@ -314,6 +331,7 @@ export function useDecideApproval(projectId: number) {
         (await import("./approvals-schema")).decideApprovalInputSchema.parse(data), config, approvalDecideContract),
     (data, input, pid, qc) => {
       qc.setQueriesData({ queryKey: buildWorkQueryKeys.projects.approvals.list(pid) }, patchApprovalInPages(data));
+      qc.setQueriesData({ queryKey: buildWorkQueryKeys.projects.approvals.list(pid) }, patchApprovalInFlatPage(data));
       void qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.approvals.detail(pid, input.approvalId), exact: true, refetchType: "none" });
     },
   );
@@ -328,6 +346,7 @@ export function useUpdateApproval(projectId?: number) {
         (await import("./approvals-schema")).updateApprovalInputSchema.parse(data), config, approvalUpdateContract),
     (data, input, pid, qc) => {
       qc.setQueriesData({ queryKey: buildWorkQueryKeys.projects.approvals.list(pid) }, patchApprovalInPages(data));
+      qc.setQueriesData({ queryKey: buildWorkQueryKeys.projects.approvals.list(pid) }, patchApprovalInFlatPage(data));
       void qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.approvals.detail(pid, input.approvalId), exact: true, refetchType: "none" });
     },
   );
