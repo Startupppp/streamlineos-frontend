@@ -6,8 +6,8 @@ import type { ProjectMilestone } from "@/hooks/api/build/milestones";
 const updateMutate = jest.fn();
 
 jest.mock("@/hooks/api/build/milestones", () => ({
-  useCreateMilestone: () => ({ mutate: jest.fn(), isPending: false }),
-  useUpdateMilestone: () => ({ mutate: updateMutate, isPending: false }),
+  useCreateMilestone: () => ({ mutateAsync: jest.fn(), isPending: false }),
+  useUpdateMilestone: () => ({ mutateAsync: updateMutate, isPending: false }),
 }));
 
 jest.mock("@/hooks/api/organization", () => ({
@@ -73,31 +73,30 @@ const MILESTONE: ProjectMilestone = {
 const CONFLICT = new ApiError("conflict", 409, "PROJECTS_TICKET_CONFLICT", { currentVersion: 9 });
 
 beforeEach(() => {
-  updateMutate.mockClear();
+  updateMutate.mockReset();
+  updateMutate.mockResolvedValue({ ...MILESTONE, version: 8 });
   (toast.error as jest.Mock).mockClear();
   (toast.warning as jest.Mock).mockClear();
 });
 
-async function submitRenamedMilestone(): Promise<(e: unknown) => void> {
-  let capturedOnError: ((e: unknown) => void) | undefined;
-  updateMutate.mockImplementation((_vars: unknown, opts: { onError?: (e: unknown) => void }) => {
-    capturedOnError = opts.onError;
-  });
+async function submitRenamedMilestone(failure: unknown): Promise<void> {
+  updateMutate.mockRejectedValueOnce(failure);
   const { container } = render(
     <MilestoneUpsertSheet projectId={42} milestone={MILESTONE} onClose={jest.fn()} />,
   );
   fireEvent.change(screen.getByDisplayValue("Beta rollout"), { target: { value: "Beta rollout v2" } });
   const form = container.ownerDocument.querySelector("form");
   if (form === null) throw new Error("the milestone upsert sheet rendered no form");
-  fireEvent.submit(form);
-  await screen.findByRole("button", { name: "Save Changes" });
-  if (!capturedOnError) throw new Error("the sheet never submitted an update");
-  return capturedOnError;
+  await act(async () => {
+    fireEvent.submit(form);
+  });
+  if (updateMutate.mock.calls.length === 0) {
+    throw new Error("the sheet never submitted an update");
+  }
 }
 
 it("opens a field-level comparison when a milestone update comes back 409, instead of only a toast", async () => {
-  const onError = await submitRenamedMilestone();
-  await act(async () => onError(CONFLICT));
+  await submitRenamedMilestone(CONFLICT);
   await waitFor(() => {
     expect(screen.getByText("Name")).toBeInTheDocument();
   });
@@ -106,8 +105,7 @@ it("opens a field-level comparison when a milestone update comes back 409, inste
 });
 
 it("shows the server value and the pending value under their own labels so the two sides are distinguishable", async () => {
-  const onError = await submitRenamedMilestone();
-  await act(async () => onError(CONFLICT));
+  await submitRenamedMilestone(CONFLICT);
   await waitFor(() => {
     expect(screen.getByText("On the server now")).toBeInTheDocument();
   });
@@ -115,8 +113,7 @@ it("shows the server value and the pending value under their own labels so the t
 });
 
 it("keeps an ordinary failure on the error toast and opens no comparison, so the 409 branch did not swallow errors", async () => {
-  const onError = await submitRenamedMilestone();
-  await act(async () => onError(new ApiError("boom", 500, "INTERNAL")));
+  await submitRenamedMilestone(new ApiError("boom", 500, "INTERNAL"));
   await waitFor(() => {
     expect(toast.error).toHaveBeenCalled();
   });
@@ -124,18 +121,15 @@ it("keeps an ordinary failure on the error toast and opens no comparison, so the
 });
 
 it("falls back to a warning toast when a 409 arrives with nothing edited, because there is no field to compare", async () => {
-  let capturedOnError: ((e: unknown) => void) | undefined;
-  updateMutate.mockImplementation((_vars: unknown, opts: { onError?: (e: unknown) => void }) => {
-    capturedOnError = opts.onError;
-  });
+  updateMutate.mockRejectedValueOnce(CONFLICT);
   const { container } = render(
     <MilestoneUpsertSheet projectId={42} milestone={MILESTONE} onClose={jest.fn()} />,
   );
   const form = container.ownerDocument.querySelector("form");
   if (form === null) throw new Error("the milestone upsert sheet rendered no form");
-  fireEvent.submit(form);
-  await screen.findByRole("button", { name: "Save Changes" });
-  await act(async () => capturedOnError?.(CONFLICT));
+  await act(async () => {
+    fireEvent.submit(form);
+  });
   await waitFor(() => {
     expect(toast.warning).toHaveBeenCalled();
   });
