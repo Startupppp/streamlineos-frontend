@@ -6,11 +6,12 @@ import { Briefcase, Clock, FileCheck, Shield, UserCircle } from "lucide-react";
 
 interface EmployeeTabsListProps {
   showSensitiveTab: boolean;
+  showEditTab: boolean;
   isSelf: boolean;
 }
 
 export const EmployeeTabsList = forwardRef<HTMLDivElement, EmployeeTabsListProps>(
-  function EmployeeTabsList({ showSensitiveTab, isSelf }, ref) {
+  function EmployeeTabsList({ showSensitiveTab, showEditTab, isSelf }, ref) {
     return (
       <TabsList
         ref={ref}
@@ -55,6 +56,7 @@ export const EmployeeTabsList = forwardRef<HTMLDivElement, EmployeeTabsListProps
         </TabsTrigger>
         <TabsTrigger
           value="profile"
+          hidden={!showEditTab}
           className="gap-1.5 px-2.5 text-xs"
         >
           <FileCheck className="h-3 w-3" />
