@@ -6,15 +6,28 @@ jest.mock("@/hooks/common/use-mobile", () => ({
 }));
 
 jest.mock("@/hooks/api/calendar", () => ({
-  useCalendarSources: () => ({
+  useCalendarSources: jest.fn(),
+  useSetCalendarSourcePreference: jest.fn(),
+}));
+
+const mockCalendar = jest.requireMock("@/hooks/api/calendar") as {
+  useCalendarSources: jest.Mock;
+  useSetCalendarSourcePreference: jest.Mock;
+};
+
+beforeEach(() => {
+  mockCalendar.useCalendarSources.mockReturnValue({
     data: [],
     isLoading: false,
     isError: false,
     error: null,
     refetch: jest.fn(),
-  }),
-  useSetCalendarSourcePreference: () => ({ mutate: jest.fn(), isPending: false }),
-}));
+  });
+  mockCalendar.useSetCalendarSourcePreference.mockReturnValue({
+    mutate: jest.fn(),
+    isPending: false,
+  });
+});
 
 describe("CalendarToolbarPrimaryActions", () => {
   it("opens calendar accounts from the header beside Share", () => {
@@ -181,6 +194,47 @@ describe("CalendarToolbar — module-disabled toggles", () => {
     expect(screen.getByRole("button", { name: "Attendance events" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "HR events" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "CRM events" })).toBeInTheDocument();
+  });
+});
+
+describe("B-011 — server-driven toggle visibility", () => {
+  it("hides HR, CRM and Attendance buttons when source registry returns no matching modules", () => {
+    renderToolbar(undefined, {
+      isHrEnabled: false,
+      isCrmEnabled: false,
+      isAttendanceEnabled: false,
+    });
+
+    expect(screen.queryByRole("button", { name: "Attendance events" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "HR events" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "CRM events" })).toBeNull();
+  });
+
+  it("surfaces the Build tickets source in the event sources panel when registry returns it", async () => {
+    mockCalendar.useCalendarSources.mockReturnValue({
+      data: [{ key: "build", label: "Build tickets", module: "build", enabled: true }],
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+
+    renderToolbar(undefined, {
+      isHrEnabled: false,
+      isCrmEnabled: false,
+      isAttendanceEnabled: false,
+    });
+
+    expect(screen.queryByRole("button", { name: "Attendance events" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "HR events" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "CRM events" })).toBeNull();
+
+    const [sourcesButton] = screen.getAllByRole("button", { name: "Event sources" });
+    fireEvent.click(sourcesButton);
+
+    await waitFor(() => {
+      expect(screen.getByText("Build tickets")).toBeInTheDocument();
+    });
   });
 });
 

@@ -204,6 +204,16 @@ describe("BuildAgentPulse", () => {
     expect(screen.getByTestId("tooltip-content")).toBeInTheDocument();
   });
 
+  it("B-040 — link carries a title attribute with the full summary text for native tooltip fallback", () => {
+    const longTitle = "A".repeat(323);
+    mockUseAgentPulse.mockReturnValue({
+      data: makeSignal({ type: "comment_draft", title: longTitle }),
+    });
+    render(<BuildAgentPulse isCollapsed={false} />);
+    const link = screen.getByRole("link");
+    expect(link).toHaveAttribute("title", `Draft awaiting review: ${longTitle}`);
+  });
+
   it("resolves scope from pathname and passes it to useAgentPulse — two scopes must not share a cache (BSN-03-040)", () => {
     const { resolveBuildScope } = jest.requireMock("@/lib/build/build-scope") as {
       resolveBuildScope: jest.Mock;

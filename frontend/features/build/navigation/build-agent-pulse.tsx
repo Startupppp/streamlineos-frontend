@@ -98,6 +98,7 @@ export function BuildAgentPulse({
       href={href}
       onClick={onNavigate}
       aria-label={summary}
+      title={summary}
       className={cn(
         "group relative flex items-center gap-2 rounded-md border border-primary/25 bg-primary/5 transition-colors hover:bg-primary/10 motion-reduce:transition-none",
         isCollapsed ? "mx-auto size-8 justify-center p-0" : "min-w-0 overflow-hidden px-2 py-1.5",
