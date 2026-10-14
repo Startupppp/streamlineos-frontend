@@ -9,7 +9,7 @@ import { useBugs } from "@/hooks/api/build/bugs";
 import { useBoardSavedViews } from "./use-board-saved-views";
 import { applyDisplayOptionParams, useDisplayOptions, writeDisplayOptionParams } from "./use-display-options";
 import type { DisplayOptions } from "@/features/build/shared/types";
-import { parseViewType, type ViewType } from "./view-switcher";
+import { parseBoardPageView, type ViewType } from "./view-switcher";
 import { INITIAL_FILTERS, type FilterState as WorkloadFilterState } from "./workload-types";
 import type { KanbanTicket } from "@/features/build/shared/types";
 import { mapBoardTicketToKanban } from "@/features/build/my-tickets/map-board-ticket";
@@ -47,11 +47,7 @@ export function useBoardUrlState(
   );
 
   const viewParam = searchParams.get("view");
-  const calendarHref = `/calendar?source=build&projectId=${projectId}`;
-  const isCalendarDeepLink =
-    pathname === `/build/${projectId}/issues` && viewParam === "calendar";
-  const view: ViewType =
-    isCalendarDeepLink ? "board" : parseViewType(viewParam ?? defaultView);
+  const view: ViewType = parseBoardPageView(viewParam ?? defaultView);
   const ticketParam = searchParams.get("ticket");
   const selectedTicketId = ticketParam ? parseInt(ticketParam) : null;
   const commentParam = searchParams.get("comment");
@@ -144,8 +140,6 @@ export function useBoardUrlState(
   useBoardViewApply({
     viewId,
     views,
-    isCalendarDeepLink,
-    calendarHref,
     searchParams,
     router,
     setStoredDisplayOptions,

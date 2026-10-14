@@ -12,8 +12,6 @@ import type { useRouter } from "next/navigation";
 interface UseBoardViewApplyParams {
   viewId: string | null;
   views: { data: ProjectView[] } | undefined;
-  isCalendarDeepLink: boolean;
-  calendarHref: string;
   searchParams: URLSearchParams;
   router: ReturnType<typeof useRouter>;
   setStoredDisplayOptions: (next: DisplayOptions) => void;
@@ -22,8 +20,6 @@ interface UseBoardViewApplyParams {
 export function useBoardViewApply({
   viewId,
   views,
-  isCalendarDeepLink,
-  calendarHref,
   searchParams,
   router,
   setStoredDisplayOptions,
@@ -31,12 +27,7 @@ export function useBoardViewApply({
   const appliedViewIdRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (!isCalendarDeepLink) return;
-    router.replace(calendarHref);
-  }, [calendarHref, isCalendarDeepLink, router]);
-
-  useEffect(() => {
-    if (isCalendarDeepLink || !viewId || !views) return;
+    if (!viewId || !views) return;
     if (appliedViewIdRef.current === viewId) return;
     const savedView = views.data.find((v) => v.id.toString() === viewId);
     if (!savedView) return;
@@ -62,7 +53,6 @@ export function useBoardViewApply({
     next.delete(BUILD_LIST_CURSOR_PARAM);
     router.replace(`?${next.toString()}`, { scroll: false });
   }, [
-    isCalendarDeepLink,
     viewId,
     views,
     searchParams,

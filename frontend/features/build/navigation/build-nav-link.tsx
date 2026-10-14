@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useNavigationLeave } from "@/components/shared/dirty-state-context";
+import { useOrgStorageScope } from "@/lib/org-scoped-storage";
+import { loadIssuesFilterQuery } from "@/features/build/views/use-issues-query-store";
 import {
   Tooltip,
   TooltipContent,
@@ -45,6 +47,7 @@ export function BuildNavLink({
   const prefetchOnIntent = useNavIntentPrefetch();
   const requestLeave = useNavigationLeave();
   const router = useRouter();
+  const scope = useOrgStorageScope();
   const Icon = destination.icon;
   const hasBadge = badgeCount > 0;
 
@@ -62,10 +65,19 @@ export function BuildNavLink({
       event.preventDefault();
       requestLeave(() => {
         onNavigate?.();
+        const issuesMatch = destination.href.match(/^\/build\/(\d+)\/issues(?:\/|$|\?)/);
+        if (issuesMatch) {
+          const projectId = Number(issuesMatch[1]);
+          const stored = loadIssuesFilterQuery(projectId, scope);
+          if (stored) {
+            router.push(`${destination.href}?${stored}`);
+            return;
+          }
+        }
         router.push(destination.href);
       });
     },
-    [requestLeave, onNavigate, router, destination.href],
+    [requestLeave, onNavigate, router, destination.href, scope],
   );
 
   const link = (

@@ -151,7 +151,6 @@ export function useBoardFilterParams() {
       }
       const stored = loadIssuesFilterQuery(projectId, scope);
       if (stored) {
-        saveIssuesFilterQuery(projectId, "", scope);
         restoreIssuesFilters(stored);
       }
       return;

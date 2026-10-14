@@ -109,6 +109,7 @@ export function applyColumnOrder(items: KanbanColumn[]): KanbanColumn[] {
 export function groupTicketsByKey(
   tickets: KanbanTicket[],
   getKey: (t: KanbanTicket) => string,
+  comparator?: ((a: KanbanTicket, b: KanbanTicket) => number) | null,
 ): Map<string, KanbanTicket[]> {
   const map = new Map<string, KanbanTicket[]>();
   for (const ticket of tickets) {
@@ -117,8 +118,11 @@ export function groupTicketsByKey(
     if (list) list.push(ticket);
     else map.set(key, [ticket]);
   }
-  for (const list of map.values()) {
-    list.sort(compareByRank);
+  const cmp = comparator === undefined ? compareByRank : comparator;
+  if (cmp !== null) {
+    for (const list of map.values()) {
+      list.sort(cmp);
+    }
   }
   return map;
 }

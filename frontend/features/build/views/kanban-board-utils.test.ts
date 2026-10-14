@@ -1,4 +1,5 @@
 import { groupTicketsByKey, buildColumns, applyColumnOrder } from "./kanban-board-utils";
+import { getTicketRowKey } from "./kanban-swimlane";
 import type { KanbanTicket } from "../shared/types";
 
 const makeTicket = (overrides: Partial<KanbanTicket>): KanbanTicket => ({
@@ -60,5 +61,61 @@ describe("buildColumns for status layout", () => {
     ];
     const columns = applyColumnOrder(buildColumns(statuses, []));
     expect(columns.map((c) => c.id)).toEqual(["Backlog", "Active"]);
+  });
+});
+
+describe("columnBy grouping covers every option the Columns menu offers (B-035)", () => {
+  it("groups by label, cycle and project, each with a bucket for tickets that have none", () => {
+    const tickets = [
+      makeTicket({
+        id: 1,
+        labels: [{ label: { id: 1, name: "bug", color: "#000" } }],
+        cycle: { id: 1, name: "Cycle 1" },
+        project: { id: 7, name: "QA Project Alpha" },
+      }),
+      makeTicket({
+        id: 2,
+        labels: [{ label: { id: 1, name: "bug", color: "#000" } }],
+        cycle: { id: 2, name: "Cycle 2" },
+        project: { id: 7, name: "QA Project Alpha" },
+      }),
+      makeTicket({ id: 3 }),
+    ];
+
+    const byLabel = groupTicketsByKey(tickets, (t) => getTicketRowKey(t, "label"));
+    expect(byLabel.get("bug")).toHaveLength(2);
+    expect(byLabel.get("No label")).toHaveLength(1);
+
+    const byCycle = groupTicketsByKey(tickets, (t) => getTicketRowKey(t, "cycle"));
+    expect(byCycle.get("Cycle 1")).toHaveLength(1);
+    expect(byCycle.get("Cycle 2")).toHaveLength(1);
+    expect(byCycle.get("No cycle")).toHaveLength(1);
+
+    const byProject = groupTicketsByKey(tickets, (t) => getTicketRowKey(t, "project"));
+    expect(byProject.get("QA Project Alpha")).toHaveLength(2);
+    expect(byProject.get("No project")).toHaveLength(1);
+  });
+
+  it("gives every Columns option a distinct grouping rather than silently falling back to one bucket", () => {
+    const tickets = [
+      makeTicket({
+        id: 1,
+        status: "TODO",
+        priority: "HIGH",
+        assignee: { id: "u1", name: "Alice" },
+        labels: [{ label: { id: 1, name: "bug", color: "#000" } }],
+        cycle: { id: 1, name: "Cycle 1" },
+        project: { id: 7, name: "QA Project Alpha" },
+      }),
+      makeTicket({ id: 2, status: "DONE", priority: "LOW" }),
+    ];
+
+    for (const columnBy of ["status", "priority", "assignee", "label", "cycle", "project"]) {
+      const grouped = groupTicketsByKey(tickets, (t) => getTicketRowKey(t, columnBy));
+      expect(grouped.size).toBeGreaterThan(1);
+    }
+
+    const unknown = groupTicketsByKey(tickets, (t) => getTicketRowKey(t, "nope"));
+    expect(unknown.size).toBe(1);
   });
 });

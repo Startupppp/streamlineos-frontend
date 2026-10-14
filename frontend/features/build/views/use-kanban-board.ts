@@ -9,6 +9,7 @@ import {
   type StatusEntry,
   buildColumns,
   applyColumnOrder,
+  compareByRank,
   groupTicketsByKey,
   formatStatusName,
 } from "./kanban-board-utils";
@@ -51,6 +52,10 @@ export function useKanbanBoard({
 
   const columnBy = displayOptions?.columnBy ?? "status";
   const rowBy = displayOptions?.rowBy ?? "none";
+  const ticketComparator =
+    displayOptions?.orderBy == null || displayOptions.orderBy === "manual"
+      ? compareByRank
+      : null;
   const showEmptyColumns = displayOptions?.showEmptyColumns ?? true;
   const showEmptyRows = displayOptions?.showEmptyRows ?? false;
 
@@ -94,11 +99,11 @@ export function useKanbanBoard({
           return {
             rowKey,
             tickets: rowTickets,
-            byColumn: groupTicketsByKey(rowTickets, (t) => getTicketRowKey(t, columnBy)),
+            byColumn: groupTicketsByKey(rowTickets, (t) => getTicketRowKey(t, columnBy), ticketComparator),
           };
         })
         .filter((group) => showEmptyRows || group.tickets.length > 0),
-    [swimlaneRows, displayTickets, rowBy, columnBy, showEmptyRows],
+    [swimlaneRows, displayTickets, rowBy, columnBy, showEmptyRows, ticketComparator],
   );
 
   const visibleSwimlaneRows = useMemo(
@@ -107,8 +112,8 @@ export function useKanbanBoard({
   );
 
   const ticketsByColumn = useMemo(
-    () => groupTicketsByKey(displayTickets, (t) => getTicketRowKey(t, columnBy)),
-    [displayTickets, columnBy],
+    () => groupTicketsByKey(displayTickets, (t) => getTicketRowKey(t, columnBy), ticketComparator),
+    [displayTickets, columnBy, ticketComparator],
   );
 
   const visibleColumns = useMemo<KanbanColumn[]>(() => {
