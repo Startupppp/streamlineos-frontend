@@ -1,6 +1,6 @@
 "use client";
 
-import { render, act } from "@testing-library/react";
+import { render, act, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { CalendarView } from "./calendar-view";
 import { calendarProjectionFields } from "./calendar-projection-fixtures";
@@ -45,12 +45,13 @@ jest.mock("@/lib/org-scoped-storage", () => ({
 }));
 
 let mockRenderCount = 0;
+let mockShellVariant = "desktop";
 jest.mock("@/components/layout/shell-variant-context", () => ({
   useShellVariant: () => {
     mockRenderCount += 1;
     if (mockRenderCount > 60)
       throw new Error("CalendarView re-rendered without bound");
-    return "desktop";
+    return mockShellVariant;
   },
 }));
 
@@ -123,6 +124,7 @@ beforeEach(() => {
     unavailable: false,
   };
   mockRenderCount = 0;
+  mockShellVariant = "desktop";
   mockReplace.mockReset();
   mockApiPut.mockReset();
   mockApiPut.mockResolvedValue(undefined);
@@ -150,6 +152,40 @@ async function renderCalendar() {
 }
 
 describe("/calendar render stability", () => {
+  it("shows every authorized event in the mobile list after the first fifty", async () => {
+    mockShellVariant = "mobile";
+    mockSearchParams = new URLSearchParams("mode=list");
+    const start = `${new Date().toISOString().slice(0, 10)}T12:00:00.000Z`;
+    const end = `${new Date().toISOString().slice(0, 10)}T13:00:00.000Z`;
+    const events = Array.from({ length: 51 }, (_, index) => {
+      const id = `mobile-event-${index + 1}`;
+      return {
+        ...CALENDAR_EVENTS.events[0],
+        id,
+        title: id,
+        start,
+        end,
+        ...calendarProjectionFields(id, start, end),
+      };
+    });
+    mockApiGet.mockImplementation((path: unknown) =>
+      Promise.resolve(
+        path === "/calendar/events"
+          ? { ...CALENDAR_EVENTS, events }
+          : routeGet(path),
+      ),
+    );
+
+    await renderCalendar();
+
+    await waitFor(() => {
+      const list = screen.getByRole("list", { name: "Calendar list events" });
+      expect(
+        list.querySelector("[aria-setsize]")?.getAttribute("aria-setsize"),
+      ).toBe("52");
+    });
+  });
+
   it("mounts the grid without an unbounded render loop (bounded so a loop fails instead of hanging)", async () => {
     await renderCalendar();
     expect(mockRenderCount).toBeLessThanOrEqual(60);

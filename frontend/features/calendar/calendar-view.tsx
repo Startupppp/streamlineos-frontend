@@ -1076,9 +1076,17 @@ export function CalendarView() {
                     loadedPageCount={loadedHistoryPages}
                   />
                 ) : (
-                  <CalendarAgendaPreview
-                    events={surfaceEvents}
-                    maxEvents={50}
+                  <CalendarEventsPanel
+                    mode="list"
+                    events={savedViewActive ? visibleSearchEvents : visibleEvents}
+                    range={
+                      savedViewActive
+                        ? {
+                            start: new Date(myDayWindow.start),
+                            end: new Date(myDayWindow.end),
+                          }
+                        : visibleRange
+                    }
                     onSelectEvent={handleSelectListEvent}
                   />
                 )
