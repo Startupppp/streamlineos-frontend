@@ -1,20 +1,31 @@
-import { PRICING } from "@/lib/pricing";
-import { SignInAction } from "./hero";
-import { Section } from "./section";
+import Image from "next/image";
+import { MotionReveal } from "../components/motion/motion-reveal";
+import { REVEAL, VIEWPORT_EARLY } from "./motion";
+import { Assurances, CONTAINER, StartLink } from "./section";
+import ctaImage from "@/public/landing/cta.webp";
 
 export function FinalCTA() {
   return (
-    <Section className="pt-8 sm:pt-12">
-      <div className="rounded-3xl border border-border/70 bg-card px-6 py-16 text-center sm:py-24">
-        <h2 className="mx-auto max-w-[18ch] text-balance text-[clamp(2.1rem,5vw,3.75rem)] font-semibold leading-[1.02] tracking-[-0.04em] text-foreground">
-          Run the whole company from one place
-        </h2>
-        <p className="mx-auto mt-5 max-w-md text-lg text-muted-foreground">
-          Free for up to {PRICING.freeSeatLimit} seats. Turn on the modules you need and add the
-          rest later.
-        </p>
-        <SignInAction className="mt-9" />
+    <section className="py-12 sm:py-16">
+      <div className={CONTAINER}>
+        <MotionReveal
+          variant="scaleIn"
+          viewport={VIEWPORT_EARLY}
+          transition={REVEAL}
+          className="relative isolate flex min-h-[28rem] flex-col items-center justify-center overflow-hidden rounded-3xl px-6 py-20 text-center"
+        >
+          <Image src={ctaImage} alt="" fill sizes="(min-width: 1280px) 1216px, 100vw" className="-z-10 object-cover" />
+          <div aria-hidden className="absolute inset-0 -z-10 bg-(--lp-ink)/45" />
+          <h2 className="lp-display max-w-3xl text-balance text-5xl text-white sm:text-7xl">
+            Build your company’s OS today, free
+          </h2>
+          <p className="mt-5 max-w-md text-lg text-white/85">
+            Turn on the modules you need today and add the rest whenever you are ready.
+          </p>
+          <StartLink tone="light" className="mt-9" />
+          <Assurances tone="light" className="mt-5" />
+        </MotionReveal>
       </div>
-    </Section>
+    </section>
   );
 }

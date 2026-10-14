@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { PublicShell, PublicEyebrow } from "@/features/landing/public-shell";
+import { MarketingShell } from "@/features/landing/home/marketing-shell";
+import { PageHero } from "@/features/landing/home/page-hero";
+import { Section, SectionHeading } from "@/features/landing/home/section";
+import { FinalCTA } from "@/features/landing/home/final-cta";
 import { BRAND_NAME, BRAND_URL, BRAND_SUPPORT_EMAIL } from "@/lib/branding";
 import {
   PRICING,
@@ -20,9 +23,9 @@ import {
 import { SavingsCalculator } from "@/features/landing/components/savings-calculator";
 import {
   PricingFeatureMatrix,
-  PricingFaqAccordion,
   type PricingComparisonGroup,
 } from "@/features/landing/components/pricing-page-sections";
+import { FAQ } from "@/features/landing/home/faq";
 
 export const metadata: Metadata = {
   title: `Pricing — ${BRAND_NAME}`,
@@ -42,7 +45,7 @@ const comparison: PricingComparisonGroup[] = [
     rows: [
       { feature: "Seats", tiers: [`Up to ${PRICING.freeSeatLimit}`, "Up to 10", "Up to 50", "Negotiated"] },
       { feature: "Storage", tiers: [`${PRICING.freeStorageGb} GB`, `${PRICING.starterStorageGb} GB`, "1 TB", "Unlimited"] },
-      { feature: "Every app — HR, CRM, projects, chat, accounting", tiers: [true, true, true, true] },
+      { feature: "Every app: HR, CRM, projects, chat, accounting", tiers: [true, true, true, true] },
     ],
   },
   {
@@ -66,7 +69,7 @@ const pricingFaqs = [
   {
     question: "Do I really get every app for a single price?",
     answer:
-      "Yes. Paid plans include HR, Recruitment, Projects, CRM, Sales, Chat, Calendar, Accounting, Billing, Helpdesk, Customer Success, and more — no per-module fees and no feature upselling.",
+      "Yes. Paid plans include HR, Recruitment, Projects, CRM, Sales, Chat, Calendar, Accounting, Billing, Helpdesk, Customer Success, and more. No per-module fees and no feature upselling.",
   },
   {
     question: "How does pricing compare to other all-in-one platforms?",
@@ -132,61 +135,47 @@ export default async function PricingPage({
   return (
     <>
       <FAQJsonLd faqs={[...faqs, ...pricingFaqs]} />
-      <PublicShell>
-        <section className="container mx-auto max-w-2xl px-4 text-center lg:px-8">
-          <PublicEyebrow>Pricing</PublicEyebrow>
-          <h1 className="font-display text-4xl font-extrabold leading-[1.08] tracking-tight text-foreground sm:text-5xl">
-            One price per organisation.
-          </h1>
-          <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
-            Free, Starter, Professional, or Enterprise. Seat caps sit on the plan. There is no per-seat meter and no per-app fee.
-          </p>
-        </section>
+      <MarketingShell>
+        <PageHero
+          title="One price per organisation"
+          lede="Free, Starter, Professional or Enterprise. Each plan includes a set number of seats. You never pay per seat or per app."
+        />
 
-        <section className="mt-10">
-          <div className="container mx-auto max-w-6xl px-4 lg:px-8">
-            <PricingTierGrid showAppsGrid={false} tiers={tiers} />
-            {notice ? (
-              <p className="mt-6 text-center text-xs text-muted-foreground">{notice}</p>
-            ) : null}
-          </div>
-        </section>
+        <Section className="pt-0 sm:pt-0">
+          <h2 className="sr-only">Plans</h2>
+          <PricingTierGrid tiers={tiers} />
+          {notice ? <p className="mt-6 text-center text-xs text-muted-foreground">{notice}</p> : null}
+        </Section>
 
-        <section className="mt-16">
-          <div className="container mx-auto max-w-6xl px-4 lg:px-8">
-            <h2 className="mb-6 text-center font-display text-2xl font-bold tracking-tight text-foreground">
-              Compare plans
-            </h2>
-            <PricingFeatureMatrix groups={comparison} />
-          </div>
-        </section>
+        <Section>
+          <SectionHeading title="Compare plans" className="mb-12" />
+          <PricingFeatureMatrix groups={comparison} />
+        </Section>
 
-        <section className="mt-16 border-t border-border bg-muted">
-          <div className="container mx-auto max-w-3xl px-4 py-14 lg:px-8">
-            <h2 className="mb-8 text-center font-display text-2xl font-bold tracking-tight text-foreground">
-              What the same team costs elsewhere
-            </h2>
+        <Section>
+          <SectionHeading
+            title="What the same team costs elsewhere"
+            lede="Move the slider to your team size and compare a year on one plan with a year of per-seat tools."
+            className="mb-12"
+          />
+          <div className="mx-auto max-w-3xl">
             <SavingsCalculator />
           </div>
-        </section>
+        </Section>
 
         <DataResidencySection residency={residency} />
 
-        <section className="border-t border-border">
-          <div className="container mx-auto max-w-2xl px-4 py-14 lg:px-8">
-            <h2 className="mb-6 text-center font-display text-2xl font-bold tracking-tight text-foreground">
-              Questions
-            </h2>
-            <PricingFaqAccordion items={pricingFaqs} />
-            <p className="mt-8 text-center text-sm text-muted-foreground">
-              Not sure which plan fits?{" "}
-              <Link href="/contact?topic=sales" className="font-medium text-foreground underline-offset-4 hover:underline">
-                Book a call
-              </Link>
-            </p>
-          </div>
-        </section>
-      </PublicShell>
+        <FAQ items={pricingFaqs} title="Questions about pricing">
+          <p className="mt-6 text-sm text-muted-foreground">
+            Not sure which plan fits?{" "}
+            <Link href="/contact?topic=sales" className="font-medium text-foreground underline underline-offset-4 hover:text-(--lp-accent)">
+              Book a call
+            </Link>
+          </p>
+        </FAQ>
+
+        <FinalCTA />
+      </MarketingShell>
     </>
   );
 }

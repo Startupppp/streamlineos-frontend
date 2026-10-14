@@ -1,177 +1,122 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, Compass, Heart, Layers, Lock, Sparkles, Users } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { PublicShell, PublicEyebrow } from "@/features/landing/public-shell";
+import { Compass, Heart, Layers, Lock } from "lucide-react";
+import { FinalCTA } from "@/features/landing/home/final-cta";
+import { MarketingShell } from "@/features/landing/home/marketing-shell";
+import { PageHero } from "@/features/landing/home/page-hero";
+import { MODULE_COUNT } from "@/features/landing/home/areas";
+import { Section, SectionHeading } from "@/features/landing/home/section";
 import { BRAND_NAME, BRAND_TAGLINE } from "@/lib/branding";
+import { PRICING } from "@/lib/pricing";
 
 export const metadata: Metadata = {
   title: `About ${BRAND_NAME}`,
-  description: `${BRAND_TAGLINE} — the team and the thinking behind ${BRAND_NAME}.`,
+  description: `${BRAND_TAGLINE}. The team and the thinking behind ${BRAND_NAME}.`,
   alternates: { canonical: "/about" },
 };
 
 const values = [
   {
     icon: Layers,
-    title: "One product, end-to-end",
-    body: "We chose the harder thing: a single data model for HR, projects, and CRM. No connectors, no Zaps, no exports. The information your company runs on lives in one place.",
+    title: "One product, end to end",
+    body: "We chose the harder thing: a single data model for HR, projects and CRM. No connectors, no Zaps, no exports. The information your company runs on lives in one place.",
   },
   {
     icon: Lock,
     title: "Boring infrastructure",
-    body: "Postgres. TypeScript. Server-rendered HTML. No clever frameworks. We optimize for things that will still work in ten years, not for what's on the conference circuit this year.",
+    body: "Postgres, TypeScript and server-rendered HTML. We optimise for things that will still work in ten years, not for what is fashionable this year.",
   },
   {
     icon: Heart,
     title: "Built with the people using it",
-    body: "Every feature ships only after a real team has run their week through it. We prioritize what HR managers, founders, and sales leads actually do on Monday morning.",
+    body: "Every feature ships only after a real team has run their week through it. We prioritise what HR managers, founders and sales leads actually do on Monday morning.",
   },
   {
     icon: Compass,
     title: "Default to honest",
-    body: "Honest pricing. Honest changelogs. We tell you what broke before you find out. We turn down customers we can't serve well. We don't pretend to be a category we're not.",
+    body: "Honest pricing and honest changelogs. We tell you what broke before you find out, and we turn down customers we can't serve well.",
   },
 ];
 
-const numbers = [
+const facts = [
   { value: "2026", label: "Founded" },
-  { value: "30+", label: "Modules shipped" },
-  { value: "â‚¹0", label: "Below 10 seats" },
+  { value: String(MODULE_COUNT), label: "Modules in one workspace" },
+  { value: "₹0", label: `For up to ${PRICING.freeSeatLimit} seats` },
   { value: "100%", label: "Founder-owned" },
 ];
 
 export default function AboutPage() {
   return (
-    <PublicShell>
-      <section className="container mx-auto px-4 lg:px-8 max-w-5xl">
-        <PublicEyebrow>About {BRAND_NAME}</PublicEyebrow>
-        <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-[-0.035em] leading-[1.02] text-foreground mb-6">
-          We&apos;re building the operating system{" "}
-          <span className="text-status-info-ink">teams actually use.</span>
-        </h1>
-        <p className="text-muted-foreground text-lg lg:text-xl leading-relaxed max-w-3xl">
-          Most companies run on a graveyard of disconnected tools. HR in one place. Sales in
-          another. Sprints in a third. Chat in a fourth. Every Monday morning, someone copy-pastes
-          numbers between them. We thought that was strange. So we built something different.
-        </p>
-      </section>
+    <MarketingShell>
+      <PageHero
+        title="We’re building the operating system teams actually use"
+        lede="Most companies run on disconnected tools: HR in one place, sales in another, projects in a third. Every Monday someone copies numbers between them. We built something different."
+      />
 
-      <section className="container mx-auto px-4 lg:px-8 max-w-5xl mt-16 lg:mt-24">
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-px rounded-2xl glass-panel-strong overflow-hidden">
-          {numbers.map((n) => (
-            <div key={n.label} className="px-6 py-8 text-center bg-white/70 backdrop-blur">
-              <p className="font-display text-3xl lg:text-4xl font-extrabold text-status-info-ink leading-none mb-1.5">
-                {n.value}
-              </p>
-              <p className="text-xs font-medium text-muted-foreground">
-                {n.label}
-              </p>
+      <Section className="pt-0 sm:pt-0">
+        <dl className="lp-card mx-auto grid max-w-5xl grid-cols-2 gap-y-8 rounded-3xl p-8 text-center lg:grid-cols-4 lg:divide-x lg:divide-(--lp-rule)">
+          {facts.map((fact) => (
+            <div key={fact.label} className="flex flex-col-reverse px-4">
+              <dt className="mt-2 text-sm text-muted-foreground">{fact.label}</dt>
+              <dd className="lp-display text-5xl text-foreground">{fact.value}</dd>
             </div>
           ))}
-        </div>
-      </section>
+        </dl>
+      </Section>
 
-      <section className="container mx-auto px-4 lg:px-8 max-w-5xl mt-20 lg:mt-28 grid lg:grid-cols-12 gap-10">
-        <div className="lg:col-span-4">
-          <PublicEyebrow>Our story</PublicEyebrow>
-          <h2 className="font-display text-3xl lg:text-4xl font-extrabold tracking-[-0.025em] leading-[1.05] text-foreground">
-            One workspace, because every other path felt wrong.
-          </h2>
-        </div>
-        <div className="lg:col-span-8 space-y-5 text-sm lg:text-base text-foreground leading-relaxed">
-          <p>
-            Before {BRAND_NAME}, we ran teams the way most teams still do — one SaaS for HR, one
-            for sprints, one for sales, one for chat, one for the weekly status meeting. Every
-            new hire meant five logins. Every weekly report meant CSV exports and pivot tables.
-          </p>
-          <p>
-            We tried the existing &ldquo;all in one&rdquo; platforms. They were either shallow on
-            every module or built on top of bolt-on integrations that broke whenever a vendor
-            shipped a new API. We wanted something with one data model — the same employee
-            record, the same client record, used by everything.
-          </p>
-          <p>
-            So we built it. {BRAND_NAME} is a single platform where the candidate you
-            interviewed becomes the employee on payroll becomes the project lead on a sprint
-            becomes the account owner on a deal. The same person, with one identity, across
-            every function. No syncs. No drift. No 4 AM Zapier alerts.
-          </p>
-          <p>
-            We&apos;re still early. The product changes every week. But the thesis hasn&apos;t —
-            companies deserve software that doesn&apos;t make them sit in front of seven tabs to
-            understand what&apos;s happening this Wednesday.
-          </p>
-        </div>
-      </section>
-
-      <section className="container mx-auto px-4 lg:px-8 max-w-6xl mt-20 lg:mt-28">
-        <div className="text-center mb-12">
-          <PublicEyebrow>What we care about</PublicEyebrow>
-          <h2 className="font-display text-3xl lg:text-4xl font-extrabold tracking-[-0.025em] leading-[1.05] text-foreground">
-            Four principles we won&apos;t move on.
-          </h2>
-        </div>
-        <div className="grid sm:grid-cols-2 gap-4">
-          {values.map((v) => {
-            const Icon = v.icon;
-            return (
-              <div
-                key={v.title}
-                className="rounded-2xl border border-border bg-white/70 backdrop-blur-sm p-7"
-              >
-                <span className="h-11 w-11 rounded-xl bg-gradient-to-br from-gradient-info-from to-gradient-info-to inline-flex items-center justify-center mb-4 shadow-[0_8px_18px_-6px_rgba(59,130,246,0.5)]">
-                  <Icon className="h-5 w-5 text-white" />
-                </span>
-                <h3 className="font-display text-lg font-bold text-foreground mb-2">{v.title}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">{v.body}</p>
-              </div>
-            );
-          })}
-        </div>
-      </section>
-
-      <section className="container mx-auto px-4 lg:px-8 max-w-5xl mt-20 lg:mt-28">
-        <div className="relative rounded-2xl overflow-hidden bg-status-neutral-fill p-10 lg:p-14 text-center">
-          <div className="absolute inset-0 pointer-events-none">
-            <div className="absolute -top-16 left-1/2 -translate-x-1/2 h-[280px] w-[560px] rounded-full bg-status-info-surface blur-3xl" />
-          </div>
-          <div className="relative">
-            <div className="inline-flex items-center gap-2 rounded-full bg-white/10 backdrop-blur border border-white/15 px-3.5 py-1.5 mb-5">
-              <Users className="h-3 w-3 text-status-info-ink" />
-              <span className="text-xs font-medium text-status-info-ink">
-                We&apos;re hiring soon
-              </span>
-            </div>
-            <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-[-0.025em] text-white mb-4 leading-[1.05]">
-              Want to build with us?
-            </h2>
-            <p className="text-status-info-ink text-base lg:text-lg leading-relaxed max-w-xl mx-auto mb-7">
-              We&apos;re a small founding team. If the way we work resonates, reach out — even if
-              we don&apos;t have a role open in your discipline yet.
+      <Section>
+        <div className="grid gap-10 lg:grid-cols-12">
+          <SectionHeading
+            align="left"
+            title="One workspace, because every other path felt wrong"
+            className="lg:col-span-5"
+          />
+          <div className="max-w-2xl space-y-5 leading-relaxed text-foreground lg:col-span-7">
+            <p>
+              Before {BRAND_NAME}, we ran teams the way most teams still do: one tool for HR, one for
+              projects, one for sales, one for chat. Every new hire meant five logins. Every weekly report
+              meant spreadsheet exports.
             </p>
-            <Link href="/contact">
-              <Button
-                size="lg"
-                className="bg-white text-foreground hover:bg-status-info-surface font-bold border-0 shadow-[0_18px_50px_-12px_rgba(255,255,255,0.3)] h-12 px-8 text-sm"
-              >
-                Get in touch
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </Link>
+            <p>
+              We tried the existing all-in-one platforms. They were either shallow in every module or held
+              together by integrations that broke whenever a vendor changed its API. We wanted one data
+              model: the same employee record and the same client record, used by everything.
+            </p>
+            <p>
+              So we built it. In {BRAND_NAME}, the candidate you interview becomes the employee on payroll,
+              then the project lead, then the account owner on a deal. One person, one identity, across every
+              team. Nothing to sync and nothing to drift.
+            </p>
+            <p>
+              We are still early and the product changes every week. The idea has not: companies deserve
+              software that doesn&apos;t make them open seven tabs to understand their own week.
+            </p>
           </div>
         </div>
-      </section>
+      </Section>
 
-      <section className="container mx-auto px-4 lg:px-8 max-w-5xl mt-16 text-center">
-        <p className="inline-flex items-center gap-2 text-label font-medium text-muted-foreground">
-          <Sparkles className="h-3 w-3 text-status-info-ink" />
-          More about what we&apos;re shipping next on{" "}
-          <Link href="/blogs" className="text-status-info-ink hover:underline">
-            the blog
+      <Section>
+        <SectionHeading title="Four principles we won’t move on" />
+        <ul className="mt-14 grid gap-4 sm:grid-cols-2">
+          {values.map((value) => (
+            <li key={value.title} className="lp-card rounded-3xl p-7">
+              <span className="flex size-11 items-center justify-center rounded-full bg-(--lp-accent-soft) text-(--lp-accent)">
+                <value.icon className="size-5" aria-hidden />
+              </span>
+              <h3 className="lp-display mt-5 text-3xl text-foreground">{value.title}</h3>
+              <p className="mt-2 leading-relaxed text-muted-foreground">{value.body}</p>
+            </li>
+          ))}
+        </ul>
+        <p className="mt-10 text-center text-sm text-muted-foreground">
+          Want to build with us? We are a small founding team.{" "}
+          <Link href="/contact" className="font-medium text-foreground underline underline-offset-4 hover:text-(--lp-accent)">
+            Get in touch
           </Link>
         </p>
-      </section>
-    </PublicShell>
+      </Section>
+
+      <FinalCTA />
+    </MarketingShell>
   );
 }
