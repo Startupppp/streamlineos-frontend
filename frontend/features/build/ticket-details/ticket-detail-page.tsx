@@ -209,6 +209,7 @@ export function TicketDetailPage({
             onExpandRightPanel={handleExpandRightPanel}
             onDelete={handleDelete}
             isDeleting={isDeleting}
+            subtaskCount={subtasks.length}
           />
         }
       >

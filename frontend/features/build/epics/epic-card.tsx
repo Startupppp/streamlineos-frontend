@@ -59,14 +59,14 @@ export interface EpicCardProps {
   projectId: number;
   projectKey?: string | null;
   projectStatuses?: ProjectStatusRecord[];
-  unlinkedStories: Array<{ id: number; title: string }>;
+  unlinkedItems: Array<{ id: number; title: string }>;
   onDeleteEpic: (epicId: number) => void;
   onLinkStory: (storyId: number, epicId: number) => void;
   onCreateStory: (title: string, epicId: number) => void;
   isDeleting?: boolean;
 }
 
-export const EpicCard = memo(function EpicCard({ epic, stories, dependencyCount, projectId, projectKey, projectStatuses, unlinkedStories, onDeleteEpic, onLinkStory, onCreateStory, isDeleting }: EpicCardProps) {
+export const EpicCard = memo(function EpicCard({ epic, stories, dependencyCount, projectId, projectKey, projectStatuses, unlinkedItems, onDeleteEpic, onLinkStory, onCreateStory, isDeleting }: EpicCardProps) {
   const canCreate = useCan("build:tickets:create");
   const canUpdate = useCan("build:tickets:update");
   const canDelete = useCan("build:tickets:delete");
@@ -257,7 +257,7 @@ export const EpicCard = memo(function EpicCard({ epic, stories, dependencyCount,
             projectStatuses={projectStatuses}
             canCreate={canCreate}
             canUpdate={canUpdate}
-            unlinkedStories={unlinkedStories}
+            unlinkedItems={unlinkedItems}
             onCreateStory={onCreateStory}
             onLinkStory={onLinkStory}
           />

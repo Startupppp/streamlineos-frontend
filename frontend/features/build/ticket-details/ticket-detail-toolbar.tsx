@@ -17,6 +17,7 @@ interface TicketDetailToolbarProps {
   onExpandRightPanel: () => void;
   onDelete: () => void;
   isDeleting: boolean;
+  subtaskCount?: number;
 }
 
 export function TicketDetailToolbar({
@@ -25,6 +26,7 @@ export function TicketDetailToolbar({
   onExpandRightPanel,
   onDelete,
   isDeleting,
+  subtaskCount,
 }: TicketDetailToolbarProps) {
   const [overflowDeleteOpen, setOverflowDeleteOpen] = useState(false);
   const canDeleteTicket = useCan("build:tickets:delete");
@@ -86,6 +88,7 @@ export function TicketDetailToolbar({
               onOpenChange={setOverflowDeleteOpen}
               onDelete={onDelete}
               isDeleting={isDeleting}
+              subtaskCount={subtaskCount}
             />
           </>
         ) : (
@@ -114,6 +117,7 @@ export function TicketDetailToolbar({
             <TicketDetailActions
               onDelete={onDelete}
               isDeleting={isDeleting}
+              subtaskCount={subtaskCount}
             />
           )}
         </>

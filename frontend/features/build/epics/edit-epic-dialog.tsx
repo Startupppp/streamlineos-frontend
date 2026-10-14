@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/select";
 import { useUpdateTicket } from "@/hooks/api/build/tickets";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
+import type { EpicPage } from "@/hooks/api/build/epics";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { isApiError, getApiErrorCode } from "@/lib/api-envelope";
@@ -98,7 +99,7 @@ export function EditEpicDialog({
     async (data: EditEpicInput) => {
       pendingValuesRef.current = data;
       try {
-        await updateTicket.mutateAsync({
+        const response = await updateTicket.mutateAsync({
           ticketId: epic.id,
           version: epic.version,
           title: data.title,
@@ -106,11 +107,31 @@ export function EditEpicDialog({
           priority: data.priority,
           status: data.status,
         });
-        toast.success("Epic updated");
+        const epicKey = buildWorkQueryKeys.projects.epics(projectId);
+        for (const [key, cached] of queryClient.getQueriesData<EpicPage>({ queryKey: epicKey })) {
+          if (!cached) continue;
+          queryClient.setQueryData<EpicPage>(key, {
+            ...cached,
+            data: cached.data.map((e) =>
+              e.id === epic.id
+                ? {
+                    ...e,
+                    title: data.title,
+                    description: data.description ?? null,
+                    priority: data.priority,
+                    status: data.status,
+                    version: response.version,
+                    updatedAt: response.updatedAt,
+                  }
+                : e,
+            ),
+          });
+        }
         void queryClient.invalidateQueries({
-          queryKey: buildWorkQueryKeys.projects.epics(projectId),
+          queryKey: epicKey,
           refetchType: "none",
         });
+        toast.success("Epic updated");
         setOpen(false);
       } catch (error) {
         if (

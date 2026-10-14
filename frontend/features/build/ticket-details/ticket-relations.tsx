@@ -213,7 +213,7 @@ export function TicketRelations({ ticketId, projectId }: TicketRelationsProps) {
                 <SelectContent>
                   {RELATION_TYPES.map((t) => (
                     <SelectItem key={t} value={t}>
-                      {RELATION_LABELS[t].label}
+                      {DISPLAY_RELATION_LABELS[t].label}
                     </SelectItem>
                   ))}
                 </SelectContent>

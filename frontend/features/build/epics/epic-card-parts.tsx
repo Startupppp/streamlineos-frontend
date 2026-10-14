@@ -115,7 +115,7 @@ interface EpicStoriesPanelProps {
   projectStatuses?: ProjectStatusRecord[];
   canCreate: boolean;
   canUpdate: boolean;
-  unlinkedStories: Array<{ id: number; title: string }>;
+  unlinkedItems: Array<{ id: number; title: string }>;
   onCreateStory: (title: string, epicId: number) => void;
   onLinkStory: (storyId: number, epicId: number) => void;
 }
@@ -130,7 +130,7 @@ export const EpicStoriesPanel = memo(function EpicStoriesPanel({
   projectStatuses,
   canCreate,
   canUpdate,
-  unlinkedStories,
+  unlinkedItems,
   onCreateStory,
   onLinkStory,
 }: EpicStoriesPanelProps) {
@@ -207,7 +207,7 @@ export const EpicStoriesPanel = memo(function EpicStoriesPanel({
                 </Button>
               </>
             )}
-            {canUpdate && unlinkedStories.length > 0 ? (
+            {canUpdate && unlinkedItems.length > 0 ? (
               <ResponsivePopover open={linkOpen} onOpenChange={setLinkOpen}>
                 <ResponsivePopoverTrigger asChild>
                   <Button variant="outline" size="sm" className="border-border/70 bg-background/60 px-2.5 text-xs backdrop-blur-sm">
@@ -217,7 +217,7 @@ export const EpicStoriesPanel = memo(function EpicStoriesPanel({
                 </ResponsivePopoverTrigger>
                 <ResponsivePopoverContent title="Link story" className="w-72 p-1.5" align="end">
                   <div className="max-h-48 space-y-0.5 overflow-y-auto">
-                    {unlinkedStories.map((s) => (
+                    {unlinkedItems.map((s) => (
                       <LinkStoryItem key={s.id} story={s} onSelect={handleSelectLink} />
                     ))}
                   </div>
