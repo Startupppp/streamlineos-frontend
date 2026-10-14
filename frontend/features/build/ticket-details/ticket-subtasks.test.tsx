@@ -63,11 +63,11 @@ jest.mock("@/components/ui/command", () => ({
 jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn() } }));
 
 import { act, fireEvent, render, screen } from "@testing-library/react";
-import type { Ticket } from "@/types/projects";
 import { TicketSubtasks } from "./ticket-subtasks";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
+import { STUB_FULL_TICKET } from "@/features/build/views/execution-core-gallery-stubs";
 
-const child = { id: 20, title: "Existing child", status: "TODO", version: 1 } as unknown as Ticket;
+const child = { ...STUB_FULL_TICKET, id: 20, title: "Existing child", status: "TODO" };
 
 function result(id: number, title: string) {
   return { id, projectId: 7, projectKey: "QAB", ticketNumber: id, title, version: 4 };
