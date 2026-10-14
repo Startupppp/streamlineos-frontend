@@ -1,6 +1,9 @@
 import "server-only";
 import type { Session } from "next-auth";
 import { gateCookieName, mayDeferOwnOnboarding } from "@/lib/onboarding-gate";
+import { grantsPermission } from "@/lib/rbac/permission-gate";
+import { resolveRouteAccess } from "@/lib/rbac/route-access/route-access";
+import type { AccessResponse } from "@/types/access";
 
 export type WizardGate =
   | "/access-suspended"
@@ -59,4 +62,20 @@ export function resolveWizardGate(
   }
 
   return null;
+}
+
+/**
+ * The onboarding wizard is a detour on the way to a page the user may open.
+ * For a page whose permission they lack, the detour only delays the Access
+ * Restricted they get after "Skip for now" — so the denial wins (QA 2026-10-13:
+ * a new employee opening /hr/employees was sent to /employee-onboarding).
+ */
+export function onboardingGateYieldsToDenial(
+  destination: string,
+  access: Pick<AccessResponse, "isOrgOwner" | "scopes">,
+): boolean {
+  const decision = resolveRouteAccess(destination);
+  if (decision.kind !== "permission" || decision.permission === null) return false;
+  const keys = Array.isArray(decision.permission) ? decision.permission : [decision.permission];
+  return !keys.some((key) => grantsPermission(access, key));
 }

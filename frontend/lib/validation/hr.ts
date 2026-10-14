@@ -103,6 +103,7 @@ export const onboardEmployeeInputSchema = z.object({
   email: z
     .string()
     .trim()
+    .min(1, "Email is required")
     .email("Invalid email address")
     .max(254, "Email must be at most 254 characters"),
   gender: z.enum(["MALE", "FEMALE", "OTHER"]).optional(),

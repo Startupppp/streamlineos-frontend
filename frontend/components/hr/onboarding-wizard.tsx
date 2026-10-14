@@ -88,14 +88,10 @@ export function OnboardingWizard() {
     if (fields) {
       const valid = await form.trigger(fields);
       if (!valid) {
+        // Each field already shows its own inline message; a toast on top
+        // repeated it (QA 2026-10-13). Focus carries the user to the first one.
         const firstInvalid = fields.find((field) => form.getFieldState(field).error);
-        if (firstInvalid) {
-          form.setFocus(firstInvalid);
-          toast.error(
-            form.getFieldState(firstInvalid).error?.message ??
-              "Fill in the highlighted fields to continue.",
-          );
-        }
+        if (firstInvalid) form.setFocus(firstInvalid);
         return;
       }
     }

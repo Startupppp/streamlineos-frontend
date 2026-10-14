@@ -122,7 +122,10 @@ export function PageWrapper({
   }, [onBack, requestLeave]);
 
   const isInterrupted = state !== undefined && state.kind !== "ready" && state.kind !== "empty";
-  const visibleActions = isInterrupted ? undefined : actions;
+  // Loading is not an interruption for the page's primary actions: they gate
+  // themselves (useCan fails closed), and a slow read must not also hide
+  // "Add employee" (QA 2026-10-13, /hr/employees).
+  const visibleActions = isInterrupted && state?.kind !== "loading" ? undefined : actions;
   const visibleFilters = isInterrupted ? undefined : filters;
   const titleClass =
     variant === "display"

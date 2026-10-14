@@ -148,6 +148,29 @@ const nextConfig: NextConfig = {
       destination: "/hr/leaves",
       permanent: false,
     },
+    // QA 2026-10-13: guessed addresses that answered Page Not Found. The org
+    // sidebar calls the people list "Directory"; the sidebar "Pay" and
+    // "Expenses" entries live under /me.
+    {
+      source: "/hr/directory",
+      destination: "/hr/employees",
+      permanent: false,
+    },
+    {
+      source: "/hr/policies",
+      destination: "/hr/settings/policies",
+      permanent: false,
+    },
+    {
+      source: "/pay",
+      destination: "/me/pay",
+      permanent: false,
+    },
+    {
+      source: "/expenses",
+      destination: "/me/expenses",
+      permanent: false,
+    },
     {
       source: "/hr/payroll/salary-structures",
       destination: "/payroll/salary-structures",

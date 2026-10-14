@@ -4,6 +4,7 @@ import { keepPreviousData, useQuery, useInfiniteQuery } from "@tanstack/react-qu
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
 const employeeListPageLazy = lazyContract(() =>
   import("@/hooks/api/hr/employee-list-schema").then((m) => m.employeeListPageContract),
@@ -164,6 +165,9 @@ export function useInfiniteHrEmployees(
      * being allowed to land late.
      */
     placeholderData: keepPreviousData,
+    // The directory draws its own ErrorState + Retry under its header; thrown to
+    // the route boundary, a failed or timed-out read replaced the whole page.
+    ...INLINE_READ_ERROR,
     enabled: hrEnabled && canView && (options?.enabled ?? true),
   });
 }

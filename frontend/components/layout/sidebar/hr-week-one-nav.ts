@@ -9,9 +9,9 @@ export const HR_NAV_CHROME_KILLS: readonly string[] = [
 
 const CHROME_KILLS = new Set(HR_NAV_CHROME_KILLS);
 
+// Skills Matrix and Find Expert stay in the default tree: QA 2026-10-13 could
+// not find them because Simple mode hid them.
 export const HR_NAV_ADVANCED_HREFS: readonly string[] = [
-  "/hr/employees/skills-matrix",
-  "/hr/employees/find-expert",
   "/hr/employees/manager-coverage",
   "/hr/employees/reporting-requests",
   "/hr/employees/reporting-changes",

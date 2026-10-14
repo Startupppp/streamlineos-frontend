@@ -19,7 +19,7 @@ import {
   employeeAdmissionGuidance,
   fetchEmployeeAdmissionCheck,
 } from "@/components/hr/check-employee-email";
-import { latinNameFieldChange } from "./restricted-field-change";
+import { personNameFieldChange } from "./restricted-field-change";
 
 type FormValues = z.infer<typeof onboardEmployeeInputSchema>;
 
@@ -68,7 +68,7 @@ export function StepPersonalInfo({ form }: StepPersonalInfoProps) {
           <FormItem>
             <FormLabel>First Name <span className="text-destructive">*</span></FormLabel>
             <FormControl>
-              <Input placeholder="John" {...field} onChange={latinNameFieldChange(field.onChange)} />
+              <Input placeholder="John" maxLength={80} {...field} onChange={personNameFieldChange(field.onChange)} />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -81,7 +81,7 @@ export function StepPersonalInfo({ form }: StepPersonalInfoProps) {
           <FormItem>
             <FormLabel>Last Name <span className="text-destructive">*</span></FormLabel>
             <FormControl>
-              <Input placeholder="Doe" {...field} onChange={latinNameFieldChange(field.onChange)} />
+              <Input placeholder="Doe" maxLength={80} {...field} onChange={personNameFieldChange(field.onChange)} />
             </FormControl>
             <FormMessage />
           </FormItem>

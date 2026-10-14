@@ -15,7 +15,7 @@ import {
   FormLabel,
   FormMessage,
 } from "../../ui/form";
-import { latinNameFieldChange, digitsOnlyFieldChange } from "./restricted-field-change";
+import { personNameFieldChange, digitsOnlyFieldChange } from "./restricted-field-change";
 
 type FormValues = z.infer<typeof onboardEmployeeInputSchema>;
 
@@ -50,7 +50,7 @@ export function StepBanking({ form }: StepBankingProps) {
             <FormItem>
               <FormLabel>Account Holder Name</FormLabel>
               <FormControl>
-                <Input placeholder="Name as per bank records" {...field} onChange={latinNameFieldChange(field.onChange)} />
+                <Input placeholder="Name as per bank records" {...field} onChange={personNameFieldChange(field.onChange)} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -63,7 +63,7 @@ export function StepBanking({ form }: StepBankingProps) {
             <FormItem>
               <FormLabel>Bank Name</FormLabel>
               <FormControl>
-                <Input placeholder="e.g. Chase, HDFC" {...field} onChange={latinNameFieldChange(field.onChange)} />
+                <Input placeholder="e.g. Chase, HDFC" {...field} onChange={personNameFieldChange(field.onChange)} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -76,7 +76,7 @@ export function StepBanking({ form }: StepBankingProps) {
             <FormItem>
               <FormLabel>Branch Name</FormLabel>
               <FormControl>
-                <Input placeholder="e.g. Down Town Branch" {...field} onChange={latinNameFieldChange(field.onChange)} />
+                <Input placeholder="e.g. Down Town Branch" {...field} onChange={personNameFieldChange(field.onChange)} />
               </FormControl>
               <FormMessage />
             </FormItem>

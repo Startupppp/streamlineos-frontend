@@ -124,6 +124,10 @@ function OrganizationSwitcher({
   const isLabelHidden = isSidebar && iconOnly;
   const isOrgLoading = organizations === undefined;
   const workspaceName = activeOrg?.name ?? "";
+  // With one membership there is nothing to switch to; the menu still holds
+  // Create organization and Leave, so it stays, under an honest name
+  // (QA 2026-10-13).
+  const triggerLabel = otherOrgs.length > 0 ? "Switch organization" : "Organization menu";
 
   const panelProps = {
     canLeave,
@@ -175,8 +179,8 @@ function OrganizationSwitcher({
       onClick={triggerOnly ? handleTriggerClick : undefined}
       aria-label={
         isLabelHidden
-          ? `Switch organization${workspaceName ? ` — ${workspaceName}` : ""}`
-          : "Switch organization"
+          ? `${triggerLabel}${workspaceName ? ` — ${workspaceName}` : ""}`
+          : triggerLabel
       }
       className={cn(
         identityClassName,

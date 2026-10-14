@@ -58,7 +58,7 @@ export const EmployeeTabsList = forwardRef<HTMLDivElement, EmployeeTabsListProps
           className="gap-1.5 px-2.5 text-xs"
         >
           <FileCheck className="h-3 w-3" />
-          Edit
+          Edit details
         </TabsTrigger>
       </TabsList>
     );
