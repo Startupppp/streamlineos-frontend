@@ -31,6 +31,13 @@ blaming them): `ticket-detail-errors.test.tsx` (2), `use-ticket-comment-composer
 `board-cursor-param.test.tsx` (1), `projects-page-empty.test.tsx` (1), and the four
 chat-assistant suites that need a provider key.
 
+Add `app/org-setup/page.test.tsx` (8) to that list. Measured 2026-10-14 by running the
+file in a throwaway worktree at `0919e7014`: the same 8 cases fail there — the five
+"skipping the wizard" and three "session name seeds" cases render the `!mounted`
+skeleton, so `capturedWelcomeProps` is never set. B-022's four new cases pass. The
+failure has nothing to do with the pending-invitation work and is not mock pollution:
+it reproduces when a single case is run with `-t`.
+
 Exit criteria for every lane: it runs the **existing** test files that cover each source
 file it changed — not only the tests it wrote — and reports each as pass/fail. A test that
 fails because the lane deliberately changed behaviour is updated in the same change and
@@ -76,7 +83,7 @@ Unchanged: no code comments, no gate or ratchet weakened to pass (FE-136), no `a
 | L6 | project settings, budget, CSV import, create-project wizard | B-007, B-010, B-046, B-002, B-050, B-051, B-052, NEW-11, NEW-26, NEW-10, B-012, B-083 | CODE DONE |
 | L7 | epics, triage, ticket relations, parents, history, sub-issues | B-043, B-047, B-062, B-070, B-041, B-063, B-064, B-071, B-072, B-073, B-079, B-082 | RUNNING |
 | L8 | approvals, inbox | B-084, B-061, B-056, B-076, B-054, B-055, B-057, B-077, B-040 | CODE DONE — B-040 reassigned to L9 |
-| L9 | calendar source, navigation, dead links, org-setup invite | B-011, B-022, B-042, B-033, B-009, B-040 | RUNNING |
+| L9 | calendar source, navigation, dead links, org-setup invite | B-011, B-022, B-042, B-033, B-009, B-040 | CODE DONE — all six re-verified against the code, no change needed |
 
 ## Territory
 
@@ -105,7 +112,9 @@ applies to production (authorized for this program).
 
 | Migration | For | Applied |
 |---|---|---|
-| `2021_release_version_unique_per_project` (idx 1291) | B-049 | yes — proven on a `prodshape` clone, then applied to Neon production; index and ledger row verified. 2022-2025 / idx 1292-1295 stay reserved. |
+| `2021_release_version_unique_per_project` (idx 1291) | B-049 | yes — proven on a `prodshape` clone, then applied to Neon production; index and ledger row verified. |
+| `2022_ticket_activity_relation_parent_actions` (idx 1292) | L7 relation/parent activity | yes — verified on production by its enum labels `parent_set` and `parent_removed`. |
+| `2016`-`2020_calendar_*` (idx 1286-1290) | a peer session's calendar work | yes, 2026-10-14 — **they were stranded**. Applying 2021 and 2022 pushed the runner's watermark past them, so `db:migrate` reported `0 pending` while production lacked `calendar_saved_views`, `calendar_protected_work`, `calendar_commitment_edges`, `calendar_coach_consent` and the two `calendar_admin_policies.offline_busy_cache_*` columns — proven absent by catalog probe, with 19 backend files reading them. Replayed on a `prodshape` clone (RLS on, one policy each, `streamline_app` SELECT+INSERT), then applied to production tag by tag with `apply-journalled-migration.mjs`. `check:migration-ledger` now passes 1165/1165. |
 
 ## Policy decisions to confirm
 
