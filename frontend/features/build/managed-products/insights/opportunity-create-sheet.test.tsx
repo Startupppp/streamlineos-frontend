@@ -24,6 +24,15 @@ describe("OpportunityCreateButton — create opportunity (BSN-OPP-CREATE)", () =
     expect(createMutate).not.toHaveBeenCalled();
   });
 
+  it("marks the required title visually without adding the asterisk to its accessible name", async () => {
+    render(<OpportunityCreateButton managedProductId={5} />);
+    fireEvent.click(screen.getByTestId("new-opportunity-btn"));
+    const title = await screen.findByRole("textbox", { name: "Title" });
+    const label = title.labels?.[0];
+    expect(label?.querySelector(".text-destructive")).toHaveTextContent("*");
+    expect(label?.textContent).toBe("Title *");
+  });
+
   it("creates with the title and only the optional fields the user filled in", async () => {
     const user = userEvent.setup();
     render(<OpportunityCreateButton managedProductId={5} />);

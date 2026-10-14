@@ -83,6 +83,15 @@ export const EpicCard = memo(function EpicCard({ epic, stories, dependencyCount,
     [stories, projectStatuses],
   );
 
+  const openItemCount = useMemo(() => {
+    const completedNames = new Set(
+      (projectStatuses ?? [])
+        .filter((s) => s.type === "completed")
+        .map((s) => s.name),
+    );
+    return stories.filter((s) => !completedNames.has(s.status)).length;
+  }, [stories, projectStatuses]);
+
   const epicCardId = `epic-stories-${epic.id}`;
 
   const handleToggleExpand = useCallback(() => setIsExpanded(prev => !prev), []);
@@ -174,6 +183,7 @@ export const EpicCard = memo(function EpicCard({ epic, stories, dependencyCount,
                   projectId={projectId}
                   open={editOpen}
                   onOpenChange={setEditOpen}
+                  openItemCount={openItemCount}
                 />
               )}
               {(canUpdate || canDeleteEpic) && (

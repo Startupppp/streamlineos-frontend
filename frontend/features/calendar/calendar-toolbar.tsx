@@ -69,6 +69,7 @@ const VIEW_MODE_OPTIONS: ViewOption<ViewMode>[] = [
 
 interface CalendarToolbarPrimaryActionsProps {
   activeConnectionCount: number;
+  canCreateTicket: boolean;
   onOpenAccounts: () => void;
   onOpenCreate: () => void;
   onOpenCreateTicket: () => void;
@@ -87,6 +88,7 @@ function ShareMenuItems() {
 export const CalendarToolbarPrimaryActions = memo(
   function CalendarToolbarPrimaryActions({
     activeConnectionCount,
+    canCreateTicket,
     onOpenAccounts,
     onOpenCreate,
     onOpenCreateTicket,
@@ -142,10 +144,12 @@ export const CalendarToolbarPrimaryActions = memo(
               <PlusIcon size={14} className="mr-2 text-muted-foreground" />
               Add event
             </DropdownMenuItem>
-            <DropdownMenuItem className="text-xs" onClick={onOpenCreateTicket}>
-              <Ticket className="mr-2 h-3.5 w-3.5 text-muted-foreground" />
-              Add ticket due date
-            </DropdownMenuItem>
+            {canCreateTicket ? (
+              <DropdownMenuItem className="text-xs" onClick={onOpenCreateTicket}>
+                <Ticket className="mr-2 h-3.5 w-3.5 text-muted-foreground" />
+                Add ticket due date
+              </DropdownMenuItem>
+            ) : null}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -159,6 +163,10 @@ interface CalendarToolbarProps {
   hrEventsVisible: boolean;
   crmEventsVisible: boolean;
   attendanceEventsVisible: boolean;
+  isHrEnabled: boolean;
+  isCrmEnabled: boolean;
+  isAttendanceEnabled: boolean;
+  canCreateTicket: boolean;
   sourceFailures?: ReadonlyArray<{ key: string; label: string }>;
   onPrev: () => void;
   onNext: () => void;
@@ -180,6 +188,10 @@ export const CalendarToolbar = memo(function CalendarToolbar({
   hrEventsVisible,
   crmEventsVisible,
   attendanceEventsVisible,
+  isHrEnabled,
+  isCrmEnabled,
+  isAttendanceEnabled,
+  canCreateTicket,
   sourceFailures,
   onPrev,
   onNext,
@@ -294,41 +306,47 @@ export const CalendarToolbar = memo(function CalendarToolbar({
               </DropdownMenu>
             ) : null}
 
-            <Button
-              variant={attendanceEventsVisible ? "secondary" : "outline"}
-              size="sm"
-              className="gap-1 px-2.5 text-xs font-medium xl:px-3"
-              aria-label="Attendance events"
-              aria-pressed={attendanceEventsVisible}
-              onClick={onToggleAttendanceEvents}
-            >
-              <Clock3 className="h-3.5 w-3.5" />
-              <span className="hidden xl:inline">Attendance</span>
-            </Button>
+            {isAttendanceEnabled ? (
+              <Button
+                variant={attendanceEventsVisible ? "secondary" : "outline"}
+                size="sm"
+                className="gap-1 px-2.5 text-xs font-medium xl:px-3"
+                aria-label="Attendance events"
+                aria-pressed={attendanceEventsVisible}
+                onClick={onToggleAttendanceEvents}
+              >
+                <Clock3 className="h-3.5 w-3.5" />
+                <span className="hidden xl:inline">Attendance</span>
+              </Button>
+            ) : null}
 
-            <Button
-              variant={hrEventsVisible ? "secondary" : "outline"}
-              size="sm"
-              className="gap-1 px-2.5 text-xs font-medium xl:px-3"
-              aria-label="HR events"
-              aria-pressed={hrEventsVisible}
-              onClick={onToggleHrEvents}
-            >
-              <Building2 className="h-3.5 w-3.5" />
-              <span className="hidden xl:inline">HR events</span>
-            </Button>
+            {isHrEnabled ? (
+              <Button
+                variant={hrEventsVisible ? "secondary" : "outline"}
+                size="sm"
+                className="gap-1 px-2.5 text-xs font-medium xl:px-3"
+                aria-label="HR events"
+                aria-pressed={hrEventsVisible}
+                onClick={onToggleHrEvents}
+              >
+                <Building2 className="h-3.5 w-3.5" />
+                <span className="hidden xl:inline">HR events</span>
+              </Button>
+            ) : null}
 
-            <Button
-              variant={crmEventsVisible ? "secondary" : "outline"}
-              size="sm"
-              className="gap-1 px-2.5 text-xs font-medium xl:px-3"
-              aria-label="CRM events"
-              aria-pressed={crmEventsVisible}
-              onClick={onToggleCrmEvents}
-            >
-              <Handshake className="h-3.5 w-3.5" />
-              <span className="hidden xl:inline">CRM events</span>
-            </Button>
+            {isCrmEnabled ? (
+              <Button
+                variant={crmEventsVisible ? "secondary" : "outline"}
+                size="sm"
+                className="gap-1 px-2.5 text-xs font-medium xl:px-3"
+                aria-label="CRM events"
+                aria-pressed={crmEventsVisible}
+                onClick={onToggleCrmEvents}
+              >
+                <Handshake className="h-3.5 w-3.5" />
+                <span className="hidden xl:inline">CRM events</span>
+              </Button>
+            ) : null}
 
             <CalendarSourcePanel failures={sourceFailures} />
           </div>
@@ -358,28 +376,36 @@ export const CalendarToolbar = memo(function CalendarToolbar({
                     </DropdownMenuSubContent>
                   </DropdownMenuSub>
                 ) : null}
-                {!hidePrimaryActions ? <DropdownMenuSeparator /> : null}
-                <DropdownMenuCheckboxItem
-                  className="text-xs"
-                  checked={attendanceEventsVisible}
-                  onCheckedChange={onToggleAttendanceEvents}
-                >
-                  Attendance
-                </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem
-                  className="text-xs"
-                  checked={hrEventsVisible}
-                  onCheckedChange={onToggleHrEvents}
-                >
-                  HR events
-                </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem
-                  className="text-xs"
-                  checked={crmEventsVisible}
-                  onCheckedChange={onToggleCrmEvents}
-                >
-                  CRM events
-                </DropdownMenuCheckboxItem>
+                {!hidePrimaryActions && (isAttendanceEnabled || isHrEnabled || isCrmEnabled) ? (
+                  <DropdownMenuSeparator />
+                ) : null}
+                {isAttendanceEnabled ? (
+                  <DropdownMenuCheckboxItem
+                    className="text-xs"
+                    checked={attendanceEventsVisible}
+                    onCheckedChange={onToggleAttendanceEvents}
+                  >
+                    Attendance
+                  </DropdownMenuCheckboxItem>
+                ) : null}
+                {isHrEnabled ? (
+                  <DropdownMenuCheckboxItem
+                    className="text-xs"
+                    checked={hrEventsVisible}
+                    onCheckedChange={onToggleHrEvents}
+                  >
+                    HR events
+                  </DropdownMenuCheckboxItem>
+                ) : null}
+                {isCrmEnabled ? (
+                  <DropdownMenuCheckboxItem
+                    className="text-xs"
+                    checked={crmEventsVisible}
+                    onCheckedChange={onToggleCrmEvents}
+                  >
+                    CRM events
+                  </DropdownMenuCheckboxItem>
+                ) : null}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -403,13 +429,15 @@ export const CalendarToolbar = memo(function CalendarToolbar({
                   <PlusIcon size={14} className="mr-2 text-muted-foreground" />
                   Add event
                 </DropdownMenuItem>
-                <DropdownMenuItem
-                  className="text-xs"
-                  onClick={onOpenCreateTicket}
-                >
-                  <Ticket className="mr-2 h-3.5 w-3.5 text-muted-foreground" />
-                  Add ticket due date
-                </DropdownMenuItem>
+                {canCreateTicket ? (
+                  <DropdownMenuItem
+                    className="text-xs"
+                    onClick={onOpenCreateTicket}
+                  >
+                    <Ticket className="mr-2 h-3.5 w-3.5 text-muted-foreground" />
+                    Add ticket due date
+                  </DropdownMenuItem>
+                ) : null}
               </DropdownMenuContent>
             </DropdownMenu>
           ) : null}

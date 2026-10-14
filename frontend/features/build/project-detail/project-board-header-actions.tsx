@@ -9,7 +9,7 @@ import {
 import { CreateTicketDialog } from "@/features/build/tickets/create-ticket-dialog";
 import { ProjectAiMenu } from "@/features/build/ai/project-ai-menu";
 import { TicketImportExportDialog } from "@/features/build/import-export/components/ticket-import-export-dialog";
-import { useCan } from "@/hooks/api/access";
+import { useCan, useModuleEnabled } from "@/hooks/api/access";
 
 interface ProjectBoardHeaderActionsProps {
   projectId: number;
@@ -28,7 +28,7 @@ export function ProjectBoardHeaderActions({
   const canUseAI = useCan("build:ai:use");
   const canImport = useCan("build:tickets:create");
   const canExport = useCan("build:tickets:view");
-  /** Child assigns in useLayoutEffect; click handler only reads. No setState. */
+  const isTimesheetsEnabled = useModuleEnabled("timesheets");
   const summarizeRunRef = useRef<(() => void) | null>(null);
   const [importOpen, setImportOpen] = useState(false);
 
@@ -48,17 +48,16 @@ export function ProjectBoardHeaderActions({
     setImportOpen(open);
   }, []);
 
-  /* Summarize onSelect reads summarizeFnRef only on click, never during render. */
-  /* eslint-disable react-hooks/refs */
   const actions = useMemo(() => {
-    const next: BuildHeaderAction[] = [
-      {
+    const next: BuildHeaderAction[] = [];
+    if (isTimesheetsEnabled) {
+      next.push({
         id: "log-time",
         label: "Log time",
         icon: Clock3,
         href: `/timesheets?projectId=${projectId}`,
-      },
-    ];
+      });
+    }
     if (canUseAI) {
       next.push({
         id: "summarize",
@@ -87,6 +86,7 @@ export function ProjectBoardHeaderActions({
     return next;
   }, [
     projectId,
+    isTimesheetsEnabled,
     canUseAI,
     canImport,
     canExport,
@@ -95,7 +95,6 @@ export function ProjectBoardHeaderActions({
     handleImportExport,
     handleCreate,
   ]);
-  /* eslint-enable react-hooks/refs */
 
   return (
     <>

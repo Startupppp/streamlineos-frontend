@@ -1,11 +1,13 @@
 import React from "react";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { ProductGoalsPage } from "./product-goals-page";
 
 const mockSetCreateOpen = jest.fn();
+const mockReplace = jest.fn();
 
 jest.mock("next/navigation", () => ({
-  useRouter: () => ({ replace: jest.fn(), push: jest.fn() }),
+  useRouter: () => ({ replace: mockReplace, push: jest.fn() }),
   usePathname: () => "/build/managed-products/7/goals",
   useSearchParams: () => new URLSearchParams("pg_view=list"),
 }));
@@ -184,7 +186,9 @@ jest.mock("@/features/build/goals/goals-list-shared", () => ({
 }));
 
 jest.mock("@/features/build/goals/goals-list-toolbar", () => ({
-  GoalsListToolbar: () => <div data-testid="goals-list-toolbar" />,
+  GoalsListToolbar: ({ trailing }: { trailing?: React.ReactNode }) => (
+    <div data-testid="goals-list-toolbar">{trailing}</div>
+  ),
   GOAL_FILTER_DEFINITIONS: [
     { param: "level", options: ["company", "team", "individual"] },
     { param: "status", options: ["not_started", "on_track", "at_risk", "off_track", "completed"] },
@@ -337,6 +341,19 @@ describe("ProductGoalsPage — states (C3 BSN-STATE-GOALS-01)", () => {
 });
 
 describe("ProductGoalsPage — URL params forwarded to hook (C3 BSN-FILTER-GOALS-01)", () => {
+  it("uses accessible shared tabs for view mode and preserves URL-driven selection", async () => {
+    const user = userEvent.setup();
+    render(<ProductGoalsPage managedProductId={7} />);
+    expect(screen.getByRole("tab", { name: "List" })).toHaveAttribute("data-state", "active");
+    await user.click(screen.getByRole("tab", { name: "Table" }));
+    await waitFor(() =>
+      expect(mockReplace).toHaveBeenCalledWith(
+        "/build/managed-products/7/goals?pg_view=table",
+        { scroll: false },
+      ),
+    );
+  });
+
   it("passes managedProductId to useGoalsPage so goals are scoped to this product", () => {
     render(<ProductGoalsPage managedProductId={7} />);
     expect(useGoalsPage).toHaveBeenCalledWith(

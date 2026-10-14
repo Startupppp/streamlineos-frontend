@@ -29,6 +29,10 @@ import {
   computeDoneCount,
 } from "./board-filter-model";
 import { useBoardViewApply } from "./use-board-view-apply";
+import { parseBoardOrderBy, parseBoardOrderDir } from "./board-filter-params";
+import { orderDirectionFor } from "./use-display-options";
+
+const SEARCH_TERM_MAX_LENGTH = 200;
 
 export function useBoardUrlState(
   projectId: number,
@@ -75,16 +79,6 @@ export function useBoardUrlState(
     hasActiveFilters,
   } = useBoardFilterParams();
 
-  const {
-    data: boardTickets,
-    isLoading: ticketsLoading,
-    isError: ticketsError,
-    error: ticketsErrorValue,
-    refetch: refetchTickets,
-    isTruncated,
-    fetchNextPage: fetchMoreTickets,
-    isFetchingNextPage: isFetchingMoreTickets,
-  } = useProjectBoardTickets(projectId, boardFilters);
   const { data } = useProject(projectId);
   const { data: views } = useViews(projectId);
 
@@ -95,6 +89,33 @@ export function useBoardUrlState(
     () => applyDisplayOptionParams(storedDisplayOptions, searchParams),
     [storedDisplayOptions, searchParams],
   );
+
+  const effectiveBoardFilters = useMemo(
+    () => {
+      const rawQ = boardFilters.q;
+      const safeQ = rawQ && rawQ.length > SEARCH_TERM_MAX_LENGTH
+        ? rawQ.slice(0, SEARCH_TERM_MAX_LENGTH)
+        : rawQ;
+      return {
+        ...boardFilters,
+        q: safeQ,
+        orderBy: boardFilters.orderBy ?? parseBoardOrderBy(displayOptions.orderBy) ?? undefined,
+        orderDir: boardFilters.orderDir ?? orderDirectionFor(displayOptions.orderBy),
+      };
+    },
+    [boardFilters, displayOptions.orderBy],
+  );
+
+  const {
+    data: boardTickets,
+    isLoading: ticketsLoading,
+    isError: ticketsError,
+    error: ticketsErrorValue,
+    refetch: refetchTickets,
+    isTruncated,
+    fetchNextPage: fetchMoreTickets,
+    isFetchingNextPage: isFetchingMoreTickets,
+  } = useProjectBoardTickets(projectId, effectiveBoardFilters);
 
   const setDisplayOptions = useCallback(
     (next: DisplayOptions) => {
@@ -158,15 +179,20 @@ export function useBoardUrlState(
     return new Set(qaMatches.map((bug) => bug.id));
   }, [qaFilterActive, qaMatches]);
 
+  const nonEpicTickets = useMemo(
+    () => allTickets.filter((t) => t.type !== "EPIC"),
+    [allTickets],
+  );
+
   const filteredTickets = useMemo(
     () => filterBoardTickets({
-      allTickets,
+      allTickets: nonEpicTickets,
       hideCompleted,
       completedIssues: displayOptions.completedIssues,
       statuses,
       qaMatchIds,
     }),
-    [allTickets, hideCompleted, displayOptions.completedIssues, statuses, qaMatchIds],
+    [nonEpicTickets, hideCompleted, displayOptions.completedIssues, statuses, qaMatchIds],
   );
 
   const members = useMemo(() => computeBoardMembers(data?.members), [data?.members]);
@@ -287,7 +313,7 @@ export function useBoardUrlState(
     showEmptyFilterState,
     showFirstRunState,
     hasActiveFilters,
-    boardFilters,
+    boardFilters: effectiveBoardFilters,
     handleViewChange,
     handleClearSearch,
     handleQaFilterChange,

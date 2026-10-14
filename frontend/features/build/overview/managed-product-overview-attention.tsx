@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { AlertTriangle, ArrowUpRight, CheckCircle2, Info, OctagonAlert } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Info, OctagonAlert } from "lucide-react";
+import { CircleCheckIcon, SquareArrowOutUpRightIcon } from "@animateicons/react/lucide";
 import type { ComponentType } from "react";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { statusToneClasses } from "@/lib/design-tokens";
 import type { StatusTone } from "@/lib/design-tokens";
 import { cn } from "@/lib/utils";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import type { AttentionSignal } from "./overview-attention-signals";
 import { OverviewPanel } from "./overview-metric";
 
@@ -32,6 +34,7 @@ interface AttentionRowProps {
 }
 
 function AttentionAction({ signal, onMarkReviewed, isMarkingReviewed }: AttentionRowProps) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
   if (signal.resolvedByReview) {
     if (!onMarkReviewed) return null;
     return (
@@ -43,7 +46,9 @@ function AttentionAction({ signal, onMarkReviewed, isMarkingReviewed }: Attentio
         loadingText="Saving…"
         onClick={onMarkReviewed}
         className="ml-8 min-h-11 shrink-0 text-xs font-medium text-primary sm:ml-0 sm:min-h-8"
+        {...hoverHandlers}
       >
+        <CircleCheckIcon ref={iconRef} size={14} aria-hidden />
         {signal.actionLabel}
       </LoadingButton>
     );
@@ -52,11 +57,13 @@ function AttentionAction({ signal, onMarkReviewed, isMarkingReviewed }: Attentio
     <Link
       href={signal.href}
       className="group ml-8 inline-flex min-h-11 shrink-0 items-center gap-1 rounded-md border border-border/60 bg-background px-2.5 text-xs font-medium text-primary shadow-xs transition-[color,background-color,border-color,transform] hover:-translate-y-0.5 hover:border-primary/30 hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transform-none sm:ml-0 sm:min-h-8"
+      {...hoverHandlers}
     >
       {signal.actionLabel}
-      <ArrowUpRight
+      <SquareArrowOutUpRightIcon
+        ref={iconRef}
+        size={14}
         aria-hidden
-        className="size-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 motion-reduce:transition-none"
       />
     </Link>
   );
@@ -66,7 +73,7 @@ function AttentionRow({ signal, onMarkReviewed, isMarkingReviewed }: AttentionRo
   const tone = statusToneClasses(signal.tone);
   const Icon = TONE_ICON[signal.tone];
   return (
-    <li className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg border border-border/60 bg-muted/15 p-2.5 transition-colors hover:bg-muted/35 motion-reduce:transition-none">
+    <li className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg border border-border bg-muted/15 p-2.5 transition-colors hover:bg-muted/35 motion-reduce:transition-none dark:border-background">
       <span
         aria-hidden
         className={cn("mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-md", tone.surface, tone.ink)}

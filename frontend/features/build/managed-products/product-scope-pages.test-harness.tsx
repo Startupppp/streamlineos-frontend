@@ -429,6 +429,9 @@ jest.mock("@/hooks/common/use-animated-icon", () => ({
 jest.mock("@animateicons/react/lucide", () => ({
   PlusIcon: () => null,
   EllipsisIcon: () => <span data-testid="ellipsis-icon" />,
+  LayoutGridIcon: () => null,
+  LayoutListIcon: () => null,
+  ChartColumnIcon: () => null,
 }));
 
 jest.mock(

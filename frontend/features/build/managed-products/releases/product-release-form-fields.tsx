@@ -44,7 +44,7 @@ export function ProductReleaseFormFields({
         name="name"
         render={({ field }) => (
           <FormItem className="sm:col-span-2">
-            <FormLabel>Name</FormLabel>
+            <FormLabel>Name <span aria-hidden="true" className="text-destructive">*</span></FormLabel>
             <FormControl>
               <Input {...field} placeholder="Release name" />
             </FormControl>
@@ -57,7 +57,7 @@ export function ProductReleaseFormFields({
         name="version"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Version</FormLabel>
+            <FormLabel>Version <span aria-hidden="true" className="text-destructive">*</span></FormLabel>
             <FormControl>
               <Input {...field} placeholder="1.0.0" className="font-mono tabular-nums" />
             </FormControl>
@@ -70,7 +70,7 @@ export function ProductReleaseFormFields({
         name="status"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Status</FormLabel>
+            <FormLabel>Status <span aria-hidden="true" className="text-destructive">*</span></FormLabel>
             <Select value={field.value} onValueChange={field.onChange}>
               <FormControl>
                 <SelectTrigger>

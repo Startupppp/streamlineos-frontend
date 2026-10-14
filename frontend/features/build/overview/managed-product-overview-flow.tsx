@@ -1,19 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import {
-  ChevronRight,
-  Lightbulb,
-  Map,
-  MessageSquareText,
-  Rocket,
-  Tags,
-  Target,
-  type LucideIcon,
-} from "lucide-react";
+import { ChevronRight } from "lucide-react";
+import { ChartLineIcon, LayersIcon, MapPinnedIcon, MessageCircleIcon, RocketIcon, TelescopeIcon } from "@animateicons/react/lucide";
 import { motion } from "framer-motion";
 import type { ManagedProductSummary } from "@/hooks/api/build/managed-product-summary";
 import { useMotionVariants } from "@/lib/motion-variants";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { cn } from "@/lib/utils";
 import { deriveValueStream } from "./overview-signals";
 import type { ValueStreamStage } from "./overview-signals";
@@ -24,13 +17,13 @@ interface FlowProps {
   summary: ManagedProductSummary;
 }
 
-const STAGE_ICONS: Record<ValueStreamStage["id"], LucideIcon> = {
-  feedback: MessageSquareText,
-  themed: Tags,
-  opportunities: Lightbulb,
-  roadmap: Map,
-  shipped: Rocket,
-  measured: Target,
+const STAGE_ICONS = {
+  feedback: MessageCircleIcon,
+  themed: LayersIcon,
+  opportunities: TelescopeIcon,
+  roadmap: MapPinnedIcon,
+  shipped: RocketIcon,
+  measured: ChartLineIcon,
 };
 
 const STAGE_STYLES: Record<ValueStreamStage["id"], { surface: string; icon: string; accent: string }> = {
@@ -74,6 +67,7 @@ function StageLink({
   isLast: boolean;
 }) {
   const Icon = STAGE_ICONS[stage.id];
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
   const style = STAGE_STYLES[stage.id];
   return (
     <div className="relative h-full min-w-0">
@@ -84,9 +78,10 @@ function StageLink({
           "group relative flex min-h-16 w-full min-w-0 items-center gap-2.5 overflow-hidden rounded-lg border px-2.5 py-2 transition-[transform,background-color,border-color,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring motion-reduce:transform-none motion-reduce:transition-none sm:min-h-20 sm:items-start sm:px-3 sm:py-2.5",
           style.surface,
         )}
+        {...hoverHandlers}
       >
         <span className={cn("flex size-8 shrink-0 items-center justify-center rounded-lg transition-transform duration-200 group-hover:scale-105 motion-reduce:transform-none motion-reduce:transition-none", style.icon)}>
-          <Icon className="size-4" aria-hidden />
+          <Icon ref={iconRef} size={16} aria-hidden />
         </span>
         <span className="min-w-0 flex-1">
           <span className="flex items-baseline justify-between gap-2">

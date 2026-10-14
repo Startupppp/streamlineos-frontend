@@ -2,6 +2,8 @@
 
 ## Current local verification checkpoint
 
+On 2026-10-14, a fresh backend Calendar run exposed a stale provider-sync scenario fixture after external-event reads moved into tenant transactions. The fixture now restores the transaction passthrough after `jest.resetAllMocks()`. Its focused rerun passed all 18 tests, and the complete backend Calendar rerun passed 132 suites and 996 tests in 82.967 seconds with four workers. This is local test evidence; it does not prove deployed behavior or database migrations.
+
 The post-fix Calendar run on 2026-10-13 passed all 128 backend Calendar suites and 988 tests. The frontend Jest Calendar selection passed all 73 suites and 450 tests after updating a stale event-ID template-count expectation. A broader first Jest scan mistakenly included one Playwright E2E spec, which cannot run under Jest; the corrected selection excluded that separate runner. These passes cover local unit and component behavior, not production authentication, database migrations, provider sandboxes, or deployment.
 
 The intercepted Calendar Playwright suite was separately attempted with installed system Chrome and its fixture-only backend configuration. The Next.js test server did not reach runner readiness and the process was stopped after remaining silent beyond the configured startup limit. A direct localhost:3201 probe returned a sandbox socket-permission error. The E2E TypeScript project passed, but no intercepted browser cases executed; this attempt is unverified browser evidence.
@@ -20,7 +22,13 @@ The same repeatable script subsequently registered the real `public/sw.js` under
 
 For ticket 29, the focused meeting-workspace UI suite passed 3 tests showing safe unavailable, consent-withdrawn, and expired context states. The backend context suite passed 7 tests, including isolation of one failed source from another authorized source. Targeted lint passed. These fixtures do not establish a real database retention sweep or authenticated API and browser lifecycle.
 
+On 2026-10-14, ticket 29 workspace member and bundle reads were moved into tenant transactions; a bundle now reads its event, contexts, notes, and drafts through the same transaction. A focused store suite passed two tests and targeted lint passed. Real RLS, retention cascade, and authenticated meeting lifecycle remain unverified.
+
 For ticket 30, the aggregate search suite passed 23 tests after correcting false next-page cursors when a source is partial but exactly 100 authorized matches are loaded. Targeted backend TypeScript and ESLint passed. Source coverage remains visibly partial because upstream source cursors are not traversable through the search endpoint. The production saved-view HTTP 500, migration 2016 state, and database CRUD remain unverified.
+
+On 2026-10-14, the saved-view service was rechecked: its membership, list, create, update, and delete queries use tenant transactions, and migration `2016_calendar_saved_views.sql` is present and registered in the migration journal. This source inspection cannot establish whether production applied migration 2016 or explain the observed 500 without deployed database state and server logs. A package-wide backend TypeScript attempt was stopped after five minutes without diagnostics or exit; it is unverified, while the focused changed-service Jest suites passed.
+
+The saved-view source-key lookup also reaches the external Calendar connection service. Its active-connection, event-connection, and mapped-replica reads now use tenant transactions instead of the raw database handle. The three focused external Calendar suites passed 15 tests after their database mocks were updated for the tenant boundary, and targeted lint passed. This removes one plausible source-side failure path but does not establish the production 500 root cause or migration state.
 
 For ticket 31, the lifecycle replan consumer now uses its own tenant transaction only for candidate scans. The protected-work service already opens tenant transactions for suggestions and moves, so removing outer wrappers avoids holding an extra connection across availability evaluation. A focused consumer regression passed (1 test), as did targeted backend TypeScript and ESLint. Connection-pool pressure and lifecycle replan behavior against a real database remain unverified.
 

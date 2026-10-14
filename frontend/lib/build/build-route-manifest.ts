@@ -18,6 +18,7 @@ type BuildRouteManifestEntry = z.infer<typeof BuildRouteManifestEntrySchema>;
 const BUILD_ROUTE_MANIFEST: readonly BuildRouteManifestEntry[] = [
   { route: "/build", decision: "KEEP", target: null },
   { route: "/build/[projectId]", decision: "KEEP", target: null },
+  { route: "/build/[projectId]/agile-reports", decision: "CONSOLIDATE", target: "/build/[projectId]/reports" },
   { route: "/build/[projectId]/approvals", decision: "KEEP", target: null },
   { route: "/build/[projectId]/backlog", decision: "KEEP", target: null },
   { route: "/build/[projectId]/bugs/[submissionId]", decision: "CONSOLIDATE", target: "/build/[projectId]/intake" },

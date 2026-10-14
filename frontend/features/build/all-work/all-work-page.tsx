@@ -11,14 +11,13 @@ import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import { cn } from "@/lib/utils";
 import {
   PmPageShell,
-  PmPanel,
   PmSection,
   CONTENT_FILL_PANEL,
   PM_FILL_SECTION,
 } from "@/components/pm-chrome";
 import { groupTickets } from "./all-work-ticket-utils";
 import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
-import { AllWorkSkeleton } from "./all-work-view-switcher";
+import { AllWorkSkeleton, AllWorkToolbarSkeleton } from "./all-work-view-switcher";
 import { useAllWorkFilters } from "./use-all-work-filters";
 import { useAllWorkBulk } from "./use-all-work-bulk";
 import { useAllWorkIds } from "@/hooks/api/build/all-work";
@@ -207,7 +206,7 @@ export function AllWorkPage() {
       subtitle="Explore tickets across every project you can access"
       filtersClassName="flex-col items-stretch gap-0 overflow-visible pb-2 [&>*]:w-full [&>*]:min-w-0 [&>*]:shrink"
       filters={
-        <AllWorkPageToolbar
+        pageState.kind === "loading" ? <AllWorkToolbarSkeleton /> : <AllWorkPageToolbar
           view={view}
           grouping={grouping}
           scopeMine={scopeMine}
@@ -234,11 +233,7 @@ export function AllWorkPage() {
             className={CONTENT_FILL_PANEL}
             onRetry={handleRetry}
             loading={
-              <PmPanel solid className="flex-1 overflow-auto">
-                <div className="py-2">
-                  <AllWorkSkeleton view={view} />
-                </div>
-              </PmPanel>
+              <AllWorkSkeleton view={view} />
             }
             empty={<AllWorkEmptyState isOnline={isOnline} hasActiveFilters={hasActiveFilters} onClearFilters={handleClearFilters} />}
           >

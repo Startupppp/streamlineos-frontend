@@ -116,7 +116,7 @@ export function CaptureSubmissionSheet({
             name="message"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Message</FormLabel>
+                <FormLabel>Message <span aria-hidden="true" className="text-destructive">*</span></FormLabel>
                 <FormControl>
                   <Textarea rows={4} placeholder="Describe the feedback…" {...field} />
                 </FormControl>
@@ -129,7 +129,7 @@ export function CaptureSubmissionSheet({
             name="sourceChannel"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Source channel</FormLabel>
+                <FormLabel>Source channel <span aria-hidden="true" className="text-destructive">*</span></FormLabel>
                 <Select onValueChange={(v) => v && field.onChange(v)} value={field.value}>
                   <FormControl>
                     <SelectTrigger>
@@ -153,7 +153,7 @@ export function CaptureSubmissionSheet({
             name="type"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Type</FormLabel>
+                <FormLabel>Type <span aria-hidden="true" className="text-destructive">*</span></FormLabel>
                 <Select onValueChange={(v) => v && field.onChange(v)} value={field.value}>
                   <FormControl>
                     <SelectTrigger>
@@ -177,7 +177,7 @@ export function CaptureSubmissionSheet({
             name="consentStatus"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Consent</FormLabel>
+                <FormLabel>Consent <span aria-hidden="true" className="text-destructive">*</span></FormLabel>
                 <Select onValueChange={(v) => v && field.onChange(v)} value={field.value}>
                   <FormControl>
                     <SelectTrigger>

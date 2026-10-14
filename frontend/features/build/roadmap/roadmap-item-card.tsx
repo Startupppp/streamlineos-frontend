@@ -3,9 +3,8 @@
 import { memo, useCallback, useState, type MouseEvent } from "react";
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
-import { ArrowBigUp, Pencil, ArrowRight, Globe, ArrowUp, ArrowDown, EyeOff } from "lucide-react";
-import { Trash2Icon } from "@animateicons/react/lucide";
-import { Button } from "@/components/ui/button";
+import { ArrowBigUp, ArrowRight, Globe, ArrowUp, ArrowDown, EyeOff } from "lucide-react";
+import { Trash2Icon, UserPenIcon } from "@animateicons/react/lucide";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -128,7 +127,7 @@ export const RoadmapItemCard = memo(function RoadmapItemCard({
       variants={shouldReduceMotion ? listItemReduced : listItem}
       transition={pmSnappy}
       className={cn(
-        "group rounded-xl border border-border/80 bg-card p-3 shadow-sm transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-primary/35 hover:shadow-md focus-within:border-primary/50",
+        "group rounded-xl border border-border bg-card p-3 shadow-sm transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-primary/35 hover:shadow-md focus-within:border-primary/50 dark:border-background",
       )}
       onContextMenu={handleContextMenu}
     >
@@ -172,9 +171,7 @@ export const RoadmapItemCard = memo(function RoadmapItemCard({
           {hasActions ? (
             <div className="flex shrink-0 items-center gap-0.5 opacity-70 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
               {canEdit ? (
-                <Button size="icon-sm" variant="ghost" aria-label="Edit roadmap item" onClick={handleEdit}>
-                  <Pencil className="size-3.5" aria-hidden />
-                </Button>
+                <AnimatedIconButton size="icon-sm" variant="ghost" aria-label="Edit roadmap item" onClick={handleEdit} icon={UserPenIcon} iconSize={14} />
               ) : null}
               {canDelete ? (
                 <AnimatedIconButton size="icon-sm" variant="ghost" className="text-destructive hover:text-destructive" aria-label="Delete roadmap item" onClick={handleDelete} icon={Trash2Icon} iconSize={14} />

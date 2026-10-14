@@ -23,6 +23,7 @@ describe("CalendarToolbarPrimaryActions", () => {
     render(
       <CalendarToolbarPrimaryActions
         activeConnectionCount={1}
+        canCreateTicket
         onOpenAccounts={onOpenAccounts}
         onOpenCreate={jest.fn()}
         onOpenCreateTicket={jest.fn()}
@@ -46,6 +47,12 @@ describe("CalendarToolbarPrimaryActions", () => {
 
 function renderToolbar(
   sourceFailures?: ReadonlyArray<{ key: string; label: string }>,
+  overrides: {
+    isHrEnabled?: boolean;
+    isCrmEnabled?: boolean;
+    isAttendanceEnabled?: boolean;
+    canCreateTicket?: boolean;
+  } = {},
 ) {
   render(
     <CalendarToolbar
@@ -54,6 +61,10 @@ function renderToolbar(
       hrEventsVisible
       crmEventsVisible
       attendanceEventsVisible={false}
+      isHrEnabled={overrides.isHrEnabled ?? true}
+      isCrmEnabled={overrides.isCrmEnabled ?? true}
+      isAttendanceEnabled={overrides.isAttendanceEnabled ?? true}
+      canCreateTicket={overrides.canCreateTicket ?? true}
       sourceFailures={sourceFailures}
       onPrev={jest.fn()}
       onNext={jest.fn()}
@@ -146,5 +157,68 @@ describe("CalendarToolbar — field control sizing", () => {
     const trigger = screen.getByRole("combobox", { name: "Calendar view" });
     expect(trigger.className).toContain("h-9");
     expect(trigger.className).not.toContain("h-8");
+  });
+});
+
+describe("CalendarToolbar — module-disabled toggles", () => {
+  it("hides the Attendance toggle when attendance module is disabled", () => {
+    renderToolbar(undefined, { isAttendanceEnabled: false });
+    expect(screen.queryByRole("button", { name: "Attendance events" })).toBeNull();
+  });
+
+  it("hides the HR toggle when HR module is disabled", () => {
+    renderToolbar(undefined, { isHrEnabled: false });
+    expect(screen.queryByRole("button", { name: "HR events" })).toBeNull();
+  });
+
+  it("hides the CRM toggle when CRM module is disabled", () => {
+    renderToolbar(undefined, { isCrmEnabled: false });
+    expect(screen.queryByRole("button", { name: "CRM events" })).toBeNull();
+  });
+
+  it("shows all three toggles when all modules are enabled", () => {
+    renderToolbar();
+    expect(screen.getByRole("button", { name: "Attendance events" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "HR events" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "CRM events" })).toBeInTheDocument();
+  });
+});
+
+describe("CalendarToolbarPrimaryActions — canCreateTicket gate", () => {
+  it("shows Add ticket due date when canCreateTicket is true", async () => {
+    render(
+      <CalendarToolbarPrimaryActions
+        activeConnectionCount={0}
+        canCreateTicket
+        onOpenAccounts={jest.fn()}
+        onOpenCreate={jest.fn()}
+        onOpenCreateTicket={jest.fn()}
+      />,
+    );
+
+    const trigger = screen.getByRole("button", { name: "Add to calendar" });
+    fireEvent.keyDown(trigger, { key: "Enter" });
+    await waitFor(() => {
+      expect(screen.getByRole("menuitem", { name: /Add ticket due date/i })).toBeInTheDocument();
+    });
+  });
+
+  it("hides Add ticket due date when canCreateTicket is false", async () => {
+    render(
+      <CalendarToolbarPrimaryActions
+        activeConnectionCount={0}
+        canCreateTicket={false}
+        onOpenAccounts={jest.fn()}
+        onOpenCreate={jest.fn()}
+        onOpenCreateTicket={jest.fn()}
+      />,
+    );
+
+    const trigger = screen.getByRole("button", { name: "Add to calendar" });
+    fireEvent.keyDown(trigger, { key: "Enter" });
+    await waitFor(() => {
+      expect(screen.getByRole("menuitem", { name: /Add event/i })).toBeInTheDocument();
+    });
+    expect(screen.queryByRole("menuitem", { name: /Add ticket due date/i })).toBeNull();
   });
 });

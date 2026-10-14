@@ -3711,6 +3711,7 @@ export const projectsTicketsSearchTicketsResponseSchema = z.array(z.object({
   projectId: z.number().int().gte(-9007199254740991).lte(9007199254740991),
   projectKey: z.string(),
   projectName: z.string(),
+  version: z.number().int().gte(-9007199254740991).lte(9007199254740991),
 }));
 export type ProjectsTicketsSearchTicketsResponse = z.infer<typeof projectsTicketsSearchTicketsResponseSchema>;
 
@@ -4286,7 +4287,7 @@ export type ProjectsByIdUpdateProjectBody = z.input<typeof projectsByIdUpdatePro
 export const projectsActivityFeedGetProjectActivityResponseSchema = z.object({
   data: z.array(z.object({
     id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
-    action: z.enum(["created", "status_changed", "priority_changed", "assignee_changed", "title_changed", "sprint_changed", "due_date_changed", "comment_added", "comment_updated", "comment_deleted", "label_changed", "estimate_changed", "cycle_changed", "type_changed"]),
+    action: z.enum(["created", "status_changed", "priority_changed", "assignee_changed", "title_changed", "sprint_changed", "due_date_changed", "comment_added", "comment_updated", "comment_deleted", "label_changed", "estimate_changed", "cycle_changed", "type_changed", "parent_set", "parent_removed", "relation_added", "relation_removed"]),
     label: z.string(),
     fromValue: z.string().nullable(),
     toValue: z.string().nullable(),
@@ -8130,7 +8131,7 @@ export type ProjectsTicketsUpdateTicketBody = z.input<typeof projectsTicketsUpda
 export const projectsTicketsGetActivityResponseSchema = z.object({
   data: z.array(z.object({
     id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
-    action: z.enum(["created", "status_changed", "priority_changed", "assignee_changed", "title_changed", "sprint_changed", "due_date_changed", "comment_added", "comment_updated", "comment_deleted", "label_changed", "estimate_changed", "cycle_changed", "type_changed"]),
+    action: z.enum(["created", "status_changed", "priority_changed", "assignee_changed", "title_changed", "sprint_changed", "due_date_changed", "comment_added", "comment_updated", "comment_deleted", "label_changed", "estimate_changed", "cycle_changed", "type_changed", "parent_set", "parent_removed", "relation_added", "relation_removed"]),
     label: z.string(),
     fromValue: z.string().nullable(),
     toValue: z.string().nullable(),

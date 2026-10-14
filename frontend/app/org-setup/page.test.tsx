@@ -1,4 +1,5 @@
-import { act, render, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import type { PropsWithChildren } from "react";
 import { gateCookieName } from "@/lib/onboarding-gate";
 import { SESSION_CLAIMS_UNCONFIRMED_MESSAGE } from "@/hooks/common/use-confirmed-session-claims-refresh";
@@ -273,6 +274,102 @@ describe("OrgSetupPage — auto sign-out suppression", () => {
     unmount();
 
     expect(mockSetAutoSignOutSuppressed).toHaveBeenCalledWith(false);
+  });
+});
+
+describe("OrgSetupPage — pending invitation banner", () => {
+  const { useMyPendingInvitations, useClaimInvitation } = jest.requireMock(
+    "@/hooks/common/auth-hooks",
+  ) as {
+    useMyPendingInvitations: jest.Mock;
+    useClaimInvitation: jest.Mock;
+  };
+
+  const { useOrgSetupDraftQuery, useOrgSetupSessionQuery } = jest.requireMock(
+    "@/hooks/api/org-setup",
+  ) as {
+    useOrgSetupDraftQuery: jest.Mock;
+    useOrgSetupSessionQuery: jest.Mock;
+  };
+
+  function withInvitations(mutate = jest.fn()) {
+    useMyPendingInvitations.mockReturnValue({
+      data: [{ id: "inv-1", organizationName: "Acme Corp", role: "Member" }],
+      isPending: false,
+    });
+    useClaimInvitation.mockReturnValue({ mutate, isPending: false });
+    useOrgSetupDraftQuery.mockReturnValue({ data: undefined, isFetched: true });
+    useOrgSetupSessionQuery.mockReturnValue({ data: undefined, isFetched: true });
+  }
+
+  beforeEach(() => {
+    useMyPendingInvitations.mockReturnValue({ data: [], isPending: false });
+    useOrgSetupDraftQuery.mockReturnValue({ data: undefined, isFetched: true });
+    useOrgSetupSessionQuery.mockReturnValue({ data: undefined, isFetched: true });
+  });
+
+  it("renders the invite banner when pending invitations are present", async () => {
+    withInvitations();
+    render(<OrgSetupPage />);
+
+    await waitFor(() => {
+      expect(screen.getByRole("heading", { name: /pending invitation/i })).toBeInTheDocument();
+    });
+
+    expect(screen.getByRole("button", { name: "Join" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /create my own organization/i })).toBeInTheDocument();
+  });
+
+  it("calls claimMutation.mutate with the invitation id when Join is clicked", async () => {
+    const mutate = jest.fn();
+    withInvitations(mutate);
+    render(<OrgSetupPage />);
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Join" })).toBeInTheDocument();
+    });
+
+    await userEvent.click(screen.getByRole("button", { name: "Join" }));
+
+    expect(mutate).toHaveBeenCalledWith(
+      "inv-1",
+      expect.objectContaining({ onSuccess: expect.any(Function), onError: expect.any(Function) }),
+    );
+  });
+
+  it("disables the Join button while a claim is in flight", async () => {
+    const mutate = jest.fn();
+    withInvitations(mutate);
+    render(<OrgSetupPage />);
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Join" })).toBeInTheDocument();
+    });
+
+    await userEvent.click(screen.getByRole("button", { name: "Join" }));
+
+    expect(screen.getByRole("button", { name: "Joining…" })).toBeDisabled();
+  });
+
+  it("shows an error toast and re-enables the button when the claim fails", async () => {
+    let capturedOnError: ((error: unknown) => void) | undefined;
+    const mutate = jest.fn((_id: string, opts: { onError: (e: unknown) => void }) => {
+      capturedOnError = opts.onError;
+    });
+    withInvitations(mutate);
+    render(<OrgSetupPage />);
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Join" })).toBeInTheDocument();
+    });
+
+    await userEvent.click(screen.getByRole("button", { name: "Join" }));
+    act(() => { capturedOnError?.(new Error("Forbidden")); });
+
+    await waitFor(() => {
+      expect(mockToastError).toHaveBeenCalled();
+    });
+    expect(screen.getByRole("button", { name: "Join" })).toBeEnabled();
   });
 });
 

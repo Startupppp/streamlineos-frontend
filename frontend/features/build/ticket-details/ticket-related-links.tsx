@@ -2,7 +2,12 @@
 
 import Link from "next/link";
 import { ExternalLink, Link2 } from "lucide-react";
-import { useTicketRelatedLinks } from "@/hooks/api/build/ticket-related-links";
+import { XIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { useTicketRelatedLinks, useRemoveRelatedLink } from "@/hooks/api/build/ticket-related-links";
+import { useCan } from "@/hooks/api/access";
+import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 interface TicketRelatedLinksProps {
   projectId: number;
@@ -39,7 +44,12 @@ export function TicketRelatedLinks({
   projectId,
   ticketId,
 }: TicketRelatedLinksProps) {
+  const canUpdate = useCan("build:tickets:update");
   const { data: links } = useTicketRelatedLinks(projectId, ticketId);
+  const removeLink = useRemoveRelatedLink({
+    onError: (e) => { toast.error(getErrorMessage(e)); },
+  });
+
   if (!links || links.length === 0) return null;
   const origin = typeof window === "undefined" ? "" : window.location.origin;
 
@@ -52,34 +62,51 @@ export function TicketRelatedLinks({
         {links.map((link) => {
           const label = link.title || link.url;
           const target = resolveLinkTarget(link.url, origin);
-          const className =
-            "flex items-center gap-1.5 text-dense text-foreground hover:text-accent truncate";
+          const anchorClass =
+            "flex min-w-0 items-center gap-1.5 text-dense text-foreground hover:text-accent truncate";
           return (
-            <li key={link.id} className="min-w-0">
-              {target?.kind === "internal" ? (
-                <Link href={target.href} className={className} title={link.url}>
-                  <Link2 className="h-3 w-3 shrink-0 text-muted-foreground" />
-                  <span className="truncate">{label}</span>
-                </Link>
-              ) : target?.kind === "external" ? (
-                <a
-                  href={target.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={className}
-                  title={link.url}
-                >
-                  <ExternalLink className="h-3 w-3 shrink-0 text-muted-foreground" />
-                  <span className="truncate">{label}</span>
-                </a>
-              ) : (
-                <span
-                  className="text-dense text-muted-foreground truncate block"
-                  title={link.url}
-                >
-                  {label}
-                </span>
-              )}
+            <li key={link.id} className="group flex min-w-0 items-center gap-1">
+              <span className="min-w-0 flex-1">
+                {target?.kind === "internal" ? (
+                  <Link href={target.href} className={anchorClass} title={link.url}>
+                    <Link2 className="h-3 w-3 shrink-0 text-muted-foreground" />
+                    <span className="truncate">{label}</span>
+                  </Link>
+                ) : target?.kind === "external" ? (
+                  <a
+                    href={target.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={anchorClass}
+                    title={link.url}
+                  >
+                    <ExternalLink className="h-3 w-3 shrink-0 text-muted-foreground" />
+                    <span className="truncate">{label}</span>
+                  </a>
+                ) : (
+                  <span
+                    className="text-dense text-muted-foreground truncate block"
+                    title={link.url}
+                  >
+                    {label}
+                  </span>
+                )}
+              </span>
+              {canUpdate ? (
+                <AnimatedIconButton
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  icon={XIcon}
+                  iconSize={12}
+                  aria-label="Remove link"
+                  className="h-5 w-5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+                  onClick={() =>
+                    removeLink.mutate({ projectId, ticketId, linkId: link.id })
+                  }
+                  disabled={removeLink.isPending}
+                />
+              ) : null}
             </li>
           );
         })}

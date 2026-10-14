@@ -57,7 +57,7 @@ function OpportunityRiceFormFields() {
           name="reach"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Reach</FormLabel>
+              <FormLabel>Reach <span aria-hidden="true" className="text-destructive">*</span></FormLabel>
               <FormControl>
                 <Input
                   {...field}
@@ -76,7 +76,7 @@ function OpportunityRiceFormFields() {
           name="reachPeriod"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Period</FormLabel>
+              <FormLabel>Period <span aria-hidden="true" className="text-destructive">*</span></FormLabel>
               <Select value={field.value} onValueChange={(v) => v && field.onChange(v)}>
                 <SelectTrigger className={FIELD_CONTROL_CLASS}>
                   <SelectValue />
@@ -104,7 +104,7 @@ function OpportunityRiceFormFields() {
           }
           return (
             <FormItem>
-              <FormLabel>Impact</FormLabel>
+              <FormLabel>Impact <span aria-hidden="true" className="text-destructive">*</span></FormLabel>
               <Select
                 value={String(field.value ?? "")}
                 onValueChange={handleImpactChange}
@@ -135,7 +135,7 @@ function OpportunityRiceFormFields() {
           }
           return (
             <FormItem>
-              <FormLabel>Confidence (0–1)</FormLabel>
+              <FormLabel>Confidence (0–1) <span aria-hidden="true" className="text-destructive">*</span></FormLabel>
               <FormControl>
                 <Input
                   {...field}
@@ -164,7 +164,7 @@ function OpportunityRiceFormFields() {
             }
             return (
               <FormItem>
-                <FormLabel>Effort</FormLabel>
+                <FormLabel>Effort <span aria-hidden="true" className="text-destructive">*</span></FormLabel>
                 <FormControl>
                   <Input
                     {...field}
@@ -186,7 +186,7 @@ function OpportunityRiceFormFields() {
           name="effortUnit"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Unit</FormLabel>
+              <FormLabel>Unit <span aria-hidden="true" className="text-destructive">*</span></FormLabel>
               <Select value={field.value} onValueChange={(v) => v && field.onChange(v)}>
                 <SelectTrigger className={FIELD_CONTROL_CLASS}>
                   <SelectValue />

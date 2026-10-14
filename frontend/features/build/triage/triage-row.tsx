@@ -65,6 +65,7 @@ export const TriageRow = memo(function TriageRow({
           <span className={FLEX_TITLE_SLOT}>
             <TruncatedText
               text={ticket.title ?? "—"}
+              lines={2}
               className="text-sm font-medium"
             />
             {ticket.description ? (

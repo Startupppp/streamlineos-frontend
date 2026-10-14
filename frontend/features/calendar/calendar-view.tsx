@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/dialog";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { toast } from "sonner";
+import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import {
   useCalendarEvents,
   useCalendarHistory,
@@ -241,6 +242,11 @@ export function CalendarView() {
     handleCloseAccounts,
     handleCloseCreateTicket,
   } = useCalendarViewState();
+
+  const isHrEnabled = useModuleEnabled("hr");
+  const isCrmEnabled = useModuleEnabled("crm");
+  const isAttendanceEnabled = useModuleEnabled("attendance");
+  const canCreateTicket = useCan("build:tickets:create");
 
   useEffect(() => {
     const interval = window.setInterval(() => setClockNow(new Date()), 60_000);
@@ -728,6 +734,7 @@ export function CalendarView() {
       actions={
         <div className="flex items-center gap-2">{scenarioDrafts.length ? <Button variant="outline" onClick={() => setScenarioOpen(true)}>What if ({scenarioDrafts.length})</Button> : null}<Button variant="outline" onClick={() => setCapacityOpen(true)}>Capacity</Button><Button variant="outline" onClick={() => setCoachOpen(true)}>My time insights</Button><CalendarToolbarPrimaryActions
           activeConnectionCount={activeConnectionCount}
+          canCreateTicket={canCreateTicket}
           onOpenAccounts={handleOpenAccounts}
           onOpenCreate={handleOpenCreate}
           onOpenCreateTicket={handleOpenCreateTicket}
@@ -748,6 +755,10 @@ export function CalendarView() {
           hrEventsVisible={hrEventsVisible}
           crmEventsVisible={crmEventsVisible}
           attendanceEventsVisible={attendanceEventsVisible}
+          isHrEnabled={isHrEnabled}
+          isCrmEnabled={isCrmEnabled}
+          isAttendanceEnabled={isAttendanceEnabled}
+          canCreateTicket={canCreateTicket}
           sourceFailures={displayedSourceFailures}
           onPrev={handlePrev}
           onNext={handleNext}

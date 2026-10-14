@@ -4,11 +4,14 @@ import userEvent from "@testing-library/user-event";
 const execute = jest.fn();
 let registerCalls = 0;
 
+const mockUseModuleEnabled = jest.fn((_key: string) => true);
+
 jest.mock("@/hooks/api/access", () => ({
   useCan: (key: string) =>
     key === "build:ai:use" ||
     key === "build:tickets:create" ||
     key === "build:tickets:view",
+  useModuleEnabled: (key: string) => mockUseModuleEnabled(key),
 }));
 
 jest.mock("@/features/build/tickets/create-ticket-dialog", () => ({
@@ -64,10 +67,45 @@ jest.mock("@/features/build/ai/project-ai-menu", () => {
 
 import { ProjectBoardHeaderActions } from "./project-board-header-actions";
 
+describe("ProjectBoardHeaderActions — timesheets module gate", () => {
+  beforeEach(() => {
+    execute.mockClear();
+    registerCalls = 0;
+    mockUseModuleEnabled.mockReturnValue(true);
+  });
+
+  it("shows the Log time action when Timesheets is enabled", () => {
+    render(
+      <ProjectBoardHeaderActions
+        projectId={29}
+        createOpen={false}
+        onCreateOpenChange={jest.fn()}
+      />,
+    );
+
+    expect(screen.getByText("Log time")).toBeInTheDocument();
+  });
+
+  it("hides the Log time action when Timesheets is disabled", () => {
+    mockUseModuleEnabled.mockReturnValue(false);
+
+    render(
+      <ProjectBoardHeaderActions
+        projectId={29}
+        createOpen={false}
+        onCreateOpenChange={jest.fn()}
+      />,
+    );
+
+    expect(screen.queryByText("Log time")).toBeNull();
+  });
+});
+
 describe("ProjectBoardHeaderActions — AI summarize registration", () => {
   beforeEach(() => {
     execute.mockClear();
     registerCalls = 0;
+    mockUseModuleEnabled.mockReturnValue(true);
   });
 
   it("does not open or run summarize while registering the callback during mount", async () => {

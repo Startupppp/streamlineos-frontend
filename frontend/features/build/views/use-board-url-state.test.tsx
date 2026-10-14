@@ -20,7 +20,7 @@ describe("useBoardUrlState — saving a view persists every filter the board was
 
     renderHook(() => useBoardUrlState(1));
 
-    expect(boardState.boardFilters).toEqual({
+    expect(boardState.boardFilters).toMatchObject({
       q: undefined,
       status: undefined,
       priority: undefined,

@@ -40,6 +40,8 @@ interface TicketRelationsProps {
   projectId: number;
 }
 
+type DisplayRelationType = WorkItemRelationType | "duplicated_by";
+
 const RELATION_TYPES: readonly WorkItemRelationType[] = [
   "blocks",
   "blocked_by",
@@ -47,7 +49,15 @@ const RELATION_TYPES: readonly WorkItemRelationType[] = [
   "relates_to",
 ];
 
-const RELATION_LABELS: Record<WorkItemRelationType, { label: string; icon: React.ReactNode; color: string }> = {
+const DISPLAY_RELATION_TYPES: readonly DisplayRelationType[] = [
+  "blocks",
+  "blocked_by",
+  "duplicate_of",
+  "duplicated_by",
+  "relates_to",
+];
+
+const DISPLAY_RELATION_LABELS: Record<DisplayRelationType, { label: string; icon: React.ReactNode; color: string }> = {
   blocks: {
     label: "Blocks",
     icon: <ArrowRight className="h-3 w-3" />,
@@ -63,12 +73,29 @@ const RELATION_LABELS: Record<WorkItemRelationType, { label: string; icon: React
     icon: <Copy className="h-3 w-3" />,
     color: "text-status-warning-ink-strong",
   },
+  duplicated_by: {
+    label: "Duplicated by",
+    icon: <Copy className="h-3 w-3" />,
+    color: "text-status-warning-ink-strong",
+  },
   relates_to: {
     label: "Relates to",
     icon: <Minus className="h-3 w-3" />,
     color: "text-muted-foreground",
   },
 };
+
+function getDisplayRelationType(
+  relationType: WorkItemRelationType,
+  direction: "outgoing" | "incoming",
+): DisplayRelationType {
+  if (direction === "incoming") {
+    if (relationType === "blocks") return "blocked_by";
+    if (relationType === "blocked_by") return "blocks";
+    if (relationType === "duplicate_of") return "duplicated_by";
+  }
+  return relationType;
+}
 
 
 export function TicketRelations({ ticketId, projectId }: TicketRelationsProps) {
@@ -135,14 +162,18 @@ export function TicketRelations({ ticketId, projectId }: TicketRelationsProps) {
     void refetch();
   }, [refetch]);
 
-  const grouped = useMemo(() => (relations ?? []).reduce<Partial<Record<WorkItemRelationType, typeof relations>>>(
-    (acc, r) => {
-      const t = r.relationType;
-      acc[t] = [...(acc[t] ?? []), r];
-      return acc;
-    },
-    {},
-  ), [relations]);
+  const grouped = useMemo(
+    () =>
+      (relations ?? []).reduce<Partial<Record<DisplayRelationType, typeof relations>>>(
+        (acc, r) => {
+          const t = getDisplayRelationType(r.relationType, r.direction);
+          acc[t] = [...(acc[t] ?? []), r];
+          return acc;
+        },
+        {},
+      ),
+    [relations],
+  );
 
   const resolution = usePageState({ isLoading, isError, error });
 
@@ -224,9 +255,9 @@ export function TicketRelations({ ticketId, projectId }: TicketRelationsProps) {
           <p className="text-xs text-muted-foreground py-1 max-md:pb-16">No relations yet.</p>
         ) : (
           <div className="space-y-2">
-            {RELATION_TYPES.map((type) => {
+            {DISPLAY_RELATION_TYPES.map((type) => {
               const rels = grouped[type];
-              const meta = RELATION_LABELS[type];
+              const meta = DISPLAY_RELATION_LABELS[type];
               if (!rels?.length) return null;
               return (
                 <div key={type}>

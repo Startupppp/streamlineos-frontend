@@ -100,7 +100,7 @@ export function BuildAgentPulse({
       aria-label={summary}
       className={cn(
         "group relative flex items-center gap-2 rounded-md border border-primary/25 bg-primary/5 transition-colors hover:bg-primary/10 motion-reduce:transition-none",
-        isCollapsed ? "mx-auto size-8 justify-center p-0" : "px-2 py-1.5",
+        isCollapsed ? "mx-auto size-8 justify-center p-0" : "min-w-0 overflow-hidden px-2 py-1.5",
       )}
     >
       <Sparkles className="h-3.5 w-3.5 shrink-0 text-primary" />
@@ -119,12 +119,10 @@ export function BuildAgentPulse({
     </Link>
   );
 
-  if (!isCollapsed) return link;
-
   return (
     <Tooltip delayDuration={0}>
       <TooltipTrigger asChild>{link}</TooltipTrigger>
-      <TooltipContent side="right" sideOffset={10} className="text-xs font-medium max-w-[220px]">
+      <TooltipContent side="right" sideOffset={10} className="text-xs font-medium max-w-[220px] [overflow-wrap:anywhere]">
         {tooltipContent}
       </TooltipContent>
     </Tooltip>

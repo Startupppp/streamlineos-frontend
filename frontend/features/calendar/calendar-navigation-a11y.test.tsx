@@ -40,6 +40,10 @@ function renderToolbar(view: "day" | "week" | "month") {
       hrEventsVisible={false}
       crmEventsVisible
       attendanceEventsVisible={false}
+      isHrEnabled
+      isCrmEnabled
+      isAttendanceEnabled
+      canCreateTicket
       {...toolbarHandlers}
     />,
   );

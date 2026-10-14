@@ -2,6 +2,7 @@ import { act, renderHook, waitFor } from "@testing-library/react";
 import { QueryClientProvider, QueryObserver } from "@tanstack/react-query";
 import { createElement, useState, type ReactNode } from "react";
 import { createAppQueryClient } from "@/components/providers/query-provider";
+import { ApiError } from "@/lib/api-envelope";
 import { queryKeys } from "@/lib/query-keys";
 import { apiClient } from "@/lib/api-client";
 import { useKanbanDrag } from "./use-kanban-drag";
@@ -168,5 +169,54 @@ it("does not call rankTicket when dropping onto the exact same position in the s
     combine: null,
   }));
   expect(apiClient.patch).not.toHaveBeenCalled();
+  client.clear();
+});
+
+it("applies the server's version to the local ticket after a successful drag so a subsequent drag sends the updated CAS token — onSuccess missing version would leave the stale token and the next drag's CAS check would fail", async () => {
+  const client = createAppQueryClient();
+  client.setDefaultOptions({ mutations: { retry: false } });
+  const ticket = { id: 5, title: "T", status: "TODO", type: "TASK", rank: "a0", version: 1 };
+  jest.mocked(apiClient.patch).mockReset().mockResolvedValue({ id: 5, rank: "b0", status: "DONE", version: 3 });
+  const wrapper = ({ children }: { children: ReactNode }) => createElement(QueryClientProvider, { client }, children);
+  const setOptimisticTickets = jest.fn();
+  const { result } = renderHook(() => useKanbanDrag({
+    projectId: 1, statuses: [], rowBy: "none", hideCompleted: false, canManage: true,
+    visibleColumns: [], orderedColumns: [], optimisticTickets: [ticket], optimisticStatuses: [],
+    setOptimisticTickets, setOptimisticStatuses: jest.fn(), setOptimisticColumnOrder: jest.fn(),
+    setIsDragging: jest.fn(), dragStartRef: { current: null },
+  }), { wrapper });
+  await act(async () => result.current.onDragEnd({ draggableId: "5", type: "TICKET", reason: "DROP", mode: "FLUID", source: { droppableId: "TODO", index: 0 }, destination: { droppableId: "DONE", index: 0 }, combine: null }));
+  await waitFor(() => expect(apiClient.patch).toHaveBeenCalledTimes(1));
+  const successCall = setOptimisticTickets.mock.calls.find((args) => {
+    const updater = args[0] as (tickets: typeof ticket[]) => typeof ticket[];
+    const updated = updater([ticket]);
+    return updated[0]?.version === 3;
+  });
+  expect(successCall).toBeDefined();
+  client.clear();
+});
+
+it("invalidates the board query after a 409 conflict so the board shows the current server state rather than leaving a stale optimistic snapshot — without this invalidation the board would stay frozen on the pre-drag order after a conflict rollback", async () => {
+  const client = createAppQueryClient();
+  client.setDefaultOptions({ mutations: { retry: false } });
+  const ticket = { id: 9, title: "T", status: "TODO", type: "TASK", rank: "x0", version: 1 };
+  const boardKey = queryKeys.projects.tickets({ projectId: 1, view: "board" });
+  const original = { pages: [{ data: [ticket], pagination: { nextCursor: null } }], pageParams: [undefined] };
+  client.setQueryData(boardKey, original);
+  const queryFn = jest.fn(async () => original);
+  const observer = new QueryObserver(client, { queryKey: boardKey, queryFn, staleTime: Infinity });
+  const unsubscribe = observer.subscribe(() => {});
+  jest.mocked(apiClient.patch).mockReset().mockRejectedValue(new ApiError("Board order changed; refresh and retry", 409, "CONFLICT"));
+  const wrapper = ({ children }: { children: ReactNode }) => createElement(QueryClientProvider, { client }, children);
+  const { result } = renderHook(() => useKanbanDrag({
+    projectId: 1, statuses: [], rowBy: "none", hideCompleted: false, canManage: true,
+    visibleColumns: [], orderedColumns: [], optimisticTickets: [ticket], optimisticStatuses: [],
+    setOptimisticTickets: jest.fn(), setOptimisticStatuses: jest.fn(), setOptimisticColumnOrder: jest.fn(),
+    setIsDragging: jest.fn(), dragStartRef: { current: null },
+  }), { wrapper });
+  await act(async () => result.current.onDragEnd({ draggableId: "9", type: "TICKET", reason: "DROP", mode: "FLUID", source: { droppableId: "TODO", index: 0 }, destination: { droppableId: "DONE", index: 0 }, combine: null }));
+  await waitFor(() => expect(apiClient.patch).toHaveBeenCalledTimes(1));
+  await waitFor(() => expect(queryFn).toHaveBeenCalled());
+  unsubscribe();
   client.clear();
 });

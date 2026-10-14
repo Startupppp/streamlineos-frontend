@@ -98,12 +98,11 @@ describe("ProductGoalsViewBody", () => {
     expect(screen.queryByTestId("goals-data-table")).not.toBeInTheDocument();
   });
 
-  it("renders goals grouped by level with section headers in tree mode", () => {
+  it("orders grouped goals by level without repeating redundant group headings", () => {
     render(<ProductGoalsViewBody {...BASE_PROPS} viewMode="tree" />);
-    expect(screen.getByRole("heading", { name: "Company" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Team" })).toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: "Individual" })).not.toBeInTheDocument();
-    expect(screen.getAllByTestId("goal-card")).toHaveLength(2);
+    expect(screen.queryByRole("heading", { name: "Company" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Team" })).not.toBeInTheDocument();
+    expect(screen.getAllByTestId("goal-card").map((card) => card.textContent)).toEqual(["Alpha", "Beta"]);
     expect(screen.queryByTestId("goals-data-table")).not.toBeInTheDocument();
   });
 

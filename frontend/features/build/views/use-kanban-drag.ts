@@ -12,6 +12,7 @@ import { patchTicketCollections, restoreTicketCollections, ticketRollback, type 
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { isWriteConflict } from "@/lib/api-envelope";
 import { useQueryClient } from "@tanstack/react-query";
 import type { DropResult } from "@hello-pangea/dnd";
 import type { KanbanTicket, KanbanColumn } from "../shared/types";
@@ -111,13 +112,16 @@ export function useKanbanDrag({
         restoreTicketCollections(queryClient, context.previousCache);
       }
       toast.error(getErrorMessage(error));
+      if (isWriteConflict(error)) {
+        void queryClient.invalidateQueries({ queryKey: boardTicketsKey, refetchType: "active" });
+      }
     },
     onSuccess: (data) => {
       if (data) {
         setOptimisticTickets((current) =>
           current.map((ticket) =>
             ticket.id === data.id
-              ? { ...ticket, rank: data.rank, status: data.status }
+              ? { ...ticket, rank: data.rank, status: data.status, version: data.version }
               : ticket,
           ),
         );

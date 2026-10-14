@@ -32,8 +32,8 @@ jest.mock("@/hooks/api/entitlements", () => ({
 }));
 jest.mock("@/hooks/api/build/all-work", () => ({
   useAllWork: () => ({
-    data: undefined,
-    isLoading: true,
+    data: { data: [], hasMore: false, nextCursor: null, limit: 50 },
+    isLoading: false,
     isError: false,
     error: null,
     refetch: jest.fn(),
@@ -136,6 +136,7 @@ jest.mock("./use-all-work-keyboard", () => ({
 jest.mock("./all-work-view-switcher", () => ({
   AllWorkViewSwitcher: () => null,
   AllWorkSkeleton: () => null,
+  AllWorkToolbarSkeleton: () => null,
 }));
 jest.mock("./all-work-views-menu", () => ({
   AllWorkViewsMenu: () => null,

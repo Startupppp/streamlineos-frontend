@@ -152,7 +152,7 @@ export function ManagedProductOverviewHero({ product, now }: HeroProps) {
             ) : null}
           </div>
         </div>
-        <dl className="grid shrink-0 grid-cols-1 overflow-hidden rounded-lg border border-border/60 bg-muted/20 sm:grid-cols-3 sm:divide-x sm:divide-border/60">
+        <dl className="grid shrink-0 grid-cols-1 overflow-hidden rounded-lg border border-border bg-muted/20 dark:border-background sm:grid-cols-3 sm:divide-x sm:divide-border">
           <div className="flex items-center justify-between gap-3 border-b border-border/60 px-3 py-2.5 sm:flex-col sm:items-start sm:justify-start sm:border-b-0">
             <dt className="text-xs text-muted-foreground">Owner</dt>
             <dd>
@@ -179,7 +179,7 @@ export function ManagedProductOverviewHero({ product, now }: HeroProps) {
           </div>
         </dl>
       </div>
-      <div className="flex min-h-20 flex-1 items-center rounded-lg border border-border/60 bg-background/60 px-3 py-3">
+      <div className="flex min-h-20 flex-1 items-center rounded-lg border border-border bg-background/60 px-3 py-3 dark:border-background">
         <div className="w-full">
           <p className="mb-2 text-micro font-medium uppercase tracking-wide text-muted-foreground">Lifecycle</p>
           <LifecycleTrack lifecycle={product.lifecycle} />

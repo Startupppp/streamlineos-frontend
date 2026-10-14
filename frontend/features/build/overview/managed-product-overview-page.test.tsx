@@ -181,6 +181,11 @@ describe("ManagedProductOverviewPage — owner display in subtitle (FE-85)", () 
 });
 
 describe("ManagedProductOverviewPage — product identity", () => {
+  it("stretches identity and attention into an equal-height overview row", () => {
+    render(<ManagedProductOverviewPage managedProductId={42} />);
+    expect(screen.getByTestId("overview-identity-attention-grid")).toHaveClass("items-stretch");
+  });
+
   it("keeps strategy, ownership, schedule, phase, lifecycle and labels visible in the compact surface", () => {
     const { useManagedProductSummary } = jest.requireMock(
       "@/hooks/api/build/managed-product-summary",
@@ -311,6 +316,12 @@ describe("ManagedProductOverviewPage — mark reviewed", () => {
       expect.objectContaining({ managedProductId: 42, version: 1, lastReviewedAt: expect.any(String) }),
       expect.anything(),
     );
+  });
+
+  it("shows the review action with an icon while keeping its accessible name", () => {
+    render(<ManagedProductOverviewPage managedProductId={42} />);
+    const review = screen.getByRole("button", { name: /Mark reviewed/i });
+    expect(review.querySelector("svg")).toBeInTheDocument();
   });
 
   it("offers no review action to a viewer who cannot update the product", () => {

@@ -153,8 +153,9 @@ export function ManagedProductOverviewPage({
           {summaryData ? (
             <>
               <motion.div
+                data-testid="overview-identity-attention-grid"
                 variants={fadeUp}
-                className="grid grid-cols-1 items-start gap-3 lg:grid-cols-[minmax(0,1.45fr)_minmax(20rem,1fr)] sm:gap-4"
+                className="grid grid-cols-1 items-stretch gap-3 lg:grid-cols-[minmax(0,1.45fr)_minmax(20rem,1fr)] sm:gap-4"
               >
                 <ManagedProductOverviewHero
                   product={summaryData.product}
