@@ -52,6 +52,7 @@ const mockMutateAsync = jest.fn();
 const mockUploadFile = jest.fn();
 const mockDeleteFile = jest.fn();
 const mockAddAttachment = jest.fn();
+const mockAddComment = jest.fn();
 const mockStage = jest.fn<StagedCommentDraft, [{ ticketId: number; body: string }]>();
 const mockFlush = jest.fn();
 let mockDraftLoadError: Error | null = null;
@@ -70,7 +71,7 @@ jest.mock("@/hooks/api/build/comment-drafts", () => ({
 }));
 
 jest.mock("@/hooks/api/build/ticket-sub-resources", () => ({
-  useAddComment: () => ({ mutate: jest.fn(), isPending: false }),
+  useAddComment: () => ({ mutate: jest.fn(), mutateAsync: mockAddComment, isPending: false }),
   useAddAttachment: () => ({ mutateAsync: mockAddAttachment, isPending: false }),
 }));
 jest.mock("@/hooks/api/build/project-files", () => {
@@ -128,6 +129,7 @@ beforeEach(() => {
   mockUploadFile.mockReset().mockResolvedValue({ id: 91 });
   mockDeleteFile.mockReset().mockResolvedValue(undefined);
   mockAddAttachment.mockReset().mockResolvedValue({ id: 501 });
+  mockAddComment.mockReset();
   localStorage.clear();
   mockFlush.mockReset().mockResolvedValue(null);
   mockStage.mockReset().mockImplementation(({ ticketId, body }) => ({
@@ -296,4 +298,44 @@ it("shows the server error message when upload returns 400 for an allowed file t
     expect(mockToastError).toHaveBeenCalledWith("File content rejected by server"),
   );
   expect(mockToastError).not.toHaveBeenCalledWith(expect.stringContaining("Try again"));
+});
+
+describe("B-003 — posting a comment twice in one tick", () => {
+  it("sends exactly one request when Post comment is clicked twice before the first settles", async () => {
+    let settle: (value: unknown) => void = () => {};
+    mockAddComment.mockImplementation(
+      () => new Promise((resolve) => { settle = resolve; }),
+    );
+    renderFeed(false, true);
+
+    fireEvent.change(screen.getByTestId("comment-textarea"), {
+      target: { value: "One comment only" },
+    });
+    const post = screen.getByRole("button", { name: "Post comment" });
+
+    fireEvent.click(post);
+    fireEvent.click(post);
+
+    expect(mockAddComment).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      settle({ id: 1 });
+    });
+  });
+
+  it("accepts a second comment once the first has settled, so the guard is not a one-shot latch", async () => {
+    mockAddComment.mockResolvedValue({ id: 1 });
+    renderFeed(false, true);
+
+    const textarea = screen.getByTestId("comment-textarea");
+    const post = screen.getByRole("button", { name: "Post comment" });
+
+    fireEvent.change(textarea, { target: { value: "First" } });
+    await act(async () => { fireEvent.click(post); });
+
+    fireEvent.change(textarea, { target: { value: "Second" } });
+    await act(async () => { fireEvent.click(post); });
+
+    expect(mockAddComment).toHaveBeenCalledTimes(2);
+  });
 });
