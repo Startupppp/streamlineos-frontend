@@ -14,6 +14,8 @@ Ticket 08 pagination, external sync, and normalizer suites passed 55 tests acros
 
 Ticket 09 owner-mutation, projection-refresh, source-key, and source-panel frontend suites passed 27 tests across four suites. Deployed owner mutations, reconnect, and cross-tab refresh remain to be observed.
 
+Ticket 10 unified-view and event-panel frontend suites passed 28 tests across four suites. Ticket 11 frontend History/URL suites passed 14 tests across four suites, and backend History service passed 12 tests. Live responsive parity, URL back/reload, and dense cursor behavior remain open.
+
 ## Production events repair and Outlook live journey, 2026-10-14
 
 Ticket 01's shared occurrence helper was found to compare all-day events by UTC date slices. A timed conflict window inside an Asia/Kolkata all-day event incorrectly returned no overlap. A failing regression reproduced this before the helper switched to half-open instant overlap. Another failing regression showed a weekly New York all-day recurrence ending one hour late across spring DST; recurrence ends now use the original local wall-clock duration, with a fall DST case verifying the extra hour. The conflict service has a direct timed-slot regression. Five dependent occurrence, native-source, conflict, export, and moved-identity suites passed 99 tests; the conflict suite with the added case passed 15 tests. Targeted ESLint and whitespace checks passed. Backend commit `0d95c0de2` was pushed, and Railway deployment `9810cacd-7b51-4208-8a04-ec954e66c1f9` reached SUCCESS. Live behavioral acceptance remains pending.
