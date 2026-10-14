@@ -48,6 +48,8 @@ export function useBoardUrlState(
 
   const viewParam = searchParams.get("view");
   const view: ViewType = parseBoardPageView(viewParam ?? defaultView);
+  const isCalendarDeepLink = viewParam === "calendar";
+  const calendarHref = `/calendar?source=build&projectId=${projectId}`;
   const ticketParam = searchParams.get("ticket");
   const selectedTicketId = ticketParam ? parseInt(ticketParam) : null;
   const commentParam = searchParams.get("comment");
@@ -143,6 +145,8 @@ export function useBoardUrlState(
     searchParams,
     router,
     setStoredDisplayOptions,
+    isCalendarDeepLink,
+    calendarHref,
   });
 
   const activeView = viewId

@@ -15,6 +15,8 @@ interface UseBoardViewApplyParams {
   searchParams: URLSearchParams;
   router: ReturnType<typeof useRouter>;
   setStoredDisplayOptions: (next: DisplayOptions) => void;
+  isCalendarDeepLink: boolean;
+  calendarHref: string;
 }
 
 export function useBoardViewApply({
@@ -23,10 +25,18 @@ export function useBoardViewApply({
   searchParams,
   router,
   setStoredDisplayOptions,
+  isCalendarDeepLink,
+  calendarHref,
 }: UseBoardViewApplyParams): void {
   const appliedViewIdRef = useRef<string | null>(null);
 
   useEffect(() => {
+    if (!isCalendarDeepLink) return;
+    router.replace(calendarHref);
+  }, [isCalendarDeepLink, calendarHref, router]);
+
+  useEffect(() => {
+    if (isCalendarDeepLink) return;
     if (!viewId || !views) return;
     if (appliedViewIdRef.current === viewId) return;
     const savedView = views.data.find((v) => v.id.toString() === viewId);
@@ -53,6 +63,7 @@ export function useBoardViewApply({
     next.delete(BUILD_LIST_CURSOR_PARAM);
     router.replace(`?${next.toString()}`, { scroll: false });
   }, [
+    isCalendarDeepLink,
     viewId,
     views,
     searchParams,
