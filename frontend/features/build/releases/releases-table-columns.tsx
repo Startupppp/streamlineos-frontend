@@ -229,7 +229,11 @@ export function buildReleasesColumns({
       headerClassName: "sr-only",
       cell: (r) =>
         canManage ? (
-          <div className="flex items-center justify-end gap-0.5" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="flex items-center justify-end gap-0.5"
+            onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => e.stopPropagation()}
+          >
             <ReleaseRowActions release={r} onEdit={onEdit} onDelete={onDelete} />
           </div>
         ) : null,
