@@ -74,9 +74,9 @@ export function WinRateTrendChart({ kpis }: WinRateTrendChartProps) {
             <Line
               type="monotone"
               dataKey="winRate"
-              stroke="#3b82f6"
+              stroke="var(--chart-1)"
               strokeWidth={2.5}
-              dot={{ fill: "#3b82f6", r: 5, strokeWidth: 2, stroke: "#fff" }}
+              dot={{ fill: "var(--chart-1)", r: 5, strokeWidth: 2, stroke: "var(--card)" }}
               activeDot={{ r: 7 }}
             />
           </LineChart>

@@ -342,9 +342,12 @@ function MeetingWorkspaceSheet({
   const eventId = event ? parseCalendarEventId(event.id)?.eventId ?? null : null;
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="flex flex-col p-0 w-full sm:max-w-2xl">
-        <SheetHeader className="px-5 py-4 border-b shrink-0">
-          <SheetTitle className="text-sm font-semibold">Meeting workspace</SheetTitle>
+      <SheetContent className="flex w-full flex-col gap-0 p-0 sm:max-w-2xl">
+        <SheetHeader className="shrink-0 gap-1 border-b px-5 py-4">
+          <p className="text-xs font-medium text-muted-foreground">Meeting workspace</p>
+          <SheetTitle className="text-base font-semibold tracking-tight">
+            <TruncatedText text={event?.title || "Meeting"} lines={2} className="min-w-0 text-balance" />
+          </SheetTitle>
         </SheetHeader>
         <ScrollArea className="min-h-0 flex-1">
           <div className="px-5 py-4">

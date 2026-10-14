@@ -3,7 +3,7 @@ import { QUESTION_TYPE_META, type SurveyQuestionType } from "@/features/surveys/
 import type { QuestionAnalytics } from "@/hooks/api/surveys/analytics";
 import { AnonymitySuppressedNotice } from "@/components/shared/anonymity-suppressed-notice";
 
-const CHART_COLOR = "#3B82F6";
+const CHART_COLOR = "var(--chart-1)";
 
 function ChoiceDistributionBars({ analytics }: { analytics: QuestionAnalytics }) {
   const total = analytics.choiceDistribution.reduce((sum, c) => sum + c.count, 0) || 1;

@@ -1,10 +1,10 @@
 export const ACCOUNT_COLORS: readonly string[] = [
-  "#a855f7",
+  "#2563eb",
   "#22c55e",
   "#0ea5e9",
   "#ef4444",
   "#f59e0b",
-  "#3b82f6",
+  "#a855f7",
 ];
 
 export function accountColor(index: number): string {

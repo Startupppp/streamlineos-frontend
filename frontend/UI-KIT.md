@@ -71,30 +71,30 @@ Dates go through `lib/date-utils.ts` + `date-fns` `format` — never inline `toL
 
 ## Tokens
 
-Tokens live in `globals.css` (repo root, imported by `app/layout.tsx:5`) — Tailwind 4 CSS-first, `:root` + `.dark`, no `tailwind.config`. 525 custom properties.
+Tokens live in `globals.css` (frontend root, imported by `app/layout.tsx`) — Tailwind 4 CSS-first, `:root` + `.dark`, no `tailwind.config`.
 
 ### Page color and surface contract
 
-Build every authenticated page on this ladder. `globals.css` owns the Harbor values; `themes.css` may change the selected primary and navigation tint, but the surface roles stay the same in light and dark mode. Use token classes in components, not copies of their hex values.
+Build every authenticated page on this ladder. `globals.css` owns the Mist base and Mist theme values; `themes.css` may change the selected accent, but the surface roles stay the same in light and dark mode. Use token classes in components, not copies of their hex values.
 
-| Role | Token classes | Harbor light / dark | Use |
+| Role | Token classes | Mist light / dark | Use |
 |---|---|---|---|
-| Page canvas | `bg-background text-foreground` | `#f4f7fb` / `#0d1726` | One canvas behind the page, including empty space. `PageWrapper` owns page chrome. |
-| First-level panel | `bg-card text-card-foreground border border-border rounded-xl` | `#ffffff` / `#142337` | Main calendar, table, chart, form, or dashboard panel. |
-| Item inside a panel | `bg-surface-inset text-foreground border border-border dark:border-background rounded-xl` | `#edf2f7` / `#203248` | Event, task, metric, detail, or callout nested in a first-level panel. `bg-surface-inset` aliases `muted`. |
-| Popover, menu, dialog, sheet | `bg-surface-raised text-popover-foreground border-border` | `#ffffff` / `#1a2b42` | Content above the page; keep its edge visible. `bg-surface-raised` aliases `popover`. |
-| Secondary controls and headers | `bg-secondary text-secondary-foreground` | `#edf2f7` / `#203248` | Grouped actions, table heads, and schedule bands. |
-| Selection and hover | `bg-accent text-accent-foreground` | `#e7f0fb` / `#243b56` | Selected rows and quiet hover feedback. |
-| Primary action | `bg-primary text-primary-foreground` | `#1856a3` / `#86b9f5` | One main action per page header; theme selection may change this pair. |
-| Structural edge | `border-border`; controls use `border-input` | `#d6e0ea` / `#34475d` | Full-opacity panel boundaries; nested dark panels use `dark:border-background`. |
-| Sidebar | `bg-sidebar text-sidebar-foreground`; active item `bg-sidebar-accent text-sidebar-accent-foreground` | `#eaf1f8` / `#111f31` | Navigation only, separate from work content. |
+| Page canvas | `bg-background text-foreground` | `#f7f9f9` / `#090b0c` | One canvas behind the page, including empty space. `PageWrapper` owns page chrome. |
+| First-level panel | `bg-card text-card-foreground border border-border rounded-xl` | `#ffffff` / `#161b1d` | Main calendar, table, chart, form, or dashboard panel. |
+| Item inside a panel | `bg-surface-inset text-foreground border border-border dark:border-background rounded-xl` | `#f1f3f3` / `#22292b` | Event, task, metric, detail, or callout nested in a first-level panel. `bg-surface-inset` aliases `muted`. |
+| Popover, menu, dialog, sheet | `bg-surface-raised text-popover-foreground border-border` | `#ffffff` / `#1c2326` | Content above the page; keep its edge visible. `bg-surface-raised` aliases `popover`. |
+| Secondary controls and headers | `bg-secondary text-secondary-foreground` | `#f4f4f5` / `#27272a` | Grouped actions, table heads, and schedule bands. |
+| Selection and hover | `bg-accent text-accent-foreground` | `#f1f3f3` / `#22292b` | Selected rows and quiet hover feedback. |
+| Primary action | `bg-primary text-primary-foreground` | `#22292b` / `#e7ecec` | One main action per page header; theme selection may change this pair. |
+| Structural edge | `border-border`; controls use `border-input` | `#dbe1e3` / `#394449` | Full-opacity panel boundaries; nested dark panels use `dark:border-background`. |
+| Sidebar | `bg-sidebar text-sidebar-foreground`; active item `bg-sidebar-accent text-sidebar-accent-foreground` | `#f9fbfb` / `#13191b` | Navigation only, separate from work content. |
 
-Page recipe: start with `PageWrapper`; place content in one first-level panel; alternate to `muted` for card-like children. Put page actions in the header, with one `default` button and `outline` or `ghost` for secondary actions. Reserve `primary` for actions, selection, focus, and a small identity mark; use `statusToneClasses` for success, warning, danger, and info. Charts use `--chart-1..5` as distinct series, and module colors identify modules only at navigation or hero moments. Review light and dark at 375, 768, and 1280px: canvas, panel, nested item, popover, disabled state, hover, selected state, and keyboard focus must remain distinguishable. A nested item and its parent must compute to different backgrounds.
+Page recipe: start with `PageWrapper`; place content in one first-level panel; alternate to `muted` for card-like children. Put page actions in the header, with one `default` button and `outline` or `ghost` for secondary actions. Reserve `primary` for actions, selection, focus, and a small identity mark; use `statusToneClasses` for success, warning, danger, and info. Charts use `--chart-1..5` as distinct Mist shades, with labels or a legend so series are identifiable without color alone; module colors identify modules only at navigation or hero moments. Review light and dark at 375, 768, and 1280px: canvas, panel, nested item, popover, disabled state, hover, selected state, and keyboard focus must remain distinguishable. A nested item and its parent must compute to different backgrounds.
 
 Shared primitives follow this ladder: `Card` and `ContentFillPanel` are first-level panels; a `StatCard` nested inside either gets the inset surface, while a featured metric keeps `primary`. `Alert` uses the inset surface. `Input`, `Textarea`, and outline `Button` use the canvas fill with a control border, so they stay legible on both a panel and the page. `Dialog` and `Sheet` use the raised surface. Received chat and KB messages use `card`; their attachments and quoted content use the inset surface. When a component overrides one of these roles, retain a visible border and check the computed parent/child fills in both modes.
 
-- `--primary` blue CTA fill · `--ring` focus rings · `--brand-*` + `--gradient-signature` landing/onboarding/marketing only · `--chart-1..5` distinct report hues · `--sidebar-*` sidebar chrome.
-- **`--accent` is a NEUTRAL hover wash, not brand blue.** shadcn primitives paint `bg-accent text-accent-foreground` on hover/focus, so a chromatic value makes every menu hover illegible.
+- `--primary` Mist CTA fill · `--ring` focus rings · `--brand-*` + `--gradient-signature` landing/onboarding/marketing only · `--chart-1..5` neutral report shades with at least 3:1 contrast on `card` · `--sidebar-*` sidebar chrome.
+- **`--accent` is a NEUTRAL hover wash.** shadcn primitives paint `bg-accent text-accent-foreground` on hover/focus, so a chromatic value makes every menu hover illegible.
 - **Semantic status:** `statusToneClasses(tone)` from `lib/design-tokens` gives `bg-status-<tone>-surface` / `text-status-<tone>-ink` / `border-status-<tone>-rule` for `success` · `warning` · `danger` · `info` · `neutral`. The dark pairing is built in — never hand-write a `dark:` twin.
 - Legacy literals `bg-X-50 text-X-700 border-X-200` (emerald = completed/active/approved · amber = pending/expiring · red = error/rejected/overdue · blue = draft/in-progress/info · slate = closed/archived) stay valid until ticket 17 migrates them. **Add no new ones.** Every legacy light tint carries `dark:bg-X-500/10 dark:text-X-300 dark:border-X-500/30`; standalone colored icons carry `dark:text-X-400`.
 - **Borders:** `border-border` full opacity for structure; **≥70%** on any card/panel outer boundary; `/60` only for hairline dividers inside dense rows.
@@ -124,11 +124,10 @@ Never `p-[7px]`, `mt-[13px]`, `gap-[5px]`.
 - Page chrome belongs to `components/ui/content-fill-panel.tsx`: `PAGE_CHROME_X` = `px-4 sm:px-6 lg:px-8`, `PAGE_CHROME_BOTTOM` = `pb-0`.
 - **Card padding** standard `p-4` · compact list `p-3` · metric `p-4 sm:p-5` · section header in card `px-4 py-3`.
 - **Gaps** `gap-1` icon+label · `gap-2` field stack/button group · `gap-3` filter bar & header actions · `gap-4` card grid · `gap-6` section separator.
-- **Harbor surface hierarchy:** cool page canvas `background` → white or blue-charcoal cards/panels `card` → grouped controls/columns `muted` → table headers `muted` with a 2px divider → selected tabs/rows `accent`. The full-opacity `border` and stronger `input` edge keep controls clear on both modes. Selected color themes tint navigation and selection while preserving the same canvas, card, and chart hierarchy. Calendar and workload headers may use `secondary` where they need a stronger schedule band.
-- **Create reference:** [shadcn Nova / Mist / Blue / IBM Plex Sans / Lucide / Radix preset](https://ui.shadcn.com/create?preset=b1YobvkGW&base=radix). Harbor adapts its blue accent to this product's stronger canvas/card separation, five distinct report hues, and accessible dark focus ring. Use the repo tokens as the implementation source; applying the generator's raw theme would replace these product-specific decisions.
-- **Maia alternative:** [shadcn Maia / Mist / Indigo / IBM Plex Sans headings and body / Lucide / Radix preset](https://ui.shadcn.com/create?preset=b1smIyRHu&base=radix). Select Maia for its indigo accent and softer controls while keeping the original IBM Plex Sans typography.
+- **Maia surface hierarchy:** neutral page canvas `background` → white or charcoal cards/panels `card` → grouped controls/columns `muted` → table headers `muted` with a 2px divider → selected tabs/rows `accent`. The full-opacity `border` and stronger `input` edge keep controls clear in both modes. Alternate accent themes preserve this ladder.
+- **Create reference:** [shadcn Mist base / Mist theme / Mist charts preset](https://ui.shadcn.com/create?preset=b1j5erCI2E&base=radix). StreamlineOS keeps its established Maia layout and IBM Plex typography while applying the requested Mist colors. The app uses a slightly tinted light canvas, raised dark popovers, stronger borders and visible neutral focus rings. Apply theme changes through repo tokens; the generator's `init` command would reset an existing project.
 - **Table density from the primitives:** `TableHead` `h-10 px-2 text-sm font-medium text-muted-foreground whitespace-nowrap` · `TableRow` `hover:bg-muted data-[state=selected]:bg-accent border-b` · `DataTable` header `sticky top-0 z-10 bg-muted border-b-2` · skeleton cell `px-2 py-2 text-sm`. **Anything denser than `h-10` is not implemented.**
-- **Radius scale** (`--radius: 0.625rem`): `sm` 6 · `md` 8 · `lg` 10 · `xl` 14px. Inputs/tables `rounded-md`, cards/panels `rounded-xl`, `2xl`/`3xl` marketing + the HR/Administration rich surface only.
+- **Radius scale** (`--radius: 0.45rem` in the authenticated app): `2xs` minimum 2 · `sm` 3.2 · `md` 5.2 · `lg` 7.2 · `xl` 11.2px. Inputs/tables `rounded-md`, cards/panels `rounded-xl`, `2xl`/`3xl` marketing + the HR/Administration rich surface only.
 - **Shadows:** `shadow-sm` for page panels, `shadow-noir` inside `<Card>`. `shadow-soft`/`shadow-medium` are **deprecated**.
 
 ### Motion
@@ -287,9 +286,9 @@ The one screen that owns its scroll. `PageWrapper … noInternalScroll className
 
 ## Component contracts
 
-**Buttons** — one default-variant `<Button>` per view. Default (slate-900 fill) = the single most important action · Outline = secondary (Export, Edit, Cancel) · Ghost = tertiary/icon-only · Destructive = delete confirm only, inside `AlertDialogAction`. `h-9` standard, `h-7` icon-only in table rows. Press feedback is built into `Button` — never re-add `active:scale`.
+**Buttons** — one default-variant `<Button>` per view. Default (theme primary fill) = the single most important action · Outline = secondary (Export, Edit, Cancel) · Ghost = tertiary/icon-only · Destructive = delete confirm only, inside `AlertDialogAction`. `h-9` standard, `h-7` icon-only in table rows. Press feedback is built into `Button` — never re-add `active:scale`.
 
-**Cards** — `<Card>` primitive (`bg-card text-card-foreground flex flex-col rounded-xl border border-border/70 shadow-noir`) when you need CardHeader/Content/Footer, or a plain panel via `CONTENT_PANEL_SOLID` (`rounded-xl border border-border bg-card shadow-sm`) — import the constant, never retype it. Always `bg-card`, never `bg-white`; translucent fills ≥75% card opacity with ≥70% borders. Clickable cards add `hover:border-primary/40 hover:shadow-md transition-all cursor-pointer`.
+**Cards** — `<Card>` primitive (`bg-card text-card-foreground flex flex-col rounded-xl border border-border shadow-noir`) when you need CardHeader/Content/Footer, or a plain panel via `CONTENT_PANEL_SOLID` (`rounded-xl border border-border bg-card shadow-sm`) — import the constant, never retype it. First-level panels use `card`; children use `surface-inset` and a visible edge. Never use `bg-white` for authenticated surfaces. Clickable cards add `hover:border-primary/40 hover:shadow-md transition-all cursor-pointer`.
 
 **StatCard** — `rounded-lg border border-border bg-card px-3 py-2.5` (~56px): tinted icon square (`h-8 w-8 rounded-md`) left, label `text-[11px] font-medium text-muted-foreground` (no uppercase) + value `text-lg font-semibold tabular-nums` right. `tone`: `default` · `blue` · `emerald` · `amber` · `red` · `violet` (RBAC/privileged); optional `delta`, `hint` (never with `delta`; truncates unless `wrapHint`, for a hint that carries data), `href`, `isLoading`. **`StatCardGrid` is always ONE horizontal row:** `repeat(N, minmax(10rem, 1fr))` from child count, `gap-3`, horizontal-scroll container **at every breakpoint** (`overflow-x-auto scrollbar-hide touch-pan-x`) so the ROW scrolls and the PAGE never does. Never `md:overflow-x-visible`, never multi-row, never wrap.
 

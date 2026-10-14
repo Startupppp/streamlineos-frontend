@@ -119,25 +119,6 @@
   --blue: #047857;
 }
 
-:root.theme-maia {
-  --radius: 0.75rem;
-  --primary: #4338ca;
-  --primary-foreground: #ffffff;
-  --ring: #4338ca;
-  --sidebar-primary: #4338ca;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent-foreground: #3730a3;
-  --sidebar-ring: #4338ca;
-  --brand-deep: #3730a3;
-  --brand-core: #4f46e5;
-  --brand-bright: #a5b4fc;
-  --gradient-signature: linear-gradient(135deg, #3730a3 0%, #4f46e5 50%, #a5b4fc 100%);
-  --chart-1: #4338ca;
-  --chart-3: #818cf8;
-  --gold: #4f46e5;
-  --blue: #4338ca;
-}
-
 :root.theme-teal {
   --primary: #0f766e;
   --primary-foreground: #ffffff;
@@ -308,34 +289,36 @@
   --blue: #be123c;
 }
 
-/* Selected accents tint navigation and selection, while work surfaces stay legible. */
+/* Accent themes reuse the Maia Mist surface ladder. */
 :root:not(.dark)[class*="theme-"] {
-  --background: #f4f7fb;
+  --background: #f7f9f9;
   --card: #ffffff;
   --popover: #ffffff;
-  --muted: #edf2f7;
-  --secondary: #edf2f7;
-  --accent: color-mix(in srgb, var(--brand-core) 9%, #edf2f7);
-  --border: #d6e0ea;
-  --input: #c7d4e2;
-  --sidebar: color-mix(in srgb, var(--brand-core) 3%, #eaf1f8);
-  --sidebar-border: #d2deea;
+  --muted: #f1f3f3;
+  --muted-foreground: #536367;
+  --secondary: #f4f4f5;
+  --accent: color-mix(in srgb, var(--brand-core) 6%, #f1f3f3);
+  --border: #dbe1e3;
+  --input: #cbd4d6;
+  --sidebar: color-mix(in srgb, var(--brand-core) 3%, #f9fbfb);
+  --sidebar-border: #dbe1e3;
   --ring: var(--brand-deep);
   --sidebar-ring: var(--brand-deep);
 }
 
-/* The same elevation ladder holds for every accent in dark mode. */
+/* Dark mode retains readable structural edges across every accent. */
 :root.dark[class*="theme-"] {
-  --background: #0d1726;
-  --card: #142337;
-  --popover: #1a2b42;
-  --muted: #203248;
-  --secondary: #203248;
-  --accent: color-mix(in srgb, var(--brand-core) 8%, #243b56);
-  --border: #34475d;
-  --input: #41546b;
-  --sidebar: color-mix(in srgb, var(--brand-core) 4%, #111f31);
-  --sidebar-border: #34475d;
+  --background: #090b0c;
+  --card: #161b1d;
+  --popover: #1c2326;
+  --muted: #22292b;
+  --muted-foreground: #9ca8ab;
+  --secondary: #27272a;
+  --accent: color-mix(in srgb, var(--brand-core) 8%, #22292b);
+  --border: #394449;
+  --input: #48545a;
+  --sidebar: color-mix(in srgb, var(--brand-core) 4%, #13191b);
+  --sidebar-border: #394449;
 }
 
 /* Dark-mode reconciliation — accent foregrounds lifted for contrast on dark surfaces */
@@ -380,18 +363,6 @@
   --sidebar-accent-foreground: #6ee7b7;
   --chart-1: #10b981;
   --blue: #10b981;
-}
-
-:root.dark.theme-maia {
-  --primary: #a5b4fc;
-  --primary-foreground: #1e1b4b;
-  --ring: #a5b4fc;
-  --sidebar-primary: #a5b4fc;
-  --sidebar-primary-foreground: #1e1b4b;
-  --sidebar-ring: #a5b4fc;
-  --sidebar-accent-foreground: #c7d2fe;
-  --chart-1: #a5b4fc;
-  --blue: #a5b4fc;
 }
 
 :root.dark.theme-teal {
@@ -455,19 +426,19 @@
   --blue: #f43f5e;
 }
 
-/* Reports retain distinct categorical hues when the interface accent changes. */
+/* Blue-family series retain visible contrast on both card surfaces. */
 :root:not(.dark)[class*="theme-"] {
-  --chart-1: #1856a3;
-  --chart-2: #087e85;
-  --chart-3: #a45b13;
-  --chart-4: #7547a6;
-  --chart-5: #b34065;
+  --chart-1: #0369a1;
+  --chart-2: #3730a3;
+  --chart-3: #155dfc;
+  --chart-4: #0e7490;
+  --chart-5: #1d4ed8;
 }
 
 :root.dark[class*="theme-"] {
-  --chart-1: #86b9f5;
-  --chart-2: #5fd1d0;
-  --chart-3: #f0bb72;
-  --chart-4: #c1a3ee;
-  --chart-5: #f294ae;
+  --chart-1: #38bdf8;
+  --chart-2: #818cf8;
+  --chart-3: #60a5fa;
+  --chart-4: #22d3ee;
+  --chart-5: #a5b4fc;
 }

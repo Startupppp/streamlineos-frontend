@@ -12,8 +12,10 @@ import {
   Shield,
   Sparkles,
   Trash2,
+  type LucideIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 interface EventDetailActionsProps {
   showMeeting: boolean;
@@ -35,6 +37,25 @@ interface EventDetailActionsProps {
 }
 
 const DOCK_EASE = [0.22, 1, 0.36, 1] as const;
+
+const TILE_TONE = {
+  default: "bg-muted text-foreground",
+  danger: "bg-destructive/10 text-destructive",
+  warning: "bg-status-warning-surface text-status-warning-ink",
+} as const;
+
+interface ActionTool {
+  key: string;
+  icon: LucideIcon;
+  label: string;
+  ariaLabel?: string;
+  onClick: () => void;
+  tone: keyof typeof TILE_TONE;
+}
+
+function isActionTool(tool: ActionTool | null): tool is ActionTool {
+  return tool !== null;
+}
 
 export function EventDetailActions({
   showMeeting,
@@ -78,58 +99,82 @@ export function EventDetailActions({
         <MeetingDock onClick={onMeeting} reduceMotion={reduceMotion} />
       ) : null}
       {hasTools ? (
-        <div className="grid grid-cols-2 gap-2">
-          {canMutate ? (
-            <Button variant="outline" className="bg-card dark:border-background" onClick={onEdit}>
-              <Pencil className="size-4" />
-              Edit
-            </Button>
-          ) : null}
-          {canExport ? (
-            <Button
-              variant="outline"
-              className="bg-card dark:border-background"
-              onClick={onExport}
-              aria-label="Export this day's events as CSV"
-            >
-              <Download className="size-4" />
-              Export day
-            </Button>
-          ) : null}
-          {canMutate ? (
-            <Button
-              variant="outline"
-              className="bg-card text-destructive hover:bg-destructive/10 hover:text-destructive dark:border-background"
-              onClick={onDelete}
-            >
-              <Trash2 className="size-4" />
-              Delete
-            </Button>
-          ) : null}
-          {showCancelOccurrence ? (
-            <Button
-              variant="outline"
-              className="col-span-2 bg-card dark:border-background"
-              onClick={onCancelOccurrence}
-            >
-              <CalendarX2 className="size-4" />
-              Cancel occurrence
-            </Button>
-          ) : null}
-          {showProtect ? (
-            <Button variant="outline" className="col-span-2 bg-card dark:border-background" onClick={onProtect}>
-              <Shield className="size-4" />
-              Protect time
-            </Button>
-          ) : null}
-          {showRadar ? (
-            <Button variant="outline" className="col-span-2 bg-card dark:border-background" onClick={onRadar}>
-              <Radar className="size-4" />
-              Commitment radar
-            </Button>
-          ) : null}
-        </div>
+        <ActionGrid
+          tools={(
+            [
+              canMutate
+                ? { key: "edit", icon: Pencil, label: "Edit", onClick: onEdit, tone: "default" }
+                : null,
+              canExport
+                ? {
+                    key: "export",
+                    icon: Download,
+                    label: "Export day",
+                    ariaLabel: "Export this day's events as CSV",
+                    onClick: onExport,
+                    tone: "default",
+                  }
+                : null,
+              canMutate
+                ? { key: "delete", icon: Trash2, label: "Delete", onClick: onDelete, tone: "danger" }
+                : null,
+              showCancelOccurrence
+                ? {
+                    key: "cancel",
+                    icon: CalendarX2,
+                    label: "Cancel occurrence",
+                    onClick: onCancelOccurrence,
+                    tone: "warning",
+                  }
+                : null,
+              showProtect
+                ? { key: "protect", icon: Shield, label: "Protect time", onClick: onProtect, tone: "warning" }
+                : null,
+              showRadar
+                ? { key: "radar", icon: Radar, label: "Commitment radar", onClick: onRadar, tone: "default" }
+                : null,
+            ] satisfies Array<ActionTool | null>
+          ).filter(isActionTool)}
+        />
       ) : null}
+    </div>
+  );
+}
+
+function ActionGrid({ tools }: { tools: ActionTool[] }) {
+  const lastIsWide = tools.length % 2 === 1;
+
+  return (
+    <div className="grid grid-cols-2 gap-2">
+      {tools.map((tool, index) => {
+        const Icon = tool.icon;
+        const wide = lastIsWide && index === tools.length - 1;
+        return (
+          <Button
+            key={tool.key}
+            type="button"
+            variant="ghost"
+            aria-label={tool.ariaLabel}
+            onClick={tool.onClick}
+            className={cn(
+              "h-auto justify-start gap-2.5 border border-input bg-card px-2.5 py-2 shadow-xs hover:border-primary/50 dark:border-background",
+              wide && "col-span-2",
+              tool.tone === "danger" &&
+                "text-destructive hover:bg-destructive/10 hover:text-destructive",
+            )}
+          >
+            <span
+              className={cn(
+                "flex size-8 shrink-0 items-center justify-center rounded-lg",
+                TILE_TONE[tool.tone],
+              )}
+            >
+              <Icon />
+            </span>
+            <span className="min-w-0 truncate">{tool.label}</span>
+          </Button>
+        );
+      })}
     </div>
   );
 }

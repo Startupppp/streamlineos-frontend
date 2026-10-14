@@ -1,7 +1,9 @@
 "use client";
 
-import { CalendarClock, RefreshCw } from "lucide-react";
+import { AlertCircle, CalendarClock, RefreshCw } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -17,29 +19,65 @@ import { MeetingWorkspaceGovernance } from "./meeting-workspace-governance";
 import { MeetingWorkspaceNotes } from "./meeting-workspace-notes";
 import { MeetingWorkspaceOutcomes } from "./meeting-workspace-outcomes";
 
+const COVERAGE = [
+  ["available", "Available"],
+  ["stale", "Stale"],
+  ["unavailable", "Unavailable"],
+  ["consentRequired", "Awaiting consent"],
+] as const;
+
 export function MeetingWorkspacePanel({ eventId, eventTitle }: { eventId: number; eventTitle: string }) {
   const workspaceQuery = useCalendarMeetingWorkspace(eventId);
   const initialize = useInitializeCalendarMeetingWorkspace();
   const workspace = workspaceQuery.data;
 
-  if (workspaceQuery.isLoading) return <div className="space-y-3"><Skeleton className="h-8 w-full" /><Skeleton className="h-24 w-full" /><Skeleton className="h-20 w-full" /></div>;
+  const handleRetry = () => {
+    void workspaceQuery.refetch();
+  };
+
+  const handleCreate = () => {
+    initialize.mutate(eventId, {
+      onError: (error) => toast.error(getErrorMessage(error)),
+    });
+  };
+
+  if (workspaceQuery.isLoading) {
+    return (
+      <div className="space-y-3">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <Skeleton className="h-16" />
+          <Skeleton className="h-16" />
+          <Skeleton className="h-16" />
+          <Skeleton className="h-16" />
+        </div>
+        <Skeleton className="h-9 w-full" />
+        <Skeleton className="h-40 w-full" />
+      </div>
+    );
+  }
 
   if (workspaceQuery.isError) {
     return (
-      <div className="rounded-lg border p-5 space-y-3">
-        <p className="text-sm font-medium">Meeting workspace is unavailable</p>
-        <p className="text-xs text-muted-foreground">{getErrorMessage(workspaceQuery.error)}</p>
-        <Button size="sm" variant="outline" onClick={() => void workspaceQuery.refetch()}>Try again</Button>
-      </div>
+      <Alert variant="destructive">
+        <AlertCircle />
+        <AlertTitle>Meeting workspace is unavailable</AlertTitle>
+        <AlertDescription className="flex flex-col items-start gap-3">
+          <span>{getErrorMessage(workspaceQuery.error)}</span>
+          <Button size="sm" variant="outline" onClick={handleRetry}>Try again</Button>
+        </AlertDescription>
+      </Alert>
     );
   }
 
   if (!workspace) {
     return (
-      <div className="rounded-lg border p-5 text-center space-y-3">
-        <CalendarClock className="mx-auto h-8 w-8 text-muted-foreground" />
-        <div><p className="text-sm font-medium">Create the meeting workspace</p><p className="mt-1 text-xs text-muted-foreground">Bring permitted context, notes, decisions, and reviewed follow-ups into one place.</p></div>
-        <Button size="sm" onClick={() => initialize.mutate(eventId, { onError: (error) => toast.error(getErrorMessage(error)) })} disabled={initialize.isPending}>Create workspace</Button>
+      <div className="flex flex-col items-center gap-3 rounded-lg bg-muted px-4 py-8 text-center dark:border dark:border-background">
+        <CalendarClock className="size-8 text-muted-foreground" />
+        <div className="space-y-1">
+          <p className="text-sm font-medium">Create the meeting workspace</p>
+          <p className="text-sm text-muted-foreground">Bring permitted context, notes, decisions, and reviewed follow-ups into one place.</p>
+        </div>
+        <Button size="sm" onClick={handleCreate} disabled={initialize.isPending}>Create workspace</Button>
       </div>
     );
   }
@@ -47,10 +85,20 @@ export function MeetingWorkspacePanel({ eventId, eventTitle }: { eventId: number
   const coverage = workspace.sourceCoverage;
 
   return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between gap-3 rounded-lg border px-3 py-2">
-        <div><p className="text-sm font-medium">{workspace.eventTitle}</p><p className="text-micro text-muted-foreground">{coverage.available} available · {coverage.stale} stale · {coverage.unavailable} unavailable · {coverage.consentRequired} awaiting consent</p></div>
-        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => void workspaceQuery.refetch()} aria-label="Refresh meeting workspace"><RefreshCw className="h-3.5 w-3.5" /></Button>
+    <div className="space-y-4">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-sm font-medium">Source coverage</p>
+        <Button variant="outline" size="icon" onClick={handleRetry} aria-label="Refresh meeting workspace">
+          <RefreshCw className="size-4" />
+        </Button>
+      </div>
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+        {COVERAGE.map(([key, label]) => (
+          <div key={key} className="rounded-lg bg-muted px-3 py-2.5 dark:border dark:border-background">
+            <p className="text-lg font-semibold tabular-nums">{coverage[key]}</p>
+            <p className="text-xs text-muted-foreground">{label}</p>
+          </div>
+        ))}
       </div>
       <Tabs defaultValue="prep">
         <TabsList className="w-full md:w-full">
@@ -60,11 +108,15 @@ export function MeetingWorkspacePanel({ eventId, eventTitle }: { eventId: number
           <TabsTrigger value="outcomes">Outcomes</TabsTrigger>
           <TabsTrigger value="governance">Controls</TabsTrigger>
         </TabsList>
-        <TabsContent value="prep" className="pt-2 space-y-5"><MeetingPrepPanel eventId={String(eventId)} eventTitle={eventTitle} /><div className="border-t pt-4"><MeetingFollowUpPanel eventId={String(eventId)} workspaceId={workspace.id} /></div></TabsContent>
-        <TabsContent value="context" className="pt-2"><MeetingWorkspaceContext workspace={workspace} /></TabsContent>
-        <TabsContent value="notes" className="pt-2"><MeetingWorkspaceNotes workspace={workspace} /></TabsContent>
-        <TabsContent value="outcomes" className="pt-2"><MeetingWorkspaceOutcomes workspace={workspace} onRefresh={() => void workspaceQuery.refetch()} /></TabsContent>
-        <TabsContent value="governance" className="pt-2"><MeetingWorkspaceGovernance workspace={workspace} /></TabsContent>
+        <TabsContent value="prep" className="space-y-4">
+          <MeetingPrepPanel eventId={String(eventId)} eventTitle={eventTitle} />
+          <Separator />
+          <MeetingFollowUpPanel eventId={String(eventId)} workspaceId={workspace.id} />
+        </TabsContent>
+        <TabsContent value="context"><MeetingWorkspaceContext workspace={workspace} /></TabsContent>
+        <TabsContent value="notes"><MeetingWorkspaceNotes workspace={workspace} /></TabsContent>
+        <TabsContent value="outcomes"><MeetingWorkspaceOutcomes workspace={workspace} onRefresh={handleRetry} /></TabsContent>
+        <TabsContent value="governance"><MeetingWorkspaceGovernance workspace={workspace} /></TabsContent>
       </Tabs>
     </div>
   );

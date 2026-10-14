@@ -68,25 +68,6 @@ export function CalendarAgendaPreview({
   );
 }
 
-export function CalendarOverlayFallback({ label }: { label: string }) {
-  return (
-    <div
-      role="status"
-      aria-live="polite"
-      aria-label={label}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-background/60 p-4"
-    >
-      <div className="flex w-full max-w-md flex-col gap-3 rounded-lg border border-border bg-card p-4 shadow-panel">
-        <Skeleton className="h-5 w-2/3" />
-        <Skeleton className="h-9 w-full" />
-        <Skeleton className="h-9 w-full" />
-        <Skeleton className="h-24 w-full" />
-        <Skeleton className="h-9 w-24 self-end" />
-      </div>
-    </div>
-  );
-}
-
 export function CalendarSheetFallback({ label }: { label: string }) {
   return (
     <div

@@ -110,11 +110,7 @@ export const CalendarToolbarPrimaryActions = memo(
       <div className="flex shrink-0 items-center gap-2">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button
-              variant="outline"
-              size="icon"
-              aria-label="Share"
-            >
+            <Button variant="outline" size="icon" aria-label="Share">
               <Share2 className="h-3.5 w-3.5" />
             </Button>
           </DropdownMenuTrigger>
@@ -204,7 +200,7 @@ export const CalendarToolbar = memo(function CalendarToolbar({
     [onViewChange],
   );
   const reduceMotion = useReducedMotion() === true;
-  const showPeriod = viewMode === "calendar" || viewMode === "list";
+  const showDateNav = viewMode === "calendar";
   const showCapacity = viewMode === "calendar" && Boolean(onOpenCapacity);
   const showInsights =
     (viewMode === "calendar" || viewMode === "my-day") && Boolean(onOpenCoach);
@@ -242,125 +238,124 @@ export const CalendarToolbar = memo(function CalendarToolbar({
                 <span className="hidden sm:inline">My time insights</span>
               </Button>
             ) : null}
-          <div className="hidden items-center gap-1.5 lg:flex sm:gap-2">
-            {!hidePrimaryActions ? (
+            <div className="hidden items-center gap-1.5 lg:flex sm:gap-2">
+              {!hidePrimaryActions ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="icon" aria-label="Share">
+                      <Share2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-40">
+                    <ShareMenuItems />
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : null}
+
+              {isAttendanceEnabled ? (
+                <Button
+                  variant={attendanceEventsVisible ? "secondary" : "outline"}
+                  size="sm"
+                  className="gap-1 px-2.5 xl:px-3"
+                  aria-label="Attendance events"
+                  aria-pressed={attendanceEventsVisible}
+                  onClick={onToggleAttendanceEvents}
+                >
+                  <Clock3 className="h-3.5 w-3.5" />
+                  <span className="hidden xl:inline">Attendance</span>
+                </Button>
+              ) : null}
+
+              {isHrEnabled ? (
+                <Button
+                  variant={hrEventsVisible ? "secondary" : "outline"}
+                  size="sm"
+                  className="gap-1 px-2.5 xl:px-3"
+                  aria-label="HR events"
+                  aria-pressed={hrEventsVisible}
+                  onClick={onToggleHrEvents}
+                >
+                  <Building2 className="h-3.5 w-3.5" />
+                  <span className="hidden xl:inline">HR events</span>
+                </Button>
+              ) : null}
+
+              {isCrmEnabled ? (
+                <Button
+                  variant={crmEventsVisible ? "secondary" : "outline"}
+                  size="sm"
+                  className="gap-1 px-2.5 xl:px-3"
+                  aria-label="CRM events"
+                  aria-pressed={crmEventsVisible}
+                  onClick={onToggleCrmEvents}
+                >
+                  <Handshake className="h-3.5 w-3.5" />
+                  <span className="hidden xl:inline">CRM events</span>
+                </Button>
+              ) : null}
+
+              <CalendarSourcePanel failures={sourceFailures} />
+            </div>
+
+            <div className="flex items-center gap-1.5 lg:hidden">
+              <CalendarSourcePanel failures={sourceFailures} />
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button
+                  <AnimatedIconButton
+                    icon={EllipsisIcon}
+                    iconSize={16}
                     variant="outline"
                     size="icon"
-                    aria-label="Share"
-                  >
-                    <Share2 className="h-3.5 w-3.5" />
-                  </Button>
+                    aria-label="More calendar actions"
+                  />
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-40">
-                  <ShareMenuItems />
+                <DropdownMenuContent align="end" className="w-52">
+                  {!hidePrimaryActions ? (
+                    <DropdownMenuSub>
+                      <DropdownMenuSubTrigger>
+                        <Share2 className="mr-2 h-3.5 w-3.5" />
+                        Share
+                      </DropdownMenuSubTrigger>
+                      <DropdownMenuSubContent className="w-40">
+                        <ShareMenuItems />
+                      </DropdownMenuSubContent>
+                    </DropdownMenuSub>
+                  ) : null}
+                  {!hidePrimaryActions &&
+                  (isAttendanceEnabled || isHrEnabled || isCrmEnabled) ? (
+                    <DropdownMenuSeparator />
+                  ) : null}
+                  {isAttendanceEnabled ? (
+                    <DropdownMenuCheckboxItem
+                      checked={attendanceEventsVisible}
+                      onCheckedChange={onToggleAttendanceEvents}
+                    >
+                      Attendance
+                    </DropdownMenuCheckboxItem>
+                  ) : null}
+                  {isHrEnabled ? (
+                    <DropdownMenuCheckboxItem
+                      checked={hrEventsVisible}
+                      onCheckedChange={onToggleHrEvents}
+                    >
+                      HR events
+                    </DropdownMenuCheckboxItem>
+                  ) : null}
+                  {isCrmEnabled ? (
+                    <DropdownMenuCheckboxItem
+                      checked={crmEventsVisible}
+                      onCheckedChange={onToggleCrmEvents}
+                    >
+                      CRM events
+                    </DropdownMenuCheckboxItem>
+                  ) : null}
                 </DropdownMenuContent>
               </DropdownMenu>
+            </div>
+
+            {!hidePrimaryActions ? (
+              <AddEventButton onOpenCreate={onOpenCreate} />
             ) : null}
-
-            {isAttendanceEnabled ? (
-              <Button
-                variant={attendanceEventsVisible ? "secondary" : "outline"}
-                size="sm"
-                className="gap-1 px-2.5 xl:px-3"
-                aria-label="Attendance events"
-                aria-pressed={attendanceEventsVisible}
-                onClick={onToggleAttendanceEvents}
-              >
-                <Clock3 className="h-3.5 w-3.5" />
-                <span className="hidden xl:inline">Attendance</span>
-              </Button>
-            ) : null}
-
-            {isHrEnabled ? (
-              <Button
-                variant={hrEventsVisible ? "secondary" : "outline"}
-                size="sm"
-                className="gap-1 px-2.5 xl:px-3"
-                aria-label="HR events"
-                aria-pressed={hrEventsVisible}
-                onClick={onToggleHrEvents}
-              >
-                <Building2 className="h-3.5 w-3.5" />
-                <span className="hidden xl:inline">HR events</span>
-              </Button>
-            ) : null}
-
-            {isCrmEnabled ? (
-              <Button
-                variant={crmEventsVisible ? "secondary" : "outline"}
-                size="sm"
-                className="gap-1 px-2.5 xl:px-3"
-                aria-label="CRM events"
-                aria-pressed={crmEventsVisible}
-                onClick={onToggleCrmEvents}
-              >
-                <Handshake className="h-3.5 w-3.5" />
-                <span className="hidden xl:inline">CRM events</span>
-              </Button>
-            ) : null}
-
-            <CalendarSourcePanel failures={sourceFailures} />
-          </div>
-
-          <div className="flex items-center gap-1.5 lg:hidden">
-            <CalendarSourcePanel failures={sourceFailures} />
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <AnimatedIconButton
-                  icon={EllipsisIcon}
-                  iconSize={16}
-                  variant="outline"
-                  size="icon"
-                  aria-label="More calendar actions"
-                />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-52">
-                {!hidePrimaryActions ? (
-                  <DropdownMenuSub>
-                    <DropdownMenuSubTrigger>
-                      <Share2 className="mr-2 h-3.5 w-3.5" />
-                      Share
-                    </DropdownMenuSubTrigger>
-                    <DropdownMenuSubContent className="w-40">
-                      <ShareMenuItems />
-                    </DropdownMenuSubContent>
-                  </DropdownMenuSub>
-                ) : null}
-                {!hidePrimaryActions && (isAttendanceEnabled || isHrEnabled || isCrmEnabled) ? (
-                  <DropdownMenuSeparator />
-                ) : null}
-                {isAttendanceEnabled ? (
-                  <DropdownMenuCheckboxItem
-                    checked={attendanceEventsVisible}
-                    onCheckedChange={onToggleAttendanceEvents}
-                  >
-                    Attendance
-                  </DropdownMenuCheckboxItem>
-                ) : null}
-                {isHrEnabled ? (
-                  <DropdownMenuCheckboxItem
-                    checked={hrEventsVisible}
-                    onCheckedChange={onToggleHrEvents}
-                  >
-                    HR events
-                  </DropdownMenuCheckboxItem>
-                ) : null}
-                {isCrmEnabled ? (
-                  <DropdownMenuCheckboxItem
-                    checked={crmEventsVisible}
-                    onCheckedChange={onToggleCrmEvents}
-                  >
-                    CRM events
-                  </DropdownMenuCheckboxItem>
-                ) : null}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-
-          {!hidePrimaryActions ? <AddEventButton onOpenCreate={onOpenCreate} /> : null}
           </div>
         </div>
 
@@ -375,11 +370,7 @@ export const CalendarToolbar = memo(function CalendarToolbar({
               : { duration: 0.2, ease: TOOL_ROW_EASE }
           }
         >
-          {viewMode === "history" ? (
-            <span className="px-1 text-sm text-muted-foreground">
-              Newest to oldest
-            </span>
-          ) : (
+          {showDateNav ? (
             <>
               <Button
                 variant="outline"
@@ -401,7 +392,7 @@ export const CalendarToolbar = memo(function CalendarToolbar({
                   variant="outline"
                   size="icon"
                   className="rounded-r-none border-r-0"
-                  aria-label={`Previous ${viewMode === "my-day" ? "day" : VIEW_PERIOD_LABEL[view]}`}
+                  aria-label={`Previous ${VIEW_PERIOD_LABEL[view]}`}
                   disabled={navigationDisabled}
                   onClick={onPrev}
                 />
@@ -411,31 +402,30 @@ export const CalendarToolbar = memo(function CalendarToolbar({
                   variant="outline"
                   size="icon"
                   className="rounded-l-none"
-                  aria-label={`Next ${viewMode === "my-day" ? "day" : VIEW_PERIOD_LABEL[view]}`}
+                  aria-label={`Next ${VIEW_PERIOD_LABEL[view]}`}
                   disabled={navigationDisabled}
                   onClick={onNext}
                 />
               </div>
-              {showPeriod ? (
-                <Select value={view} onValueChange={handleViewChange}>
-                  <SelectTrigger
-                    aria-label="Calendar view"
-                    className={cn(
-                      "w-fit min-w-[4.5rem]",
-                      FILTER_SELECT_TRIGGER,
-                    )}
-                  >
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
-                    <SelectItem value="day">Day</SelectItem>
-                    <SelectItem value="week">Week</SelectItem>
-                    <SelectItem value="month">Month</SelectItem>
-                  </SelectContent>
-                </Select>
-              ) : null}
+              <Select value={view} onValueChange={handleViewChange}>
+                <SelectTrigger
+                  aria-label="Calendar view"
+                  className={cn("w-fit min-w-[4.5rem]", FILTER_SELECT_TRIGGER)}
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
+                  <SelectItem value="day">Day</SelectItem>
+                  <SelectItem value="week">Week</SelectItem>
+                  <SelectItem value="month">Month</SelectItem>
+                </SelectContent>
+              </Select>
             </>
-          )}
+          ) : viewMode === "history" ? (
+            <span className="px-1 text-sm text-muted-foreground">
+              Newest to oldest
+            </span>
+          ) : null}
           {viewMode === "calendar" && scenarioCount > 0 && onOpenScenario ? (
             <Button
               variant="outline"

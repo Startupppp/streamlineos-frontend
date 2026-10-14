@@ -150,24 +150,22 @@ export function MeetingPrepPanel({ eventId, eventTitle }: MeetingPrepPanelProps)
       )}
 
       {showForm && (
-        <div className="space-y-3">
+        <div className="space-y-3 rounded-lg bg-muted p-3 dark:border dark:border-background">
           <div className="flex items-center gap-2">
-            <CalendarDays className="h-3.5 w-3.5 text-muted-foreground shrink-0" aria-hidden />
-            <span className="text-xs text-muted-foreground truncate min-w-0">{eventTitle}</span>
+            <CalendarDays className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+            <span className="min-w-0 truncate text-sm text-muted-foreground">{eventTitle}</span>
           </div>
 
           <div className="space-y-2">
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-              Include context from
-            </p>
-            <div className="flex flex-col gap-1.5">
+            <p className="text-sm font-medium">Include context from</p>
+            <div className="flex flex-col gap-2">
               <div className="flex items-center gap-2">
                 <Checkbox
                   id="meeting-prep-crm"
                   checked={includeCrm}
                   onCheckedChange={handleCrmChecked}
                 />
-                <Label htmlFor="meeting-prep-crm" className="text-xs font-normal">
+                <Label htmlFor="meeting-prep-crm" className="font-normal">
                   CRM (deals, contacts)
                 </Label>
               </div>
@@ -177,7 +175,7 @@ export function MeetingPrepPanel({ eventId, eventTitle }: MeetingPrepPanelProps)
                   checked={includeProject}
                   onCheckedChange={handleProjectChecked}
                 />
-                <Label htmlFor="meeting-prep-project" className="text-xs font-normal">
+                <Label htmlFor="meeting-prep-project" className="font-normal">
                   Projects & tickets
                 </Label>
               </div>
@@ -188,9 +186,9 @@ export function MeetingPrepPanel({ eventId, eventTitle }: MeetingPrepPanelProps)
             type="button"
             size="sm"
             onClick={handleDraftAgenda}
-            className="w-full h-8 text-xs gap-1.5"
+            className="w-full"
           >
-            <Sparkles className="h-3.5 w-3.5" aria-hidden />
+            <Sparkles className="size-4" aria-hidden />
             Draft Agenda
           </Button>
         </div>
@@ -224,9 +222,9 @@ export function MeetingPrepPanel({ eventId, eventTitle }: MeetingPrepPanelProps)
               variant="outline"
               size="sm"
               onClick={stop}
-              className="w-full h-8 text-xs gap-1.5"
+              className="w-full"
             >
-              <StopCircle className="h-3.5 w-3.5" aria-hidden />
+              <StopCircle className="size-4" aria-hidden />
               Stop
             </Button>
           ) : (
@@ -235,9 +233,9 @@ export function MeetingPrepPanel({ eventId, eventTitle }: MeetingPrepPanelProps)
               variant="outline"
               size="sm"
               onClick={handleDraftAgenda}
-              className="w-full h-8 text-xs gap-1.5"
+              className="w-full"
             >
-              <Sparkles className="h-3.5 w-3.5" aria-hidden />
+              <Sparkles className="size-4" aria-hidden />
               Run again
             </Button>
           )}

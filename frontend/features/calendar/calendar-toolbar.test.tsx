@@ -269,12 +269,13 @@ describe("CalendarToolbar — controls follow the active tab", () => {
     expect(screen.getByRole("button", { name: "Today" })).toBeInTheDocument();
   });
 
-  it("keeps the period on the list tab and hides planning tools", () => {
+  it("hides date navigation and planning tools on the list tab", () => {
     renderMode("list");
+    expect(screen.queryByRole("button", { name: "Today" })).toBeNull();
+    expect(screen.queryByRole("button", { name: /previous week/i })).toBeNull();
+    expect(screen.queryByRole("combobox", { name: "Calendar view" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Capacity" })).toBeNull();
     expect(screen.queryByRole("button", { name: "My time insights" })).toBeNull();
-    expect(screen.getByRole("combobox", { name: "Calendar view" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Today" })).toBeInTheDocument();
   });
 
   it("replaces date controls with the history order", () => {
@@ -286,11 +287,11 @@ describe("CalendarToolbar — controls follow the active tab", () => {
     expect(screen.queryByRole("button", { name: "My time insights" })).toBeNull();
   });
 
-  it("keeps day stepping and insights on My Day", () => {
+  it("keeps insights on My Day and hides date navigation", () => {
     renderMode("my-day");
-    expect(screen.getByRole("button", { name: "Today" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /previous day/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "My time insights" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Today" })).toBeNull();
+    expect(screen.queryByRole("button", { name: /previous/i })).toBeNull();
     expect(screen.queryByRole("button", { name: "Capacity" })).toBeNull();
     expect(screen.queryByRole("combobox", { name: "Calendar view" })).toBeNull();
   });

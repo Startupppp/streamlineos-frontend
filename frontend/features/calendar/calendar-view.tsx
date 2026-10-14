@@ -28,7 +28,6 @@ import {
   CalendarAgendaPreview,
   CalendarListFallback,
   CalendarLoadingStatus,
-  CalendarOverlayFallback,
   CalendarSheetFallback,
 } from "./calendar-lazy-fallbacks";
 import { CALENDAR_TRUNCATED_WARNING } from "./calendar-event-constants";
@@ -98,16 +97,12 @@ const CalendarEventsPanel = dynamic(
   },
 );
 
-const EventCreateDialog = dynamic(
-  () =>
-    import("./event-create-dialog").then((m) => ({
-      default: m.EventCreateDialog,
-    })),
-  {
-    ssr: false,
-    loading: () => <CalendarOverlayFallback label="Loading event form" />,
-  },
-);
+const loadEventCreateDialog = () =>
+  import("./event-create-dialog").then((module) => ({
+    default: module.EventCreateDialog,
+  }));
+
+const EventCreateDialog = dynamic(loadEventCreateDialog, { ssr: false });
 
 const EventDetailSheet = dynamic(
   () =>
@@ -768,7 +763,10 @@ export function CalendarView() {
     });
   }, [searchParams, finalizeMutate, router, setAccountsOpen]);
 
-  // `/calendar?accounts=1` lands on the accounts sheet; the huddle "Connect Google Calendar" toast links here.
+  useEffect(() => {
+    void loadEventCreateDialog();
+  }, []);
+
   useEffect(() => {
     if (searchParams.get("accounts") === "1") setAccountsOpen(true);
   }, [searchParams, setAccountsOpen]);
@@ -1300,7 +1298,10 @@ export function CalendarView() {
               className="flex shrink-0 items-center gap-2 rounded-md border border-status-warning-rule bg-status-warning-surface px-3 py-1.5 text-dense text-status-warning-ink"
               role="status"
             >
-              <span className="min-w-0 flex-1">Connected calendar coverage is partial. Retry before relying on this time window.</span>
+              <span className="min-w-0 flex-1">
+                Connected calendar coverage is partial. Retry before relying on
+                this time window.
+              </span>
               <button
                 type="button"
                 onClick={handleRetryExternal}

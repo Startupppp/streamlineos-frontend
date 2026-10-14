@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -95,7 +96,7 @@ export function MeetingWorkspaceSourceActionDraft({ workspace }: MeetingWorkspac
   };
 
   return (
-    <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-3 rounded-lg border p-3">
+    <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-3 rounded-lg bg-muted p-3 dark:border dark:border-background">
       <div>
         <p className="text-xs font-semibold">Propose a source-owned change</p>
         <p className="text-micro text-muted-foreground">The record owner checks access and version again when the change is reviewed and applied.</p>
@@ -108,7 +109,7 @@ export function MeetingWorkspaceSourceActionDraft({ workspace }: MeetingWorkspac
         <>
           <Label htmlFor={`meeting-source-target-${workspace.id}`}>Source commitment</Label>
           <Select value={targetId || undefined} onValueChange={handleTargetChange}>
-            <SelectTrigger id={`meeting-source-target-${workspace.id}`} className="h-8 text-xs"><SelectValue placeholder="Choose a record" /></SelectTrigger>
+            <SelectTrigger id={`meeting-source-target-${workspace.id}`}><SelectValue placeholder="Choose a record" /></SelectTrigger>
             <SelectContent>
               {targets.map((event) => <SelectItem key={event.id} value={event.id}>{event.title} · {event.sourceKey}</SelectItem>)}
             </SelectContent>
@@ -116,10 +117,19 @@ export function MeetingWorkspaceSourceActionDraft({ workspace }: MeetingWorkspac
           {config ? (
             <>
               <Label htmlFor={`meeting-source-value-${workspace.id}`}>{config.label}</Label>
-              <Input id={`meeting-source-value-${workspace.id}`} type={config.inputType} {...form.register("value")} className="h-8 text-xs" />
+              {config.inputType === "date" ? (
+                <DatePicker
+                  id={`meeting-source-value-${workspace.id}`}
+                  value={form.watch("value")}
+                  onChange={(value) => form.setValue("value", value, { shouldValidate: true })}
+                  ariaLabel={config.label}
+                />
+              ) : (
+                <Input id={`meeting-source-value-${workspace.id}`} type="datetime-local" {...form.register("value")} />
+              )}
               <Label htmlFor={`meeting-source-effect-${workspace.id}`}>Intended effect</Label>
-              <Input id={`meeting-source-effect-${workspace.id}`} {...form.register("effect")} className="h-8 text-xs" />
-              <Label className="flex items-center gap-2 text-xs font-normal">
+              <Input id={`meeting-source-effect-${workspace.id}`} {...form.register("effect")} />
+              <Label className="font-normal">
                 <Checkbox checked={form.watch("sharedWithGuests")} onCheckedChange={handleShareChange} />
                 Share the reviewed outcome with guests
               </Label>
