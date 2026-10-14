@@ -76,14 +76,16 @@ Unchanged: no code comments, no gate or ratchet weakened to pass (FE-136), no `a
 | Lane | Domain | Bugs | Stage |
 |---|---|---|---|
 | L1 | storage, attachments, project files, ticket page shell | B-013, B-016, B-024, B-030, B-031, B-017, NEW-27, B-020 | CODE DONE |
-| L2 | board rank, list/table ordering, display options, search limits | B-027, B-037, B-028, B-025, B-034, B-035, B-029, B-005, B-036, B-081, B-006 | RUNNING |
+| L2 | board rank, list/table ordering, display options, search limits | B-027, B-037, B-028, B-025, B-034, B-035, B-029, B-005, B-036, B-081, B-006 | CODE DONE — B-029/B-081 by the coordinator, B-035/B-036 re-dispatched |
 | L3 | create-issue dialog, ticket activity, comments, timer, a11y, mobile | B-001, B-003, B-004, B-008, B-019, B-060, B-023, B-038, NEW-06 | CODE DONE |
 | L4 | releases, milestones, project updates | B-039, B-065, B-044, B-045, B-048, B-049, B-059, B-066, B-085, B-053, B-068 | CODE DONE |
 | L5 | portfolios, programs, roadmap timeline | B-014, B-015, B-074, B-075, B-069, B-080 | CODE DONE |
 | L6 | project settings, budget, CSV import, create-project wizard | B-007, B-010, B-046, B-002, B-050, B-051, B-052, NEW-11, NEW-26, NEW-10, B-012, B-083 | CODE DONE |
-| L7 | epics, triage, ticket relations, parents, history, sub-issues | B-043, B-047, B-062, B-070, B-041, B-063, B-064, B-071, B-072, B-073, B-079, B-082 | RUNNING |
-| L8 | approvals, inbox | B-084, B-061, B-056, B-076, B-054, B-055, B-057, B-077, B-040 | CODE DONE — B-040 reassigned to L9 |
-| L9 | calendar source, navigation, dead links, org-setup invite | B-011, B-022, B-042, B-033, B-009, B-040 | CODE DONE — all six re-verified against the code, no change needed |
+| L7 | epics, triage, ticket relations, parents, history, sub-issues | B-043, B-047, B-062, B-070, B-041, B-063, B-064, B-071, B-072, B-073, B-079, B-082 | CODE DONE — audited; B-070, B-071, B-073, B-079, B-082 needed completion |
+| L8 | approvals, inbox | B-084, B-061, B-056, B-076, B-054, B-055, B-057, B-077, B-040 | CODE DONE |
+| L9 | calendar source, navigation, dead links, org-setup invite | B-011, B-022, B-042, B-033, B-009, B-040 | CODE DONE — B-042 reworked to a config redirect |
+
+All 83 bug IDs are `PENDING_BROWSER_VERIFICATION`. Nothing is pushed.
 
 ## Territory
 
@@ -113,8 +115,9 @@ applies to production (authorized for this program).
 | Migration | For | Applied |
 |---|---|---|
 | `2021_release_version_unique_per_project` (idx 1291) | B-049 | yes — proven on a `prodshape` clone, then applied to Neon production; index and ledger row verified. |
-| `2022_ticket_activity_relation_parent_actions` (idx 1292) | L7 relation/parent activity | yes — verified on production by its enum labels `parent_set` and `parent_removed`. |
-| `2016`-`2020_calendar_*` (idx 1286-1290) | a peer session's calendar work | yes, 2026-10-14 — **they were stranded**. Applying 2021 and 2022 pushed the runner's watermark past them, so `db:migrate` reported `0 pending` while production lacked `calendar_saved_views`, `calendar_protected_work`, `calendar_commitment_edges`, `calendar_coach_consent` and the two `calendar_admin_policies.offline_busy_cache_*` columns — proven absent by catalog probe, with 19 backend files reading them. Replayed on a `prodshape` clone (RLS on, one policy each, `streamline_app` SELECT+INSERT), then applied to production tag by tag with `apply-journalled-migration.mjs`. `check:migration-ledger` now passes 1165/1165. |
+| `2022_ticket_activity_relation_parent_actions` (idx 1292) | B-082 | yes — arrived as 2023/idx 1293, leaving a hole in the journal, and added the labels with no lock timeout, no idempotency and no post-check. Renumbered to 2022/idx 1292 and hardened, proven on a `prodshape` clone (absent before, present after, second pass a no-op, value usable after commit), then applied to Neon production and the enum re-read. |
+
+2023-2025 / idx 1293-1295 stay reserved.
 
 ## Policy decisions to confirm
 
@@ -129,3 +132,13 @@ final summary.
 | B-069 | Bars stay click-only with a tooltip and a drag no longer opens the ticket — the brief's own recommended fix. Drag-to-reschedule was deliberately NOT built; the timeline has no drag support to wire up. |
 | B-073 | "Add subtask" accepts an existing ticket key as well as a new title. |
 | B-084 | The assigned approver and an active delegate see Decide regardless of Build Admin; Delegate/Escalate/Cancel/Delete stay admin-only. |
+
+## Gates at the end of the program
+
+| Gate | Result |
+|---|---|
+| `pnpm type-check` (frontend) | green for every file this program touched. Three errors remain in another session's in-flight work and are not in this brief: `components/hr/onboarding-wizard.tsx` (2), `components/hr/_onboarding/step-banking.tsx` (1, imports a `latinNameFieldChange` that module does not export yet), `features/build/overview/managed-product-overview-flow.tsx` (1). |
+| `pnpm type-check:specs` | same three, nothing else. |
+| `eslint` over all 267 changed files | no errors. `pnpm lint` itself cannot start — `eslint-plugin-react-hooks` is in the pnpm store but not linked into `frontend/node_modules`, so the flat config cannot resolve it. `npx eslint` resolves it and runs. An install-state problem, not a code one. |
+| `pnpm typecheck` (backend) | green. |
+| Build-module jest | green except three suites that are red independently of this program: `inbox-triage.test.tsx` (passes alone, times out under full-suite load), `build-actor-selector-scope.test.ts` (four files still on `useOrgMembers` instead of `useBuildMembers` + `useOrgMembersByIds`), and `build-ui-consistency.test.ts` / `build-paginated-content.test.tsx` (expectations for `collapseBelow` and `BuildPaginatedContent` that no source has ever satisfied). |

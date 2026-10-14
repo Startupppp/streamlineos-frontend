@@ -1599,7 +1599,7 @@ Each section gives: where, steps, expected, actual (from the QA run), likely cau
 
 ## B-036: The Priority filter is dropped after navigating away and back
 **Severity:** Low
-**Status:** IN PROGRESS
+**Status:** FIXED — code and tests landed; browser verification pending
 **Shared root cause group:** G7 List/board query options (sort, columns, sub-issues, filters)
 
 **Where:** https://www.streamlineos.in/build/7/issues (filter bar: Add filter) | Role/account: Owner qaown1012b (Owner).
