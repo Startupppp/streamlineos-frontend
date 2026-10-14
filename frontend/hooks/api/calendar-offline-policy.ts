@@ -31,6 +31,7 @@ export function useCalendarOfflinePolicy(enabled = true) {
     },
     enabled: enabled && Boolean(orgId && userId) && canRead,
     staleTime: 30_000,
+    refetchOnMount: "always",
     refetchOnWindowFocus: "always",
     refetchOnReconnect: "always",
   });
