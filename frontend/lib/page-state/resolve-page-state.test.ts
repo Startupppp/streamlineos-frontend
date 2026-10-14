@@ -114,6 +114,13 @@ describe("resolvePageState — the branch order below denial", () => {
       .toEqual({ kind: "loading" });
   });
 
+  it("separates an empty filtered result from an empty collection", () => {
+    expect(resolvePageState({ ...granted, isEmpty: true, hasActiveFilters: true }))
+      .toEqual({ kind: "filtered-empty" });
+    expect(resolvePageState({ ...granted, isEmpty: false, hasActiveFilters: true }))
+      .toEqual({ kind: "ready" });
+  });
+
   it("prefers an error to an empty result, so a failure is not read as no data", () => {
     const error = new Error("boom");
     expect(resolvePageState({ ...granted, isError: true, error, isEmpty: true }))
