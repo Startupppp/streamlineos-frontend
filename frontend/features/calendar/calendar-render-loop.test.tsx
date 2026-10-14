@@ -153,6 +153,19 @@ describe("/calendar render stability", () => {
     expect(paths).toContain("/me/attendance/monthly");
   });
 
+  it("shows a loading state while the desktop grid event window is pending", async () => {
+    mockApiGet.mockImplementation((path: unknown) =>
+      path === "/calendar/events"
+        ? new Promise(() => undefined)
+        : Promise.resolve(routeGet(path)),
+    );
+
+    const { getByText, queryByText } = await renderCalendar();
+
+    expect(getByText("Loading events")).toBeInTheDocument();
+    expect(queryByText("No events in this period")).not.toBeInTheDocument();
+  });
+
   it("announces the range at the granularity of the active view, not month-only", async () => {
     const { getByLabelText } = await renderCalendar();
     expect(

@@ -997,6 +997,8 @@ export function CalendarView() {
               ) : viewMode === "calendar" ? (
                 savedViewActive && myDayQuery.isLoading ? (
                   <CalendarListFallback label="Loading saved view" />
+                ) : regularSourcesActive && eventsIsLoading ? (
+                  <CalendarListFallback label="Loading events" />
                 ) : gridActive ? (
                   <CalendarGridLayer
                     events={savedViewActive ? savedGridEvents : allCalEvents}
