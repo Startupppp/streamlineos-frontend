@@ -58,9 +58,17 @@ export const invitationActionContract = z.object({
   meetingUrl: z.string().nullable(),
 });
 
+export const bookingNoShowContract = z.object({
+  id: z.string().uuid(),
+  status: z.enum(["pending", "confirmed", "cancelled", "rescheduled", "declined"]),
+  lifecycleState: z.literal("no_show"),
+  lifecycleVersion: z.number().int().positive(),
+});
+
 export type ManagedBooking = z.infer<typeof managedBookingsContract>["items"][number];
 export type ManagedBookingPage = z.infer<typeof managedBookingsContract>;
 export type RoutingAssignment = z.infer<typeof routingAssignmentContract>;
 export type BookingInvitationPage = z.infer<typeof bookingInvitationsContract>;
 export type BookingInvitation = BookingInvitationPage["items"][number];
 export type InvitationAction = z.infer<typeof invitationActionContract>;
+export type BookingNoShow = z.infer<typeof bookingNoShowContract>;
