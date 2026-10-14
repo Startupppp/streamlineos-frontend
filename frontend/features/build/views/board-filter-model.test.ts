@@ -33,6 +33,31 @@ describe("filterBoardTickets", () => {
     expect(result).toHaveLength(2);
   });
 
+  it("drops the tickets named as sub-issues when the caller passes a set", () => {
+    const tickets = [makeTicket({ id: 1 }), makeTicket({ id: 2 })];
+    const result = filterBoardTickets({
+      allTickets: tickets,
+      hideCompleted: false,
+      completedIssues: "all",
+      statuses: undefined,
+      qaMatchIds: null,
+      subIssueIds: new Set([2]),
+    });
+    expect(result.map((t) => t.id)).toEqual([1]);
+  });
+
+  it("keeps every ticket when no sub-issue set is passed, so the board is unchanged by default", () => {
+    const tickets = [makeTicket({ id: 1 }), makeTicket({ id: 2 })];
+    const result = filterBoardTickets({
+      allTickets: tickets,
+      hideCompleted: false,
+      completedIssues: "all",
+      statuses: undefined,
+      qaMatchIds: null,
+    });
+    expect(result.map((t) => t.id)).toEqual([1, 2]);
+  });
+
   it("filters to qaMatchIds when provided", () => {
     const tickets = [makeTicket({ id: 1 }), makeTicket({ id: 2 })];
     const result = filterBoardTickets({

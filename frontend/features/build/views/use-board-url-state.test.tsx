@@ -263,3 +263,57 @@ describe("useBoardUrlState — an applied saved view can be updated in place fro
     expect(mockUpdateViewMutate).not.toHaveBeenCalled();
   });
 });
+
+describe("B-081 — the Sub-issues display option decides whether child tickets are listed", () => {
+  const PARENT_AND_CHILD = [
+    {
+      id: 130,
+      ticketNumber: 130,
+      title: "Parent",
+      status: "TODO",
+      type: "STORY",
+      labels: [],
+      parentTicketId: null,
+      version: 1,
+    },
+    {
+      id: 131,
+      ticketNumber: 131,
+      title: "Child",
+      status: "TODO",
+      type: "TASK",
+      labels: [],
+      parentTicketId: 130,
+      version: 1,
+    },
+  ];
+
+  it("leaves a child ticket out of the list when Sub-issues is off", () => {
+    boardState.boardTickets = PARENT_AND_CHILD;
+    setParams({ cols: "showId" });
+
+    const { result } = renderHook(() => useBoardUrlState(1));
+
+    expect(result.current.displayOptions.showSubIssues).toBe(false);
+    expect(result.current.filteredTickets.map((t) => t.id)).toEqual([130]);
+  });
+
+  it("lists the child ticket when Sub-issues is on", () => {
+    boardState.boardTickets = PARENT_AND_CHILD;
+    setParams({ cols: "showId,showSubIssues" });
+
+    const { result } = renderHook(() => useBoardUrlState(1));
+
+    expect(result.current.displayOptions.showSubIssues).toBe(true);
+    expect(result.current.filteredTickets.map((t) => t.id)).toEqual([130, 131]);
+  });
+
+  it("keeps every ticket when none of them has a parent, so the filter cannot empty a flat project", () => {
+    boardState.boardTickets = [PARENT_AND_CHILD[0]];
+    setParams({ cols: "showId" });
+
+    const { result } = renderHook(() => useBoardUrlState(1));
+
+    expect(result.current.filteredTickets.map((t) => t.id)).toEqual([130]);
+  });
+});

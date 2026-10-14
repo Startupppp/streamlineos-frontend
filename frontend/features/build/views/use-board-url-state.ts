@@ -179,6 +179,14 @@ export function useBoardUrlState(
     return new Set(qaMatches.map((bug) => bug.id));
   }, [qaFilterActive, qaMatches]);
 
+  const subIssueIds = useMemo(() => {
+    if (displayOptions.showSubIssues || !boardTickets) return null;
+    const ids = boardTickets
+      .filter((ticket) => ticket.parentTicketId != null)
+      .map((ticket) => ticket.id);
+    return ids.length > 0 ? new Set(ids) : null;
+  }, [boardTickets, displayOptions.showSubIssues]);
+
   const filteredTickets = useMemo(
     () => filterBoardTickets({
       allTickets,
@@ -186,8 +194,9 @@ export function useBoardUrlState(
       completedIssues: displayOptions.completedIssues,
       statuses,
       qaMatchIds,
+      subIssueIds,
     }),
-    [allTickets, hideCompleted, displayOptions.completedIssues, statuses, qaMatchIds],
+    [allTickets, hideCompleted, displayOptions.completedIssues, statuses, qaMatchIds, subIssueIds],
   );
 
   const members = useMemo(() => computeBoardMembers(data?.members), [data?.members]);
