@@ -68,9 +68,10 @@ export function CalendarOfflineEditReview({ intent, onDiscard, onContinue }: {
   const sourceCurrent = Boolean(event?.actions.edit && detail?.canManage && event.sourceVersion === intent.expectedSourceVersion && String(detail.localVersion) === intent.expectedSourceVersion &&
     new Date(event.start).getTime() === originalStart.getTime() && new Date(event.end).getTime() === originalEnd.getTime() && review.data?.coverage === "complete");
   const evaluationAge = review.data ? nowMs - new Date(review.data.availability.evaluatedAt).getTime() : NaN;
-  const safe = sameIdentity && canRead && canWrite && policyCurrent && valid && sourceCurrent && slot?.state === "free" && slot.coverageState === "complete" &&
-    review.isFetchedAfterMount && !review.isFetching && !review.isError && review.dataUpdatedAt >= intent.createdAt &&
+  const evaluationCurrent = review.isFetchedAfterMount && review.dataUpdatedAt >= intent.createdAt &&
     Number.isFinite(evaluationAge) && evaluationAge >= 0 && evaluationAge < 60_000;
+  const safe = sameIdentity && canRead && canWrite && policyCurrent && valid && sourceCurrent && slot?.state === "free" && slot.coverageState === "complete" &&
+    !review.isFetching && !review.isError && evaluationCurrent;
   return <Dialog open onOpenChange={(open) => { if (!open) onDiscard(); }}>
     <DialogContent><DialogHeader><DialogTitle>Review offline event change</DialogTitle><DialogDescription>No event was changed while offline. The original occurrence, permission, version, policy, and proposed time must all be current before the edit form opens.</DialogDescription></DialogHeader>
       <div className="space-y-3 text-sm">
@@ -85,7 +86,7 @@ export function CalendarOfflineEditReview({ intent, onDiscard, onContinue }: {
         {review.isError ? <p className="text-destructive">{getErrorMessage(review.error)}</p> : null}
         {review.data && !sourceCurrent ? <p className="text-destructive">This event or occurrence changed, or its coverage is incomplete. Discard and refresh the Calendar.</p> : null}
         {slot && (slot.state !== "free" || slot.coverageState !== "complete") ? <p className="text-destructive">The proposed time needs review: {slot.explanation}</p> : null}
-        <div className="flex justify-end gap-2"><Button variant="ghost" onClick={onDiscard}>Discard</Button>{policy.isError ? <Button variant="outline" onClick={() => { void policy.refetch(); }}>Retry policy</Button> : null}{review.isError ? <Button variant="outline" onClick={() => { void review.refetch(); }}>Retry checks</Button> : null}<Button disabled={!safe || !event || !detail} onClick={() => { if (event && detail) onContinue({ ...event, start: intent.start, end: intent.end }, detail.rrule); }}>Continue to edit form</Button></div>
+        <div className="flex justify-end gap-2"><Button variant="ghost" onClick={onDiscard}>Discard</Button>{policy.isError ? <Button variant="outline" onClick={() => { void policy.refetch(); }}>Retry policy</Button> : null}{review.isError ? <Button variant="outline" onClick={() => { void review.refetch(); }}>Retry checks</Button> : null}{sameIdentity && canRead && canWrite && policyCurrent && valid && review.data && !evaluationCurrent && !review.isFetching && !review.isError ? <Button variant="outline" onClick={() => { void review.refetch(); }}>Recheck current state</Button> : null}<Button disabled={!safe || !event || !detail} onClick={() => { if (event && detail) onContinue({ ...event, start: intent.start, end: intent.end }, detail.rrule); }}>Continue to edit form</Button></div>
       </div>
     </DialogContent>
   </Dialog>;

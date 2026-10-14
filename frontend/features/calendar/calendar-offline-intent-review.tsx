@@ -58,9 +58,10 @@ export function CalendarOfflineIntentReview({ intent, onDiscard, onContinue }: {
   });
   const slot = availability.data?.slots[0];
   const evaluationAge = availability.data ? nowMs - new Date(availability.data.evaluatedAt).getTime() : NaN;
-  const safe = sameIdentity && canRead && canWrite && policyCurrent && valid && slot?.state === "free" && slot.coverageState === "complete" &&
-    availability.isFetchedAfterMount && !availability.isFetching && !availability.isError && availability.dataUpdatedAt >= intent.createdAt &&
+  const evaluationCurrent = availability.isFetchedAfterMount && availability.dataUpdatedAt >= intent.createdAt &&
     Number.isFinite(evaluationAge) && evaluationAge >= 0 && evaluationAge < 60_000;
+  const safe = sameIdentity && canRead && canWrite && policyCurrent && valid && slot?.state === "free" && slot.coverageState === "complete" &&
+    !availability.isFetching && !availability.isError && evaluationCurrent;
   return <Dialog open onOpenChange={(open) => { if (!open) onDiscard(); }}>
     <DialogContent><DialogHeader><DialogTitle>Review offline time draft</DialogTitle><DialogDescription>This draft was not booked while offline. Current access, policy, and availability must be checked before you continue.</DialogDescription></DialogHeader>
       <div className="space-y-3 text-sm">
@@ -74,7 +75,7 @@ export function CalendarOfflineIntentReview({ intent, onDiscard, onContinue }: {
         {availability.isLoading ? <p className="text-muted-foreground">Checking live availability</p> : null}
         {availability.isError ? <p className="text-destructive">{getErrorMessage(availability.error)}</p> : null}
         {slot ? <p>{slot.state === "free" && slot.coverageState === "complete" ? "Time is currently available" : `Time needs review: ${slot.explanation}`}</p> : null}
-        <div className="flex justify-end gap-2"><Button variant="ghost" onClick={onDiscard}>Discard</Button>{policy.isError ? <Button variant="outline" onClick={() => { void policy.refetch(); }}>Retry policy</Button> : null}{availability.isError ? <Button variant="outline" onClick={() => { void availability.refetch(); }}>Retry availability</Button> : null}<Button disabled={!safe} onClick={() => onContinue({ start, end })}>Continue to event form</Button></div>
+        <div className="flex justify-end gap-2"><Button variant="ghost" onClick={onDiscard}>Discard</Button>{policy.isError ? <Button variant="outline" onClick={() => { void policy.refetch(); }}>Retry policy</Button> : null}{availability.isError ? <Button variant="outline" onClick={() => { void availability.refetch(); }}>Retry availability</Button> : null}{sameIdentity && canRead && canWrite && policyCurrent && valid && availability.data && !evaluationCurrent && !availability.isFetching && !availability.isError ? <Button variant="outline" onClick={() => { void availability.refetch(); }}>Recheck availability</Button> : null}<Button disabled={!safe} onClick={() => onContinue({ start, end })}>Continue to event form</Button></div>
       </div>
     </DialogContent>
   </Dialog>;

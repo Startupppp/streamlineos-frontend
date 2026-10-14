@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { CalendarOfflineIntentReview } from "./calendar-offline-intent-review";
 
 jest.mock("@tanstack/react-query", () => ({ useQuery: jest.fn() }));
@@ -18,20 +18,21 @@ const query = jest.requireMock<{ useQuery: jest.Mock }>("@tanstack/react-query")
 const session = jest.requireMock<{ useSession: jest.Mock }>("next-auth/react").useSession;
 const can = jest.requireMock<{ useCan: jest.Mock }>("@/hooks/api/access").useCan;
 const policy = jest.requireMock<{ useCalendarOfflinePolicy: jest.Mock }>("@/hooks/api/calendar-offline-policy").useCalendarOfflinePolicy;
+const refetch = jest.fn();
 
-function setup(overrides: Record<string, unknown> = {}) {
+function setup(options: { stale?: boolean; isFetching?: boolean; isError?: boolean } = {}) {
   const now = Date.now();
   session.mockReturnValue({ status: "authenticated", data: { orgId: "org-1", user: { id: "user-1" } } });
   can.mockReturnValue(true);
   policy.mockReturnValue({ isFetchedAfterMount: true, isFetching: false, isError: false, dataUpdatedAt: now, data: { enabled: true, version: 2 } });
   query.mockReturnValue({
-    data: { evaluatedAt: new Date(now).toISOString(), slots: [{ state: "free", coverageState: "complete", explanation: "Available" }] },
+    data: { evaluatedAt: new Date(now - (options.stale ? 61_000 : 0)).toISOString(), slots: [{ state: "free", coverageState: "complete", explanation: "Available" }] },
     dataUpdatedAt: now,
     isFetchedAfterMount: true,
-    isFetching: false,
-    isError: false,
+    isFetching: options.isFetching ?? false,
+    isError: options.isError ?? false,
     isLoading: false,
-    ...overrides,
+    refetch,
   });
   const intent = {
     identity: "org-1:user-1",
@@ -57,5 +58,11 @@ describe("offline Calendar intent review", () => {
 
   it("allows review to continue only after fresh complete availability", () => {
     expect(setup()).toBeEnabled();
+  });
+
+  it("offers a fresh availability check after the previous result expires", () => {
+    expect(setup({ stale: true })).toBeDisabled();
+    fireEvent.click(screen.getByRole("button", { name: "Recheck availability" }));
+    expect(refetch).toHaveBeenCalledTimes(1);
   });
 });

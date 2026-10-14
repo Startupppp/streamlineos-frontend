@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { CalendarOfflineEditReview } from "./calendar-offline-edit-review";
 
 jest.mock("@tanstack/react-query", () => ({ useQuery: jest.fn() }));
@@ -18,8 +18,9 @@ const query = jest.requireMock<{ useQuery: jest.Mock }>("@tanstack/react-query")
 const session = jest.requireMock<{ useSession: jest.Mock }>("next-auth/react").useSession;
 const can = jest.requireMock<{ useCan: jest.Mock }>("@/hooks/api/access").useCan;
 const policy = jest.requireMock<{ useCalendarOfflinePolicy: jest.Mock }>("@/hooks/api/calendar-offline-policy").useCalendarOfflinePolicy;
+const refetch = jest.fn();
 
-function setup(options: { moved?: boolean; isError?: boolean } = {}) {
+function setup(options: { moved?: boolean; isError?: boolean; stale?: boolean } = {}) {
   const now = Date.now();
   const originalStart = new Date(now + 86_400_000);
   const originalEnd = new Date(originalStart.getTime() + 3_600_000);
@@ -41,13 +42,14 @@ function setup(options: { moved?: boolean; isError?: boolean } = {}) {
       },
       detail: { canManage: true, localVersion: 3, rrule: null },
       coverage: "complete",
-      availability: { evaluatedAt: new Date(now).toISOString(), slots: [{ state: "free", coverageState: "complete", explanation: "Available" }] },
+      availability: { evaluatedAt: new Date(now - (options.stale ? 61_000 : 0)).toISOString(), slots: [{ state: "free", coverageState: "complete", explanation: "Available" }] },
     },
     dataUpdatedAt: now,
     isFetchedAfterMount: true,
     isFetching: false,
     isError: options.isError ?? false,
     isLoading: false,
+    refetch,
   });
   render(<CalendarOfflineEditReview intent={{
     identity: "org-1:user-1",
@@ -77,5 +79,11 @@ describe("offline Calendar edit review", () => {
 
   it("allows a current occurrence with complete fresh availability", () => {
     expect(setup()).toBeEnabled();
+  });
+
+  it("rechecks the occurrence and availability when the review expires", () => {
+    expect(setup({ stale: true })).toBeDisabled();
+    fireEvent.click(screen.getByRole("button", { name: "Recheck current state" }));
+    expect(refetch).toHaveBeenCalledTimes(1);
   });
 });
