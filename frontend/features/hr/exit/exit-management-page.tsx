@@ -33,6 +33,7 @@ import { AdminResignationFormSheet } from "@/features/hr/exit/admin-resignation-
 import { ResignationReviewSheets } from "@/features/hr/exit/resignation-review-sheets";
 import { useResignationReview } from "@/features/hr/exit/use-resignation-review";
 import { ExitPathStrip } from "@/features/hr/exit/exit-path-strip";
+import { OffboardingChecklistSummaryPanel } from "@/features/hr/exit/offboarding-checklist-summary-panel";
 
 const ACTIVE_RESIGNATION_STATUSES = ["SUBMITTED", "PENDING_HR", "HR_APPROVED"];
 
@@ -216,6 +217,8 @@ export function ExitManagementPage() {
           }
         />
       </div>
+
+      <OffboardingChecklistSummaryPanel />
 
       {!resignations?.length ? (
         <EmptyState

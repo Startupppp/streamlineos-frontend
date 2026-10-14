@@ -3,6 +3,7 @@ import type { z } from "zod";
 import type {
   exitChecklistItemContract,
   exitChecklistOwnerContract,
+  offboardingChecklistRowContract,
   resignationContract,
   resignationDetailContract,
   resignationProgressContract,
@@ -17,12 +18,14 @@ import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useAuthorizedIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
 import { IDEMPOTENCY_HEADER } from "@/lib/idempotency-key";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
 export type Resignation = z.infer<typeof resignationContract>;
 export type ResignationDetail = z.infer<typeof resignationDetailContract>;
 export type ResignationProgress = z.infer<typeof resignationProgressContract>;
 export type ExitChecklistItem = z.infer<typeof exitChecklistItemContract>;
 export type ExitChecklistOwner = z.infer<typeof exitChecklistOwnerContract>;
+export type OffboardingChecklistRow = z.infer<typeof offboardingChecklistRowContract>;
 
 export interface PaginatedResignations {
   data: Resignation[];
@@ -39,6 +42,7 @@ const exitKeys = {
   all: [...humanResourcesQueryKeys.hr.all, "exit"] as const,
   lists: () => [...exitKeys.all, "list"] as const,
   list: (params?: ResignationListParams) => [...exitKeys.lists(), params] as const,
+  offboardingChecklists: () => [...exitKeys.all, "offboarding-checklists"] as const,
   detail: (resignationId: number) => [...exitKeys.all, "detail", resignationId] as const,
   progress: (resignationId: number) =>
     [...exitKeys.all, "progress", resignationId] as const,
@@ -62,6 +66,9 @@ const _successContract = lazyContract(() =>
 const _resignationProgressContract = lazyContract(() =>
   import("@/hooks/api/hr/exit-schema").then((m) => m.resignationProgressContract),
 );
+const _offboardingChecklistSummaryListContract = lazyContract(() =>
+  import("@/hooks/api/hr/exit-schema").then((m) => m.offboardingChecklistSummaryListContract),
+);
 
 export function useResignations(params?: ResignationListParams) {
   const canExit = useCan("hr:exit:view");
@@ -79,6 +86,24 @@ export function useResignations(params?: ResignationListParams) {
     staleTime: 2 * 60_000,
     placeholderData: keepPreviousData,
     enabled: hrEnabled && canExit,
+  });
+}
+
+export function useOffboardingChecklists() {
+  const canExit = useCan("hr:exit:view");
+  const hrEnabled = useModuleEnabled("hr");
+  return useQuery({
+    queryKey: exitKeys.offboardingChecklists(),
+    queryFn: ({ signal }) =>
+      apiClient.get(
+        "/hr/exit/offboarding-checklists",
+        undefined,
+        signal,
+        _offboardingChecklistSummaryListContract,
+      ),
+    staleTime: 2 * 60_000,
+    enabled: hrEnabled && canExit,
+    ...INLINE_READ_ERROR,
   });
 }
 

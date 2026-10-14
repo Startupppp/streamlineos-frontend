@@ -45,6 +45,9 @@ jest.mock("@/features/hr/exit/resignation-form-sheet", () => ({ ResignationFormS
 jest.mock("@/features/hr/exit/admin-resignation-form-sheet", () => ({ AdminResignationFormSheet: () => null }));
 jest.mock("@/features/hr/exit/resignation-review-sheets", () => ({ ResignationReviewSheets: () => null }));
 jest.mock("@/features/hr/exit/exit-path-strip", () => ({ ExitPathStrip: () => null }));
+jest.mock("@/features/hr/exit/offboarding-checklist-summary-panel", () => ({
+  OffboardingChecklistSummaryPanel: () => null,
+}));
 jest.mock("@/features/hr/exit/use-resignation-review", () => ({ useResignationReview: () => ({}) }));
 
 jest.mock("next/navigation", () => ({

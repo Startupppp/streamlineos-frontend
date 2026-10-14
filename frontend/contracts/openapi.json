@@ -908562,6 +908562,116 @@
         }
       }
     },
+    "/hr/exit/offboarding-checklists": {
+      "get": {
+        "operationId": "ExitController_listOffboardingChecklists",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "anchorKind": {
+                            "type": "string",
+                            "enum": [
+                              "resignation",
+                              "termination"
+                            ]
+                          },
+                          "anchorId": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "employeeDisplayName": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "relevantDate": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "openItems": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "totalItems": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": [
+                          "anchorKind",
+                          "anchorId",
+                          "employeeDisplayName",
+                          "relevantDate",
+                          "openItems",
+                          "totalItems"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "tags": [
+          "Exit"
+        ],
+        "x-exposure": "permissioned",
+        "x-permission": "hr:exit:view",
+        "description": "Exposure: permission — hr:exit:view"
+      }
+    },
     "/hr/expenses": {
       "get": {
         "operationId": "ExpensesController_list",
