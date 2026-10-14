@@ -6,9 +6,17 @@ Ticket 03 projection, source registry, and wire-shape suites passed 37 tests acr
 
 Ticket 04 source-owner, visibility, event-detail, export-isolation, and external-tenant suites passed 43 tests across five suites. Live denied-object, permission-revocation, and two-account identity checks remain to be completed.
 
+Ticket 05 native recurrence, dense-series, and export-truncation suites passed 42 tests across three suites. Ticket 06 Build and Tasks source suites passed 28 tests across two suites. Their dense live continuation and source-owner mutation flows remain open.
+
+Ticket 07 HR Calendar source suites passed 32 tests across three suites; the Calendar hook-gate and HR window frontend suites passed 22 tests across two suites. Real multi-session, partial-month, and permission-restoration flows remain open.
+
+Ticket 08 pagination, external sync, and normalizer suites passed 55 tests across three suites. The live connected accounts had too few events to prove dense multi-page behavior.
+
+Ticket 09 owner-mutation, projection-refresh, source-key, and source-panel frontend suites passed 27 tests across four suites. Deployed owner mutations, reconnect, and cross-tab refresh remain to be observed.
+
 ## Production events repair and Outlook live journey, 2026-10-14
 
-Ticket 01's shared occurrence helper was found to compare all-day events by UTC date slices. A timed conflict window inside an Asia/Kolkata all-day event incorrectly returned no overlap. A failing regression reproduced this before the helper switched to half-open instant overlap. Another failing regression showed a weekly New York all-day recurrence ending one hour late across spring DST; recurrence ends now use the original local wall-clock duration, with a fall DST case verifying the extra hour. The conflict service has a direct timed-slot regression. Five dependent occurrence, native-source, conflict, export, and moved-identity suites passed 99 tests; the conflict suite with the added case passed 15 tests. Targeted ESLint and whitespace checks passed. Backend commit `0d95c0de2` was pushed; live production acceptance remains pending.
+Ticket 01's shared occurrence helper was found to compare all-day events by UTC date slices. A timed conflict window inside an Asia/Kolkata all-day event incorrectly returned no overlap. A failing regression reproduced this before the helper switched to half-open instant overlap. Another failing regression showed a weekly New York all-day recurrence ending one hour late across spring DST; recurrence ends now use the original local wall-clock duration, with a fall DST case verifying the extra hour. The conflict service has a direct timed-slot regression. Five dependent occurrence, native-source, conflict, export, and moved-identity suites passed 99 tests; the conflict suite with the added case passed 15 tests. Targeted ESLint and whitespace checks passed. Backend commit `0d95c0de2` was pushed, and Railway deployment `9810cacd-7b51-4208-8a04-ec954e66c1f9` reached SUCCESS. Live behavioral acceptance remains pending.
 
 Railway logs for correlation ID `6072e5a9-cd89-4f66-9b92-55fee4877ea1` show `/calendar/events` failing when postgres.js received a JavaScript `Date` as a raw string parameter. The HR interview overlap SQL now binds ISO timestamp strings, and Build and HR leave search cursor predicates use encoded timestamp strings. The HR source suite passed 23 tests. The first repair reached production in backend commit `030d62dd5`; the user refreshed the production Calendar and confirmed it loaded. Railway subsequently marked the leave cursor follow-up commit `e2fa7e6ee` successful. The user's live refresh preceded that follow-up, so its search cursor needs a separate live check.
 
