@@ -1,28 +1,52 @@
 /*
  * Marketing landing page only.
  *
- * The product mockups stay dark on a light page, and the app's own dark theme
- * is keyed to `.dark` on <html>, so the frames cannot borrow it. Their palette
- * lives here, scoped to `.lp`, and is read from Tailwind as `bg-(--lpf-panel)`.
+ * The page is a light, misty, photographic world: blue-grey hills, one ink, one
+ * cobalt-blue accent. Everything is scoped to `.lp` so no other route sees it.
+ * The shared pricing grid and footer read the global tokens, so those are
+ * re-pointed here instead of editing the shared components.
  */
 .lp {
   --lp-canvas: #f3f5f8;
+  --lp-surface: #ffffff;
+  --lp-mist: #e7ecf3;
+  --lp-ink: #131720;
+  --lp-dim: #57606d;
+  --lp-faint: #a0a8b4;
+  --lp-rule: #dce2ea;
+  --lp-accent: #1d4ed8;
+  --lp-accent-soft: #e3ebfc;
 
-  /* Primary buttons are brand blue on this page, not the app's ink. Set on the
-     token so the shared pricing grid follows without being edited. */
-  --primary: var(--status-info-fill);
+  --foreground: var(--lp-ink);
+  --muted-foreground: var(--lp-dim);
+  --border: var(--lp-rule);
+  --card: var(--lp-surface);
+  --primary: var(--lp-ink);
+  --primary-foreground: #f9fafc;
+  --status-info-fill: var(--lp-ink);
+  --status-info-rule: var(--lp-ink);
+  --status-info-surface: var(--lp-accent-soft);
+  --status-info-ink: var(--lp-accent);
+  --status-success-rule: var(--lp-accent-soft);
+  --muted: var(--lp-mist);
+  --status-success-surface: var(--lp-accent-soft);
+  --status-success-ink: var(--lp-accent);
 
-  --lpf-bg: #0c0f16;
-  --lpf-panel: #131823;
-  --lpf-raise: #1b2230;
-  --lpf-rule: #252d3d;
-  --lpf-ink: #e6eaf2;
-  --lpf-dim: #8a94a8;
-  --lpf-accent: #8b9bff;
-  --lpf-good: #4cc38a;
-  --lpf-warn: #e2a84b;
+  /* Product mockups: light panels so they sit inside the photography. */
+  --lpf-bg: #ffffff;
+  --lpf-panel: #f6f8fb;
+  --lpf-raise: #edf1f6;
+  --lpf-rule: #e1e6ee;
+  --lpf-ink: #151922;
+  --lpf-dim: #5b6470;
+  --lpf-accent: #1d4ed8;
+  --lpf-good: #2f7a4b;
+  --lpf-warn: #8a5a16;
 
   background: var(--lp-canvas);
+  color: var(--lp-ink);
+  font-kerning: normal;
+  text-rendering: optimizeLegibility;
 }
 
 html:has(.lp) {
@@ -30,51 +54,114 @@ html:has(.lp) {
 }
 
 .lp :is(a, button, summary):focus-visible {
-  outline: 2px solid var(--status-info-fill);
+  outline: 2px solid var(--lp-accent);
   outline-offset: 3px;
-  border-radius: 6px;
+  border-radius: 8px;
+}
+
+.lp-display {
+  font-family: var(--font-lp-display), Georgia, "Times New Roman", serif;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  line-height: 1.04;
 }
 
 .lp-frame {
   box-shadow:
-    0 0 0 1px rgb(12 15 22 / 0.04),
-    0 2px 4px rgb(12 15 22 / 0.06),
-    0 40px 80px -32px rgb(20 30 70 / 0.35);
+    0 0 0 1px rgb(19 23 32 / 0.04),
+    0 2px 6px rgb(30 45 75 / 0.06),
+    0 40px 80px -36px rgb(20 40 80 / 0.35);
 }
 
-/* A mockup that runs off its container instead of ending in a box. */
-.lp-crop {
+/* Floating glass chip over photography. Solid fallback when transparency is reduced. */
+.lp-glass {
+  background: rgb(255 255 255 / 0.86);
+  backdrop-filter: blur(12px) saturate(140%);
+  -webkit-backdrop-filter: blur(12px) saturate(140%);
+  border: 1px solid rgb(255 255 255 / 0.7);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.8),
+    0 12px 32px -12px rgb(20 40 80 / 0.28);
+}
+
+.lp-card {
+  background: var(--lp-surface);
+  border: 1px solid var(--lp-rule);
+  box-shadow: 0 1px 2px rgb(30 45 75 / 0.04), 0 18px 40px -28px rgb(20 40 80 / 0.25);
+}
+
+/* On phones the stacked dashboard runs very long; crop it to one screen. */
+@media (max-width: 639px) {
+  .lp-fade-mobile {
+    max-height: 32rem;
+    overflow: hidden;
+    mask-image: linear-gradient(to bottom, black 70%, transparent);
+  }
+}
+
+/* The fixed navbar repaints on every scroll frame, so it gets a near-solid
+   surface instead of a live backdrop blur. */
+.lp-bar {
+  background: rgb(255 255 255 / 0.94);
+  border-color: var(--lp-rule);
+  box-shadow: 0 10px 30px -18px rgb(20 40 80 / 0.35);
+}
+
+/* Endless module strip: two identical lists slide left by one list's width,
+   fading out at both edges. Hover or focus pauses it. */
+.lp-marquee {
   overflow: hidden;
-  mask-image: linear-gradient(to bottom, black 72%, transparent);
+  mask-image: linear-gradient(90deg, transparent, black 10%, black 90%, transparent);
 }
 
-/* The one orchestrated moment: the hero settles in on load. CSS, not JS, so the
-   headline paints before hydration. */
-@keyframes lp-rise {
-  from {
-    opacity: 0;
-    transform: translateY(14px);
-  }
+.lp-marquee-track {
+  display: flex;
+  width: max-content;
+  animation: lp-marquee 45s linear infinite;
 }
 
-.lp-rise {
-  animation: lp-rise 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+.lp-marquee:is(:hover, :focus-within) .lp-marquee-track {
+  animation-play-state: paused;
 }
 
-/* The hero mockup trails the scroll slightly. Browsers without scroll-driven
-   animations simply leave it still. */
-@keyframes lp-drift {
+@keyframes lp-marquee {
   to {
-    transform: translateY(-56px);
+    transform: translateX(-50%);
   }
 }
 
-@supports (animation-timeline: scroll()) {
-  .lp-drift {
-    animation: lp-drift linear both;
-    animation-timeline: scroll(root);
-    animation-range: 0 900px;
+/* Auto-advance timer for the story list: runs only while on screen. */
+@keyframes lp-progress {
+  from {
+    transform: scaleX(0);
   }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.lp-story-progress {
+  transform: scaleX(0);
+  animation: lp-progress 7s linear forwards paused;
+}
+
+[data-running="true"] .lp-story-progress {
+  animation-play-state: running;
+}
+
+[data-running="true"]:is(:hover, :focus-within) .lp-story-progress {
+  animation-play-state: paused;
+}
+
+/* Data flowing along the hub lines in "One platform, one team". */
+@keyframes lp-flow {
+  to {
+    stroke-dashoffset: -16;
+  }
+}
+
+.lp-flow {
+  animation: lp-flow 1.2s linear infinite;
 }
 
 .lp details > summary {
@@ -85,13 +172,47 @@ html:has(.lp) {
   display: none;
 }
 
+/* FAQ answers glide open: the browser interpolates to the content's height
+   where ::details-content is supported, and simply snaps open elsewhere. */
+.lp details {
+  interpolate-size: allow-keywords;
+}
+
+.lp details::details-content {
+  block-size: 0;
+  opacity: 0;
+  overflow: clip;
+  transition:
+    block-size 0.32s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.24s ease-out,
+    content-visibility 0.32s allow-discrete;
+}
+
+.lp details[open]::details-content {
+  block-size: auto;
+  opacity: 1;
+}
+
 @media (prefers-reduced-motion: reduce) {
   html:has(.lp) {
     scroll-behavior: auto;
   }
 
-  .lp-rise,
-  .lp-drift {
+  .lp-story-progress,
+  .lp-marquee-track,
+  .lp-flow {
     animation: none;
+  }
+
+  .lp details::details-content {
+    transition: none;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .lp-glass {
+    background: var(--lp-surface);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
   }
 }
