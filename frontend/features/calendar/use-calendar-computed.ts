@@ -154,7 +154,9 @@ function normalizeExternalEvents(
           ? {
               kind: "date" as const,
               startDate: event.start.slice(0, 10),
-              endDate: event.end.slice(0, 10),
+              endDate: (new Date(event.end).getTime() > new Date(event.start).getTime()
+                ? new Date(new Date(event.end).getTime() - 1).toISOString()
+                : event.end).slice(0, 10),
             }
           : {
               kind: "timed" as const,
@@ -189,8 +191,8 @@ export function toBigCalEvent(
   return {
     id: event.id,
     title: event.title,
-    start: new Date(event.start),
-    end: new Date(event.end),
+    start: event.time.kind === "date" ? new Date(`${event.time.startDate}T00:00:00`) : new Date(event.start),
+    end: event.time.kind === "date" ? new Date(`${event.time.endDate}T23:59:59.999`) : new Date(event.end),
     allDay: event.allDay ?? false,
     resource: {
       color:

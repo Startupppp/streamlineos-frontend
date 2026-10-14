@@ -22,6 +22,13 @@ export function calendarProjectionFields(
   timezone: string | null = null,
   sourceKey = "calendar-events",
 ): ProjectionFields {
+  const dateValue = (value: string) => {
+    if (sourceKey !== "calendar-events" || !timezone) return value.slice(0, 10);
+    const parts = new Intl.DateTimeFormat("en-CA", {
+      timeZone: timezone, year: "numeric", month: "2-digit", day: "2-digit",
+    }).formatToParts(new Date(value));
+    return ["year", "month", "day"].map((type) => parts.find((part) => part.type === type)?.value).join("-");
+  };
   return {
     sourceKey,
     sourceRecordId: id,
@@ -29,7 +36,7 @@ export function calendarProjectionFields(
     status: null,
     timeKind: allDay ? "date" : "timed",
     time: allDay
-      ? { kind: "date", startDate: start.slice(0, 10), endDate: end.slice(0, 10) }
+      ? { kind: "date", startDate: dateValue(start), endDate: dateValue(new Date(end).getTime() > new Date(start).getTime() ? new Date(new Date(end).getTime() - 1).toISOString() : end) }
       : { kind: "timed", start, end, timezone },
     availability: "busy",
     sourceVersion: "1",

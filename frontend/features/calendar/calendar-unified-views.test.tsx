@@ -5,6 +5,7 @@ import {
   calendarSourceFamily,
   eventOverlapsRange,
   mergeSelfAttendanceEvents,
+  toBigCalEvent,
   useCalendarComputed,
 } from "./use-calendar-computed";
 import { calendarProjectionFields, externalProjectionFields } from "./calendar-projection-fixtures";
@@ -60,6 +61,18 @@ const EXTERNAL: ExternalCalendarEventsResponse = {
 };
 
 describe("unified Calendar views", () => {
+  it("positions a date-only item by its business date instead of its UTC instant", () => {
+    const item = event("all-day", "calendar-events", {
+      allDay: true, timezone: "Asia/Kolkata", start: "2027-01-25T18:30:00.000Z", end: "2027-01-26T18:29:59.999Z",
+    });
+    const grid = toBigCalEvent(item);
+
+    expect([grid.start.getFullYear(), grid.start.getMonth(), grid.start.getDate()]).toEqual([2027, 0, 26]);
+    expect([grid.end.getFullYear(), grid.end.getMonth(), grid.end.getDate()]).toEqual([2027, 0, 26]);
+    expect(grid.start.getHours()).toBe(0);
+    expect(grid.end.getHours()).toBe(23);
+  });
+
   const events = [
     event("event-1", "calendar"),
     event("deal-1", "tasks", { entityType: "DEAL", source: "task" }),

@@ -88,6 +88,8 @@ describe("calendar projection refresh", () => {
         "user-1",
         START.toISOString(),
         END.toISOString(),
+        undefined,
+        Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
       ),
     )).toBeDefined();
   });
