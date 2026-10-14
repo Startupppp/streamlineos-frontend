@@ -27,7 +27,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 function formatMinor(amountMinor: number, currency: string): string {
   try {
     const formatter = new Intl.NumberFormat(undefined, { style: "currency", currency });
-    return formatter.format(amountMinor / 10 ** formatter.resolvedOptions().maximumFractionDigits);
+    return formatter.format(amountMinor / 10 ** (formatter.resolvedOptions().maximumFractionDigits ?? 2));
   } catch {
     return `${amountMinor} minor units ${currency}`;
   }
