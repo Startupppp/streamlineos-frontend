@@ -18,6 +18,8 @@ Ticket 29 meeting-workspace, ticket 31 protected-work, ticket 32 commitment grap
 
 Production My Day displayed the current day's connected-account events with source-current labels. The Capacity panel's personal slice returned current source coverage, three available 15-minute slots, and one over-capacity slot. My time insights showed the private opt-in state, complete 28-day source coverage, scheduled meeting/protected-work totals, and a suggestion. These checks do not exercise resource ownership, inventory freshness, consent changes, or another actor's access. A transient server-unavailable page during a concurrent backend rollout recovered, and the subsequently loaded panels were observed after Railway marked backend commit `fb1eefb20` successful; that commit contains the Calendar availability fix.
 
+Browser back from My Day restored the prior History URL with `historyBefore` and `historyPages=1` and rendered its rows; forward restored My Day and its events. This confirms mode history navigation for the signed-in actor, not older-page scroll position or a selected-event return after a long history traversal.
+
 On 2026-10-14, ticket 02 mutation validation, moved occurrence identity, and exception reminder cancellation suites passed 28 tests across three suites. The rejected paths make no exception insert; the wrong-date, expired-series, and cancelled cases do not bump the series. A second edit of a moved occurrence writes the original nominal key. Authenticated rejection behavior remains to be checked.
 
 Ticket 03 projection, source registry, and wire-shape suites passed 37 tests across three suites. Live multi-source completeness and version behavior remain to be checked.
