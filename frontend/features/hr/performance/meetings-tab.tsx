@@ -205,11 +205,11 @@ export function MeetingsTab() {
               <CardContent className="p-3 flex items-center gap-3">
                 <div className="flex -space-x-2 shrink-0">
                   <Avatar className="w-7 border-2 border-background">
-                    <AvatarImage src={resolveImageUrl(m.manager?.image ?? null)} />
+                    <AvatarImage src={resolveImageUrl(m.manager?.image ?? null)} alt="" />
                     <AvatarFallback className="text-micro bg-primary/10 text-primary">{m.manager?.name?.[0]}</AvatarFallback>
                   </Avatar>
                   <Avatar className="w-7 border-2 border-background">
-                    <AvatarImage src={resolveImageUrl(m.employee?.image ?? null)} />
+                    <AvatarImage src={resolveImageUrl(m.employee?.image ?? null)} alt="" />
                     <AvatarFallback className="text-micro bg-primary/10 text-primary">{m.employee?.name?.[0]}</AvatarFallback>
                   </Avatar>
                 </div>

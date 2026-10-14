@@ -84,6 +84,7 @@ export function EmployeesListResults({
       {integrityFailed ? <SearchIntegrityBanner /> : null}
       {view === "grid" ? (
         <div
+          aria-busy={isFetching}
           className={cn(
             "grid auto-rows-max content-start gap-2.5 sm:gap-3",
             "grid-cols-1 min-[420px]:grid-cols-2 md:grid-cols-3 xl:grid-cols-4",

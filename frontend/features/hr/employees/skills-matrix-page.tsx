@@ -167,7 +167,7 @@ export function SkillsMatrixPage() {
                       <th scope="row" className="sticky left-0 z-10 bg-card border-b border-r border-border px-3 py-2 text-left font-normal">
                         <div className="flex items-center gap-2">
                           <Avatar className="h-6 w-6 shrink-0">
-                            <AvatarImage src={resolveImageUrl(employeeRecord.image)} />
+                            <AvatarImage src={resolveImageUrl(employeeRecord.image)} alt="" />
                             <AvatarFallback className="text-micro">{getInitials(employeeRecord.name)}</AvatarFallback>
                           </Avatar>
                           <TruncatedText text={employeeRecord.name ?? ""} className="font-medium max-w-[110px]" />

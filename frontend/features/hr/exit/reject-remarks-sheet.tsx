@@ -92,10 +92,11 @@ export function RejectRemarksSheet({
         Provide a reason for rejection. The employee will be notified.
       </p>
       <div className="space-y-1.5">
-        <label className="text-sm font-semibold text-foreground">
-          Remarks <span className="text-destructive">*</span>
+        <label htmlFor="reject-remarks-input" className="text-sm font-semibold text-foreground">
+          Remarks <span className="text-destructive" aria-hidden="true">*</span>
         </label>
         <Textarea
+          id="reject-remarks-input"
           placeholder="Enter your rejection remarks..."
           value={rejectRemarks}
           onChange={handleRejectRemarksChange}
@@ -104,9 +105,11 @@ export function RejectRemarksSheet({
           maxLength={1000}
           className="resize-none w-full"
           aria-invalid={rejectRemarksError !== null}
+          aria-describedby={rejectRemarksError ? "reject-remarks-error" : undefined}
+          required
         />
         {rejectRemarksError && (
-          <p className="text-xs text-destructive">{rejectRemarksError}</p>
+          <p id="reject-remarks-error" role="alert" className="text-xs text-destructive">{rejectRemarksError}</p>
         )}
       </div>
     </HrSheet>

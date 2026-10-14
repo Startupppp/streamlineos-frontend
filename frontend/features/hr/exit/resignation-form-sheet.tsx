@@ -206,9 +206,9 @@ export function ResignationFormSheet({ open, onOpenChange }: ResignationFormShee
       </div>
 
       <div className="space-y-1.5">
-        <label className="text-sm font-semibold text-foreground">Reason Category</label>
+        <label htmlFor="resignation-reason-category" className="text-sm font-semibold text-foreground">Reason Category</label>
         <Select value={reasonCategory} onValueChange={setReasonCategory}>
-          <SelectTrigger>
+          <SelectTrigger id="resignation-reason-category" aria-label="Reason Category">
             <SelectValue placeholder="Select a category..." />
           </SelectTrigger>
           <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
@@ -223,31 +223,36 @@ export function ResignationFormSheet({ open, onOpenChange }: ResignationFormShee
 
       {reasonCategory === RESIGNATION_REASON_OTHER && (
         <div className="space-y-1.5">
-          <label className="text-sm font-semibold text-foreground">
-            Specify Reason <span className="text-destructive">*</span>
+          <label htmlFor="resignation-other-reason" className="text-sm font-semibold text-foreground">
+            Specify Reason <span className="text-destructive" aria-hidden="true">*</span>
           </label>
           <Input
+            id="resignation-other-reason"
             placeholder="Briefly describe your reason..."
             value={otherReasonCategory}
             onChange={handleOtherReasonCategoryChange}
             maxLength={100}
+            required
           />
         </div>
       )}
 
       <div className="space-y-1.5">
-        <label className="text-sm font-semibold text-foreground">
-          Detailed Explanation <span className="text-destructive">*</span>
+        <label htmlFor="resignation-explanation" className="text-sm font-semibold text-foreground">
+          Detailed Explanation <span className="text-destructive" aria-hidden="true">*</span>
         </label>
         <Textarea
+          id="resignation-explanation"
           placeholder="Please describe your reason for leaving..."
           value={reason}
           onChange={handleReasonChange}
           rows={4}
           maxLength={2000}
           className="resize-none w-full"
+          required
+          aria-describedby="resignation-explanation-hint"
         />
-        <p className="text-dense text-muted-foreground text-right">{reason.length} / 2000 (min 50)</p>
+        <p id="resignation-explanation-hint" className="text-dense text-muted-foreground text-right">{reason.length} / 2000 (min 50)</p>
       </div>
 
       <div className="flex items-center justify-between rounded-lg border border-border px-3 py-2.5">
@@ -265,11 +270,12 @@ export function ResignationFormSheet({ open, onOpenChange }: ResignationFormShee
       </div>
 
       <div className="space-y-1.5">
-        <label className="text-sm font-semibold text-foreground">
+        <label htmlFor="resignation-feedback" className="text-sm font-semibold text-foreground">
           Company Feedback{" "}
           <span className="text-muted-foreground font-normal">(optional)</span>
         </label>
         <Textarea
+          id="resignation-feedback"
           placeholder="Any feedback about your experience at the company..."
           value={companyFeedback}
           onChange={handleCompanyFeedbackChange}
@@ -280,13 +286,13 @@ export function ResignationFormSheet({ open, onOpenChange }: ResignationFormShee
       </div>
 
       <div className="space-y-2">
-        <label className="text-sm font-semibold text-foreground">
+        <p className="text-sm font-semibold text-foreground">
           Resignation Letter{" "}
           <span className="text-muted-foreground font-normal">(optional)</span>
-        </label>
+        </p>
         {resignationLetterUrl ? (
           <div className="flex items-center gap-2 rounded-lg border border-status-success-rule bg-status-success-surface px-3 py-2 text-xs text-status-success-ink">
-            <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
+            <CheckCircle2 className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
             <span className="flex-1 truncate">Letter uploaded successfully</span>
             <button
               type="button"

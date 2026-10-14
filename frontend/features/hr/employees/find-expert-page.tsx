@@ -221,7 +221,7 @@ export function FindExpertPage() {
                           <div className="flex items-start gap-3">
                             <Link href={`/hr/employees/${expert.userId}`} className="flex items-center gap-3 group min-w-0 flex-1">
                               <Avatar className="h-10 w-10 shrink-0">
-                                <AvatarImage src={resolveImageUrl(expert.image)} />
+                                <AvatarImage src={resolveImageUrl(expert.image)} alt="" />
                                 <AvatarFallback className="bg-primary/10 text-primary font-bold text-sm">
                                   {(expert.name ?? "?")[0]?.toUpperCase() ?? "?"}
                                 </AvatarFallback>
