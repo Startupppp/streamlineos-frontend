@@ -15,6 +15,7 @@ import {
 import { EmptyExpensesIllustration } from "@/components/illustrations";
 import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { useFnfSettlements } from "@/hooks/api/payroll/fnf";
+import { useCan } from "@/hooks/api/access";
 import { formatMoney } from "@/features/payroll/shared";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { formatShortDate } from "@/lib/date-utils";
@@ -84,6 +85,11 @@ export function FnfTable() {
   const [selectedId, setSelectedId] = useState<number | null>(null);
 
   const { data, isLoading, isError, error, refetch } = useFnfSettlements();
+  const canViewExits = useCan("hr:exit:view");
+  // /hr/fnf needs hr:payroll:approve to open and hr:exit:manage to create.
+  const canOpenHrFnf = useCan("hr:payroll:approve");
+  const canCreateFnf = useCan("hr:exit:manage");
+  const canStartSettlement = canOpenHrFnf && canCreateFnf;
 
   const filtered =
     data && statusFilter !== SENTINEL
@@ -176,7 +182,15 @@ export function FnfTable() {
             description={
               filtersActive
                 ? undefined
-                : "Final settlements will appear here once initiated"
+                : "Final settlements start from an employee exit. Record the exit in HR → Exit, then start the settlement from HR → Final settlement; it appears here for review and approval."
+            }
+            action={
+              !filtersActive && canViewExits ? { label: "Go to HR → Exit", href: "/hr/exit" } : undefined
+            }
+            secondaryAction={
+              !filtersActive && canStartSettlement
+                ? { label: "Start a settlement", href: "/hr/fnf" }
+                : undefined
             }
             filtersActive={filtersActive}
             onClearFilters={handleClearFilters}

@@ -9,6 +9,12 @@ jest.mock("@/hooks/api/payroll/ess", () => ({
   useSubmitReimbursement: () => ({ mutateAsync, isPending: false }),
 }));
 
+const payrollMutateAsync = jest.fn();
+
+jest.mock("@/hooks/api/hr/reimbursements", () => ({
+  useCreateReimbursement: () => ({ mutateAsync: payrollMutateAsync, isPending: false }),
+}));
+
 jest.mock("@/hooks/api/use-upload-file", () => ({
   useUploadFile: () => ({ mutate: jest.fn(), isPending: false }),
 }));
@@ -70,5 +76,52 @@ describe("the reimbursement Amount field", () => {
 
   it("rejects '0.01' because the floor is now ₹1, matching the HR route that writes the same decimal(15,2) column", () => {
     expect(reimbursementSchema.shape.amount.safeParse("0.01").success).toBe(false);
+  });
+});
+
+/**
+ * QA 2026-10-13: /payroll/reimbursements had no create path. The payroll page
+ * reuses this sheet over POST /hr/reimbursements, which is not gated by the ESS
+ * toggle; the self-service channel must keep using the ESS route.
+ */
+describe("the sheet's submit channel", () => {
+  beforeAll(() => {
+    // jsdom lacks the pointer-capture and scroll APIs Radix Select calls on open.
+    Element.prototype.hasPointerCapture = () => false;
+    Element.prototype.releasePointerCapture = () => undefined;
+    Element.prototype.scrollIntoView = () => undefined;
+  });
+
+  beforeEach(() => {
+    mutateAsync.mockReset();
+    payrollMutateAsync.mockReset();
+  });
+
+  async function submitValid(channel?: "self-service" | "payroll") {
+    const user = userEvent.setup();
+    render(<SubmitSheet open onClose={jest.fn()} channel={channel} />);
+    await user.click(screen.getAllByRole("combobox")[0]);
+    await user.click(await screen.findByRole("option", { name: "Travel" }));
+    await user.type(screen.getByLabelText(/Amount/), "250");
+    await user.type(screen.getByLabelText(/Description/), "Taxi to client site");
+    await user.click(screen.getByRole("button", { name: /Submit Claim/ }));
+  }
+
+  it("posts through the payroll route from the payroll admin page", async () => {
+    await submitValid("payroll");
+
+    expect(payrollMutateAsync).toHaveBeenCalledWith(
+      expect.objectContaining({ category: "Travel", amount: 250 }),
+    );
+    expect(mutateAsync).not.toHaveBeenCalled();
+  });
+
+  it("posts through the self-service route by default", async () => {
+    await submitValid();
+
+    expect(mutateAsync).toHaveBeenCalledWith(
+      expect.objectContaining({ category: "Travel", amount: 250 }),
+    );
+    expect(payrollMutateAsync).not.toHaveBeenCalled();
   });
 });

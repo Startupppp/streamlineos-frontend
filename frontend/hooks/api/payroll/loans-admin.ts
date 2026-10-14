@@ -67,3 +67,27 @@ export function useUpdateLoanStatus() {
     },
   });
 }
+
+const loanCreatedC = lazyContract(() =>
+  import("@/hooks/api/payroll/loans-admin-schema").then((m) => m.loanContract),
+);
+
+export interface CreateLoanInput {
+  userId: string;
+  amount: number;
+  totalEmis: number;
+  reason: string;
+}
+
+/** POST /hr/loans — `userId` is honoured only for org-wide `hr:expenses:approve` (or the owner). */
+export function useCreateAdminLoan() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("hr:payroll:view", {
+    mutationKey: ["hr", "loans", "create"],
+    mutationFn: (data: CreateLoanInput) =>
+      apiClient.post("/hr/loans", data, undefined, loanCreatedC),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.loansAdmin() });
+    },
+  });
+}
