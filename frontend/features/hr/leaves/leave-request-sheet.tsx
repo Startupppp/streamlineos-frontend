@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format, startOfDay } from "date-fns";
 import { toast } from "sonner";
+import { useSubmitGuard } from "@/hooks/common/use-submit-guard";
 
 import { Form } from "@/components/ui/form";
 import { HrSheet } from "@/components/shared/hr-sheet";
@@ -130,7 +131,7 @@ export function LeaveRequestSheet({
   );
 
   const onSubmit = useCallback(
-    (data: LeaveFormValues) => {
+    async (data: LeaveFormValues) => {
       if (validation.overlapMessage) {
         toast.error(validation.overlapMessage);
         return;
@@ -139,8 +140,8 @@ export function LeaveRequestSheet({
         toast.error(validation.dayLimitError);
         return;
       }
-      requestLeaveMutation.mutate(
-        {
+      try {
+        await requestLeaveMutation.mutateAsync({
           leaveTypeId: parseInt(data.leaveTypeId),
           startDate: data.startDate,
           endDate: data.endDate,
@@ -149,20 +150,19 @@ export function LeaveRequestSheet({
           attachmentUrl: attachmentUrl || undefined,
           isHalfDay: data.halfDay,
           halfDayPeriod: data.halfDay ? data.halfDayPeriod : undefined,
-        },
-        {
-          onSuccess: () => {
-            toast.success("Leave requested successfully!");
-            form.reset();
-            setAttachmentUrl(null);
-            onOpenChange(false);
-          },
-          onError: (err) => toast.error(getErrorMessage(err)),
-        },
-      );
+        });
+        toast.success("Leave requested successfully!");
+        form.reset();
+        setAttachmentUrl(null);
+        onOpenChange(false);
+      } catch (err: unknown) {
+        toast.error(getErrorMessage(err));
+      }
     },
     [validation, attachmentUrl, form, onOpenChange, requestLeaveMutation],
   );
+
+  const guard = useSubmitGuard(onSubmit);
 
   const { isDirty } = form.formState;
 
@@ -181,9 +181,9 @@ export function LeaveRequestSheet({
       onOpenChange={onOpenChange}
       title="Request leave"
       description="Fill in the details to submit a leave request"
-      onSubmit={form.handleSubmit(onSubmit)}
+      onSubmit={form.handleSubmit(guard.submit)}
       submitLabel={submitLabel}
-      isPending={requestLeaveMutation.isPending}
+      isPending={guard.isSubmitting || requestLeaveMutation.isPending}
       submitDisabled={
         leaveTypes.length === 0 ||
         !approverAvailable ||

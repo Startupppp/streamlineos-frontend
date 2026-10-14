@@ -2,6 +2,7 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { AnimatePresence } from "framer-motion";
+import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { EmptyState } from "@/components/ui/empty-state";
 import { NoPermissionState } from "@/components/shared";
@@ -44,6 +45,8 @@ export function ActionCenterQueueView({
   queue,
   onOpenRequester,
 }: ActionCenterQueueViewProps) {
+  const { data: session } = useSession();
+  const currentUserId = session?.user?.id;
   const [filters, setFilters] = useState<ActionCenterFilterState>(
     ACTION_CENTER_NO_FILTERS,
   );
@@ -194,20 +197,24 @@ export function ActionCenterQueueView({
         <ContentFillPanel className="p-0">
           <ul className="divide-border/60">
             <AnimatePresence initial={false}>
-              {visible.map((item, index) => (
-                <ActionCenterRow
-                  key={item.id}
-                  item={item}
-                  index={index}
-                  selected={selectedIds.includes(item.id)}
-                  selectable={decisions.canDecide(item.source)}
-                  decidable={decisions.canDecide(item.source)}
-                  isDeciding={decisions.isDeciding(item.id)}
-                  onToggleSelected={handleToggleSelected}
-                  onOpenRequester={onOpenRequester}
-                  onDecide={handleDecide}
-                />
-              ))}
+              {visible.map((item, index) => {
+                const isOwnItem = !!currentUserId && item.requester?.userId === currentUserId;
+                const canDecideItem = decisions.canDecide(item.source) && !isOwnItem;
+                return (
+                  <ActionCenterRow
+                    key={item.id}
+                    item={item}
+                    index={index}
+                    selected={selectedIds.includes(item.id)}
+                    selectable={canDecideItem}
+                    decidable={canDecideItem}
+                    isDeciding={decisions.isDeciding(item.id)}
+                    onToggleSelected={handleToggleSelected}
+                    onOpenRequester={onOpenRequester}
+                    onDecide={handleDecide}
+                  />
+                );
+              })}
             </AnimatePresence>
           </ul>
         </ContentFillPanel>

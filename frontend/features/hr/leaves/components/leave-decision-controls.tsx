@@ -11,6 +11,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
@@ -172,9 +173,9 @@ export function useLeaveDecisions(): LeaveDecisionControls {
             <SheetTitle className="text-base font-semibold">
               Reject Leave Request
             </SheetTitle>
-            <p className="text-sm text-muted-foreground">
+            <SheetDescription>
               Provide a reason for rejecting this request.
-            </p>
+            </SheetDescription>
           </SheetHeader>
           <div className="flex-1 p-5 space-y-4">
             <div className="space-y-1.5">

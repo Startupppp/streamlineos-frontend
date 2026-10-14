@@ -133,6 +133,8 @@ export function useBoardFilterParams() {
   const isOnIssuesPath = pathname === issuesPath;
   const currentFilterQuery = buildIssuesFilterQuery(rawSearchParams);
   const wasOnIssuesRef = useRef(false);
+  const routerRef = useRef(router);
+  routerRef.current = router;
 
   useEffect(() => {
     if (!isOnIssuesPath) {
@@ -147,12 +149,13 @@ export function useBoardFilterParams() {
       }
       const stored = loadIssuesFilterQuery(projectId, scope);
       if (stored) {
-        router.replace(`${issuesPath}?${stored}`, { scroll: false });
+        saveIssuesFilterQuery(projectId, "", scope);
+        routerRef.current.replace(`${issuesPath}?${stored}`, { scroll: false });
       }
       return;
     }
     saveIssuesFilterQuery(projectId, currentFilterQuery, scope);
-  }, [currentFilterQuery, isOnIssuesPath, issuesPath, projectId, router, scope]);
+  }, [currentFilterQuery, isOnIssuesPath, issuesPath, projectId, scope]);
 
   const hasActiveFilters = !!(
     q ||
