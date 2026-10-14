@@ -147,6 +147,26 @@ describe("CalendarEventsPanel", () => {
     expect(onLoadMore).toHaveBeenCalledTimes(1);
   });
 
+  it("pauses automatic paging after a history window adds no visible events", () => {
+    const onLoadMore = jest.fn();
+    render(
+      <CalendarEventsPanel
+        mode="history"
+        events={[makeEvent("past", "2020-09-02T12:00:00.000Z")]}
+        onSelectEvent={noop}
+        hasMore
+        autoLoadMore={false}
+        onLoadMore={onLoadMore}
+        loadedPageCount={2}
+      />,
+    );
+
+    fireEvent.click(screen.getByTestId("virtual-list"));
+    expect(onLoadMore).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: "Load older events" }));
+    expect(onLoadMore).toHaveBeenCalledTimes(1);
+  });
+
   it("does not request another cursor while URL history pages are being restored", () => {
     const onLoadMore = jest.fn();
     render(

@@ -18,6 +18,7 @@ interface CalendarEventsPanelProps {
   onSelectEvent: (event: CalendarListItem) => void;
   hasMore?: boolean;
   isLoadingMore?: boolean;
+  autoLoadMore?: boolean;
   onLoadMore?: () => void;
   loadedPageCount?: number;
 }
@@ -143,6 +144,7 @@ export function CalendarEventsPanel({
   onSelectEvent,
   hasMore = false,
   isLoadingMore = false,
+  autoLoadMore = true,
   onLoadMore,
   loadedPageCount = 0,
 }: CalendarEventsPanelProps) {
@@ -205,12 +207,22 @@ export function CalendarEventsPanel({
 
   const handleRowsRendered = useCallback(({ stopIndex }: { startIndex: number; stopIndex: number }) => {
     tailVisibleRef.current = stopIndex >= rows.length - 1;
-    if (tailVisibleRef.current) requestMore();
-  }, [rows.length, requestMore]);
+    if (tailVisibleRef.current && autoLoadMore) requestMore();
+  }, [rows.length, autoLoadMore, requestMore]);
 
   useEffect(() => {
-    if (filteredEvents.length === 0 || tailVisibleRef.current) requestMore();
-  }, [filteredEvents.length, loadedPageCount, requestMore]);
+    if (autoLoadMore && (filteredEvents.length === 0 || tailVisibleRef.current)) requestMore();
+  }, [autoLoadMore, filteredEvents.length, loadedPageCount, requestMore]);
+
+  const loadOlderControl = mode === "history" && hasMore && !isLoadingMore && !autoLoadMore ? (
+    <button
+      type="button"
+      onClick={requestMore}
+      className="shrink-0 border-t border-border p-3 text-center text-sm font-medium text-primary hover:bg-muted/40"
+    >
+      Load older events
+    </button>
+  ) : null;
 
   if (filteredEvents.length === 0) {
     return (
@@ -226,6 +238,7 @@ export function CalendarEventsPanel({
           className="min-h-0 flex-1 border-0 bg-transparent shadow-none"
         />
         {mode === "history" && isLoadingMore ? <div role="status" className="p-3 text-center text-xs text-muted-foreground">Loading older events…</div> : null}
+        {loadOlderControl}
       </div>
     );
   }
@@ -248,6 +261,7 @@ export function CalendarEventsPanel({
         />
       </div>
       {mode === "history" && isLoadingMore ? <div role="status" className="shrink-0 border-t border-border p-3 text-center text-xs text-muted-foreground">Loading older events…</div> : null}
+      {loadOlderControl}
     </div>
   );
 }

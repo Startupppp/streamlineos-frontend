@@ -558,6 +558,21 @@ export function CalendarView() {
     ],
   );
   const loadedHistoryPages = historyData?.pages.length ?? 0;
+  const autoLoadOlderHistory = useMemo(() => {
+    const pages = historyData?.pages ?? [];
+    if (pages.length <= 1) return true;
+    const prior = new Set(
+      pages.slice(0, -1).flatMap((page) =>
+        page.events.map((event) => `${event.sourceKey}:${event.occurrenceId}`),
+      ),
+    );
+    return filterCalendarEventsBySources(pages.at(-1)?.events ?? [], {
+      attendanceVisible: attendanceEventsVisible,
+      crmVisible: crmEventsVisible,
+      hrVisible: hrEventsVisible,
+      hiddenConnectionIds: hiddenIds,
+    }).some((event) => !prior.has(`${event.sourceKey}:${event.occurrenceId}`));
+  }, [historyData?.pages, attendanceEventsVisible, crmEventsVisible, hrEventsVisible, hiddenIds]);
   useEffect(() => {
     if (
       viewMode !== "history" ||
@@ -1058,6 +1073,7 @@ export function CalendarView() {
                       historyHasNextPage && loadedHistoryPages >= historyPages
                     }
                     isLoadingMore={historyIsFetchingNextPage}
+                    autoLoadMore={autoLoadOlderHistory}
                     onLoadMore={handleLoadOlderHistory}
                     loadedPageCount={loadedHistoryPages}
                   />
@@ -1102,6 +1118,7 @@ export function CalendarView() {
                     loadedHistoryPages >= historyPages
                   }
                   isLoadingMore={historyIsFetchingNextPage}
+                  autoLoadMore={viewMode !== "history" || autoLoadOlderHistory}
                   loadedPageCount={
                     viewMode === "history" ? loadedHistoryPages : 0
                   }
@@ -1119,6 +1136,7 @@ export function CalendarView() {
                     historyHasNextPage && loadedHistoryPages >= historyPages
                   }
                   isLoadingMore={historyIsFetchingNextPage}
+                  autoLoadMore={autoLoadOlderHistory}
                   onLoadMore={handleLoadOlderHistory}
                   loadedPageCount={loadedHistoryPages}
                 />
