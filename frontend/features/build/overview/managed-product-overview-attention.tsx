@@ -45,7 +45,7 @@ function AttentionAction({ signal, onMarkReviewed, isMarkingReviewed }: Attentio
         isPending={isMarkingReviewed}
         loadingText="Saving…"
         onClick={onMarkReviewed}
-        className="ml-8 min-h-11 shrink-0 text-xs font-medium text-primary sm:ml-0 sm:min-h-8"
+        className="min-h-11 w-full shrink-0 justify-center text-sm font-medium text-primary sm:min-h-9 sm:w-auto sm:justify-start sm:self-center"
         {...hoverHandlers}
       >
         <CircleCheckIcon ref={iconRef} size={14} aria-hidden />
@@ -56,7 +56,7 @@ function AttentionAction({ signal, onMarkReviewed, isMarkingReviewed }: Attentio
   return (
     <Link
       href={signal.href}
-      className="group ml-8 inline-flex min-h-11 shrink-0 items-center gap-1 rounded-md border border-border/60 bg-background px-2.5 text-xs font-medium text-primary shadow-xs transition-[color,background-color,border-color,transform] hover:-translate-y-0.5 hover:border-primary/30 hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transform-none sm:ml-0 sm:min-h-8"
+      className="inline-flex min-h-11 w-full shrink-0 items-center justify-center gap-1 rounded-md border border-border bg-card px-2.5 text-sm font-medium text-primary transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none sm:min-h-9 sm:w-auto sm:justify-start sm:self-center"
       {...hoverHandlers}
     >
       {signal.actionLabel}
@@ -69,20 +69,33 @@ function AttentionAction({ signal, onMarkReviewed, isMarkingReviewed }: Attentio
   );
 }
 
-function AttentionRow({ signal, onMarkReviewed, isMarkingReviewed }: AttentionRowProps) {
+function AttentionRow({ signal, onMarkReviewed, isMarkingReviewed, featured }: AttentionRowProps & { featured: boolean }) {
   const tone = statusToneClasses(signal.tone);
   const Icon = TONE_ICON[signal.tone];
   return (
-    <li className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg border border-border bg-muted/15 p-2.5 transition-colors hover:bg-muted/35 motion-reduce:transition-none dark:border-background">
-      <span
-        aria-hidden
-        className={cn("mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-md", tone.surface, tone.ink)}
-      >
-        <Icon className="size-3.5" />
-      </span>
-      <div className="flex min-w-40 flex-1 basis-0 flex-col gap-0.5">
-        <p className="text-sm font-medium text-foreground">{signal.title}</p>
-        <p className="text-xs text-muted-foreground">{signal.detail}</p>
+    <li
+      className={cn(
+        "flex flex-col gap-3 sm:flex-row sm:items-center",
+        featured
+          ? cn("mb-3 rounded-lg border p-3 last:mb-0", tone.surface, tone.rule)
+          : "border-b border-border py-3 last:border-b-0",
+      )}
+    >
+      <div className="flex min-w-0 flex-1 items-start gap-3">
+        <span
+          aria-hidden
+          className={cn(
+            "mt-0.5 flex shrink-0 items-center justify-center rounded-md",
+            featured ? cn("size-9 border bg-card", tone.rule) : cn("size-7", tone.surface),
+            tone.ink,
+          )}
+        >
+          <Icon className={featured ? "size-4" : "size-3.5"} />
+        </span>
+        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+          <p className={cn("text-foreground", featured ? "text-sm font-semibold" : "text-sm font-medium")}>{signal.title}</p>
+          <p className="text-pretty text-xs text-muted-foreground">{signal.detail}</p>
+        </div>
       </div>
       <AttentionAction signal={signal} onMarkReviewed={onMarkReviewed} isMarkingReviewed={isMarkingReviewed} />
     </li>
@@ -96,6 +109,7 @@ export function ManagedProductOverviewAttention({
   className,
 }: AttentionPanelProps) {
   const urgent = signals.filter((signal) => signal.tone === "danger" || signal.tone === "warning").length;
+  const leadId = signals.find((signal) => signal.tone === "danger" || signal.tone === "warning")?.id;
   const description =
     signals.length === 0
       ? "Nothing needs a decision right now."
@@ -118,11 +132,12 @@ export function ManagedProductOverviewAttention({
           </p>
         </div>
       ) : (
-        <ul className="flex flex-1 flex-col gap-2">
+        <ul className="flex flex-1 flex-col">
           {signals.map((signal) => (
             <AttentionRow
               key={signal.id}
               signal={signal}
+              featured={signal.id === leadId}
               onMarkReviewed={onMarkReviewed}
               isMarkingReviewed={isMarkingReviewed}
             />

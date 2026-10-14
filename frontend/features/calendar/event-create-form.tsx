@@ -36,7 +36,7 @@ type EventCreateFormProps = {
   isPending: boolean;
   onClose: () => void;
   onTitleChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
-  onDescriptionChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  onDescriptionChange: (event: React.ChangeEvent<HTMLTextAreaElement>) => void;
   onLocationChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
   onAllDayChange: (value: boolean) => void;
   onStartDateChange: (value: string) => void;
@@ -165,9 +165,9 @@ export function EventCreateForm({
               </div>
               </div>
             </ScrollArea>
-            <div className="px-4 pt-2.5 pb-[max(0.625rem,env(safe-area-inset-bottom))] border-t bg-muted/20 shrink-0 flex flex-row items-center justify-end gap-2">
-              <Button type="button" variant="outline" size="sm" className="text-xs px-3 font-normal text-muted-foreground hover:text-foreground" onClick={onClose} disabled={isPending}>Discard</Button>
-              <LoadingButton type="submit" size="sm" className="text-xs px-4 font-medium" disabled={!form.title.trim()} isPending={isPending} loadingText={isEdit ? "Saving…" : "Creating…"}>Save</LoadingButton>
+            <div className="grid grid-cols-2 gap-2 px-4 pt-2.5 pb-[max(0.625rem,env(safe-area-inset-bottom))] border-t bg-muted/20 shrink-0">
+              <Button type="button" variant="outline" size="sm" className="w-full text-xs font-normal text-muted-foreground hover:text-foreground" onClick={onClose} disabled={isPending}>Discard</Button>
+              <LoadingButton type="submit" size="sm" className="w-full text-xs font-medium" disabled={!form.title.trim()} isPending={isPending} loadingText={isEdit ? "Saving…" : "Creating…"}>Save</LoadingButton>
             </div>
           </form>
           <TicketPickerDialog open={ticketPickerOpen} onOpenChange={onTicketPickerChange} onSelect={onTicketSelect} />

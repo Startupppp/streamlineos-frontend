@@ -108,6 +108,11 @@ const ACCESS_GRANTED = {
   isLoading: false,
 };
 
+const ACCESS_OWNER = {
+  data: { isOrgOwner: true, scopes: {}, modules: {} },
+  isLoading: false,
+};
+
 const ACCESS_DENIED = {
   data: { isOrgOwner: false, scopes: {}, modules: {} },
   isLoading: false,
@@ -223,4 +228,37 @@ it("renders the plan upgrade link the backend sent with a 402 MODULE_NOT_ENABLED
   render(<FilesPage projectId={1} />);
   expect(screen.queryByText("Retry")).not.toBeInTheDocument();
   expect(screen.getByRole("link", { name: /view plans/i })).toHaveAttribute("href", "/settings/billing");
+});
+
+it("renders empty state with upload action for org owner with no files (FE-122)", () => {
+  mockUseAccess.mockReturnValue(ACCESS_OWNER);
+  mockUseCan.mockReturnValue(true);
+  mockUseProjectFiles.mockReturnValue(baseQueryResult({ data: [] }));
+  render(<FilesPage projectId={7} />);
+  expect(screen.getByTestId("empty-state")).toBeInTheDocument();
+});
+
+it("renders file list with manage actions for org owner when files exist (FE-122)", () => {
+  mockUseAccess.mockReturnValue(ACCESS_OWNER);
+  mockUseCan.mockReturnValue(true);
+  mockUseProjectFiles.mockReturnValue(
+    baseQueryResult({
+      data: [
+        {
+          id: 1,
+          orgId: "org-1",
+          projectId: 7,
+          uploadedByMembershipId: 3,
+          fileName: "owner-brief.pdf",
+          mimeType: "application/pdf",
+          sizeBytes: 102400,
+          createdAt: new Date(0).toISOString(),
+          deletedAt: null,
+        },
+      ],
+    }),
+  );
+  render(<FilesPage projectId={7} />);
+  expect(screen.getByText("owner-brief.pdf")).toBeInTheDocument();
+  expect(screen.getByText("Confirm Delete")).toBeInTheDocument();
 });

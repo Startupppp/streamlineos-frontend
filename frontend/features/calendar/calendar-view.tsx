@@ -229,6 +229,9 @@ export function CalendarView() {
   const [scenarioDrafts, setScenarioDrafts] = useState<
     CalendarScenarioDraftStep[]
   >([]);
+  const openCapacity = useCallback(() => setCapacityOpen(true), []);
+  const openCoach = useCallback(() => setCoachOpen(true), []);
+  const openScenario = useCallback(() => setScenarioOpen(true), []);
   const [myDaySearch, setMyDaySearch] = useState("");
   const [clockNow, setClockNow] = useState(() => new Date());
   const debouncedMyDaySearch = useDebouncedValue(myDaySearch, 300);
@@ -570,9 +573,13 @@ export function CalendarView() {
     const pages = historyData?.pages ?? [];
     if (pages.length <= 1) return true;
     const prior = new Set(
-      pages.slice(0, -1).flatMap((page) =>
-        page.events.map((event) => `${event.sourceKey}:${event.occurrenceId}`),
-      ),
+      pages
+        .slice(0, -1)
+        .flatMap((page) =>
+          page.events.map(
+            (event) => `${event.sourceKey}:${event.occurrenceId}`,
+          ),
+        ),
     );
     return filterCalendarEventsBySources(pages.at(-1)?.events ?? [], {
       attendanceVisible: attendanceEventsVisible,
@@ -580,7 +587,13 @@ export function CalendarView() {
       hrVisible: hrEventsVisible,
       hiddenConnectionIds: hiddenIds,
     }).some((event) => !prior.has(`${event.sourceKey}:${event.occurrenceId}`));
-  }, [historyData?.pages, attendanceEventsVisible, crmEventsVisible, hrEventsVisible, hiddenIds]);
+  }, [
+    historyData?.pages,
+    attendanceEventsVisible,
+    crmEventsVisible,
+    hrEventsVisible,
+    hiddenIds,
+  ]);
   useEffect(() => {
     if (
       viewMode !== "history" ||
@@ -806,17 +819,15 @@ export function CalendarView() {
       title={
         viewMode === "history" ? (
           <div className="flex flex-col">
-            <span className="text-base font-semibold">Calendar history</span>
-            <span className="text-dense font-normal text-muted-foreground">
+            <span>Calendar history</span>
+            <span className="text-sm font-normal text-muted-foreground">
               Browse past events from newest to oldest
             </span>
           </div>
         ) : viewMode === "my-day" ? (
           <div className="flex flex-col">
-            <span className="text-base font-semibold">
-              {selectedSavedView?.name ?? "My Day"}
-            </span>
-            <span className="text-dense font-normal text-muted-foreground">
+            <span>{selectedSavedView?.name ?? "My Day"}</span>
+            <span className="text-sm font-normal text-muted-foreground">
               {selectedSavedView
                 ? "Saved calendar view"
                 : format(currentDate, "EEEE, MMMM d")}
@@ -824,10 +835,8 @@ export function CalendarView() {
           </div>
         ) : selectedSavedView ? (
           <div className="flex flex-col">
-            <span className="text-base font-semibold">
-              {selectedSavedView.name}
-            </span>
-            <span className="text-dense font-normal text-muted-foreground">
+            <span>{selectedSavedView.name}</span>
+            <span className="text-sm font-normal text-muted-foreground">
               Saved calendar view
             </span>
           </div>
@@ -842,26 +851,13 @@ export function CalendarView() {
       noInternalScroll
       actionsInline
       actions={
-        <div className="flex items-center gap-2">
-          {scenarioDrafts.length ? (
-            <Button variant="outline" onClick={() => setScenarioOpen(true)}>
-              What if ({scenarioDrafts.length})
-            </Button>
-          ) : null}
-          <Button variant="outline" onClick={() => setCapacityOpen(true)}>
-            Capacity
-          </Button>
-          <Button variant="outline" onClick={() => setCoachOpen(true)}>
-            My time insights
-          </Button>
-          <CalendarToolbarPrimaryActions
-            activeConnectionCount={activeConnectionCount}
-            canCreateTicket={canCreateTicket}
-            onOpenAccounts={handleOpenAccounts}
-            onOpenCreate={handleOpenCreate}
-            onOpenCreateTicket={handleOpenCreateTicket}
-          />
-        </div>
+        <CalendarToolbarPrimaryActions
+          activeConnectionCount={activeConnectionCount}
+          canCreateTicket={canCreateTicket}
+          onOpenAccounts={handleOpenAccounts}
+          onOpenCreate={handleOpenCreate}
+          onOpenCreateTicket={handleOpenCreateTicket}
+        />
       }
     >
       {coachOpen ? (
@@ -925,7 +921,7 @@ export function CalendarView() {
           rrule={offlineEditEvent.rrule}
         />
       ) : null}
-      <div className="flex min-h-0 flex-1 flex-col gap-3">
+      <div className="relative flex min-h-0 flex-1 flex-col gap-3">
         <CalendarToolbar
           view={displayedGridView}
           viewMode={viewMode}
@@ -947,8 +943,23 @@ export function CalendarView() {
           onToggleHrEvents={toggleHrEvents}
           onToggleCrmEvents={toggleCrmEvents}
           onToggleAttendanceEvents={toggleAttendanceEvents}
+          onOpenCapacity={openCapacity}
+          onOpenCoach={openCoach}
+          onOpenScenario={openScenario}
+          scenarioCount={scenarioDrafts.length}
           hidePrimaryActions
           navigationDisabled={Boolean(selectedSavedView)}
+          filters={
+            viewMode !== "history" ? (
+              <CalendarSavedViewControls
+                selectedId={savedFilterId}
+                currentDate={currentDate}
+                mode={viewMode}
+                search={savedViewActive ? myDaySearch : undefined}
+                onSearchChange={setMyDaySearch}
+              />
+            ) : null
+          }
         />
 
         <div className="flex min-h-0 flex-1 gap-4">
@@ -962,15 +973,6 @@ export function CalendarView() {
                   : "overflow-hidden",
               )}
             >
-              {viewMode !== "history" ? (
-                <CalendarSavedViewControls
-                  selectedId={savedFilterId}
-                  currentDate={currentDate}
-                  mode={viewMode}
-                  search={savedViewActive ? myDaySearch : undefined}
-                  onSearchChange={setMyDaySearch}
-                />
-              ) : null}
               {viewMode === "my-day" ? (
                 <div className="flex min-h-0 flex-1 flex-col">
                   {savedViewResolving || myDayQuery.isLoading ? (
@@ -1251,11 +1253,14 @@ export function CalendarView() {
           (regularSourcesActive &&
             (externalIsLoading || attendanceCoverage.isLoading))) && (
           <div
-            className="shrink-0 rounded-md border border-border bg-muted/40 px-3 py-1.5 text-dense text-muted-foreground"
+            className="flex shrink-0 justify-center"
             role="status"
             aria-live="polite"
+            aria-busy="true"
           >
-            Loading calendar sources…
+            <p className="max-w-sm rounded-md border border-border bg-card px-4 py-2 text-center text-sm font-medium text-foreground shadow-panel">
+              Loading calendar sources…
+            </p>
           </div>
         )}
 

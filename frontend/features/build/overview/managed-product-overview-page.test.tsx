@@ -181,9 +181,12 @@ describe("ManagedProductOverviewPage — owner display in subtitle (FE-85)", () 
 });
 
 describe("ManagedProductOverviewPage — product identity", () => {
-  it("stretches identity and attention into an equal-height overview row", () => {
+  it("keeps product identity content-sized instead of stretching it beside the attention list", () => {
     render(<ManagedProductOverviewPage managedProductId={42} />);
-    expect(screen.getByTestId("overview-identity-attention-grid")).toHaveClass("items-stretch");
+    expect(screen.queryByTestId("overview-identity-attention-grid")).not.toBeInTheDocument();
+    const identity = screen.getByRole("region", { name: "Product identity" });
+    expect(identity).not.toHaveClass("h-full");
+    expect(identity).not.toHaveClass("flex-1");
   });
 
   it("keeps strategy, ownership, schedule, phase, lifecycle and labels visible in the compact surface", () => {

@@ -1,6 +1,7 @@
 "use client";
 
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -44,7 +45,7 @@ interface EventFormFieldsProps {
   showEndDate: boolean;
   dateTimeError: string;
   onTitleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onDescriptionChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onDescriptionChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
   onAllDayChange: (v: boolean) => void;
   onStartDateChange: (v: string) => void;
   onStartTimeChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -274,14 +275,15 @@ export function EventFormFields({
       )}
 
       <div className="flex items-start gap-2.5">
-        <FileText className="h-4 w-4 text-muted-foreground shrink-0 mt-2" />
+        <FileText className="h-4 w-4 text-muted-foreground shrink-0 mt-2.5" />
         <div className="flex-1">
-          <Input
+          <Textarea
             id="ev-desc"
             value={description}
             onChange={onDescriptionChange}
             placeholder="Notes"
-            className="text-xs"
+            maxLength={2000}
+            className="min-h-20"
           />
         </div>
       </div>

@@ -118,14 +118,14 @@ export function CalendarSavedViewControls({
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-2 border-b border-border px-4 py-2">
+    <div className="flex shrink-0 flex-nowrap items-center gap-2">
       <Select
         value={selectedId ?? "none"}
         onValueChange={(value) => selectView(value === "none" ? null : value)}
       >
         <SelectTrigger
           aria-label="Saved calendar view"
-          className="h-9 min-w-40 max-w-64 text-xs"
+          className="h-9 w-40 text-sm"
         >
           <SelectValue placeholder="Saved views" />
         </SelectTrigger>
@@ -145,7 +145,7 @@ export function CalendarSavedViewControls({
           onChange={(event) => onSearchChange(event.target.value)}
           placeholder="Search this view"
           aria-label="Search saved calendar view"
-          className="h-9 min-w-40 max-w-64 text-xs"
+          className="h-9 min-w-40 max-w-64 text-sm"
           maxLength={200}
         />
       ) : null}

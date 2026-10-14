@@ -64,7 +64,12 @@ export function eventOverlapsRange(
   event: Pick<CalendarListItem, "start" | "end" | "time">,
   range: { start: Date; end: Date },
 ): boolean {
-  if (!Number.isFinite(range.start.getTime()) || !Number.isFinite(range.end.getTime()) || range.start.getTime() >= range.end.getTime()) return false;
+  if (
+    !Number.isFinite(range.start.getTime()) ||
+    !Number.isFinite(range.end.getTime()) ||
+    range.start.getTime() >= range.end.getTime()
+  )
+    return false;
   if (event.time.kind === "date") {
     const firstDate = format(range.start, "yyyy-MM-dd");
     const lastDate = format(new Date(range.end.getTime() - 1), "yyyy-MM-dd");
@@ -283,11 +288,14 @@ export function useCalendarComputed({
     if (view === "week") {
       const start = startOfWeek(currentDate, { weekStartsOn: 1 });
       const end = endOfWeek(currentDate, { weekStartsOn: 1 });
-      const weekNumber = format(currentDate, "I");
-      if (start.getMonth() === end.getMonth()) {
-        return `${format(currentDate, "MMMM yyyy")} Week ${weekNumber}`;
-      }
-      return `${format(start, "MMM")} - ${format(end, "MMM yyyy")} Week ${weekNumber}`;
+      const sameYear = start.getFullYear() === end.getFullYear();
+      if (start.getMonth() === end.getMonth() && sameYear)
+        return `${format(start, "MMM d")}–${format(end, "d, yyyy")}`;
+
+      if (sameYear)
+        return `${format(start, "MMM d")} – ${format(end, "MMM d, yyyy")}`;
+
+      return `${format(start, "MMM d, yyyy")} – ${format(end, "MMM d, yyyy")}`;
     }
     return format(currentDate, "eeee, MMMM d, yyyy");
   }, [currentDate, view]);

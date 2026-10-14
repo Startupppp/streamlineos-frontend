@@ -136,7 +136,7 @@ export function useEventCreateDialog({
   );
 
   const handleDescriptionChange = useCallback(
-    (e: ChangeEvent<HTMLInputElement>) => set("description", e.target.value),
+    (e: ChangeEvent<HTMLTextAreaElement>) => set("description", e.target.value),
     [set],
   );
 

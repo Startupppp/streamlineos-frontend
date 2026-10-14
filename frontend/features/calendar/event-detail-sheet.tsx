@@ -3,10 +3,8 @@
 import { useCallback, useState } from "react";
 import dynamic from "next/dynamic";
 import { format, addDays } from "date-fns";
-import Link from "next/link";
-import { Pencil, Sparkles } from "lucide-react";
-import { DownloadIcon, MicIcon, Trash2Icon } from "@animateicons/react/lucide";
-import { Button } from "@/components/ui/button";
+import { motion, useReducedMotion } from "framer-motion";
+import { Tag } from "lucide-react";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   Sheet,
@@ -25,10 +23,11 @@ import {
   type CalendarListItem,
 } from "@/hooks/api/calendar";
 import { useCan } from "@/hooks/api/access";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { formatEventDate, formatEventTimeRange } from "@/lib/date-utils";
 import { downloadCalendarExport } from "./calendar-export";
+import { EventDetailActions } from "./event-detail-actions";
 import { EventCreateDialog } from "./event-create-dialog";
 import {
   EventDetailContent,
@@ -98,12 +97,7 @@ export function EventDetailSheet({ event, onClose, onQueueScenarioStep }: EventD
     : event?.entityType === "deal" && event.entityId && /^\d+$/.test(event.entityId)
       ? { source: "crm", type: "deal", recordId: event.entityId }
       : null;
-  const { iconRef: huddleIconRef, hoverHandlers: huddleHoverHandlers } =
-    useAnimatedIcon();
-  const { iconRef: deleteIconRef, hoverHandlers: deleteHoverHandlers } =
-    useAnimatedIcon();
-  const { iconRef: downloadIconRef, hoverHandlers: downloadHoverHandlers } =
-    useAnimatedIcon();
+  const reduceMotion = useReducedMotion() === true;
 
   const handleUnlink = useCallback(async () => {
     if (numericEventId === null) return;
@@ -195,23 +189,14 @@ export function EventDetailSheet({ event, onClose, onQueueScenarioStep }: EventD
   const handleRequestUnlink = useCallback(() => setUnlinkConfirmOpen(true), []);
   const handleOpenEdit = useCallback(() => setEditOpen(true), []);
   const handleOpenMeetingWorkspace = useCallback(() => setMeetingWorkspaceOpen(true), []);
+  const handleOpenProtectedWork = useCallback(() => setProtectedWorkOpen(true), []);
+  const handleOpenCommitmentRadar = useCallback(() => setCommitmentRadarOpen(true), []);
 
   return (
     <>
       <Sheet open={!!event} onOpenChange={handleSheetOpenChange}>
-        <SheetContent className="flex flex-col p-0 w-[360px] sm:max-w-[360px]">
-          <SheetHeader className="px-5 py-4 border-b shrink-0">
-            <SheetTitle className="text-sm font-semibold flex items-center gap-2 min-w-0">
-              <span
-                className="h-3 w-3 rounded-full shrink-0"
-                style={{ backgroundColor: getEventColor(event) }}
-              />
-              <TruncatedText
-                text={event?.title ?? ""}
-                className="min-w-0 flex-1"
-              />
-            </SheetTitle>
-          </SheetHeader>
+        <SheetContent className="flex w-[360px] flex-col gap-0 p-0 sm:max-w-[360px]">
+          <EventDetailHeader event={event} reduceMotion={reduceMotion} />
           <EventDetailContent
             event={event}
             numericEventId={numericEventId}
@@ -226,100 +211,24 @@ export function EventDetailSheet({ event, onClose, onQueueScenarioStep }: EventD
             onRsvp={handleRsvp}
           />
           {event ? <CalendarSourceActionPanel key={`${event.id}:${event.sourceVersion}`} event={event} onQueueScenarioStep={onQueueScenarioStep} /> : null}
-          {event?.category === "huddle" && event.entityId ? (
-            <div className="px-5 pt-3 pb-1 shrink-0">
-              <Link href={`/chat?channel=${event.entityId}`} onClick={onClose}>
-                <Button
-                  size="sm"
-                  className="w-full h-8 text-xs gap-1.5 bg-status-warning-fill hover:bg-status-warning-fill-hover text-white"
-                  {...huddleHoverHandlers}
-                >
-                  <MicIcon ref={huddleIconRef} size={14} />
-                  Join Huddle
-                </Button>
-              </Link>
-            </div>
-          ) : null}
-          <div className="px-5 py-3 border-t shrink-0 flex items-center justify-between gap-2">
-            {canMutateEvent ? (
-              <div className="flex items-center gap-1">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                  onClick={handleRequestDelete}
-                  {...deleteHoverHandlers}
-                >
-                  <Trash2Icon
-                    ref={deleteIconRef}
-                    size={14}
-                    className="mr-1.5"
-                  />
-                  Delete
-                </Button>
-                {detail?.isRecurring ? (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-muted-foreground hover:text-foreground"
-                    onClick={handleRequestCancelOccurrence}
-                  >
-                    Cancel occurrence
-                  </Button>
-                ) : null}
-              </div>
-            ) : (
-              <div />
-            )}
-            <div className="flex items-center gap-2">
-              {isCalendarEvent && event?.category !== "huddle" ? (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleOpenMeetingWorkspace}
-                  className="gap-1.5"
-                >
-                  <Sparkles className="h-3.5 w-3.5" />
-                  Meeting workspace
-                </Button>
-              ) : null}
-              {canExport ? (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleExportDay}
-                  aria-label="Export this day's events as CSV"
-                  {...downloadHoverHandlers}
-                >
-                  <DownloadIcon
-                    ref={downloadIconRef}
-                    size={14}
-                    className="mr-1.5"
-                  />
-                  Export day
-                </Button>
-              ) : null}
-              {canMutateEvent ? (
-                <Button variant="outline" size="sm" onClick={handleOpenEdit}>
-                  <Pencil className="h-3.5 w-3.5 mr-1.5" />
-                  Edit
-                </Button>
-              ) : null}
-              {canMutateEvent && !detail?.isRecurring && !event?.allDay ? (
-                <Button variant="outline" size="sm" onClick={() => setProtectedWorkOpen(true)}>
-                  Protect time
-                </Button>
-              ) : null}
-              {commitmentRoot ? (
-                <Button variant="outline" size="sm" onClick={() => setCommitmentRadarOpen(true)}>
-                  Commitment radar
-                </Button>
-              ) : null}
-              <Button variant="outline" size="sm" onClick={onClose}>
-                Close
-              </Button>
-            </div>
-          </div>
+          <EventDetailActions
+            showMeeting={isCalendarEvent && event?.category !== "huddle"}
+            showHuddle={event?.category === "huddle" && Boolean(event.entityId)}
+            huddleHref={event?.entityId ? `/chat?channel=${event.entityId}` : null}
+            canExport={canExport}
+            canMutate={canMutateEvent}
+            showCancelOccurrence={canMutateEvent && detail?.isRecurring === true}
+            showProtect={canMutateEvent && !detail?.isRecurring && !event?.allDay}
+            showRadar={commitmentRoot !== null}
+            onClose={onClose}
+            onDelete={handleRequestDelete}
+            onCancelOccurrence={handleRequestCancelOccurrence}
+            onMeeting={handleOpenMeetingWorkspace}
+            onExport={handleExportDay}
+            onEdit={handleOpenEdit}
+            onProtect={handleOpenProtectedWork}
+            onRadar={handleOpenCommitmentRadar}
+          />
         </SheetContent>
       </Sheet>
       <ConfirmDialog
@@ -373,6 +282,48 @@ export function EventDetailSheet({ event, onClose, onQueueScenarioStep }: EventD
         <CommitmentRadarSheet root={commitmentRoot} open onClose={() => setCommitmentRadarOpen(false)} />
       ) : null}
     </>
+  );
+}
+
+const HEADER_EASE = [0.22, 1, 0.36, 1] as const;
+
+function EventDetailHeader({
+  event,
+  reduceMotion,
+}: {
+  event: CalendarListItem | null;
+  reduceMotion: boolean;
+}) {
+  const color = getEventColor(event);
+  const when = !event
+    ? ""
+    : event.allDay
+      ? formatEventDate(event.start, event.timezone)
+      : formatEventTimeRange(event.start, event.end, event.timezone);
+
+  return (
+    <SheetHeader className="relative shrink-0 overflow-hidden border-b px-5 py-4">
+      <motion.span
+        aria-hidden
+        className="absolute inset-x-0 top-0 h-1 origin-left"
+        style={{ backgroundColor: color }}
+        initial={reduceMotion ? false : { scaleX: 0 }}
+        animate={{ scaleX: 1 }}
+        transition={reduceMotion ? { duration: 0 } : { duration: 0.45, ease: HEADER_EASE }}
+      />
+      <SheetTitle className="text-base font-semibold tracking-tight">
+        <TruncatedText text={event?.title ?? ""} lines={2} className="min-w-0 text-balance" />
+      </SheetTitle>
+      {event ? (
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="text-label text-muted-foreground">{when}</p>
+          <span className="inline-flex items-center gap-1.5 rounded-md bg-muted px-2 py-0.5 text-label font-medium capitalize text-foreground">
+            <Tag className="size-3.5" style={{ color }} />
+            {event.category}
+          </span>
+        </div>
+      ) : null}
+    </SheetHeader>
   );
 }
 

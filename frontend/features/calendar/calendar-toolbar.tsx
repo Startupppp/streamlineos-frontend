@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useCallback } from "react";
+import { memo, useCallback, type ReactNode } from "react";
 import {
   Share2,
   Calendar as CalendarIcon,
@@ -78,9 +78,9 @@ interface CalendarToolbarPrimaryActionsProps {
 function ShareMenuItems() {
   return (
     <>
-      <DropdownMenuItem className="text-xs">Copy link</DropdownMenuItem>
-      <DropdownMenuItem className="text-xs">Email calendar</DropdownMenuItem>
-      <DropdownMenuItem className="text-xs">Embed calendar</DropdownMenuItem>
+      <DropdownMenuItem>Copy link</DropdownMenuItem>
+      <DropdownMenuItem>Email calendar</DropdownMenuItem>
+      <DropdownMenuItem>Embed calendar</DropdownMenuItem>
     </>
   );
 }
@@ -100,13 +100,13 @@ export const CalendarToolbarPrimaryActions = memo(
             <Button
               variant="outline"
               size="sm"
-              className="gap-1 px-3 text-xs font-medium"
+              className="gap-1 px-3"
             >
               <Share2 className="h-3.5 w-3.5" />
               <span className="sr-only sm:not-sr-only">Share</span>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-40 text-xs">
+          <DropdownMenuContent align="end" className="w-40">
             <ShareMenuItems />
           </DropdownMenuContent>
         </DropdownMenu>
@@ -114,7 +114,7 @@ export const CalendarToolbarPrimaryActions = memo(
         <Button
           variant="outline"
           size="icon"
-          className="relative w-8"
+          className="relative"
           aria-label="Calendar accounts"
           onClick={onOpenAccounts}
         >
@@ -134,18 +134,18 @@ export const CalendarToolbarPrimaryActions = memo(
               iconClassName="mr-0"
               size="sm"
               aria-label="Add to calendar"
-              className="gap-1 bg-primary text-xs font-semibold text-primary-foreground hover:bg-primary/90"
+              className="gap-1 bg-primary font-semibold text-primary-foreground hover:bg-primary/90"
             >
               <span className="hidden sm:inline">Add</span>
             </AnimatedIconButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-44">
-            <DropdownMenuItem className="text-xs" onClick={onOpenCreate}>
+            <DropdownMenuItem onClick={onOpenCreate}>
               <PlusIcon size={14} className="mr-2 text-muted-foreground" />
               Add event
             </DropdownMenuItem>
             {canCreateTicket ? (
-              <DropdownMenuItem className="text-xs" onClick={onOpenCreateTicket}>
+              <DropdownMenuItem onClick={onOpenCreateTicket}>
                 <Ticket className="mr-2 h-3.5 w-3.5 text-muted-foreground" />
                 Add ticket due date
               </DropdownMenuItem>
@@ -178,8 +178,13 @@ interface CalendarToolbarProps {
   onToggleHrEvents: () => void;
   onToggleCrmEvents: () => void;
   onToggleAttendanceEvents: () => void;
+  onOpenCapacity?: () => void;
+  onOpenCoach?: () => void;
+  onOpenScenario?: () => void;
+  scenarioCount?: number;
   hidePrimaryActions?: boolean;
   navigationDisabled?: boolean;
+  filters?: ReactNode;
 }
 
 export const CalendarToolbar = memo(function CalendarToolbar({
@@ -203,8 +208,13 @@ export const CalendarToolbar = memo(function CalendarToolbar({
   onToggleHrEvents,
   onToggleCrmEvents,
   onToggleAttendanceEvents,
+  onOpenCapacity,
+  onOpenCoach,
+  onOpenScenario,
+  scenarioCount = 0,
   hidePrimaryActions = false,
   navigationDisabled = false,
+  filters,
 }: CalendarToolbarProps) {
   const handleViewChange = useCallback(
     (v: string) => onViewChange(v as View),
@@ -212,11 +222,11 @@ export const CalendarToolbar = memo(function CalendarToolbar({
   );
 
   return (
-    <div className="flex w-full min-w-0 shrink-0 flex-col gap-2 overflow-x-auto">
-      <div className="flex min-w-max select-none flex-row items-center justify-between gap-2 border-b border-border pb-2">
-        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+    <div className="flex w-full min-w-0 shrink-0 flex-col gap-2">
+      <div className="flex min-w-0 select-none flex-row flex-wrap items-center justify-between gap-2 border-b border-border pb-2">
+        <div className="flex min-w-0 flex-wrap items-center gap-1.5 sm:gap-2">
           {viewMode === "history" ? (
-            <span className="px-1 text-xs font-medium text-muted-foreground">
+            <span className="px-1 text-muted-foreground">
               Newest to oldest
             </span>
           ) : (
@@ -224,7 +234,7 @@ export const CalendarToolbar = memo(function CalendarToolbar({
               <Button
                 variant="outline"
                 size="sm"
-                className="shrink-0 px-2.5 text-xs font-medium sm:px-3"
+                className="shrink-0 px-2.5 sm:px-3"
                 onClick={onToday}
                 disabled={navigationDisabled}
               >
@@ -241,7 +251,7 @@ export const CalendarToolbar = memo(function CalendarToolbar({
                   iconSize={16}
                   variant="outline"
                   size="icon"
-                  className="w-8 rounded-r-none border-r-0"
+                  className="rounded-r-none border-r-0"
                   aria-label={`Previous ${viewMode === "my-day" ? "day" : VIEW_PERIOD_LABEL[view]}`}
                   disabled={navigationDisabled}
                   onClick={onPrev}
@@ -251,7 +261,7 @@ export const CalendarToolbar = memo(function CalendarToolbar({
                   iconSize={16}
                   variant="outline"
                   size="icon"
-                  className="w-8 rounded-l-none"
+                  className="rounded-l-none"
                   aria-label={`Next ${viewMode === "my-day" ? "day" : VIEW_PERIOD_LABEL[view]}`}
                   disabled={navigationDisabled}
                   onClick={onNext}
@@ -259,6 +269,39 @@ export const CalendarToolbar = memo(function CalendarToolbar({
               </div>
             </>
           )}
+          {scenarioCount > 0 && onOpenScenario ? (
+            <Button
+              variant="outline"
+              size="sm"
+              className="shrink-0 px-2.5"
+              onClick={onOpenScenario}
+            >
+              What if ({scenarioCount})
+            </Button>
+          ) : null}
+          {onOpenCapacity ? (
+            <Button
+              variant="outline"
+              size="sm"
+              className="shrink-0 px-2.5"
+              onClick={onOpenCapacity}
+            >
+              Capacity
+            </Button>
+          ) : null}
+          {onOpenCoach ? (
+            <Button
+              variant="outline"
+              size="sm"
+              className="shrink-0 px-2.5"
+              aria-label="My time insights"
+              onClick={onOpenCoach}
+            >
+              <span className="sm:hidden">Insights</span>
+              <span className="hidden sm:inline">My time insights</span>
+            </Button>
+          ) : null}
+          {filters}
         </div>
 
         <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
@@ -267,20 +310,20 @@ export const CalendarToolbar = memo(function CalendarToolbar({
               <SelectTrigger
                 aria-label="Calendar view"
                 className={cn(
-                  "w-fit min-w-[4.5rem] text-xs font-medium",
+                  "w-fit min-w-[4.5rem]",
                   FILTER_SELECT_TRIGGER,
                 )}
               >
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
-                <SelectItem value="day" className="text-xs">
+                <SelectItem value="day">
                   Day
                 </SelectItem>
-                <SelectItem value="week" className="text-xs">
+                <SelectItem value="week">
                   Week
                 </SelectItem>
-                <SelectItem value="month" className="text-xs">
+                <SelectItem value="month">
                   Month
                 </SelectItem>
               </SelectContent>
@@ -294,13 +337,13 @@ export const CalendarToolbar = memo(function CalendarToolbar({
                   <Button
                     variant="outline"
                     size="sm"
-                    className="gap-1 px-3 text-xs font-medium"
+                    className="gap-1 px-3"
                   >
                     <Share2 className="h-3.5 w-3.5" />
                     <span className="sr-only xl:not-sr-only">Share</span>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-40 text-xs">
+                <DropdownMenuContent align="end" className="w-40">
                   <ShareMenuItems />
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -310,7 +353,7 @@ export const CalendarToolbar = memo(function CalendarToolbar({
               <Button
                 variant={attendanceEventsVisible ? "secondary" : "outline"}
                 size="sm"
-                className="gap-1 px-2.5 text-xs font-medium xl:px-3"
+                className="gap-1 px-2.5 xl:px-3"
                 aria-label="Attendance events"
                 aria-pressed={attendanceEventsVisible}
                 onClick={onToggleAttendanceEvents}
@@ -324,7 +367,7 @@ export const CalendarToolbar = memo(function CalendarToolbar({
               <Button
                 variant={hrEventsVisible ? "secondary" : "outline"}
                 size="sm"
-                className="gap-1 px-2.5 text-xs font-medium xl:px-3"
+                className="gap-1 px-2.5 xl:px-3"
                 aria-label="HR events"
                 aria-pressed={hrEventsVisible}
                 onClick={onToggleHrEvents}
@@ -338,7 +381,7 @@ export const CalendarToolbar = memo(function CalendarToolbar({
               <Button
                 variant={crmEventsVisible ? "secondary" : "outline"}
                 size="sm"
-                className="gap-1 px-2.5 text-xs font-medium xl:px-3"
+                className="gap-1 px-2.5 xl:px-3"
                 aria-label="CRM events"
                 aria-pressed={crmEventsVisible}
                 onClick={onToggleCrmEvents}
@@ -360,18 +403,17 @@ export const CalendarToolbar = memo(function CalendarToolbar({
                   iconSize={16}
                   variant="outline"
                   size="icon"
-                  className="w-8"
                   aria-label="More calendar actions"
                 />
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-52 text-xs">
+              <DropdownMenuContent align="end" className="w-52">
                 {!hidePrimaryActions ? (
                   <DropdownMenuSub>
-                    <DropdownMenuSubTrigger className="text-xs">
+                    <DropdownMenuSubTrigger>
                       <Share2 className="mr-2 h-3.5 w-3.5" />
                       Share
                     </DropdownMenuSubTrigger>
-                    <DropdownMenuSubContent className="w-40 text-xs">
+                    <DropdownMenuSubContent className="w-40">
                       <ShareMenuItems />
                     </DropdownMenuSubContent>
                   </DropdownMenuSub>
@@ -381,7 +423,6 @@ export const CalendarToolbar = memo(function CalendarToolbar({
                 ) : null}
                 {isAttendanceEnabled ? (
                   <DropdownMenuCheckboxItem
-                    className="text-xs"
                     checked={attendanceEventsVisible}
                     onCheckedChange={onToggleAttendanceEvents}
                   >
@@ -390,7 +431,6 @@ export const CalendarToolbar = memo(function CalendarToolbar({
                 ) : null}
                 {isHrEnabled ? (
                   <DropdownMenuCheckboxItem
-                    className="text-xs"
                     checked={hrEventsVisible}
                     onCheckedChange={onToggleHrEvents}
                   >
@@ -399,7 +439,6 @@ export const CalendarToolbar = memo(function CalendarToolbar({
                 ) : null}
                 {isCrmEnabled ? (
                   <DropdownMenuCheckboxItem
-                    className="text-xs"
                     checked={crmEventsVisible}
                     onCheckedChange={onToggleCrmEvents}
                   >
@@ -419,19 +458,18 @@ export const CalendarToolbar = memo(function CalendarToolbar({
                   iconClassName="mr-0"
                   size="sm"
                   aria-label="Add to calendar"
-                  className="gap-1 bg-primary text-xs font-semibold text-primary-foreground hover:bg-primary/90"
+                  className="gap-1 bg-primary font-semibold text-primary-foreground hover:bg-primary/90"
                 >
                   <span className="hidden sm:inline">Add</span>
                 </AnimatedIconButton>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-44">
-                <DropdownMenuItem className="text-xs" onClick={onOpenCreate}>
+                <DropdownMenuItem onClick={onOpenCreate}>
                   <PlusIcon size={14} className="mr-2 text-muted-foreground" />
                   Add event
                 </DropdownMenuItem>
                 {canCreateTicket ? (
                   <DropdownMenuItem
-                    className="text-xs"
                     onClick={onOpenCreateTicket}
                   >
                     <Ticket className="mr-2 h-3.5 w-3.5 text-muted-foreground" />

@@ -110,7 +110,7 @@ export function MobileShellFab({
           "fixed z-[60] md:hidden touch-none select-none [[data-scroll-locked]_&]:hidden",
           !isPositioned && "right-4",
           !isPositioned &&
-            "bottom-[calc(var(--mb-fab-bottom,4.5rem)+env(safe-area-inset-bottom))]",
+            "bottom-[calc(var(--mb-fab-bottom,3.25rem)+env(safe-area-inset-bottom))]",
           isDragging ? "cursor-grabbing" : "cursor-grab",
           className,
         )}

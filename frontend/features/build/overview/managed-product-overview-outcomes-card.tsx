@@ -48,14 +48,14 @@ export function ManagedProductOverviewOutcomesCard({
           segments={reviewSegments}
         />
       ) : null}
-      <dl className="grid grid-cols-1 sm:grid-cols-2 sm:gap-x-8">
+      <dl className="grid grid-cols-1">
         <OverviewFact label="Goals linked" href={`/build/managed-products/${managedProductId}/goals`}>{goalsLinked}</OverviewFact>
         <OverviewFact label="Reviews scheduled">{outcomeReviews.scheduled}</OverviewFact>
         <OverviewFact label="Completed">{outcomeReviews.completed}</OverviewFact>
         <OverviewFact label="Met / not met">
           {hasReviews ? `${outcomeReviews.met} / ${outcomeReviews.notMet}` : "Not measured yet"}
         </OverviewFact>
-        <OverviewFact label="Latest review" className="sm:col-span-2">
+        <OverviewFact label="Latest review">
           {reviewFreshnessLabel(latestReviewAt)}
         </OverviewFact>
       </dl>

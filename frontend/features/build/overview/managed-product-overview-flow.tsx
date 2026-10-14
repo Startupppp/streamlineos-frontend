@@ -75,24 +75,22 @@ function StageLink({
         href={stage.href}
         aria-label={`${stage.label}: ${stage.value}. ${stage.hint}`}
         className={cn(
-          "group relative flex min-h-16 w-full min-w-0 items-center gap-2.5 overflow-hidden rounded-lg border px-2.5 py-2 transition-[transform,background-color,border-color,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring motion-reduce:transform-none motion-reduce:transition-none sm:min-h-20 sm:items-start sm:px-3 sm:py-2.5",
+          "group relative flex h-full min-h-20 w-full min-w-0 items-start gap-2.5 overflow-hidden rounded-lg border px-2.5 py-2.5 transition-colors duration-200 hover:border-foreground/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transform-none motion-reduce:transition-none sm:px-3",
           style.surface,
         )}
         {...hoverHandlers}
       >
-        <span className={cn("flex size-8 shrink-0 items-center justify-center rounded-lg transition-transform duration-200 group-hover:scale-105 motion-reduce:transform-none motion-reduce:transition-none", style.icon)}>
+        <span className={cn("flex size-8 shrink-0 items-center justify-center rounded-lg", style.icon)}>
           <Icon ref={iconRef} size={16} aria-hidden />
         </span>
-        <span className="min-w-0 flex-1">
-          <span className="flex items-baseline justify-between gap-2">
-            <span className="truncate text-xs font-medium text-muted-foreground transition-colors duration-200 group-hover:text-foreground motion-reduce:transition-none">
-              {stage.label}
-            </span>
+        <span className="flex min-w-0 flex-1 flex-col gap-1">
+          <span className="truncate text-xs font-medium text-muted-foreground transition-colors duration-200 group-hover:text-foreground motion-reduce:transition-none">
+            {stage.label}
           </span>
-          <span className="mt-0.5 block font-mono text-lg font-semibold leading-none tabular-nums tracking-tight text-foreground">
+          <span className="font-mono text-lg font-semibold leading-none tabular-nums tracking-tight text-foreground">
             {stage.value}
           </span>
-          <span className="mt-1 block truncate text-micro leading-3 text-muted-foreground">
+          <span className="line-clamp-2 text-pretty text-xs leading-4 text-muted-foreground">
             {stage.hint}
           </span>
         </span>
@@ -101,7 +99,7 @@ function StageLink({
       {isLast ? null : (
         <ChevronRight
           aria-hidden
-          className="pointer-events-none absolute -right-2.5 top-1/2 z-10 hidden size-4 -translate-y-1/2 rounded-full bg-card text-muted-foreground lg:block"
+          className="pointer-events-none absolute -right-2.5 top-1/2 z-10 hidden size-4 -translate-y-1/2 rounded-full bg-card text-muted-foreground 2xl:block"
         />
       )}
     </div>
@@ -124,7 +122,7 @@ export function ManagedProductOverviewFlow({
         animate="visible"
         variants={staggerContainer}
         aria-label="Signal to outcome"
-        className="relative grid grid-cols-1 gap-1 rounded-lg bg-muted/35 p-1 min-[420px]:grid-cols-2 sm:grid-cols-3 lg:grid-cols-6"
+        className="relative grid min-w-0 grid-cols-1 gap-1.5 min-[420px]:grid-cols-2 sm:grid-cols-3 2xl:grid-cols-6"
       >
         {stages.map((stage, index) => (
           <motion.li key={stage.id} variants={fadeUp} className="min-w-0">

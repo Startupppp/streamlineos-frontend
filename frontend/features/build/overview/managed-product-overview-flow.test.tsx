@@ -32,7 +32,7 @@ describe("ManagedProductOverviewFlow", () => {
     );
 
     const list = screen.getByRole("list", { name: "Signal to outcome" });
-    expect(list).toHaveClass("grid-cols-1", "min-[420px]:grid-cols-2", "sm:grid-cols-3", "lg:grid-cols-6");
+    expect(list).toHaveClass("grid-cols-1", "min-[420px]:grid-cols-2", "sm:grid-cols-3", "2xl:grid-cols-6");
     const firstLink = within(list).getAllByRole("link")[0];
     expect(firstLink).toHaveClass("motion-reduce:transform-none", "motion-reduce:transition-none");
     expect(container.querySelectorAll("svg")).toHaveLength(11);

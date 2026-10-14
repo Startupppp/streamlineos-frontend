@@ -9,11 +9,7 @@ export const PAGE_CHROME_X = "px-4 sm:px-6 lg:px-8";
 
 export const PAGE_CHROME_BOTTOM = "pb-0";
 
-export const PAGE_CHROME_MOBILE_NAV_PAD =
-  "max-md:[.mobile-nav-active_&]:pb-[calc(4rem+env(safe-area-inset-bottom,0px))]";
-
-export const STICKY_FOOTER_ABOVE_MOBILE_NAV =
-  "sticky bottom-0 max-md:[.mobile-nav-active_&]:bottom-[calc(4rem+env(safe-area-inset-bottom,0px))]";
+export const STICKY_FOOTER_ABOVE_MOBILE_NAV = "sticky bottom-0";
 
 export const FILTER_SELECT_TRIGGER =
   "min-w-0 border-input bg-card text-foreground font-normal data-[placeholder]:font-normal *:data-[slot=select-value]:font-normal [&_svg]:text-muted-foreground [&_[data-slot=select-value]]:min-w-0 [&_[data-slot=select-value]]:truncate";

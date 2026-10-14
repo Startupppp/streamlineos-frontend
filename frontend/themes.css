@@ -291,32 +291,32 @@
 
 /* Whole-surface tinting — selected accent tints all neutral chrome, light mode */
 :root:not(.dark)[class*="theme-"] {
-  --background: color-mix(in srgb, var(--brand-core) 4%, #f8fafc);
-  --card: color-mix(in srgb, var(--brand-core) 2%, #ffffff);
-  --popover: color-mix(in srgb, var(--brand-core) 2%, #ffffff);
-  --muted: color-mix(in srgb, var(--brand-core) 7%, #f1f5f9);
-  --secondary: color-mix(in srgb, var(--brand-core) 7%, #f1f5f9);
-  --accent: color-mix(in srgb, var(--brand-core) 7%, #f1f5f9);
-  --border: color-mix(in srgb, var(--brand-core) 14%, #cbd5e1);
-  --input: color-mix(in srgb, var(--brand-core) 14%, #cbd5e1);
-  --sidebar: color-mix(in srgb, var(--brand-core) 3%, #ffffff);
-  --sidebar-border: color-mix(in srgb, var(--brand-core) 12%, #cbd5e1);
+  --background: color-mix(in srgb, var(--brand-core) 4%, oklch(1 0 0));
+  --card: color-mix(in srgb, var(--brand-core) 2%, oklch(1 0 0));
+  --popover: color-mix(in srgb, var(--brand-core) 2%, oklch(1 0 0));
+  --muted: color-mix(in srgb, var(--brand-core) 8%, oklch(0.963 0.002 197.1));
+  --secondary: color-mix(in srgb, var(--brand-core) 8%, oklch(0.963 0.002 197.1));
+  --accent: color-mix(in srgb, var(--brand-core) 8%, oklch(0.963 0.002 197.1));
+  --border: color-mix(in srgb, var(--brand-core) 12%, oklch(0.925 0.005 214.3));
+  --input: color-mix(in srgb, var(--brand-core) 12%, oklch(0.925 0.005 214.3));
+  --sidebar: color-mix(in srgb, var(--brand-core) 3%, oklch(0.987 0.002 197.1));
+  --sidebar-border: color-mix(in srgb, var(--brand-core) 12%, oklch(0.925 0.005 214.3));
   --ring: var(--brand-deep);
   --sidebar-ring: var(--brand-deep);
 }
 
 /* Whole-surface tinting — dark mode */
 :root.dark[class*="theme-"] {
-  --background: color-mix(in srgb, var(--brand-core) 10%, #0a0a0b);
-  --card: color-mix(in srgb, var(--brand-core) 10%, #131316);
-  --popover: color-mix(in srgb, var(--brand-core) 10%, #18181b);
-  --muted: color-mix(in srgb, var(--brand-core) 10%, #1c1c1f);
-  --secondary: color-mix(in srgb, var(--brand-core) 12%, #202023);
-  --accent: color-mix(in srgb, var(--brand-core) 12%, #202023);
-  --border: color-mix(in srgb, var(--brand-bright) 50%, transparent);
-  --input: color-mix(in srgb, var(--brand-bright) 38%, transparent);
-  --sidebar: color-mix(in srgb, var(--brand-core) 8%, #0e0e10);
-  --sidebar-border: color-mix(in srgb, var(--brand-bright) 34%, transparent);
+  --background: color-mix(in srgb, var(--brand-core) 8%, oklch(0.148 0.004 228.8));
+  --card: color-mix(in srgb, var(--brand-core) 8%, oklch(0.218 0.008 223.9));
+  --popover: color-mix(in srgb, var(--brand-core) 8%, oklch(0.218 0.008 223.9));
+  --muted: color-mix(in srgb, var(--brand-core) 8%, oklch(0.275 0.011 216.9));
+  --secondary: color-mix(in srgb, var(--brand-core) 8%, oklch(0.275 0.011 216.9));
+  --accent: color-mix(in srgb, var(--brand-core) 8%, oklch(0.275 0.011 216.9));
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --sidebar: color-mix(in srgb, var(--brand-core) 6%, oklch(0.218 0.008 223.9));
+  --sidebar-border: oklch(1 0 0 / 10%);
 }
 
 /* Dark-mode reconciliation — accent foregrounds lifted for contrast on dark surfaces */

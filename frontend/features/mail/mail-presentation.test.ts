@@ -174,7 +174,7 @@ describe("useMailPresentation — recent drawer", () => {
 describe("exported class constants", () => {
   it("compose FAB class includes the safe-area offset above the bottom nav", () => {
     expect(MAIL_COMPOSE_FAB_CLASS).toContain("env(safe-area-inset-bottom)");
-    expect(MAIL_COMPOSE_FAB_CLASS).toContain("bottom-[calc(4rem");
+    expect(MAIL_COMPOSE_FAB_CLASS).toContain("bottom-[calc(2.75rem");
     expect(MAIL_COMPOSE_FAB_CLASS).toContain("md:hidden");
   });
 

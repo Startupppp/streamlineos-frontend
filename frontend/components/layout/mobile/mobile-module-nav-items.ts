@@ -7,7 +7,7 @@ import {
 export const MAX_MOBILE_MODULE_TABS = 5;
 
 export const MOBILE_MODULE_CONTENT_PADDING_CLASS =
-  "max-lg:pb-[calc(4rem+env(safe-area-inset-bottom,0px))]";
+  "max-lg:pb-[calc(2.75rem+env(safe-area-inset-bottom,0px))]";
 
 export function getAllMobileModuleTabs(navGroups: NavGroup[]): NavRoute[] {
   const tabs: NavRoute[] = [];

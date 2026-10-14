@@ -47,7 +47,7 @@ export function ManagedProductOverviewPulse({
           icon={MessageSquare}
           tone="blue"
           href={`${base}/feedback`}
-          className="min-h-20 bg-gradient-to-br from-card to-muted/20"
+          wrapHint
         />
         <StatCard
           label="Opportunities"
@@ -56,7 +56,7 @@ export function ManagedProductOverviewPulse({
           icon={Lightbulb}
           tone="amber"
           href={`${base}/insights`}
-          className="min-h-20 bg-gradient-to-br from-card to-muted/20"
+          wrapHint
         />
         <StatCard
           label="In flight"
@@ -64,7 +64,7 @@ export function ManagedProductOverviewPulse({
           hint={`Now + Next · ${delivery.roadmapByHorizon.later} later`}
           icon={Navigation}
           href={`${base}/roadmap`}
-          className="min-h-20 bg-gradient-to-br from-card to-muted/20"
+          wrapHint
         />
         <StatCard
           label="Tickets done"
@@ -77,7 +77,7 @@ export function ManagedProductOverviewPulse({
           icon={CheckCircle2}
           tone="emerald"
           href={`${base}/projects`}
-          className="min-h-20 bg-gradient-to-br from-card to-muted/20"
+          wrapHint
         />
         <StatCard
           label="Outcomes met"
@@ -89,7 +89,7 @@ export function ManagedProductOverviewPulse({
           }
           icon={Target}
           href={`${base}/insights`}
-          className="min-h-20 bg-gradient-to-br from-card to-muted/20"
+          wrapHint
         />
       </StatCardGrid>
     </section>

@@ -29,7 +29,10 @@ import { DirtyStateProvider } from "@/components/shared/dirty-state-context";
 import { getChatMobileContentPaddingClassName } from "./mobile/chat-mobile-chrome-layout";
 import { MobileModuleBottomNav } from "./mobile/mobile-module-bottom-nav";
 import { MobileShellFab } from "./mobile/mobile-shell-fab";
-import { shouldShowMobileModuleBottomNav } from "./mobile/mobile-module-nav-items";
+import {
+  MOBILE_MODULE_CONTENT_PADDING_CLASS,
+  shouldShowMobileModuleBottomNav,
+} from "./mobile/mobile-module-nav-items";
 import {
   fabBottomCssPx,
   launcherBottomCssPx,
@@ -334,7 +337,9 @@ export function DashboardShell({
                           ? getChatMobileContentPaddingClassName(
                               isChatConversationOpen,
                             )
-                          : "max-lg:pb-[var(--mb-fab-lane)]",
+                          : showModuleBottomNav
+                            ? MOBILE_MODULE_CONTENT_PADDING_CLASS
+                            : "max-lg:pb-[var(--mb-fab-lane)]",
                       )}
                     >
                       <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden [&>:first-child]:h-full [&>:first-child]:min-h-0 [&>:first-child]:flex-1">

@@ -55,23 +55,29 @@ export function OverviewPanel({ title, description, action, children, className 
     <section
       aria-label={title}
       className={cn(
-        "group/panel relative flex h-full min-w-0 flex-col gap-3 overflow-hidden rounded-xl border border-border/80 bg-card p-3.5 shadow-xs transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-border hover:shadow-sm motion-reduce:transform-none sm:p-4",
+        "flex h-full min-w-0 flex-col gap-3 rounded-xl border border-border bg-card p-3.5 sm:p-4",
         className,
       )}
     >
-      <span
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/35 to-transparent opacity-0 transition-opacity duration-200 group-hover/panel:opacity-100 motion-reduce:transition-none"
-      />
-      <header className="flex items-start justify-between gap-3 border-b border-border/60 pb-3">
-        <div className="min-w-0">
-          <h2 className="text-sm font-semibold tracking-tight text-foreground">{title}</h2>
-          {description ? <p className="mt-0.5 text-xs text-muted-foreground">{description}</p> : null}
+      <header className="flex flex-col items-start gap-2 border-b border-border pb-3 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
+        <div className="flex min-w-0 flex-col gap-0.5">
+          <h2 className="text-balance text-sm font-semibold tracking-tight text-foreground">{title}</h2>
+          {description ? (
+            <p className="text-pretty text-xs text-muted-foreground">{description}</p>
+          ) : null}
         </div>
         {action}
       </header>
       {children}
     </section>
+  );
+}
+
+export function OverviewEmptyState({ children }: { children: ReactNode }) {
+  return (
+    <div className="flex flex-1 flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border bg-card px-4 py-10 text-center">
+      {children}
+    </div>
   );
 }
 
@@ -88,16 +94,18 @@ export function OverviewFact({
 }) {
   const inner = (
     <>
-      <dt className="text-sm text-muted-foreground">{label}</dt>
-      <dd className="text-right font-mono text-sm tabular-nums text-foreground">{children}</dd>
+      <dt className="min-w-0 text-sm text-muted-foreground">{label}</dt>
+      <dd className="min-w-0 text-right font-mono text-sm tabular-nums text-foreground sm:ml-auto sm:whitespace-nowrap">{children}</dd>
     </>
   );
+  const rowClass = "flex min-h-11 min-w-0 flex-wrap items-center justify-between gap-x-4 gap-y-0.5 border-b border-border px-1.5 py-1.5 last:border-b-0 sm:min-h-9";
   if (href) {
     return (
       <Link
         href={href}
         className={cn(
-          "flex min-h-10 items-center justify-between gap-4 rounded-md border-b border-border/60 px-1.5 py-1.5 transition-colors last:border-b-0 hover:bg-muted/50 hover:text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring sm:min-h-9",
+          rowClass,
+          "rounded-md transition-colors hover:bg-muted hover:text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring motion-reduce:transition-none",
           className,
         )}
       >
@@ -106,12 +114,7 @@ export function OverviewFact({
     );
   }
   return (
-    <div
-      className={cn(
-        "flex min-h-10 items-center justify-between gap-4 border-b border-border/60 px-1.5 py-1.5 last:border-b-0 sm:min-h-9",
-        className,
-      )}
-    >
+    <div className={cn(rowClass, className)}>
       {inner}
     </div>
   );
@@ -129,7 +132,7 @@ export function OverviewRecordLink({
   return (
     <Link
       href={href}
-      className="flex min-h-10 min-w-0 items-center justify-between gap-3 rounded-md border-b border-border/60 px-1.5 py-1.5 text-sm transition-colors last:border-b-0 hover:bg-muted/50 hover:text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring sm:min-h-9"
+      className="flex min-h-11 min-w-0 items-center justify-between gap-3 rounded-md border-b border-border px-1.5 py-1.5 text-sm transition-colors last:border-b-0 hover:bg-muted hover:text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring motion-reduce:transition-none sm:min-h-9"
     >
       <span className="truncate">{title}</span>
       <span className="flex shrink-0 items-center gap-2">{trailing}</span>

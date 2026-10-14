@@ -83,7 +83,7 @@ function PanelVirtualRow({
   if (row.type === "header") {
     return (
       <div style={style} {...ariaAttributes} className="flex items-end px-4 pt-5 pb-1">
-        <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        <h3 className="text-sm font-semibold text-muted-foreground">
           {format(new Date(`${row.dateKey}T12:00:00`), "EEEE, MMMM d, yyyy")}
         </h3>
       </div>
@@ -128,7 +128,7 @@ function PanelVirtualRow({
               />
             ) : null}
           </div>
-          <span className="shrink-0 text-micro uppercase tracking-wide text-muted-foreground whitespace-nowrap">
+          <span className="shrink-0 text-xs font-medium text-muted-foreground whitespace-nowrap">
             {event.category}
           </span>
         </div>

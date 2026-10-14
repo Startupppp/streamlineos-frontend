@@ -9,7 +9,7 @@
 }
 
 @utility h-safe-bottom {
-  height: calc(4rem + env(safe-area-inset-bottom));
+  height: calc(2.75rem + env(safe-area-inset-bottom));
 }
 
 @theme inline {
@@ -101,17 +101,17 @@
 
   --radius: 0.625rem;
 
-  /* â”€â”€â”€ Surface â”€â”€â”€ */
-  --background: #f8fafc; /* page canvas â€” slate-50, near pure white with the barest cool hint for card lift */
-  --foreground: #0b1220; /* primary ink */
-  --card: #ffffff;
-  --card-foreground: #0b1220;
-  --popover: #ffffff;
-  --popover-foreground: #0b1220;
-  --muted: #f1f5f9; /* slate-100 â€” muted surfaces */
-  --muted-foreground: #556377; /* slate-500/600 midpoint - 5.58:1 on --muted, 5.84:1 on --background, 6.11:1 on --card (WCAG AA normal text); slate-500 #64748b measured 4.34:1 on --muted */
-  --border: #cbd5e1; /* slate-300: visible but still quiet on white and slate-50 */
-  --input: #cbd5e1;
+  /* Surface — shadcn mist (cool), not zinc */
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.148 0.004 228.8);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.148 0.004 228.8);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.148 0.004 228.8);
+  --muted: oklch(0.963 0.002 197.1);
+  --muted-foreground: oklch(0.56 0.021 213.5);
+  --border: oklch(0.925 0.005 214.3);
+  --input: oklch(0.925 0.005 214.3);
   /* â”€â”€â”€ CTA & Action (Ink-style â€” Linear/Stripe feel) â”€â”€â”€ */
   --primary: #0b1220; /* slate-900 â€” primary CTAs */
   --primary-foreground: #ffffff;
@@ -171,21 +171,16 @@
 
 .dark {
   /* â”€â”€â”€ Surface (neutral zinc blacks â€” Ink stays monochrome in dark) â”€â”€â”€ */
-  --background: #0a0a0b; /* page canvas */
-  --foreground: #f4f4f5;
-  --card: #131316; /* elevated panel â€” clearly lifted from bg */
-  --card-foreground: #f4f4f5;
-  --popover: #18181b;
-  --popover-foreground: #f4f4f5;
-  --muted: #1c1c1f;
-  --muted-foreground: #a1a1aa;
-  --border: rgba(
-    255,
-    255,
-    255,
-    0.3
-  ); /* clearly visible against dark surfaces */
-  --input: rgba(255, 255, 255, 0.22);
+  --background: oklch(0.148 0.004 228.8);
+  --foreground: oklch(0.987 0.002 197.1);
+  --card: oklch(0.218 0.008 223.9);
+  --card-foreground: oklch(0.987 0.002 197.1);
+  --popover: oklch(0.218 0.008 223.9);
+  --popover-foreground: oklch(0.987 0.002 197.1);
+  --muted: oklch(0.275 0.011 216.9);
+  --muted-foreground: oklch(0.723 0.014 214.4);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
 
   /* â”€â”€â”€ CTA & Action â€” invert ink to white for dark â”€â”€â”€ */
   --primary: #f4f4f5;
@@ -218,100 +213,99 @@
 }
 
 /*
- * Authenticated shell only. Warm stone: paper canvas, white cards, warm ink.
- * IBM Plex replaces Geist here. Public pages keep the :root fonts and colors.
- * A selected color theme still overrides the accent block below.
+ * Authenticated shell. Surfaces follow the shadcn mist base.
+ * IBM Plex replaces Geist here. A selected color theme still overrides the accent block below.
  */
 html.app-neutral {
   --app-font-sans: var(--font-plex-sans, "IBM Plex Sans"), "IBM Plex Sans";
   --app-font-mono: var(--font-plex-mono, "IBM Plex Mono"), "IBM Plex Mono";
-  --background: #fafaf9;
-  --foreground: #1c1917;
-  --card: #ffffff;
-  --card-foreground: #1c1917;
-  --popover: #ffffff;
-  --popover-foreground: #1c1917;
-  --muted: #f5f5f4;
-  --muted-foreground: #57534e;
-  --border: #e7e5e4;
-  --input: #e7e5e4;
-  --secondary: #f5f5f4;
-  --secondary-foreground: #1c1917;
-  --accent: #f5f5f4;
-  --accent-foreground: #1c1917;
-  --sidebar: #f5f5f4;
-  --sidebar-foreground: #1c1917;
-  --sidebar-accent: #e7e5e4;
-  --sidebar-accent-foreground: #1c1917;
-  --sidebar-border: #e7e5e4;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.148 0.004 228.8);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.148 0.004 228.8);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.148 0.004 228.8);
+  --muted: oklch(0.963 0.002 197.1);
+  --muted-foreground: oklch(0.56 0.021 213.5);
+  --border: oklch(0.925 0.005 214.3);
+  --input: oklch(0.925 0.005 214.3);
+  --secondary: oklch(0.963 0.002 197.1);
+  --secondary-foreground: oklch(0.218 0.008 223.9);
+  --accent: oklch(0.963 0.002 197.1);
+  --accent-foreground: oklch(0.218 0.008 223.9);
+  --sidebar: oklch(0.987 0.002 197.1);
+  --sidebar-foreground: oklch(0.148 0.004 228.8);
+  --sidebar-accent: oklch(0.963 0.002 197.1);
+  --sidebar-accent-foreground: oklch(0.218 0.008 223.9);
+  --sidebar-border: oklch(0.925 0.005 214.3);
   --bg-glass: rgba(255, 255, 255, 0.78);
   --border-glass: rgba(28, 25, 23, 0.08);
 }
 
 html.app-neutral:not([class*="theme-"]) {
-  --primary: #1c1917;
-  --primary-foreground: #fafaf9;
-  --ring: #1c1917;
-  --sidebar-primary: #1c1917;
-  --sidebar-primary-foreground: #fafaf9;
-  --sidebar-ring: #1c1917;
-  --brand-deep: #1c1917;
-  --brand-core: #44403c;
-  --brand-bright: #78716c;
-  --brand-cyan: #57534e;
+  --primary: oklch(0.218 0.008 223.9);
+  --primary-foreground: oklch(0.987 0.002 197.1);
+  --ring: oklch(0.723 0.014 214.4);
+  --sidebar-primary: oklch(0.218 0.008 223.9);
+  --sidebar-primary-foreground: oklch(0.987 0.002 197.1);
+  --sidebar-ring: oklch(0.723 0.014 214.4);
+  --brand-deep: oklch(0.218 0.008 223.9);
+  --brand-core: oklch(0.45 0.017 213.2);
+  --brand-bright: oklch(0.723 0.014 214.4);
+  --brand-cyan: oklch(0.56 0.021 213.5);
   --gradient-signature: linear-gradient(
     135deg,
-    #1c1917 0%,
-    #44403c 55%,
-    #78716c 100%
+    oklch(0.218 0.008 223.9) 0%,
+    oklch(0.45 0.017 213.2) 55%,
+    oklch(0.723 0.014 214.4) 100%
   );
-  --gold: #44403c;
-  --blue: #1c1917;
+  --gold: oklch(0.45 0.017 213.2);
+  --blue: oklch(0.218 0.008 223.9);
 }
 
 html.app-neutral.dark {
-  --background: #0c0a09;
-  --foreground: #fafaf9;
-  --card: #1c1917;
-  --card-foreground: #fafaf9;
-  --popover: #1c1917;
-  --popover-foreground: #fafaf9;
-  --muted: #292524;
-  --muted-foreground: #a8a29e;
-  --border: #292524;
-  --input: #44403c;
-  --secondary: #292524;
-  --secondary-foreground: #fafaf9;
-  --accent: #292524;
-  --accent-foreground: #fafaf9;
-  --sidebar: #0c0a09;
-  --sidebar-foreground: #fafaf9;
-  --sidebar-accent: #292524;
-  --sidebar-accent-foreground: #fafaf9;
-  --sidebar-border: #292524;
+  --background: oklch(0.148 0.004 228.8);
+  --foreground: oklch(0.987 0.002 197.1);
+  --card: oklch(0.218 0.008 223.9);
+  --card-foreground: oklch(0.987 0.002 197.1);
+  --popover: oklch(0.218 0.008 223.9);
+  --popover-foreground: oklch(0.987 0.002 197.1);
+  --muted: oklch(0.275 0.011 216.9);
+  --muted-foreground: oklch(0.723 0.014 214.4);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --secondary: oklch(0.275 0.011 216.9);
+  --secondary-foreground: oklch(0.987 0.002 197.1);
+  --accent: oklch(0.275 0.011 216.9);
+  --accent-foreground: oklch(0.987 0.002 197.1);
+  --sidebar: oklch(0.218 0.008 223.9);
+  --sidebar-foreground: oklch(0.987 0.002 197.1);
+  --sidebar-accent: oklch(0.275 0.011 216.9);
+  --sidebar-accent-foreground: oklch(0.987 0.002 197.1);
+  --sidebar-border: oklch(1 0 0 / 10%);
   --bg-glass: rgba(12, 10, 9, 0.78);
   --border-glass: rgba(250, 250, 249, 0.12);
 }
 
 html.app-neutral.dark:not([class*="theme-"]) {
-  --primary: #fafaf9;
-  --primary-foreground: #1c1917;
-  --ring: #d6d3d1;
-  --sidebar-primary: #fafaf9;
-  --sidebar-primary-foreground: #1c1917;
-  --sidebar-ring: #d6d3d1;
-  --brand-deep: #fafaf9;
-  --brand-core: #e7e5e4;
-  --brand-bright: #a8a29e;
-  --brand-cyan: #d6d3d1;
+  --primary: oklch(0.925 0.005 214.3);
+  --primary-foreground: oklch(0.218 0.008 223.9);
+  --ring: oklch(0.56 0.021 213.5);
+  --sidebar-primary: oklch(0.925 0.005 214.3);
+  --sidebar-primary-foreground: oklch(0.218 0.008 223.9);
+  --sidebar-ring: oklch(0.56 0.021 213.5);
+  --brand-deep: oklch(0.987 0.002 197.1);
+  --brand-core: oklch(0.925 0.005 214.3);
+  --brand-bright: oklch(0.723 0.014 214.4);
+  --brand-cyan: oklch(0.56 0.021 213.5);
   --gradient-signature: linear-gradient(
     135deg,
-    #fafaf9 0%,
-    #e7e5e4 55%,
-    #a8a29e 100%
+    oklch(0.987 0.002 197.1) 0%,
+    oklch(0.925 0.005 214.3) 55%,
+    oklch(0.723 0.014 214.4) 100%
   );
-  --gold: #e7e5e4;
-  --blue: #fafaf9;
+  --gold: oklch(0.925 0.005 214.3);
+  --blue: oklch(0.987 0.002 197.1);
 }
 
 /* â”€â”€â”€ Shadow override for dark mode â€” light glass-highlight instead of dark drop â”€â”€â”€ */
@@ -1014,7 +1008,7 @@ button.goal-everything-chip[aria-checked="true"]::before {
   box-sizing: border-box;
   min-height: 40px;
   padding: 10px 6px;
-  font-size: 12px;
+  font-size: 0.875rem;
   font-weight: 600;
   line-height: 1.25;
   color: var(--muted-foreground);
@@ -1085,13 +1079,17 @@ button.goal-everything-chip[aria-checked="true"]::before {
   .rbc-time-view
   .rbc-time-header
   .rbc-header.rbc-today
-  .calendar-week-day-header-date,
-.calendar-container
-  .rbc-time-view
-  .rbc-time-header
-  .rbc-header.rbc-today
-  .calendar-week-day-header-weekday {
-  color: inherit;
+  .calendar-week-day-header-date {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  min-width: 1.375rem;
+  height: 1.375rem;
+  padding: 0 0.25rem;
+  border-radius: 9999px;
+  background: var(--primary);
+  color: var(--primary-foreground);
 }
 
 .calendar-container
@@ -1099,7 +1097,8 @@ button.goal-everything-chip[aria-checked="true"]::before {
   .rbc-time-header
   .rbc-header.rbc-today
   .calendar-week-day-header-weekday {
-  opacity: 0.75;
+  color: var(--primary);
+  opacity: 1;
 }
 
 .calendar-container .rbc-month-row {
@@ -1152,14 +1151,15 @@ button.goal-everything-chip[aria-checked="true"]::before {
 }
 
 .calendar-container .rbc-time-view .rbc-header.rbc-today {
-  background: var(--primary);
-  color: var(--primary-foreground);
+  background-color: transparent;
+  color: var(--foreground);
   border-bottom-color: var(--primary);
 }
 
 .calendar-container .rbc-date-cell {
   padding: 4px 6px;
-  font-size: 12px;
+  font-size: 0.875rem;
+  font-weight: 500;
   color: var(--foreground);
 }
 
@@ -1199,9 +1199,16 @@ button.goal-everything-chip[aria-checked="true"]::before {
   cursor: pointer;
 }
 
+.calendar-container .rbc-event,
+.calendar-container .rbc-event-label,
+.calendar-container .rbc-event-content {
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.25;
+}
+
 .calendar-container .rbc-event {
   border-radius: 4px;
-  font-size: 12px;
   padding: 1px 6px;
   border: none;
 }
@@ -1211,7 +1218,7 @@ button.goal-everything-chip[aria-checked="true"]::before {
 }
 
 .calendar-container .rbc-show-more {
-  font-size: 11px;
+  font-size: 0.75rem;
   color: var(--primary);
   font-weight: 500;
   background: transparent;
@@ -1219,7 +1226,8 @@ button.goal-everything-chip[aria-checked="true"]::before {
 }
 
 .calendar-container .rbc-time-slot {
-  font-size: 11px;
+  font-size: 0.75rem;
+  font-weight: 500;
   color: var(--muted-foreground);
 }
 
@@ -1289,7 +1297,7 @@ button.goal-everything-chip[aria-checked="true"]::before {
   .calendar-container .rbc-header {
     min-height: 36px;
     padding: 8px 4px;
-    font-size: 10px;
+    font-size: 0.75rem;
   }
 
   .calendar-container
@@ -1303,7 +1311,7 @@ button.goal-everything-chip[aria-checked="true"]::before {
 
   .calendar-container .rbc-time-view .rbc-time-header .rbc-header {
     padding: 6px 4px;
-    font-size: 10px;
+    font-size: 0.75rem;
   }
 
   .calendar-container
@@ -1311,7 +1319,7 @@ button.goal-everything-chip[aria-checked="true"]::before {
     .rbc-time-header
     .rbc-header
     .calendar-week-day-header-date {
-    font-size: 11px;
+    font-size: 0.875rem;
   }
 
   .calendar-container
@@ -1319,7 +1327,7 @@ button.goal-everything-chip[aria-checked="true"]::before {
     .rbc-time-header
     .rbc-header
     .calendar-week-day-header-weekday {
-    font-size: 9px;
+    font-size: 0.75rem;
   }
 
   .calendar-container
@@ -1327,12 +1335,12 @@ button.goal-everything-chip[aria-checked="true"]::before {
     .rbc-time-header
     .rbc-header
     .calendar-day-header {
-    font-size: 11px;
+    font-size: 0.875rem;
   }
 
   .calendar-container .rbc-date-cell {
     padding: 2px 3px;
-    font-size: 10px;
+    font-size: 0.75rem;
   }
 
   .calendar-container .rbc-date-cell.rbc-now a,
@@ -1342,22 +1350,30 @@ button.goal-everything-chip[aria-checked="true"]::before {
   }
 
   .calendar-container .rbc-header.rbc-today {
-    font-size: 10px;
+    font-size: 0.75rem;
+  }
+
+  .calendar-container
+    .rbc-time-view
+    .rbc-header.rbc-today
+    .calendar-week-day-header-date {
+    min-width: 1.125rem;
+    height: 1.125rem;
   }
 
   .calendar-container .rbc-event {
-    font-size: 10px;
+    font-size: 0.75rem;
     padding: 0 3px;
-    line-height: 1.2;
+    line-height: 1.25;
   }
 
   .calendar-container .rbc-show-more {
-    font-size: 9px;
+    font-size: 0.75rem;
     padding: 0 2px;
   }
 
   .calendar-container .rbc-time-slot {
-    font-size: 10px;
+    font-size: 0.75rem;
   }
 }
 
@@ -1365,7 +1381,7 @@ button.goal-everything-chip[aria-checked="true"]::before {
   .calendar-container .rbc-header {
     min-height: 38px;
     padding: 9px 5px;
-    font-size: 11px;
+    font-size: 0.875rem;
   }
 
   .calendar-container
@@ -1386,7 +1402,7 @@ button.goal-everything-chip[aria-checked="true"]::before {
     .rbc-time-header
     .rbc-header
     .calendar-week-day-header-date {
-    font-size: 12px;
+    font-size: 0.875rem;
   }
 
   .calendar-container
@@ -1394,7 +1410,7 @@ button.goal-everything-chip[aria-checked="true"]::before {
     .rbc-time-header
     .rbc-header
     .calendar-week-day-header-weekday {
-    font-size: 9px;
+    font-size: 0.75rem;
   }
 
   .calendar-container
@@ -1402,16 +1418,16 @@ button.goal-everything-chip[aria-checked="true"]::before {
     .rbc-time-header
     .rbc-header
     .calendar-day-header {
-    font-size: 12px;
+    font-size: 0.875rem;
   }
 
   .calendar-container .rbc-date-cell {
     padding: 3px 4px;
-    font-size: 11px;
+    font-size: 0.875rem;
   }
 
   .calendar-container .rbc-event {
-    font-size: 11px;
+    font-size: 0.875rem;
   }
 }
 

@@ -218,12 +218,12 @@ export function TicketSubtasks({
   const subtaskProgress = subtasksTotal > 0 ? (subtasksDone / subtasksTotal) * 100 : 0;
 
   const excludeIds = useMemo(() => {
-    const ids = new Set(subtasks.map((s) => s.id));
+    const ids = new Set<number>(subtasks.map((s) => s.id));
     ids.add(ticketId);
     let ancestorId: number | null | undefined = parentTicketId;
-    while (ancestorId != null) {
+    while (ancestorId != null && !ids.has(ancestorId)) {
       ids.add(ancestorId);
-      const ancestor = queryClient.getQueryData<Ticket>(
+      const ancestor: Ticket | undefined = queryClient.getQueryData<Ticket>(
         buildWorkQueryKeys.projects.ticket(projectId, ancestorId),
       );
       ancestorId = ancestor?.parentTicketId;

@@ -156,7 +156,7 @@ describe("/calendar render stability", () => {
   it("announces the range at the granularity of the active view, not month-only", async () => {
     const { getByLabelText } = await renderCalendar();
     expect(
-      getByLabelText(/Choose month and year, currently .*Week \d+/),
+      getByLabelText(/Choose month and year, currently .+\d+\s*[–-]\s*.*\d+/),
     ).toBeInTheDocument();
   });
 });
