@@ -13,7 +13,14 @@ export const regularizationQueueContract = z.object({
 export const regularizationApplyContract = z.object({
   success: z.literal(true),
   monthKey: z.string(),
-  payrollInputRebuild: z.boolean(),
+  payrollInputRebuild: z.union([
+    z.object({
+      rebuilt: z.boolean(),
+      periodId: z.number().nullable(),
+      status: z.string().nullable(),
+    }),
+    z.boolean(),
+  ]),
 });
 
 export const regularizationRejectContract = z.object({

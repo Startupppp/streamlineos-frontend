@@ -18,7 +18,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useSession } from "next-auth/react";
 import { useCan } from "@/hooks/api/access";
+import { useOrgTimeZone } from "@/hooks/api/org-display";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useApplyRegularization,
@@ -45,6 +47,8 @@ function readQueueStatus(value: string): QueueStatus {
 
 export function RegularizationQueueCard() {
   const canDecide = useCan("hr:attendance:regularize");
+  const { data: session } = useSession();
+  const orgTz = useOrgTimeZone();
   const invalidateAttendanceDay = useInvalidateAttendanceDay();
   const [presetId, setPresetId] = useState<DateRangePresetId>("month");
   const [range, setRange] = useState<DateRange>(() => istMonthRange());
@@ -241,6 +245,8 @@ export function RegularizationQueueCard() {
                     row={row}
                     canDecide={canDecide}
                     isPending={isPending}
+                    currentUserId={session?.user?.id}
+                    orgTz={orgTz}
                     onApply={handleApply}
                     onReject={handleRejectOpen}
                   />

@@ -26,6 +26,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useCreateHrPolicy, useUpdateHrPolicy } from "@/hooks/api/hr/policies";
+import { getValidationFieldErrors } from "@/lib/api-envelope";
 import {
   HR_POLICY_TYPES,
   POLICY_TYPE_LABELS,
@@ -99,39 +100,66 @@ export function PolicyUpsertSheet({ open, onOpenChange, policy }: Props) {
 
   const onSubmit = useCallback(
     (data: PolicyFormValues) => {
-      const payload = {
-        policyType: data.policyType as HrPolicyType,
-        name: data.name,
-        description: data.description || undefined,
-        effectiveFrom: data.effectiveFrom,
-        effectiveTo: data.effectiveTo || undefined,
-        priority: data.priority,
-        rules: data.rules,
-        scopes: data.scopes,
+      const handleError = (err: unknown) => {
+        const fieldErrors = getValidationFieldErrors(err);
+        if (fieldErrors.length > 0) {
+          let anySet = false;
+          const topLevel = form.getValues();
+          for (const { path, message } of fieldErrors) {
+            if (path in topLevel) {
+              form.setError(path as keyof PolicyFormValues, { message });
+            } else {
+              form.setError(`rules.${path}` as `rules.${string}`, { message });
+            }
+            anySet = true;
+          }
+          if (!anySet) toast.error(getErrorMessage(err));
+          return;
+        }
+        toast.error(getErrorMessage(err));
       };
 
       if (isEdit && policy) {
+        const editPayload = {
+          name: data.name,
+          description: data.description || undefined,
+          effectiveFrom: data.effectiveFrom,
+          effectiveTo: data.effectiveTo || undefined,
+          priority: data.priority,
+          rules: data.rules,
+          scopes: data.scopes,
+        };
         update.mutate(
-          { policyId: policy.id, ...payload },
+          { policyId: policy.id, ...editPayload },
           {
             onSuccess: () => {
               toast.success("Policy updated");
               onOpenChange(false);
             },
-            onError: (err) => toast.error(getErrorMessage(err)),
+            onError: handleError,
           },
         );
       } else {
-        create.mutate(payload, {
+        const createPayload = {
+          policyType: data.policyType as HrPolicyType,
+          name: data.name,
+          description: data.description || undefined,
+          effectiveFrom: data.effectiveFrom,
+          effectiveTo: data.effectiveTo || undefined,
+          priority: data.priority,
+          rules: data.rules,
+          scopes: data.scopes,
+        };
+        create.mutate(createPayload, {
           onSuccess: () => {
             toast.success("Policy created");
             onOpenChange(false);
           },
-          onError: (err) => toast.error(getErrorMessage(err)),
+          onError: handleError,
         });
       }
     },
-    [isEdit, policy, create, update, onOpenChange],
+    [isEdit, policy, form, create, update, onOpenChange],
   );
 
   const policyType = form.watch("policyType") as HrPolicyType;

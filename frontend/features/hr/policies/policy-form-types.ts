@@ -22,6 +22,19 @@ export const policyFormSchema = z.object({
         ),
     )
     .min(1, "At least one scope is required"),
+}).superRefine((data, ctx) => {
+  if (data.policyType === "leave") {
+    const v = data.rules["accrualAmount"];
+    if (typeof v === "number") {
+      if (v < 0) {
+        ctx.addIssue({ code: z.ZodIssueCode.too_small, minimum: 0, type: "number", inclusive: true, message: "Accrual must be 0 or more", path: ["rules", "accrualAmount"] });
+      } else if (v > 365) {
+        ctx.addIssue({ code: z.ZodIssueCode.too_big, maximum: 365, type: "number", inclusive: true, message: "Accrual cannot exceed 365 days", path: ["rules", "accrualAmount"] });
+      } else if (Math.round(v * 100) !== v * 100) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Accrual can have at most 2 decimal places", path: ["rules", "accrualAmount"] });
+      }
+    }
+  }
 });
 
 export type PolicyFormValues = z.infer<typeof policyFormSchema>;
