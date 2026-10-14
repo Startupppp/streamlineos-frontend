@@ -1275,15 +1275,17 @@ export function CalendarView() {
                   : "This history period remains incomplete, and older periods cannot be loaded safely. Retry this period later."
                 : CALENDAR_TRUNCATED_WARNING}
             </span>
-            {viewMode === "history" ? (
-              <button
-                type="button"
-                onClick={() => void refetchHistory()}
-                className="shrink-0 text-dense font-medium text-status-warning-ink underline underline-offset-2"
-              >
-                Retry
-              </button>
-            ) : null}
+            <button
+              type="button"
+              onClick={
+                viewMode === "history"
+                  ? () => void refetchHistory()
+                  : handleRetryEvents
+              }
+              className="shrink-0 text-dense font-medium text-status-warning-ink underline underline-offset-2"
+            >
+              Retry
+            </button>
           </div>
         )}
 
@@ -1331,11 +1333,17 @@ export function CalendarView() {
           !externalData.complete &&
           externalData.errors.length === 0 && (
             <div
-              className="shrink-0 rounded-md border border-status-warning-rule bg-status-warning-surface px-3 py-1.5 text-dense text-status-warning-ink"
+              className="flex shrink-0 items-center gap-2 rounded-md border border-status-warning-rule bg-status-warning-surface px-3 py-1.5 text-dense text-status-warning-ink"
               role="status"
             >
-              Connected calendar coverage is partial. Retry before relying on
-              this time window.
+              <span className="min-w-0 flex-1">Connected calendar coverage is partial. Retry before relying on this time window.</span>
+              <button
+                type="button"
+                onClick={handleRetryExternal}
+                className="shrink-0 font-medium underline underline-offset-2"
+              >
+                Retry
+              </button>
             </div>
           )}
 
