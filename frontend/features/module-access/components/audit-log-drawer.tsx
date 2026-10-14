@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ClipboardList, X } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -88,18 +88,57 @@ interface AuditLogBodyProps {
   open: boolean;
 }
 
+function useProgressiveLoadState(isLoading: boolean): { stillLoading: boolean; offerRetry: boolean } {
+  const [stillLoading, setStillLoading] = useState(false);
+  const [offerRetry, setOfferRetry] = useState(false);
+
+  useEffect(() => {
+    if (!isLoading) {
+      setStillLoading(false);
+      setOfferRetry(false);
+      return;
+    }
+    const t1 = setTimeout(() => setStillLoading(true), 5_000);
+    const t2 = setTimeout(() => setOfferRetry(true), 15_000);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
+  }, [isLoading]);
+
+  return { stillLoading, offerRetry };
+}
+
 function AuditLogBody({ moduleKey, open }: AuditLogBodyProps) {
   const auditQuery = useModuleAuditLog(moduleKey, PAGE_SIZE, { enabled: open });
+  const { stillLoading, offerRetry } = useProgressiveLoadState(auditQuery.isLoading);
 
   const entries = auditQuery.data?.pages.flatMap((p) => p.data) ?? [];
 
   return (
     <div className="flex flex-col flex-1 min-h-0">
       {auditQuery.isLoading ? (
-        <div className="divide-y divide-border/60 flex-1">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <AuditEntryRowSkeleton key={i} />
-          ))}
+        <div className="flex flex-col flex-1">
+          <div className="divide-y divide-border/60">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <AuditEntryRowSkeleton key={i} />
+            ))}
+          </div>
+          {stillLoading ? (
+            <div className="flex flex-col items-center gap-2 px-4 py-3 text-center">
+              <p className="text-xs text-muted-foreground">Still loading…</p>
+              {offerRetry ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => void auditQuery.refetch()}
+                >
+                  Retry
+                </Button>
+              ) : null}
+            </div>
+          ) : null}
         </div>
       ) : auditQuery.isError ? (
         <EmptyState

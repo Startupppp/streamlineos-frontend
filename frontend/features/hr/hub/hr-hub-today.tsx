@@ -1,5 +1,6 @@
 "use client";
 
+import { Skeleton } from "@/components/ui/skeleton";
 import { HrSectionHeader } from "@/features/hr/shared/hr-ui";
 import type { HrHubViewProps } from "@/hooks/api/hr/hub-types";
 import { OutTodayCard } from "./today/out-today-card";
@@ -19,6 +20,22 @@ export function HrHubToday({
     access.canLeaveCalendar ||
     access.canAnalytics ||
     access.canAttendanceView;
+
+  if (isLoading) {
+    return (
+      <div className="space-y-2.5">
+        <div className="flex flex-col gap-1">
+          <Skeleton className="h-5 w-20 rounded-md" />
+          <Skeleton className="h-3.5 w-56 rounded-md" />
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+          {Array.from({ length: 3 }, (_, i) => (
+            <Skeleton key={i} className="h-28 w-full rounded-xl" />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   if (!hasAny) return null;
 

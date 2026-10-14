@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/tabs";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { ErrorState } from "@/components/shared/error-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useModuleMyPermissions } from "@/hooks/api/module-access";
 import { RolesTab } from "@/features/module-access/components/roles-tab";
@@ -89,10 +90,12 @@ export function ModuleAccessPage({ moduleKey, title }: ModuleAccessPageProps) {
         noInternalScroll
         contentClassName="flex min-h-0 flex-1 flex-col"
         actions={
-          <Button variant="outline" size="sm" onClick={handleOpenAuditLog}>
-            <ClipboardList className="mr-1.5 h-4 w-4" />
-            Audit log
-          </Button>
+          canManage ? (
+            <Button variant="outline" size="sm" onClick={handleOpenAuditLog}>
+              <ClipboardList className="mr-1.5 h-4 w-4" />
+              Audit log
+            </Button>
+          ) : undefined
         }
         filtersClassName="justify-between"
         filters={
@@ -135,34 +138,41 @@ export function ModuleAccessPage({ moduleKey, title }: ModuleAccessPageProps) {
               description={getErrorMessage(myPermissionsQuery.error)}
               onRetry={handleRetryPermissions}
             />
-          ) : null}
-
-          <TabsContent value="roles" className={TAB_PANEL_CLASS}>
-            <RolesTab
-              moduleKey={moduleKey}
-              canManage={canManage}
-              createOpen={createGroupOpen}
-              onCreateOpenChange={setCreateGroupOpen}
-              hideToolbar
+          ) : !myPermissionsQuery.isLoading && !canManage ? (
+            <NoPermissionState
+              title="Admin access required"
+              description="You need module admin or owner standing to manage access for this module."
             />
-          </TabsContent>
+          ) : (
+            <>
+              <TabsContent value="roles" className={TAB_PANEL_CLASS}>
+                <RolesTab
+                  moduleKey={moduleKey}
+                  canManage={canManage}
+                  createOpen={createGroupOpen}
+                  onCreateOpenChange={setCreateGroupOpen}
+                  hideToolbar
+                />
+              </TabsContent>
 
-          <TabsContent value="members" className={TAB_PANEL_CLASS}>
-            <ModuleMembersTab
-              moduleKey={moduleKey}
-              canManage={canManage}
-              focusUserId={focusUserId}
-              addOpen={addMemberOpen}
-              onAddOpenChange={setAddMemberOpen}
-              hideToolbar
-            />
-          </TabsContent>
+              <TabsContent value="members" className={TAB_PANEL_CLASS}>
+                <ModuleMembersTab
+                  moduleKey={moduleKey}
+                  canManage={canManage}
+                  focusUserId={focusUserId}
+                  addOpen={addMemberOpen}
+                  onAddOpenChange={setAddMemberOpen}
+                  hideToolbar
+                />
+              </TabsContent>
 
-          {canViewOwnership ? (
-            <TabsContent value="ownership" className={TAB_PANEL_CLASS}>
-              <OwnershipSection moduleKey={moduleKey} canManage={canViewOwnership} />
-            </TabsContent>
-          ) : null}
+              {canViewOwnership ? (
+                <TabsContent value="ownership" className={TAB_PANEL_CLASS}>
+                  <OwnershipSection moduleKey={moduleKey} canManage={canViewOwnership} />
+                </TabsContent>
+              ) : null}
+            </>
+          )}
         </div>
       </PageWrapper>
 

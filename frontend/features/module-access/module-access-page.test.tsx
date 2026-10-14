@@ -133,16 +133,20 @@ describe("ModuleAccessPage authorization UX", () => {
     expect(screen.getByTestId("ownership-policy")).toHaveTextContent("true");
   });
 
-  it("hides mutation and ownership controls while authority is absent", () => {
+  it("shows no-permission state when authority has resolved and is absent", () => {
     renderPage();
 
+    expect(screen.getByText("Admin access required")).toBeInTheDocument();
+    expect(screen.queryByTestId("roles-policy")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "New group" })).not.toBeInTheDocument();
     expect(screen.queryByRole("tab", { name: "Ownership" })).not.toBeInTheDocument();
-    expect(screen.getByTestId("roles-policy")).toHaveTextContent("false");
+  });
 
-    selectTab("Members");
+  it("does not deny access while permissions are still loading", () => {
+    mockUseModuleMyPermissions.mockReturnValue({ data: undefined, isLoading: true });
+    render(<ModuleAccessPage moduleKey="hr" title="HR Access" />);
 
-    expect(screen.queryByRole("button", { name: "Add member" })).not.toBeInTheDocument();
-    expect(screen.getByTestId("members-policy")).toHaveTextContent("false");
+    expect(screen.queryByText("Admin access required")).not.toBeInTheDocument();
+    expect(screen.getByTestId("roles-policy")).toBeInTheDocument();
   });
 });
