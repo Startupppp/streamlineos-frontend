@@ -11,6 +11,7 @@ import {
   parseISO,
   subDays,
 } from "date-fns";
+
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 
@@ -55,7 +56,10 @@ export function splitHrCalendarWindow(
   while (cursor <= finalDay) {
     const end = addDays(cursor, HR_CALENDAR_MAX_WINDOW_DAYS - 1);
     const to = end < finalDay ? end : finalDay;
-    windows.push({ from: format(cursor, "yyyy-MM-dd"), to: format(to, "yyyy-MM-dd") });
+    windows.push({
+      from: format(cursor, "yyyy-MM-dd"),
+      to: format(to, "yyyy-MM-dd"),
+    });
     cursor = addDays(to, 1);
   }
   return windows;
@@ -101,7 +105,11 @@ export function useHrCalendarEventsMapped(
 
   const query = useQueries({
     queries: windows.map(({ from, to }) => ({
-      queryKey: platformHierarchyQueryKeys.calendar.hrSupplemental(orgId, from, to),
+      queryKey: platformHierarchyQueryKeys.calendar.hrSupplemental(
+        orgId,
+        from,
+        to,
+      ),
       queryFn: ({ signal }: { signal: AbortSignal }) =>
         apiClient.get<HrCalendarEvent[]>(
           "/hr/calendar",
@@ -111,7 +119,8 @@ export function useHrCalendarEventsMapped(
         ),
       staleTime: 5 * 60_000,
       retry: (failureCount: number, error: unknown) =>
-        (error as { status?: number } | null)?.status !== 403 && failureCount < 2,
+        (error as { status?: number } | null)?.status !== 403 &&
+        failureCount < 2,
       enabled: Boolean(orgId) && hrVisible && access.allowed && hrModuleEnabled,
       refetchOnWindowFocus: "always" as const,
       refetchOnReconnect: "always" as const,

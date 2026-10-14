@@ -389,6 +389,7 @@
 
 :root.dark.theme-indigo {
   --sidebar-accent-foreground: #a5b4fc;
+  --ring: #a5b4fc;
   --chart-1: #6366f1;
   --blue: #6366f1;
 }

@@ -48,12 +48,13 @@ describe("the theme census sees every palette a user can select", () => {
     expect(palettes).toHaveLength(34);
   });
 
-  it("resolves the tinted neutrals rather than falling back to the untinted default", () => {
+  it("keeps themed canvas and cards on the shared surface ladder", () => {
     const orange = lightPalettes.find((palette) => palette.id === "orange");
     expect(orange).toBeDefined();
     if (!orange) return;
-    expect(rawToken(orange, "background")).toContain("color-mix");
-    expect(resolveToken(orange, "background")).not.toEqual(parseHex("#f8fafc"));
+    expect(resolveToken(orange, "background")).toEqual(parseHex("#f4f7fb"));
+    expect(resolveToken(orange, "card")).toEqual(parseHex("#ffffff"));
+    expect(rawToken(orange, "accent")).toContain("color-mix");
   });
 
   it("chases a var() reference to the hex it names", () => {
