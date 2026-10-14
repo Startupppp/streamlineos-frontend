@@ -37,7 +37,11 @@ export function clampToHrCalendarWindow(
     differenceInCalendarDays(rangeEnd, rangeStart) <=
     HR_CALENDAR_MAX_WINDOW_DAYS
   )
-    return { from: rangeStart, to: rangeEnd };
+    if (
+      differenceInCalendarDays(rangeEnd, rangeStart) <=
+      HR_CALENDAR_MAX_WINDOW_DAYS
+    )
+      return { from: rangeStart, to: rangeEnd };
   const midpoint = new Date((rangeStart.getTime() + rangeEnd.getTime()) / 2);
   return {
     from: subDays(midpoint, HR_CALENDAR_HALF_WINDOW_DAYS),

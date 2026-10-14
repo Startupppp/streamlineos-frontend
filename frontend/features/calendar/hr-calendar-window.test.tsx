@@ -220,4 +220,24 @@ describe("useHrCalendarEventsMapped — what it actually puts on the wire", () =
       }
     }
   });
+
+  it("covers every day of the view range without gaps or oversized requests", () => {
+    for (const anchor of anchors()) {
+      const { rangeStart, rangeEnd } = viewWindow(anchor);
+      const windows = splitHrCalendarWindow(rangeStart, rangeEnd);
+      expect(windows[0]?.from).toBe(format(rangeStart, "yyyy-MM-dd"));
+      expect(windows.at(-1)?.to).toBe(format(rangeEnd, "yyyy-MM-dd"));
+      for (const [index, window] of windows.entries()) {
+        expect(backendDiffDays(window.from, window.to)).toBeLessThanOrEqual(
+          HR_CALENDAR_MAX_WINDOW_DAYS,
+        );
+        if (index > 0) {
+          const priorEnd = windows[index - 1]?.to ?? "";
+          const nextDay = new Date(`${priorEnd}T00:00:00.000Z`);
+          nextDay.setUTCDate(nextDay.getUTCDate() + 1);
+          expect(window.from).toBe(format(nextDay, "yyyy-MM-dd"));
+        }
+      }
+    }
+  });
 });
