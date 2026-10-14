@@ -8,7 +8,10 @@ import {
   CircleDot,
   Flag,
   Gauge,
+  GitBranch,
   History,
+  Link2,
+  Link2Off,
   MessageSquare,
   Pencil,
   RefreshCw,
@@ -47,6 +50,10 @@ const ACTION_ICONS: Record<KnownTicketActivityAction, LucideIcon> = {
   estimate_changed: Gauge,
   cycle_changed: RefreshCw,
   type_changed: RefreshCw,
+  parent_set: GitBranch,
+  parent_removed: GitBranch,
+  relation_added: Link2,
+  relation_removed: Link2Off,
 };
 
 function isKnownAction(action: string): action is KnownTicketActivityAction {

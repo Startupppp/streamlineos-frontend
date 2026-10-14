@@ -1,6 +1,9 @@
 import { render, screen } from "@testing-library/react";
 import { TicketActivityLog } from "./ticket-activity-log";
-import { ticketActivityPageContract } from "@/hooks/api/build/build-tickets-core-schema";
+import {
+  ticketActivityActionContract,
+  ticketActivityPageContract,
+} from "@/hooks/api/build/build-tickets-core-schema";
 
 jest.mock("@/components/illustrations", () => ({
   EmptyActivityIllustration: () => null,
@@ -119,4 +122,29 @@ it("a known action parsed through the contract schema renders with its server la
   render(<TicketActivityLog projectId={1} ticketId={5} />);
   expect(screen.getByText("changed status to Done")).toBeInTheDocument();
   expect(screen.queryByText("Could not load activity history.")).not.toBeInTheDocument();
+});
+
+it("B-082 — renders every parent and relation action the contract declares, each with its own icon rather than the unknown-action fallback", () => {
+  const actions = ticketActivityActionContract.options as readonly string[];
+  for (const action of ["parent_set", "parent_removed", "relation_added", "relation_removed"]) {
+    expect(actions).toContain(action);
+  }
+
+  mockWithEntries([
+    { ...makeEntry("parent_set", "set the parent"), id: 1 },
+    { ...makeEntry("parent_removed", "removed the parent"), id: 2 },
+    { ...makeEntry("relation_added", "added a relation"), id: 3 },
+    { ...makeEntry("relation_removed", "removed a relation"), id: 4 },
+  ]);
+
+  const { container } = render(<TicketActivityLog projectId={1} ticketId={1} />);
+
+  expect(screen.getByText("set the parent")).toBeInTheDocument();
+  expect(screen.getByText("removed the parent")).toBeInTheDocument();
+  expect(screen.getByText("added a relation")).toBeInTheDocument();
+  expect(screen.getByText("removed a relation")).toBeInTheDocument();
+
+  const icons = [...container.querySelectorAll("li svg")].map((svg) => svg.getAttribute("class"));
+  expect(icons).toHaveLength(4);
+  expect(icons.some((cls) => cls?.includes("lucide-history"))).toBe(false);
 });
