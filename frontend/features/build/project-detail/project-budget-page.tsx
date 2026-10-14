@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useCallback } from "react";
 import { useForm } from "react-hook-form";
+import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { z } from "zod";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -103,6 +104,8 @@ export function ProjectBudgetPage({
     resolver: zodResolver(budgetFormSchema),
     defaultValues: { budget: "" },
   });
+
+  useRegisterDirtyState(editMode && budgetForm.formState.isDirty);
 
   const handleRetry = useCallback(() => {
     void refetch();

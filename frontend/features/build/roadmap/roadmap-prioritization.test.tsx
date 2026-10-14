@@ -231,7 +231,7 @@ describe("linked account revenue is shown as unknown rather than zero", () => {
       />,
     );
     expect(screen.queryByText("Revenue unknown")).not.toBeInTheDocument();
-    expect(screen.getByText(/1\.5K/)).toBeInTheDocument();
+    expect(screen.getByText(/1,500/)).toBeInTheDocument();
   });
 
   it("declares how many accounts the total covers when only some carry a value", () => {
