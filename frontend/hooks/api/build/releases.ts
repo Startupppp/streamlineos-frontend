@@ -82,7 +82,7 @@ export function useCreateRelease(projectId: number) {
     onSuccess: (created) => {
       qc.setQueriesData<ReleasePage>(
         { queryKey: releaseBaseKey(projectId) },
-        (old) => old ? { ...old, data: [created, ...old.data] } : old,
+        (old) => old ? { ...old, data: [{ ...created, createdByUser: null }, ...old.data] } : old,
       );
     },
   });
@@ -97,7 +97,7 @@ export function useUpdateRelease(projectId: number) {
     onSuccess: (updated) => {
       qc.setQueriesData<ReleasePage>(
         { queryKey: releaseBaseKey(projectId) },
-        (old) => old ? { ...old, data: old.data.map((r) => r.id === updated.id ? updated : r) } : old,
+        (old) => old ? { ...old, data: old.data.map((r) => r.id === updated.id ? { ...r, ...updated } : r) } : old,
       );
     },
   });
