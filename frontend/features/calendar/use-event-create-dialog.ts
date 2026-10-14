@@ -168,8 +168,9 @@ export function useEventCreateDialog({
   }, [showEndDate]);
 
   const handleStartTimeChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
     setForm((prev) => {
-      const next = { ...prev, startTime: e.target.value };
+      const next = { ...prev, startTime: value };
       setDateTimeError(getDateTimeError(next, showEndDate));
       return next;
     });
@@ -184,8 +185,9 @@ export function useEventCreateDialog({
   }, [showEndDate]);
 
   const handleEndTimeChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
     setForm((prev) => {
-      const next = { ...prev, endTime: e.target.value };
+      const next = { ...prev, endTime: value };
       setDateTimeError(getDateTimeError(next, showEndDate));
       return next;
     });
