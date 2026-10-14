@@ -1,6 +1,14 @@
 # Calendar release evidence
 
+On 2026-10-14, ticket 02 mutation validation, moved occurrence identity, and exception reminder cancellation suites passed 28 tests across three suites. The rejected paths make no exception insert; the wrong-date, expired-series, and cancelled cases do not bump the series. A second edit of a moved occurrence writes the original nominal key. Authenticated rejection behavior remains to be checked.
+
+Ticket 03 projection, source registry, and wire-shape suites passed 37 tests across three suites. Live multi-source completeness and version behavior remain to be checked.
+
+Ticket 04 source-owner, visibility, event-detail, export-isolation, and external-tenant suites passed 43 tests across five suites. Live denied-object, permission-revocation, and two-account identity checks remain to be completed.
+
 ## Production events repair and Outlook live journey, 2026-10-14
+
+Ticket 01's shared occurrence helper was found to compare all-day events by UTC date slices. A timed conflict window inside an Asia/Kolkata all-day event incorrectly returned no overlap. A failing regression reproduced this before the helper switched to half-open instant overlap. Another failing regression showed a weekly New York all-day recurrence ending one hour late across spring DST; recurrence ends now use the original local wall-clock duration, with a fall DST case verifying the extra hour. The conflict service has a direct timed-slot regression. Five dependent occurrence, native-source, conflict, export, and moved-identity suites passed 99 tests; the conflict suite with the added case passed 15 tests. Targeted ESLint and whitespace checks passed. Backend commit `0d95c0de2` was pushed; live production acceptance remains pending.
 
 Railway logs for correlation ID `6072e5a9-cd89-4f66-9b92-55fee4877ea1` show `/calendar/events` failing when postgres.js received a JavaScript `Date` as a raw string parameter. The HR interview overlap SQL now binds ISO timestamp strings, and Build and HR leave search cursor predicates use encoded timestamp strings. The HR source suite passed 23 tests. The first repair reached production in backend commit `030d62dd5`; the user refreshed the production Calendar and confirmed it loaded. Railway subsequently marked the leave cursor follow-up commit `e2fa7e6ee` successful. The user's live refresh preceded that follow-up, so its search cursor needs a separate live check.
 
@@ -8,7 +16,7 @@ The production app-role read found one active Google Calendar connection and one
 
 ## Google and Outlook connection architecture, 2026-10-14
 
-Both Calendar providers use Composio connected accounts. The Calendar UI sends `googlecalendar` or `outlook` through the shared integration initiate/finalize endpoints. The backend selects the matching Composio auth config, stores the connected account ID, and uses `ComposioGateway.executeTool` or `executeProxy` for provider reads and writes. The Google Calendar and Microsoft Graph URLs in the write service are endpoints supplied to Composio's authenticated proxy. The Calendar module does not instantiate Google or Microsoft provider SDK clients for these journeys. Google write and read flows were exercised with a connected account; Outlook live acceptance remains pending as requested.
+Both Calendar providers use Composio connected accounts. The Calendar UI sends `googlecalendar` or `outlook` through the shared integration initiate/finalize endpoints. The backend selects the matching Composio auth config, stores the connected account ID, and uses `ComposioGateway.executeTool` or `executeProxy` for provider reads and writes. The Google Calendar and Microsoft Graph URLs in the write service are endpoints supplied to Composio's authenticated proxy. The Calendar module does not instantiate Google or Microsoft provider SDK clients for these journeys. Google write and read flows were exercised with a connected account. Outlook's core write journey was exercised after the account was connected; dense paging and reconnect remain open.
 
 ## Current verification, 2026-10-14
 
@@ -16,7 +24,7 @@ Calendar frontend Jest passed 76 suites and 471 tests. Focused tests after the h
 
 All 11 Calendar scratch PostgreSQL suites passed 40 tests. The final resolver suite used the existing `APP_DATABASE_URL` non-owner credentials from `backend/.env.production` against `scratch_calendar_20261014_56460c`; it confirmed `current_user = streamline_app` and `rolbypassrls = false`. No database role grants were changed.
 
-The connected Google account passed live create, stable operation replay, update, recurring timezone, Meet conference creation, moved occurrence read-back, occurrence cancellation, authored India all-day dates, and cleanup. A live window returned 44 events in one complete page. Both temporary events were removed. These checks did not send attendee invitations. Outlook live verification remains pending at the user's request.
+The connected Google account passed live create, stable operation replay, update, recurring timezone, Meet conference creation, moved occurrence read-back, occurrence cancellation, authored India all-day dates, and cleanup. A live window returned 44 events in one complete page. Both temporary events were removed. These checks did not send attendee invitations. The later Outlook core journey is recorded above; its remaining cases are still open.
 
 Outlook continuation URLs are now validated before the Composio proxy request. Only HTTPS Microsoft Graph `me/calendarView` or `me/events` continuations are accepted. An unsafe continuation leaves the account window partial and exposes a retryable error; it is never sent to the proxy. The focused pagination suite passed 15 tests, including three invalid destinations, and targeted ESLint passed.
 
