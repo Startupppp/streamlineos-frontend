@@ -69,7 +69,7 @@ export function useCreateCalendarBookingRule() {
   return useAuthorizedMutation("calendar:write", {
     mutationKey: calendarBookingQueryKeys.mutation("create"),
     mutationFn: (input: CalendarBookingRuleInput) => apiClient.post<CalendarBookingRule>("/calendar/booking-rules", input, undefined, ruleContract),
-    onSuccess: () => { void queryClient.invalidateQueries({ queryKey: calendarBookingQueryKeys.all() }); },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: calendarBookingQueryKeys.all() }),
   });
 }
 
@@ -79,7 +79,7 @@ export function useUpdateCalendarBookingRule() {
     mutationKey: calendarBookingQueryKeys.mutation("update"),
     mutationFn: ({ id, expectedVersion, input }: { id: number; expectedVersion: number; input: CalendarBookingRuleInput }) =>
       apiClient.put<CalendarBookingRule>(`/calendar/booking-rules/${id}`, { ...input, expectedVersion }, undefined, ruleContract),
-    onSuccess: () => { void queryClient.invalidateQueries({ queryKey: calendarBookingQueryKeys.all() }); },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: calendarBookingQueryKeys.all() }),
   });
 }
 
@@ -88,7 +88,7 @@ export function useActivateCalendarBookingRule() {
   return useAuthorizedMutation("calendar:write", {
     mutationKey: calendarBookingQueryKeys.mutation("activate"),
     mutationFn: (id: number) => apiClient.post<{ rule: CalendarBookingRule; publicToken: string | null }>(`/calendar/booking-rules/${id}/activate`, undefined, undefined, activationContract),
-    onSuccess: () => { void queryClient.invalidateQueries({ queryKey: calendarBookingQueryKeys.all() }); },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: calendarBookingQueryKeys.all() }),
   });
 }
 
@@ -97,7 +97,7 @@ export function useChangeCalendarBookingRuleStatus(action: "pause" | "revoke") {
   return useAuthorizedMutation("calendar:write", {
     mutationKey: calendarBookingQueryKeys.mutation(action),
     mutationFn: (id: number) => apiClient.post<CalendarBookingRule>(`/calendar/booking-rules/${id}/${action}`, undefined, undefined, ruleContract),
-    onSuccess: () => { void queryClient.invalidateQueries({ queryKey: calendarBookingQueryKeys.all() }); },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: calendarBookingQueryKeys.all() }),
   });
 }
 
