@@ -4,6 +4,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe } from "jest-axe";
 import { apiClient } from "@/lib/api-client";
+import { ApiError } from "@/lib/api-envelope";
 import { PublicCalendarBookingPage } from "./public-calendar-booking-page";
 import { openCheckout } from "@/features/billing/lib/checkout-script";
 
@@ -242,6 +243,61 @@ describe("public calendar booking page", () => {
       .not.toBe((holdCalls[1][1] as { idempotencyKey: string }).idempotencyKey);
     expect((commitCalls[0][1] as { idempotencyKey: string }).idempotencyKey)
       .not.toBe((commitCalls[1][1] as { idempotencyKey: string }).idempotencyKey);
+  });
+
+  it("refreshes offered times when a hold loses a slot race", async () => {
+    const secondSlot = {
+      start: "2026-10-20T11:00:00.000Z",
+      end: "2026-10-20T11:30:00.000Z",
+      localStart: "2026-10-20T16:30:00+05:30",
+      localEnd: "2026-10-20T17:00:00+05:30",
+    };
+    let offeringReads = 0;
+    mockedGet.mockImplementation(async () => {
+      offeringReads += 1;
+      return { ...offering, slots: offeringReads === 1 ? [offering.slots[0], secondSlot] : [secondSlot] };
+    });
+    mockedPost.mockImplementation(async (path) => {
+      const value = String(path);
+      if (value.endsWith("/sessions")) return session;
+      if (value.endsWith("/holds")) throw new ApiError("Requested slot is no longer available", 409);
+      throw new Error("Unexpected request");
+    });
+    const user = userEvent.setup();
+    renderPage();
+    await screen.findByRole("heading", { name: "Meet Northwind" });
+    await user.click(screen.getAllByRole("radio")[0]);
+    await user.type(screen.getByLabelText("Name"), "Ada Lovelace");
+    await user.type(screen.getByLabelText("Email"), "ada@example.com");
+    await user.type(screen.getByLabelText("Organization"), "Analytical Engines");
+    await user.click(screen.getByRole("checkbox"));
+    await user.click(screen.getByRole("button", { name: "Confirm booking" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("Requested slot is no longer available");
+    await waitFor(() => expect(screen.getAllByRole("radio")).toHaveLength(1));
+    expect(screen.getByRole("radio")).not.toBeChecked();
+    expect((screen.getByRole("radio") as HTMLInputElement).value).toBe(secondSlot.start);
+    expect(offeringReads).toBeGreaterThan(1);
+  });
+
+  it("shows a payment preparation failure without opening checkout", async () => {
+    mockedPost.mockImplementation(async (path) => {
+      const value = String(path);
+      if (value.endsWith("/sessions")) return { ...session, payment: { amountMinor: 2500, currency: "INR" } };
+      if (value.endsWith("/holds")) return hold;
+      if (value.endsWith("/payments/prepare")) throw new ApiError("Payment setup is unavailable", 503);
+      throw new Error("Unexpected request");
+    });
+    const user = userEvent.setup();
+    renderPage();
+    await screen.findByRole("heading", { name: "Meet Northwind" });
+    await user.click(screen.getByRole("radio"));
+    await user.type(screen.getByLabelText("Name"), "Ada Lovelace");
+    await user.type(screen.getByLabelText("Email"), "ada@example.com");
+    await user.type(screen.getByLabelText("Organization"), "Analytical Engines");
+    await user.click(screen.getByRole("checkbox"));
+    await user.click(screen.getByRole("button", { name: /Pay.*and book/ }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("Payment setup is unavailable");
+    expect(openCheckout).not.toHaveBeenCalled();
   });
 
   it("confirms a paid booking only after provider success", async () => {

@@ -17,9 +17,11 @@ import {
   usePublicCalendarBookingCallback,
 } from "@/hooks/api/calendar-booking-public";
 import type {
+  PublicCalendarBookingHold,
   PublicCalendarBookingOffering,
   PublicCalendarBookingSession,
 } from "@/hooks/api/calendar-booking-public-schema";
+import { isApiError } from "@/lib/api-envelope";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { usePaidCalendarBooking } from "../hooks/use-paid-calendar-booking";
 import { PublicCalendarBookingPaymentStatus } from "./public-calendar-booking-payment-status";
@@ -130,29 +132,45 @@ export function PublicCalendarBookingForm({
   }, [callbackQuery.data, callbackState, session.targetOrigin]);
 
   async function handleSubmit(values: BookingFormValues) {
-    const hold = await acquireHold.mutateAsync({
-      start: values.slotStart,
-      sessionToken: session.sessionToken,
-      idempotencyKey: keyFor(holdKeys.current, values.slotStart),
-      consentAccepted: values.consentAccepted,
-      honeypot: values.website,
-    });
+    let hold: PublicCalendarBookingHold;
+    try {
+      hold = await acquireHold.mutateAsync({
+        start: values.slotStart,
+        sessionToken: session.sessionToken,
+        idempotencyKey: keyFor(holdKeys.current, values.slotStart),
+        consentAccepted: values.consentAccepted,
+        honeypot: values.website,
+      });
+    } catch (error) {
+      if (isApiError(error) && error.status === 409) {
+        holdKeys.current.delete(values.slotStart);
+        form.setValue("slotStart", "");
+        await queryClient.invalidateQueries({
+          queryKey: ["public", "calendar", "booking", token, "offering"],
+        });
+      }
+      return;
+    }
     if (session.payment) {
       await paidBooking.submit(hold, values);
       return;
     }
-    await confirmBooking.mutateAsync({
-      holdId: hold.id,
-      sessionToken: session.sessionToken,
-      idempotencyKey: keyFor(commitKeys.current, hold.id),
-      expectedFencingToken: hold.fencingToken,
-      expectedRuleVersion: offering.version,
-      guestName: values.guestName,
-      guestEmail: values.guestEmail,
-      intake: values.intake,
-      consentAccepted: values.consentAccepted,
-      honeypot: values.website,
-    });
+    try {
+      await confirmBooking.mutateAsync({
+        holdId: hold.id,
+        sessionToken: session.sessionToken,
+        idempotencyKey: keyFor(commitKeys.current, hold.id),
+        expectedFencingToken: hold.fencingToken,
+        expectedRuleVersion: offering.version,
+        guestName: values.guestName,
+        guestEmail: values.guestEmail,
+        intake: values.intake,
+        consentAccepted: values.consentAccepted,
+        honeypot: values.website,
+      });
+    } catch {
+      return;
+    }
   }
 
   function handleConsentChange(checked: boolean | "indeterminate") {

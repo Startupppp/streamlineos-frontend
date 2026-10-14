@@ -9,6 +9,7 @@ import {
 import type {
   PublicCalendarBookingHold,
   PublicCalendarBookingOffering,
+  PublicCalendarBookingPayment,
   PublicCalendarBookingSession,
 } from "@/hooks/api/calendar-booking-public-schema";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -43,15 +44,20 @@ export function usePaidCalendarBooking(
       key = paymentIdempotencyKey();
       prepareKeys.current.set(hold.id, key);
     }
-    const payment = await prepare.mutateAsync({
-      holdId: hold.id,
-      sessionToken: session.sessionToken,
-      idempotencyKey: key,
-      expectedFencingToken: hold.fencingToken,
-      expectedRuleVersion: offering.version,
-      consentAccepted: values.consentAccepted,
-      honeypot: values.website,
-    });
+    let payment: PublicCalendarBookingPayment;
+    try {
+      payment = await prepare.mutateAsync({
+        holdId: hold.id,
+        sessionToken: session.sessionToken,
+        idempotencyKey: key,
+        expectedFencingToken: hold.fencingToken,
+        expectedRuleVersion: offering.version,
+        consentAccepted: values.consentAccepted,
+        honeypot: values.website,
+      });
+    } catch {
+      return;
+    }
     if (
       payment.paymentState !== "order_created" ||
       !payment.providerOrderId ||
