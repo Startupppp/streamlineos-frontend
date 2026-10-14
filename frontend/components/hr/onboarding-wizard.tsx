@@ -56,8 +56,8 @@ export const STEP_FIELDS: Record<number, FieldPath<FormValues>[]> = {
 
 export function OnboardingWizard() {
   const { data: authSession } = useSession();
-  const userId = authSession?.user?.id;
-  const orgId = authSession?.orgId;
+  const userId = authSession?.user?.id ?? undefined;
+  const orgId = authSession?.orgId ?? undefined;
 
   const savedDraft = useMemo(
     () => loadAdminWizardDraft(userId, orgId),
@@ -217,7 +217,7 @@ export function OnboardingWizard() {
         }
       );
     },
-    [onboardEmployee, router, currentStep]
+    [onboardEmployee, router, currentStep, userId, orgId]
   );
 
   return (

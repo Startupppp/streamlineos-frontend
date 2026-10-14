@@ -7,7 +7,6 @@ import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan } from "@/hooks/api/access";
 import type {
-  Expense,
   CreateExpenseInput,
   UpdateExpenseStatusInput,
 } from "@/types/hr";
