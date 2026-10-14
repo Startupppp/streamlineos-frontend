@@ -14,6 +14,8 @@ Ticket 20 resource, ticket 21 poll service/token, and ticket 22 routing service/
 
 Ticket 23 embed-state and public-policy suites passed seven tests. Ticket 24 payment coordinator, provider, and webhook suites passed 14 tests. Ticket 25 workflow policy/planner, ticket 26 developer API policy/service, ticket 27 analytics policy, and ticket 28 source-action policy/store/service suites passed 35 tests together across eight suites. Prior isolated PostgreSQL runs cover their guarded database suites, but live embed, payment sandbox, workflow channel, credential, analytics, and source-owner receipt journeys remain open.
 
+Ticket 29 meeting-workspace, ticket 31 protected-work, ticket 32 commitment graph, ticket 33 scenario, ticket 34 capacity, and ticket 35 coach suites passed 63 backend tests across eight suites. Frontend meeting-workspace permission, My Day, search, saved-view, offline policy, and offline cache suites passed 29 tests across seven suites. These runs do not cover the required live tenant, cross-module, or offline transitions.
+
 On 2026-10-14, ticket 02 mutation validation, moved occurrence identity, and exception reminder cancellation suites passed 28 tests across three suites. The rejected paths make no exception insert; the wrong-date, expired-series, and cancelled cases do not bump the series. A second edit of a moved occurrence writes the original nominal key. Authenticated rejection behavior remains to be checked.
 
 Ticket 03 projection, source registry, and wire-shape suites passed 37 tests across three suites. Live multi-source completeness and version behavior remain to be checked.
