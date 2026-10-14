@@ -179,7 +179,6 @@ export function useDeletePortfolio() {
       );
       qc.invalidateQueries({
         queryKey: buildWorkQueryKeys.projects.portfolios.detail(portfolioId),
-        exact: true,
         refetchType: "none",
       });
     },

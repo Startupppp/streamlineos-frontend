@@ -25,6 +25,12 @@ interface BuildRedirect {
 
 const REMOVED_ROUTES: RemovedRoute[] = [
   {
+    route: "/build/[projectId]/agile-reports",
+    appDir: join("[projectId]", "agile-reports"),
+    redirectSource: "/build/:projectId(\\\\d+)/agile-reports",
+    redirectDestination: "/build/:projectId/reports",
+  },
+  {
     route: "/build/access",
     appDir: "access",
     redirectSource: "/build/access",
@@ -255,7 +261,7 @@ function everyBuildNavHref(): string[] {
 
 describe("removed Build redirect routes keep their deep link in next.config.ts", () => {
   it("covers every removed route, so a truncated list cannot pass vacuously", () => {
-    expect(REMOVED_ROUTES).toHaveLength(27);
+    expect(REMOVED_ROUTES).toHaveLength(28);
   });
 
   it("inventories every declarative Build redirect, including compatibility redirects that did not replace a page in this list", () => {
@@ -272,7 +278,7 @@ describe("removed Build redirect routes keep their deep link in next.config.ts",
     ].sort((a, b) => a.source.localeCompare(b.source));
 
     expect(actual).toEqual(expected);
-    expect(actual).toHaveLength(34);
+    expect(actual).toHaveLength(35);
   });
 
   it("keeps every declarative Build compatibility redirect temporary", () => {
@@ -280,7 +286,7 @@ describe("removed Build redirect routes keep their deep link in next.config.ts",
       source.startsWith("/build"),
     );
 
-    expect(buildRedirects).toHaveLength(34);
+    expect(buildRedirects).toHaveLength(35);
     expect(buildRedirects.every(({ permanent }) => !permanent)).toBe(true);
   });
 

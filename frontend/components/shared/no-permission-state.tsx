@@ -3,18 +3,7 @@
 import { ShieldAlert } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { PermissionKey } from "@/lib/rbac/permissions";
-
-function toHumanLabel(key: PermissionKey): string {
-  return key
-    .split(":")
-    .map((seg) =>
-      seg
-        .split("-")
-        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-        .join(" "),
-    )
-    .join(" › ");
-}
+import { permissionKeyLabel } from "@/lib/rbac/administering-module";
 
 interface NoPermissionStateProps {
   permission?: PermissionKey;
@@ -55,7 +44,7 @@ export function NoPermissionState({
           compact ? "text-xs" : "text-sm",
         )}
       >
-        {description ?? (permission ? `You need the ${toHumanLabel(permission)} permission.` : "You don’t have the required permission for this section.")}
+        {description ?? (permission ? `You need the ${permissionKeyLabel(permission)} permission.` : "You don’t have the required permission for this section.")}
       </p>
       {permission ? (
         <details className="mt-1">

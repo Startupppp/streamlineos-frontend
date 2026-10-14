@@ -128,7 +128,6 @@ export function useUpdateProgram() {
       );
       qc.invalidateQueries({
         queryKey: buildWorkQueryKeys.projects.programs.detail(vars.programId),
-        exact: true,
       });
     },
   });
@@ -147,7 +146,6 @@ export function useDeleteProgram() {
       );
       qc.invalidateQueries({
         queryKey: buildWorkQueryKeys.projects.programs.detail(programId),
-        exact: true,
         refetchType: "none",
       });
     },
