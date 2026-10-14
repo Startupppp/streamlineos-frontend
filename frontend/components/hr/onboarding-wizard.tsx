@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useCallback, useRef, type KeyboardEvent } from "react";
+import { useState, useCallback, useRef, useMemo, useEffect, type KeyboardEvent } from "react";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useForm, type FieldPath, type DefaultValues } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { onboardEmployeeInputSchema } from "@/lib/validation/hr";
+import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Form } from "@/components/ui/form";
@@ -32,6 +33,11 @@ import { StepEmployment } from "./_onboarding/step-employment";
 import { StepSkillsPay } from "./_onboarding/step-skills-pay";
 import { StepBanking } from "./_onboarding/step-banking";
 import { StepReview } from "./_onboarding/step-review";
+import {
+  loadAdminWizardDraft,
+  saveAdminWizardDraft,
+  clearAdminWizardDraft,
+} from "./_onboarding/wizard-draft";
 
 type FormValues = z.infer<typeof onboardEmployeeInputSchema>;
 
@@ -49,7 +55,16 @@ export const STEP_FIELDS: Record<number, FieldPath<FormValues>[]> = {
 };
 
 export function OnboardingWizard() {
-  const [currentStep, setCurrentStep] = useState(1);
+  const { data: authSession } = useSession();
+  const userId = authSession?.user?.id;
+  const orgId = authSession?.orgId;
+
+  const savedDraft = useMemo(
+    () => loadAdminWizardDraft(userId, orgId),
+    [userId, orgId],
+  );
+
+  const [currentStep, setCurrentStep] = useState(savedDraft?.step ?? 1);
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
   const checkedEmail = useRef<string>("");
   const submittingRef = useRef(false);
@@ -61,15 +76,29 @@ export function OnboardingWizard() {
   const form = useForm<FormValues>({
     resolver: zodResolver(onboardEmployeeInputSchema),
     defaultValues: {
-      firstName: "", lastName: "", email: "", phone: "",
-      whatsappSameAsPhone: true, whatsappNumber: "", gender: undefined,
-      designation: "", departmentId: undefined,
-      locationId: undefined, workerType: DEFAULT_HR_WORKER_TYPE,
-      reportingManagerUserId: undefined, reportingManagerRef: null, secondaryManagers: [],
-      topLevelRole: false, topLevelRoleReason: undefined,
-      role: DEFAULT_INVITE_ROLE, employeeId: "", attachToExistingMember: false, joiningDate: new Date(),
-      dateOfBirth: undefined,
-      taxId: "", monthlySalary: undefined,
+      firstName: savedDraft?.firstName ?? "",
+      lastName: savedDraft?.lastName ?? "",
+      email: savedDraft?.email ?? "",
+      phone: savedDraft?.phone ?? "",
+      whatsappSameAsPhone: true,
+      whatsappNumber: "",
+      gender: (savedDraft?.gender as FormValues["gender"]) ?? undefined,
+      designation: savedDraft?.designation ?? "",
+      departmentId: savedDraft?.departmentId ?? undefined,
+      locationId: savedDraft?.locationId ?? undefined,
+      workerType: (savedDraft?.workerType as FormValues["workerType"]) ?? DEFAULT_HR_WORKER_TYPE,
+      reportingManagerUserId: undefined,
+      reportingManagerRef: null,
+      secondaryManagers: [],
+      topLevelRole: false,
+      topLevelRoleReason: undefined,
+      role: (savedDraft?.role as FormValues["role"]) ?? DEFAULT_INVITE_ROLE,
+      employeeId: savedDraft?.employeeId ?? "",
+      attachToExistingMember: false,
+      joiningDate: savedDraft?.joiningDate ? new Date(savedDraft.joiningDate) : new Date(),
+      dateOfBirth: savedDraft?.dateOfBirth ? new Date(savedDraft.dateOfBirth) : undefined,
+      taxId: savedDraft?.taxId ?? "",
+      monthlySalary: savedDraft?.monthlySalary ?? undefined,
       bankDetails: {
         accountNumber: "",
         bankName: "",
@@ -82,6 +111,35 @@ export function OnboardingWizard() {
     } as DefaultValues<FormValues>,
     mode: "onChange",
   });
+
+  useEffect(() => {
+    if (!userId || !orgId) return;
+    const subscription = form.watch((values) => {
+      saveAdminWizardDraft(
+        {
+          step: currentStep,
+          firstName: values.firstName,
+          lastName: values.lastName,
+          email: values.email,
+          phone: values.phone,
+          gender: values.gender,
+          dateOfBirth: values.dateOfBirth instanceof Date ? values.dateOfBirth.toISOString() : undefined,
+          designation: values.designation,
+          departmentId: values.departmentId,
+          employeeId: typeof values.employeeId === "string" ? values.employeeId : undefined,
+          role: values.role,
+          joiningDate: values.joiningDate instanceof Date ? values.joiningDate.toISOString() : undefined,
+          taxId: typeof values.taxId === "string" ? values.taxId : undefined,
+          monthlySalary: values.monthlySalary,
+          locationId: values.locationId,
+          workerType: values.workerType,
+        },
+        userId,
+        orgId,
+      );
+    });
+    return () => subscription.unsubscribe();
+  }, [form, userId, orgId, currentStep]);
 
   const handleNext = useCallback(async () => {
     const fields = STEP_FIELDS[currentStep];
@@ -142,6 +200,7 @@ export function OnboardingWizard() {
         buildOnboardEmployeePayload(data),
         {
           onSuccess: (result) => {
+            clearAdminWizardDraft(userId, orgId);
             toast.success(describeOnboardingSuccess(result.primaryManager));
             const unsentInvite = describeUnsentInvite(result.invite);
             if (unsentInvite)

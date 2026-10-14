@@ -82,16 +82,21 @@ function validateReportingChoice(
   });
 }
 
+export const MIN_EMPLOYMENT_AGE_YEARS = 16;
+
+const UNICODE_NAME_PATTERN = /^[\p{L}\p{M}\s'\-]+$/u;
+
 export const onboardEmployeeInputSchema = z.object({
-  // Ticket 07: whitespace is normalised on the way in, so the review step and
-  // the payload show what will be stored. Letters, case and punctuation are
-  // never touched — "QA", "van der Berg" and "O'Brien" are legal names.
   firstName: z
     .string()
     .trim()
     .min(1, "First name is required")
     .max(80, "First name must be at most 80 characters")
     .refine(hasLetterOrDigit, "First name must contain a letter or number")
+    .refine(
+      (v) => UNICODE_NAME_PATTERN.test(v),
+      "Name may only contain letters, spaces, apostrophes, and hyphens",
+    )
     .transform(normalizeNamePart),
   lastName: z
     .string()
@@ -99,11 +104,16 @@ export const onboardEmployeeInputSchema = z.object({
     .min(1, "Last name is required")
     .max(80, "Last name must be at most 80 characters")
     .refine(hasLetterOrDigit, "Last name must contain a letter or number")
+    .refine(
+      (v) => UNICODE_NAME_PATTERN.test(v),
+      "Name may only contain letters, spaces, apostrophes, and hyphens",
+    )
     .transform(normalizeNamePart),
   email: z
     .string()
     .trim()
-    .email("Invalid email address")
+    .min(1, "Email is required")
+    .email("Enter a valid email, e.g. name@company.com")
     .max(254, "Email must be at most 254 characters"),
   gender: z.enum(["MALE", "FEMALE", "OTHER"]).optional(),
   phone: z
@@ -121,7 +131,7 @@ export const onboardEmployeeInputSchema = z.object({
     .min(1, "Designation is required")
     .max(120, "Designation must be at most 120 characters")
     .refine(hasLetterOrDigit, "Designation must contain a letter or number"),
-  departmentId: z.string().min(1, "Department is required"),
+  departmentId: z.string({ error: "Select a department" }).min(1, "Select a department"),
   /**
    * BUG-HRMS-006 / BUG-HRMS-007. Both columns have always existed on
    * `hr_employments`; onboarding simply never offered them, so every hire landed
@@ -155,8 +165,8 @@ export const onboardEmployeeInputSchema = z.object({
     .refine((d) => d < new Date(), "Date of birth cannot be in the future")
     .refine((d) => {
       const ageMs = Date.now() - d.getTime();
-      return ageMs >= 16 * 365.25 * 24 * 3600 * 1000;
-    }, "Employee must be at least 16 years old")
+      return ageMs >= MIN_EMPLOYMENT_AGE_YEARS * 365.25 * 24 * 3600 * 1000;
+    }, `Employee must be at least ${MIN_EMPLOYMENT_AGE_YEARS} years old`)
     .optional(),
   taxId: z
     .string()

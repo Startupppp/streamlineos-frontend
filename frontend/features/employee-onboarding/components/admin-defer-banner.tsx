@@ -44,9 +44,7 @@ export function AdminDeferBanner() {
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-muted/40 px-4 py-3">
       <p className="text-dense text-muted-foreground">
-        {role === "ORG_ADMIN"
-          ? "You are an administrator. You can set up HR first and fill in your own details whenever you like — this page stays available."
-          : "You can fill in your details later — this page stays available."}
+        You can add your bank details later from Profile → Bank — this page stays available.
       </p>
       <Button
         type="button"
