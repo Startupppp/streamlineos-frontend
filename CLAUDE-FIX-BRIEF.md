@@ -814,7 +814,7 @@ Each section gives: where, steps, expected, actual (from the QA run), likely cau
 
 ## B-035: Board "Columns" option is ignored (always Status columns)
 **Severity:** Medium
-**Status:** IN PROGRESS
+**Status:** FIXED — code and tests landed; browser verification pending
 **Shared root cause group:** G7 List/board query options (sort, columns, sub-issues, filters)
 
 **Where:** https://www.streamlineos.in/build/7/issues (Board) → Display options → Columns | Role/account: Owner qaown1012b (Owner).
@@ -1950,7 +1950,7 @@ Double-click the Save button of each dialog after changing one field.
 
 ## B-071: Deleting a parent gives no warning about its children
 **Severity:** Low
-**Status:** NOT FIXED — the delete confirmation still omits the child count
+**Status:** FIXED — code and tests landed; browser verification pending
 **Shared root cause group:** G10 Ticket relations, parents and history
 
 **Where:** Ticket page → "Delete ticket" (trash icon) → "Delete Ticket" popover (https://www.streamlineos.in/build/7/tickets/QAB-117) | Role/account: Owner qaown1012b (Owner). QAB-117 "R6 link target 1013" had one child, QAB-115 "R6 epic child 1013" (1/1 Done in the Subtasks header), plus a Blocks/Relates-to link set.
