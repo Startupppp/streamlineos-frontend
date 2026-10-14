@@ -64,9 +64,10 @@ export function eventOverlapsRange(
   event: Pick<CalendarListItem, "start" | "end" | "time">,
   range: { start: Date; end: Date },
 ): boolean {
+  if (!Number.isFinite(range.start.getTime()) || !Number.isFinite(range.end.getTime()) || range.start.getTime() >= range.end.getTime()) return false;
   if (event.time.kind === "date") {
     const firstDate = format(range.start, "yyyy-MM-dd");
-    const lastDate = format(range.end, "yyyy-MM-dd");
+    const lastDate = format(new Date(range.end.getTime() - 1), "yyyy-MM-dd");
     return event.time.startDate <= lastDate && event.time.endDate >= firstDate;
   }
   const eventStart = new Date(event.start).getTime();
@@ -76,8 +77,8 @@ export function eventOverlapsRange(
   return (
     Number.isFinite(eventStart) &&
     Number.isFinite(eventEnd) &&
-    eventStart <= rangeEnd &&
-    eventEnd >= rangeStart
+    eventStart < rangeEnd &&
+    eventEnd > rangeStart
   );
 }
 
@@ -113,9 +114,11 @@ export function mergeSelfAttendanceEvents(
   const aggregateAttendanceDates = new Set(
     events
       .filter((event) => calendarSourceFamily(event) === "attendance")
-      .map((event) => event.time.kind === "date"
-        ? event.time.startDate
-        : format(new Date(event.start), "yyyy-MM-dd")),
+      .map((event) =>
+        event.time.kind === "date"
+          ? event.time.startDate
+          : format(new Date(event.start), "yyyy-MM-dd"),
+      ),
   );
   const additions = selfAttendanceEvents.filter(
     (event) =>
@@ -154,9 +157,11 @@ function normalizeExternalEvents(
           ? {
               kind: "date" as const,
               startDate: event.start.slice(0, 10),
-              endDate: (new Date(event.end).getTime() > new Date(event.start).getTime()
+              endDate: (new Date(event.end).getTime() >
+              new Date(event.start).getTime()
                 ? new Date(new Date(event.end).getTime() - 1).toISOString()
-                : event.end).slice(0, 10),
+                : event.end
+              ).slice(0, 10),
             }
           : {
               kind: "timed" as const,
@@ -191,8 +196,14 @@ export function toBigCalEvent(
   return {
     id: event.id,
     title: event.title,
-    start: event.time.kind === "date" ? new Date(`${event.time.startDate}T00:00:00`) : new Date(event.start),
-    end: event.time.kind === "date" ? new Date(`${event.time.endDate}T23:59:59.999`) : new Date(event.end),
+    start:
+      event.time.kind === "date"
+        ? new Date(`${event.time.startDate}T00:00:00`)
+        : new Date(event.start),
+    end:
+      event.time.kind === "date"
+        ? new Date(`${event.time.endDate}T23:59:59.999`)
+        : new Date(event.end),
     allDay: event.allDay ?? false,
     resource: {
       color:
@@ -283,15 +294,23 @@ export function useCalendarComputed({
 
   const visibleRange = useMemo(() => {
     if (view === "month") {
-      return { start: startOfMonth(currentDate), end: endOfMonth(currentDate) };
+      return {
+        start: startOfMonth(currentDate),
+        end: new Date(endOfMonth(currentDate).getTime() + 1),
+      };
     }
     if (view === "week") {
       return {
         start: startOfWeek(currentDate, { weekStartsOn: 1 }),
-        end: endOfWeek(currentDate, { weekStartsOn: 1 }),
+        end: new Date(
+          endOfWeek(currentDate, { weekStartsOn: 1 }).getTime() + 1,
+        ),
       };
     }
-    return { start: startOfDay(currentDate), end: endOfDay(currentDate) };
+    return {
+      start: startOfDay(currentDate),
+      end: new Date(endOfDay(currentDate).getTime() + 1),
+    };
   }, [currentDate, view]);
 
   const rangeEvents = useMemo(

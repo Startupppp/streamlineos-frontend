@@ -13,13 +13,17 @@ import { lazyContract } from "@/lib/api-envelope";
 import type { PermissionGate } from "@/lib/rbac/permission-gate";
 
 const attendanceLogListContract = lazyContract(() =>
-  import("@/hooks/api/calendar-schema").then((m) => m.attendanceLogListContract),
+  import("@/hooks/api/calendar-schema").then(
+    (m) => m.attendanceLogListContract,
+  ),
 );
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import type { AttendanceLog, WfhRequest } from "@/types/hr";
 
 const NO_WFH_REQUESTS: readonly WfhRequest[] = Object.freeze([]);
-const ATTENDANCE_ACCESS_ERROR = new Error("Attendance access could not be verified.");
+const ATTENDANCE_ACCESS_ERROR = new Error(
+  "Attendance access could not be verified.",
+);
 
 interface AttendancePagesResult {
   pages: (AttendanceLog[] | undefined)[];
@@ -56,7 +60,11 @@ export function useAttendanceCalendarEvents(
   const wfhQuery = useHrWfhRequests({ enabled: attendanceVisible });
   const wfhRequests = wfhQuery.data ?? NO_WFH_REQUESTS;
   const months = useMemo(
-    () => eachMonthOfInterval({ start: rangeStart, end: rangeEnd }),
+    () =>
+      eachMonthOfInterval({
+        start: rangeStart,
+        end: new Date(rangeEnd.getTime() - 1),
+      }),
     [rangeEnd, rangeStart],
   );
 
@@ -85,12 +93,18 @@ export function useAttendanceCalendarEvents(
       return {
         queryKey: humanResourcesQueryKeys.hr.monthlyAttendance(params),
         queryFn: ({ signal }) =>
-          apiClient.get<AttendanceLog[]>("/me/attendance/monthly", {
-            year: params.year,
-            month: params.month,
-          }, signal, attendanceLogListContract),
+          apiClient.get<AttendanceLog[]>(
+            "/me/attendance/monthly",
+            {
+              year: params.year,
+              month: params.month,
+            },
+            signal,
+            attendanceLogListContract,
+          ),
         staleTime: 2 * 60_000,
-        enabled: Boolean(orgId && userId) && access.allowed && attendanceVisible,
+        enabled:
+          Boolean(orgId && userId) && access.allowed && attendanceVisible,
         refetchOnWindowFocus: "always" as const,
         refetchOnReconnect: "always" as const,
       };
@@ -100,7 +114,7 @@ export function useAttendanceCalendarEvents(
   const events = useMemo(() => {
     const logsByDate = new Map<string, AttendanceLog[]>();
     const from = format(rangeStart, "yyyy-MM-dd");
-    const to = format(rangeEnd, "yyyy-MM-dd");
+    const to = format(new Date(rangeEnd.getTime() - 1), "yyyy-MM-dd");
     const today = format(new Date(), "yyyy-MM-dd");
     const approvedWfhByDate = new Map(
       wfhRequests
@@ -215,8 +229,17 @@ export function useAttendanceCalendarEvents(
           time: { kind: "date" as const, startDate: date, endDate: date },
           availability: "free" as const,
           sourceVersion: null,
-          actions: { view: true, edit: false, delete: false, rsvp: false, complete: false },
-          freshness: { state: "fresh" as const, asOf: new Date().toISOString() },
+          actions: {
+            view: true,
+            edit: false,
+            delete: false,
+            rsvp: false,
+            complete: false,
+          },
+          freshness: {
+            state: "fresh" as const,
+            asOf: new Date().toISOString(),
+          },
         };
       })
       .concat(
@@ -242,8 +265,17 @@ export function useAttendanceCalendarEvents(
               time: { kind: "date" as const, startDate: date, endDate: date },
               availability: "free" as const,
               sourceVersion: null,
-              actions: { view: true, edit: false, delete: false, rsvp: false, complete: false },
-              freshness: { state: "fresh" as const, asOf: new Date().toISOString() },
+              actions: {
+                view: true,
+                edit: false,
+                delete: false,
+                rsvp: false,
+                complete: false,
+              },
+              freshness: {
+                state: "fresh" as const,
+                asOf: new Date().toISOString(),
+              },
             };
           }),
       );
@@ -255,30 +287,33 @@ export function useAttendanceCalendarEvents(
     await Promise.all([refetchAttendance(), refetchWfh()]);
   }, [refetchAttendance, refetchWfh]);
 
-  return useMemo(() => ({
-    events,
-    isLoading: attendanceVisible && (
-      access.pending ||
-      (access.allowed && (attendance.isLoading || wfhQuery.isLoading))
-    ),
-    isError: attendanceVisible && (
-      access.unavailable || attendance.isError || wfhQuery.isError
-    ),
-    error: access.unavailable
-      ? ATTENDANCE_ACCESS_ERROR
-      : attendance.error ?? wfhQuery.error ?? null,
-    access,
-    refetch,
-  }), [
-    access,
-    attendance.error,
-    attendance.isError,
-    attendance.isLoading,
-    attendanceVisible,
-    events,
-    refetch,
-    wfhQuery.error,
-    wfhQuery.isError,
-    wfhQuery.isLoading,
-  ]);
+  return useMemo(
+    () => ({
+      events,
+      isLoading:
+        attendanceVisible &&
+        (access.pending ||
+          (access.allowed && (attendance.isLoading || wfhQuery.isLoading))),
+      isError:
+        attendanceVisible &&
+        (access.unavailable || attendance.isError || wfhQuery.isError),
+      error: access.unavailable
+        ? ATTENDANCE_ACCESS_ERROR
+        : (attendance.error ?? wfhQuery.error ?? null),
+      access,
+      refetch,
+    }),
+    [
+      access,
+      attendance.error,
+      attendance.isError,
+      attendance.isLoading,
+      attendanceVisible,
+      events,
+      refetch,
+      wfhQuery.error,
+      wfhQuery.isError,
+      wfhQuery.isLoading,
+    ],
+  );
 }

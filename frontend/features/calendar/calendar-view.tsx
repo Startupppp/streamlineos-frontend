@@ -68,14 +68,20 @@ import { useCalendarSearch } from "@/hooks/api/calendar-search";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { CalendarMyDayPanel } from "./calendar-my-day-panel";
 import { useCalendarSavedViews } from "@/hooks/api/calendar-saved-views";
-import { calendarSavedViewGridView, calendarSavedViewWindow } from "./calendar-saved-view-date";
+import {
+  calendarSavedViewGridView,
+  calendarSavedViewWindow,
+} from "./calendar-saved-view-date";
 import { CalendarSavedViewControls } from "./calendar-saved-view-controls";
 import { calendarSearchIsPartial } from "./calendar-search-coverage";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import { CalendarOfflinePanel } from "./calendar-offline-panel";
 import { CalendarOfflineIntentReview } from "./calendar-offline-intent-review";
 import { CalendarOfflineEditReview } from "./calendar-offline-edit-review";
-import type { CalendarOfflineEditIntent, CalendarOfflineIntent } from "./calendar-offline-intent";
+import type {
+  CalendarOfflineEditIntent,
+  CalendarOfflineIntent,
+} from "./calendar-offline-intent";
 import type { CalendarScenarioDraftStep } from "./calendar-scenario-draft";
 
 const CalendarGridLayer = dynamic(
@@ -166,34 +172,62 @@ const CalendarAccountsSheet = dynamic(
   },
 );
 
-const CalendarCoachSheet = dynamic(() => import("./calendar-coach-sheet").then((module) => ({ default: module.CalendarCoachSheet })), {
-  ssr: false,
-  loading: () => <CalendarSheetFallback label="Loading personal insights" />,
-});
+const CalendarCoachSheet = dynamic(
+  () =>
+    import("./calendar-coach-sheet").then((module) => ({
+      default: module.CalendarCoachSheet,
+    })),
+  {
+    ssr: false,
+    loading: () => <CalendarSheetFallback label="Loading personal insights" />,
+  },
+);
 
-const CalendarCapacitySheet = dynamic(() => import("./calendar-capacity-sheet").then((module) => ({ default: module.CalendarCapacitySheet })), {
-  ssr: false,
-  loading: () => <CalendarSheetFallback label="Loading resource capacity" />,
-});
+const CalendarCapacitySheet = dynamic(
+  () =>
+    import("./calendar-capacity-sheet").then((module) => ({
+      default: module.CalendarCapacitySheet,
+    })),
+  {
+    ssr: false,
+    loading: () => <CalendarSheetFallback label="Loading resource capacity" />,
+  },
+);
 
-const CalendarScenarioWorkspace = dynamic(() => import("./calendar-scenario-workspace").then((module) => ({ default: module.CalendarScenarioWorkspace })), {
-  ssr: false,
-  loading: () => <CalendarSheetFallback label="Loading scenario" />,
-});
+const CalendarScenarioWorkspace = dynamic(
+  () =>
+    import("./calendar-scenario-workspace").then((module) => ({
+      default: module.CalendarScenarioWorkspace,
+    })),
+  {
+    ssr: false,
+    loading: () => <CalendarSheetFallback label="Loading scenario" />,
+  },
+);
 
 const NO_CALENDAR_EVENTS: CalendarListItem[] = [];
 const NO_CALENDAR_SEARCH_PAGES: CalendarSearchResponse[] = [];
 
 export function CalendarView() {
   const online = useOnlineStatus();
-  const [offlineIntent, setOfflineIntent] = useState<CalendarOfflineIntent | null>(null);
-  const [offlineEditIntent, setOfflineEditIntent] = useState<CalendarOfflineEditIntent | null>(null);
-  const [offlineCreateSlot, setOfflineCreateSlot] = useState<{ start: Date; end: Date } | null>(null);
-  const [offlineEditEvent, setOfflineEditEvent] = useState<{ event: CalendarListItem; rrule: string | null } | null>(null);
+  const [offlineIntent, setOfflineIntent] =
+    useState<CalendarOfflineIntent | null>(null);
+  const [offlineEditIntent, setOfflineEditIntent] =
+    useState<CalendarOfflineEditIntent | null>(null);
+  const [offlineCreateSlot, setOfflineCreateSlot] = useState<{
+    start: Date;
+    end: Date;
+  } | null>(null);
+  const [offlineEditEvent, setOfflineEditEvent] = useState<{
+    event: CalendarListItem;
+    rrule: string | null;
+  } | null>(null);
   const [capacityOpen, setCapacityOpen] = useState(false);
   const [coachOpen, setCoachOpen] = useState(false);
   const [scenarioOpen, setScenarioOpen] = useState(false);
-  const [scenarioDrafts, setScenarioDrafts] = useState<CalendarScenarioDraftStep[]>([]);
+  const [scenarioDrafts, setScenarioDrafts] = useState<
+    CalendarScenarioDraftStep[]
+  >([]);
   const [myDaySearch, setMyDaySearch] = useState("");
   const [clockNow, setClockNow] = useState(() => new Date());
   const debouncedMyDaySearch = useDebouncedValue(myDaySearch, 300);
@@ -255,8 +289,10 @@ export function CalendarView() {
   const savedViewsQuery = useCalendarSavedViews(viewMode !== "history");
   const selectedSavedView = savedViewsQuery.data?.pages
     .flatMap((page) => page.items)
-    .find(
-      (item) => Boolean(item && item.id === savedFilterId && item.definition.mode === viewMode),
+    .find((item) =>
+      Boolean(
+        item && item.id === savedFilterId && item.definition.mode === viewMode,
+      ),
     );
   const fetchNextSavedViewPage = savedViewsQuery.fetchNextPage;
   useEffect(() => {
@@ -296,7 +332,7 @@ export function CalendarView() {
     [currentDate],
   );
   const rangeEnd = useMemo(
-    () => endOfMonth(addMonths(currentDate, 1)),
+    () => new Date(endOfMonth(addMonths(currentDate, 1)).getTime() + 1),
     [currentDate],
   );
 
@@ -356,18 +392,34 @@ export function CalendarView() {
   );
   const savedViewActive = viewMode !== "my-day" && Boolean(selectedSavedView);
   useEffect(() => {
-    if (!savedViewActive || !myDayQuery.hasNextPage || myDayQuery.isFetchingNextPage || !myDayQuery.dataUpdatedAt) return;
+    if (
+      !savedViewActive ||
+      !myDayQuery.hasNextPage ||
+      myDayQuery.isFetchingNextPage ||
+      !myDayQuery.dataUpdatedAt
+    )
+      return;
     const sentinel = savedSearchSentinelRef.current;
     if (!sentinel || typeof IntersectionObserver === "undefined") return;
     const update = myDayQuery.dataUpdatedAt;
     const observer = new IntersectionObserver(([entry]) => {
-      if (!entry?.isIntersecting || savedSearchRequestedUpdateRef.current === update) return;
+      if (
+        !entry?.isIntersecting ||
+        savedSearchRequestedUpdateRef.current === update
+      )
+        return;
       savedSearchRequestedUpdateRef.current = update;
       void myDayQuery.fetchNextPage();
     });
     observer.observe(sentinel);
     return () => observer.disconnect();
-  }, [savedViewActive, myDayQuery.hasNextPage, myDayQuery.isFetchingNextPage, myDayQuery.dataUpdatedAt, myDayQuery.fetchNextPage]);
+  }, [
+    savedViewActive,
+    myDayQuery.hasNextPage,
+    myDayQuery.isFetchingNextPage,
+    myDayQuery.dataUpdatedAt,
+    myDayQuery.fetchNextPage,
+  ]);
   const visibleSearchEvents = useMemo(
     () =>
       filterCalendarEventsBySources(myDayEvents, {
@@ -425,8 +477,10 @@ export function CalendarView() {
     [attendanceEventsVisible, setSourceVisibility],
   );
 
-  const savedRangeDays =
-    differenceInCalendarDays(new Date(myDayWindow.end), new Date(myDayWindow.start));
+  const savedRangeDays = differenceInCalendarDays(
+    new Date(myDayWindow.end),
+    new Date(myDayWindow.start),
+  );
   const gridActive =
     viewMode === "calendar" &&
     afterLoad &&
@@ -551,10 +605,10 @@ export function CalendarView() {
       savedFilterId && !selectedSavedView
         ? NO_CALENDAR_EVENTS
         : viewMode === "history"
-        ? visibleHistoryEvents
-        : viewMode === "my-day" || savedViewActive
-          ? visibleSearchEvents
-          : visibleEvents;
+          ? visibleHistoryEvents
+          : viewMode === "my-day" || savedViewActive
+            ? visibleSearchEvents
+            : visibleEvents;
     return (
       selectionEvents.find(
         (event) =>
@@ -562,7 +616,16 @@ export function CalendarView() {
           calendarSourceFamily(event) === selected.source,
       ) ?? null
     );
-  }, [selected, savedFilterId, selectedSavedView, visibleEvents, visibleHistoryEvents, visibleSearchEvents, savedViewActive, viewMode]);
+  }, [
+    selected,
+    savedFilterId,
+    selectedSavedView,
+    visibleEvents,
+    visibleHistoryEvents,
+    visibleSearchEvents,
+    savedViewActive,
+    viewMode,
+  ]);
   const selectedBigEvent = useMemo(
     () =>
       selectedListEvent ? toBigCalEvent(selectedListEvent, connections) : null,
@@ -704,7 +767,16 @@ export function CalendarView() {
     if (searchParams.get("accounts") === "1") setAccountsOpen(true);
   }, [searchParams, setAccountsOpen]);
 
-  if (!online) return <CalendarOfflinePanel onQueueIntent={setOfflineIntent} queued={offlineIntent !== null} loadedEvents={events} onQueueEditIntent={setOfflineEditIntent} editQueued={offlineEditIntent !== null} />;
+  if (!online)
+    return (
+      <CalendarOfflinePanel
+        onQueueIntent={setOfflineIntent}
+        queued={offlineIntent !== null}
+        loadedEvents={events}
+        onQueueEditIntent={setOfflineEditIntent}
+        editQueued={offlineEditIntent !== null}
+      />
+    );
 
   return (
     <PageWrapper
@@ -747,22 +819,89 @@ export function CalendarView() {
       noInternalScroll
       actionsInline
       actions={
-        <div className="flex items-center gap-2">{scenarioDrafts.length ? <Button variant="outline" onClick={() => setScenarioOpen(true)}>What if ({scenarioDrafts.length})</Button> : null}<Button variant="outline" onClick={() => setCapacityOpen(true)}>Capacity</Button><Button variant="outline" onClick={() => setCoachOpen(true)}>My time insights</Button><CalendarToolbarPrimaryActions
-          activeConnectionCount={activeConnectionCount}
-          canCreateTicket={canCreateTicket}
-          onOpenAccounts={handleOpenAccounts}
-          onOpenCreate={handleOpenCreate}
-          onOpenCreateTicket={handleOpenCreateTicket}
-        /></div>
+        <div className="flex items-center gap-2">
+          {scenarioDrafts.length ? (
+            <Button variant="outline" onClick={() => setScenarioOpen(true)}>
+              What if ({scenarioDrafts.length})
+            </Button>
+          ) : null}
+          <Button variant="outline" onClick={() => setCapacityOpen(true)}>
+            Capacity
+          </Button>
+          <Button variant="outline" onClick={() => setCoachOpen(true)}>
+            My time insights
+          </Button>
+          <CalendarToolbarPrimaryActions
+            activeConnectionCount={activeConnectionCount}
+            canCreateTicket={canCreateTicket}
+            onOpenAccounts={handleOpenAccounts}
+            onOpenCreate={handleOpenCreate}
+            onOpenCreateTicket={handleOpenCreateTicket}
+          />
+        </div>
       }
     >
-      {coachOpen ? <CalendarCoachSheet onClose={() => setCoachOpen(false)} /> : null}
-      {capacityOpen ? <CalendarCapacitySheet onClose={() => setCapacityOpen(false)} /> : null}
-      {scenarioOpen && scenarioDrafts.length ? <CalendarScenarioWorkspace key={JSON.stringify(scenarioDrafts)} drafts={scenarioDrafts} onRemove={(index) => setScenarioDrafts((current) => current.filter((_, position) => position !== index))} onClear={() => { setScenarioDrafts([]); setScenarioOpen(false); }} onClose={() => setScenarioOpen(false)} /> : null}
-      {offlineIntent ? <CalendarOfflineIntentReview intent={offlineIntent} onDiscard={() => setOfflineIntent(null)} onContinue={(slot) => { setOfflineCreateSlot(slot); setOfflineIntent(null); }} /> : null}
-      {offlineEditIntent ? <CalendarOfflineEditReview intent={offlineEditIntent} onDiscard={() => setOfflineEditIntent(null)} onContinue={(event, rrule) => { setOfflineEditEvent({ event, rrule }); setOfflineEditIntent(null); }} /> : null}
-      {offlineCreateSlot ? <EventCreateDialog open onOpenChange={(open) => { if (!open) setOfflineCreateSlot(null); }} defaultSlot={offlineCreateSlot} /> : null}
-      {offlineEditEvent ? <EventCreateDialog open onOpenChange={(open) => { if (!open) setOfflineEditEvent(null); }} event={offlineEditEvent.event} rrule={offlineEditEvent.rrule} /> : null}
+      {coachOpen ? (
+        <CalendarCoachSheet onClose={() => setCoachOpen(false)} />
+      ) : null}
+      {capacityOpen ? (
+        <CalendarCapacitySheet onClose={() => setCapacityOpen(false)} />
+      ) : null}
+      {scenarioOpen && scenarioDrafts.length ? (
+        <CalendarScenarioWorkspace
+          key={JSON.stringify(scenarioDrafts)}
+          drafts={scenarioDrafts}
+          onRemove={(index) =>
+            setScenarioDrafts((current) =>
+              current.filter((_, position) => position !== index),
+            )
+          }
+          onClear={() => {
+            setScenarioDrafts([]);
+            setScenarioOpen(false);
+          }}
+          onClose={() => setScenarioOpen(false)}
+        />
+      ) : null}
+      {offlineIntent ? (
+        <CalendarOfflineIntentReview
+          intent={offlineIntent}
+          onDiscard={() => setOfflineIntent(null)}
+          onContinue={(slot) => {
+            setOfflineCreateSlot(slot);
+            setOfflineIntent(null);
+          }}
+        />
+      ) : null}
+      {offlineEditIntent ? (
+        <CalendarOfflineEditReview
+          intent={offlineEditIntent}
+          onDiscard={() => setOfflineEditIntent(null)}
+          onContinue={(event, rrule) => {
+            setOfflineEditEvent({ event, rrule });
+            setOfflineEditIntent(null);
+          }}
+        />
+      ) : null}
+      {offlineCreateSlot ? (
+        <EventCreateDialog
+          open
+          onOpenChange={(open) => {
+            if (!open) setOfflineCreateSlot(null);
+          }}
+          defaultSlot={offlineCreateSlot}
+        />
+      ) : null}
+      {offlineEditEvent ? (
+        <EventCreateDialog
+          open
+          onOpenChange={(open) => {
+            if (!open) setOfflineEditEvent(null);
+          }}
+          event={offlineEditEvent.event}
+          rrule={offlineEditEvent.rrule}
+        />
+      ) : null}
       <div className="flex min-h-0 flex-1 flex-col gap-3">
         <CalendarToolbar
           view={displayedGridView}
@@ -890,20 +1029,21 @@ export function CalendarView() {
                     }
                     onSelectEvent={handleSelectEvent}
                   />
+                ) : savedViewActive ? (
+                  <CalendarEventsPanel
+                    mode="list"
+                    events={visibleSearchEvents}
+                    range={{
+                      start: new Date(myDayWindow.start),
+                      end: new Date(myDayWindow.end),
+                    }}
+                    onSelectEvent={handleSelectListEvent}
+                  />
                 ) : (
-                  savedViewActive ? (
-                    <CalendarEventsPanel
-                      mode="list"
-                      events={visibleSearchEvents}
-                      range={{ start: new Date(myDayWindow.start), end: new Date(myDayWindow.end) }}
-                      onSelectEvent={handleSelectListEvent}
-                    />
-                  ) : (
-                    <CalendarAgendaPreview
-                      events={surfaceEvents}
-                      onSelectEvent={handleSelectListEvent}
-                    />
-                  )
+                  <CalendarAgendaPreview
+                    events={surfaceEvents}
+                    onSelectEvent={handleSelectListEvent}
+                  />
                 )
               ) : isMobile ? (
                 surfaceIsLoading ? (
@@ -914,7 +1054,9 @@ export function CalendarView() {
                     mode="history"
                     events={visibleHistoryEvents}
                     onSelectEvent={handleSelectListEvent}
-                    hasMore={historyHasNextPage && loadedHistoryPages >= historyPages}
+                    hasMore={
+                      historyHasNextPage && loadedHistoryPages >= historyPages
+                    }
                     isLoadingMore={historyIsFetchingNextPage}
                     onLoadMore={handleLoadOlderHistory}
                     loadedPageCount={loadedHistoryPages}
@@ -930,7 +1072,11 @@ export function CalendarView() {
                 <CalendarListFallback label="Loading events" />
               ) : afterLoad ? (
                 <CalendarEventsPanel
-                  key={viewMode === "history" ? `history:${historyBefore ?? "now"}` : "list"}
+                  key={
+                    viewMode === "history"
+                      ? `history:${historyBefore ?? "now"}`
+                      : "list"
+                  }
                   mode={viewMode}
                   events={
                     viewMode === "history"
@@ -950,9 +1096,15 @@ export function CalendarView() {
                       : undefined
                   }
                   onSelectEvent={handleSelectListEvent}
-                  hasMore={viewMode === "history" && historyHasNextPage && loadedHistoryPages >= historyPages}
+                  hasMore={
+                    viewMode === "history" &&
+                    historyHasNextPage &&
+                    loadedHistoryPages >= historyPages
+                  }
                   isLoadingMore={historyIsFetchingNextPage}
-                  loadedPageCount={viewMode === "history" ? loadedHistoryPages : 0}
+                  loadedPageCount={
+                    viewMode === "history" ? loadedHistoryPages : 0
+                  }
                   onLoadMore={
                     viewMode === "history" ? handleLoadOlderHistory : undefined
                   }
@@ -963,7 +1115,9 @@ export function CalendarView() {
                   mode="history"
                   events={visibleHistoryEvents}
                   onSelectEvent={handleSelectListEvent}
-                  hasMore={historyHasNextPage && loadedHistoryPages >= historyPages}
+                  hasMore={
+                    historyHasNextPage && loadedHistoryPages >= historyPages
+                  }
                   isLoadingMore={historyIsFetchingNextPage}
                   onLoadMore={handleLoadOlderHistory}
                   loadedPageCount={loadedHistoryPages}
@@ -991,8 +1145,14 @@ export function CalendarView() {
                         : "Some sources returned incomplete results. Try a shorter date range or refresh after they recover."}
                     </span>
                   ) : null}
-                  <div ref={savedSearchSentinelRef} aria-hidden="true" className="h-px w-full" />
-                  {myDayQuery.isFetchingNextPage ? <span role="status">Loading additional results…</span> : null}
+                  <div
+                    ref={savedSearchSentinelRef}
+                    aria-hidden="true"
+                    className="h-px w-full"
+                  />
+                  {myDayQuery.isFetchingNextPage ? (
+                    <span role="status">Loading additional results…</span>
+                  ) : null}
                 </div>
               ) : null}
             </div>
@@ -1029,7 +1189,8 @@ export function CalendarView() {
             description={getErrorMessage(historyError)}
             error={historyError}
             onRetry={() => {
-              if (historyQuery.isFetchNextPageError) void handleLoadOlderHistory();
+              if (historyQuery.isFetchNextPageError)
+                void handleLoadOlderHistory();
               else void refetchHistory();
             }}
             className="shrink-0 border border-border rounded-xl"
@@ -1203,9 +1364,20 @@ export function CalendarView() {
             onClose={handleCloseSelected}
             onQueueScenarioStep={(draft) => {
               setScenarioDrafts((current) => {
-                const matching = current.findIndex((item) => item.step.sourceKey === draft.step.sourceKey && item.step.entityType === draft.step.entityType && item.step.sourceRecordId === draft.step.sourceRecordId);
-                if (matching >= 0) return current.map((item, index) => index === matching ? draft : item);
-                if (current.length >= 20) { toast.error("A scenario can contain at most 20 changes"); return current; }
+                const matching = current.findIndex(
+                  (item) =>
+                    item.step.sourceKey === draft.step.sourceKey &&
+                    item.step.entityType === draft.step.entityType &&
+                    item.step.sourceRecordId === draft.step.sourceRecordId,
+                );
+                if (matching >= 0)
+                  return current.map((item, index) =>
+                    index === matching ? draft : item,
+                  );
+                if (current.length >= 20) {
+                  toast.error("A scenario can contain at most 20 changes");
+                  return current;
+                }
                 return [...current, draft];
               });
               handleCloseSelected();
