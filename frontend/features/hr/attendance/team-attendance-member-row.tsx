@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { format } from "date-fns";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useOrgTimeZone } from "@/hooks/api/org-display";
+import { formatTimeInOrgTz } from "@/lib/date-utils";
 import { Badge } from "@/components/ui/badge";
 import { Wifi, CircleDashed, Coffee, LogOut } from "lucide-react";
 import { resolveImageUrl, cn } from "@/lib/utils";
@@ -55,6 +56,7 @@ export function StatusBadge({ status }: { status: TeamAttendanceEntry["status"] 
 }
 
 export function MemberRow({ entry }: { entry: TeamAttendanceEntry }) {
+  const orgTz = useOrgTimeZone();
   return (
     <Link
       href={`/hr/employees/${entry.userId}`}
@@ -87,9 +89,9 @@ export function MemberRow({ entry }: { entry: TeamAttendanceEntry }) {
         <StatusBadge status={entry.status} />
         {entry.checkIn && (
           <span className="text-micro tabular-nums text-muted-foreground">
-            In {format(new Date(entry.checkIn), "h:mm a")}
+            In {formatTimeInOrgTz(entry.checkIn, orgTz)}
             {entry.checkOut
-              ? ` · Out ${format(new Date(entry.checkOut), "h:mm a")}`
+              ? ` · Out ${formatTimeInOrgTz(entry.checkOut, orgTz)}`
               : ""}
           </span>
         )}

@@ -95,11 +95,9 @@ export async function parseFile(file: File): Promise<ParsedRow[]> {
       skipEmptyLines: false,
       transformHeader: (h) => h.trim(),
     });
-    const structuralError = result.errors.find(
-      (e) => e.type === "Quotes" || e.type === "Delimiter",
-    );
+    const structuralError = result.errors.find((e) => e.type === "Quotes");
     if (structuralError) {
-      const fileLineNumber = (structuralError.row ?? 0) + 2;
+      const fileLineNumber = (structuralError.row ?? 0) + 1;
       throw new ParseStructuralError(`Line ${fileLineNumber}: unclosed quote`);
     }
     const rows = result.data

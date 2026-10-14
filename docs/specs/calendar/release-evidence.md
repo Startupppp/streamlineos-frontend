@@ -1,5 +1,23 @@
 # Calendar release evidence
 
+## Google and Outlook connection architecture, 2026-10-14
+
+Both Calendar providers use Composio connected accounts. The Calendar UI sends `googlecalendar` or `outlook` through the shared integration initiate/finalize endpoints. The backend selects the matching Composio auth config, stores the connected account ID, and uses `ComposioGateway.executeTool` or `executeProxy` for provider reads and writes. The Google Calendar and Microsoft Graph URLs in the write service are endpoints supplied to Composio's authenticated proxy. The Calendar module does not instantiate Google or Microsoft provider SDK clients for these journeys. Google write and read flows were exercised with a connected account; Outlook live acceptance remains pending as requested.
+
+## Current verification, 2026-10-14
+
+Calendar frontend Jest passed 76 suites and 471 tests. Focused tests after the half-open range changes passed five suites and 39 tests. The broad backend Calendar Jest run passed 148 of 151 suites; the three failed fixtures were corrected and the affected suites passed on rerun. The final provider write suite passed 26 tests, including authored Outlook all-day create and update boundaries.
+
+All 11 Calendar scratch PostgreSQL suites passed 40 tests. The final resolver suite used the existing `APP_DATABASE_URL` non-owner credentials from `backend/.env.production` against `scratch_calendar_20261014_56460c`; it confirmed `current_user = streamline_app` and `rolbypassrls = false`. No database role grants were changed.
+
+The connected Google account passed live create, stable operation replay, update, recurring timezone, Meet conference creation, moved occurrence read-back, occurrence cancellation, authored India all-day dates, and cleanup. A live window returned 44 events in one complete page. Both temporary events were removed. These checks did not send attendee invitations. Outlook live verification remains pending at the user's request.
+
+Outlook continuation URLs are now validated before the Composio proxy request. Only HTTPS Microsoft Graph `me/calendarView` or `me/events` continuations are accepted. An unsafe continuation leaves the account window partial and exposes a retryable error; it is never sent to the proxy. The focused pagination suite passed 15 tests, including three invalid destinations, and targeted ESLint passed.
+
+The current backend production TypeScript check exits with TS2353 in `src/modules/hr/time/attendance-regularization.service.ts` at line 243 (`name` is not a `PersonNameFields` property). It reported no Calendar diagnostic, but the full check is not green. That HR file is outside the Calendar scope and was not edited here.
+
+The user reported `/calendar/events` HTTP 500 with correlation ID `a41242e7-fca0-41e4-889f-e5c9d6601b05`. They later said they think it is fixed. Automatic approval review rejected direct localhost browser verification due the existing browser-security denial. The local frontend points to `https://api.streamlineos.in`; its backend log for that correlation ID was not available in this workspace. The reported 500 remains unverified.
+
 ## Linked-record access fallback, 2026-10-14
 
 History now uses the same virtual event list on desktop and mobile, and requests the next cursor when its last rendered row enters view. Empty history pages advance automatically once per loaded page. The manual older-events buttons were removed from Calendar History and the agenda preview, and mobile History no longer drops events after the first 50. Focused component cases were updated; final validation remains pending.
