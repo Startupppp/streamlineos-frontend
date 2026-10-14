@@ -18,5 +18,7 @@ export const calendarBookingQueryKeys = {
     ["calendar", "booking-rules", "polls", orgId, userId, membershipId, accessVersion, canRead, ruleId, cursor] as const,
   poll: (orgId: string, userId: string, membershipId: number | null, accessVersion: number, canRead: boolean, pollId: string) =>
     ["calendar", "booking-rules", "poll", orgId, userId, membershipId, accessVersion, canRead, pollId] as const,
+  myPolls: (orgId: string, userId: string, membershipId: number | null, accessVersion: number, canRead: boolean, cursor: string | null) =>
+    ["calendar", "booking-rules", "my-polls", orgId, userId, membershipId, accessVersion, canRead, cursor] as const,
   mutation: (action: string) => ["calendar", "booking-rules", action] as const,
 };

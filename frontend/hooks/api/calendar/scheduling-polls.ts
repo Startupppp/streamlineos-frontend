@@ -51,6 +51,27 @@ export function useSchedulingPoll(pollId: string | null) {
   });
 }
 
+export function useMySchedulingPolls(cursor: string | null) {
+  const scope = useBookingScope();
+  return useGatedQuery("calendar:read", {
+    queryKey: calendarBookingQueryKeys.myPolls(scope.orgId, scope.userId, scope.membershipId, scope.accessVersion, scope.canRead, cursor),
+    queryFn: ({ signal }) => apiClient.get<SchedulingPollList>("/calendar/scheduling-polls/mine", cursor ? { cursor } : undefined, signal, listContract),
+    enabled: Boolean(scope.orgId && scope.userId),
+    staleTime: 15_000,
+    ...INLINE_READ_ERROR,
+  });
+}
+
+export function useVoteSchedulingPoll() {
+  const queryClient = useQueryClient();
+  return useAuthorizedMutation("calendar:read", {
+    mutationKey: calendarBookingQueryKeys.mutation("vote-poll"),
+    mutationFn: ({ pollId, optionId, response }: { pollId: string; optionId: string; response: "yes" | "maybe" | "no" }) =>
+      apiClient.put<SchedulingPoll>(`/calendar/scheduling-polls/${encodeURIComponent(pollId)}/votes`, { optionId, response }, undefined, pollContract),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: calendarBookingQueryKeys.all() }),
+  });
+}
+
 export function useCreateSchedulingPoll() {
   const queryClient = useQueryClient();
   return useAuthorizedMutation("calendar:write", {
