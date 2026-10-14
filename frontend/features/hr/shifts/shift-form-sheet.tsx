@@ -181,6 +181,16 @@ export function ShiftFormSheet({ open, onOpenChange, shift }: Props) {
     onOpenChange,
   ]);
 
+  function handleTypeChange(value: string) {
+    const next = SHIFT_TYPES.find((t) => t === value);
+    if (!next) return;
+    const options = { shouldDirty: true, shouldTouch: true };
+    form.setValue("type", next, options);
+    if (next !== "NIGHT") return;
+    form.setValue("isNightShift", true, options);
+    if (form.getFieldState("endTime").error) void form.trigger("endTime");
+  }
+
   const isPending = createShift.isPending || updateShift.isPending;
 
   return (
@@ -226,7 +236,7 @@ export function ShiftFormSheet({ open, onOpenChange, shift }: Props) {
                   <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
                     Type
                   </FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  <Select onValueChange={handleTypeChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger className="text-sm">
                         <SelectValue />

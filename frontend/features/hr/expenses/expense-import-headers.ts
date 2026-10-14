@@ -49,7 +49,7 @@ export const EXPENSE_IMPORT_FIELDS: readonly ExpenseImportField[] = [
     sample: "Travel",
     hint: `One of: ${EXPENSE_IMPORT_CATEGORIES.join(", ")} (blank files as Other)`,
   },
-  { key: "amount", required: true, sample: "450.00", hint: "Positive number, up to 2 decimals" },
+  { key: "amount", required: true, sample: "450.00", hint: "Positive number up to 10,00,000, up to 2 decimals" },
   { key: "description", required: false, sample: "Cab to client site", hint: "Text (optional)" },
   { key: "merchant", required: false, sample: "City Cabs", hint: "Vendor name (optional)" },
   {
