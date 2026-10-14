@@ -20,6 +20,12 @@ Production My Day displayed the current day's connected-account events with sour
 
 Browser back from My Day restored the prior History URL with `historyBefore` and `historyPages=1` and rendered its rows; forward restored My Day and its events. This confirms mode history navigation for the signed-in actor, not older-page scroll position or a selected-event return after a long history traversal.
 
+In a later production run, scrolling History automatically loaded `historyPages=2`. An August 28 external event opened from that older page; closing the detail restored the older viewport, and the URL retained page two. Reloading that URL fetched both pages again, and August rows remained reachable by scrolling. The signed-in account's organization switcher listed only its current organization, so a second-organization browser isolation journey cannot use this account.
+
+At 375 px, History page two showed August 21 events. Opening a Daily Team Standup displayed the Google read-only detail; closing it retained `historyPages=2` and restored the August 21 area. A malformed `event=not-a-valid-id&eventSource=external` History URL rendered without a detail and removed the invalid event parameters after load. A real unauthorized ID, terminal cursor, and saved-filter recovery remain unverified.
+
+After the user connected Outlook, the production Calendar accounts panel showed Google Calendar as default and Outlook as enabled. The Week grid loaded its October 12–18 events without the prior `/calendar/events` error. This confirms the post-connection read path for this actor; the displayed standups were Google events, so an Outlook-sourced row and cross-account failure behavior remain open.
+
 On 2026-10-14, ticket 02 mutation validation, moved occurrence identity, and exception reminder cancellation suites passed 28 tests across three suites. The rejected paths make no exception insert; the wrong-date, expired-series, and cancelled cases do not bump the series. A second edit of a moved occurrence writes the original nominal key. Authenticated rejection behavior remains to be checked.
 
 Ticket 03 projection, source registry, and wire-shape suites passed 37 tests across three suites. Live multi-source completeness and version behavior remain to be checked.
