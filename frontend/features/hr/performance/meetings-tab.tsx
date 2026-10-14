@@ -242,36 +242,37 @@ export function MeetingsTab() {
     </PageState>
       <HrSheet open={sheetOpen} onOpenChange={(open) => { if (!open) resetForm(); setSheetOpen(open); }} title="Schedule 1-on-1" onSubmit={handleCreate} submitLabel="Schedule" isPending={createMeeting.isPending}>
         <div className="space-y-1.5">
-          <label className="text-sm font-medium">Employee</label>
+          <p className="text-sm font-medium">Employee</p>
           <EmployeePicker
             value={empId}
             onChange={handleEmpIdChange}
             placeholder="Select team member"
+            ariaLabel="Employee"
             className={fieldErrors.employeeId ? "border-destructive" : undefined}
           />
-          {fieldErrors.employeeId && <p className="text-xs text-destructive">{fieldErrors.employeeId}</p>}
+          {fieldErrors.employeeId && <p className="text-xs text-destructive" role="alert">{fieldErrors.employeeId}</p>}
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
-            <label className="text-sm font-medium">Date</label>
-            <DatePicker value={scheduledDate ?? ""} onChange={handleScheduledDateChange} fromDate={new Date()} placeholder="Pick a date" className="text-sm" />
-            {fieldErrors.scheduledDate && <p className="text-xs text-destructive">{fieldErrors.scheduledDate}</p>}
+            <label htmlFor="meeting-date" className="text-sm font-medium">Date</label>
+            <DatePicker id="meeting-date" value={scheduledDate ?? ""} onChange={handleScheduledDateChange} fromDate={new Date()} placeholder="Pick a date" className="text-sm" />
+            {fieldErrors.scheduledDate && <p className="text-xs text-destructive" role="alert">{fieldErrors.scheduledDate}</p>}
           </div>
           <div className="space-y-1.5">
-            <label className="text-sm font-medium">Time</label>
-            <Input type="time" value={scheduledTime} onChange={handleScheduledTimeChange} />
-            {fieldErrors.scheduledTime && <p className="text-xs text-destructive">{fieldErrors.scheduledTime}</p>}
+            <label htmlFor="meeting-time" className="text-sm font-medium">Time</label>
+            <Input id="meeting-time" type="time" value={scheduledTime} onChange={handleScheduledTimeChange} />
+            {fieldErrors.scheduledTime && <p className="text-xs text-destructive" role="alert">{fieldErrors.scheduledTime}</p>}
           </div>
         </div>
         <div className="space-y-1.5">
-          <label className="text-sm font-medium">Duration (min)</label>
-          <Input type="number" min={15} max={480} step={15} value={duration} onChange={handleDurationChange} />
-          {fieldErrors.duration && <p className="text-xs text-destructive">{fieldErrors.duration}</p>}
+          <label htmlFor="meeting-duration" className="text-sm font-medium">Duration (min)</label>
+          <Input id="meeting-duration" type="number" min={15} max={480} step={15} value={duration} onChange={handleDurationChange} />
+          {fieldErrors.duration && <p className="text-xs text-destructive" role="alert">{fieldErrors.duration}</p>}
         </div>
         <div className="space-y-1.5">
-          <label className="text-sm font-medium">Agenda</label>
-          <Textarea placeholder="Topics to discuss..." value={agenda} onChange={handleAgendaChange} rows={3} maxLength={1000} className="resize-none w-full" />
-          {fieldErrors.agenda && <p className="text-xs text-destructive">{fieldErrors.agenda}</p>}
+          <label htmlFor="meeting-agenda" className="text-sm font-medium">Agenda</label>
+          <Textarea id="meeting-agenda" placeholder="Topics to discuss..." value={agenda} onChange={handleAgendaChange} rows={3} maxLength={1000} className="resize-none w-full" />
+          {fieldErrors.agenda && <p className="text-xs text-destructive" role="alert">{fieldErrors.agenda}</p>}
         </div>
       </HrSheet>
 

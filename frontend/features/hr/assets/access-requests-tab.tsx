@@ -240,16 +240,18 @@ export function AccessRequestsTab({ employees, canManage }: AccessRequestsTabPro
       >
         <div className="space-y-4">
           <div className="space-y-1.5">
-            <label className="text-sm font-medium">Employee <span className="text-destructive">*</span></label>
+            <p className="text-sm font-medium">Employee <span className="text-destructive" aria-hidden="true">*</span></p>
             <EmployeePicker
               value={employeeId}
               onChange={setEmployeeId}
               placeholder="Select employee..."
+              ariaLabel="Employee"
             />
           </div>
           <div className="space-y-1.5">
-            <label className="text-sm font-medium">System / Application <span className="text-destructive">*</span></label>
+            <label htmlFor="access-req-system" className="text-sm font-medium">System / Application <span className="text-destructive" aria-hidden="true">*</span></label>
             <Input
+              id="access-req-system"
               placeholder="e.g. GitHub, Jira, AWS Console"
               value={systemName}
               onChange={handleSystemNameChange}
@@ -257,8 +259,9 @@ export function AccessRequestsTab({ employees, canManage }: AccessRequestsTabPro
             />
           </div>
           <div className="space-y-1.5">
-            <label className="text-sm font-medium">Access Level <span className="text-destructive">*</span></label>
+            <label htmlFor="access-req-level" className="text-sm font-medium">Access Level <span className="text-destructive" aria-hidden="true">*</span></label>
             <Input
+              id="access-req-level"
               placeholder="e.g. Read, Write, Admin"
               value={accessLevel}
               onChange={handleAccessLevelChange}

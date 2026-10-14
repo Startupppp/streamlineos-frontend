@@ -290,14 +290,14 @@ export function ExpenseFormFields({
 
         <div className="space-y-1.5">
           <div className="flex items-center justify-between gap-2">
-            <label className="text-xs font-medium">
+            <p className="text-xs font-medium">
               Receipts
               {totalReceipts > 0 && (
                 <span className="ml-1 text-muted-foreground font-normal">
                   ({totalReceipts}/{MAX_EXPENSE_RECEIPTS})
                 </span>
               )}
-            </label>
+            </p>
           </div>
           <ReceiptManager
             existingReceipts={existingReceipts}

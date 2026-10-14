@@ -44,14 +44,15 @@ export function AssignAssetSheet({
     >
       <div className="space-y-4">
         <div className="space-y-1.5">
-          <label className="text-sm font-medium">
+          <p className="text-sm font-medium">
             {hasCurrentAssignee ? "Reassign to Employee" : "Assign to Employee"}
-          </label>
+          </p>
           <EmployeePicker
             key={assignDialog?.assetId ?? "closed"}
             value={assignEmpId}
             onChange={onEmpChange}
             placeholder="Select employee…"
+            ariaLabel={hasCurrentAssignee ? "Reassign to Employee" : "Assign to Employee"}
           />
         </div>
         {hasCurrentAssignee && (

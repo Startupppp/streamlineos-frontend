@@ -216,7 +216,7 @@ export function ReimbursementRequestSheet({
           )}
         />
         <div className="space-y-1.5">
-          <label className="text-sm font-medium">Receipt</label>
+          <p className="text-sm font-medium">Receipt</p>
           {!receiptUrl ? (
             <button
               type="button"

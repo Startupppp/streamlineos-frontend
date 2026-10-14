@@ -200,12 +200,12 @@ export function LeaveRequestFormFields({
       />
 
       <div className="space-y-1.5">
-        <label className={`${FIELD_LABEL_CLASS} block`}>
+        <p className={`${FIELD_LABEL_CLASS} block`}>
           Attach Document{" "}
           <span className="font-normal normal-case tracking-normal text-muted-foreground">
             (Optional)
           </span>
-        </label>
+        </p>
         <FileUpload
           folder="leave-attachments"
           accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"

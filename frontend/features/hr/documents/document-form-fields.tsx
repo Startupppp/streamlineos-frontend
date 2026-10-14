@@ -265,11 +265,12 @@ export function DocumentFormFields({
       />
 
       <div className="space-y-2">
-        <label className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
+        <label htmlFor="doc-tags-input" className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
           Tags
         </label>
         <div className="flex gap-2">
           <Input
+            id="doc-tags-input"
             placeholder="Add a tag..."
             value={tagInput}
             onChange={onTagInputChange}
