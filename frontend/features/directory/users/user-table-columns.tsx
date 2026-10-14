@@ -140,10 +140,6 @@ export function getUserTableColumns(
       className: "tabular-nums font-mono",
       cell: renderJoinedAt,
     },
-    /*
-     * Pinned right: below ~1280px the eight columns outgrow the table, which
-     * scrolls, and the row actions sat past the right edge at 768px.
-     */
     {
       key: "actions",
       header: "",

@@ -8,6 +8,7 @@ import {
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { platformHierarchyQueryKeys } from "@/lib/query-keys/platform-hierarchy";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { useCan } from "@/hooks/api/access";
 import type {
   OrgLocation,
@@ -160,6 +161,7 @@ export function useOrgLocations(query?: ListQuery) {
         ...(query?.status ? { status: query.status } : {}),
       }, signal, locationListContract),
     staleTime: 60_000,
+    ...INLINE_READ_ERROR,
   });
 }
 

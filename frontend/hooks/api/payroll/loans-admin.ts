@@ -79,7 +79,6 @@ export interface CreateLoanInput {
   reason: string;
 }
 
-/** POST /hr/loans — `userId` is honoured only for org-wide `hr:expenses:approve` (or the owner). */
 export function useCreateAdminLoan() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:payroll:view", {

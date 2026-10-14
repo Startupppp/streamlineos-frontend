@@ -148,9 +148,6 @@ const nextConfig: NextConfig = {
       destination: "/hr/leaves",
       permanent: false,
     },
-    // QA 2026-10-13: guessed addresses that answered Page Not Found. The org
-    // sidebar calls the people list "Directory"; the sidebar "Pay" and
-    // "Expenses" entries live under /me.
     {
       source: "/hr/directory",
       destination: "/hr/employees",
@@ -171,7 +168,6 @@ const nextConfig: NextConfig = {
       destination: "/me/expenses",
       permanent: false,
     },
-    // QA 2026-10-14 pass 2: more guessed HR addresses that answered Page Not Found.
     {
       source: "/hr/people",
       destination: "/hr/employees",
@@ -234,10 +230,6 @@ const nextConfig: NextConfig = {
       destination: "/settings/organization",
       permanent: false,
     },
-    // QA 2026-10-14: /hr/leave-policies is no alias. It is the only page that
-    // manages leave types and the accrual/probation rows leave requests are
-    // checked against, and the sidebar, the request form and the empty state
-    // all link to it. A redirect here made leave types unreachable.
     {
       source: "/hr/settings/managers",
       destination: "/hr/settings/reporting-managers",

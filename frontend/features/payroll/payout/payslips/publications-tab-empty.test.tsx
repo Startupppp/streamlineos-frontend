@@ -23,7 +23,6 @@ jest.mock("@/hooks/api/access", () => ({
   useCan: () => canViewRuns,
 }));
 
-/** QA 2026-10-13 [P3]: Payroll → Payslips was an empty shell with no explanation or action. */
 describe("Payslips with no approved run", () => {
   it("says where payslips come from and links to Run payroll", () => {
     canViewRuns = true;

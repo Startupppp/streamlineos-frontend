@@ -28,7 +28,6 @@ const NOTICE_PERIOD_DAYS = 60;
 interface ResignationFormSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** "record": an exit administrator files for a chosen employee. "self": the caller resigns. */
   mode: "self" | "record";
 }
 

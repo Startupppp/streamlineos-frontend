@@ -247,9 +247,6 @@ export const useCancelInvitation = () => {
           userSuccessContract,
         ),
       onSuccess: (_result, invitationId) => {
-        // FE-133. QA 2026-10-14: the row stayed "Pending" until a reload. The
-        // revoke is known here, so every cached page shows it at once; other
-        // filtered views are only marked stale and refetch when next shown.
         queryClient.setQueriesData<InvitationsResponse>(
           { queryKey: usersAndCommerceQueryKeys.users.invitations() },
           (page) => markInvitationRevoked(page, invitationId, new Date().toISOString()),

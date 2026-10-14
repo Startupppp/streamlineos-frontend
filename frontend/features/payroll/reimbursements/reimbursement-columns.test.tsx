@@ -30,7 +30,6 @@ function renderActions(row: Reimbursement) {
   render(<>{actions.cell(row)}</>);
 }
 
-/** 03-SECURITY: PATCH /hr/reimbursements/:id refuses a requester deciding their own claim. */
 describe("the payroll reimbursements approve control", () => {
   it("is offered on someone else's pending claim", () => {
     renderActions(pendingClaim("someone-else"));

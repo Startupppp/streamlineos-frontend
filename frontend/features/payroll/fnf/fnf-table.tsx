@@ -87,7 +87,6 @@ export function FnfTable() {
 
   const { data, isLoading, isError, error, refetch } = useFnfSettlements();
   const canViewExits = useCan("hr:exit:view");
-  // /hr/fnf needs hr:payroll:approve to open and hr:exit:manage to create.
   const canOpenHrFnf = useCan("hr:payroll:approve");
   const canCreateFnf = useCan("hr:exit:manage");
   const canStartSettlement = canOpenHrFnf && canCreateFnf;

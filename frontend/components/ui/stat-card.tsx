@@ -367,8 +367,6 @@ export const StatCard = memo(function StatCard({
         <TruncatedTooltipText
           text={label}
           className={cn(
-            // Two lines before clamping: at 768 a four-up grid cut "Total Employees"
-            // to "Total Employee…" (QA 2026-10-13).
             "text-dense font-medium leading-tight line-clamp-2 break-words",
             featured ? "text-primary-foreground/70" : "text-muted-foreground",
           )}

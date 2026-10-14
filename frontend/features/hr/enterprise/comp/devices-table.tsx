@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { motion } from "framer-motion";
 import { format } from "date-fns";
 import { Edit2, AlertCircle, CheckCircle2, WifiOff } from "lucide-react";
 import { Trash2Icon } from "@animateicons/react/lucide";
@@ -129,7 +128,7 @@ export function DevicesTable({ canManage, onAdd, onEdit }: Props) {
   }
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }} className="flex flex-1 min-h-0 flex-col gap-3">
+    <div className="flex flex-1 min-h-0 flex-col gap-3">
       <DataTable
         className="flex-1 min-h-0"
         getRowKey={(r) => r.id}
@@ -191,6 +190,6 @@ export function DevicesTable({ canManage, onAdd, onEdit }: Props) {
           onNext={handleNextPage}
         />
       ) : null}
-    </motion.div>
+    </div>
   );
 }

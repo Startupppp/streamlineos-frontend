@@ -102,10 +102,6 @@ export function useActionCenterQueue(): ActionCenterQueue {
         key: "leave",
         label: "Leave",
         permission: "hr:leaves:view",
-        // QA 2026-10-13: the leave query also waits on the session identity, and a
-        // disabled query is not `isLoading` — so every other source settled first
-        // and the page said "You're clear" for seconds before leave rows arrived.
-        // Allowed and still without data is loading.
         isLoading: leaveGate.pending || (leaveGate.allowed && leaves.isPending),
         isError: leaves.isError,
         denied: leaveGate.denied,

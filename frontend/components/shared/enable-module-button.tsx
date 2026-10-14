@@ -45,7 +45,7 @@ function EnableModuleControl({ moduleKey, moduleName, compact }: EnableModuleBut
           // Read at click time, not through useSearchParams: this view renders on
           // prerendered pages too, where that hook demands a Suspense boundary.
           const from = internalPath(new URLSearchParams(window.location.search).get("from"));
-          if (from) router.replace(from);
+          if (from) window.location.assign(from);
           else router.refresh();
         },
         onError: (error) => toast.error(getErrorMessage(error)),

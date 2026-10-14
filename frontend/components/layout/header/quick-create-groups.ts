@@ -176,7 +176,6 @@ export const QUICK_CREATE_GROUPS: CreateGroup[] = [
     id: "payroll",
     label: "Payroll",
     products: ["payroll"],
-    // Each permission is the one the destination route requires, so no entry ends at Access Denied.
     items: [
       {
         id: "payroll-run",

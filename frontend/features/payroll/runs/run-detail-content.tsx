@@ -25,7 +25,9 @@ import { VarianceTab } from "@/features/payroll/runs/variance-tab";
 import { formatMoney, formatMonth } from "@/features/payroll/shared/payroll-format";
 import { ReadinessRail } from "@/features/payroll/shared/readiness-rail";
 import { usePayrollRun } from "@/hooks/api/payroll/runs";
+import { useAccess, usePermissionGate } from "@/hooks/api/access";
 import { ErrorState } from "@/components/shared";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 
 const LOCKED_STATUSES = new Set(["APPROVED", "LOCKED", "PAID", "PAYSLIPS_PUBLISHED", "CLOSED"]);
 
@@ -38,9 +40,9 @@ export function RunDetailContent({ runId }: RunDetailContentProps) {
   const router = useRouter();
   const activeTab = searchParams.get("tab") ?? "employees";
 
-  // isPending, not isLoading: while access resolves the query is disabled (not fetching), and
-  // isLoading=false there fell through to "Run not found" before the run ever loaded.
-  const { data, isPending, error, refetch, isRefetching } = usePayrollRun(runId);
+  const viewGate = usePermissionGate("payroll:runs:view");
+  const { refetch: refetchAccess } = useAccess();
+  const { data, isLoading, error, refetch, isRefetching } = usePayrollRun(runId);
   const run = data?.run;
 
   const isLocked = run ? LOCKED_STATUSES.has(run.status) : false;
@@ -53,8 +55,26 @@ export function RunDetailContent({ runId }: RunDetailContentProps) {
 
   const openExceptions = run?.exceptionCount ?? 0;
 
-  // A failed background refetch (e.g. right after Recalculate) keeps the last good run on screen;
-  // only a run that never loaded swaps the page for an error.
+  if (viewGate.denied) {
+    return (
+      <PageWrapper title="Payroll Run" backHref="/payroll/runs">
+        <NoPermissionState permission="payroll:runs:view" className="flex-1" />
+      </PageWrapper>
+    );
+  }
+
+  if (viewGate.unavailable) {
+    return (
+      <PageWrapper title="Payroll Run" backHref="/payroll/runs">
+        <ErrorState
+          title="Failed to load run"
+          description="Your access could not be checked, so this run cannot be shown."
+          onRetry={refetchAccess}
+        />
+      </PageWrapper>
+    );
+  }
+
   if (error && !run) {
     return (
       <PageWrapper title="Payroll Run" backHref="/payroll/runs">
@@ -67,7 +87,7 @@ export function RunDetailContent({ runId }: RunDetailContentProps) {
     );
   }
 
-  if (isPending) {
+  if (viewGate.pending || isLoading) {
     return (
       <PageWrapper title="Payroll Run" subtitle="Loading run…" backHref="/payroll/runs">
         <div className="flex flex-1 min-h-0 flex-col gap-4">
@@ -126,7 +146,7 @@ export function RunDetailContent({ runId }: RunDetailContentProps) {
         <ReadinessRail
           canPay={
             openExceptions === 0 &&
-            (run.status === "LOCKED" || run.status === "APPROVED" || run.status === "PAID")
+            (run.status === "LOCKED" || run.status === "PAID")
           }
           totals={{
             gross: formatMoney(run.grossTotal),

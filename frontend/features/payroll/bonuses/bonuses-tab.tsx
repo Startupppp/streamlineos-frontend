@@ -42,7 +42,6 @@ import { formatShortDate } from "@/lib/date-utils";
 export function BonusesTab() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  // `?create=1` is the global Create menu's "Bonus" entry.
   const [createOpen, setCreateOpen] = useState(() => searchParams.get("create") === "1");
 
   const month = searchParams.get("b_month") ?? getCurrentMonth();

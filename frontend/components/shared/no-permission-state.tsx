@@ -5,7 +5,6 @@ import { cn } from "@/lib/utils";
 import type { PermissionKey } from "@/lib/rbac/permissions";
 
 interface NoPermissionStateProps {
-  /** Several keys mean any one of them grants access (a multi-key route gate). */
   permission?: PermissionKey | readonly PermissionKey[];
   title?: string;
   description?: string;

@@ -2,7 +2,6 @@
 
 import { useState, useCallback } from "react";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
-import { motion } from "framer-motion";
 import { Plus, Pencil } from "lucide-react";
 import { EyeIcon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
@@ -328,12 +327,7 @@ export function HrPoliciesPage() {
           <span>Resolve overlapping scopes and dates before activating drafts.</span>
         </div>
       )}
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.22, ease: "easeOut" }}
-        className="flex flex-1 min-h-0 flex-col py-4"
-      >
+      <div className="flex flex-1 min-h-0 flex-col py-4">
         {data?.data.length === 0 ? (
           <EmptyState
             className="flex-1"
@@ -368,7 +362,7 @@ export function HrPoliciesPage() {
             }}
           />
         )}
-      </motion.div>
+      </div>
 
       <PolicyUpsertSheet
         open={sheetOpen}

@@ -74,6 +74,7 @@ export function useManagerCandidates(q: string, excludeUserId?: string, options?
     enabled: hrEnabled && canView && (options?.enabled ?? true),
     staleTime: 30_000,
     placeholderData: (previous) => previous,
+    ...INLINE_READ_ERROR,
   });
 }
 

@@ -17,7 +17,6 @@ import {
 
 interface ActionCenterFiltersProps {
   state: ActionCenterFilterState;
-  /** Null while the queue is still loading: a 0 there reads as "nothing pending". */
   counts: Record<ActionCenterFacet | "all", number> | null;
   cutoffAvailable: boolean;
   cutoffCount: number | null;

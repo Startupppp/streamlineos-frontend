@@ -10,7 +10,6 @@ jest.mock("@/hooks/api/access", () => ({
 
 jest.mock("@/lib/i18n/i18n", () => ({ useT: () => (key: string) => key }));
 
-// Radix menus need pointer geometry jsdom lacks; render the items inline.
 jest.mock("@/components/ui/dropdown-menu", () => ({
   DropdownMenu: ({ children }: { children: ReactNode }) => <div>{children}</div>,
   DropdownMenuTrigger: ({ children }: { children: ReactNode }) => <div>{children}</div>,

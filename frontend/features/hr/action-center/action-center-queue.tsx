@@ -53,7 +53,6 @@ export function ActionCenterQueueView({
   const decisions = useActionCenterDecisions();
   const { data: session } = useSession();
   const myUserId = session?.user?.id;
-  // QA 2026-10-13 P0: nobody decides their own leave — the server refuses it.
   const isOwnLeave = useCallback(
     (item: ActionCenterItem): boolean =>
       item.source === "leave" && !!myUserId && item.requester?.userId === myUserId,

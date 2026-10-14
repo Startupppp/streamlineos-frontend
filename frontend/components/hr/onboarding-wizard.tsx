@@ -88,8 +88,6 @@ export function OnboardingWizard() {
     if (fields) {
       const valid = await form.trigger(fields);
       if (!valid) {
-        // Each field already shows its own inline message; a toast on top
-        // repeated it (QA 2026-10-13). Focus carries the user to the first one.
         const firstInvalid = fields.find((field) => form.getFieldState(field).error);
         if (firstInvalid) form.setFocus(firstInvalid);
         return;
@@ -221,6 +219,11 @@ export function OnboardingWizard() {
               </div>
             )}
             {currentStep === 4 && <StepReview form={form} departments={departments ?? []} locations={locations?.data ?? []} />}
+            {onboardEmployee.isError && (
+              <p role="alert" className="mt-4 text-sm text-destructive">
+                {getErrorMessage(onboardEmployee.error)} Your entries are kept; submit again to retry.
+              </p>
+            )}
           </div>
 
           <div

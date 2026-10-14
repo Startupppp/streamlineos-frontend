@@ -26,10 +26,7 @@ const STATUS_COLORS: Record<string, string> = {
 interface Props {
   policy: HrPolicy;
   canManage: boolean;
-  /** QA 2026-10-14: the editor holds a snapshot of the draft row, so it kept
-   * offering Activate after the policy went live. The host closes on success. */
   onActivated?: () => void;
-  /** Activation applies the saved draft; unsaved edits would close unseen. */
   unsavedChanges?: boolean;
 }
 

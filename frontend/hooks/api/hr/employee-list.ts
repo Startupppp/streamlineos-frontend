@@ -24,7 +24,6 @@ export type HrEmployeesParams = {
   limit?: number;
   search?: string;
   departmentId?: string;
-  /** `current` = accepted + invite pending (not deactivated) — what a person picker offers. */
   isActive?: "true" | "false" | "all" | "current";
   /** Server-side role filter (users.role). */
   role?: string;
@@ -166,8 +165,6 @@ export function useInfiniteHrEmployees(
      * being allowed to land late.
      */
     placeholderData: keepPreviousData,
-    // The directory draws its own ErrorState + Retry under its header; thrown to
-    // the route boundary, a failed or timed-out read replaced the whole page.
     ...INLINE_READ_ERROR,
     enabled: hrEnabled && canView && (options?.enabled ?? true),
   });

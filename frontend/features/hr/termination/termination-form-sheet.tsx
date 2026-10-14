@@ -82,7 +82,6 @@ interface TerminationFormSheetProps {
   submitDisabled?: boolean;
   onSubmit: () => void;
   employees: EmployeeListItem[];
-  /** The employee a profile link named; listed even when the first page of options does not reach them. */
   prefilledEmployee: TerminationCandidate | null;
   selectedEmployeeUserId: string;
   onSelectedEmployeeUserIdChange: (employeeUserId: string) => void;

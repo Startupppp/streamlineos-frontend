@@ -3,8 +3,6 @@ import type { WizardData } from "../lib/wizard-data-schema";
 import { DEFAULT_DATA, MODULE_CATALOG, MODULE_QUESTIONS, ALWAYS_ENABLED_MODULES, MODULE_GROUPS } from "../lib/constants";
 import { StepProducts } from "./step-products";
 
-// The preview is a react-query mutation; without this mock every case died on
-// "No QueryClient set". Default: every selected module is eligible.
 const mockPreview = jest.fn((payload: { modules: string[] }) =>
   Promise.resolve({
     modules: payload.modules.map((moduleKey) => ({ moduleKey, eligible: true })),

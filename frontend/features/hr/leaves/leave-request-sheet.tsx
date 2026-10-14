@@ -48,8 +48,6 @@ export function LeaveRequestSheet({
   balances = [],
   existingRequests = NO_EXISTING_REQUESTS,
 }: LeaveRequestSheetProps) {
-  // A sole owner's leave has no other approver yet (ownerSelfApproval with no
-  // rung) but is still accepted and waits pending; the route panel says why.
   const approverAvailable =
     approvalRoute !== undefined && (approvalRoute.rung !== null || approvalRoute.ownerSelfApproval);
   const requestLeaveMutation = useRequestLeave();

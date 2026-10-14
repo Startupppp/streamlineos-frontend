@@ -11,8 +11,6 @@ import { CreateLoanDialog } from "./create-loan-dialog";
 
 export function LoansPageContent() {
   const searchParams = useSearchParams();
-  // POST /hr/loans honours the chosen employee only for an org-wide approver; anyone else would
-  // silently get a loan in their own name, so the admin dialog is offered to exactly that scope.
   const canCreateForOthers = useScope("hr:expenses:approve") === "all";
   const [createOpen, setCreateOpen] = useState(() => searchParams.get("create") === "1");
 

@@ -10,7 +10,11 @@ import {
 const policy = jest.fn();
 const refetch = jest.fn();
 
-jest.mock("@/hooks/api/access", () => ({ useCan: () => true }));
+jest.mock("@/hooks/api/access", () => ({
+  useCan: () => true,
+  usePermissionGate: (key: string) => ({ permission: key, allowed: true, denied: false, pending: false, unavailable: false }),
+  useAccess: () => ({ refetch: jest.fn() }),
+}));
 
 jest.mock("@/hooks/api/payroll", () => ({
   usePayrollPolicyCurrent: () => policy(),

@@ -53,7 +53,6 @@ const SEVERITY_CONFIG: Record<
   INFO: { className: "bg-status-info-surface text-status-info-ink border-status-info-rule", label: "Info" },
 };
 
-/** Exceptions fixed on the employee's salary profile, not by resolving the row. */
 const PROFILE_FIX_CODES = new Set(["MISSING_SALARY_PROFILE", "NO_EARNING_COMPONENTS"]);
 
 const STATUS_CONFIG: Record<PayrollExceptionStatus, { className: string; label: string }> = {

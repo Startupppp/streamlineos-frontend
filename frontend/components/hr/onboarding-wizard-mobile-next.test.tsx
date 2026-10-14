@@ -66,8 +66,6 @@ describe("Flow 1 at 390 — Next must be reachable and blocked by validation, ne
       expect(screen.getByText("First name is required")).toBeInTheDocument();
     });
     expect(screen.getByText("Last name is required")).toBeInTheDocument();
-    // QA 2026-10-13: an empty email is "required", not "invalid", and the inline
-    // messages are not repeated as toasts.
     expect(screen.getByText("Email is required")).toBeInTheDocument();
     expect(screen.queryByText("Invalid email address")).not.toBeInTheDocument();
     expect(toastError).not.toHaveBeenCalled();

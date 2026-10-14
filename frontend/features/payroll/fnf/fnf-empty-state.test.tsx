@@ -23,7 +23,6 @@ jest.mock("@/hooks/api/access", () => ({
 
 jest.mock("./fnf-detail-sheet", () => ({ FnfDetailSheet: () => null }));
 
-/** QA 2026-10-13 [P2]: Payroll → Final settlement was empty with no create path and no explanation. */
 describe("the empty Final settlement list", () => {
   it("explains that a settlement starts from an exit and links to both HR steps", () => {
     granted = new Set(["hr:exit:view", "hr:payroll:approve", "hr:exit:manage"]);

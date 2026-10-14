@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { motion } from "framer-motion";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -86,19 +85,13 @@ export function CompensationPlanningPage() {
         ) : undefined
       }
     >
-      <motion.div
-        key={selectedCycle?.id ?? "list"}
-        initial={{ opacity: 0, x: selectedCycle ? 24 : -24 }}
-        animate={{ opacity: 1, x: 0 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.22, ease: "easeOut" }}
-      >
+      <div key={selectedCycle?.id ?? "list"}>
         {selectedCycle ? (
           <CompCycleDetail cycleId={selectedCycle.id} canManage={canManage} />
         ) : (
           <CompCycleList onSelect={setSelectedCycle} />
         )}
-      </motion.div>
+      </div>
 
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
         <DialogContent className="max-w-sm">

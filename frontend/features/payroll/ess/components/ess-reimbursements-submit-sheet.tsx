@@ -29,11 +29,6 @@ import {
 interface SubmitSheetProps {
   open: boolean;
   onClose: () => void;
-  /**
-   * "self-service" posts to /payroll/me/reimbursements (honours the ESS toggle);
-   * "payroll" posts to /hr/reimbursements from the payroll admin page. Both file
-   * the claim in the caller's own name — neither endpoint takes an employee.
-   */
   channel?: "self-service" | "payroll";
 }
 

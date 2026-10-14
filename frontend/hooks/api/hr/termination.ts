@@ -98,7 +98,6 @@ export function useTerminations(params: UseTerminationsParams = {}) {
   });
 }
 
-/** The employee a profile's "Terminate" link names, so the picker can show them before the list pages reach them. */
 export function useTerminationCandidate(employeeUserId: string | null) {
   const canView = useCan("hr:employees:view");
   const hrEnabled = useModuleEnabled("hr");

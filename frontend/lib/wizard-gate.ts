@@ -64,12 +64,6 @@ export function resolveWizardGate(
   return null;
 }
 
-/**
- * The onboarding wizard is a detour on the way to a page the user may open.
- * For a page whose permission they lack, the detour only delays the Access
- * Restricted they get after "Skip for now" — so the denial wins (QA 2026-10-13:
- * a new employee opening /hr/employees was sent to /employee-onboarding).
- */
 export function onboardingGateYieldsToDenial(
   destination: string,
   access: Pick<AccessResponse, "isOrgOwner" | "scopes">,

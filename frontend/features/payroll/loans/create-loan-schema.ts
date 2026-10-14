@@ -1,6 +1,5 @@
 import { z } from "zod";
 
-// Mirrors createLoanSchema on POST /hr/loans so the bounds show inline, not as a 400 toast.
 export const createLoanFormSchema = z.object({
   userId: z.string().min(1, "Select an employee"),
   amount: z

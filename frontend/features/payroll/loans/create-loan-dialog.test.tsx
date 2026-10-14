@@ -36,7 +36,6 @@ beforeEach(() => {
   searchParams = new URLSearchParams();
 });
 
-/** QA 2026-10-13 [P2]: /payroll/loans had an empty state and no way to create a loan. */
 describe("the New loan dialog", () => {
   it("shows every missing field inline and sends nothing", async () => {
     const user = userEvent.setup();

@@ -4,7 +4,6 @@ export const leaveFormSchema = z
   .object({
     leaveTypeId: z.string().min(1, "Leave type is required"),
     startDate: z.string().min(1, "Start date is required"),
-    // Half-day leave is a single date: the end is the start and is not asked for.
     endDate: z.string(),
     halfDay: z.boolean(),
     halfDayPeriod: z.enum(["AM", "PM"]),
@@ -38,7 +37,6 @@ export const leaveFormSchema = z
 
 export type LeaveFormValues = z.infer<typeof leaveFormSchema>;
 
-/** The end date the request covers: a half day ends on the day it starts. */
 export function effectiveLeaveEnd(values: Pick<LeaveFormValues, "halfDay" | "startDate" | "endDate">): string {
   return values.halfDay ? values.startDate : values.endDate;
 }

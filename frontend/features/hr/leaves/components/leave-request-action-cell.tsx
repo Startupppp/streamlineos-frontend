@@ -21,10 +21,6 @@ interface RequestActionCellProps {
  * rows — every one of them always 403s ("You cannot approve or reject your own
  * leave request"), since this list is the caller's own — and a "View Details"
  * item with no handler. Approvals live in the Approvals tab.
- *
- * QA 2026-10-13 P0: a sole owner's request is no longer routed back to them —
- * nobody decides their own leave. It waits pending with no approver, and the row
- * says so instead of pointing them at an Approve button the server refuses.
  */
 export function RequestActionCell({ request, isCancelling = false, onCancel }: RequestActionCellProps) {
   const [confirmOpen, setConfirmOpen] = useState(false);

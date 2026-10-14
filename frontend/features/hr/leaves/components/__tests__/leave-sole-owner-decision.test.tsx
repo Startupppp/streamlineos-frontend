@@ -1,11 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { LeaveDecisionButtons } from "../leave-decision-controls";
 
-/**
- * QA 2026-10-13 P0. An owner approved their own leave. Product decision: nobody
- * decides their own leave, sole owners included — the server refuses it, so the
- * control is never offered (this replaces the BUG-HRMS-017 sole-owner hatch).
- */
 
 const OWNER = "u-founder";
 

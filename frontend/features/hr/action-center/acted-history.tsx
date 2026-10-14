@@ -35,9 +35,6 @@ export function ActedHistory({ enabled, onOpenInstance }: ActedHistoryProps) {
 
   const { data, isLoading, isFetching, isError, refetch, access } =
     useWorkflowActed({ cursor, limit: 50 }, { enabled });
-  // QA 2026-10-14: leave decisions never create workflow step actions, so the
-  // workflow history alone always said "No actions yet" after a leave decision.
-  // ponytail: newest 20 leave decisions only; paginate if someone needs older.
   const leaves = useHrLeaveApprovals({ decidedBy: "me", limit: 20, enabled });
   const leaveDecisions = useMemo(
     () => leaves.data?.pages[0]?.data ?? [],

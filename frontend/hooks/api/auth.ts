@@ -103,8 +103,6 @@ export function useVerifyOtp(
   return useMutation<VerifyOtpResult, Error, { email: string; code: string }>({
     mutationKey: ["auth", "verify-otp"],
     mutationFn: (variables: { email: string; code: string }) =>
-      // Bounded: a hung verify left "Verifying…" up for 60-120s (QA 2026-10-13). A timeout
-      // carries no HTTP status, so the form keeps the digits and Verify becomes the retry.
       apiClient.post<VerifyOtpResult>("/auth/email-otp/verify", variables, { timeoutMs: 15_000 }, verifyOtpContract),
     ...options,
   });

@@ -46,7 +46,6 @@ const PendingActions = memo(function PendingActions({
 
 interface BuildReimbursementColumnsOptions {
   canApprove: boolean;
-  /** The server refuses to let a requester decide their own claim; don't offer it. */
   currentUserId?: string;
   isProcessing: boolean;
   onApprove: (claimId: number) => void;

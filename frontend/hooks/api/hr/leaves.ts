@@ -44,7 +44,6 @@ export interface LeaveTeamListParams {
   from?: string;
   to?: string;
   limit?: number;
-  /** Requests the caller approved or rejected (Action Center "Acted"). */
   decidedBy?: "me";
 }
 

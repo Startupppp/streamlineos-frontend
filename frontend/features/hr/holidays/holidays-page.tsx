@@ -202,7 +202,7 @@ export function HolidaysPage() {
         onRetry={handleRetry}
         className="flex-1"
       >
-        <AnimatePresence mode="wait">
+        <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={viewMode}
             initial={{ opacity: 0, y: 12 }}

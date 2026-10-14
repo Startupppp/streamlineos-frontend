@@ -124,8 +124,6 @@ export function LeavesWfhToolbar({
   );
 }
 
-// QA 2026-10-14: leave setup and reports were reachable only by typing the URL.
-// Each link carries the permission its route enforces (FE-55).
 const LEAVE_LINKS: readonly { label: string; href: string; permission: PermissionKey }[] = [
   { label: "Leave types & policies", href: "/hr/leave-policies", permission: "hr:leaves:manage" },
   { label: "HR policies", href: "/hr/settings/policies", permission: "hr:policies:view" },

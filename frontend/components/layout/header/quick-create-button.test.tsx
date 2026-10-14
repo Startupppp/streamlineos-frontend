@@ -68,7 +68,6 @@ describe("QuickCreatePanel", () => {
   })
 })
 
-/** QA 2026-10-13 [P3]: the global Create menu had no payroll entries. */
 describe("the Create menu's Payroll group", () => {
   afterEach(() => {
     granted = () => true

@@ -96,7 +96,6 @@
   "features/payroll/runs/inputs-tab.tsx",
   "features/payroll/runs/runs-page-content.tsx",
   "features/payroll/runs/variance-tab.tsx",
-  "features/payroll/salary-structures/salary-structures-page.tsx",
   "features/payroll/settings/entities-section.tsx",
   "features/payroll/settings/settings-page.tsx",
   "features/payroll/settings/version-history-section.tsx",

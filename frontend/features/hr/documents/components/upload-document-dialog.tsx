@@ -46,11 +46,9 @@ function getFileTypeConfig(file: File): { icon: React.ComponentType<{ className?
   return { icon: File, bg: "bg-muted", text: "text-muted-foreground", badge: "FILE" };
 }
 
-/** Mirrors the backend `/storage/upload` allowlist (it re-checks MIME + magic bytes). */
 const ACCEPTED_EXTENSIONS = [".pdf", ".doc", ".docx", ".xls", ".xlsx", ".png", ".jpg", ".jpeg", ".gif", ".webp"];
 const MAX_FILE_BYTES = 10 * 1024 * 1024;
 
-/** Why a file can't be queued, or null when it can. */
 export function uploadRejectionReason(file: Pick<File, "name" | "size">): string | null {
   const dot = file.name.lastIndexOf(".");
   const ext = dot >= 0 ? file.name.slice(dot).toLowerCase() : "";
@@ -105,7 +103,6 @@ export function UploadDocumentDialog({
   const [tags, setTags] = useState<string[]>([]);
   const [isDragOver, setIsDragOver] = useState(false);
   const [employeeSearch, setEmployeeSearch] = useState("");
-  // Inline, not toast-only: a toast in an occluded corner reads as a silent failure.
   const [rejected, setRejected] = useState<{ name: string; reason: string }[]>([]);
   const [fileErrors, setFileErrors] = useState<Map<File, string>>(new Map());
   const titleAutoPopulated = useRef(false);
@@ -319,7 +316,6 @@ export function UploadDocumentDialog({
         titleAutoPopulated.current = false;
         onSuccess();
       } else {
-        // Keep the dialog open on the failed files with each one's reason inline.
         setFiles((prev) => prev.filter((f) => failures.has(f)));
         setFileErrors(failures);
         if (successCount > 0) toast.success(`${successCount} uploaded, ${failures.size} failed`);

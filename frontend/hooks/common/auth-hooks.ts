@@ -106,7 +106,6 @@ async function probeSession(): Promise<SessionProbe> {
 }
 
 const CREDENTIALS_CALLBACK_ECHO_PATH = "/dashboard";
-/** Server authorize is bounded at ~8s + 2x8s session-data + jwt exchange; leave headroom. */
 export const CREDENTIALS_SIGN_IN_TIMEOUT_MS = 45_000;
 
 async function confirmSessionEstablished(): Promise<MagicLinkSignInOutcome> {
@@ -130,8 +129,6 @@ async function attemptCredentialsSignIn(
         redirect: false,
         callbackUrl: CREDENTIALS_CALLBACK_ECHO_PATH,
       }),
-      // signIn has no timeout of its own; a stalled authorize kept "Verifying…" up
-      // indefinitely. Past the deadline, ask the session what actually happened.
       new Promise<never>((_, reject) => {
         timer = setTimeout(() => reject(new Error("sign-in timed out")), CREDENTIALS_SIGN_IN_TIMEOUT_MS);
       }),

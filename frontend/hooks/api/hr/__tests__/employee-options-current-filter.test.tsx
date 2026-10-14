@@ -4,13 +4,6 @@ import { renderHook, waitFor } from "@testing-library/react";
 import { apiClient } from "@/lib/api-client";
 import { useHrEmployeeOptions } from "@/hooks/api/hr/employee-list";
 
-/**
- * QA 2026-10-14: the termination and onboarding pickers listed 2 of 4 active
- * members. `isActive=true` on /hr/employees means "accepted the invite", so a
- * bulk-onboarded hire who had never signed in was not pickable, while the
- * Members table showed them Active. Pickers ask for `current` (accepted +
- * invite pending, never deactivated) instead.
- */
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn().mockReturnValue(true),

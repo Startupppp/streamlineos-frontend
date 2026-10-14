@@ -51,7 +51,6 @@ interface LeaveRequestFormFieldsProps {
   onStartDateChange: (value: string) => void;
   onAttachmentUpload: (key: string) => void;
   validation: LeaveRequestValidation;
-  /** Employees cannot pick past dates; say so instead of greying them out silently. */
   pastDatesBlocked: boolean;
 }
 

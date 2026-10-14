@@ -25,7 +25,6 @@ interface ActionCenterRowProps {
   selected: boolean;
   selectable: boolean;
   decidable: boolean;
-  /** The viewer raised this request, so another approver must decide it. */
   ownRequest?: boolean;
   isDeciding: boolean;
   onToggleSelected: (itemId: string) => void;

@@ -79,14 +79,8 @@ describe("the reimbursement Amount field", () => {
   });
 });
 
-/**
- * QA 2026-10-13: /payroll/reimbursements had no create path. The payroll page
- * reuses this sheet over POST /hr/reimbursements, which is not gated by the ESS
- * toggle; the self-service channel must keep using the ESS route.
- */
 describe("the sheet's submit channel", () => {
   beforeAll(() => {
-    // jsdom lacks the pointer-capture and scroll APIs Radix Select calls on open.
     Element.prototype.hasPointerCapture = () => false;
     Element.prototype.releasePointerCapture = () => undefined;
     Element.prototype.scrollIntoView = () => undefined;

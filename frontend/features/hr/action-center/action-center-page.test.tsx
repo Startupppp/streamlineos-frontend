@@ -153,7 +153,6 @@ describe("HR Action Center — the clear claim", () => {
   });
 
   it("does not claim clear, or print zero counts, while the leave read has not started (QA 2026-10-13)", () => {
-    // A query disabled while the session identity loads is pending but not `isLoading`.
     mockQueueState.leavePending = true;
 
     render(<HrActionCenterPage />);

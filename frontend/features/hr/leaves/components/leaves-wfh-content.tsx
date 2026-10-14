@@ -96,6 +96,29 @@ export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps)
     ? t("timeOff.subtitle")
     : "Manage leave requests, work from home, and approvals.";
 
+  const requestSheets = (
+    <>
+      <LeaveRequestSheet
+        open={leaveSheetOpen}
+        onOpenChange={setLeaveSheetOpen}
+        leaveTypes={data.leaveTypes}
+        approvalRoute={data.approvalRoute}
+        joiningDate={data.joiningDate}
+        balances={data.balances}
+        existingRequests={data.myLeaveRequests}
+      />
+      <WfhRequestSheet open={wfhSheetOpen} onOpenChange={setWfhSheetOpen} />
+    </>
+  );
+  const headerActions = (
+    <LeavesWfhActions
+      canRequestLeave={data.canRequestLeave}
+      canRequestWfh={data.canRequestWfh}
+      onRequestLeave={handleOpenLeaveSheet}
+      onRequestWfh={handleOpenWfhSheet}
+    />
+  );
+
   if (data.isLoading) {
     return (
       <PageWrapper
@@ -103,11 +126,13 @@ export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps)
         subtitle={subtitle}
         noInternalScroll
         contentClassName="flex min-h-0 flex-1 flex-col"
+        actions={headerActions}
       >
         <div className="flex min-h-0 flex-1 flex-col gap-3">
           <StatCardGridSkeleton cols={3} count={3} />
           <Skeleton className="min-h-0 w-full flex-1 rounded-xl" />
         </div>
+        {requestSheets}
       </PageWrapper>
     );
   }
@@ -119,6 +144,7 @@ export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps)
         subtitle={subtitle}
         noInternalScroll
         contentClassName="flex min-h-0 flex-1 flex-col"
+        actions={headerActions}
       >
         <ErrorState
           title={selfService ? t("timeOff.loadError") : undefined}
@@ -127,6 +153,7 @@ export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps)
           onRetry={data.onRetryPage}
           className="flex-1"
         />
+        {requestSheets}
       </PageWrapper>
     );
   }
@@ -161,14 +188,7 @@ export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps)
               onExport={handleExportExcel}
             />
           }
-          actions={
-            <LeavesWfhActions
-              canRequestLeave={data.canRequestLeave}
-              canRequestWfh={data.canRequestWfh}
-              onRequestLeave={handleOpenLeaveSheet}
-              onRequestWfh={handleOpenWfhSheet}
-            />
-          }
+          actions={headerActions}
         >
           <div className="flex min-h-0 w-full flex-1 flex-col gap-3 overflow-hidden">
             {!selfService ? (
@@ -226,16 +246,7 @@ export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps)
         </PageWrapper>
       </Tabs>
 
-      <LeaveRequestSheet
-        open={leaveSheetOpen}
-        onOpenChange={setLeaveSheetOpen}
-        leaveTypes={data.leaveTypes}
-        approvalRoute={data.approvalRoute}
-        joiningDate={data.joiningDate}
-        balances={data.balances}
-        existingRequests={data.myLeaveRequests}
-      />
-      <WfhRequestSheet open={wfhSheetOpen} onOpenChange={setWfhSheetOpen} />
+      {requestSheets}
     </div>
   );
 }

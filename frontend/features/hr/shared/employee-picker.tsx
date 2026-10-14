@@ -14,7 +14,6 @@ interface EmployeePickerProps {
   placeholder?: string;
   excludeUserIds?: string[];
   className?: string;
-  /** Also list deactivated employees (e.g. terminated, for a final settlement). */
   includeInactive?: boolean;
 }
 

@@ -234,8 +234,6 @@ export function LeaveDecisionButtons({
 }: LeaveDecisionButtonsProps) {
   const status = request.status ?? "PENDING";
   const isSelfRequest = !!currentUserId && request.user?.id === currentUserId;
-  // QA 2026-10-13 P0: nobody decides their own leave, sole owners included —
-  // `PUT /hr/leaves/:id/approve|reject` refuses it, so no control is offered.
   // PUT /hr/leaves/:id/approve|reject require hr:leaves:approve (FE-44). The
   // approvals surfaces are also open to WFH-only deciders, who must not see
   // controls that can only fail for them.

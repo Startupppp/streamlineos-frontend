@@ -42,9 +42,6 @@ function resolveAccessDeniedState(
 
 export default async function AccessDeniedPage({ searchParams }: AccessDeniedPageProps) {
   const { required, reason } = await searchParams;
-  // A multi-key route gate (/hr/approvals, /hr/benefits, /hr/settings) sends
-  // `required=a,b`; that whole string is no catalogue key, so the page named
-  // nothing. Name every known key; unknown ones are still never echoed.
   const anyOf = required?.includes(",") ? required.split(",").filter(isPermissionKey) : [];
   if (anyOf.length > 0) return <NoPermissionState permission={anyOf} />;
   return <DeniedView resolution={resolveAccessDeniedState(required, reason)} />;
