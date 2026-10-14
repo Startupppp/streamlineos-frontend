@@ -1,5 +1,11 @@
 # Calendar release evidence
 
+## Production events repair and Outlook live journey, 2026-10-14
+
+Railway logs for correlation ID `6072e5a9-cd89-4f66-9b92-55fee4877ea1` show `/calendar/events` failing when postgres.js received a JavaScript `Date` as a raw string parameter. The HR interview overlap SQL now binds ISO timestamp strings, and Build and HR leave search cursor predicates use encoded timestamp strings. The HR source suite passed 23 tests. The first repair reached production in backend commit `030d62dd5`; the user refreshed the production Calendar and confirmed it loaded. Railway subsequently marked the leave cursor follow-up commit `e2fa7e6ee` successful. The user's live refresh preceded that follow-up, so its search cursor needs a separate live check.
+
+The production app-role read found one active Google Calendar connection and one active Outlook connection for the affected actor. Through the application's Composio gateway, Outlook returned a complete empty October window with no unreadable rows or continuation. A temporary no-attendee Outlook event was created, a replay with the same idempotency key returned the same provider event ID, an update succeeded and was visible exactly once in the provider window, and deletion succeeded with zero matching provider IDs on read-back. This journey ran twice and both temporary events were removed. It establishes the live core Outlook transport and idempotent create behavior; dense pagination, OAuth reconnect, accepted-timeout repair, and duplicate or out-of-order webhook handling remain unverified in production.
+
 ## Google and Outlook connection architecture, 2026-10-14
 
 Both Calendar providers use Composio connected accounts. The Calendar UI sends `googlecalendar` or `outlook` through the shared integration initiate/finalize endpoints. The backend selects the matching Composio auth config, stores the connected account ID, and uses `ComposioGateway.executeTool` or `executeProxy` for provider reads and writes. The Google Calendar and Microsoft Graph URLs in the write service are endpoints supplied to Composio's authenticated proxy. The Calendar module does not instantiate Google or Microsoft provider SDK clients for these journeys. Google write and read flows were exercised with a connected account; Outlook live acceptance remains pending as requested.
