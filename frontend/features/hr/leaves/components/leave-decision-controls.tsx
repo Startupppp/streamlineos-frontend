@@ -176,7 +176,7 @@ export function useLeaveDecisions(): LeaveDecisionControls {
               htmlFor="leave-rejection-reason"
               className="text-xs font-medium text-foreground"
             >
-              Rejection Reason <span className="text-destructive">*</span>
+              Rejection Reason <span className="text-destructive" aria-hidden="true">*</span>
             </Label>
             <Textarea
               id="leave-rejection-reason"
@@ -186,7 +186,7 @@ export function useLeaveDecisions(): LeaveDecisionControls {
               className="resize-none text-sm"
             />
             {reasonFieldState.error ? (
-              <p className="text-sm text-destructive">{reasonFieldState.error.message}</p>
+              <p id="leave-reject-reason-error" role="alert" className="text-sm text-destructive">{reasonFieldState.error.message}</p>
             ) : null}
           </div>
         }
@@ -264,7 +264,7 @@ export function LeaveDecisionButtons({
         isPending={processingId === request.id}
         onClick={handleApprove}
       >
-        <CheckCircle2 className="h-3 w-3" />
+        <CheckCircle2 className="h-3 w-3" aria-hidden="true" />
         Approve
       </LoadingButton>
       <Button
@@ -273,7 +273,7 @@ export function LeaveDecisionButtons({
         disabled={processingId === request.id}
         onClick={handleReject}
       >
-        <XCircle className="h-3 w-3" />
+        <XCircle className="h-3 w-3" aria-hidden="true" />
         Reject
       </Button>
     </>

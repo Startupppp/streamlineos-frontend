@@ -139,7 +139,7 @@ export function LetterGenerationSheet({ open, onOpenChange, onSaved }: LetterGen
     >
       <div className="space-y-4">
         <div className="space-y-1.5">
-          <label className="text-sm font-medium">Employee</label>
+          <p className="text-sm font-medium">Employee</p>
           <Combobox
             options={employeeOptions}
             value={employeeId}
@@ -148,13 +148,16 @@ export function LetterGenerationSheet({ open, onOpenChange, onSaved }: LetterGen
             searchPlaceholder="Search employees..."
             emptyText={employeesQuery.isLoading ? "Loading employees..." : "No employees found."}
             onSearchChange={setEmployeeSearch}
+            ariaLabel="Employee"
           />
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-sm font-medium">Letter Template <span className="text-destructive">*</span></label>
+          <label htmlFor="letter-template" className="text-sm font-medium">
+            Letter Template <span className="text-destructive" aria-hidden="true">*</span>
+          </label>
           <Select value={templateId} onValueChange={setTemplateId}>
-            <SelectTrigger className="">
+            <SelectTrigger id="letter-template" aria-label="Letter Template" className="">
               <SelectValue placeholder="Select template..." />
             </SelectTrigger>
             <SelectContent>
@@ -169,16 +172,18 @@ export function LetterGenerationSheet({ open, onOpenChange, onSaved }: LetterGen
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium text-muted-foreground">Override Variables</label>
+          <p className="text-sm font-medium text-muted-foreground">Override Variables</p>
           <div className="flex gap-2">
             <Input
               placeholder="Variable name"
+              aria-label="Variable name"
               value={extraKey}
               onChange={handleExtraKeyChange}
               className="text-xs"
             />
             <Input
               placeholder="Value"
+              aria-label="Override value"
               value={extraVal}
               onChange={handleExtraValChange}
               className="text-xs"

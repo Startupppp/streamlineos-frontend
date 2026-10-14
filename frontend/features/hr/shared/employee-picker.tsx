@@ -14,6 +14,7 @@ interface EmployeePickerProps {
   placeholder?: string;
   excludeUserIds?: string[];
   className?: string;
+  ariaLabel?: string;
 }
 
 /**
@@ -45,6 +46,7 @@ export function EmployeePicker({
   placeholder = "Select employee…",
   excludeUserIds,
   className,
+  ariaLabel,
 }: EmployeePickerProps) {
   const { employees, isFetching } = useHrEmployeeOptions();
 
@@ -71,6 +73,7 @@ export function EmployeePicker({
       emptyText="No employees found."
       disabled={disabled ?? isFetching}
       className={cn(className)}
+      ariaLabel={ariaLabel ?? placeholder}
     />
   );
 }

@@ -214,7 +214,7 @@ export const WfhRequestItem = React.memo(function WfhRequestItem({
       <div className="flex items-center gap-3 min-w-0 flex-1">
         {showUser && request.user && (
           <Avatar className="w-8 shrink-0">
-            <AvatarImage src={resolveImageUrl(request.user.image)} />
+            <AvatarImage src={resolveImageUrl(request.user.image)} alt="" />
             <AvatarFallback className="text-xs bg-status-info-surface text-status-info-ink">
               {request.user.firstName?.[0]}
               {request.user.lastName?.[0]}
