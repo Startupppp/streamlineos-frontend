@@ -63,10 +63,11 @@ export function KanbanBoard({
     isMounted,
     optimisticStatuses,
     dragStartRef,
+    columnBy,
     rowBy,
     swimlaneGroups,
     visibleSwimlaneRows,
-    ticketsByStatus,
+    ticketsByColumn,
     visibleColumns,
     existingNames,
     handleSelect,
@@ -96,7 +97,7 @@ export function KanbanBoard({
           defaultValue={visibleSwimlaneRows}
           className="flex h-full min-w-0 flex-col gap-1.5 overflow-y-auto pb-1 px-1 scrollbar-hide"
         >
-          {swimlaneGroups.map(({ rowKey, tickets: rowTickets, byStatus: rowByStatus }) => {
+          {swimlaneGroups.map(({ rowKey, tickets: rowTickets, byColumn: rowByColumn }) => {
             return (
               <AccordionItem
                 key={rowKey}
@@ -119,18 +120,18 @@ export function KanbanBoard({
                       <KanbanBoardColumn
                         hasActiveFilters={hasActiveFilters}
                         completedTicketsHidden={
-                          hideCompleted && isCompletedTicketStatus(col.id, optimisticStatuses)
+                          columnBy === "status" && hideCompleted && isCompletedTicketStatus(col.id, optimisticStatuses)
                         }
                         key={col.id}
                         column={col}
-                        tickets={rowByStatus.get(col.id) ?? []}
+                        tickets={rowByColumn.get(col.id) ?? []}
                         projectId={projectId}
                         projectKey={projectKey}
                         droppableId={`${encodeRowKey(rowKey)}||${col.id}`}
                         canManage={boardCanManage}
                         existingNames={existingNames}
-                        wipLimit={wipLimits?.[col.id]}
-                        serverCount={columnCountsData ? (columnCountsData[col.id] ?? 0) : undefined}
+                        wipLimit={columnBy === "status" ? wipLimits?.[col.id] : undefined}
+                        serverCount={columnBy === "status" && columnCountsData ? (columnCountsData[col.id] ?? 0) : undefined}
                         displayOptions={displayOptions}
                         minHeightClass="min-h-[60px]"
                         stretch
@@ -139,7 +140,7 @@ export function KanbanBoard({
                         onSelect={handleSelect}
                         selection={selection}
                         dragStartRef={dragStartRef}
-                        canDragTickets={boardCanUpdateTickets}
+                        canDragTickets={boardCanUpdateTickets && columnBy === "status"}
                       />
                     ))}
                   </div>
@@ -169,7 +170,7 @@ export function KanbanBoard({
             )}
           >
             {visibleColumns.map((col, index) => {
-              const columnTickets = ticketsByStatus.get(col.id) ?? [];
+              const columnTickets = ticketsByColumn.get(col.id) ?? [];
               const canReorderColumn = boardCanManage && col.statusId != null;
 
               return (
@@ -183,7 +184,7 @@ export function KanbanBoard({
                     <KanbanBoardColumn
                       hasActiveFilters={hasActiveFilters}
                       completedTicketsHidden={
-                        hideCompleted && isCompletedTicketStatus(col.id, optimisticStatuses)
+                        columnBy === "status" && hideCompleted && isCompletedTicketStatus(col.id, optimisticStatuses)
                       }
                       column={col}
                       tickets={columnTickets}
@@ -192,10 +193,10 @@ export function KanbanBoard({
                       droppableId={col.id}
                       canManage={boardCanManage}
                       existingNames={existingNames}
-                      wipLimit={wipLimits?.[col.id]}
-                      serverCount={columnCountsData ? (columnCountsData[col.id] ?? 0) : undefined}
+                      wipLimit={columnBy === "status" ? wipLimits?.[col.id] : undefined}
+                      serverCount={columnBy === "status" && columnCountsData ? (columnCountsData[col.id] ?? 0) : undefined}
                       displayOptions={displayOptions}
-                      showHeaderQuickAdd={!readOnly}
+                      showHeaderQuickAdd={!readOnly && columnBy === "status"}
                       dragHandleProps={
                         canReorderColumn ? columnProvided.dragHandleProps : null
                       }
@@ -203,9 +204,9 @@ export function KanbanBoard({
                       onRename={handleColumnRename}
                       onColorChange={handleColumnColorChange}
                       onSelect={handleSelect}
-                        selection={selection}
+                      selection={selection}
                       dragStartRef={dragStartRef}
-                      canDragTickets={boardCanUpdateTickets}
+                      canDragTickets={boardCanUpdateTickets && columnBy === "status"}
                       columnInnerRef={columnProvided.innerRef}
                       columnDraggableProps={columnProvided.draggableProps}
                     />
@@ -214,7 +215,7 @@ export function KanbanBoard({
               );
             })}
             {columnsProvided.placeholder}
-            {!readOnly ? (
+            {!readOnly && columnBy === "status" ? (
               <AddColumn projectId={projectId} existingNames={existingNames} />
             ) : null}
           </div>

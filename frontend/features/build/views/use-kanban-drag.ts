@@ -38,6 +38,7 @@ function isRankDragContext(v: unknown): v is RankDragContext {
 interface KanbanDragParams {
   projectId: number;
   statuses: StatusEntry[] | undefined;
+  columnBy: string;
   rowBy: string;
   hideCompleted: boolean;
   canManage: boolean;
@@ -55,6 +56,7 @@ interface KanbanDragParams {
 export function useKanbanDrag({
   projectId,
   statuses,
+  columnBy,
   rowBy,
   hideCompleted,
   canManage,
@@ -202,6 +204,8 @@ export function useKanbanDrag({
       )
         return;
 
+      if (columnBy !== "status") return;
+
       if (rowBy !== "none") {
         const srcRow = decodeRowKey(source.droppableId.split("||")[0] ?? "");
         const dstRow = decodeRowKey(destination.droppableId.split("||")[0] ?? "");
@@ -254,6 +258,7 @@ export function useKanbanDrag({
       optimisticTickets,
       rankTicket,
       projectId,
+      columnBy,
       rowBy,
       hideCompleted,
       optimisticStatuses,

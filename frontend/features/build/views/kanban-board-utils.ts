@@ -106,14 +106,16 @@ export function applyColumnOrder(items: KanbanColumn[]): KanbanColumn[] {
   return [...items].sort((a, b) => a.order - b.order);
 }
 
-export function groupTicketsByStatus(
+export function groupTicketsByKey(
   tickets: KanbanTicket[],
+  getKey: (t: KanbanTicket) => string,
 ): Map<string, KanbanTicket[]> {
   const map = new Map<string, KanbanTicket[]>();
   for (const ticket of tickets) {
-    const list = map.get(ticket.status);
+    const key = getKey(ticket);
+    const list = map.get(key);
     if (list) list.push(ticket);
-    else map.set(ticket.status, [ticket]);
+    else map.set(key, [ticket]);
   }
   for (const list of map.values()) {
     list.sort(compareByRank);
