@@ -39,12 +39,22 @@ const ROW_GAP_PX = 8;
 const OVERSCAN_COUNT = 5;
 const DEFAULT_LIST_HEIGHT = 600;
 
-function groupByDate(events: CalendarListItem[]): Map<string, CalendarListItem[]> {
+function groupByDate(
+  events: CalendarListItem[],
+  mode: "list" | "history",
+): Map<string, CalendarListItem[]> {
   const groups = new Map<string, CalendarListItem[]>();
   for (const event of events) {
-    const key = event.time.kind === "date"
-      ? event.time.startDate
-      : format(new Date(event.start), "yyyy-MM-dd");
+    const key = mode === "history"
+      ? event.time.kind === "date"
+        ? event.time.endDate
+        : format(
+            new Date(Math.max(Date.parse(event.start), Date.parse(event.end) - 1)),
+            "yyyy-MM-dd",
+          )
+      : event.time.kind === "date"
+        ? event.time.startDate
+        : format(new Date(event.start), "yyyy-MM-dd");
     const existing = groups.get(key);
     if (existing) {
       existing.push(event);
@@ -156,7 +166,10 @@ export function CalendarEventsPanel({
     if (mode === "history") {
       return events
         .filter((e) => new Date(e.end) < now)
-        .sort((a, b) => new Date(b.start).getTime() - new Date(a.start).getTime());
+        .sort((a, b) =>
+          Date.parse(b.end) - Date.parse(a.end) ||
+          b.occurrenceId.localeCompare(a.occurrenceId),
+        );
     }
 
     const inRange = range
@@ -168,7 +181,10 @@ export function CalendarEventsPanel({
     );
   }, [events, mode, range]);
 
-  const grouped = useMemo(() => groupByDate(filteredEvents), [filteredEvents]);
+  const grouped = useMemo(
+    () => groupByDate(filteredEvents, mode),
+    [filteredEvents, mode],
+  );
 
   const rows = useMemo<PanelRow[]>(() => {
     const result: PanelRow[] = [];

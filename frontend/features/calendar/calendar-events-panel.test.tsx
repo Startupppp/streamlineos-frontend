@@ -40,6 +40,40 @@ function makeEvent(id: string, start: string): CalendarListItem {
 const noop = (_event: CalendarListItem) => undefined;
 
 describe("CalendarEventsPanel", () => {
+  it("orders historical multi-day events by their completion and groups the last occupied day", () => {
+    const long = {
+      ...makeEvent("long", "2020-09-01T09:00:00.000Z"),
+      end: "2020-09-10T09:00:00.000Z",
+    };
+    const short = {
+      ...makeEvent("short", "2020-09-08T09:00:00.000Z"),
+      end: "2020-09-09T09:00:00.000Z",
+    };
+
+    render(
+      <CalendarEventsPanel
+        mode="history"
+        events={[short, long]}
+        onSelectEvent={noop}
+      />,
+    );
+
+    const props = (List as jest.Mock).mock.calls.at(-1)?.[0] as {
+      rowKey: (index: number, data: { rows: unknown[] }) => string;
+      rowProps: { rows: unknown[] };
+    };
+    expect(
+      props.rowProps.rows.map((_, index) =>
+        props.rowKey(index, props.rowProps),
+      ),
+    ).toEqual([
+      "hdr:2020-09-10",
+      "evt:long",
+      "hdr:2020-09-09",
+      "evt:short",
+    ]);
+  });
+
   it("delegates rendering to react-window List rather than mapping all items into the DOM", () => {
     const events = [
       makeEvent("1", "2026-09-02T12:00:00"),
