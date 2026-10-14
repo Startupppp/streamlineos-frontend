@@ -136,6 +136,7 @@ export function PolicyUpsertSheet({ open, onOpenChange, policy }: Props) {
 
   const policyType = form.watch("policyType") as HrPolicyType;
   const isActive = policy?.status === "active";
+  const handleActivated = useCallback(() => onOpenChange(false), [onOpenChange]);
 
   return (
     <HrSheet
@@ -318,7 +319,9 @@ export function PolicyUpsertSheet({ open, onOpenChange, policy }: Props) {
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 Versions &amp; Activation
               </p>
-              <PolicyVersionHistory policy={policy} canManage={canManage} />
+              <PolicyVersionHistory policy={policy} canManage={canManage} onActivated={handleActivated}
+                unsavedChanges={form.formState.isDirty}
+              />
             </div>
           )}
         </div>

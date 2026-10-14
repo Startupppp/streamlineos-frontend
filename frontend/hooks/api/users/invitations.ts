@@ -246,9 +246,17 @@ export const useCancelInvitation = () => {
           undefined,
           userSuccessContract,
         ),
-      onSuccess: () => {
+      onSuccess: (_result, invitationId) => {
+        // FE-133. QA 2026-10-14: the row stayed "Pending" until a reload. The
+        // revoke is known here, so every cached page shows it at once; other
+        // filtered views are only marked stale and refetch when next shown.
+        queryClient.setQueriesData<InvitationsResponse>(
+          { queryKey: usersAndCommerceQueryKeys.users.invitations() },
+          (page) => markInvitationRevoked(page, invitationId, new Date().toISOString()),
+        );
         void queryClient.invalidateQueries({
           queryKey: usersAndCommerceQueryKeys.users.invitations(),
+          refetchType: "none",
         });
         void queryClient.invalidateQueries({
           queryKey: usersAndCommerceQueryKeys.users.stats(),
@@ -258,3 +266,17 @@ export const useCancelInvitation = () => {
     },
   );
 };
+
+function markInvitationRevoked(
+  page: InvitationsResponse | undefined,
+  invitationId: string,
+  revokedAt: string,
+): InvitationsResponse | undefined {
+  if (!page?.data.some((row) => row.id === invitationId)) return page;
+  return {
+    ...page,
+    data: page.data.map((row) =>
+      row.id === invitationId ? { ...row, status: "REVOKED", revokedAt } : row,
+    ),
+  };
+}

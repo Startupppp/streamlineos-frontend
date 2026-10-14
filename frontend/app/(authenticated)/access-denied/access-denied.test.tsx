@@ -45,4 +45,25 @@ describe("AccessDeniedPage", () => {
     expect(screen.queryByText(/555-0100/)).toBeNull();
     expect(screen.queryByText(/suspended/i)).toBeNull();
   });
+
+  it("names every key of a multi-key gate (/hr/approvals sends required=a,b), instead of naming nothing", async () => {
+    render(
+      await AccessDeniedPage({
+        searchParams: Promise.resolve({ required: "hr:workflows:approve,hr:leaves:approve" }),
+      }),
+    );
+    expect(screen.getByText("hr:workflows:approve")).toBeInTheDocument();
+    expect(screen.getByText("hr:leaves:approve")).toBeInTheDocument();
+    expect(screen.getByText(/any one of these permissions/i)).toBeInTheDocument();
+  });
+
+  it("drops unknown entries from a multi-key list, so the URL still cannot put arbitrary text on the page", async () => {
+    render(
+      await AccessDeniedPage({
+        searchParams: Promise.resolve({ required: "hr:leaves:approve,call 555-0100" }),
+      }),
+    );
+    expect(screen.getByText("hr:leaves:approve")).toBeInTheDocument();
+    expect(screen.queryByText(/555-0100/)).toBeNull();
+  });
 });

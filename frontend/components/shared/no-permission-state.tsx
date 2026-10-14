@@ -5,7 +5,8 @@ import { cn } from "@/lib/utils";
 import type { PermissionKey } from "@/lib/rbac/permissions";
 
 interface NoPermissionStateProps {
-  permission?: PermissionKey;
+  /** Several keys mean any one of them grants access (a multi-key route gate). */
+  permission?: PermissionKey | readonly PermissionKey[];
   title?: string;
   description?: string;
   className?: string;
@@ -19,6 +20,7 @@ export function NoPermissionState({
   className,
   compact = false,
 }: NoPermissionStateProps) {
+  const permissions = permission === undefined ? [] : typeof permission === "string" ? [permission] : permission;
   return (
     <div
       className={cn(
@@ -45,10 +47,17 @@ export function NoPermissionState({
       >
         {description ?? "You don’t have the required permission for this section."}
       </p>
-      {permission ? (
-        <p className="text-xs text-foreground/80 font-mono bg-muted px-2 py-1 rounded">
-          {permission}
-        </p>
+      {permissions.length > 1 ? (
+        <p className="text-xs text-muted-foreground mb-2">Any one of these permissions grants access:</p>
+      ) : null}
+      {permissions.length > 0 ? (
+        <div className="flex max-w-md flex-wrap justify-center gap-1.5">
+          {permissions.map((key) => (
+            <p key={key} className="text-xs text-foreground/80 font-mono bg-muted px-2 py-1 rounded">
+              {key}
+            </p>
+          ))}
+        </div>
       ) : null}
       {compact ? null : (
         <p className="text-xs text-muted-foreground mt-3">

@@ -26,7 +26,8 @@ import type { FnfWithUser } from "@/hooks/api/payroll/fnf-schema";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
 const STATUS_OPTIONS: { value: FnfStatus; label: string }[] = [
-  { value: "PENDING", label: "Pending" },
+  { value: "DRAFT", label: "Draft" },
+  { value: "PENDING_APPROVAL", label: "Pending approval" },
   { value: "HR_REVIEW", label: "HR Review" },
   { value: "FINANCE_REVIEW", label: "Finance Review" },
   { value: "APPROVED", label: "Approved" },

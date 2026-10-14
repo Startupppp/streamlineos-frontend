@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { toast } from "sonner";
 import { format, addDays } from "date-fns";
 import { FileText, Download, CheckCircle2, LogOut } from "lucide-react";
@@ -17,7 +17,9 @@ import {
 } from "@/components/ui/select";
 import { HrSheet } from "@/components/shared/hr-sheet";
 import { FileUpload } from "@/components/storage/file-upload";
-import { useCreateResignation } from "@/hooks/api/hr";
+import { useSession } from "next-auth/react";
+import { useRecordResignation, useSubmitMyResignation } from "@/hooks/api/hr/exit";
+import { EmployeePicker } from "@/features/hr/shared/employee-picker";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { RESIGNATION_REASONS, RESIGNATION_REASON_OTHER } from "@/lib/constants/hr-separation";
 
@@ -26,10 +28,20 @@ const NOTICE_PERIOD_DAYS = 60;
 interface ResignationFormSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** "record": an exit administrator files for a chosen employee. "self": the caller resigns. */
+  mode: "self" | "record";
 }
 
-export function ResignationFormSheet({ open, onOpenChange }: ResignationFormSheetProps) {
-  const createResignation = useCreateResignation();
+export function ResignationFormSheet({ open, onOpenChange, mode }: ResignationFormSheetProps) {
+  const { data: session } = useSession();
+  const recordResignation = useRecordResignation();
+  const submitMyResignation = useSubmitMyResignation();
+  const isRecord = mode === "record";
+  const isPending = isRecord ? recordResignation.isPending : submitMyResignation.isPending;
+  const sessionUserId = session?.user?.id;
+  const excludeSelf = useMemo(() => (sessionUserId ? [sessionUserId] : undefined), [sessionUserId]);
+
+  const [employeeUserId, setEmployeeUserId] = useState<string | undefined>(undefined);
 
   const [reason, setReason] = useState("");
   const [reasonCategory, setReasonCategory] = useState("");
@@ -42,6 +54,7 @@ export function ResignationFormSheet({ open, onOpenChange }: ResignationFormShee
   const autoLwd = format(addDays(new Date(), NOTICE_PERIOD_DAYS), "yyyy-MM-dd");
 
   const resetForm = useCallback(() => {
+    setEmployeeUserId(undefined);
     setReason("");
     setReasonCategory("");
     setOtherReasonCategory("");
@@ -125,6 +138,10 @@ export function ResignationFormSheet({ open, onOpenChange }: ResignationFormShee
   }, []);
 
   const handleSubmit = useCallback(() => {
+    if (isRecord && !employeeUserId) {
+      toast.error("Select the employee who is resigning");
+      return;
+    }
     if (!reasonCategory) {
       toast.error("Please select a reason category");
       return;
@@ -150,26 +167,31 @@ export function ResignationFormSheet({ open, onOpenChange }: ResignationFormShee
       reasonCategory === RESIGNATION_REASON_OTHER
         ? otherReasonCategory.trim()
         : reasonCategory;
-    createResignation.mutate(
-      {
-        reason: trimmedReason,
-        lastWorkingDate: autoLwd,
-        noticePeriodDays: NOTICE_PERIOD_DAYS,
-        reasonCategory: resolvedCategory || undefined,
-        willingForExitInterview,
-        companyFeedback: companyFeedback.trim() || undefined,
-        resignationLetterUrl: resignationLetterUrl ?? undefined,
+    const submission = {
+      reason: trimmedReason,
+      lastWorkingDate: autoLwd,
+      noticePeriodDays: NOTICE_PERIOD_DAYS,
+      reasonCategory: resolvedCategory || undefined,
+      willingForExitInterview,
+      companyFeedback: companyFeedback.trim() || undefined,
+      resignationLetterUrl: resignationLetterUrl ?? undefined,
+    };
+    const callbacks = {
+      onSuccess: () => {
+        toast.success(isRecord ? "Resignation recorded" : "Resignation submitted");
+        onOpenChange(false);
+        resetForm();
       },
-      {
-        onSuccess: () => {
-          toast.success("Resignation submitted");
-          onOpenChange(false);
-          resetForm();
-        },
-        onError: (e) => toast.error(getErrorMessage(e)),
-      },
-    );
+      onError: (e: Error) => toast.error(getErrorMessage(e)),
+    };
+    if (isRecord && employeeUserId) {
+      recordResignation.mutate({ ...submission, userId: employeeUserId }, callbacks);
+    } else {
+      submitMyResignation.mutate(submission, callbacks);
+    }
   }, [
+    isRecord,
+    employeeUserId,
     reason,
     reasonCategory,
     otherReasonCategory,
@@ -177,7 +199,8 @@ export function ResignationFormSheet({ open, onOpenChange }: ResignationFormShee
     companyFeedback,
     autoLwd,
     resignationLetterUrl,
-    createResignation,
+    recordResignation,
+    submitMyResignation,
     resetForm,
     onOpenChange,
   ]);
@@ -186,21 +209,35 @@ export function ResignationFormSheet({ open, onOpenChange }: ResignationFormShee
     <HrSheet
       open={open}
       onOpenChange={handleOpenChange}
-      title="Submit Resignation"
+      title={isRecord ? "Record Resignation" : "Submit Resignation"}
       onSubmit={handleSubmit}
       submitLabel={
         <span className="flex items-center gap-1.5">
           <LogOut className="h-3.5 w-3.5" />
-          Submit Resignation
+          {isRecord ? "Record Resignation" : "Submit Resignation"}
         </span>
       }
-      isPending={createResignation.isPending}
+      isPending={isPending}
     >
+      {isRecord ? (
+        <div className="space-y-1.5">
+          <label className="text-sm font-semibold text-foreground">
+            Employee <span className="text-destructive">*</span>
+          </label>
+          <EmployeePicker
+            value={employeeUserId}
+            onChange={setEmployeeUserId}
+            placeholder="Who is resigning?"
+            excludeUserIds={excludeSelf}
+          />
+        </div>
+      ) : null}
+
       <div className="rounded-lg border border-primary/20 bg-primary/5 px-3 py-2.5 flex items-start gap-2.5 text-xs text-foreground">
         <FileText className="h-3.5 w-3.5 mt-0.5 shrink-0" />
         <span>
-          Notice period is <strong>60 days</strong> as per company policy. Your last working date
-          will be{" "}
+          Notice period is <strong>60 days</strong> as per company policy.{" "}
+          {isRecord ? "The employee's" : "Your"} last working date will be{" "}
           <strong>{format(addDays(new Date(), NOTICE_PERIOD_DAYS), "dd MMM yyyy")}</strong>.
         </span>
       </div>

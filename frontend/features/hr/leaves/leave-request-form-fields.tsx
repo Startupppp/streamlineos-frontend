@@ -51,6 +51,8 @@ interface LeaveRequestFormFieldsProps {
   onStartDateChange: (value: string) => void;
   onAttachmentUpload: (key: string) => void;
   validation: LeaveRequestValidation;
+  /** Employees cannot pick past dates; say so instead of greying them out silently. */
+  pastDatesBlocked: boolean;
 }
 
 export function LeaveRequestFormFields({
@@ -62,6 +64,7 @@ export function LeaveRequestFormFields({
   onStartDateChange,
   onAttachmentUpload,
   validation,
+  pastDatesBlocked,
 }: LeaveRequestFormFieldsProps) {
   const noApproverAction = useNoApproverFix(approvalRoute);
   const halfDay = form.watch("halfDay");
@@ -167,6 +170,11 @@ export function LeaveRequestFormFields({
             />
           )}
         </div>
+        {pastDatesBlocked ? (
+          <p className="text-xs text-muted-foreground">
+            Past dates can&apos;t be requested — ask HR to record it.
+          </p>
+        ) : null}
       </div>
 
       {validation.overlapMessage ? (

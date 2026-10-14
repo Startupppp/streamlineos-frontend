@@ -60,7 +60,9 @@ export function EmployeePicker({
         .map((e) => ({
           value: e.id,
           label: getUserDisplayName(e),
-          sublabel: e.designation ?? e.email,
+          sublabel: e.hasAccepted === false
+            ? `${e.designation ?? e.email} · Invite pending`
+            : e.designation ?? e.email,
           icon: <EmployeeAvatar employee={e} />,
         })),
     [employees, excludeUserIds],

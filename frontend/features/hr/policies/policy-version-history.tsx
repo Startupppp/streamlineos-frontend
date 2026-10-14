@@ -26,9 +26,14 @@ const STATUS_COLORS: Record<string, string> = {
 interface Props {
   policy: HrPolicy;
   canManage: boolean;
+  /** QA 2026-10-14: the editor holds a snapshot of the draft row, so it kept
+   * offering Activate after the policy went live. The host closes on success. */
+  onActivated?: () => void;
+  /** Activation applies the saved draft; unsaved edits would close unseen. */
+  unsavedChanges?: boolean;
 }
 
-export function PolicyVersionHistory({ policy, canManage }: Props) {
+export function PolicyVersionHistory({ policy, canManage, onActivated, unsavedChanges = false }: Props) {
   const createVersion = useCreatePolicyVersion();
   const activate = useActivatePolicy();
   const archive = useArchivePolicy();
@@ -49,6 +54,7 @@ export function PolicyVersionHistory({ policy, canManage }: Props) {
         onSuccess: () => {
           toast.success(force ? "Policy force-activated" : "Policy activated");
           setForceArmed(false);
+          onActivated?.();
         },
         onError: (err) => {
           toast.error(getErrorMessage(err));
@@ -111,7 +117,7 @@ export function PolicyVersionHistory({ policy, canManage }: Props) {
                   className="text-xs"
                   isPending={activate.isPending}
                   onClick={handleActivateClick}
-                  disabled={conflicts.isLoading}
+                  disabled={conflicts.isLoading || unsavedChanges}
                 >
                   Activate
                 </LoadingButton>
@@ -147,6 +153,9 @@ export function PolicyVersionHistory({ policy, canManage }: Props) {
           </div>
         )}
       </div>
+      {canManage && policy.status === "draft" && unsavedChanges ? (
+        <p className="text-xs text-muted-foreground">Save your changes before activating.</p>
+      ) : null}
     </div>
   );
 }

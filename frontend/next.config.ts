@@ -171,6 +171,37 @@ const nextConfig: NextConfig = {
       destination: "/me/expenses",
       permanent: false,
     },
+    // QA 2026-10-14 pass 2: more guessed HR addresses that answered Page Not Found.
+    {
+      source: "/hr/people",
+      destination: "/hr/employees",
+      permanent: false,
+    },
+    {
+      source: "/hr/time-clocks",
+      destination: "/hr/devices",
+      permanent: false,
+    },
+    {
+      source: "/hr/support",
+      destination: "/hr/helpdesk",
+      permanent: false,
+    },
+    {
+      source: "/hr/compensation",
+      destination: "/hr/compensation-planning",
+      permanent: false,
+    },
+    {
+      source: "/hr/doc-types",
+      destination: "/hr/document-types",
+      permanent: false,
+    },
+    {
+      source: "/hr/doc-review",
+      destination: "/hr/document-review",
+      permanent: false,
+    },
     {
       source: "/hr/payroll/salary-structures",
       destination: "/payroll/salary-structures",
@@ -203,16 +234,10 @@ const nextConfig: NextConfig = {
       destination: "/settings/organization",
       permanent: false,
     },
-    {
-      source: "/hr/leave-policies",
-      destination: "/hr/settings/policies",
-      permanent: true,
-    },
-    {
-      source: "/hr/leave-policies/:path*",
-      destination: "/hr/settings/policies",
-      permanent: true,
-    },
+    // QA 2026-10-14: /hr/leave-policies is no alias. It is the only page that
+    // manages leave types and the accrual/probation rows leave requests are
+    // checked against, and the sidebar, the request form and the empty state
+    // all link to it. A redirect here made leave types unreachable.
     {
       source: "/hr/settings/managers",
       destination: "/hr/settings/reporting-managers",

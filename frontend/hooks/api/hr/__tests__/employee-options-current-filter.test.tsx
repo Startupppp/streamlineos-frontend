@@ -1,0 +1,48 @@
+import type { ReactNode } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { renderHook, waitFor } from "@testing-library/react";
+import { apiClient } from "@/lib/api-client";
+import { useHrEmployeeOptions } from "@/hooks/api/hr/employee-list";
+
+/**
+ * QA 2026-10-14: the termination and onboarding pickers listed 2 of 4 active
+ * members. `isActive=true` on /hr/employees means "accepted the invite", so a
+ * bulk-onboarded hire who had never signed in was not pickable, while the
+ * Members table showed them Active. Pickers ask for `current` (accepted +
+ * invite pending, never deactivated) instead.
+ */
+
+jest.mock("@/hooks/api/access", () => ({
+  useCan: jest.fn().mockReturnValue(true),
+  useModuleEnabled: jest.fn().mockReturnValue(true),
+}));
+
+jest.mock("@/lib/api-client", () => ({
+  apiClient: { get: jest.fn(), post: jest.fn(), patch: jest.fn(), delete: jest.fn() },
+}));
+
+const mockedGet = jest.mocked(apiClient.get);
+
+function wrapper({ children }: { children: ReactNode }) {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
+}
+
+beforeEach(() => {
+  mockedGet.mockReset();
+  mockedGet.mockResolvedValue({ data: [], pageInfo: { limit: 100, hasMore: false, nextCursor: null } });
+});
+
+describe("useHrEmployeeOptions", () => {
+  it("asks for every non-deactivated member, not only those who accepted their invite", async () => {
+    renderHook(() => useHrEmployeeOptions(), { wrapper });
+    await waitFor(() => expect(mockedGet).toHaveBeenCalled());
+    expect(mockedGet.mock.calls[0][1]).toEqual(expect.objectContaining({ isActive: "current", limit: 100 }));
+  });
+
+  it("still lets a caller widen to deactivated people", async () => {
+    renderHook(() => useHrEmployeeOptions({ isActive: "all" }), { wrapper });
+    await waitFor(() => expect(mockedGet).toHaveBeenCalled());
+    expect(mockedGet.mock.calls[0][1]).toEqual(expect.objectContaining({ isActive: "all" }));
+  });
+});

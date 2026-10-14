@@ -135,7 +135,7 @@ describe("LeaveApprovalsList — optional manager comment on Approve (decision #
     openApproveOverlay();
     confirmApprove();
 
-    expect(mockToastSuccess).toHaveBeenCalledWith("Request approved successfully");
+    expect(mockToastSuccess).toHaveBeenCalledWith("Leave request approved");
   });
 
   it("leaves Reject's required reason untouched — a blank reason never reaches the mutation", () => {

@@ -12,6 +12,22 @@ export function countWorkdays(startStr: string, endStr: string): number {
   return count;
 }
 
+/**
+ * QA 2026-10-14. Earliest selectable leave start. HR (leave approve/manage)
+ * may record backdated leave, floored at the joining date or 1 January (the
+ * balance year the server deducts from). Everyone else starts today, or on
+ * their joining date when that is later. The server accepts past dates from
+ * anyone; this floor is the product rule, stated in the form.
+ */
+export function leaveStartFloor(
+  joiningDate: Date | undefined,
+  canBackdate: boolean,
+  today: Date,
+): Date {
+  if (canBackdate) return joiningDate ?? new Date(today.getFullYear(), 0, 1);
+  return joiningDate && joiningDate > today ? joiningDate : today;
+}
+
 const pad = (n: number): string => String(n).padStart(2, "0");
 
 /** yyyy-MM-dd in local time — never via toISOString, which shifts the day. */

@@ -44,6 +44,8 @@ export interface LeaveTeamListParams {
   from?: string;
   to?: string;
   limit?: number;
+  /** Requests the caller approved or rejected (Action Center "Acted"). */
+  decidedBy?: "me";
 }
 
 export * from "@/hooks/api/hr/leave-request-mutations";

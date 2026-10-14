@@ -10,7 +10,16 @@ import {
 } from "@/components/ui/select";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { DownloadIcon, HouseIcon, PlusIcon } from "@animateicons/react/lucide";
+import { DownloadIcon, EllipsisIcon, HouseIcon, PlusIcon } from "@animateicons/react/lucide";
+import Link from "next/link";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useCan } from "@/hooks/api/access";
+import type { PermissionKey } from "@/lib/rbac/permissions";
 import { LeavesSummaryStrip } from "./leaves-summary-strip";
 import { useT } from "@/lib/i18n/i18n";
 
@@ -115,6 +124,51 @@ export function LeavesWfhToolbar({
   );
 }
 
+// QA 2026-10-14: leave setup and reports were reachable only by typing the URL.
+// Each link carries the permission its route enforces (FE-55).
+const LEAVE_LINKS: readonly { label: string; href: string; permission: PermissionKey }[] = [
+  { label: "Leave types & policies", href: "/hr/leave-policies", permission: "hr:leaves:manage" },
+  { label: "HR policies", href: "/hr/settings/policies", permission: "hr:policies:view" },
+  { label: "Holiday calendar", href: "/hr/holidays", permission: "self:attendance" },
+  { label: "Leave analytics", href: "/hr/leaves/analytics", permission: "hr:leaves:view" },
+];
+
+function LeaveLinksMenu() {
+  const canManageLeaves = useCan("hr:leaves:manage");
+  const canViewPolicies = useCan("hr:policies:view");
+  const canSeeHolidays = useCan("self:attendance");
+  const canViewLeaves = useCan("hr:leaves:view");
+  const granted: Record<string, boolean> = {
+    "hr:leaves:manage": canManageLeaves,
+    "hr:policies:view": canViewPolicies,
+    "self:attendance": canSeeHolidays,
+    "hr:leaves:view": canViewLeaves,
+  };
+  const links = LEAVE_LINKS.filter((link) => granted[link.permission]);
+  if (links.length === 0) return null;
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <AnimatedIconButton
+          icon={EllipsisIcon}
+          iconSize={16}
+          variant="outline"
+          size="icon"
+          className="min-h-11 md:min-h-0"
+          aria-label="Leave settings and reports"
+        />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        {links.map((link) => (
+          <DropdownMenuItem key={link.href} asChild>
+            <Link href={link.href}>{link.label}</Link>
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
 export function LeavesWfhActions({
   canRequestLeave,
   canRequestWfh,
@@ -129,6 +183,7 @@ export function LeavesWfhActions({
   const t = useT();
   return (
     <>
+      <LeaveLinksMenu />
       {canRequestWfh ? (
         <AnimatedIconButton
           icon={HouseIcon}

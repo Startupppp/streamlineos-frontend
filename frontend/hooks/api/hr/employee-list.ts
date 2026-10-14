@@ -24,7 +24,8 @@ export type HrEmployeesParams = {
   limit?: number;
   search?: string;
   departmentId?: string;
-  isActive?: "true" | "false" | "all";
+  /** `current` = accepted + invite pending (not deactivated) — what a person picker offers. */
+  isActive?: "true" | "false" | "all" | "current";
   /** Server-side role filter (users.role). */
   role?: string;
 };
@@ -192,7 +193,7 @@ export function useHrEmployeeOptions(
 ) {
   const canView = useCan("hr:employees:view");
   const { enabled, ...rest } = params ?? {};
-  const merged = { limit: 100, isActive: "true" as const, ...rest };
+  const merged = { limit: 100, isActive: "current" as const, ...rest };
   const query = useHrEmployees(
     { ...merged, limit: Math.min(merged.limit, 100) },
     { enabled: canView && (enabled ?? true) },

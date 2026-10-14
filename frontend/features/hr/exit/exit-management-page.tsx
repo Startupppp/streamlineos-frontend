@@ -17,8 +17,7 @@ import { usePageState } from "@/hooks/api/use-page-state";
 import { TablePagination, useCursorPager } from "@/components/ui/table-pagination";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useRouter } from "next/navigation";
-import { PlusIcon, UserXIcon } from "@animateicons/react/lucide";
+import { PlusIcon } from "@animateicons/react/lucide";
 import { EmptyPersonIllustration } from "@/components/illustrations";
 import { useSession } from "next-auth/react";
 import { useCan } from "@/hooks/api/access";
@@ -32,7 +31,6 @@ const ACTIVE_RESIGNATION_STATUSES = ["SUBMITTED", "PENDING_HR", "HR_APPROVED"];
 
 export function ExitManagementPage() {
   const { data: session } = useSession();
-  const router = useRouter();
   const pager = useCursorPager();
   const { data: resignationData, isLoading, isError, error, refetch } = useResignations({ cursor: pager.cursor, limit: 20 });
   const resignations = resignationData?.data;
@@ -48,7 +46,7 @@ export function ExitManagementPage() {
   const isAdmin = useCan("hr:exit:manage");
   const isHR = isAdmin;
   const canApproveExit = useCan("hr:exit:approve");
-  const canSubmit = useCan("hr:exit:create");
+  const canSelfResign = useCan("self:resignation");
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set());
@@ -94,21 +92,20 @@ export function ExitManagementPage() {
     pager.goNext(pagination?.nextCursor);
   }
 
-  function handleInitiateTermination() {
-    router.push("/hr/termination");
-  }
+  const canSubmit = !isAdmin && canSelfResign && !hasActiveResignation;
+  const canStartResignation = isAdmin || canSubmit;
 
-  const primaryAction = hasActiveResignation ? (
+  const primaryAction = isAdmin ? (
+    <AnimatedIconButton icon={PlusIcon} iconSize={14} size="sm" className="gap-1.5" onClick={handleOpenSheet}>
+      Record resignation
+    </AnimatedIconButton>
+  ) : hasActiveResignation ? (
     <span className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border bg-status-warning-surface text-status-warning-ink border-status-warning-rule">
       Resignation pending
     </span>
   ) : canSubmit ? (
     <AnimatedIconButton icon={PlusIcon} iconSize={14} size="sm" className="gap-1.5" onClick={handleOpenSheet}>
       Submit resignation
-    </AnimatedIconButton>
-  ) : isAdmin ? (
-    <AnimatedIconButton icon={UserXIcon} iconSize={14} size="sm" className="gap-1.5" onClick={handleInitiateTermination}>
-      Initiate termination
     </AnimatedIconButton>
   ) : null;
 
@@ -147,7 +144,10 @@ export function ExitManagementPage() {
       actions={primaryAction ?? undefined}
     >
       <div className="mb-3 shrink-0">
-        <ExitPathStrip showReassignPrompt={hasActiveResignation || (resignations?.length ?? 0) > 0} />
+        <ExitPathStrip
+          showReassignPrompt={hasActiveResignation || (resignations?.length ?? 0) > 0}
+          onStartResignation={canStartResignation ? handleOpenSheet : undefined}
+        />
       </div>
 
       {!resignations?.length ? (
@@ -162,8 +162,8 @@ export function ExitManagementPage() {
                 : "You have no exit in progress."
           }
           action={
-            !hasActiveResignation && canSubmit
-              ? { label: "Submit resignation", onClick: handleOpenSheet }
+            canStartResignation
+              ? { label: isAdmin ? "Record resignation" : "Submit resignation", onClick: handleOpenSheet }
               : undefined
           }
           compact
@@ -201,7 +201,7 @@ export function ExitManagementPage() {
         </div>
       )}
 
-      <ResignationFormSheet open={sheetOpen} onOpenChange={setSheetOpen} />
+      <ResignationFormSheet open={sheetOpen} onOpenChange={setSheetOpen} mode={isAdmin ? "record" : "self"} />
       <ResignationReviewSheets review={review} />
     </PageWrapper>
   );

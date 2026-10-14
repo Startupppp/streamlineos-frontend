@@ -15,7 +15,14 @@ import {
 
 interface ExitPathStripProps {
   showReassignPrompt?: boolean;
+  onStartResignation?: () => void;
 }
+
+const STEP_ACTION_CLASS = cn(
+  "flex min-h-11 w-full items-start gap-2 rounded-lg border border-border/70 p-3 text-left",
+  "transition-colors duration-200 motion-reduce:transition-none",
+  "hover:border-status-info-rule focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+);
 
 function StepBody({ step }: { step: ExitPathStep }) {
   return (
@@ -36,7 +43,7 @@ function StepBody({ step }: { step: ExitPathStep }) {
   );
 }
 
-export function ExitPathStrip({ showReassignPrompt = false }: ExitPathStripProps) {
+export function ExitPathStrip({ showReassignPrompt = false, onStartResignation }: ExitPathStripProps) {
   const { data: access } = useAccess();
   const warning = statusToneClasses("warning");
 
@@ -59,35 +66,32 @@ export function ExitPathStrip({ showReassignPrompt = false }: ExitPathStripProps
             (access !== undefined && grantsPermission(access, step.permission));
           const reachableHref = permitted ? step.href : null;
           const content = (
-            <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-              <StepBody step={step} />
-            </span>
+            <>
+              <span className="shrink-0 text-dense tabular-nums text-muted-foreground">
+                {index + 1}
+              </span>
+              <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                <StepBody step={step} />
+              </span>
+            </>
+          );
+          const chevron = (
+            <ChevronRight className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
           );
           return (
             <li key={step.key} className="min-w-0">
-              {reachableHref !== null ? (
-                <Link
-                  href={reachableHref}
-                  className={cn(
-                    "flex min-h-11 items-start gap-2 rounded-lg border border-border/70 p-3",
-                    "transition-colors duration-200 motion-reduce:transition-none",
-                    "hover:border-status-info-rule focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                  )}
-                >
-                  <span className="shrink-0 text-dense tabular-nums text-muted-foreground">
-                    {index + 1}
-                  </span>
+              {step.key === "request" && onStartResignation ? (
+                <button type="button" onClick={onStartResignation} className={STEP_ACTION_CLASS}>
                   {content}
-                  <ChevronRight
-                    className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground"
-                    aria-hidden="true"
-                  />
+                  {chevron}
+                </button>
+              ) : reachableHref !== null ? (
+                <Link href={reachableHref} className={STEP_ACTION_CLASS}>
+                  {content}
+                  {chevron}
                 </Link>
               ) : (
                 <div className="flex min-h-11 items-start gap-2 rounded-lg border border-dashed border-border/70 p-3">
-                  <span className="shrink-0 text-dense tabular-nums text-muted-foreground">
-                    {index + 1}
-                  </span>
                   {content}
                 </div>
               )}

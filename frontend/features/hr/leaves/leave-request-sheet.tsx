@@ -3,7 +3,6 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { format, startOfDay } from "date-fns";
 import { toast } from "sonner";
 
 import { Form } from "@/components/ui/form";
@@ -16,6 +15,8 @@ import {
   startOfLocalDay,
 } from "@/lib/date-constraints";
 import { useRequestLeave, useLeavePolicy } from "@/hooks/api/hr";
+import { useCan } from "@/hooks/api/access";
+import { leaveStartFloor } from "./leave-date-helpers";
 import { effectiveLeaveEnd, leaveFormSchema, type LeaveFormValues } from "./leave-request-schema";
 import { LeaveRequestFormFields } from "./leave-request-form-fields";
 import { useLeaveRequestValidation } from "./use-leave-request-validation";
@@ -64,9 +65,9 @@ export function LeaveRequestSheet({
   );
   const [attachmentUrl, setAttachmentUrl] = useState<string | null>(null);
 
-  const minDate = joiningDate
-    ? format(new Date(joiningDate), "yyyy-MM-dd")
-    : format(startOfDay(new Date()), "yyyy-MM-dd");
+  const canApprove = useCan("hr:leaves:approve");
+  const canManage = useCan("hr:leaves:manage");
+  const canBackdate = canApprove || canManage;
 
   const form = useForm<LeaveFormValues>({
     resolver: zodResolver(leaveFormSchema),
@@ -94,16 +95,20 @@ export function LeaveRequestSheet({
   const watchedEndDate = form.watch("endDate");
   const watchedHalfDay = form.watch("halfDay");
 
-  const leaveStartFloor = parseDateOnly(minDate) ?? startOfLocalDay();
+  const startFloor = leaveStartFloor(
+    parseDateOnly(joiningDate?.slice(0, 10)),
+    canBackdate,
+    startOfLocalDay(),
+  );
   const leaveStartBounds = {
-    fromDate: leaveStartFloor,
-    fromYear: leaveStartFloor.getFullYear(),
+    fromDate: startFloor,
+    fromYear: startFloor.getFullYear(),
     toYear: startOfLocalDay().getFullYear() + 10,
   };
   const leaveEndBounds = planningEndPickerProps({
     startDate: watchedStartDate,
     mode: "onOrAfter",
-    floorDate: leaveStartFloor,
+    floorDate: startFloor,
     enforceTodayFloor: false,
   });
 
@@ -155,7 +160,7 @@ export function LeaveRequestSheet({
         },
         {
           onSuccess: () => {
-            toast.success("Leave requested successfully!");
+            toast.success("Leave request submitted");
             form.reset();
             setAttachmentUrl(null);
             onOpenChange(false);
@@ -206,6 +211,7 @@ export function LeaveRequestSheet({
           onStartDateChange={handleLeaveStartDateChange}
           onAttachmentUpload={handleAttachmentUpload}
           validation={validation}
+          pastDatesBlocked={!canBackdate}
         />
       </Form>
     </HrSheet>

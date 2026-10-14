@@ -18,6 +18,7 @@ import {
   useHrEmployees,
   type TerminationStatus,
 } from "@/hooks/api/hr";
+import { useTerminationCandidate } from "@/hooks/api/hr/termination";
 import { useTerminationActions } from "./use-termination-actions";
 
 type StatusFilter = "ALL" | TerminationStatus;
@@ -44,9 +45,10 @@ export function TerminationPage() {
     status: statusFilter === "ALL" ? undefined : statusFilter,
   });
   const terminations = useMemo(() => terminationsData?.data ?? [], [terminationsData]);
-  const { data: employeesData } = useHrEmployees({ limit: 100 });
+  const { data: employeesData } = useHrEmployees({ limit: 100, isActive: "current" });
 
   const employees = useMemo(() => employeesData?.data ?? [], [employeesData]);
+  const { data: prefilledEmployee } = useTerminationCandidate(employeeUserIdParam);
 
   const actions = useTerminationActions({ terminations, employees, employeeUserIdParam });
 
@@ -140,6 +142,7 @@ export function TerminationPage() {
         submitDisabled={!actions.canSubmitCreate}
         onSubmit={actions.handleCreateSubmit}
         employees={employees}
+        prefilledEmployee={prefilledEmployee ?? null}
         selectedEmployeeUserId={actions.selectedEmployeeUserId}
         onSelectedEmployeeUserIdChange={actions.setSelectedEmployeeUserId}
         selectedReason={actions.selectedReason}

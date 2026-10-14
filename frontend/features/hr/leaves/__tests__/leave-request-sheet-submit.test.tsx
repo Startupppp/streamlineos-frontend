@@ -15,8 +15,9 @@ jest.mock("@/hooks/api/hr", () => ({
   useLeavePolicy: () => ({ data: null }),
 }));
 
+const mockUseCan = jest.fn((_key: string) => true);
 jest.mock("@/hooks/api/access", () => ({
-  useCan: () => true,
+  useCan: (key: string) => mockUseCan(key),
 }));
 
 const toastSuccess = jest.fn();
@@ -179,6 +180,18 @@ describe("leaveTypeOptionLabel", () => {
 });
 
 describe("LeaveRequestSheet", () => {
+  it("tells an employee why past dates are unavailable", () => {
+    mockUseCan.mockImplementation((key) => key === "self:leaves");
+    renderSheet();
+    expect(screen.getByText(/past dates can.t be requested/i)).toBeInTheDocument();
+    mockUseCan.mockImplementation(() => true);
+  });
+
+  it("does not show the past-date rule to someone who can record leave for others", () => {
+    renderSheet();
+    expect(screen.queryByText(/past dates can.t be requested/i)).toBeNull();
+  });
+
   it("shows the configured policy beside the leave type in the dropdown", () => {
     renderSheet();
 
@@ -210,7 +223,7 @@ describe("LeaveRequestSheet", () => {
       startDate: "2026-10-05",
       endDate: "2026-10-06",
     });
-    expect(toastSuccess).toHaveBeenCalledWith("Leave requested successfully!");
+    expect(toastSuccess).toHaveBeenCalledWith("Leave request submitted");
     expect(onOpenChange).toHaveBeenCalledWith(false);
     expect(toastError).not.toHaveBeenCalled();
   });
