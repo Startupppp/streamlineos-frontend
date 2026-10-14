@@ -13,6 +13,8 @@ import {
 } from "@/components/ui/select";
 import { isApiError } from "@/lib/api-envelope";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
+import { useCanState } from "@/hooks/api/access";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { usePortalPreview } from "@/hooks/api/build/client-portal-management";
 import { useProjectClientGrants } from "@/hooks/api/portal-access/grants";
 
@@ -24,6 +26,7 @@ const NO_GRANT_SELECTED = "__none__";
 
 export function PortalPreviewSection({ projectId }: PortalPreviewSectionProps) {
   const [selectedMembershipId, setSelectedMembershipId] = useState<string | undefined>(undefined);
+  const canViewState = useCanState("build:portal:view");
 
   const { data: grantsPage, isLoading: grantsLoading } = useProjectClientGrants({
     projectId,
@@ -47,6 +50,10 @@ export function PortalPreviewSection({ projectId }: PortalPreviewSectionProps) {
     const last = grant.contactLastName ?? "";
     const name = `${first} ${last}`.trim();
     return name.length > 0 ? name : portalMembershipId;
+  }
+
+  if (canViewState === "denied") {
+    return <NoPermissionState compact className={CONTENT_FILL_PANEL} />;
   }
 
   if (grantsLoading || isLoading) {

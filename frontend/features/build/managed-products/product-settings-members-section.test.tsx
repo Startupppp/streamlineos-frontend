@@ -21,6 +21,7 @@ jest.mock("@/hooks/api/build/managed-product-members", () => ({
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn(() => true),
+  useCanState: jest.fn(() => "granted"),
 }));
 
 jest.mock("sonner", () => ({
