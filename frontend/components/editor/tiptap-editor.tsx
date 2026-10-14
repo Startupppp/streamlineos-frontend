@@ -12,6 +12,7 @@ import { TiptapBubbleMenu } from "./tiptap-bubble-menu";
 import { EditorImageContextMenu } from "./editor-image-context-menu";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { toast } from "sonner";
+import { validatePreUpload } from "@/lib/build-upload-validator";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
@@ -218,8 +219,9 @@ export function TiptapEditor({
     const file = e.target.files?.[0];
     if (!file || !editor) return;
     e.target.value = "";
-    if (!isImageFile(file)) {
-      toast.error("Only image files are supported.");
+    const error = validatePreUpload(file, isImageFile);
+    if (error) {
+      toast.error(error);
       return;
     }
     void uploadImageFile(file).then((url) => {
@@ -264,7 +266,7 @@ export function TiptapEditor({
           accept="image/jpeg,image/png,image/gif,image/webp"
           className="hidden"
           onChange={handleImageFileChange}
-          aria-hidden
+          aria-label="Insert image"
         />
       )}
       {contextMenu && editor && (
