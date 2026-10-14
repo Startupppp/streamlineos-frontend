@@ -1,7 +1,10 @@
 import * as z from "zod";
 import { hrPersonNameField } from "@/lib/person-name-schema";
 
-export function makeEmployeeFormSchema(origFirstName: string, origLastName: string) {
+export function makeEmployeeFormSchema(
+  origFirstName: string,
+  origLastName: string,
+) {
   return z.object({
     firstName: z
       .string()
@@ -10,9 +13,8 @@ export function makeEmployeeFormSchema(origFirstName: string, origLastName: stri
         if (val === origFirstName) return;
         const result = hrPersonNameField("First name").safeParse(val);
         if (!result.success) {
-          for (const issue of result.error.issues) {
-            ctx.addIssue(issue);
-          }
+          for (const issue of result.error.issues)
+            ctx.addIssue({ code: "custom", message: issue.message });
         }
       }),
     lastName: z
@@ -22,9 +24,8 @@ export function makeEmployeeFormSchema(origFirstName: string, origLastName: stri
         if (val === origLastName) return;
         const result = hrPersonNameField("Last name").safeParse(val);
         if (!result.success) {
-          for (const issue of result.error.issues) {
-            ctx.addIssue(issue);
-          }
+          for (const issue of result.error.issues)
+            ctx.addIssue({ code: "custom", message: issue.message });
         }
       }),
     designation: z
@@ -47,4 +48,6 @@ export function makeEmployeeFormSchema(origFirstName: string, origLastName: stri
   });
 }
 
-export type EmployeeFormValues = z.infer<ReturnType<typeof makeEmployeeFormSchema>>;
+export type EmployeeFormValues = z.infer<
+  ReturnType<typeof makeEmployeeFormSchema>
+>;
