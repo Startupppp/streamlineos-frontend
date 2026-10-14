@@ -16,6 +16,7 @@ jest.mock("next/navigation", () => ({
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn(() => true),
+  useModuleEnabled: jest.fn(() => true),
   usePermissionGate: jest.fn(() => ({
     permission: "build:roadmap:view",
     allowed: true,

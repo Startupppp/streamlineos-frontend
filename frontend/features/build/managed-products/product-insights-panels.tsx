@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import {
   BarChart2,
   CheckCircle2,
@@ -9,7 +10,10 @@ import {
   LayoutGrid,
   MessageSquare,
   ThumbsUp,
+  PlugZap,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useModuleEnabled } from "@/hooks/api/access";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import type { ManagedProductInsights } from "@/hooks/api/build/managed-products-schema";
 import { CustomerImpactPanel } from "./customer-impact-panel";
@@ -202,6 +206,21 @@ export function InsightFeedbackPanel({
   managedProductId,
   insights,
 }: InsightPanelProps) {
+  const feedbucketEnabled = useModuleEnabled("feedbucket");
+  if (!feedbucketEnabled) {
+    return (
+      <section aria-label="Customer response" className="rounded-xl border border-border bg-card p-5">
+        <div className="flex items-start gap-3">
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"><PlugZap className="size-5" aria-hidden /></div>
+          <div className="min-w-0 flex-1">
+            <h2 className="text-sm font-semibold text-foreground">Connect customer feedback</h2>
+            <p className="mt-1 max-w-[65ch] text-sm text-muted-foreground">Enable Feedbucket for this organization to collect widget submissions and see customer response here.</p>
+            <Button asChild variant="outline" size="sm" className="mt-4"><Link href="/settings/modules">Open module settings</Link></Button>
+          </div>
+        </div>
+      </section>
+    );
+  }
   return (
     <div>
       <h2 className="mb-1 text-sm font-medium text-foreground">
