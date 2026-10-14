@@ -280,7 +280,7 @@ Each section gives: where, steps, expected, actual (from the QA run), likely cau
 
 ## B-043: Double-click on "Create epic" creates two epics
 **Severity:** High
-**Status:** UNDER REVIEW — claimed fixed, being re-verified against the code
+**Status:** FIXED — code and tests landed; browser verification pending
 **Shared root cause group:** G1 Submit in-flight guard
 
 **Where:** Epics — https://www.streamlineos.in/build/7/epics → "Create Epic" → dialog "Create new epic" → "Create epic" | Role/account: Owner qaown1012b (Owner).
@@ -1197,7 +1197,7 @@ Each section gives: where, steps, expected, actual (from the QA run), likely cau
 
 ## B-062: The epic card does not refresh after "Save changes"
 **Severity:** Medium
-**Status:** UNDER REVIEW — claimed fixed, being re-verified against the code
+**Status:** FIXED — code and tests landed; browser verification pending
 **Shared root cause group:** G5 Query invalidation after mutations
 
 **Where:** Epics — https://www.streamlineos.in/build/7/epics → epic card "More actions" → "Edit" → "Save changes" (epic "R6 epic 1013") | Role/account: Owner qaown1012b (Owner). Epic with 3 linked items (1 Done, 2 To Do).
@@ -1249,7 +1249,7 @@ Each section gives: where, steps, expected, actual (from the QA run), likely cau
 
 ## B-070: "Blocks" and "Duplicate of" are not inverted on the other ticket
 **Severity:** Medium
-**Status:** UNDER REVIEW — claimed fixed, being re-verified against the code
+**Status:** FIXED — code and tests landed; browser verification pending
 **Shared root cause group:** G10 Ticket relations, parents and history
 
 **Where:** Ticket Relations section — https://www.streamlineos.in/build/7/tickets/QAB-113, /QAB-114, /QAB-115, /QAB-117 | Role/account: Owner qaown1012b (Owner, project 7).
@@ -1674,7 +1674,7 @@ Each section gives: where, steps, expected, actual (from the QA run), likely cau
 
 ## B-041: A long unbroken ticket title overflows the Triage row
 **Severity:** Low
-**Status:** UNDER REVIEW — claimed fixed, being re-verified against the code
+**Status:** FIXED — code and tests landed; browser verification pending
 **Shared root cause group:** G9 Narrow-viewport layout (375/768 px) and long text
 
 **Where:** https://www.streamlineos.in/build/7/triage, a row whose ticket (QAB-2 in the run) has a long unbroken title. Role: Owner.
@@ -1860,7 +1860,7 @@ Double-click the Save button of each dialog after changing one field.
 
 ## B-063: An epic can be set to Done while linked items are open
 **Severity:** Low (CONFIRM INTENDED: implement the recommended behavior and flag it in your summary)
-**Status:** UNDER REVIEW — claimed fixed, being re-verified against the code
+**Status:** FIXED — code and tests landed; browser verification pending
 
 **Where:** Epics → "Edit" → Status → Done → "Save changes" (https://www.streamlineos.in/build/7/epics) | Role/account: Owner qaown1012b (Owner). Epic "R6 epic 1013" with linked items: "R6 epic child 1013" (Done, 3 pts), "R6 parent 1013" (To Do, 5 pts), "R6 link target 1013" (To Do, 2 pts).
 
@@ -1883,7 +1883,7 @@ Double-click the Save button of each dialog after changing one field.
 
 ## B-064: The epic Link picker lists only stories
 **Severity:** Low
-**Status:** UNDER REVIEW — claimed fixed, being re-verified against the code
+**Status:** FIXED — code and tests landed; browser verification pending
 
 **Where:** Epics → epic card "Link" (https://www.streamlineos.in/build/7/epics); ticket Details → Epic (https://www.streamlineos.in/build/7/tickets/QAB-115) | Role/account: Owner qaown1012b (Owner). QAB-115 "R6 epic child 1013" is type Task and unlinked (and QAB-116 / QAB-117 are Tasks too).
 
@@ -1999,7 +1999,7 @@ Double-click the Save button of each dialog after changing one field.
 
 ## B-073: "Add subtask" cannot attach an existing ticket
 **Severity:** Low (CONFIRM INTENDED: implement the recommended behavior and flag it in your summary)
-**Status:** UNDER REVIEW — claimed fixed, being re-verified against the code
+**Status:** FIXED — code and tests landed; browser verification pending
 **Shared root cause group:** G10 Ticket relations, parents and history
 
 **Where:** Ticket Subtasks section — https://www.streamlineos.in/build/7/tickets/QAB-113 | Role/account: Owner qaown1012b (Owner).
@@ -2164,7 +2164,7 @@ Double-click the Save button of each dialog after changing one field.
 
 ## B-082: Parent and relation changes leave no history entry
 **Severity:** Low
-**Status:** UNDER REVIEW — claimed fixed, being re-verified against the code
+**Status:** FIXED — code and tests landed; browser verification pending
 **Shared root cause group:** G10 Ticket relations, parents and history
 
 **Where:** Ticket page history/activity — https://www.streamlineos.in/build/7/tickets/QAB-120, /QAB-121, /QAB-122 (round 8, owner qaown1012b). | Role/account: Owner qaown1012b (Owner, project 7).
