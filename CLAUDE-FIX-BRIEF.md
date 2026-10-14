@@ -8,12 +8,49 @@ left below is the work that is genuinely still outstanding.
 
 Verified by: backend `typecheck` + `typecheck:test`, frontend `type-check` +
 `check:test-typecheck` (a hard gate at zero), `check:contract-vendor`, `check:migration-ledger`
-(1170/1170, 0 pending), and the HR/expenses/organization/directory suites.
+(1171/1171, 0 pending), and the HR/expenses/organization/directory suites.
 
 **Migration 2035** (`exit_checklists.termination_id`, exclusive-arc CHECK, two partial indexes)
 is **applied to production and verified by query** — FK and CHECK both `convalidated`,
 `resignation_id` now nullable, ledger row present. It was rehearsed first inside a rolled-back
 production transaction because local Postgres was down.
+
+**Migration 2036** (`uniq_org_units_org_kind_code_live`, uniqueness made partial so an archived
+department frees its code) is likewise applied and verified by `pg_indexes`. Ledger **1171/1171**.
+
+### Fix status — 25 of 25 fixed in code
+
+Full QA detail and the per-bug evidence line live in `HR-BUGS.md`, the original report these IDs
+come from. Two were reported closed and were **not**, found by a later re-read: HR-B-024 and
+HR-B-025. Nothing here is closed until a browser pass confirms it — see section 1.
+
+| ID | Status | Fixed in |
+|---|---|---|
+| HR-B-001 | ✅ Fixed | `lib/person-name-schema.ts:25` + `common/validation/person-name.schema.ts:26` |
+| HR-B-002 | ✅ Fixed | same pair, `:32` — digits now message instead of emptying the field (**P2**) |
+| HR-B-003 | ✅ Fixed | `employee-form-schema.ts:31` + `hr-directory.schemas.ts:259` |
+| HR-B-004 | ✅ Fixed | `department-form-schema.ts:4` + `org-hierarchy.schemas.ts:11` |
+| HR-B-005 | ✅ Fixed | `org-hierarchy-departments.service.ts:81` — code-only, see **P3** |
+| HR-B-006 | ✅ Fixed | `employees-list-page.tsx:75` + `employees.service.ts:450` |
+| HR-B-007 | ✅ Fixed | `shift-form-sheet.tsx:93` + `shifts.schemas.ts:36` |
+| HR-B-008 | ✅ Fixed | `attendance-regularization.service.ts:280` / `:403`, `FOR UPDATE` in-txn (**P1**) |
+| HR-B-009 | ✅ Fixed | `attendance-regularization-queue-schema.ts:16` |
+| HR-B-010 | ✅ Fixed | `formatTimeInOrgTz` across all 4 surfaces (**P7**) |
+| HR-B-011 | ✅ Fixed | `policy-form-types.ts:29` |
+| HR-B-012 | ✅ Fixed | `data-table-skeleton.tsx:28` — headers only; the 10–15 s load is §3 |
+| HR-B-013 | ✅ Fixed | `attendance-regularization-dialog.tsx:89`, **plus an org-day residual found here** |
+| HR-B-014 | ✅ Fixed | `leaves-approval.service.ts:137` + `leave-entitlement.ts:48` |
+| HR-B-015 | ✅ Fixed | `attendance-regularization.service.ts:242` + `regularization-row.tsx:70` |
+| HR-B-016 | ✅ Fixed | `hooks/api/hr/leaves.ts:78` / `:104`, per-read `INLINE_READ_ERROR` |
+| HR-B-017 | ✅ Fixed | `org-hierarchy-response.schemas.ts:222` + `org-hierarchy.service.ts:249` |
+| HR-B-018 | ✅ Fixed | `policy-upsert-sheet.tsx:123` — the stray `policyType` against `.strict()` |
+| HR-B-019 | ✅ Fixed | `hr-policy-conflict.service.ts:98`, lineage CTE (**P10**) |
+| HR-B-020 | ✅ Fixed | shared `expenseAmountSchema`, `expense.schemas.ts:68` (**P11**) |
+| HR-B-021 | ✅ Fixed | `expense-form-schema.ts:8` — amount validated as typed text |
+| HR-B-022 | ✅ Fixed | `assets.service.ts:160`, both writes in one `tx` (**P12**) |
+| HR-B-023 | ✅ Fixed | `bulk-onboard-parse.ts:98` — rejected before the preview step |
+| HR-B-024 | ✅ Fixed | `exit-management-page.tsx` — the trigger was unreachable for an owner |
+| HR-B-025 | ✅ Fixed | `exit-checklist.service.ts` + `GET /hr/exit/offboarding-checklists`; seeding moved into the completion transaction |
 
 ---
 
@@ -21,6 +58,10 @@ production transaction because local Postgres was down.
 
 jsdom cannot see real rendering, focus order, paint or a live backend, so these are the items
 no automated gate here can close. Run as the owner unless noted.
+
+**An unticked box below is a browser pass that has not been run — not unfinished code.** Every
+code change is complete, committed, pushed and live; the fix-status table above is the record of
+that. These boxes are the only outstanding work in this brief.
 
 - [ ] Onboarding single employee: names with `'`, `-`, `.`, accents save (typed **and** pasted); digits and HTML rejected inline; duplicate email still blocked at Next; double-click Submit still creates one record; future DOB still impossible.
 - [ ] Employee Edit: designation required/trimmed, 200-char max enforced; unsaved-changes prompt works; `<img onerror>` still rendered as text. Editing a person whose name carries digits (e.g. `adityachalla01`) must still save other fields untouched.
