@@ -320,6 +320,32 @@ describe("BuildListToolbar", () => {
     await waitFor(() => expect(trigger).toHaveFocus());
   });
 
+  it("moves the inline selects into Filters on a large screen and lets search grow", async () => {
+    const { container } = render(
+      <BuildListToolbar
+        search={search}
+        row={{ mobile: 2, tablet: 2, desktop: 0 }}
+        filters={[
+          statusFilter(),
+          severityFilter(),
+          { id: "team", label: "Team", control: <button type="button">All teams</button> },
+        ]}
+      />,
+    );
+
+    expect(container.querySelector("[data-filter-id=status]")?.className).toContain("lg:hidden");
+    expect(container.querySelector("[data-filter-id=severity]")?.className).toContain("lg:hidden");
+    expect(container.querySelector("[data-filter-id=team]")?.className).toContain("hidden");
+    expect(container.querySelector("[data-slot=search-input]")?.className).toContain("lg:max-w-none");
+    expect(screen.getByRole("button", { name: /^Filters/ }).className).not.toContain("lg:hidden");
+
+    fireEvent.click(screen.getByRole("button", { name: /^Filters/ }));
+    const overlay = await screen.findByRole("dialog");
+    expect(within(overlay).getByRole("combobox", { name: "Status" })).toBeInTheDocument();
+    expect(within(overlay).getByRole("combobox", { name: "Severity" })).toBeInTheDocument();
+    expect(within(overlay).getByRole("button", { name: "All teams" })).toBeInTheDocument();
+  });
+
   it("does not put Clear all on the toolbar icon row", () => {
     const onClearAll = jest.fn();
     const { container } = render(

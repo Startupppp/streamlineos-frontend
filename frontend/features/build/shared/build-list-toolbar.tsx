@@ -36,6 +36,7 @@ import {
   toolbarDrawerVisibility,
   toolbarMoreButtonClass,
   type BuildToolbarFilter,
+  resolveToolbarRow,
   type BuildToolbarRow,
   type BuildToolbarSearch,
 } from "./build-list-toolbar-layout";
@@ -80,6 +81,8 @@ export function BuildListToolbar({
   const isMobile = useIsMobile();
   const shouldReduceMotion = useReducedMotion();
   const layout = buildToolbarLayout({ search, filters });
+  const toolbarRow = resolveToolbarRow(row);
+  const searchFillsLargeScreen = toolbarRow.desktop === 0;
   const showDrawer = layout.fieldFilterCount > 0;
   const searchExpanded = isToolbarMobileSearchExpanded({
     isMobile,
@@ -238,6 +241,7 @@ export function BuildListToolbar({
           inputClassName={searchInputClassName}
           className={cn(
             "min-w-0 flex-1 basis-[12rem] md:max-w-md transition-[flex-basis,width,max-width] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]",
+            searchFillsLargeScreen && "lg:max-w-none",
             searchExpanded && "max-md:max-w-none max-md:basis-auto",
           )}
         />
@@ -251,6 +255,7 @@ export function BuildListToolbar({
             className={cn(
               "flex min-w-0 flex-nowrap items-center gap-2 transition-[flex-basis,width] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]",
               row ? "max-md:w-full md:min-w-0 md:flex-1" : "max-md:w-full md:shrink-0",
+              searchFillsLargeScreen && "lg:w-auto lg:flex-none lg:shrink-0",
               searchCollapsed && "flex-1",
               fillMobileActions && "max-md:justify-between",
             )}

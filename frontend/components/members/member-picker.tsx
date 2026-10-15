@@ -65,6 +65,7 @@ interface MemberPickerBaseProps {
   triggerTooltip?: string;
   contentAlign?: "start" | "center" | "end";
   contentClassName?: string;
+  modal?: boolean;
 }
 
 interface MemberPickerSingleProps extends MemberPickerBaseProps {
@@ -72,6 +73,7 @@ interface MemberPickerSingleProps extends MemberPickerBaseProps {
   value?: string;
   onChange?: (userId: string | null) => void;
   allowUnassigned?: boolean;
+  unassignedLabel?: string;
   values?: never;
   onToggle?: never;
 }
@@ -155,6 +157,7 @@ export function MemberPicker(props: MemberPickerProps) {
     triggerTooltip,
     contentAlign = "start",
     contentClassName,
+    modal = false,
   } = props;
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -283,7 +286,7 @@ export function MemberPicker(props: MemberPickerProps) {
             ))}
           </div>
         ) : null}
-        <Popover open={open} onOpenChange={handleOpenChange}>
+        <Popover open={open} onOpenChange={handleOpenChange} modal={modal}>
           {triggerTooltip ? (
             <TooltipProvider>
               <Tooltip>
@@ -341,7 +344,7 @@ export function MemberPicker(props: MemberPickerProps) {
     );
   }
 
-  const { value, onChange, allowUnassigned } = props;
+  const { value, onChange, allowUnassigned, unassignedLabel = "Unassigned" } = props;
   const selected = value
     ? (selectedMembers.find((m) => m.id === value) ??
       members.find((m) => m.id === value) ??
@@ -390,7 +393,7 @@ export function MemberPicker(props: MemberPickerProps) {
   );
 
   return (
-    <Popover open={open} onOpenChange={handleOpenChange}>
+    <Popover open={open} onOpenChange={handleOpenChange} modal={modal}>
       {triggerTooltip ? (
         <TooltipProvider>
           <Tooltip>
@@ -428,7 +431,7 @@ export function MemberPicker(props: MemberPickerProps) {
                     onSelect={() => handleSelect(null)}
                   >
                     <User className="mr-2 h-4 w-4 text-muted-foreground" />
-                    <span className="text-xs">Unassigned</span>
+                    <span className="text-xs">{unassignedLabel}</span>
                     {!value && <Check className="ml-auto h-3 w-3" />}
                   </CommandItem>
                 )}

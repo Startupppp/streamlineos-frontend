@@ -113,11 +113,28 @@ export interface BuildToolbarRow {
   desktop: number;
 }
 
-function resolveToolbarRow(row?: BuildToolbarRow): BuildToolbarRow {
+export function resolveToolbarRow(row?: BuildToolbarRow): BuildToolbarRow {
   const mobile = Math.max(0, row?.mobile ?? 2);
-  const tablet = Math.max(mobile, row?.tablet ?? 2);
-  const desktop = Math.max(tablet, row?.desktop ?? 3);
+  const tablet = Math.max(0, row?.tablet ?? mobile);
+  const desktop =
+    row?.desktop === undefined ? Math.max(tablet, 3) : Math.max(0, row.desktop);
   return { mobile, tablet, desktop };
+}
+
+function breakpointVisibility(shown: {
+  mobile: boolean;
+  tablet: boolean;
+  desktop: boolean;
+}): string {
+  const { mobile, tablet, desktop } = shown;
+  if (!mobile && !tablet && !desktop) return "hidden";
+  if (mobile && tablet && desktop) return "";
+  if (!mobile && !tablet && desktop) return "max-lg:hidden";
+  if (!mobile && tablet && desktop) return "max-md:hidden";
+  if (mobile && tablet && !desktop) return "lg:hidden";
+  if (mobile && !tablet && !desktop) return "md:hidden";
+  if (!mobile && tablet && !desktop) return "max-md:hidden lg:hidden";
+  return "md:max-lg:hidden";
 }
 
 export function toolbarInlineVisibility(
@@ -127,10 +144,11 @@ export function toolbarInlineVisibility(
   row?: BuildToolbarRow,
 ): string {
   const resolved = resolveToolbarRow(row);
-  if (index < resolved.mobile) return "";
-  if (index < resolved.tablet) return "max-md:hidden";
-  if (index < resolved.desktop) return "max-lg:hidden";
-  return "hidden";
+  return breakpointVisibility({
+    mobile: index < resolved.mobile,
+    tablet: index < resolved.tablet,
+    desktop: index < resolved.desktop,
+  });
 }
 
 export function toolbarDrawerVisibility(
@@ -140,10 +158,11 @@ export function toolbarDrawerVisibility(
   row?: BuildToolbarRow,
 ): string {
   const resolved = resolveToolbarRow(row);
-  if (index < resolved.mobile) return "hidden";
-  if (index < resolved.tablet) return "md:hidden";
-  if (index < resolved.desktop) return "lg:hidden";
-  return "";
+  return breakpointVisibility({
+    mobile: index >= resolved.mobile,
+    tablet: index >= resolved.tablet,
+    desktop: index >= resolved.desktop,
+  });
 }
 
 export function toolbarMoreButtonClass(
@@ -152,8 +171,12 @@ export function toolbarMoreButtonClass(
   row?: BuildToolbarRow,
 ): string {
   const resolved = resolveToolbarRow(row);
-  if (filterCount <= resolved.mobile) return "hidden";
-  if (filterCount <= resolved.tablet) return "inline-flex shrink-0 md:hidden";
-  if (filterCount <= resolved.desktop) return "inline-flex shrink-0 lg:hidden";
-  return "inline-flex shrink-0";
+  const visibility = breakpointVisibility({
+    mobile: filterCount > resolved.mobile,
+    tablet: filterCount > resolved.tablet,
+    desktop: filterCount > resolved.desktop,
+  });
+  if (visibility === "hidden") return "hidden";
+  if (visibility === "") return "inline-flex shrink-0";
+  return `inline-flex shrink-0 ${visibility}`;
 }

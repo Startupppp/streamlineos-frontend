@@ -232,6 +232,7 @@ export function ProductProjectsToolbar({ page }: ProductProjectsToolbarProps) {
     <BuildListToolbar
       search={search}
       filters={filters}
+      row={{ mobile: 2, tablet: 2, desktop: 0 }}
       onClearAll={page.isFiltered ? page.handleClearFilters : undefined}
     />
   );

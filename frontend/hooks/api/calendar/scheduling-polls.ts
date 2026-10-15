@@ -8,12 +8,13 @@ import { calendarBookingQueryKeys } from "@/lib/query-keys/calendar-booking";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { useBookingScope } from "./booking-rules";
-import type { CreatedSchedulingPoll, FinalizedSchedulingPoll, SchedulingPoll, SchedulingPollList } from "./scheduling-polls-schema";
+import type { CreatedSchedulingPoll, FinalizedSchedulingPoll, ReplacedSchedulingPollGuest, SchedulingPoll, SchedulingPollList } from "./scheduling-polls-schema";
 
 const listContract = lazyContract(() => import("./scheduling-polls-schema").then((module) => module.schedulingPollListContract));
 const pollContract = lazyContract(() => import("./scheduling-polls-schema").then((module) => module.schedulingPollContract));
 const createdContract = lazyContract(() => import("./scheduling-polls-schema").then((module) => module.createdSchedulingPollContract));
 const finalizedContract = lazyContract(() => import("./scheduling-polls-schema").then((module) => module.finalizedSchedulingPollContract));
+const replacedGuestContract = lazyContract(() => import("./scheduling-polls-schema").then((module) => module.replacedSchedulingPollGuestContract));
 
 export interface CreateSchedulingPollInput {
   requestId: string;
@@ -98,5 +99,36 @@ export function useCancelSchedulingPoll() {
     mutationFn: ({ pollId, expectedVersion }: { pollId: string; expectedVersion: number }) =>
       apiClient.put<SchedulingPoll>(`/calendar/scheduling-polls/${encodeURIComponent(pollId)}/cancel`, { expectedVersion }, undefined, pollContract),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: calendarBookingQueryKeys.all() }),
+  });
+}
+
+export function useReplaceSchedulingPollGuest() {
+  const queryClient = useQueryClient();
+  const scope = useBookingScope();
+  return useAuthorizedMutation("calendar:write", {
+    mutationKey: calendarBookingQueryKeys.mutation("replace-poll-guest"),
+    mutationFn: ({ pollId, voterId, expectedVoterVersion, email, name }: {
+      pollId: string;
+      voterId: string;
+      expectedVoterVersion: number;
+      email: string;
+      name: string | null;
+    }) => apiClient.put<ReplacedSchedulingPollGuest>(
+      `/calendar/scheduling-polls/${encodeURIComponent(pollId)}/voters/${encodeURIComponent(voterId)}`,
+      { expectedVoterVersion, email, name },
+      undefined,
+      replacedGuestContract,
+    ),
+    onSuccess: (result, input) => {
+      queryClient.setQueryData<SchedulingPoll>(
+        calendarBookingQueryKeys.poll(scope.orgId, scope.userId, scope.membershipId, scope.accessVersion, scope.canRead, input.pollId),
+        (current) => current ? {
+          ...current,
+          guestVoters: current.guestVoters?.map((voter) => voter.voterId === result.voterId
+            ? { ...voter, email: result.email, name: input.name, voterVersion: result.voterVersion }
+            : voter),
+        } : current,
+      );
+    },
   });
 }

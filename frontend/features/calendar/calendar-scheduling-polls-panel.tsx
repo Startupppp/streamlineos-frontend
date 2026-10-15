@@ -19,6 +19,7 @@ import {
   type CreateSchedulingPollInput,
 } from "@/hooks/api/calendar/scheduling-polls";
 import type { CreatedSchedulingPoll, FinalizedSchedulingPoll } from "@/hooks/api/calendar/scheduling-polls-schema";
+import { CalendarPollGuestReplacement } from "./calendar-poll-guest-replacement";
 
 type PollVoter = CreateSchedulingPollInput["voters"][number];
 
@@ -159,5 +160,10 @@ export function CalendarSchedulingPollsPanel({ rule, onBack }: { rule: CalendarB
       {polls.access.unavailable || polls.isError ? <ErrorState title="Polls unavailable" error={polls.error} onRetry={() => void polls.refetch()} /> : polls.access.pending || polls.isPending ? <p role="status">Loading polls…</p> : polls.data?.items.length ? <div className="space-y-2">{polls.data.items.map((poll) => <button key={poll.id} type="button" className="flex w-full items-center justify-between rounded-md border p-3 text-left text-sm hover:bg-muted" onClick={() => { setSelectedPollId(poll.id); setFinalized(null); }}>{poll.title}<span className="capitalize text-muted-foreground">{poll.status}</span></button>)}</div> : <p className="text-sm text-muted-foreground">No polls for this booking page yet.</p>}
       <div className="flex gap-2">{previousCursors.length ? <Button variant="outline" onClick={() => { setCursor(previousCursors.at(-1) ?? null); setPreviousCursors(previousCursors.slice(0, -1)); }}>Newer</Button> : null}{polls.data?.nextCursor ? <Button variant="outline" onClick={() => { setPreviousCursors([...previousCursors, cursor]); setCursor(polls.data.nextCursor); }}>Older</Button> : null}</div>
     </>}
+    {selectedPollId && detail.data?.status === "open" && detail.data.guestVoters?.length ? <section className="space-y-2 rounded-md border p-3" aria-label="Poll guests">
+      <h4 className="font-medium">Guest voters</h4>
+      <p className="text-xs text-muted-foreground">Correcting a guest replaces their signed link and clears that guest’s votes.</p>
+      {detail.data.guestVoters.map((guest) => <CalendarPollGuestReplacement key={guest.voterId} pollId={selectedPollId} guest={guest} onReplaced={() => setCreated(null)} />)}
+    </section> : null}
   </div>;
 }

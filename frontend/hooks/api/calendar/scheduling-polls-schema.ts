@@ -23,6 +23,12 @@ export const schedulingPollContract = z.object({
     requirement: z.enum(["required", "optional"]),
     responses: z.record(z.string().uuid(), z.enum(["yes", "maybe", "no"])),
   }).nullable(),
+  guestVoters: z.array(z.object({
+    voterId: z.string().uuid(),
+    email: z.string().email().nullable(),
+    name: z.string().nullable(),
+    voterVersion: z.number().int().positive(),
+  })).optional(),
 });
 
 export const schedulingPollListContract = z.object({
@@ -49,7 +55,15 @@ export const finalizedSchedulingPollContract = z.object({
   alternatives: z.array(z.object({ start: z.string(), end: z.string(), localStart: z.string(), localEnd: z.string() })),
 });
 
+export const replacedSchedulingPollGuestContract = z.object({
+  voterId: z.string().uuid(),
+  email: z.string().email(),
+  token: z.string(),
+  voterVersion: z.number().int().positive(),
+});
+
 export type SchedulingPoll = z.infer<typeof schedulingPollContract>;
 export type SchedulingPollList = z.infer<typeof schedulingPollListContract>;
 export type CreatedSchedulingPoll = z.infer<typeof createdSchedulingPollContract>;
 export type FinalizedSchedulingPoll = z.infer<typeof finalizedSchedulingPollContract>;
+export type ReplacedSchedulingPollGuest = z.infer<typeof replacedSchedulingPollGuestContract>;
