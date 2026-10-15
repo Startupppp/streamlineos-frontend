@@ -10,5 +10,5 @@
 - [x] Option holds expire and release capacity without turning votes into permanent reservations.
 - [ ] Finalization rechecks availability and sends exactly one committed invitation.
 - [ ] If the chosen option became unavailable, votes remain visible and fresh alternatives are offered.
-- [ ] Tests cover anonymous signed voting, changed guest identity, expired poll, busy option, simultaneous finalization, and cancelled poll.
+- [x] Tests cover anonymous signed voting, changed guest identity, expired poll, busy option, simultaneous finalization, and cancelled poll.
 
