@@ -5,6 +5,8 @@ import { installAbortSignalPolyfill } from "@/test-utils/abort-signal-polyfill";
 import { renderWithProviders } from "@/test-utils/render";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { MeetingFollowUpPanel } from "./meeting-follow-up-panel";
+
+let mockIsMobile = false;
 import {
   installFetch,
   jsonOnce,
@@ -34,11 +36,13 @@ jest.mock("@/hooks/api/access", () => ({
     refetch: () => Promise.resolve({ data: { isOrgOwner: true, scopes: {} } }),
   }),
 }));
+jest.mock("@/hooks/common/use-mobile", () => ({ useIsMobile: () => mockIsMobile }));
 jest.mock("./calendar-connect-inline", () => ({ CalendarConnectInline: () => null }));
 
 const STREAM_PATH = "/ai/meetings/follow-up/stream";
 const BUFFERED_PATH = "/ai/meetings/follow-up";
 const PROPOSE_PATH = "/ai/meetings/follow-up/propose-send";
+const CONFIRM_PATH = "/ai/meetings/follow-up/confirm-send";
 
 const SOURCES = [
   { id: "event-42", title: "Q3 pipeline review", snippet: "Calendar event details" },
@@ -70,11 +74,13 @@ let net: FetchRecorder;
 
 function arrange(respond: StreamResponder): void {
   net = installFetch(respond, {
-    [PROPOSE_PATH]: jsonOnce({ proposalId: "prop-1", token: "tok-1", expiresAt: "2026-09-04" }),
+    [PROPOSE_PATH]: jsonOnce({ proposalId: 1, token: "tok-1", expiresAt: "2026-09-04" }),
+    [CONFIRM_PATH]: jsonOnce({ executed: true, channel: "calendar" }),
   });
 }
 
 afterEach(() => {
+  mockIsMobile = false;
   Object.assign(globalThis, { fetch: originalFetch });
   jest.restoreAllMocks();
 });
@@ -93,6 +99,16 @@ async function draft() {
   return user;
 }
 
+async function openConfirm() {
+  arrange(streamsThenEnds(WHOLE_DRAFT, SOURCES));
+  renderPanel();
+  const user = await draft();
+  const send = await screen.findByRole("button", { name: /Send via Calendar/i });
+  await waitFor(() => expect(send).toBeEnabled());
+  await user.click(send);
+  return { user, dialog: await screen.findByRole("dialog", { name: "Confirm follow-up" }) };
+}
+
 function bodySentTo(path: string): Record<string, unknown> {
   const url = net.urls.find((u) => u.endsWith(path));
   return JSON.parse(net.bodies[url ?? ""] ?? "{}") as Record<string, unknown>;
@@ -104,6 +120,29 @@ async function stopAfter(user: UserEvent): Promise<void> {
 }
 
 describe("the calendar meeting follow-up panel streams", () => {
+  it("keeps confirmation actions in a desktop dialog and Cancel closes it", async () => {
+    const { user, dialog } = await openConfirm();
+    expect(dialog).toHaveAttribute("data-slot", "dialog-content");
+    expect(screen.getByText(/This will update the calendar event description/)).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(screen.queryByRole("dialog", { name: "Confirm follow-up" })).toBeNull();
+  });
+
+  it("opens confirmation from the bottom on mobile", async () => {
+    mockIsMobile = true;
+    const { dialog } = await openConfirm();
+    expect(dialog).toHaveClass("data-[state=open]:slide-in-from-bottom");
+    expect(screen.getByRole("button", { name: "Confirm" })).toBeInTheDocument();
+  });
+
+  it("sends the proposal token when the confirmation action is chosen", async () => {
+    const { user } = await openConfirm();
+    await user.click(screen.getByRole("button", { name: "Confirm" }));
+    await waitFor(() => expect(net.urls.some((url) => url.endsWith(CONFIRM_PATH))).toBe(true));
+    expect(bodySentTo(CONFIRM_PATH)).toEqual({ token: "tok-1" });
+    await waitFor(() => expect(screen.queryByRole("dialog", { name: "Confirm follow-up" })).toBeNull());
+  });
+
   it("posts to the /stream route and never to the buffered sibling", async () => {
     arrange(streamsThenEnds(WHOLE_DRAFT, SOURCES));
     renderPanel();

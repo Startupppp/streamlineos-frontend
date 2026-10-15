@@ -7,13 +7,7 @@ import { format } from "date-fns";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { getErrorMessage } from "@/lib/get-error-message";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
+import { AppDialog } from "@/components/shared/app-dialog";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
@@ -137,14 +131,36 @@ export function CreateTicketFromCalendarDialog({
   const isPending = createTicket.isPending;
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="flex flex-col gap-0 p-0 pb-0 md:pb-0 w-full max-w-none sm:max-w-sm">
-        <DialogHeader className="px-4 py-3">
-          <DialogTitle className="text-sm font-semibold">Add ticket due date</DialogTitle>
-        </DialogHeader>
-
+    <AppDialog
+      open={open}
+      onOpenChange={handleOpenChange}
+      title="Add ticket due date"
+      description="Choose a project and enter the ticket details."
+      className="md:max-w-sm"
+      footer={<>
+        <Button
+          variant="outline"
+          size="sm"
+          className="text-xs"
+          onClick={handleCancel}
+          disabled={isPending}
+        >
+          Cancel
+        </Button>
+        <LoadingButton
+          size="sm"
+          className="text-xs"
+          onClick={form.handleSubmit(handleSubmit)}
+          isPending={isPending}
+          loadingText="Creating…"
+          disabled={projects.length === 0}
+        >
+          Create ticket
+        </LoadingButton>
+      </>}
+    >
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="px-4 py-2 space-y-2">
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-2">
             <FormField
               control={form.control}
               name="projectId"
@@ -252,29 +268,6 @@ export function CreateTicketFromCalendarDialog({
             />
           </form>
         </Form>
-
-        <DialogFooter className="px-4 pt-2.5 pb-[max(0.625rem,env(safe-area-inset-bottom))] border-t flex-row gap-2 justify-end">
-          <Button
-            variant="outline"
-            size="sm"
-            className="text-xs"
-            onClick={handleCancel}
-            disabled={isPending}
-          >
-            Cancel
-          </Button>
-          <LoadingButton
-            size="sm"
-            className="text-xs"
-            onClick={form.handleSubmit(handleSubmit)}
-            isPending={isPending}
-            loadingText="Creating…"
-            disabled={projects.length === 0}
-          >
-            Create ticket
-          </LoadingButton>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+    </AppDialog>
   );
 }

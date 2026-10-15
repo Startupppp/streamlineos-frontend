@@ -1,19 +1,14 @@
-import React from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { CalendarOfflineIntentReview } from "./calendar-offline-intent-review";
+
+let mockIsMobile = false;
 
 jest.mock("@tanstack/react-query", () => ({ useQuery: jest.fn() }));
 jest.mock("next-auth/react", () => ({ useSession: jest.fn() }));
 jest.mock("@/hooks/api/access", () => ({ useCan: jest.fn() }));
 jest.mock("@/hooks/api/calendar-offline-policy", () => ({ useCalendarOfflinePolicy: jest.fn() }));
 jest.mock("@/hooks/common/use-online-status", () => ({ useOnlineStatus: jest.fn() }));
-jest.mock("@/components/ui/dialog", () => ({
-  Dialog: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  DialogContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  DialogDescription: ({ children }: { children: React.ReactNode }) => <p>{children}</p>,
-  DialogHeader: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  DialogTitle: ({ children }: { children: React.ReactNode }) => <h2>{children}</h2>,
-}));
+jest.mock("@/hooks/common/use-mobile", () => ({ useIsMobile: () => mockIsMobile }));
 
 const query = jest.requireMock<{ useQuery: jest.Mock }>("@tanstack/react-query").useQuery;
 const session = jest.requireMock<{ useSession: jest.Mock }>("next-auth/react").useSession;
@@ -49,7 +44,20 @@ function setup(options: { stale?: boolean; isFetching?: boolean; isError?: boole
 }
 
 describe("offline Calendar intent review", () => {
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => { jest.clearAllMocks(); mockIsMobile = false; });
+
+  it("keeps the time review and actions in a desktop dialog", () => {
+    setup();
+    expect(screen.getByRole("dialog", { name: "Review offline time draft" })).toHaveAttribute("data-slot", "dialog-content");
+    expect(screen.getByRole("button", { name: "Discard" })).toBeInTheDocument();
+  });
+
+  it("opens the time review and actions from the bottom on mobile", () => {
+    mockIsMobile = true;
+    setup();
+    expect(screen.getByRole("dialog", { name: "Review offline time draft" })).toHaveClass("data-[state=open]:slide-in-from-bottom");
+    expect(screen.getByRole("button", { name: "Continue to event form" })).toBeEnabled();
+  });
 
   it("keeps continue disabled while live availability refreshes", () => {
     expect(setup({ isFetching: true })).toBeDisabled();

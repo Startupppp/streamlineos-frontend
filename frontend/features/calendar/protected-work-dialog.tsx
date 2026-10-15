@@ -3,12 +3,13 @@
 import { useState, type FormEvent } from "react";
 import { addDays, endOfDay, isValid, parseISO, startOfDay } from "date-fns";
 import { toast } from "sonner";
+import { AppSheet } from "@/components/shared/app-sheet";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DatePicker } from "@/components/ui/date-picker";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCalendarProtectedWork, useCalendarProtectedWorkSuggestions, useMoveCalendarProtectedWork, useRegisterCalendarProtectedWork, useUndoCalendarProtectedWork } from "@/hooks/api/calendar-protected-work";
 
@@ -98,9 +99,16 @@ export function ProtectedWorkDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={(next) => { if (!next) onClose(); }}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader><DialogTitle>Protected work</DialogTitle></DialogHeader>
+    <AppSheet
+      open={open}
+      onOpenChange={(next) => { if (!next) onClose(); }}
+      title="Protected work"
+      description="View or reserve focus time for this event."
+      className="z-[110] md:max-w-xl"
+      footer={!workQuery.isLoading && !workQuery.isError && !work ? (
+        <LoadingButton form="protected-work-form" type="submit" isPending={register.isPending}>Protect time</LoadingButton>
+      ) : undefined}
+    >
         {workQuery.isLoading ? <p className="text-sm text-muted-foreground">Loading protected work</p> :
           workQuery.isError ? <div className="space-y-2"><p className="text-sm text-destructive">{getErrorMessage(workQuery.error)}</p><Button variant="outline" onClick={() => { void workQuery.refetch(); }}>Retry</Button></div> :
           work ? <div className="space-y-3 text-sm">
@@ -122,7 +130,7 @@ export function ProtectedWorkDialog({
               {suggestions.data.horizonTruncated ? <p className="text-muted-foreground">The search covered up to seven days or the first five available times.</p> : null}
             </div> : null}
           </div> :
-          <form onSubmit={(event) => { void submit(event); }} className="space-y-4">
+          <form id="protected-work-form" onSubmit={(event) => { void submit(event); }} className="space-y-4">
             <div className="space-y-1.5">
               <Label htmlFor="protected-work-deadline">Deadline</Label>
               <DatePicker
@@ -138,9 +146,7 @@ export function ProtectedWorkDialog({
             <div className="space-y-1.5"><Label htmlFor="protected-work-moves">Maximum moves per day</Label><Input id="protected-work-moves" type="number" min={0} max={20} required value={maxMovesPerDay} onChange={(event) => setMaxMovesPerDay(Number(event.target.value))} /></div>
             <div className="space-y-1.5"><Label htmlFor="protected-work-load">Maximum protected minutes per day</Label><Input id="protected-work-load" type="number" min={15} max={1440} required value={maxDailyMinutes} onChange={(event) => setMaxDailyMinutes(Number(event.target.value))} /></div>
             <label className="flex items-center gap-2 text-sm"><Checkbox checked={locked} onCheckedChange={(checked) => setLocked(checked === true)} />Lock this time block</label>
-            <Button type="submit" disabled={register.isPending}>Protect time</Button>
           </form>}
-      </DialogContent>
-    </Dialog>
+    </AppSheet>
   );
 }

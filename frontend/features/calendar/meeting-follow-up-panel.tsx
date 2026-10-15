@@ -11,19 +11,12 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { AppDialog } from "@/components/shared/app-dialog";
 import { Label } from "@/components/ui/label";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { AiDraftCard } from "@/components/ai/ai-draft-card";
 import { AiFailureBody } from "@/components/ai/ai-failure-body";
 import {
@@ -448,16 +441,13 @@ export function MeetingFollowUpPanel({
         )}
       </div>
 
-      <Dialog open={confirmOpen} onOpenChange={handleConfirmOpenChange}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle>Confirm follow-up</DialogTitle>
-            <DialogDescription>
-              This will update the calendar event description with the
-              follow-up. Proceed?
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
+      <AppDialog
+        open={confirmOpen}
+        onOpenChange={handleConfirmOpenChange}
+        title="Confirm follow-up"
+        description="Review this change before confirming."
+        className="md:max-w-sm"
+        footer={<>
             <Button
               variant="outline"
               size="sm"
@@ -474,9 +464,10 @@ export function MeetingFollowUpPanel({
               <CheckCircle2 className="h-3.5 w-3.5" aria-hidden />
               Confirm
             </LoadingButton>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        </>}
+      >
+        <p className="text-sm text-muted-foreground">This will update the calendar event description with the follow-up. Proceed?</p>
+      </AppDialog>
     </>
   );
 }
