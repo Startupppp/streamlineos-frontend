@@ -6,6 +6,8 @@ import { ApproveDialog, RejectDialog } from "./reviews-decision-dialogs";
 import { BulkDecideResultsDialog } from "./reviews-bulk-results-dialog";
 import type { BulkFailureWithTitle } from "./reviews-bulk-results-dialog";
 
+let mockMobileCards = false;
+
 jest.mock("next/navigation", () => ({
   useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn() })),
   usePathname: jest.fn(() => "/knowledge/wiki/reviews"),
@@ -64,7 +66,15 @@ jest.mock("@/components/ui/data-table", () => ({
         onNext: () => void;
         onPrevious: () => void;
       };
+      mobileCard?: (row: KbPageReview) => React.ReactNode;
     }) => {
+      if (mockMobileCards && props.mobileCard) {
+        return (
+          <div data-testid="mobile-cards">
+            {props.data.map((row) => <div key={row.id}>{props.mobileCard?.(row)}</div>)}
+          </div>
+        );
+      }
       if (!props.data || props.data.length === 0) return <>{props.emptyState ?? null}</>;
       return (
         <div data-testid="data-table">
@@ -136,6 +146,9 @@ const {
 const { usePageState } = jest.requireMock("@/hooks/api/use-page-state") as {
   usePageState: jest.Mock;
 };
+const { useCan } = jest.requireMock("@/hooks/api/access") as {
+  useCan: jest.Mock;
+};
 
 const { useSearchParams } = jest.requireMock("next/navigation") as {
   useSearchParams: jest.Mock;
@@ -183,6 +196,8 @@ function makePage(
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockMobileCards = false;
+  useCan.mockReturnValue(true);
   useRouter.mockReturnValue({ push: jest.fn(), replace });
   useSearchParams.mockReturnValue(new URLSearchParams());
   usePageState.mockReturnValue({ kind: "ready" });
@@ -192,6 +207,40 @@ beforeEach(() => {
     isError: false,
     error: undefined,
     refetch: jest.fn(),
+  });
+});
+
+describe("ReviewsPage mobile cards", () => {
+  it("opens a pending review decision from the mobile card", () => {
+    mockMobileCards = true;
+    useKbPageReviews.mockReturnValue({
+      data: makePage([makeReview({ pageTitle: "Mobile Handbook" })]),
+      isLoading: false,
+      isError: false,
+      error: undefined,
+      refetch: jest.fn(),
+    });
+
+    render(<ReviewsPage />);
+    expect(screen.getByTestId("mobile-cards")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Approve review for Mobile Handbook" }));
+    expect(screen.getByRole("dialog", { name: "Approve review" })).toBeInTheDocument();
+  });
+
+  it("hides mobile decision actions without review management access", () => {
+    mockMobileCards = true;
+    useCan.mockReturnValue(false);
+    useKbPageReviews.mockReturnValue({
+      data: makePage([makeReview({ pageTitle: "Mobile Handbook" })]),
+      isLoading: false,
+      isError: false,
+      error: undefined,
+      refetch: jest.fn(),
+    });
+
+    render(<ReviewsPage />);
+    expect(screen.getByTestId("mobile-cards")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /review for Mobile Handbook/ })).toBeNull();
   });
 });
 

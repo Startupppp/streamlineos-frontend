@@ -11,26 +11,19 @@ import type { DataTableColumn, DataTableSortState } from "@/components/ui/data-t
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { useUrlFilters, parseEnum } from "@/lib/url-state/use-url-filters";
 import { useCan } from "@/hooks/api/access";
 import { TrustBadge } from "@/features/wiki/components/kb-collection-badges";
 import { useKbPageReviews } from "@/hooks/api/kb/page-reviews";
 import type {
   KbPageReview,
-  KbReviewStatus,
-  KbReviewType,
   BulkDecideResultItem,
 } from "@/hooks/api/kb/page-reviews";
 import { pageHref } from "@/lib/knowledge-routes";
 import { cn } from "@/lib/utils";
-import {
-  KbAlertCircleIcon,
-  KbCheckCircleIcon,
-  KbXCircleIcon,
-} from "@/features/wiki/lib/kb-icons";
 import { kbFormatDate } from "@/features/wiki/lib/kb-date-utils";
 import { ReviewsFilters } from "./reviews-filters";
+import { ReviewMobileCard, StatusBadge, TypeBadge } from "./reviews-mobile-card";
 import { ApproveDialog, RejectDialog } from "./reviews-decision-dialogs";
 import { BulkDecideDialog } from "./reviews-bulk-decide-dialog";
 import {
@@ -61,84 +54,6 @@ function ReviewsSkeleton() {
       {Array.from({ length: 5 }).map((_, i) => (
         <Skeleton key={i} className="h-12 w-full rounded-md" />
       ))}
-    </div>
-  );
-}
-
-function StatusBadge({
-  status,
-  isOverdue,
-}: {
-  status: KbReviewStatus;
-  isOverdue: boolean;
-}) {
-  if (isOverdue) {
-    return (
-      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-dense font-medium bg-status-danger-surface text-status-danger-ink border border-status-danger-rule">
-        <KbAlertCircleIcon className="h-3 w-3" />
-        Overdue
-      </span>
-    );
-  }
-  if (status === "pending") {
-    return (
-      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-dense font-medium bg-status-warning-surface text-status-warning-ink border border-status-warning-rule">
-        <KbAlertCircleIcon className="h-3 w-3" />
-        Pending
-      </span>
-    );
-  }
-  if (status === "approved") {
-    return (
-      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-dense font-medium bg-status-success-surface text-status-success-ink border border-status-success-rule">
-        <KbCheckCircleIcon className="h-3 w-3" />
-        Approved
-      </span>
-    );
-  }
-  return (
-    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-dense font-medium bg-status-danger-surface text-status-danger-ink border border-status-danger-rule">
-      <KbXCircleIcon className="h-3 w-3" />
-      Rejected
-    </span>
-  );
-}
-
-function TypeBadge({ type }: { type: KbReviewType }) {
-  if (type === "approval") {
-    return (
-      <Badge className="bg-primary/10 text-foreground border-primary/20 text-dense" variant="outline">
-        Approval
-      </Badge>
-    );
-  }
-  return (
-    <Badge className="bg-status-info-surface text-status-info-ink border-status-info-rule text-dense" variant="outline">
-      Freshness
-    </Badge>
-  );
-}
-
-function ReviewMobileCard(review: KbPageReview) {
-  return (
-    <div className="flex flex-col gap-1.5 px-3 py-2.5">
-      <Link
-        href={pageHref(review.pageId)}
-        className="font-medium text-foreground line-clamp-1 hover:text-accent transition-colors"
-      >
-        {review.pageTitle ?? "Untitled"}
-      </Link>
-      <div className="flex items-center gap-2 flex-wrap">
-        <StatusBadge status={review.status} isOverdue={review.isOverdue} />
-        <TypeBadge type={review.type} />
-        {review.pageTrustState ? (
-          <TrustBadge trustState={review.pageTrustState} />
-        ) : null}
-      </div>
-      <span className="text-sm text-muted-foreground">
-        {review.reviewerName ?? "No reviewer"}
-        {review.dueAt ? ` · Due ${kbFormatDate(review.dueAt)}` : ""}
-      </span>
     </div>
   );
 }
@@ -206,6 +121,18 @@ export default function ReviewsPage() {
   const [rejectTarget, setRejectTarget] = useState<KbPageReview | null>(null);
   const [bulkState, setBulkState] = useState<BulkState>({ kind: "idle" });
   const [selected, setSelected] = useState<Set<string | number>>(new Set());
+
+  const renderMobileCard = useCallback(
+    (review: KbPageReview) => (
+      <ReviewMobileCard
+        review={review}
+        canManage={canManage}
+        onApprove={setApproveTarget}
+        onReject={setRejectTarget}
+      />
+    ),
+    [canManage],
+  );
 
   const reviews = useMemo(() => data?.data ?? [], [data]);
   const pagination = data?.pagination;
@@ -496,7 +423,7 @@ export default function ReviewsPage() {
               getRowLabel: (r) => r.pageTitle ?? "Review",
             }}
             sortState={sortState}
-            mobileCard={ReviewMobileCard}
+            mobileCard={renderMobileCard}
             className="flex-1 min-h-0"
             pagination={{
               mode: "cursor",
