@@ -15,7 +15,7 @@ export const calendarEventsResponseContract = z.object({
       title: z.string(),
       start: z.string(),
       end: z.string(),
-      allDay: z.boolean().optional(),
+      allDay: z.boolean(),
       color: z.string().nullable().optional(),
       category: z.string(),
       source: z.string().min(1),
