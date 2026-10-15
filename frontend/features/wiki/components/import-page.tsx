@@ -480,7 +480,7 @@ export default function ImportPage() {
           <div className="space-y-4">
             <p className="text-xs text-muted-foreground">
               Accepts .md, .markdown and .txt files · 5 MB per file · max 100
-              pages per import. Pasted text has a 50,000 character limit. Set a
+              pages per import. Each page has a 50,000 character limit. Set a
               duplicate policy to control what happens when a page title already
               exists.
             </p>
