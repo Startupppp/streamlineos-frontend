@@ -4,6 +4,7 @@ import {
   useKbResearchBrief,
   useConvertResearchBriefToPage,
 } from "@/hooks/api/kb/research-briefs";
+import { usePageState } from "@/hooks/api/use-page-state";
 
 const pushMock = jest.fn();
 
@@ -26,6 +27,10 @@ jest.mock("@/hooks/api/kb/spaces", () => ({
   useKbSpace: jest.fn(() => ({ data: undefined })),
 }));
 
+jest.mock("@/hooks/api/use-page-state", () => ({
+  usePageState: jest.fn(() => ({ kind: "ready" })),
+}));
+
 jest.mock("@/components/ai/ai-citation-chips", () => ({
   AiCitationChips: () => <div data-testid="citation-chips" />,
 }));
@@ -36,6 +41,7 @@ jest.mock("@/hooks/api/access", () => ({
 
 const useKbResearchBriefMock = jest.mocked(useKbResearchBrief);
 const useConvertResearchBriefToPageMock = jest.mocked(useConvertResearchBriefToPage);
+const usePageStateMock = jest.mocked(usePageState);
 
 function brief(overrides: Record<string, unknown> = {}) {
   return {
@@ -62,6 +68,7 @@ function mockBrief(overrides: Record<string, unknown> = {}) {
   useKbResearchBriefMock.mockReturnValue({
     data: brief(overrides),
     isLoading: false,
+    isError: false,
     error: null,
     refetch: jest.fn(),
   } as unknown as ReturnType<typeof useKbResearchBrief>);
@@ -193,5 +200,37 @@ describe("KbResearchBriefDetail — S19 scope and owner", () => {
     mockBrief({ spaceId: 3 });
     render(<KbResearchBriefDetail briefId={1} basePath="/knowledge/research-briefs" />);
     expect(screen.getAllByText(/Scope:/i).length).toBeGreaterThan(0);
+  });
+});
+
+describe("KbResearchBriefDetail — page states", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    usePageStateMock.mockReturnValue({ kind: "ready" });
+  });
+
+  it("renders denial instead of not found while the gated detail query has no data", () => {
+    useKbResearchBriefMock.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+    } as unknown as ReturnType<typeof useKbResearchBrief>);
+    usePageStateMock.mockReturnValue({ kind: "denied", permission: "kb:pages:view" });
+
+    render(<KbResearchBriefDetail briefId={1} basePath="/knowledge/research-briefs" />);
+
+    expect(screen.getByRole("heading", { name: "Access Restricted" })).toBeInTheDocument();
+    expect(screen.queryByText("Research brief not found")).not.toBeInTheDocument();
+    expect(usePageStateMock).toHaveBeenCalledWith(expect.objectContaining({ permission: "kb:pages:view", isEmpty: true }));
+  });
+
+  it("renders loaded detail after permission resolves", () => {
+    mockBrief();
+
+    render(<KbResearchBriefDetail briefId={1} basePath="/knowledge/research-briefs" />);
+
+    expect(screen.getByText("How do we onboard a new reseller?")).toBeInTheDocument();
   });
 });
