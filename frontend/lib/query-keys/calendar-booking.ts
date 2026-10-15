@@ -12,6 +12,8 @@ export const calendarBookingQueryKeys = {
     ["calendar", "booking-rules", "operations", orgId, userId, membershipId, accessVersion, canRead, ruleId] as const,
   resources: (orgId: string, userId: string, membershipId: number | null, accessVersion: number, canRead: boolean) =>
     ["calendar", "booking-rules", "resources", orgId, userId, membershipId, accessVersion, canRead] as const,
+  allocations: (orgId: string, userId: string, membershipId: number | null, accessVersion: number, canRead: boolean, bookingId: string) =>
+    ["calendar", "booking-rules", "allocations", orgId, userId, membershipId, accessVersion, canRead, bookingId] as const,
   requirements: (orgId: string, userId: string, membershipId: number | null, accessVersion: number, canRead: boolean, ruleId: number) =>
     ["calendar", "booking-rules", "requirements", orgId, userId, membershipId, accessVersion, canRead, ruleId] as const,
   routing: (orgId: string, userId: string, membershipId: number | null, accessVersion: number, canRead: boolean, ruleId: number) =>

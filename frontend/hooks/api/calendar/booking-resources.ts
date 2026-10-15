@@ -8,12 +8,14 @@ import { calendarBookingQueryKeys } from "@/lib/query-keys/calendar-booking";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useBookingScope } from "./booking-rules";
-import type { BookingResource, BookingResourceMaintenance, BookingRuleResource } from "./booking-resources-schema";
+import type { BookingAllocation, BookingAllocationResolution, BookingResource, BookingResourceMaintenance, BookingRuleResource } from "./booking-resources-schema";
 
 const resourcesContract = lazyContract(() => import("./booking-resources-schema").then((module) => module.bookingResourcesContract));
 const requirementsContract = lazyContract(() => import("./booking-resources-schema").then((module) => module.bookingRuleResourcesContract));
 const resourceContract = lazyContract(() => import("./booking-resources-schema").then((module) => module.bookingResourceContract));
 const maintenanceContract = lazyContract(() => import("./booking-resources-schema").then((module) => module.bookingResourceMaintenanceContract));
+const allocationsContract = lazyContract(() => import("./booking-resources-schema").then((module) => module.bookingAllocationsContract));
+const allocationResolutionContract = lazyContract(() => import("./booking-resources-schema").then((module) => module.bookingAllocationResolutionContract));
 
 export interface CalendarResourceInput {
   kind: "room" | "equipment" | "resource";
@@ -58,6 +60,36 @@ export function useCalendarBookingRuleResources(ruleId: number | null, enabled =
     enabled: enabled && ruleId !== null && Boolean(scope.orgId && scope.userId),
     staleTime: 30_000,
     ...INLINE_READ_ERROR,
+  });
+}
+
+export function useCalendarBookingAllocations(bookingId: string) {
+  const scope = useBookingScope();
+  return useGatedQuery("calendar:read", {
+    queryKey: calendarBookingQueryKeys.allocations(scope.orgId, scope.userId, scope.membershipId, scope.accessVersion, scope.canRead, bookingId),
+    queryFn: ({ signal }) => apiClient.get<BookingAllocation[]>(`/calendar/resources/bookings/${encodeURIComponent(bookingId)}/allocations`, undefined, signal, allocationsContract),
+    enabled: Boolean(scope.orgId && scope.userId && bookingId),
+    staleTime: 15_000,
+    ...INLINE_READ_ERROR,
+  });
+}
+
+export function useResolveCalendarBookingAllocation(bookingId: string) {
+  const queryClient = useQueryClient();
+  const scope = useBookingScope();
+  return useAuthorizedMutation("calendar:read", {
+    mutationKey: calendarBookingQueryKeys.mutation("resolve-allocation"),
+    mutationFn: ({ resourceId, expectedVersion, outcome, ownerReceiptId, reasonCode }: { resourceId: number; expectedVersion: number; outcome: "approved" | "rejected"; ownerReceiptId: string; reasonCode?: string }) =>
+      apiClient.put<BookingAllocationResolution>(`/calendar/resources/bookings/${encodeURIComponent(bookingId)}/allocations/${resourceId}`, {
+        expectedVersion,
+        outcome,
+        ownerReceiptId,
+        ...(reasonCode ? { reasonCode } : {}),
+      }, undefined, allocationResolutionContract),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: calendarBookingQueryKeys.allocations(scope.orgId, scope.userId, scope.membershipId, scope.accessVersion, scope.canRead, bookingId) });
+      void queryClient.invalidateQueries({ queryKey: calendarBookingQueryKeys.all() });
+    },
   });
 }
 

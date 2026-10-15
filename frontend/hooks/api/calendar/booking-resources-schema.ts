@@ -42,6 +42,36 @@ export const bookingResourceMaintenanceContract = z.object({
   updatedAt: z.string(),
 });
 
+export const bookingAllocationContract = z.object({
+  resourceId: z.number().int().positive(),
+  resourceName: z.string(),
+  ownership: z.enum(["calendar", "source"]),
+  state: z.enum(["committed", "pending", "rejected", "uncertain", "released"]),
+  reasonCode: z.string().nullable(),
+  version: z.number().int().positive(),
+  canResolve: z.boolean(),
+  canApprove: z.boolean(),
+  approvalReceiptId: z.string().nullable(),
+});
+
+export const bookingAllocationsContract = z.array(bookingAllocationContract);
+
+export const bookingAllocationResolutionContract = z.object({
+  bookingId: z.string().uuid(),
+  bookingStatus: z.enum(["pending", "confirmed", "declined"]),
+  lifecycleVersion: z.number().int().positive(),
+  allocation: z.object({
+    resourceId: z.number().int().positive(),
+    state: z.enum(["committed", "pending", "rejected", "uncertain"]),
+    ownerReceiptId: z.string().nullable(),
+    reasonCode: z.string().nullable(),
+    version: z.number().int().positive(),
+    resolvedAt: z.string().nullable(),
+  }),
+});
+
 export type BookingResource = z.infer<typeof bookingResourceContract>;
 export type BookingRuleResource = z.infer<typeof bookingRuleResourceContract>;
 export type BookingResourceMaintenance = z.infer<typeof bookingResourceMaintenanceContract>;
+export type BookingAllocation = z.infer<typeof bookingAllocationContract>;
+export type BookingAllocationResolution = z.infer<typeof bookingAllocationResolutionContract>;

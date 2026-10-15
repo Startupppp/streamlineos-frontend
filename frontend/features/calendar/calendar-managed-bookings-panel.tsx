@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ErrorState } from "@/components/shared/error-state";
 import { useBookingInvitations, useCalendarRoutingAssignment, useManagedCalendarBookings, useMarkBookingInvitationNoShow, useMarkManagedBookingNoShow } from "@/hooks/api/calendar/managed-bookings";
 import { useBookingScope } from "@/hooks/api/calendar/booking-rules";
+import { useCalendarBookingAllocations, useResolveCalendarBookingAllocation } from "@/hooks/api/calendar/booking-resources";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { CalendarBookingRule } from "@/hooks/api/calendar/booking-rules-schema";
 import type { ManagedBooking } from "@/hooks/api/calendar/managed-bookings-schema";
@@ -48,6 +49,32 @@ function BookingInvitations({ booking }: { booking: ManagedBooking }) {
   return <div className="space-y-2"><h5 className="font-medium">Invitations and RSVP</h5>{error ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}{invitations.access.denied ? <p className="text-sm text-muted-foreground">Invitations are unavailable to this account.</p> : invitations.access.unavailable || invitations.isError ? <ErrorState title="Invitations unavailable" error={invitations.error} onRetry={() => void invitations.refetch()} /> : invitations.access.pending || invitations.isPending ? <p role="status">Loading invitations…</p> : invitations.data?.items.length ? <div className="space-y-2">{invitations.data.items.map((invitation) => <div key={invitation.id} className="rounded-md border p-2 text-sm"><div className="flex items-center justify-between gap-2"><span>{invitation.guestName || invitation.guestEmail || (invitation.membershipId ? `Member #${invitation.membershipId}` : "Attendee")}</span><span className="capitalize">{invitation.rsvpStatus}</span></div><p className="text-muted-foreground">{invitation.attendeeRole} · {invitation.lifecycleState}{invitation.noShowAt ? " · no-show" : ""}</p>{booking.hostMembershipId === scope.membershipId && invitation.attendeeRole !== "organizer" && invitation.rsvpStatus !== "declined" && invitation.lifecycleState === "current" && !invitation.noShowAt && now !== null && new Date(invitation.endAt).getTime() <= now ? <Button size="sm" variant="outline" disabled={noShow.isPending} onClick={() => void markNoShow(invitation.id)}>Mark no-show</Button> : null}</div>)}</div> : <p className="text-sm text-muted-foreground">No invitations are recorded.</p>}<div className="flex gap-2">{previousCursors.length ? <Button variant="outline" onClick={() => { setCursor(previousCursors.at(-1) ?? null); setPreviousCursors(previousCursors.slice(0, -1)); }}>Newer</Button> : null}{invitations.data?.nextCursor ? <Button variant="outline" onClick={() => { setPreviousCursors([...previousCursors, cursor]); setCursor(invitations.data.nextCursor); }}>Older</Button> : null}</div></div>;
 }
 
+function BookingAllocations({ booking }: { booking: ManagedBooking }) {
+  const allocations = useCalendarBookingAllocations(booking.id);
+  const resolve = useResolveCalendarBookingAllocation(booking.id);
+  const [error, setError] = useState<string | null>(null);
+
+  async function decide(resourceId: number, expectedVersion: number, ownerReceiptId: string | null, outcome: "approved" | "rejected") {
+    if (outcome === "rejected" && !window.confirm("Reject this resource request and decline the booking?")) return;
+    try {
+      await resolve.mutateAsync({
+        resourceId,
+        expectedVersion,
+        outcome,
+        ownerReceiptId: ownerReceiptId ?? `resource:${resourceId}:${expectedVersion}`,
+        ...(outcome === "rejected" ? { reasonCode: "resource_owner_rejected" } : {}),
+      });
+      setError(null);
+      toast.success(outcome === "approved" ? "Resource approved" : "Resource rejected");
+    } catch (cause) {
+      setError(getErrorMessage(cause));
+      void allocations.refetch();
+    }
+  }
+
+  return <div className="space-y-2"><h5 className="font-medium">Rooms and equipment</h5>{error ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}{allocations.access.denied ? <p className="text-sm text-muted-foreground">Resource allocations are unavailable to this account.</p> : allocations.access.unavailable || allocations.isError ? <ErrorState title="Resource allocations unavailable" error={allocations.error} onRetry={() => void allocations.refetch()} /> : allocations.access.pending || allocations.isPending ? <p role="status">Loading resource allocations…</p> : allocations.data?.length ? <div className="space-y-2">{allocations.data.map((allocation) => <div key={allocation.resourceId} className="rounded-md border p-3 text-sm"><div className="flex items-center justify-between gap-2"><span className="font-medium">{allocation.resourceName}</span><span className="capitalize">{allocation.state}</span></div>{allocation.reasonCode ? <p className="text-muted-foreground">{allocation.reasonCode.replaceAll("_", " ")}</p> : null}{booking.status === "pending" && ["pending", "uncertain"].includes(allocation.state) && allocation.canResolve ? <div className="mt-2 flex gap-2"><Button size="sm" disabled={resolve.isPending || !allocation.canApprove || !allocation.approvalReceiptId} onClick={() => void decide(allocation.resourceId, allocation.version, allocation.approvalReceiptId, "approved")}>Approve</Button><Button size="sm" variant="outline" disabled={resolve.isPending} onClick={() => void decide(allocation.resourceId, allocation.version, allocation.approvalReceiptId, "rejected")}>Reject</Button></div> : null}</div>)}</div> : <p className="text-sm text-muted-foreground">No resource allocations are required.</p>}</div>;
+}
+
 function BookingDetail({ rule, booking, cursor, onBookingChange, onBack }: { rule: CalendarBookingRule; booking: ManagedBooking; cursor: string | null; onBookingChange: (booking: ManagedBooking) => void; onBack: () => void }) {
   const now = useCurrentTime();
   const assignment = useCalendarRoutingAssignment(rule.id, booking.id);
@@ -69,6 +96,7 @@ function BookingDetail({ rule, booking, cursor, onBookingChange, onBack }: { rul
     {error ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}
     {booking.hostMembershipId === scope.membershipId && ["confirmed", "changed", "rescheduled", "started", "ended"].includes(booking.lifecycleState) && now !== null && new Date(booking.endAt).getTime() <= now ? <Button variant="outline" disabled={noShow.isPending} onClick={() => void markNoShow()}>Mark booking no-show</Button> : null}
     {assignment.access.denied ? <p className="text-sm text-muted-foreground">Routing details are unavailable to your account.</p> : assignment.access.unavailable || assignment.isError ? <ErrorState title="Routing decision unavailable" error={assignment.error} onRetry={() => void assignment.refetch()} /> : assignment.access.pending || assignment.isPending ? <p role="status">Loading routing decision…</p> : assignment.data ? <div className="space-y-1 rounded-md border p-3 text-sm"><p className="font-medium">Routing decision</p><p>Rule version ID {assignment.data.routingRuleVersionId} · {assignment.data.decisionCode.replaceAll("_", " ")}</p><p>Primary host member #{assignment.data.primaryHostMembershipId}</p><p>Assigned hosts: {assignment.data.hostMembershipIds.map((id) => `#${id}`).join(", ")}</p><p>Fallback: {assignment.data.fallbackApplied ? "Yes" : "No"}</p>{assignment.data.privateReasons.length ? <ul className="list-inside list-disc">{assignment.data.privateReasons.map((reason) => <li key={reason}>{reason.replaceAll("_", " ")}</li>)}</ul> : null}</div> : <p className="text-sm text-muted-foreground">This booking has no team routing assignment.</p>}
+    <BookingAllocations booking={booking} />
     <BookingInvitations booking={booking} />
   </div>;
 }
