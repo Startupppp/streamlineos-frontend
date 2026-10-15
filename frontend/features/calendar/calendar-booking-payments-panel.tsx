@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ErrorState } from "@/components/shared/error-state";
 import { useCan } from "@/hooks/api/access";
 import {
@@ -77,7 +78,7 @@ function PaymentPolicyEditor({ rule, current }: { rule: CalendarBookingRule; cur
     <div><h4 className="font-medium">Payment policy</h4><p className="text-sm text-muted-foreground">{current ? `Version ${current.version}` : "No payment policy yet"}</p></div>
     {error ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}
     <fieldset disabled={!canWrite || save.isPending} className="space-y-3 disabled:opacity-70">
-      <div className="grid grid-cols-2 gap-2"><div className="space-y-1"><Label htmlFor="payment-policy-status">Status</Label><select id="payment-policy-status" className="w-full rounded-md border bg-background p-2 text-sm" {...form.register("status")}><option value="disabled">Disabled</option><option value="active">Active</option></select></div><div className="space-y-1"><Label htmlFor="payment-policy-environment">Environment</Label><select id="payment-policy-environment" className="w-full rounded-md border bg-background p-2 text-sm" {...form.register("environment")}><option value="test">Test</option><option value="live">Live</option></select></div></div>
+      <div className="grid grid-cols-2 gap-2"><div className="space-y-1"><Label htmlFor="payment-policy-status">Status</Label><Controller control={form.control} name="status" render={({ field }) => <Select value={field.value} onValueChange={field.onChange}><SelectTrigger id="payment-policy-status" className="w-full"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="disabled">Disabled</SelectItem><SelectItem value="active">Active</SelectItem></SelectContent></Select>} /></div><div className="space-y-1"><Label htmlFor="payment-policy-environment">Environment</Label><Controller control={form.control} name="environment" render={({ field }) => <Select value={field.value} onValueChange={field.onChange}><SelectTrigger id="payment-policy-environment" className="w-full"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="test">Test</SelectItem><SelectItem value="live">Live</SelectItem></SelectContent></Select>} /></div></div>
       <div className="space-y-1"><Label htmlFor="payment-policy-provider">Payment provider</Label><Input id="payment-policy-provider" maxLength={60} {...form.register("providerKey")} />{form.formState.errors.providerKey ? <p role="alert" className="text-sm text-destructive">{form.formState.errors.providerKey.message}</p> : null}</div>
       <div className="grid grid-cols-2 gap-2"><div className="space-y-1"><Label htmlFor="payment-policy-amount">Amount in minor units</Label><Input id="payment-policy-amount" type="number" min={1} max={1_000_000_000} {...form.register("amountMinor", { valueAsNumber: true })} /></div><div className="space-y-1"><Label htmlFor="payment-policy-currency">Currency</Label><Input id="payment-policy-currency" maxLength={3} {...form.register("currency")} /></div></div>
       {Number.isFinite(amountMinor) && /^[A-Z]{3}$/.test(currency) ? <p className="text-sm text-muted-foreground">Displayed price: {formatMinor(amountMinor, currency)}</p> : null}

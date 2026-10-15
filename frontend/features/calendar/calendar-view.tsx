@@ -26,6 +26,7 @@ import type { CalendarListItem } from "@/hooks/api/calendar";
 import type { CalendarSearchResponse } from "@/hooks/api/calendar-types";
 import {
   CalendarAgendaPreview,
+  CalendarEventDetailFallback,
   CalendarListFallback,
   CalendarLoadingStatus,
   CalendarSheetFallback,
@@ -113,7 +114,7 @@ const EventDetailSheet = dynamic(
     })),
   {
     ssr: false,
-    loading: () => <CalendarSheetFallback label="Loading event" />,
+    loading: () => <CalendarEventDetailFallback label="Loading event" />,
   },
 );
 
@@ -124,7 +125,7 @@ const ExternalEventDetailSheet = dynamic(
     })),
   {
     ssr: false,
-    loading: () => <CalendarSheetFallback label="Loading event" />,
+    loading: () => <CalendarEventDetailFallback label="Loading event" />,
   },
 );
 
@@ -135,7 +136,7 @@ const HrEventDetailSheet = dynamic(
     })),
   {
     ssr: false,
-    loading: () => <CalendarSheetFallback label="Loading event" />,
+    loading: () => <CalendarEventDetailFallback label="Loading event" />,
   },
 );
 

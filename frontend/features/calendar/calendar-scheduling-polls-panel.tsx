@@ -3,8 +3,10 @@
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ErrorState } from "@/components/shared/error-state";
 import { useMemberDirectory } from "@/hooks/api/members/use-member-directory";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -25,6 +27,7 @@ import type {
   SchedulingPoll,
 } from "@/hooks/api/calendar/scheduling-polls-schema";
 import { CalendarPollGuestReplacement } from "./calendar-poll-guest-replacement";
+import { CalendarDateTimePicker } from "./calendar-date-time-picker";
 
 type PollVoter = CreateSchedulingPollInput["voters"][number];
 type GuestVoter = NonNullable<SchedulingPoll["guestVoters"]>[number];
@@ -334,21 +337,21 @@ export function CalendarSchedulingPollsPanel({
           </div>
           <div className="space-y-1">
             <Label htmlFor="poll-expires">Voting closes</Label>
-            <Input
+            <CalendarDateTimePicker
               id="poll-expires"
-              type="datetime-local"
+              label="Voting closes"
               value={expiresAt}
-              onChange={(event) => setExpiresAt(event.target.value)}
+              onChange={setExpiresAt}
             />
           </div>
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
+          <Label htmlFor="poll-hold-options" className="flex items-center gap-2 text-sm font-normal">
+            <Checkbox
+              id="poll-hold-options"
               checked={holdOptions}
-              onChange={(event) => setHoldOptions(event.target.checked)}
+              onCheckedChange={(checked) => setHoldOptions(checked === true)}
             />
             Temporarily hold proposed capacity
-          </label>
+          </Label>
           <fieldset className="space-y-2">
             <legend className="text-sm font-medium">Proposed times</legend>
             {preview.access.unavailable || preview.isError ? (
@@ -366,20 +369,21 @@ export function CalendarSchedulingPollsPanel({
             ) : preview.data.slots.length ? (
               <div className="max-h-64 space-y-1 overflow-y-auto">
                 {preview.data.slots.map((slot) => (
-                  <label
+                  <Label
                     key={slot.start}
-                    className="flex items-center gap-2 rounded-md border p-2 text-sm"
+                    htmlFor={`poll-slot-${slot.start}`}
+                    className="flex items-center gap-2 rounded-md border p-2 text-sm font-normal"
                   >
-                    <input
-                      type="checkbox"
+                    <Checkbox
+                      id={`poll-slot-${slot.start}`}
                       checked={selectedStarts.includes(slot.start)}
                       disabled={
                         !selectedStarts.includes(slot.start) &&
                         selectedStarts.length >= 20
                       }
-                      onChange={(event) =>
+                      onCheckedChange={(checked) =>
                         setSelectedStarts(
-                          event.target.checked
+                          checked === true
                             ? [...selectedStarts, slot.start]
                             : selectedStarts.filter(
                                 (value) => value !== slot.start,
@@ -388,7 +392,7 @@ export function CalendarSchedulingPollsPanel({
                       }
                     />
                     {displayTime(slot.start, rule.timeZone)}
-                  </label>
+                  </Label>
                 ))}
               </div>
             ) : (
@@ -411,28 +415,30 @@ export function CalendarSchedulingPollsPanel({
                         (member) => member.id === voter.userId,
                       )?.name ?? voter.userId)}
                 </span>
-                <select
-                  aria-label={`Voter ${index + 1} priority`}
+                <Select
                   value={voter.requirement}
-                  onChange={(event) =>
+                  onValueChange={(value) => {
+                    if (value !== "required" && value !== "optional") return;
                     setVoters(
                       voters.map((item, position) =>
                         position === index
                           ? {
                               ...item,
-                              requirement: event.target.value as
-                                | "required"
-                                | "optional",
+                              requirement: value,
                             }
                           : item,
                       ),
-                    )
-                  }
-                  className="rounded-md border bg-background p-1"
+                    );
+                  }}
                 >
-                  <option value="required">Required</option>
-                  <option value="optional">Optional</option>
-                </select>
+                  <SelectTrigger aria-label={`Voter ${index + 1} priority`} size="sm" className="w-auto">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="required">Required</SelectItem>
+                    <SelectItem value="optional">Optional</SelectItem>
+                  </SelectContent>
+                </Select>
                 <Button
                   size="sm"
                   variant="outline"
@@ -477,19 +483,21 @@ export function CalendarSchedulingPollsPanel({
               />
             </div>
             <div className="flex gap-2">
-              <select
-                aria-label="Team member"
-                className="min-w-0 flex-1 rounded-md border bg-background p-2 text-sm"
+              <Select
                 value={memberId}
-                onChange={(event) => setMemberId(event.target.value)}
+                onValueChange={setMemberId}
               >
-                <option value="">Choose a member</option>
-                {members.members.map((member) => (
-                  <option key={member.id} value={member.id}>
-                    {member.name ?? member.email}
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger aria-label="Team member" className="min-w-0 flex-1">
+                  <SelectValue placeholder="Choose a member" />
+                </SelectTrigger>
+                <SelectContent>
+                  {members.members.map((member) => (
+                    <SelectItem key={member.id} value={member.id}>
+                      {member.name ?? member.email}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <Button
                 variant="outline"
                 onClick={addMember}
@@ -603,10 +611,11 @@ export function CalendarSchedulingPollsPanel({
           ) : polls.data?.items.length ? (
             <div className="space-y-2">
               {polls.data.items.map((poll) => (
-                <button
+                <Button
                   key={poll.id}
                   type="button"
-                  className="flex w-full items-center justify-between rounded-md border p-3 text-left text-sm hover:bg-muted"
+                  variant="outline"
+                  className="h-auto w-full justify-between p-3 text-left"
                   onClick={() => {
                     setSelectedPollId(poll.id);
                     setFinalized(null);
@@ -616,7 +625,7 @@ export function CalendarSchedulingPollsPanel({
                   <span className="capitalize text-muted-foreground">
                     {poll.status}
                   </span>
-                </button>
+                </Button>
               ))}
             </div>
           ) : (

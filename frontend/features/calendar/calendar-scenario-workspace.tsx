@@ -95,7 +95,7 @@ export function CalendarScenarioWorkspace({ drafts, onRemove, onClear, onClose }
     <SheetContent className="flex w-full flex-col p-0 sm:max-w-xl">
       <SheetHeader className="border-b px-5 py-4"><SheetTitle>What-if scenario</SheetTitle></SheetHeader>
       <ScrollArea className="min-h-0 flex-1"><div className="space-y-4 px-5 py-4">
-        <p className="text-sm text-muted-foreground">Build a scenario from source-owned changes in one visible commitment chain. Preview does not change source records.</p>
+        <p className="text-sm text-muted-foreground">Build a scenario from linked meeting and source-owned changes in one visible commitment chain. Preview does not change records.</p>
         {drafts.map((draft, index) => <div key={`${draft.step.sourceKey}:${draft.step.entityType}:${draft.step.sourceRecordId}`} className="flex items-start gap-3 rounded-md border p-3">
           <Checkbox aria-label={`Apply ${draft.label}`} checked={selected.includes(index)} disabled={Boolean(proposal) || pending} onCheckedChange={(checked) => setSelected((current) => checked === true ? [...current, index].sort((a, b) => a - b) : current.filter((value) => value !== index))} />
           <div className="min-w-0 flex-1"><p className="text-sm font-medium">{draft.label}</p><p className="text-xs text-muted-foreground">{draft.step.intendedEffect}</p></div>
