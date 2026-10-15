@@ -167,6 +167,7 @@ KB-OPEN-074 source update, 2026-10-16: frontend `fb1e2b928` now calls `recordLeg
   - Previous consolidated ID: `KB-OPEN-274`
 - [ ] **KB-OPEN-046** **BLOCKED:** Search; URL filters for status/type/reviewer/due/space; sortable due date; cursor AV-10: URL filter behavior requires browser. `reviews-filters.tsx` and `reviews-page-filters.test.tsx` exist; full acceptance requires browser.
   - 2026-10-16 source progress: frontend `b5ed69a5d` threads backend-supported `q` through review list params and resets the search draft from URL navigation/clear while cancelling stale debounce. Focused filter tests passed 8/8 and scoped lint passed. The review cursor trail still lives only in local pagination state, so refresh/bookmark of a later page cannot restore it; URL and browser behavior remain open.
+  - Frontend `389897112` stores the current review cursor and validated previous-cursor trail in the URL; Next/Previous update both, bookmark/refresh restores position, and sort/filter changes clear the trail atomically. Focused navigation tests passed 10/10 and scoped lint passed. Actual route navigation, back/forward and browser query behavior remain open.
   - Previous consolidated ID: `KB-OPEN-275`
 - [ ] **KB-OPEN-047** **BLOCKED:** Page trust context; optional approval note; required rejection reason AV-10: browser/form behavior required.
   - Previous consolidated ID: `KB-OPEN-276`
