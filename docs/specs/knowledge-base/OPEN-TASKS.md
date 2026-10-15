@@ -209,6 +209,7 @@ KB-OPEN-074 source update, 2026-10-16: frontend `fb1e2b928` now calls `recordLeg
   - Previous consolidated ID: `KB-OPEN-291`
 - [ ] **KB-OPEN-063** **BLOCKED:** Filters; owner/due; reason/explanation; bulk repair; dismiss/snooze with reason; before/after health trend Dismiss/snooze: CONFIRMED in service code (lines 152-181). Bulk repair and health trend: BLOCKED (browser/DB).
   - 2026-10-16 partial evidence: frontend `c061e077c` gives the bulk repair overlay shared dialog semantics, an accessible description, Escape handling and focus restoration. Focused tests passed 17/17, the dialog gate passed, and both frontend typechecks passed. Actual repair and health-trend data in browser remain open.
+  - 2026-10-16 source finding and frontend correction: backend bulk repair accepted `request_review`, `mark_needs_content` and ownerless assignment as `applied` without a write. Frontend `018534829` now exposes only assignment, requires a resolved member ID, submits `assign_owner`, and labels the current trend as global open cohorts instead of selected-signal before/after history. Focused frontend tests passed 19/19. Backend false-success semantics and actual historical trend data remain open, along with browser verification.
   - Previous consolidated ID: `KB-OPEN-292`
 - [ ] **KB-OPEN-064** **BLOCKED:** Every item links to evidence and an allowed repair; no automated fix publishes without a human AV-10: browser verification required.
   - Previous consolidated ID: `KB-OPEN-293`
