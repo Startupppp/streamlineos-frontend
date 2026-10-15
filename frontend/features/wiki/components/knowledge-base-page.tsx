@@ -426,6 +426,9 @@ export default function KnowledgeBasePage() {
     scopeOwnerMembershipId !== null ||
     scopeStatus !== null;
   const scopeItemCount = scopeSourceIds.length + scopePageIds.length;
+  const scopeSummary = scopeItemCount > 0
+    ? `${scopeItemCount} item${scopeItemCount === 1 ? "" : "s"}`
+    : "Filtered";
   const clientFilteredSources = sources.filter((source) => {
     if (scopeFilters.kind !== undefined && source.kind !== scopeFilters.kind) return false;
     if (scopeFilters.createdById !== undefined && source.createdById !== scopeFilters.createdById) return false;
@@ -457,10 +460,10 @@ export default function KnowledgeBasePage() {
             size="sm"
             className="gap-1.5"
             onClick={handleScopeClick}
-            aria-label={scopeActive ? `Searching ${scopeItemCount} item${scopeItemCount === 1 ? "" : "s"}` : "Choose sources to search"}
+            aria-label={scopeActive ? `Searching ${scopeSummary}` : "Choose sources to search"}
           >
             <SlidersHorizontal className="h-4 w-4" />
-            {scopeActive ? `${scopeItemCount} item${scopeItemCount === 1 ? "" : "s"}` : "Scope"}
+            {scopeActive ? scopeSummary : "Scope"}
           </Button>
           <LoadingButton variant="outline" size="sm" className="gap-1.5" isPending={uploadSource.isPending} onClick={handleManageSourcesClick}>
             {!uploadSource.isPending && <BookOpenTextIcon size={16} />}
@@ -603,7 +606,9 @@ export default function KnowledgeBasePage() {
                 </div>
                 {scopeActive && (
                   <p className="mt-1.5 text-micro text-muted-foreground">
-                    Searching {scopeItemCount} selected item{scopeItemCount === 1 ? "" : "s"}.{" "}
+                    {scopeItemCount > 0
+                      ? `Searching ${scopeItemCount} selected item${scopeItemCount === 1 ? "" : "s"}.`
+                      : "Searching with selected filters."}{" "}
                     <button type="button" onClick={handleScopeClick} className="underline hover:text-foreground">Edit</button>
                     {" · "}
                     <button type="button" onClick={handleClearScope} className="underline hover:text-foreground">Clear</button>

@@ -404,15 +404,21 @@ function KbSourcesScopeSheet({
   const totalSelected = selectedIds.length + selectedPageIds.length;
   const noneSelected = totalSelected === 0;
   const hasSourceFilter = kindFilter !== "all" || ownerFilter !== "all";
+  const pageOnlyScope = verifiedOnly || ownerMembershipId !== null || statusScope !== null;
+  const sourceSelectionConflicts = pageOnlyScope && selectedIds.length > 0;
 
   function handleClearSourceFilter() {
     onKindFilterChange("all");
     onOwnerFilterChange("all");
   }
 
-  const description = noneSelected
-    ? "All ready sources and pages will be searched. Select specific items to narrow the answer."
-    : `${totalSelected} item${totalSelected === 1 ? "" : "s"} selected — only these will be searched.`;
+  const description = sourceSelectionConflicts
+    ? "Selected files and notes are excluded by page owner, page status or verification. Deselect them or choose pages to search."
+    : noneSelected
+      ? pageOnlyScope
+        ? "Only eligible pages and articles will be searched. Files and notes are excluded."
+        : "All ready sources and pages will be searched. Select specific items to narrow the answer."
+      : `${totalSelected} item${totalSelected === 1 ? "" : "s"} selected — only these will be searched.`;
 
   function handleToggleAll() {
     if (allSelected) {
@@ -526,14 +532,14 @@ function KbSourcesScopeSheet({
           <div className="flex items-center gap-2">
             <ShieldCheck className="h-4 w-4 text-muted-foreground" />
             <Label htmlFor="verified-only-toggle" className="text-sm">
-              Verified sources only
+              Verified pages and articles only
             </Label>
           </div>
           <Switch
             id="verified-only-toggle"
             checked={verifiedOnly}
             onCheckedChange={onVerifiedOnlyChange}
-            aria-label="Restrict answer to verified sources only"
+            aria-label="Restrict answer to verified pages and articles only"
           />
         </div>
 
@@ -600,11 +606,14 @@ function KbSourcesScopeSheet({
         <Button
           className="w-full gap-1.5"
           onClick={onConfirm}
+          disabled={sourceSelectionConflicts && selectedPageIds.length === 0}
         >
           <Check className="h-4 w-4" />
-          {noneSelected
-            ? "Search all sources and pages"
-            : `Search ${totalSelected} item${totalSelected === 1 ? "" : "s"}`}
+          {sourceSelectionConflicts
+            ? `Search ${selectedPageIds.length} page${selectedPageIds.length === 1 ? "" : "s"}`
+            : noneSelected
+              ? pageOnlyScope ? "Apply page scope" : "Search all sources and pages"
+              : `Search ${totalSelected} item${totalSelected === 1 ? "" : "s"}`}
         </Button>
       </div>
     </AppSheet>

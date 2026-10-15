@@ -118,7 +118,7 @@ describe("KbSourcesSheet scope mode — all six scope dimensions are present and
     render(<KbSourcesSheet {...SCOPE_PROPS} />);
 
     expect(screen.getByRole("button", { name: "Engineering" })).toBeInTheDocument();
-    expect(screen.getByRole("switch", { name: /verified sources only/i })).toBeInTheDocument();
+    expect(screen.getByRole("switch", { name: /verified pages and articles only/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Files" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Notes" })).toBeInTheDocument();
   });
