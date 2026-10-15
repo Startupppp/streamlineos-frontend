@@ -172,6 +172,7 @@ KB-OPEN-074 source update, 2026-10-16: frontend `fb1e2b928` now calls `recordLeg
   - Frontend `389897112` stores the current review cursor and validated previous-cursor trail in the URL; Next/Previous update both, bookmark/refresh restores position, and sort/filter changes clear the trail atomically. Focused navigation tests passed 10/10 and scoped lint passed. Actual route navigation, back/forward and browser query behavior remain open.
   - Previous consolidated ID: `KB-OPEN-275`
 - [ ] **KB-OPEN-047** **BLOCKED:** Page trust context; optional approval note; required rejection reason AV-10: browser/form behavior required.
+  - 2026-10-16 source progress: frontend `0510b6255` shows the page TrustBadge in both decision dialogs, labels note/reason controls, bounds them to the backend's 2,000-character contract, and requires rejection reason while leaving approval note optional. The full reviews-page suite passed 14/14 and scoped lint passed. Browser form, role and persisted review evidence remain open.
   - Previous consolidated ID: `KB-OPEN-276`
 - [ ] **KB-OPEN-048** **BLOCKED:** Mobile cards; assignment notifications AV-10: browser verification required.
   - Previous consolidated ID: `KB-OPEN-277`
