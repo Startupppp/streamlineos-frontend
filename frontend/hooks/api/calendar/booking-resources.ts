@@ -19,6 +19,7 @@ import type {
   BookingAllocation,
   BookingAllocationResolution,
   BookingResource,
+  BookingResourcePage,
   BookingResourceMaintenance,
   BookingRuleResource,
   InventoryCalendarEquipmentPage,
@@ -108,7 +109,7 @@ export interface CalendarResourceUpdateInput {
   status: "active" | "unavailable" | "retired";
 }
 
-export function useCalendarBookingResources(enabled = true) {
+export function useCalendarBookingResources(cursor: string | undefined = undefined, enabled = true) {
   const scope = useBookingScope();
   return useGatedQuery("calendar:read", {
     queryKey: calendarBookingQueryKeys.resources(
@@ -117,11 +118,12 @@ export function useCalendarBookingResources(enabled = true) {
       scope.membershipId,
       scope.accessVersion,
       scope.canRead,
+      cursor,
     ),
     queryFn: ({ signal }) =>
-      apiClient.get<BookingResource[]>(
+      apiClient.get<BookingResourcePage>(
         "/calendar/resources",
-        undefined,
+        { limit: 50, ...(cursor ? { cursor } : {}) },
         signal,
         resourcesContract,
       ),

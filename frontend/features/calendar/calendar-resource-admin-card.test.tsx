@@ -4,12 +4,21 @@ import { CalendarResourceAdminCard } from "./calendar-resource-admin-card";
 
 const createResource = jest.fn();
 
+jest.mock("next-auth/react", () => ({
+  useSession: () => ({ data: { orgId: "org-1", user: { id: "user-1" } } }),
+}));
+
 jest.mock("@/hooks/api/access", () => ({
   useCan: () => true,
 }));
 
 jest.mock("@/hooks/api/calendar/booking-resources", () => ({
-  useCalendarBookingResources: () => ({ data: [], access: { allowed: true, denied: false, pending: false, unavailable: false } }),
+  useCalendarBookingResources: (cursor: string | undefined) => ({
+    data: cursor === "1"
+      ? { items: [{ id: 2, name: "Annex room", kind: "room", ownership: "calendar", sourceKey: null, sourceRecordId: null, location: "Annex", capacity: 4, divisible: false, accessibility: [], requiresApproval: false, status: "active", version: 1, createdAt: "2026-10-16T00:00:00.000Z", updatedAt: "2026-10-16T00:00:00.000Z" }], nextCursor: null }
+      : { items: [], nextCursor: "1" },
+    access: { allowed: true, denied: false, pending: false, unavailable: false },
+  }),
   useInventoryCalendarEquipment: (cursor: number | null) => ({
     data: cursor === 12
       ? { items: [{ id: 13, name: "Mobile camera", location: "Annex", capacity: 1, warehouseId: 4, status: "available" }], nextCursor: null }
@@ -20,6 +29,14 @@ jest.mock("@/hooks/api/calendar/booking-resources", () => ({
   useUpdateCalendarResource: () => ({ mutateAsync: jest.fn(), isPending: false }),
   useAddCalendarResourceMaintenance: () => ({ mutateAsync: jest.fn(), isPending: false }),
 }));
+
+it("shows Calendar resources from a later catalog page", async () => {
+  const user = userEvent.setup();
+  render(<CalendarResourceAdminCard />);
+
+  await user.click(screen.getByRole("button", { name: "Next page" }));
+  expect(screen.getByText("Annex room")).toBeInTheDocument();
+});
 
 it("links selected Inventory equipment with source ownership and owner approval", async () => {
   createResource.mockReset().mockResolvedValue({});
