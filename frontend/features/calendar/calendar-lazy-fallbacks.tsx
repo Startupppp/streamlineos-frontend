@@ -1,9 +1,8 @@
 "use client";
 
 import Image from "next/image";
+import { AppSheet } from "@/components/shared/app-sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import type { CalendarListItem } from "@/hooks/api/calendar";
 import { formatEventDate, formatEventTimeRange } from "@/lib/date-utils";
 import { EVENT_COLORS } from "./calendar-event-constants";
@@ -71,21 +70,9 @@ export function CalendarAgendaPreview({
 
 export function CalendarSheetFallback({ label }: { label: string }) {
   return (
-    <Sheet open>
-      <SheetContent showCloseButton={false}>
-        <SheetHeader>
-          <SheetTitle className="sr-only">{label}</SheetTitle>
-          <SheetDescription className="sr-only">Calendar panel is loading</SheetDescription>
-        </SheetHeader>
-        <div role="status" aria-live="polite" aria-label={label} className="flex flex-col gap-3">
-          <Skeleton className="h-6 w-3/5" />
-          <Skeleton className="h-4 w-4/5" />
-          <Skeleton className="h-4 w-2/3" />
-          <Skeleton className="h-4 w-1/2" />
-          <Skeleton className="h-32 w-full" />
-        </div>
-      </SheetContent>
-    </Sheet>
+    <AppSheet open onOpenChange={() => {}} title={label}>
+      <p role="status" aria-live="polite" aria-label={label} className="text-sm text-muted-foreground">{label}…</p>
+    </AppSheet>
   );
 }
 
