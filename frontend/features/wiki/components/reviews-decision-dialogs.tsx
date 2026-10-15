@@ -13,12 +13,128 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { UserCombobox } from "@/components/ui/user-combobox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { TrustBadge } from "@/features/wiki/components/kb-collection-badges";
-import { useApprovePageReview, useRejectPageReview } from "@/hooks/api/kb/page-reviews";
-import type { KbPageReview } from "@/hooks/api/kb/page-reviews";
+import { useCan } from "@/hooks/api/access";
+import { useApprovePageReview, useCreatePageReview, useRejectPageReview } from "@/hooks/api/kb/page-reviews";
+import type { KbPageReview, KbReviewType } from "@/hooks/api/kb/page-reviews";
+
+interface RequestReviewDialogProps {
+  pageId: number;
+  pageTitle: string;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+export function RequestReviewDialog({ pageId, pageTitle, open, onOpenChange }: RequestReviewDialogProps) {
+  const [type, setType] = useState<KbReviewType>("approval");
+  const [reviewerId, setReviewerId] = useState("");
+  const [dueDate, setDueDate] = useState("");
+  const [note, setNote] = useState("");
+  const canManage = useCan("kb:reviews:manage");
+  const createReview = useCreatePageReview();
+
+  function handleTypeChange(value: string) {
+    setType(value === "freshness" ? "freshness" : "approval");
+  }
+
+  function handleDueDateChange(event: React.ChangeEvent<HTMLInputElement>) {
+    setDueDate(event.target.value);
+  }
+
+  function handleNoteChange(event: React.ChangeEvent<HTMLTextAreaElement>) {
+    setNote(event.target.value);
+  }
+
+  function handleClose() {
+    onOpenChange(false);
+  }
+
+  function handleSubmit() {
+    if (!canManage || !reviewerId || createReview.isPending) return;
+    createReview.mutate(
+      {
+        pageId,
+        type,
+        reviewerId,
+        dueAt: dueDate ? `${dueDate}T23:59:59.999Z` : undefined,
+        note: note.trim() || undefined,
+      },
+      {
+        onSuccess: () => {
+          toast.success("Review requested");
+          onOpenChange(false);
+        },
+        onError: (error) => toast.error(getErrorMessage(error)),
+      },
+    );
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Request review</DialogTitle>
+          <DialogDescription>Assign a reviewer for {pageTitle}.</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3 py-2">
+          <div className="space-y-1.5">
+            <Label htmlFor="review-request-type">Review type</Label>
+            <Select value={type} onValueChange={handleTypeChange}>
+              <SelectTrigger id="review-request-type" className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="approval">Approval</SelectItem>
+                <SelectItem value="freshness">Freshness</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="review-request-reviewer">Reviewer</Label>
+            <UserCombobox
+              id="review-request-reviewer"
+              value={reviewerId}
+              onChange={setReviewerId}
+              placeholder="Select reviewer…"
+              className="w-full"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="review-request-due">Due date (optional)</Label>
+            <Input id="review-request-due" type="date" value={dueDate} onChange={handleDueDateChange} />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="review-request-note">Note (optional)</Label>
+            <Textarea
+              id="review-request-note"
+              value={note}
+              onChange={handleNoteChange}
+              maxLength={2000}
+              rows={3}
+            />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button type="button" variant="outline" onClick={handleClose}>Cancel</Button>
+          <LoadingButton
+            type="button"
+            isPending={createReview.isPending}
+            disabled={!canManage || !reviewerId}
+            onClick={handleSubmit}
+          >
+            Request review
+          </LoadingButton>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 export interface ApproveDialogProps {
   review: KbPageReview;

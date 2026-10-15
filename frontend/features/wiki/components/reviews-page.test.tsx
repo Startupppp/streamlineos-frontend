@@ -2,7 +2,7 @@ import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import type { KbPageReview } from "@/hooks/api/kb/page-reviews";
 import ReviewsPage from "./reviews-page";
-import { ApproveDialog, RejectDialog } from "./reviews-decision-dialogs";
+import { ApproveDialog, RejectDialog, RequestReviewDialog } from "./reviews-decision-dialogs";
 import { BulkDecideResultsDialog } from "./reviews-bulk-results-dialog";
 import type { BulkFailureWithTitle } from "./reviews-bulk-results-dialog";
 
@@ -16,9 +16,16 @@ jest.mock("next/navigation", () => ({
 
 jest.mock("@/hooks/api/kb/page-reviews", () => ({
   useKbPageReviews: jest.fn(),
+  useCreatePageReview: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   useApprovePageReview: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   useRejectPageReview: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   useBulkDecidePageReviews: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+}));
+
+jest.mock("@/components/ui/user-combobox", () => ({
+  UserCombobox: ({ onChange }: { onChange: (value: string) => void }) => (
+    <button type="button" onClick={() => onChange("reviewer-user")}>Pick reviewer</button>
+  ),
 }));
 
 jest.mock("@/hooks/api/access", () => ({
@@ -135,10 +142,12 @@ jest.mock("@/features/wiki/lib/kb-icons", () => ({
 
 const {
   useKbPageReviews,
+  useCreatePageReview,
   useApprovePageReview,
   useRejectPageReview,
 } = jest.requireMock("@/hooks/api/kb/page-reviews") as {
   useKbPageReviews: jest.Mock;
+  useCreatePageReview: jest.Mock;
   useApprovePageReview: jest.Mock;
   useRejectPageReview: jest.Mock;
 };
@@ -499,6 +508,42 @@ describe("BulkDecideResultsDialog — per-row failure reporting", () => {
 });
 
 describe("Review decision dialogs", () => {
+  it("does not submit a review request without review management access", () => {
+    const mutate = jest.fn();
+    useCan.mockReturnValue(false);
+    useCreatePageReview.mockReturnValue({ mutate, isPending: false });
+
+    render(
+      <RequestReviewDialog pageId={10} pageTitle="Runbook" open onOpenChange={jest.fn()} />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Pick reviewer" }));
+    expect(screen.getByRole("button", { name: "Request review" })).toBeDisabled();
+    expect(mutate).not.toHaveBeenCalled();
+  });
+  it("requires a reviewer before requesting a review and sends the selected assignee", () => {
+    const mutate = jest.fn();
+    useCreatePageReview.mockReturnValue({ mutate, isPending: false });
+
+    render(
+      <RequestReviewDialog
+        pageId={10}
+        pageTitle="Runbook"
+        open
+        onOpenChange={jest.fn()}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "Request review" })).toBeDisabled();
+    fireEvent.click(screen.getByRole("button", { name: "Pick reviewer" }));
+    fireEvent.click(screen.getByRole("button", { name: "Request review" }));
+
+    expect(mutate).toHaveBeenCalledWith(
+      { pageId: 10, type: "approval", reviewerId: "reviewer-user", dueAt: undefined, note: undefined },
+      expect.any(Object),
+    );
+  });
+
   it("shows trust context and submits approval without an optional note", () => {
     const mutate = jest.fn();
     useApprovePageReview.mockReturnValue({ mutate, isPending: false });

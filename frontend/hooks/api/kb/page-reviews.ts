@@ -47,6 +47,14 @@ export type ApproveReviewInput = {
   note?: string;
 };
 
+export type CreatePageReviewInput = {
+  pageId: number;
+  type: KbReviewType;
+  reviewerId: string;
+  dueAt?: string;
+  note?: string;
+};
+
 export type RejectReviewInput = {
   note: string;
 };
@@ -105,6 +113,25 @@ export function useKbPageReviews(params?: KbPageReviewsParams) {
       ),
     staleTime: 30_000,
     enabled: canViewReviews,
+  });
+}
+
+export function useCreatePageReview() {
+  const qc = useQueryClient();
+  const operation = useIdempotentOperation();
+  return useAuthorizedMutation("kb:reviews:manage", {
+    mutationKey: ["kb", "pageReviews", "create"],
+    mutationFn: ({ pageId, ...body }: CreatePageReviewInput) =>
+      apiClient.post<KbPageReview>(
+        `/kb/pages/${pageId}/reviews`,
+        body,
+        operation.configFor({ pageId, ...body }),
+        kbPageReviewContract,
+      ),
+    onSuccess: () => {
+      operation.settle();
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.pageReviews() });
+    },
   });
 }
 
