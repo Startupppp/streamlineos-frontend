@@ -33,6 +33,7 @@ Documents owns source identity, audience, versions and safe file retrieval. Know
 - [ ] KD-02 page-change event
 - [ ] KD-03 retrieval and citation
 - [ ] KD-04 provider connection budget
+  - 2026-10-16 partial evidence: backend `ffddcf4df` moved the storage sweep's provider deletion outside its tenant transaction and kept pending-purge/quarantine reads and writes in short tenant transactions. The transaction-boundary focused suites passed 20/20. A small-pool brown-out run with measured connection occupancy remains open.
 - [ ] KD-05 query embedding cache decision
 - [ ] KD-06 measured search query plan
 - [ ] KD-07 chunk ACL
@@ -48,6 +49,7 @@ Documents owns source identity, audience, versions and safe file retrieval. Know
 - [ ] KD-D2: newly created page indexing and retry visibility.
 - [ ] KD-D3: HR metadata PII gate after publish and citation replay.
 - [ ] KD-D4: trash purge progress for replicas and interruption recovery.
+  - 2026-10-16 partial evidence: backend `7a289fe0a` adds a page-to-pending-storage correlation and reconciles the blob purge ledger only after mapped objects are confirmed; `ffddcf4df` moves provider I/O out of the tenant transaction. Focused purge suites passed 84/84 and sweep suites 20/20. Migrations, retries against real object storage, replica behavior, and interrupted live runs remain unverified.
 - [ ] KD-D5: ticket-to-article success/error translation and duplicate submission.
   - 2026-10-16 partial evidence: backend `5b8a70c1a` adds the command fence, one source-ticket identity, an authorized retry lookup and a tenant-scoped uniqueness race path; article creation and its event now share a transaction. Focused tests pass. Migration 2044 is not applied, and the deployed HTTP contract plus browser duplicate-submission flow remain unverified (`KB-OPEN-006`, `KB-OPEN-020`).
 - [ ] KD-D6: ACL cache key/admin semantics and security tests reaching the actual request path.
