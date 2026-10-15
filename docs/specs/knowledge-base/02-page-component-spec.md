@@ -218,6 +218,46 @@ Every collection uses cursor pagination unless it is explicitly bounded: recents
 
 **Acceptance:** token rotation/revocation purges CDN/cache; page and attachment access are bound to the same public grant.
 
+## 18. Company Documents — `/knowledge/wiki/company-documents`
+
+**Customer job:** find HR documents that are currently available through the Knowledge Base link.
+
+**Components:** link-enabled state, status filter, source and status badges, document category, effective date, version, published date, and cursor-paginated table.
+
+**Rules:** ordinary readers see active documents only; the withdrawn, source-removed, and all-status filters require `hr:documents:publish`. The backend must recheck the linked source and current actor before returning a title or preview. The status filter is URL-backed; cursor and status must travel together.
+
+**Acceptance:** disabled linking, denied access, first empty, filtered empty, loading, and failed reads remain distinct. No withdrawn or source-removed document appears to an ordinary reader through this list, search, Ask, or a retained citation.
+
+## 19. Company Document Detail — `/knowledge/wiki/company-documents/[linkedDocumentId]`
+
+**Customer job:** inspect one linked HR document without losing its source and access context.
+
+**Components:** source identity, current status, document metadata, safe preview or download, and recovery for a removed source.
+
+**Rules:** reject a malformed id before data access. Resolve the current link, source status, tenant, and actor on each request; an inaccessible source resolves as not found. A cached passage or old citation never grants access to the file.
+
+**Acceptance:** active, withdrawn, source-removed, denied, and not-found paths are exercised through the detail request and the file retrieval path. Source removal or permission revocation removes the content from the page, search, Ask, and citation replay.
+
+## 20. Support Knowledge Gaps — `/support/knowledge-gaps`
+
+**Customer job:** turn repeated unresolved support questions into reviewed Knowledge Base work.
+
+**Components:** cursor-fed gap list, evidence from tickets and searches, detect action, draft action, proposed-page link, dismissal reason, and loading, empty, error, and denied states.
+
+**Rules:** Support owns detection and triage; Knowledge Base owns the resulting draft, its publication, and its access policy. Reads require `support:knowledge-gaps:view`; detect, draft, and dismiss require `support:knowledge-gaps:manage`. A draft is never published by detection alone.
+
+**Acceptance:** duplicate detection or retry creates no duplicate gap or draft; a dismissed gap stays out of active work until a documented resurfacing event; the proposed-page link is shown only to an actor who may open it. The collection stays bounded as new gaps arrive.
+
+## 21. Research Briefs — `/knowledge/research-briefs` and `/knowledge/research-briefs/[briefId]`
+
+**Customer job:** start a bounded research job, return later, and inspect its cited result.
+
+**Components:** question and scope form, cursor-fed brief list, status and owner, detail with source snapshot and citations, retry or cancel, approval, and convert-to-page.
+
+**Rules:** these are the shipped Knowledge routes; no parallel `/knowledge/wiki/research-briefs` route is implied. The job and result survive browser closure. Every citation is rechecked for the viewer on detail open and a lost source is redacted.
+
+**Acceptance:** queued, running, completed, failed, denied, and source-revoked states have an explicit recovery path. Reopening a queued or running brief resumes status polling; repeated retry or conversion does not duplicate work or pages.
+
 ## Shared module inventory
 
 Reuse or deepen these modules before creating page-specific versions:
