@@ -155,6 +155,7 @@ Evidence:
 - [ ] **KB-OPEN-049** **BLOCKED:** Table + mobile cards; search; deleted-by/date/space filters; cursor AV-10: browser verification required. `features/wiki/components/trash-page.test.tsx` exists; full acceptance requires browser.
   - Previous consolidated ID: `KB-OPEN-278`
 - [ ] **KB-OPEN-050** **BLOCKED:** Remove the silent 100-row cap and card-only layout AV-07: bounded-query evidence does not fully prove the cap removal. Requires running the endpoint against a large dataset.
+  - 2026-10-16 source and focused-test evidence: the current Trash query uses timestamp/id keyset pagination, `limit+1`, and a cursor response; its schema caps each page at 100 rather than the whole collection. A 105-row focused test and restore-tree tests passed (28 total). Large real-data endpoint behavior and mobile/card rendering remain open.
   - Previous consolidated ID: `KB-OPEN-279`
 - [ ] **KB-OPEN-051** **BLOCKED:** Restore repairs tree/search/index links idempotently AV-07: end-to-end drain proof open. Requires running the restore flow against a real dataset.
   - Previous consolidated ID: `KB-OPEN-280`
