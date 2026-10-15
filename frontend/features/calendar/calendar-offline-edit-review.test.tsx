@@ -6,6 +6,7 @@ jest.mock("@tanstack/react-query", () => ({ useQuery: jest.fn() }));
 jest.mock("next-auth/react", () => ({ useSession: jest.fn() }));
 jest.mock("@/hooks/api/access", () => ({ useCan: jest.fn() }));
 jest.mock("@/hooks/api/calendar-offline-policy", () => ({ useCalendarOfflinePolicy: jest.fn() }));
+jest.mock("@/hooks/common/use-online-status", () => ({ useOnlineStatus: jest.fn() }));
 jest.mock("@/components/ui/dialog", () => ({
   Dialog: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   DialogContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
@@ -18,9 +19,10 @@ const query = jest.requireMock<{ useQuery: jest.Mock }>("@tanstack/react-query")
 const session = jest.requireMock<{ useSession: jest.Mock }>("next-auth/react").useSession;
 const can = jest.requireMock<{ useCan: jest.Mock }>("@/hooks/api/access").useCan;
 const policy = jest.requireMock<{ useCalendarOfflinePolicy: jest.Mock }>("@/hooks/api/calendar-offline-policy").useCalendarOfflinePolicy;
+const online = jest.requireMock<{ useOnlineStatus: jest.Mock }>("@/hooks/common/use-online-status").useOnlineStatus;
 const refetch = jest.fn();
 
-function setup(options: { moved?: boolean; isError?: boolean; stale?: boolean } = {}) {
+function setup(options: { moved?: boolean; isError?: boolean; stale?: boolean; online?: boolean } = {}) {
   const now = Date.now();
   const originalStart = new Date(now + 86_400_000);
   const originalEnd = new Date(originalStart.getTime() + 3_600_000);
@@ -28,6 +30,7 @@ function setup(options: { moved?: boolean; isError?: boolean; stale?: boolean } 
   const nextEnd = new Date(nextStart.getTime() + 3_600_000);
   session.mockReturnValue({ status: "authenticated", data: { orgId: "org-1", user: { id: "user-1" } } });
   can.mockReturnValue(true);
+  online.mockReturnValue(options.online ?? true);
   policy.mockReturnValue({ isFetchedAfterMount: true, isFetching: false, isError: false, dataUpdatedAt: now, data: { enabled: true, version: 2 } });
   query.mockReturnValue({
     data: {
@@ -75,6 +78,11 @@ describe("offline Calendar edit review", () => {
 
   it("rejects stale free data after a failed background refresh", () => {
     expect(setup({ isError: true })).toBeDisabled();
+  });
+
+  it("blocks a previously valid review after connectivity drops", () => {
+    expect(setup({ online: false })).toBeDisabled();
+    expect(screen.getByText("Reconnect to review this change.")).toBeInTheDocument();
   });
 
   it("allows a current occurrence with complete fresh availability", () => {

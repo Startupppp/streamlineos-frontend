@@ -7,6 +7,7 @@ import { z } from "zod";
 import { apiClient } from "@/lib/api-client";
 import { useCan } from "@/hooks/api/access";
 import { useCalendarOfflinePolicy } from "@/hooks/api/calendar-offline-policy";
+import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -36,6 +37,7 @@ export function CalendarOfflineIntentReview({ intent, onDiscard, onContinue }: {
   const { data: session, status } = useSession();
   const canRead = useCan("calendar:read");
   const canWrite = useCan("calendar:write");
+  const online = useOnlineStatus();
   const policy = useCalendarOfflinePolicy();
   const identity = session?.orgId && session.user?.id ? `${session.orgId}:${session.user.id}` : "";
   const sameIdentity = status === "authenticated" && identity === intent.identity;
@@ -51,7 +53,7 @@ export function CalendarOfflineIntentReview({ intent, onDiscard, onContinue }: {
       { slots: [{ start: intent.start, end: intent.end }], participants: [{ userId: session?.user?.id ?? "", requirement: "required" }], bufferBeforeMinutes: 0, bufferAfterMinutes: 0 },
       { signal }, availabilityContract,
     ),
-    enabled: sameIdentity && canRead && canWrite && policyCurrent && valid,
+    enabled: online && sameIdentity && canRead && canWrite && policyCurrent && valid,
     staleTime: 0,
     refetchOnWindowFocus: "always",
     refetchOnReconnect: "always",
@@ -60,12 +62,13 @@ export function CalendarOfflineIntentReview({ intent, onDiscard, onContinue }: {
   const evaluationAge = availability.data ? nowMs - new Date(availability.data.evaluatedAt).getTime() : NaN;
   const evaluationCurrent = availability.isFetchedAfterMount && availability.dataUpdatedAt >= intent.createdAt &&
     Number.isFinite(evaluationAge) && evaluationAge >= 0 && evaluationAge < 60_000;
-  const safe = sameIdentity && canRead && canWrite && policyCurrent && valid && slot?.state === "free" && slot.coverageState === "complete" &&
+  const safe = online && sameIdentity && canRead && canWrite && policyCurrent && valid && slot?.state === "free" && slot.coverageState === "complete" &&
     !availability.isFetching && !availability.isError && evaluationCurrent;
   return <Dialog open onOpenChange={(open) => { if (!open) onDiscard(); }}>
     <DialogContent><DialogHeader><DialogTitle>Review offline time draft</DialogTitle><DialogDescription>This draft was not booked while offline. Current access, policy, and availability must be checked before you continue.</DialogDescription></DialogHeader>
       <div className="space-y-3 text-sm">
         <p>{start.toLocaleString()} – {end.toLocaleString()}</p>
+        {!online ? <p className="text-destructive">Reconnect to review this draft.</p> : null}
         {!sameIdentity ? <p className="text-destructive">The organization or account changed. Discard this draft.</p> : null}
         {sameIdentity && (!canRead || !canWrite) ? <p className="text-destructive">Calendar access changed. Discard this draft.</p> : null}
         {sameIdentity && (policy.isLoading || policy.isFetching) ? <p className="text-muted-foreground">Rechecking current offline policy</p> : null}

@@ -1,4 +1,5 @@
 import { allowOfflineCalendarPolicy, clearOfflineCalendarSnapshot, offlineCalendarIdentityIsCurrent, readOfflineCalendarSnapshot, revokeOfflineCalendarPolicy, saveOfflineCalendarSnapshot, subscribeOfflineCalendarClear } from "./calendar-offline-cache";
+import type { CalendarEventsResponse } from "@/hooks/api/calendar-types";
 
 function fakeIndexedDb() {
   const opens: Array<{ result: unknown; onsuccess?: () => void }> = [];
@@ -56,7 +57,7 @@ function save() {
   allowOfflineCalendarPolicy("org-1:user-1", 1);
   return saveOfflineCalendarSnapshot("org-1:user-1", new Date("2026-10-13T09:00:00.000Z"), new Date("2026-10-13T10:00:00.000Z"), {
     events: [], coverageState: "complete", coverage: [],
-  } as never, { version: 1, maxAgeDays: 1 }, "Asia/Kolkata");
+  } as never, { version: 1, maxAgeDays: 1 }, "Asia/Kolkata", Date.now());
 }
 
 describe("Calendar offline cache identity", () => {
@@ -181,15 +182,15 @@ describe("Calendar offline cache identity", () => {
     localStorage.setItem("streamline-calendar-offline-identity", "org-1:user-1");
     allowOfflineCalendarPolicy("org-1:user-1", 1);
     const pending = saveOfflineCalendarSnapshot("org-1:user-1", new Date("2026-10-13T09:00:00.000Z"), new Date("2026-10-13T10:00:00.000Z"), {
-      events: Array.from({ length: 2001 }, () => ({ start: "2026-10-13T09:00:00.000Z", end: "2026-10-13T09:01:00.000Z", allDay: false, availability: "busy" })),
+      events: Array.from({ length: 2001 }, () => ({ start: "2026-10-13T09:00:00.000Z", end: "2026-10-13T09:01:00.000Z", allDay: false, availability: "busy", sourceKey: "native", freshness: { state: "fresh", asOf: "2026-10-13T08:00:00.000Z" } })),
       coverageState: "complete",
       coverage: [{ sourceKey: "native", state: "complete" }],
-    } as never, { version: 1, maxAgeDays: 1 }, "Asia/Kolkata");
+    } as never, { version: 1, maxAgeDays: 1 }, "Asia/Kolkata", Date.now());
     db.openNext();
     await pending;
     expect(db.puts).toEqual([expect.objectContaining({
       coverage: "partial",
-      sources: [{ sourceKey: "native", state: "partial" }],
+      sources: [{ sourceKey: "native", state: "partial", asOf: "2026-10-13T08:00:00.000Z" }],
       windows: expect.arrayContaining([expect.objectContaining({ availability: "busy" })]),
     })]);
     expect((db.puts[0] as { windows: unknown[] }).windows).toHaveLength(2000);
@@ -203,12 +204,42 @@ describe("Calendar offline cache identity", () => {
     const pending = saveOfflineCalendarSnapshot("org-1:user-1", new Date("2026-10-13T09:00:00.000Z"), new Date("2026-10-13T10:00:00.000Z"), {
       events: [], failures: [], truncated: true, coverageState: "complete",
       coverage: [{ sourceKey: "external:outlook:1", state: "complete", nextCursor: null }],
-    }, { version: 1, maxAgeDays: 1 }, "Asia/Kolkata");
+    }, { version: 1, maxAgeDays: 1 }, "Asia/Kolkata", Date.now());
     db.openNext();
     await pending;
     expect(db.puts).toEqual([expect.objectContaining({
       coverage: "partial",
-      sources: [{ sourceKey: "external:outlook:1", state: "partial" }],
+      sources: [{ sourceKey: "external:outlook:1", state: "partial", asOf: expect.any(String) }],
+    })]);
+  });
+
+  it("keeps the successful fetch time and each source's evidence age", async () => {
+    const db = fakeIndexedDb();
+    sessionStorage.setItem("streamline-calendar-offline-session-identity", "org-1:user-1");
+    localStorage.setItem("streamline-calendar-offline-identity", "org-1:user-1");
+    allowOfflineCalendarPolicy("org-1:user-1", 1);
+    const fetchedAt = Date.now() - 2 * 3_600_000;
+    const sourceAsOf = new Date(fetchedAt - 3_600_000).toISOString();
+    const result: CalendarEventsResponse = {
+      events: [{
+        id: "event-1", title: "Busy", start: "2026-10-13T09:00:00.000Z", end: "2026-10-13T10:00:00.000Z",
+        category: "event", source: "event", sourceKey: "native", sourceRecordId: "1", occurrenceId: "event-1", status: "confirmed",
+        timeKind: "timed", time: { kind: "timed", start: "2026-10-13T09:00:00.000Z", end: "2026-10-13T10:00:00.000Z", timezone: "Asia/Kolkata" },
+        availability: "busy", sourceVersion: "1", actions: { view: true, edit: false, delete: false, rsvp: false, complete: false },
+        freshness: { state: "stale", asOf: sourceAsOf },
+      }],
+      failures: [], truncated: false, coverageState: "partial",
+      coverage: [{ sourceKey: "native", state: "partial", nextCursor: null }, { sourceKey: "external:outlook:1", state: "failed", nextCursor: null }],
+    };
+    const pending = saveOfflineCalendarSnapshot("org-1:user-1", new Date("2026-10-13T09:00:00.000Z"), new Date("2026-10-13T10:00:00.000Z"), result, { version: 1, maxAgeDays: 1 }, "Asia/Kolkata", fetchedAt);
+    db.openNext();
+    await pending;
+    expect(db.puts).toEqual([expect.objectContaining({
+      fetchedAt,
+      sources: [
+        { sourceKey: "native", state: "partial", asOf: sourceAsOf },
+        { sourceKey: "external:outlook:1", state: "failed", asOf: null },
+      ],
     })]);
   });
 

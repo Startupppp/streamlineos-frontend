@@ -221,7 +221,9 @@ export function CalendarOfflinePanel({
                   key={source.sourceKey}
                   className="text-xs text-muted-foreground"
                 >
-                  {source.sourceKey}: {source.state}, {age} old
+                  {source.sourceKey}: {source.state}, {source.asOf && Number.isFinite(Date.parse(source.asOf))
+                    ? `source data ${Math.max(1, Math.floor((now - Date.parse(source.asOf)) / 60_000))} minutes old`
+                    : "last successful source refresh unknown"}
                 </p>
               ))}
             </div>

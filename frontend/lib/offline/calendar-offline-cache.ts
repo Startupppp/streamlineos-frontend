@@ -12,6 +12,7 @@ export interface OfflineCalendarSnapshot {
   sources: {
     sourceKey: string;
     state: "complete" | "partial" | "failed" | "continued";
+    asOf: string | null;
   }[];
   windows: {
     start: string;
@@ -210,13 +211,17 @@ export async function saveOfflineCalendarSnapshot(
   result: CalendarEventsResponse,
   policy: { version: number; maxAgeDays: number },
   timeZone: string,
+  fetchedAt: number,
 ): Promise<void> {
   watchCrossTabIdentity();
   if (
     !identity ||
     !timeZone ||
     !Number.isFinite(start.getTime()) ||
-    !Number.isFinite(end.getTime())
+    !Number.isFinite(end.getTime()) ||
+    !Number.isFinite(fetchedAt) ||
+    fetchedAt <= 0 ||
+    fetchedAt > Date.now()
   )
     return;
   const writeEpoch = cacheEpoch;
@@ -224,17 +229,26 @@ export async function saveOfflineCalendarSnapshot(
   const truncated = result.truncated || busyWindows.length > 2000;
   const snapshot: OfflineCalendarSnapshot = {
     identity,
-    fetchedAt: Date.now(),
+    fetchedAt,
     windowStart: start.toISOString(),
     windowEnd: end.toISOString(),
     timeZone,
     coverage: truncated && result.coverageState === "complete" ? "partial" : result.coverageState,
     policyVersion: policy.version,
     maxAgeDays: policy.maxAgeDays,
-    sources: result.coverage.map((entry) => ({
-      sourceKey: entry.sourceKey,
-      state: truncated && entry.state === "complete" ? "partial" : entry.state,
-    })),
+    sources: result.coverage.map((entry) => {
+      const sourceTimes = result.events
+        .filter((event) => event.sourceKey === entry.sourceKey)
+        .map((event) => event.freshness.asOf)
+        .filter((value): value is string => typeof value === "string" && Number.isFinite(Date.parse(value)));
+      return {
+        sourceKey: entry.sourceKey,
+        state: truncated && entry.state === "complete" ? "partial" : entry.state,
+        asOf: sourceTimes.length
+          ? new Date(Math.min(...sourceTimes.map((value) => Date.parse(value)))).toISOString()
+          : entry.state === "complete" ? new Date(fetchedAt).toISOString() : null,
+      };
+    }),
     windows: busyWindows
       .slice(0, 2000)
       .map((event) => ({

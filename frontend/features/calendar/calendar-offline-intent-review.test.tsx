@@ -6,6 +6,7 @@ jest.mock("@tanstack/react-query", () => ({ useQuery: jest.fn() }));
 jest.mock("next-auth/react", () => ({ useSession: jest.fn() }));
 jest.mock("@/hooks/api/access", () => ({ useCan: jest.fn() }));
 jest.mock("@/hooks/api/calendar-offline-policy", () => ({ useCalendarOfflinePolicy: jest.fn() }));
+jest.mock("@/hooks/common/use-online-status", () => ({ useOnlineStatus: jest.fn() }));
 jest.mock("@/components/ui/dialog", () => ({
   Dialog: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   DialogContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
@@ -18,12 +19,14 @@ const query = jest.requireMock<{ useQuery: jest.Mock }>("@tanstack/react-query")
 const session = jest.requireMock<{ useSession: jest.Mock }>("next-auth/react").useSession;
 const can = jest.requireMock<{ useCan: jest.Mock }>("@/hooks/api/access").useCan;
 const policy = jest.requireMock<{ useCalendarOfflinePolicy: jest.Mock }>("@/hooks/api/calendar-offline-policy").useCalendarOfflinePolicy;
+const online = jest.requireMock<{ useOnlineStatus: jest.Mock }>("@/hooks/common/use-online-status").useOnlineStatus;
 const refetch = jest.fn();
 
-function setup(options: { stale?: boolean; isFetching?: boolean; isError?: boolean } = {}) {
+function setup(options: { stale?: boolean; isFetching?: boolean; isError?: boolean; online?: boolean } = {}) {
   const now = Date.now();
   session.mockReturnValue({ status: "authenticated", data: { orgId: "org-1", user: { id: "user-1" } } });
   can.mockReturnValue(true);
+  online.mockReturnValue(options.online ?? true);
   policy.mockReturnValue({ isFetchedAfterMount: true, isFetching: false, isError: false, dataUpdatedAt: now, data: { enabled: true, version: 2 } });
   query.mockReturnValue({
     data: { evaluatedAt: new Date(now - (options.stale ? 61_000 : 0)).toISOString(), slots: [{ state: "free", coverageState: "complete", explanation: "Available" }] },
@@ -54,6 +57,11 @@ describe("offline Calendar intent review", () => {
 
   it("keeps continue disabled when a refresh fails with old free data retained", () => {
     expect(setup({ isError: true })).toBeDisabled();
+  });
+
+  it("keeps a recent free result disabled after connectivity drops", () => {
+    expect(setup({ online: false })).toBeDisabled();
+    expect(screen.getByText("Reconnect to review this draft.")).toBeInTheDocument();
   });
 
   it("allows review to continue only after fresh complete availability", () => {
