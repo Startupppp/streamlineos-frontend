@@ -7,6 +7,7 @@ import {
   CheckCircle2,
   AlertCircle,
   StopCircle,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -99,14 +100,16 @@ function ActionItemRow({
         placeholder={`Action item ${index + 1}`}
         className="min-w-0 flex-1"
       />
-      <button
+      <Button
         type="button"
+        variant="ghost"
+        size="icon-sm"
         onClick={handleRemove}
-        className="text-xs text-muted-foreground hover:text-destructive transition-colors"
+        className="shrink-0 text-muted-foreground hover:text-destructive"
         aria-label={`Remove action item ${index + 1}`}
       >
-        ×
-      </button>
+        <X className="size-4" aria-hidden />
+      </Button>
     </div>
   );
 }
