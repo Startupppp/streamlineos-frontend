@@ -62,5 +62,6 @@ Documents owns source identity, audience, versions and safe file retrieval. Know
 - [ ] KD-D5: ticket-to-article success/error translation and duplicate submission.
   - 2026-10-16 partial evidence: backend `5b8a70c1a` adds the command fence, one source-ticket identity, an authorized retry lookup and a tenant-scoped uniqueness race path; article creation and its event now share a transaction. Focused tests pass. Migration 2044 is not applied, and the deployed HTTP contract plus browser duplicate-submission flow remain unverified (`KB-OPEN-006`, `KB-OPEN-020`).
 - [ ] KD-D6: ACL cache key/admin semantics and security tests reaching the actual request path.
+  - 2026-10-16 partial evidence: backend `d27970af2` binds the KB standing request memo and page-search cursor fingerprint to user, principal kind and ceiling. Failing-first tests reproduced narrow-token admin-standing reuse and cross-actor cursor collision; 196 focused tests passed, including the page-search query seam. Shared RBAC/cache files were untouched. Live role revocation, DB-backed request paths and cache invalidation timing remain open (`KB-OPEN-024`, `KB-OPEN-027`, `KB-OPEN-033`).
 
 For each row, append the matching `KB-OPEN` ID or a current-code reproduction to the implementation claim. Unit evidence does not close browser, database, worker or deployment gates.
