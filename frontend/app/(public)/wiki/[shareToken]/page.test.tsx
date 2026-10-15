@@ -148,4 +148,28 @@ describe("public wiki share page — no raw object reference reaches the viewer"
       { type: "img", url: publicMediaBrokerUrl("tok-content-2", CONTENT_KEY) },
     ]);
   });
+
+  it("does not serialize legacy media source URLs to the client loader", async () => {
+    await renderRoute(
+      "tok-content-3",
+      pageData({
+        content: [
+          { type: "image", attrs: { src: `${BUCKET_ORIGIN}/${CONTENT_KEY}` } },
+          { type: "video", poster: `${BUCKET_ORIGIN}/${CONTENT_KEY}` },
+        ],
+      }),
+    );
+
+    expect(JSON.stringify(capturedContent)).not.toContain(BUCKET_ORIGIN);
+    expect(capturedContent).toEqual([
+      {
+        type: "image",
+        attrs: { src: publicMediaBrokerUrl("tok-content-3", CONTENT_KEY) },
+      },
+      {
+        type: "video",
+        poster: publicMediaBrokerUrl("tok-content-3", CONTENT_KEY),
+      },
+    ]);
+  });
 });

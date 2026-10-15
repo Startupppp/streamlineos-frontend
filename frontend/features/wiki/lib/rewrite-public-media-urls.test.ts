@@ -66,6 +66,37 @@ describe("rewritePublicMediaUrls", () => {
     expect(result.attrs.alt).toBe("photo");
   });
 
+  it("brokers legacy media source fields before content reaches the client", () => {
+    const origin = "https://pub.r2.example.com";
+    const content = [
+      {
+        type: "image",
+        src: `${origin}/${objectKey}`,
+        attrs: { thumbnailUrl: `${origin}/${objectKey}`, alt: "photo" },
+      },
+      {
+        type: "video",
+        poster: `${origin}/${objectKey}`,
+        attrs: { src: `${origin}/${objectKey}` },
+      },
+      { type: "file", href: `${origin}/${objectKey}` },
+      { type: "a", href: `${origin}/external/article` },
+    ];
+
+    const result = rewritePublicMediaUrls(content, shareToken);
+
+    expect(result).toEqual([
+      {
+        type: "image",
+        src: brokered,
+        attrs: { thumbnailUrl: brokered, alt: "photo" },
+      },
+      { type: "video", poster: brokered, attrs: { src: brokered } },
+      { type: "file", href: brokered },
+      { type: "a", href: `${origin}/external/article` },
+    ]);
+  });
+
   it("does not let a media node's type leak into a link in its children", () => {
     const content = {
       type: "img",
