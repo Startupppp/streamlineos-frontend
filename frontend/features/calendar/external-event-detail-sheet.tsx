@@ -3,7 +3,7 @@
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, CalendarDays, ExternalLink, MapPin, Video } from "lucide-react";
 import { formatEventDate, formatEventTimeRange } from "@/lib/date-utils";
-import { Dialog, DialogBody, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AppSheet } from "@/components/shared/app-sheet";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import type { BigCalEvent } from "./big-calendar-wrapper";
@@ -64,18 +64,32 @@ interface ExternalEventDetailSheetProps {
 
 export function ExternalEventDetailSheet({ event, onClose }: ExternalEventDetailSheetProps) {
   return (
-    <Dialog open={event !== null} onOpenChange={(open) => { if (!open) onClose(); }}>
-      <DialogContent className="gap-0 overflow-hidden p-0">
-        <DialogHeader className="shrink-0 border-b px-5 py-4 text-left">
-          <DialogTitle className="truncate text-base font-semibold leading-snug">{event?.title ?? ""}</DialogTitle>
+    <AppSheet
+      open={event !== null}
+      onOpenChange={(open) => { if (!open) onClose(); }}
+      title={event?.title ?? "Event details"}
+      className="sm:max-w-lg"
+      footer={event ? <div className="w-full space-y-2">
+        {event.resource?.meetingUrl ? <JoinMeetingLink href={event.resource.meetingUrl} /> : null}
+        {event.resource?.webLink ? (
+          <Button variant="outline" size="sm" className="w-full" asChild>
+            <a href={event.resource.webLink} target="_blank" rel="noopener noreferrer">
+              <ExternalLink className="size-3.5" />
+              Open in calendar
+            </a>
+          </Button>
+        ) : null}
+        <Button variant="outline" size="sm" className="w-full" onClick={onClose}>Close</Button>
+      </div> : null}
+    >
+        <div className="space-y-3">
           {event?.resource?.accountEmail && (
             <Badge variant="secondary" className="w-fit max-w-full truncate text-micro">
               {event.resource.accountEmail}
             </Badge>
           )}
-        </DialogHeader>
         {event && (
-          <DialogBody className="space-y-3 px-5 py-4">
+          <>
             <div className="flex items-start gap-2 text-sm text-muted-foreground">
               <CalendarDays className="mt-0.5 h-3.5 w-3.5 shrink-0" />
               <span>
@@ -93,27 +107,9 @@ export function ExternalEventDetailSheet({ event, onClose }: ExternalEventDetail
             <p className="text-dense text-muted-foreground">
               Read-only event from a connected account. Edit it in its own calendar.
             </p>
-          </DialogBody>
+          </>
         )}
-        <DialogFooter className="flex-col items-stretch gap-2 bg-muted px-3 py-3 sm:flex-col">
-          {event?.resource?.meetingUrl ? (
-            <JoinMeetingLink href={event.resource.meetingUrl} />
-          ) : null}
-          <div className="grid gap-2">
-            {event?.resource?.webLink ? (
-              <Button variant="outline" size="sm" className="w-full" asChild>
-                <a href={event.resource.webLink} target="_blank" rel="noopener noreferrer">
-                  <ExternalLink className="size-3.5" />
-                  Open in calendar
-                </a>
-              </Button>
-            ) : null}
-            <Button variant="outline" size="sm" className="w-full" onClick={onClose}>
-              Close
-            </Button>
-          </div>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </div>
+    </AppSheet>
   );
 }

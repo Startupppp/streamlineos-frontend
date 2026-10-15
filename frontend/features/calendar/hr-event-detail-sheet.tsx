@@ -1,7 +1,7 @@
 "use client";
 
 import { formatEventDate } from "@/lib/date-utils";
-import { Dialog, DialogBody, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AppSheet } from "@/components/shared/app-sheet";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CalendarDays } from "lucide-react";
@@ -19,10 +19,13 @@ export function HrEventDetailSheet({ event, onClose }: HrEventDetailSheetProps) 
   const type = event?.resource?.hrEventType as HrCalendarEventType | undefined;
 
   return (
-    <Dialog open={event !== null} onOpenChange={(open) => { if (!open) onClose(); }}>
-      <DialogContent className="gap-0 p-0">
-        <DialogHeader className="shrink-0 border-b px-5 py-4 text-left">
-          <DialogTitle className="truncate text-base font-semibold leading-snug">{event?.title ?? ""}</DialogTitle>
+    <AppSheet
+      open={event !== null}
+      onOpenChange={(open) => { if (!open) onClose(); }}
+      title={event?.title ?? "Event details"}
+      footer={event ? <Button variant="outline" size="sm" onClick={onClose}>Close</Button> : null}
+    >
+        <div className="space-y-3">
           {type && (
             <Badge
               variant="outline"
@@ -31,9 +34,8 @@ export function HrEventDetailSheet({ event, onClose }: HrEventDetailSheetProps) 
               {HR_CALENDAR_TYPE_LABELS[type]}
             </Badge>
           )}
-        </DialogHeader>
         {event && (
-          <DialogBody className="space-y-3 px-5 py-4">
+          <>
             <div className="flex items-start gap-2 text-sm text-muted-foreground">
               <CalendarDays className="mt-0.5 h-3.5 w-3.5 shrink-0" />
               <span>{`${formatEventDate(event.start, "UTC")} · All day`}</span>
@@ -41,14 +43,9 @@ export function HrEventDetailSheet({ event, onClose }: HrEventDetailSheetProps) 
             <p className="text-dense text-muted-foreground">
               Read-only HR event. Manage it from the HR module.
             </p>
-          </DialogBody>
+          </>
         )}
-        <div className="flex shrink-0 justify-end border-t px-5 py-3">
-          <Button variant="outline" size="sm" onClick={onClose}>
-            Close
-          </Button>
         </div>
-      </DialogContent>
-    </Dialog>
+    </AppSheet>
   );
 }

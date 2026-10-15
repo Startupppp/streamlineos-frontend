@@ -3,10 +3,9 @@
 import { useCallback, useState } from "react";
 import dynamic from "next/dynamic";
 import { format, addDays } from "date-fns";
-import { motion, useReducedMotion } from "framer-motion";
 import { Tag } from "lucide-react";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AppSheet } from "@/components/shared/app-sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Sheet,
@@ -100,7 +99,11 @@ export function EventDetailSheet({ event, onClose, onQueueScenarioStep }: EventD
     : event?.entityType === "deal" && event.entityId && /^\d+$/.test(event.entityId)
       ? { source: "crm", type: "deal", recordId: event.entityId }
       : null;
-  const reduceMotion = useReducedMotion() === true;
+  const when = !event
+    ? ""
+    : event.allDay
+      ? formatEventDate(event.start, event.timezone)
+      : formatEventTimeRange(event.start, event.end, event.timezone);
 
   const handleUnlink = useCallback(async () => {
     if (numericEventId === null) return;
@@ -197,9 +200,37 @@ export function EventDetailSheet({ event, onClose, onQueueScenarioStep }: EventD
 
   return (
     <>
-      <Dialog open={!!event} onOpenChange={handleSheetOpenChange}>
-        <DialogContent className="gap-0 overflow-hidden p-0">
-          <EventDetailHeader event={event} reduceMotion={reduceMotion} />
+      <AppSheet
+        open={!!event}
+        onOpenChange={handleSheetOpenChange}
+        title={event?.title ?? "Event details"}
+        description={when}
+        className="sm:max-w-xl"
+        footer={<EventDetailActions
+          showMeeting={isCalendarEvent && event?.category !== "huddle"}
+          showHuddle={event?.category === "huddle" && Boolean(event.entityId)}
+          huddleHref={event?.entityId ? `/chat?channel=${event.entityId}` : null}
+          canExport={canExport}
+          canMutate={canMutateEvent}
+          showCancelOccurrence={canMutateEvent && detail?.isRecurring === true}
+          showProtect={canMutateEvent && !detail?.isRecurring && !event?.allDay}
+          showRadar={commitmentRoot !== null}
+          onClose={onClose}
+          onDelete={handleRequestDelete}
+          onCancelOccurrence={handleRequestCancelOccurrence}
+          onMeeting={handleOpenMeetingWorkspace}
+          onExport={handleExportDay}
+          onEdit={handleOpenEdit}
+          onProtect={handleOpenProtectedWork}
+          onRadar={handleOpenCommitmentRadar}
+        />}
+      >
+          {event ? (
+            <div className="mb-4 flex items-center gap-2 border-l-4 pl-3" style={{ borderColor: getEventColor(event) }}>
+              <Tag className="size-3.5" style={{ color: getEventColor(event) }} />
+              <span className="text-sm capitalize text-muted-foreground">{event.category}</span>
+            </div>
+          ) : null}
           <EventDetailContent
             event={event}
             numericEventId={numericEventId}
@@ -216,26 +247,7 @@ export function EventDetailSheet({ event, onClose, onQueueScenarioStep }: EventD
           {event ? <CalendarSourceActionPanel key={`${event.id}:${event.sourceVersion}`} event={event} onQueueScenarioStep={onQueueScenarioStep} /> : null}
           {detail && canMutateEvent && !detail.isRecurring && !detail.allDay && commitmentRoot && onQueueScenarioStep ?
             <CalendarNativeScenarioMove key={`${detail.id}:${detail.localVersion}`} detail={detail} root={commitmentRoot} onQueue={onQueueScenarioStep} /> : null}
-          <EventDetailActions
-            showMeeting={isCalendarEvent && event?.category !== "huddle"}
-            showHuddle={event?.category === "huddle" && Boolean(event.entityId)}
-            huddleHref={event?.entityId ? `/chat?channel=${event.entityId}` : null}
-            canExport={canExport}
-            canMutate={canMutateEvent}
-            showCancelOccurrence={canMutateEvent && detail?.isRecurring === true}
-            showProtect={canMutateEvent && !detail?.isRecurring && !event?.allDay}
-            showRadar={commitmentRoot !== null}
-            onClose={onClose}
-            onDelete={handleRequestDelete}
-            onCancelOccurrence={handleRequestCancelOccurrence}
-            onMeeting={handleOpenMeetingWorkspace}
-            onExport={handleExportDay}
-            onEdit={handleOpenEdit}
-            onProtect={handleOpenProtectedWork}
-            onRadar={handleOpenCommitmentRadar}
-          />
-        </DialogContent>
-      </Dialog>
+      </AppSheet>
       <ConfirmDialog
         open={confirmOpen}
         onOpenChange={setConfirmOpen}
@@ -287,48 +299,6 @@ export function EventDetailSheet({ event, onClose, onQueueScenarioStep }: EventD
         <CommitmentRadarSheet root={commitmentRoot} open onClose={() => setCommitmentRadarOpen(false)} />
       ) : null}
     </>
-  );
-}
-
-const HEADER_EASE = [0.22, 1, 0.36, 1] as const;
-
-function EventDetailHeader({
-  event,
-  reduceMotion,
-}: {
-  event: CalendarListItem | null;
-  reduceMotion: boolean;
-}) {
-  const color = getEventColor(event);
-  const when = !event
-    ? ""
-    : event.allDay
-      ? formatEventDate(event.start, event.timezone)
-      : formatEventTimeRange(event.start, event.end, event.timezone);
-
-  return (
-    <DialogHeader className="relative shrink-0 overflow-hidden border-b px-5 py-4 text-left">
-      <motion.span
-        aria-hidden
-        className="absolute inset-x-0 top-0 h-1 origin-left"
-        style={{ backgroundColor: color }}
-        initial={reduceMotion ? false : { scaleX: 0 }}
-        animate={{ scaleX: 1 }}
-        transition={reduceMotion ? { duration: 0 } : { duration: 0.45, ease: HEADER_EASE }}
-      />
-      <DialogTitle className="text-base font-semibold tracking-tight">
-        <TruncatedText text={event?.title ?? ""} lines={2} className="min-w-0 text-balance" />
-      </DialogTitle>
-      {event ? (
-        <div className="flex flex-wrap items-center gap-2">
-          <p className="text-label text-muted-foreground">{when}</p>
-          <span className="inline-flex items-center gap-1.5 rounded-md bg-muted px-2 py-0.5 text-label font-medium capitalize text-foreground">
-            <Tag className="size-3.5" style={{ color }} />
-            {event.category}
-          </span>
-        </div>
-      ) : null}
-    </DialogHeader>
   );
 }
 

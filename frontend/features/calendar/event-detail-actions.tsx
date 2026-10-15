@@ -77,7 +77,7 @@ export function EventDetailActions({
   if (!showMeeting && !showHuddle && !hasTools) return null;
 
   return (
-    <div className="mt-auto shrink-0 space-y-2 border-t border-border/60 bg-muted px-3 py-3">
+    <div className="w-full space-y-2">
       {showHuddle && huddleHref ? (
         <Link
           href={huddleHref}
