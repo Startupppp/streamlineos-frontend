@@ -71,8 +71,8 @@ export function CalendarResourceAdminCard() {
   async function save() {
     if (!form) return;
     if (!form.name.trim()) return setError("Enter a resource name.");
-    if (form.ownership === "source" && (!form.sourceKey?.trim() || !form.sourceRecordId?.trim()))
-      return setError("Enter the source and source record for a source-owned resource.");
+    if (form.ownership === "source" && !/^[1-9]\d*$/.test(form.sourceRecordId?.trim() ?? ""))
+      return setError("Enter a valid HR asset ID.");
     if (!Number.isInteger(form.capacity) || form.capacity < 1 || form.capacity > 10_000)
       return setError("Capacity must be between 1 and 10,000.");
     setError(null);
@@ -87,16 +87,17 @@ export function CalendarResourceAdminCard() {
             capacity: form.capacity,
             divisible: form.divisible,
             accessibility: form.accessibility,
-            requiresApproval: form.requiresApproval,
+            requiresApproval: form.ownership === "source" || form.requiresApproval,
             status,
           },
         });
       } else {
         await create.mutateAsync({
           ...form,
+          requiresApproval: form.ownership === "source" || form.requiresApproval,
           name: form.name.trim(),
           location: form.location?.trim() || null,
-          sourceKey: form.ownership === "source" ? form.sourceKey?.trim() || null : null,
+          sourceKey: form.ownership === "source" ? "hr.asset" : null,
           sourceRecordId: form.ownership === "source" ? form.sourceRecordId?.trim() || null : null,
         });
       }
@@ -137,12 +138,12 @@ export function CalendarResourceAdminCard() {
     {error ? <p role="alert" className="rounded-md border border-destructive p-2 text-sm text-destructive">{error}</p> : null}
     {form ? <div className="space-y-3 rounded-md border p-3">
       <h3 className="font-medium">{editing ? `Edit ${editing.name}` : "New resource"}</h3>
-      {!editing ? <div className="grid grid-cols-2 gap-2"><label className="text-sm">Type<select className="block w-full rounded-md border bg-background p-2" value={form.kind} onChange={(event) => setForm({ ...form, kind: event.target.value as CalendarResourceInput["kind"] })}><option value="room">Room</option><option value="equipment">Equipment</option><option value="resource">Other resource</option></select></label><label className="text-sm">Owner<select className="block w-full rounded-md border bg-background p-2" value={form.ownership} onChange={(event) => setForm({ ...form, ownership: event.target.value as CalendarResourceInput["ownership"], sourceKey: null, sourceRecordId: null })}><option value="calendar">Calendar</option><option value="source">Another module</option></select></label></div> : <p className="text-sm text-muted-foreground">{editing.kind} · {editing.ownership} owned</p>}
-      {form.ownership === "source" && !editing ? <div className="grid grid-cols-2 gap-2"><div className="space-y-1"><Label htmlFor="resource-source">Source key</Label><Input id="resource-source" value={form.sourceKey ?? ""} onChange={(event) => setForm({ ...form, sourceKey: event.target.value || null })} /></div><div className="space-y-1"><Label htmlFor="resource-record">Source record ID</Label><Input id="resource-record" value={form.sourceRecordId ?? ""} onChange={(event) => setForm({ ...form, sourceRecordId: event.target.value || null })} /></div></div> : null}
+      {!editing ? <div className="grid grid-cols-2 gap-2"><label className="text-sm">Type<select className="block w-full rounded-md border bg-background p-2" value={form.kind} disabled={form.ownership === "source"} onChange={(event) => setForm({ ...form, kind: event.target.value as CalendarResourceInput["kind"] })}><option value="room">Room</option><option value="equipment">Equipment</option><option value="resource">Other resource</option></select></label><label className="text-sm">Owner<select className="block w-full rounded-md border bg-background p-2" value={form.ownership} onChange={(event) => { const ownership = event.target.value as CalendarResourceInput["ownership"]; setForm({ ...form, ownership, kind: ownership === "source" ? "equipment" : form.kind, sourceKey: ownership === "source" ? "hr.asset" : null, sourceRecordId: null, requiresApproval: ownership === "source" || form.requiresApproval }); }}><option value="calendar">Calendar</option><option value="source">HR asset</option></select></label></div> : <p className="text-sm text-muted-foreground">{editing.kind} · {editing.ownership} owned</p>}
+      {form.ownership === "source" && !editing ? <div className="space-y-1"><Label htmlFor="resource-record">HR asset ID</Label><Input id="resource-record" inputMode="numeric" value={form.sourceRecordId ?? ""} onChange={(event) => setForm({ ...form, sourceRecordId: event.target.value || null })} /><p className="text-xs text-muted-foreground">The HR asset owner confirms eligibility before the booking is confirmed.</p></div> : null}
       <div className="grid grid-cols-2 gap-2"><div className="space-y-1"><Label htmlFor="resource-name">Name</Label><Input id="resource-name" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} /></div><div className="space-y-1"><Label htmlFor="resource-location">Location</Label><Input id="resource-location" value={form.location ?? ""} onChange={(event) => setForm({ ...form, location: event.target.value || null })} /></div><div className="space-y-1"><Label htmlFor="resource-capacity">Capacity</Label><Input id="resource-capacity" type="number" min={1} max={10000} value={form.capacity} onChange={(event) => setForm({ ...form, capacity: Number(event.target.value) })} /></div>{editing ? <label className="text-sm">Status<select className="block w-full rounded-md border bg-background p-2" value={status} onChange={(event) => setStatus(event.target.value as BookingResource["status"])}><option value="active">Active</option><option value="unavailable">Unavailable</option><option value="retired">Retired</option></select></label> : null}</div>
       <div className="space-y-1"><Label htmlFor="resource-accessibility">Accessibility features</Label><Input id="resource-accessibility" placeholder="Comma-separated" value={form.accessibility.join(", ")} onChange={(event) => setForm({ ...form, accessibility: event.target.value.split(",").map((value) => value.trim()).filter(Boolean) })} /></div>
       <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.divisible} onChange={(event) => setForm({ ...form, divisible: event.target.checked })} />Capacity can be divided between bookings</label>
-      <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.requiresApproval} onChange={(event) => setForm({ ...form, requiresApproval: event.target.checked })} />Owner approval is required</label>
+      <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.ownership === "source" || form.requiresApproval} disabled={form.ownership === "source"} onChange={(event) => setForm({ ...form, requiresApproval: event.target.checked })} />Owner approval is required</label>
       <div className="flex gap-2"><Button onClick={() => void save()} disabled={create.isPending || update.isPending}>Save resource</Button><Button variant="outline" onClick={() => setForm(null)}>Cancel</Button></div>
     </div> : null}
     {maintenanceTarget ? <div className="space-y-3 rounded-md border p-3"><h3 className="font-medium">Maintenance for {maintenanceTarget.name}</h3><div className="grid grid-cols-2 gap-2"><div className="space-y-1"><Label htmlFor="maintenance-start">Starts</Label><Input id="maintenance-start" type="datetime-local" value={maintenanceStart} onChange={(event) => setMaintenanceStart(event.target.value)} /></div><div className="space-y-1"><Label htmlFor="maintenance-end">Ends</Label><Input id="maintenance-end" type="datetime-local" value={maintenanceEnd} onChange={(event) => setMaintenanceEnd(event.target.value)} /></div></div><div className="space-y-1"><Label htmlFor="maintenance-reason">Reason</Label><Input id="maintenance-reason" value={maintenanceReason} onChange={(event) => setMaintenanceReason(event.target.value)} /></div><div className="flex gap-2"><Button onClick={() => void scheduleMaintenance()} disabled={addMaintenance.isPending}>Schedule maintenance</Button><Button variant="outline" onClick={() => setMaintenanceTarget(null)}>Cancel</Button></div></div> : null}
