@@ -434,6 +434,9 @@ export default function KnowledgeAnalyticsPage() {
     isError: noResultsError,
     error: noResultsQueryError,
     refetch: refetchNoResults,
+    fetchNextPage: fetchNextNoResults,
+    hasNextPage: hasNextNoResults,
+    isFetchingNextPage: isFetchingNextNoResults,
   } = useKbNoResults(spaceId !== undefined ? { ...range, spaceId } : range);
   const noResults = noResultsResponse?.data ?? [];
   const {
@@ -705,7 +708,7 @@ export default function KnowledgeAnalyticsPage() {
               </h2>
               {noResults.length > 0 && (
                 <span className="text-xs text-muted-foreground">
-                  {noResults.length} queries
+                  {noResults.length}{hasNextNoResults ? "+" : ""} queries
                 </span>
               )}
             </div>
@@ -746,6 +749,16 @@ export default function KnowledgeAnalyticsPage() {
                 {noResults.map((row, i) => (
                   <NoResultsRow key={i} row={row} rank={i + 1} />
                 ))}
+                {hasNextNoResults ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => void fetchNextNoResults()}
+                    disabled={isFetchingNextNoResults}
+                  >
+                    {isFetchingNextNoResults ? "Loading searches..." : "Load more searches"}
+                  </Button>
+                ) : null}
               </div>
             )}
           </section>

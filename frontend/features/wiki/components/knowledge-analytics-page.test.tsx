@@ -152,6 +152,28 @@ beforeEach(() => {
 });
 
 describe("KnowledgeAnalyticsPage — access is three-valued, not a boolean", () => {
+  it("shows no-result search count as a lower bound and can continue the list", () => {
+    const fetchNextPage = jest.fn();
+    useKbNoResults.mockReturnValue({
+      ...settled({
+        data: [
+          { query: "billing", count: 4 },
+          { query: "shipping", count: 3 },
+        ],
+        scopeComplete: true,
+      }),
+      fetchNextPage,
+      hasNextPage: true,
+      isFetchingNextPage: false,
+    });
+
+    render(<KnowledgeAnalyticsPage />);
+
+    expect(screen.getByText("2+ queries")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Load more searches" }));
+    expect(fetchNextPage).toHaveBeenCalledTimes(1);
+  });
+
   it("shows citation reuse as a lower bound and offers continuation", () => {
     const fetchNextPage = jest.fn();
     useCitationReuse.mockReturnValue({

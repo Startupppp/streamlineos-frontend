@@ -22,11 +22,13 @@ import {
   useKnowledgeGaps,
   useGapRelatedPages,
   useKbContentGaps,
+  useKbNoResults,
 } from "./analytics";
 import {
   kbAnalyticsGapRelatedPagesContract,
   kbAnalyticsGapsContract,
   kbAnalyticsContentGapsContract,
+  kbAnalyticsNoResultsContract,
 } from "./kb-analytics-schema";
 
 const PAGINATION = { limit: 50, hasMore: false, nextCursor: null };
@@ -134,6 +136,37 @@ describe("useKbContentGaps", () => {
     expect(mockGet.mock.calls[1]?.[1]).toMatchObject({ kind: "search", cursor: "next" });
     await waitFor(() => expect(result.current.data).toHaveLength(2));
     expect(result.current.hasNextPage).toBe(false);
+  });
+});
+
+describe("useKbNoResults", () => {
+  it("flattens pages while preserving scope coverage and the next cursor", async () => {
+    const row = { query: "billing", count: 4 };
+    expect(kbAnalyticsNoResultsContract.safeParse({
+      data: [row],
+      pagination: { limit: 1, hasMore: true, nextCursor: "next" },
+      scopeComplete: true,
+    }).success).toBe(true);
+    mockGet
+      .mockResolvedValueOnce({
+        data: [row],
+        pagination: { limit: 1, hasMore: true, nextCursor: "next" },
+        scopeComplete: true,
+      })
+      .mockResolvedValueOnce({
+        data: [{ query: "shipping", count: 3 }],
+        pagination: { limit: 1, hasMore: false, nextCursor: null },
+        scopeComplete: true,
+      });
+
+    const { result } = renderHook(() => useKbNoResults({ spaceId: 7 }), { wrapper });
+
+    await waitFor(() => expect(result.current.hasNextPage).toBe(true));
+    expect(result.current.data?.scopeComplete).toBe(true);
+    expect(mockGet.mock.calls[0]?.[1]).toMatchObject({ spaceId: 7 });
+    await act(async () => { await result.current.fetchNextPage(); });
+    expect(mockGet.mock.calls[1]?.[1]).toMatchObject({ spaceId: 7, cursor: "next" });
+    await waitFor(() => expect(result.current.data?.data).toHaveLength(2));
   });
 });
 

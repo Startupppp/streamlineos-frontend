@@ -80,9 +80,20 @@ export function useKbNoResults(range?: KbAnalyticsRange) {
     to: range?.to,
     ...(range?.spaceId !== undefined ? { spaceId: range.spaceId } : {}),
   };
-  return useQuery({
+  return useInfiniteQuery({
     queryKey: knowledgeAndSurveysQueryKeys.kb.noResults(queryParams),
-    queryFn: ({ signal }) => apiClient.get<{ data: KbNoResultRow[]; scopeComplete: boolean }>("/kb/analytics/no-results", queryParams, signal, kbAnalyticsNoResultsContract),
+    initialPageParam: NO_CURSOR_YET,
+    queryFn: ({ signal, pageParam }) => apiClient.get<Page<KbNoResultRow> & { scopeComplete: boolean }>(
+      "/kb/analytics/no-results",
+      { ...queryParams, ...(pageParam !== undefined ? { cursor: pageParam } : {}) },
+      signal,
+      kbAnalyticsNoResultsContract,
+    ),
+    getNextPageParam: (last) => last.pagination.nextCursor ?? undefined,
+    select: (result) => ({
+      data: result.pages.flatMap((page) => page.data),
+      scopeComplete: result.pages.every((page) => page.scopeComplete),
+    }),
     staleTime: 5 * 60_000,
     enabled: canViewAnalytics,
   });
