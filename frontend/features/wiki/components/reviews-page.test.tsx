@@ -286,6 +286,39 @@ describe("ReviewsPage — empty states distinguish first-empty from filtered-emp
 });
 
 describe("ReviewsPage — cursor pagination preserves URL filter state", () => {
+  it("offers the previous page when a later cursor page becomes empty", () => {
+    useKbPageReviews.mockReturnValue({
+      data: makePage(
+        [makeReview({ id: 8 })],
+        { limit: 50, hasMore: true, nextCursor: "cursor-next" },
+      ),
+      isLoading: false,
+      isError: false,
+      error: undefined,
+      refetch: jest.fn(),
+    });
+
+    const view = render(<ReviewsPage />);
+    fireEvent.click(screen.getByTestId("next-btn"));
+
+    useKbPageReviews.mockReturnValue({
+      data: makePage([]),
+      isLoading: false,
+      isError: false,
+      error: undefined,
+      refetch: jest.fn(),
+    });
+    usePageState.mockReturnValue({ kind: "empty" });
+    view.rerender(<ReviewsPage />);
+
+    expect(screen.getByText("No reviews on this page.")).toBeInTheDocument();
+    expect(screen.queryByText("No pages under review.")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Previous page" }));
+    expect(useKbPageReviews).toHaveBeenLastCalledWith(
+      expect.objectContaining({ cursor: undefined }),
+    );
+  });
+
   it("advancing the cursor includes the active status filter in the next hook call", () => {
     useSearchParams.mockReturnValue(new URLSearchParams("status=overdue"));
     useKbPageReviews.mockReturnValue({

@@ -392,7 +392,15 @@ export default function ReviewsPage() {
     [canManage],
   );
 
-  const emptyNode = hasFilters ? (
+  const emptyNode = cursorState.hasPrevious ? (
+    <EmptyState
+      illustrationPreset="default"
+      title="No reviews on this page."
+      description="The reviews on this page may have changed. Go back to continue browsing."
+      action={{ label: "Previous page", onClick: handleGoPrevious }}
+      compact
+    />
+  ) : hasFilters ? (
     <EmptyState
       illustrationPreset="default"
       title="No reviews under these filters."
