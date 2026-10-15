@@ -4,7 +4,7 @@
 
 **Blocked by:** 13: Build privacy-safe availability and diagnostics.
 
-**Status:** ready-for-agent
+**Status:** in-progress
 
 - [ ] Hosts can create, preview, activate, pause, revoke, and version a booking rule.
 - [ ] Public visitors see only valid offered slots and minimal configured intake fields.

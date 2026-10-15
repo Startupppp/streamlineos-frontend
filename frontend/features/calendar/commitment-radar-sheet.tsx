@@ -94,7 +94,7 @@ export function CommitmentRadarSheet({ root, open, onClose }: {
   };
   return (
     <Sheet open={open} onOpenChange={(next) => { if (!next) onClose(); }}>
-      <SheetContent className="flex w-full flex-col p-0 sm:max-w-xl">
+      <SheetContent overlayClassName="z-[110]" className="z-[110] flex w-full flex-col p-0 sm:max-w-xl">
         <SheetHeader className="border-b px-5 py-4"><SheetTitle>Commitment radar</SheetTitle></SheetHeader>
         <ScrollArea className="min-h-0 flex-1"><div className="space-y-4 px-5 py-4">
           {chain.isLoading ? <p className="text-sm text-muted-foreground">Loading commitment chain</p> : null}

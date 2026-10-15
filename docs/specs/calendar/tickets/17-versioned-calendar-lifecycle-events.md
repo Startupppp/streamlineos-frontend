@@ -4,11 +4,11 @@
 
 **Blocked by:** 16: Commit bookings idempotently.
 
-**Status:** ready-for-agent
+**Status:** accepted
 
-- [ ] Confirmed, changed, rescheduled, cancelled, no-show, started, ended, failed, and repaired states emit stable versioned events.
-- [ ] Event publication is atomic with the local state transition and carries a stable effect idempotency identity.
-- [ ] Consumers can detect duplicates, gaps, and out-of-order versions and reconcile safely.
-- [ ] Payloads are tenant scoped and minimized for downstream authorization.
-- [ ] Tests cover transaction rollback, duplicate delivery, out-of-order delivery, replay, and deleted/restricted records.
+- [x] Confirmed, changed, rescheduled, cancelled, no-show, started, ended, failed, and repaired states emit stable versioned events.
+- [x] Event publication is atomic with the local state transition and carries a stable effect idempotency identity.
+- [x] Consumers can detect duplicates, gaps, and out-of-order versions and reconcile safely.
+- [x] Payloads are tenant scoped and minimized for downstream authorization.
+- [x] Tests cover transaction rollback, duplicate delivery, out-of-order delivery, replay, and deleted/restricted records.
 

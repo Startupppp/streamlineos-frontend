@@ -1,7 +1,7 @@
 "use client";
 
 import { formatEventDate } from "@/lib/date-utils";
-import { Sheet, SheetBody, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Dialog, DialogBody, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CalendarDays } from "lucide-react";
@@ -19,10 +19,10 @@ export function HrEventDetailSheet({ event, onClose }: HrEventDetailSheetProps) 
   const type = event?.resource?.hrEventType as HrCalendarEventType | undefined;
 
   return (
-    <Sheet open={event !== null} onOpenChange={onClose}>
-      <SheetContent side="right" className="w-full sm:max-w-sm p-0 flex flex-col">
-        <SheetHeader className="px-5 py-4 border-b shrink-0">
-          <SheetTitle className="text-base font-semibold leading-snug truncate">{event?.title ?? ""}</SheetTitle>
+    <Dialog open={event !== null} onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent className="gap-0 p-0">
+        <DialogHeader className="shrink-0 border-b px-5 py-4 text-left">
+          <DialogTitle className="truncate text-base font-semibold leading-snug">{event?.title ?? ""}</DialogTitle>
           {type && (
             <Badge
               variant="outline"
@@ -31,24 +31,24 @@ export function HrEventDetailSheet({ event, onClose }: HrEventDetailSheetProps) 
               {HR_CALENDAR_TYPE_LABELS[type]}
             </Badge>
           )}
-        </SheetHeader>
+        </DialogHeader>
         {event && (
-          <SheetBody className="px-5 py-4 space-y-3">
+          <DialogBody className="space-y-3 px-5 py-4">
             <div className="flex items-start gap-2 text-sm text-muted-foreground">
-              <CalendarDays className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+              <CalendarDays className="mt-0.5 h-3.5 w-3.5 shrink-0" />
               <span>{`${formatEventDate(event.start, "UTC")} · All day`}</span>
             </div>
             <p className="text-dense text-muted-foreground">
               Read-only HR event. Manage it from the HR module.
             </p>
-          </SheetBody>
+          </DialogBody>
         )}
-        <div className="px-5 py-3 border-t shrink-0 flex justify-end">
+        <div className="flex shrink-0 justify-end border-t px-5 py-3">
           <Button variant="outline" size="sm" onClick={onClose}>
             Close
           </Button>
         </div>
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
   );
 }

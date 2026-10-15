@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Sheet, SheetBody, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ErrorState } from "@/components/shared/error-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
@@ -29,6 +31,7 @@ import { CalendarBookingRoutingPanel } from "./calendar-booking-routing-panel";
 import { CalendarBookingPaymentsPanel } from "./calendar-booking-payments-panel";
 import { CalendarManagedBookingsPanel } from "./calendar-managed-bookings-panel";
 import { CalendarResourceApprovalQueue } from "./calendar-resource-approval-queue";
+import { BookingPageCard } from "./calendar-booking-page-card";
 
 const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
@@ -182,11 +185,14 @@ function CalendarBookingRulesSheetInner({ identity, onClose }: { identity: strin
   }
 
   return <Sheet open onOpenChange={(open) => { if (!open) onClose(); }}>
-    <SheetContent className="flex flex-col sm:max-w-xl">
-      <SheetHeader><SheetTitle>Booking pages</SheetTitle></SheetHeader>
-      <SheetBody className="space-y-5 overflow-y-auto px-4 py-3">
-        {error ? <div role="alert" className="rounded-md border border-destructive p-3 text-sm text-destructive">{error}</div> : null}
-        {publicLink?.identity === identity ? <div className="space-y-2 rounded-md border p-3"><p className="text-sm font-medium">Your public booking link</p><Input readOnly value={publicLink.href} aria-label="Public booking link" /><Button type="button" variant="outline" onClick={async () => { try { await navigator.clipboard.writeText(publicLink.href); toast.success("Link copied"); } catch { toast.error("Could not copy the link"); } }}>Copy link</Button><p className="text-xs text-muted-foreground">Save this link now. It is shown only when the page is first activated.</p></div> : null}
+    <SheetContent className="flex w-full flex-col gap-0 p-0 sm:max-w-xl">
+      <SheetHeader className="gap-1 border-b px-5 py-4">
+        <SheetTitle className="text-base font-semibold tracking-tight">Booking pages</SheetTitle>
+        <p className="text-sm text-muted-foreground">Share open times and manage who can book them.</p>
+      </SheetHeader>
+      <SheetBody className="space-y-4 px-5 py-4">
+        {error ? <Alert variant="destructive"><AlertDescription className="col-span-2 col-start-1 text-sm text-destructive">{error}</AlertDescription></Alert> : null}
+        {publicLink?.identity === identity ? <div className="space-y-2 rounded-lg bg-muted p-3 dark:border dark:border-background"><p className="text-sm font-medium">Your public booking link</p><Input readOnly value={publicLink.href} aria-label="Public booking link" /><Button type="button" variant="outline" onClick={async () => { try { await navigator.clipboard.writeText(publicLink.href); toast.success("Link copied"); } catch { toast.error("Could not copy the link"); } }}>Copy link</Button><p className="text-xs text-muted-foreground">Save this link now. It is shown only when the page is first activated.</p></div> : null}
         {managedBookingsRule ? <CalendarManagedBookingsPanel key={managedBookingsRule.id} rule={managedBookingsRule} onBack={() => setManagedBookingsRule(null)} /> : resourceApprovalsOpen ? <CalendarResourceApprovalQueue onBack={() => setResourceApprovalsOpen(false)} /> : paymentRule ? <CalendarBookingPaymentsPanel key={paymentRule.id} rule={paymentRule} onBack={() => setPaymentRule(null)} /> : routingRule ? <CalendarBookingRoutingPanel key={routingRule.id} rule={routingRule} onBack={() => setRoutingRule(null)} /> : pollInvitationsOpen ? <CalendarPollInvitationsPanel onBack={() => setPollInvitationsOpen(false)} /> : pollRule ? <CalendarSchedulingPollsPanel key={pollRule.id} rule={pollRule} onBack={() => setPollRule(null)} /> : distributionRule ? <CalendarBookingDistributionPanel key={distributionRule.id} rule={distributionRule} onBack={() => setDistributionRule(null)} /> : previewRule ? <BookingRulePreview rule={previewRule} onBack={() => setPreviewRule(null)} /> : form ? <form className="space-y-4" onSubmit={(event) => { event.preventDefault(); void save(); }}>
           <div className="space-y-1"><Label htmlFor="booking-title">Title</Label><Input id="booking-title" maxLength={160} value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} required /></div>
           <div className="space-y-1"><Label htmlFor="booking-description">Description</Label><Input id="booking-description" maxLength={2000} value={form.description ?? ""} onChange={(event) => setForm({ ...form, description: event.target.value || null })} /></div>
@@ -213,8 +219,12 @@ function CalendarBookingRulesSheetInner({ identity, onClose }: { identity: strin
           <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.requiresApproval} onChange={(event) => setForm({ ...form, requiresApproval: event.target.checked })} />Require approval before confirming</label>
           <div className="flex gap-2"><Button type="submit" disabled={create.isPending || update.isPending}>Save booking page</Button><Button type="button" variant="outline" onClick={() => setForm(null)}>Cancel</Button></div>
         </form> : <>
-          <div className="flex flex-wrap gap-2">{rules.access.allowed && canWrite ? <Button onClick={() => edit(null)}>New booking page</Button> : null}{canManageCalendarResources || canManageHrAssets ? <Button variant="outline" onClick={() => setResourceApprovalsOpen(true)}>Resource approvals</Button> : null}<Button variant="outline" onClick={() => setPollInvitationsOpen(true)}>Poll invitations</Button></div>
-          {rules.access.denied ? <p className="text-sm text-muted-foreground">You do not have access to booking pages.</p> : rules.access.unavailable ? <ErrorState title="Booking pages unavailable" onRetry={() => void rules.refetch()} /> : rules.access.pending || rules.isPending ? <p role="status">Loading booking pages…</p> : rules.isError ? <ErrorState error={rules.error} onRetry={() => void rules.refetch()} /> : rules.data?.length ? <div className="space-y-3">{rules.data.map((rule) => <div key={rule.id} className="space-y-2 rounded-md border p-3"><div className="flex items-center justify-between gap-2"><p className="font-medium">{rule.title}</p><span className="text-xs capitalize text-muted-foreground">{rule.status}</span></div><p className="text-sm text-muted-foreground">{rule.durationMinutes} minutes · {rule.timeZone} · Version {rule.version}</p><div className="flex flex-wrap gap-2"><Button size="sm" variant="outline" onClick={() => edit(rule)} disabled={rule.status === "revoked"}>Edit</Button><Button size="sm" variant="outline" onClick={() => setPreviewRule(rule)}>Preview</Button>{rule.status === "active" ? <Button size="sm" variant="outline" onClick={() => setDistributionRule(rule)}>Publish links</Button> : null}{rule.status === "active" ? <Button size="sm" variant="outline" onClick={() => setPollRule(rule)}>Polls</Button> : null}{rule.status === "active" ? <Button size="sm" variant="outline" onClick={() => setRoutingRule(rule)}>Team routing</Button> : null}{rule.status === "active" ? <Button size="sm" variant="outline" onClick={() => setPaymentRule(rule)}>Payments</Button> : null}<Button size="sm" variant="outline" onClick={() => setManagedBookingsRule(rule)}>Bookings</Button>{rule.status === "draft" || rule.status === "paused" ? <Button size="sm" onClick={() => void changeStatus(rule, "activate")} disabled={busyId === rule.id}>Activate</Button> : null}{rule.status === "active" ? <Button size="sm" variant="outline" onClick={() => void changeStatus(rule, "pause")} disabled={busyId === rule.id}>Pause</Button> : null}{rule.status !== "revoked" ? <Button size="sm" variant="destructive" onClick={() => void changeStatus(rule, "revoke")} disabled={busyId === rule.id}>Revoke</Button> : null}</div></div>)}</div> : <p className="text-sm text-muted-foreground">Create a booking page to offer available time slots.</p>}
+          <div className="flex flex-wrap gap-2">
+            {rules.access.allowed && canWrite ? <Button onClick={() => edit(null)}>New booking page</Button> : null}
+            {canManageCalendarResources || canManageHrAssets ? <Button variant="outline" onClick={() => setResourceApprovalsOpen(true)}>Resource approvals</Button> : null}
+            <Button variant="outline" onClick={() => setPollInvitationsOpen(true)}>Poll invitations</Button>
+          </div>
+          {rules.access.denied ? <p className="text-sm text-muted-foreground">You do not have access to booking pages.</p> : rules.access.unavailable ? <ErrorState title="Booking pages unavailable" onRetry={() => void rules.refetch()} /> : rules.access.pending || rules.isPending ? <div role="status" aria-label="Loading booking pages" className="space-y-3"><Skeleton className="h-32 w-full rounded-lg" /><Skeleton className="h-32 w-full rounded-lg" /></div> : rules.isError ? <ErrorState error={rules.error} onRetry={() => void rules.refetch()} /> : rules.data?.length ? <div className="space-y-3">{rules.data.map((rule) => <BookingPageCard key={rule.id} rule={rule} busy={busyId === rule.id} onEdit={() => edit(rule)} onPreview={() => setPreviewRule(rule)} onDistribution={() => setDistributionRule(rule)} onPolls={() => setPollRule(rule)} onRouting={() => setRoutingRule(rule)} onPayments={() => setPaymentRule(rule)} onBookings={() => setManagedBookingsRule(rule)} onActivate={() => void changeStatus(rule, "activate")} onPause={() => void changeStatus(rule, "pause")} onRevoke={() => void changeStatus(rule, "revoke")} />)}</div> : <div className="rounded-lg bg-muted px-4 py-8 text-center dark:border dark:border-background"><p className="text-sm text-muted-foreground">Create a booking page to offer available time slots.</p></div>}
         </>}
       </SheetBody>
     </SheetContent>

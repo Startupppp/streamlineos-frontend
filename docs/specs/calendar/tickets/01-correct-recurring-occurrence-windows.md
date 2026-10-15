@@ -4,11 +4,11 @@
 
 **Blocked by:** None (can start immediately).
 
-**Status:** ready-for-agent
+**Status:** accepted
 
-- [ ] An occurrence is included when its effective interval overlaps the requested half-open window, even if it starts before the window.
-- [ ] A moved occurrence appears once in its effective window and never in its former window while retaining stable occurrence identity.
-- [ ] Display, export, and conflict checking use the same occurrence-window semantics.
-- [ ] A conflict scan that reaches an expansion or candidate limit returns incomplete/unknown and never reports the slot as free.
-- [ ] Focused regression tests cover overnight recurrence, moved-in, moved-out, cancelled, DST, and dense-series cases.
+- [x] An occurrence is included when its effective interval overlaps the requested half-open window, even if it starts before the window.
+- [x] A moved occurrence appears once in its effective window and never in its former window while retaining stable occurrence identity.
+- [x] Display, export, and conflict checking use the same occurrence-window semantics.
+- [x] A conflict scan that reaches an expansion or candidate limit returns incomplete/unknown and never reports the slot as free.
+- [x] Focused regression tests cover overnight recurrence, moved-in, moved-out, cancelled, DST, and dense-series cases.
 

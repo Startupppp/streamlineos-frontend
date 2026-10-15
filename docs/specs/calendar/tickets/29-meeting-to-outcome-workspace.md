@@ -4,7 +4,7 @@
 
 **Blocked by:** 18: Complete invitations, guest lifecycle, RSVP, and reminders; 28: Propose source-owner actions with receipts.
 
-**Status:** ready-for-agent
+**Status:** in-progress
 
 - [ ] Context from CRM, Build, documents, mail, chat, recordings, or transcripts appears only with current permission and consent.
 - [ ] External guests receive only content explicitly shared with them.

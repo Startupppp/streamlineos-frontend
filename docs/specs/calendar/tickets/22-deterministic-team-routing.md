@@ -4,7 +4,7 @@
 
 **Blocked by:** 13: Build privacy-safe availability and diagnostics; 16: Commit bookings idempotently; 20: Reserve rooms and source-owned resources.
 
-**Status:** ready-for-agent
+**Status:** in-progress
 
 - [ ] Versioned routing rules explain the selected host to authorized users without exposing private reasons to guests.
 - [ ] Inactive, offboarded, on-leave, over-limit, disconnected, or otherwise ineligible hosts are excluded.

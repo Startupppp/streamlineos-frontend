@@ -4,7 +4,7 @@
 
 **Blocked by:** 17: Publish versioned Calendar lifecycle events; 18: Complete invitations, guest lifecycle, RSVP, and reminders; 22: Route team bookings deterministically.
 
-**Status:** ready-for-agent
+**Status:** in-progress
 
 - [ ] Metrics derive from authoritative lifecycle events rather than rendered projection counts.
 - [ ] Definitions, denominator, timezone, deduplication, corrections, and partial-source coverage are visible.

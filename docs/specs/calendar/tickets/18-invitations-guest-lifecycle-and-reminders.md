@@ -4,7 +4,7 @@
 
 **Blocked by:** 16: Commit bookings idempotently; 17: Publish versioned Calendar lifecycle events.
 
-**Status:** ready-for-agent
+**Status:** in-progress
 
 - [ ] Required and optional attendees receive one current invitation and can RSVP through an authorized identity or expiring signed link.
 - [ ] Removed guests and cancelled occurrences cannot use obsolete links or join information.

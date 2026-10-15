@@ -4,7 +4,7 @@
 
 **Blocked by:** 12: Complete projection-contract migration and core verification; 17: Publish versioned Calendar lifecycle events.
 
-**Status:** ready-for-agent
+**Status:** in-progress
 
 - [ ] Offline views show cache age, last successful coverage, and source-specific staleness.
 - [ ] Sensitive offline detail follows organization policy and cannot be exposed after known membership revocation.

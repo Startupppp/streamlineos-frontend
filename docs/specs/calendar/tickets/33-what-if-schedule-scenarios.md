@@ -4,7 +4,7 @@
 
 **Blocked by:** 28: Propose source-owner actions with receipts; 32: Build the dependency graph, Commitment Radar, and chain view.
 
-**Status:** ready-for-agent
+**Status:** in-progress
 
 - [ ] Scenario preview reads one versioned permission-scoped graph snapshot and performs zero writes.
 - [ ] Before/after impact identifies affected people, commitments, resources, customers, and evidence confidence.

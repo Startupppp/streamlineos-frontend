@@ -4,7 +4,7 @@
 
 **Blocked by:** 20: Reserve rooms and source-owned resources; 28: Propose source-owner actions with receipts; 32: Build the dependency graph, Commitment Radar, and chain view.
 
-**Status:** ready-for-agent
+**Status:** in-progress
 
 - [ ] Capacity supports partial-day shifts, skill constraints, divisible equipment, location, maintenance, approvals, and tentative claims.
 - [ ] Over-capacity explanations identify only constraints the viewer may inspect.

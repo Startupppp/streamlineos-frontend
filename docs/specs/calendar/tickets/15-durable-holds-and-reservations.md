@@ -4,11 +4,11 @@
 
 **Blocked by:** 13: Build privacy-safe availability and diagnostics.
 
-**Status:** ready-for-agent
+**Status:** accepted
 
-- [ ] Holds have owner/session identity, rule version, constrained targets, expiry, fencing/version token, and idempotency identity.
-- [ ] Expired, cancelled, abandoned, or crashed holds release capacity safely.
-- [ ] Concurrent attempts cannot both hold or reserve the same indivisible capacity.
-- [ ] Retrying the same request returns the same hold rather than consuming more capacity.
-- [ ] Real-persistence race tests cover expiry during confirmation, worker crash, duplicate submit, and last-unit capacity.
+- [x] Holds have owner/session identity, rule version, constrained targets, expiry, fencing/version token, and idempotency identity.
+- [x] Expired, cancelled, abandoned, or crashed holds release capacity safely.
+- [x] Concurrent attempts cannot both hold or reserve the same indivisible capacity.
+- [x] Retrying the same request returns the same hold rather than consuming more capacity.
+- [x] Real-persistence race tests cover expiry during confirmation, worker crash, duplicate submit, and last-unit capacity.
 

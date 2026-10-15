@@ -4,11 +4,11 @@
 
 **Blocked by:** 15: Create durable slot holds and reservation constraints; 16: Commit bookings idempotently.
 
-**Status:** ready-for-agent
+**Status:** in-progress
 
 - [ ] Calendar-managed rooms and source-owned equipment expose safe availability and capacity.
 - [ ] Maintenance, location, accessibility, divisible capacity, and approval rules affect offered slots.
 - [ ] Resource owners revalidate eligibility and return committed, rejected, or pending receipts.
-- [ ] A failed allocation cannot be presented as a fully confirmed booking.
+- [x] A failed allocation cannot be presented as a fully confirmed booking.
 - [ ] Race tests cover last resource unit, simultaneous room booking, maintenance change, approval delay, and partial multi-resource failure.
 

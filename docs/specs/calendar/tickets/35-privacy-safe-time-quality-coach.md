@@ -4,7 +4,7 @@
 
 **Blocked by:** 27: Deliver booking analytics and administrative controls; 30: Deliver role-aware My Day, search, and saved views; 31: Add adaptive protected-work planning.
 
-**Status:** ready-for-agent
+**Status:** in-progress
 
 - [ ] Insights explain meeting load, protected work time, missed commitments, repeated reschedules, and source coverage using documented definitions.
 - [ ] Recommendations are proposals with evidence and never mutate source records without confirmation.

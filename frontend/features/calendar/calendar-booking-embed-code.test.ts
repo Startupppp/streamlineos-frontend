@@ -10,12 +10,14 @@ describe("Calendar booking embed code", () => {
     const frame = { src: "", tagName: "IFRAME", contentWindow: frameWindow };
     const received: Array<{ type: string; detail: unknown }> = [];
     let receive: ((event: { origin: string; source: object; data: Record<string, unknown> }) => void) | null = null;
+    let removed = 0;
     runInNewContext(script ?? "", {
       URL,
       crypto: { randomUUID: () => "state-123" },
       document: { currentScript: { previousElementSibling: frame } },
       window: {
         addEventListener: (_type: string, handler: typeof receive) => { receive = handler; },
+        removeEventListener: (_type: string, handler: typeof receive) => { if (receive === handler) removed += 1; },
         dispatchEvent: (event: { type: string; detail: unknown }) => { received.push(event); },
       },
       CustomEvent: class {
@@ -31,8 +33,10 @@ describe("Calendar booking embed code", () => {
     handler({ origin: "https://app.test", source: frameWindow, data: { ...data, state: "wrong" } });
     expect(received).toHaveLength(0);
     handler({ origin: "https://app.test", source: frameWindow, data });
+    handler({ origin: "https://app.test", source: frameWindow, data });
     expect(received.map((event) => ({ type: event.type, detail: event.detail }))).toEqual([
       { type: "streamline:booking:completed", detail: { outcome: "confirmed" } },
     ]);
+    expect(removed).toBe(1);
   });
 });

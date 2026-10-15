@@ -4,7 +4,7 @@
 
 **Blocked by:** 17: Publish versioned Calendar lifecycle events; 18: Complete invitations, guest lifecycle, RSVP, and reminders.
 
-**Status:** ready-for-agent
+**Status:** in-progress
 
 - [ ] Triggers cover creation, reschedule, cancellation, no-show, start, end, and source-state changes.
 - [ ] Conditions, recipients, channels, consent, quiet hours, dry run, limits, and tenant policy are enforced at execution time.

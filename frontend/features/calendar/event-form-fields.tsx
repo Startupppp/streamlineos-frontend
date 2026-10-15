@@ -23,7 +23,7 @@ import type { IntegrationConnection } from "@/hooks/api/integrations";
 import type { CalendarOrgMember } from "@/hooks/api/calendar";
 import { EventAttendeesPicker } from "./event-attendees-picker";
 import { CalendarConnectInline } from "./calendar-connect-inline";
-import { EVENT_COLORS, EVENT_CATEGORIES } from "./calendar-event-constants";
+import { EVENT_COLORS, EVENT_CATEGORIES, eventCategoryLabel } from "./calendar-event-constants";
 import type { EventCategory, RecurrenceState } from "./event-form-state";
 import { RecurrenceEditor } from "./event-recurrence-editor";
 
@@ -236,8 +236,8 @@ export function EventFormFields({
               </SelectTrigger>
               <SelectContent>
                 {EVENT_CATEGORIES.map((cat) => (
-                  <SelectItem key={cat} value={cat} className="text-xs capitalize">
-                    {cat}
+                  <SelectItem key={cat} value={cat} className="text-xs">
+                    {eventCategoryLabel(cat)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -306,10 +306,10 @@ export function EventFormFields({
               </SelectContent>
             </Select>
             {syncConnectionId !== "none" && (
-              <div className="flex items-center justify-between rounded-md border border-border px-3 py-1.5">
+              <div className="flex h-9 items-center justify-between rounded-md border border-border px-3">
                 <div className="flex items-center gap-2">
-                  <Video className="h-3.5 w-3.5 text-muted-foreground" />
-                  <span className="text-xs">
+                  <Video className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">
                     {selectedToolkit === "outlook" ? "Add Teams meeting link" : "Add Google Meet link"}
                   </span>
                 </div>

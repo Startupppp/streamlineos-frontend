@@ -4,7 +4,7 @@
 
 **Blocked by:** 16: Commit bookings idempotently; 23: Ship secure branded and embedded booking.
 
-**Status:** ready-for-agent
+**Status:** in-progress
 
 - [ ] Payment and booking states are linked by one idempotency identity and remain independently visible.
 - [ ] A lost response or retry cannot create a duplicate charge or confirmed duplicate booking.

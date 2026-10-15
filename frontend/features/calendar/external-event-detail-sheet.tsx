@@ -3,7 +3,7 @@
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, CalendarDays, ExternalLink, MapPin, Video } from "lucide-react";
 import { formatEventDate, formatEventTimeRange } from "@/lib/date-utils";
-import { Sheet, SheetBody, SheetContent, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Dialog, DialogBody, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import type { BigCalEvent } from "./big-calendar-wrapper";
@@ -64,20 +64,20 @@ interface ExternalEventDetailSheetProps {
 
 export function ExternalEventDetailSheet({ event, onClose }: ExternalEventDetailSheetProps) {
   return (
-    <Sheet open={event !== null} onOpenChange={onClose}>
-      <SheetContent side="right" className="w-full sm:max-w-sm p-0 flex flex-col gap-0 overflow-hidden">
-        <SheetHeader className="px-5 py-4 border-b shrink-0">
-          <SheetTitle className="text-base font-semibold leading-snug truncate">{event?.title ?? ""}</SheetTitle>
+    <Dialog open={event !== null} onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent className="gap-0 overflow-hidden p-0">
+        <DialogHeader className="shrink-0 border-b px-5 py-4 text-left">
+          <DialogTitle className="truncate text-base font-semibold leading-snug">{event?.title ?? ""}</DialogTitle>
           {event?.resource?.accountEmail && (
-            <Badge variant="secondary" className="w-fit text-micro truncate max-w-full">
+            <Badge variant="secondary" className="w-fit max-w-full truncate text-micro">
               {event.resource.accountEmail}
             </Badge>
           )}
-        </SheetHeader>
+        </DialogHeader>
         {event && (
-          <SheetBody className="px-5 py-4 space-y-3">
+          <DialogBody className="space-y-3 px-5 py-4">
             <div className="flex items-start gap-2 text-sm text-muted-foreground">
-              <CalendarDays className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+              <CalendarDays className="mt-0.5 h-3.5 w-3.5 shrink-0" />
               <span>
                 {event.allDay
                   ? `${formatEventDate(event.start, "UTC")} · All day`
@@ -86,16 +86,16 @@ export function ExternalEventDetailSheet({ event, onClose }: ExternalEventDetail
             </div>
             {event.resource?.location && (
               <div className="flex items-start gap-2 text-sm text-muted-foreground">
-                <MapPin className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0" />
                 <span className="break-all">{event.resource.location}</span>
               </div>
             )}
             <p className="text-dense text-muted-foreground">
               Read-only event from a connected account. Edit it in its own calendar.
             </p>
-          </SheetBody>
+          </DialogBody>
         )}
-        <SheetFooter className="flex-col items-stretch gap-2 bg-muted px-3 py-3">
+        <DialogFooter className="flex-col items-stretch gap-2 bg-muted px-3 py-3 sm:flex-col">
           {event?.resource?.meetingUrl ? (
             <JoinMeetingLink href={event.resource.meetingUrl} />
           ) : null}
@@ -108,12 +108,12 @@ export function ExternalEventDetailSheet({ event, onClose }: ExternalEventDetail
                 </a>
               </Button>
             ) : null}
-            <Button variant="ghost" size="sm" className="w-full hover:bg-background" onClick={onClose}>
+            <Button variant="outline" size="sm" className="w-full" onClick={onClose}>
               Close
             </Button>
           </div>
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

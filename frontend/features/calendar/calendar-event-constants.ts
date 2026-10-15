@@ -25,3 +25,7 @@ export const EVENT_CATEGORIES = [
   "project",
   "other",
 ] as const;
+
+export function eventCategoryLabel(category: (typeof EVENT_CATEGORIES)[number]): string {
+  return category.charAt(0).toUpperCase() + category.slice(1);
+}

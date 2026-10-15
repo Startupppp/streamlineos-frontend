@@ -4,7 +4,7 @@
 
 **Blocked by:** 13: Build privacy-safe availability and diagnostics; 28: Propose source-owner actions with receipts; 30: Deliver role-aware My Day, search, and saved views.
 
-**Status:** ready-for-agent
+**Status:** in-progress
 
 - [ ] Only Calendar-managed movable blocks change automatically; source-owned dates remain proposals requiring owner confirmation.
 - [ ] Locked blocks, breaks, leave, nonworking days, maximum daily load, priorities, estimates, and deadlines are respected.

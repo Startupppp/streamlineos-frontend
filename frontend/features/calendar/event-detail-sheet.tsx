@@ -6,6 +6,7 @@ import { format, addDays } from "date-fns";
 import { motion, useReducedMotion } from "framer-motion";
 import { Tag } from "lucide-react";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Sheet,
@@ -195,8 +196,8 @@ export function EventDetailSheet({ event, onClose, onQueueScenarioStep }: EventD
 
   return (
     <>
-      <Sheet open={!!event} onOpenChange={handleSheetOpenChange}>
-        <SheetContent className="flex w-[360px] flex-col gap-0 p-0 sm:max-w-[360px]">
+      <Dialog open={!!event} onOpenChange={handleSheetOpenChange}>
+        <DialogContent className="gap-0 overflow-hidden p-0">
           <EventDetailHeader event={event} reduceMotion={reduceMotion} />
           <EventDetailContent
             event={event}
@@ -230,8 +231,8 @@ export function EventDetailSheet({ event, onClose, onQueueScenarioStep }: EventD
             onProtect={handleOpenProtectedWork}
             onRadar={handleOpenCommitmentRadar}
           />
-        </SheetContent>
-      </Sheet>
+        </DialogContent>
+      </Dialog>
       <ConfirmDialog
         open={confirmOpen}
         onOpenChange={setConfirmOpen}
@@ -303,7 +304,7 @@ function EventDetailHeader({
       : formatEventTimeRange(event.start, event.end, event.timezone);
 
   return (
-    <SheetHeader className="relative shrink-0 overflow-hidden border-b px-5 py-4">
+    <DialogHeader className="relative shrink-0 overflow-hidden border-b px-5 py-4 text-left">
       <motion.span
         aria-hidden
         className="absolute inset-x-0 top-0 h-1 origin-left"
@@ -312,9 +313,9 @@ function EventDetailHeader({
         animate={{ scaleX: 1 }}
         transition={reduceMotion ? { duration: 0 } : { duration: 0.45, ease: HEADER_EASE }}
       />
-      <SheetTitle className="text-base font-semibold tracking-tight">
+      <DialogTitle className="text-base font-semibold tracking-tight">
         <TruncatedText text={event?.title ?? ""} lines={2} className="min-w-0 text-balance" />
-      </SheetTitle>
+      </DialogTitle>
       {event ? (
         <div className="flex flex-wrap items-center gap-2">
           <p className="text-label text-muted-foreground">{when}</p>
@@ -324,7 +325,7 @@ function EventDetailHeader({
           </span>
         </div>
       ) : null}
-    </SheetHeader>
+    </DialogHeader>
   );
 }
 
@@ -342,7 +343,7 @@ function MeetingWorkspaceSheet({
   const eventId = event ? parseCalendarEventId(event.id)?.eventId ?? null : null;
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="flex w-full flex-col gap-0 p-0 sm:max-w-2xl">
+      <SheetContent overlayClassName="z-[110]" className="z-[110] flex w-full flex-col gap-0 p-0 sm:max-w-2xl">
         <SheetHeader className="shrink-0 gap-1 border-b px-5 py-4">
           <p className="text-xs font-medium text-muted-foreground">Meeting workspace</p>
           <SheetTitle className="text-base font-semibold tracking-tight">

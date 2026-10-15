@@ -121,7 +121,7 @@ export function EventCreateForm({
   return (
     <>
       <Drawer open={open} onOpenChange={onOpenChange} direction={isMobile ? "bottom" : "right"}>
-        <DrawerContent className={cn("flex flex-col gap-0 p-0 pb-0 overflow-hidden shadow-2xl border bg-card", isMobile ? "w-full max-h-[min(92dvh,48rem)] rounded-t-xl" : "h-full w-full md:w-1/2 md:max-w-2xl lg:max-w-3xl")}>
+        <DrawerContent overlayClassName="z-[110]" className={cn("z-[110] flex flex-col gap-0 p-0 pb-0 overflow-hidden shadow-2xl border bg-card", isMobile ? "w-full max-h-[min(92dvh,48rem)] rounded-t-xl" : "h-full w-full md:w-1/2 md:max-w-2xl lg:max-w-3xl")}>
           <DrawerHeader className="px-4 py-2.5 border-b flex flex-row items-center justify-between shrink-0 select-none">
             <DrawerTitle className="text-base font-semibold text-foreground">{isEdit ? "Edit Event" : "New Event"}</DrawerTitle>
             <DialogCloseButton type="button" onClick={onClose} className="p-1 text-muted-foreground hover:text-foreground rounded hover:bg-muted transition-colors" title="Close" aria-label="Close" />

@@ -4,7 +4,7 @@
 
 **Blocked by:** 17: Publish versioned Calendar lifecycle events; 18: Complete invitations, guest lifecycle, RSVP, and reminders.
 
-**Status:** ready-for-agent
+**Status:** in-progress
 
 - [ ] Unsupported provider capabilities are refused visibly rather than represented incorrectly.
 - [ ] A provider acceptance followed by timeout reconciles by stable external identity without duplicate events.

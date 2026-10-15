@@ -4,7 +4,7 @@
 
 **Blocked by:** 14: Configure booking rules and public availability; 15: Create durable slot holds and reservation constraints.
 
-**Status:** ready-for-agent
+**Status:** in-progress
 
 - [ ] A confirmation revalidates all mutable facts instead of trusting the displayed slot.
 - [ ] At most one constrained booking commits under concurrent attempts.

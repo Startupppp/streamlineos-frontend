@@ -4,7 +4,7 @@
 
 **Blocked by:** 27: Deliver booking analytics and administrative controls; 28: Propose source-owner actions with receipts; 30: Deliver role-aware My Day, search, and saved views.
 
-**Status:** ready-for-agent
+**Status:** in-progress
 
 - [ ] Dependency edges are explicit, typed, versioned, owner-attributed, and supported by evidence rather than title similarity.
 - [ ] Cycles, missing/deleted nodes, stale versions, and hidden nodes produce visible safe diagnostics.

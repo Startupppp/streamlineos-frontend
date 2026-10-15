@@ -4,7 +4,7 @@
 
 **Blocked by:** 17: Publish versioned Calendar lifecycle events; 23: Ship secure branded and embedded booking.
 
-**Status:** ready-for-agent
+**Status:** in-progress
 
 - [ ] Tenant credentials and user grants expose only documented least-privilege scopes.
 - [ ] Reads are paginated and rate limited; writes require idempotency and current versions.

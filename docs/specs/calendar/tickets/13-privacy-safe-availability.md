@@ -4,7 +4,7 @@
 
 **Blocked by:** 05: Make native recurrence and export results complete and deterministic; 06: Make Build and Tasks projections bounded and deterministic; 07: Make attendance and HR coverage trustworthy; 08: Page connected Google and Outlook windows; 12: Complete projection-contract migration and core verification.
 
-**Status:** ready-for-agent
+**Status:** in-progress
 
 - [ ] Availability distinguishes free, busy, tentative, and unknown with an as-of time and source coverage.
 - [ ] A stale, failed, disconnected, or truncated source cannot silently become free.

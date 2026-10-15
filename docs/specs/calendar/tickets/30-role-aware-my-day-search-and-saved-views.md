@@ -4,7 +4,7 @@
 
 **Blocked by:** 10: Use one authorized event set across every view; 11: Add durable History and Calendar URL state; 28: Propose source-owner actions with receipts.
 
-**Status:** ready-for-agent
+**Status:** in-progress
 
 - [ ] My Day distinguishes actionable items, informational dates, preparation, and incomplete source coverage.
 - [ ] Search and filters operate on the authorized server result rather than one rendered page.

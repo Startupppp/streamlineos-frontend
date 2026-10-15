@@ -4,7 +4,7 @@
 
 **Blocked by:** 16: Commit bookings idempotently; 22: Route team bookings deterministically.
 
-**Status:** ready-for-agent
+**Status:** in-progress
 
 - [ ] Pages support approved branding, localization, accessibility, and minimal configurable intake.
 - [ ] Embeds validate allowed origins and signed state; callbacks expose only permitted booking facts.
