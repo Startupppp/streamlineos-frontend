@@ -159,7 +159,10 @@ export function EventCreateForm({
                       <RemoveTicketButton type="button" onClick={onRemoveLinkedTicket} className="h-6 w-6 flex items-center justify-center rounded hover:bg-muted transition-colors shrink-0" aria-label="Remove linked ticket" />
                     </div>
                   ) : (
-                    <button type="button" onClick={onOpenTicketPicker} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground border border-dashed rounded-lg px-3 py-1.5 w-full transition-colors hover:border-primary/50"><Ticket className="h-3.5 w-3.5" />Link a ticket…</button>
+                    <Button type="button" variant="outline" onClick={onOpenTicketPicker} className="w-full justify-start border-dashed text-muted-foreground hover:text-foreground">
+                      <Ticket className="size-4" />
+                      Link a ticket…
+                    </Button>
                   )}
                 </div>
               </div>

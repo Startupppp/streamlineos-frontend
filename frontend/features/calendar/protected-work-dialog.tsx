@@ -1,9 +1,11 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { addDays, endOfDay, isValid, parseISO, startOfDay } from "date-fns";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -36,11 +38,13 @@ export function ProtectedWorkDialog({
   const undo = useUndoCalendarProtectedWork();
   const work = workQuery.data?.find((item) => item.eventId === eventId);
   const suggestions = useCalendarProtectedWorkSuggestions(work?.id ?? null, open && showSuggestions);
+  const earliestDeadline = endOfDay(eventEnd) > eventEnd ? startOfDay(eventEnd) : startOfDay(addDays(eventEnd, 1));
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const parsedDeadline = new Date(deadline);
-    if (!Number.isFinite(parsedDeadline.getTime()) || parsedDeadline <= eventEnd) {
+    const parsedDay = parseISO(deadline);
+    const parsedDeadline = isValid(parsedDay) ? endOfDay(parsedDay) : null;
+    if (!parsedDeadline || parsedDeadline <= eventEnd) {
       toast.error("Choose a deadline after this work block ends");
       return;
     }
@@ -119,7 +123,16 @@ export function ProtectedWorkDialog({
             </div> : null}
           </div> :
           <form onSubmit={(event) => { void submit(event); }} className="space-y-4">
-            <div className="space-y-1.5"><Label htmlFor="protected-work-deadline">Deadline</Label><Input id="protected-work-deadline" type="datetime-local" required value={deadline} onChange={(event) => setDeadline(event.target.value)} /></div>
+            <div className="space-y-1.5">
+              <Label htmlFor="protected-work-deadline">Deadline</Label>
+              <DatePicker
+                id="protected-work-deadline"
+                value={deadline}
+                onChange={setDeadline}
+                fromDate={earliestDeadline}
+                ariaLabel="Deadline"
+              />
+            </div>
             <div className="space-y-1.5"><Label htmlFor="protected-work-estimate">Estimated minutes</Label><Input id="protected-work-estimate" type="number" min={1} max={1440} required value={estimateMinutes} onChange={(event) => setEstimateMinutes(Number(event.target.value))} /></div>
             <div className="space-y-1.5"><Label htmlFor="protected-work-priority">Priority (0 to 100)</Label><Input id="protected-work-priority" type="number" min={0} max={100} required value={priority} onChange={(event) => setPriority(Number(event.target.value))} /></div>
             <div className="space-y-1.5"><Label htmlFor="protected-work-moves">Maximum moves per day</Label><Input id="protected-work-moves" type="number" min={0} max={20} required value={maxMovesPerDay} onChange={(event) => setMaxMovesPerDay(Number(event.target.value))} /></div>
