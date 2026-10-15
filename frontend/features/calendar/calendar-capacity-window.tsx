@@ -1,5 +1,6 @@
 "use client";
 
+import type { ChangeEvent } from "react";
 import { isValid, parseISO } from "date-fns";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
@@ -36,6 +37,22 @@ export function CapacityWindowFields({
 }: CapacityWindowFieldsProps) {
   const startDay = parseISO(datePart(start));
 
+  function handleStartDateChange(date: string) {
+    onStartChange(withDate(start, date));
+  }
+
+  function handleStartTimeChange(event: ChangeEvent<HTMLInputElement>) {
+    onStartChange(withTime(start, event.target.value));
+  }
+
+  function handleEndDateChange(date: string) {
+    onEndChange(withDate(end, date));
+  }
+
+  function handleEndTimeChange(event: ChangeEvent<HTMLInputElement>) {
+    onEndChange(withTime(end, event.target.value));
+  }
+
   return (
     <div className="grid grid-cols-2 gap-3">
       <div className="space-y-1.5">
@@ -43,7 +60,7 @@ export function CapacityWindowFields({
         <DatePicker
           id="capacity-start"
           value={datePart(start)}
-          onChange={(date) => onStartChange(withDate(start, date))}
+          onChange={handleStartDateChange}
           ariaLabel="Start date"
         />
         <Input
@@ -51,7 +68,7 @@ export function CapacityWindowFields({
           type="time"
           aria-label="Start time"
           value={timePart(start)}
-          onChange={(event) => onStartChange(withTime(start, event.target.value))}
+          onChange={handleStartTimeChange}
         />
       </div>
       <div className="space-y-1.5">
@@ -59,7 +76,7 @@ export function CapacityWindowFields({
         <DatePicker
           id="capacity-end"
           value={datePart(end)}
-          onChange={(date) => onEndChange(withDate(end, date))}
+          onChange={handleEndDateChange}
           fromDate={isValid(startDay) ? startDay : undefined}
           ariaLabel="End date"
         />
@@ -68,7 +85,7 @@ export function CapacityWindowFields({
           type="time"
           aria-label="End time"
           value={timePart(end)}
-          onChange={(event) => onEndChange(withTime(end, event.target.value))}
+          onChange={handleEndTimeChange}
         />
       </div>
     </div>
