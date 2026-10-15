@@ -179,6 +179,7 @@ KB-OPEN-074 source update, 2026-10-16: frontend `fb1e2b928` now calls `recordLeg
   - 2026-10-16 source progress: frontend `0510b6255` shows the page TrustBadge in both decision dialogs, labels note/reason controls, bounds them to the backend's 2,000-character contract, and requires rejection reason while leaving approval note optional. The full reviews-page suite passed 14/14 and scoped lint passed. Browser form, role and persisted review evidence remain open.
   - Previous consolidated ID: `KB-OPEN-276`
 - [ ] **KB-OPEN-048** **BLOCKED:** Mobile cards; assignment notifications AV-10: browser verification required.
+  - 2026-10-16 source progress: frontend `5657ab724` adds permission-gated Approve/Reject actions to pending review mobile cards, which are the only visible list rows below the `sm` breakpoint. It uses the existing decision dialogs and extracts the card from the oversized reviews page. Focused review suites passed 26/26 and scoped lint passed. The backend emits `knowledge.page.review_requested` for an assigned reviewer, but no Wiki review create/assignment control or hook was found; real notification delivery, role behavior and 375px layout remain open.
   - Previous consolidated ID: `KB-OPEN-277`
 - [ ] **KB-OPEN-049** **BLOCKED:** Table + mobile cards; search; deleted-by/date/space filters; cursor AV-10: browser verification required. `features/wiki/components/trash-page.test.tsx` exists; full acceptance requires browser.
   - Previous consolidated ID: `KB-OPEN-278`
