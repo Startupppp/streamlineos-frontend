@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { formatRoleLabel } from "@/lib/constants/user-invite-roles";
@@ -141,13 +141,22 @@ export default function PageGrantsSheet({
 }: PageGrantsSheetProps) {
   const canUpdate = useCan("kb:pages:update");
 
-  const { data, isLoading, isError, error, refetch } = useKbPageGrants(pageId);
-  const grants = useMemo(() => data?.data ?? [], [data]);
+  const {
+    data: grants = [],
+    isLoading,
+    isError,
+    isFetchNextPageError,
+    error,
+    refetch,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  } = useKbPageGrants(pageId);
 
   const pageState = usePageState({
     permission: "kb:pages:view",
     isLoading,
-    isError,
+    isError: isError && grants.length === 0,
     error,
     isEmpty: !isLoading && !isError && grants.length === 0,
   });
@@ -281,6 +290,10 @@ export default function PageGrantsSheet({
     void refetch();
   }
 
+  function handleLoadMore() {
+    void fetchNextPage();
+  }
+
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
@@ -319,6 +332,22 @@ export default function PageGrantsSheet({
                       onRevokeRequest={handleRevokeRequest}
                     />
                   ))}
+                  {isFetchNextPageError && (
+                    <p role="alert" className="text-sm text-destructive">
+                      Could not load more access grants. {getErrorMessage(error)}
+                    </p>
+                  )}
+                  {hasNextPage && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleLoadMore}
+                      disabled={isFetchingNextPage}
+                    >
+                      {isFetchingNextPage ? "Loading access grants…" : isFetchNextPageError ? "Retry loading grants" : "Load more access grants"}
+                    </Button>
+                  )}
                 </div>
               </PageState>
             </div>

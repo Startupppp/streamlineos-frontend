@@ -74,9 +74,40 @@ describe("KB page grants through the HTTP parser", () => {
     fetchMock.mockResolvedValue(response({ data: [grant], pagination }));
     const { result } = renderHook(() => useKbPageGrants(12), { wrapper });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(result.current.data).toEqual({ data: [grant], pagination });
-    expect(client.getQueryData(knowledgeAndSurveysQueryKeys.kb.pageGrants(12))).toEqual({ data: [grant], pagination });
-    expect(fetchMock.mock.calls[0]?.[0]).toContain("/kb/pages/12/grants?limit=100");
+    expect(result.current.data).toEqual([grant]);
+    expect(client.getQueryData(knowledgeAndSurveysQueryKeys.kb.pageGrants(12))).toEqual({
+      pages: [{ data: [grant], pagination }],
+      pageParams: [undefined],
+    });
+    expect(fetchMock.mock.calls[0]?.[0]).toContain("/kb/pages/12/grants");
+    expect(fetchMock.mock.calls[0]?.[0]).not.toContain("limit=100");
+  });
+
+  it("follows the backend cursor and retains both raw pages", async () => {
+    const secondGrant = { ...grant, id: 6, granteeName: "Grace" };
+    fetchMock
+      .mockResolvedValueOnce(response({
+        data: [grant],
+        pagination: { limit: 50, hasMore: true, nextCursor: "next-page" },
+      }))
+      .mockResolvedValueOnce(response({ data: [secondGrant], pagination }));
+
+    const { result } = renderHook(() => useKbPageGrants(12), { wrapper });
+    await waitFor(() => expect(result.current.hasNextPage).toBe(true));
+    await act(async () => {
+      await result.current.fetchNextPage();
+    });
+
+    await waitFor(() => expect(result.current.data).toEqual([grant, secondGrant]));
+    expect(result.current.hasNextPage).toBe(false);
+    expect(fetchMock.mock.calls[1]?.[0]).toContain("/kb/pages/12/grants?cursor=next-page");
+    expect(client.getQueryData(knowledgeAndSurveysQueryKeys.kb.pageGrants(12))).toEqual({
+      pages: [
+        { data: [grant], pagination: { limit: 50, hasMore: true, nextCursor: "next-page" } },
+        { data: [secondGrant], pagination },
+      ],
+      pageParams: [undefined, "next-page"],
+    });
   });
 
   it("returns a created grant with the same fields as the list item", async () => {

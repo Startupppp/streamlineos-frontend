@@ -221,11 +221,15 @@ const defaultMutateFn = jest.fn();
 
 function defaultGrantsPage(grants: KbPageGrant[] = []) {
   return {
-    data: { data: grants, pagination: { limit: 100, hasMore: false, nextCursor: null } },
+    data: grants,
     isLoading: false,
     isError: false,
+    isFetchNextPageError: false,
     error: undefined,
     refetch: jest.fn(),
+    hasNextPage: false,
+    isFetchingNextPage: false,
+    fetchNextPage: jest.fn(),
   };
 }
 
@@ -430,6 +434,54 @@ describe("PageGrantsSheet — server-provided grantee names", () => {
     renderSheet();
 
     expect(screen.getByText("Team member")).toBeInTheDocument();
+  });
+});
+
+describe("PageGrantsSheet — cursor pagination", () => {
+  it("loads more grants when the backend has another page", () => {
+    const fetchNextPage = jest.fn();
+    useKbPageGrants.mockReturnValue({
+      ...defaultGrantsPage([makeGrant({ id: 1, granteeName: "First member" })]),
+      hasNextPage: true,
+      fetchNextPage,
+    });
+
+    renderSheet();
+
+    expect(screen.getByText("First member")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Load more access grants" }));
+    expect(fetchNextPage).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps loaded grants visible and offers retry when the next page fails", () => {
+    const fetchNextPage = jest.fn();
+    useKbPageGrants.mockReturnValue({
+      ...defaultGrantsPage([makeGrant({ id: 1, granteeName: "First member" })]),
+      isError: true,
+      isFetchNextPageError: true,
+      error: new Error("Network unavailable"),
+      hasNextPage: true,
+      fetchNextPage,
+    });
+
+    renderSheet();
+
+    expect(screen.getByText("First member")).toBeInTheDocument();
+    expect(screen.getByRole("alert")).toHaveTextContent("Network unavailable");
+    fireEvent.click(screen.getByRole("button", { name: "Retry loading grants" }));
+    expect(fetchNextPage).toHaveBeenCalledTimes(1);
+  });
+
+  it("disables load more while a next-page request is pending", () => {
+    useKbPageGrants.mockReturnValue({
+      ...defaultGrantsPage([makeGrant()]),
+      hasNextPage: true,
+      isFetchingNextPage: true,
+    });
+
+    renderSheet();
+
+    expect(screen.getByRole("button", { name: "Loading access grants…" })).toBeDisabled();
   });
 });
 

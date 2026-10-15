@@ -1,11 +1,13 @@
 "use client";
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
+import { selectFlatPages } from "@/lib/api/select-flat-pages";
 
 export type KbPageGrant = {
   id: number;
@@ -48,15 +50,18 @@ const noContentC = lazyContract(() =>
 
 export function useKbPageGrants(pageId: number) {
   const canView = useCan("kb:pages:view");
-  return useQuery({
+  return useInfiniteQuery({
     queryKey: knowledgeAndSurveysQueryKeys.kb.pageGrants(pageId),
-    queryFn: ({ signal }) =>
+    initialPageParam: NO_CURSOR_YET,
+    queryFn: ({ signal, pageParam }) =>
       apiClient.get<KbPageGrantsPage>(
         `/kb/pages/${pageId}/grants`,
-        { limit: "100" },
+        pageParam !== undefined ? { cursor: pageParam } : undefined,
         signal,
         kbPageGrantListContract,
       ),
+    getNextPageParam: (last) => last.pagination.nextCursor ?? undefined,
+    select: selectFlatPages,
     staleTime: 30_000,
     enabled: canView && pageId > 0,
   });
