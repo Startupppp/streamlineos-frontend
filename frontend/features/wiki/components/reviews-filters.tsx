@@ -1,15 +1,10 @@
 "use client";
 
-import { useRef, useCallback, useEffect } from "react";
+import { useRef, useCallback, useEffect, useState } from "react";
 import { useSourceOverride } from "@/hooks/common/use-source-override";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Combobox } from "@/components/ui/combobox";
 import {
   ResponsivePopover,
   ResponsivePopoverContent,
@@ -19,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { UserCombobox } from "@/components/ui/user-combobox";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
-import { useKbSpaces } from "@/hooks/api/kb/spaces";
+import { useKbSpace, useKbSpaces } from "@/hooks/api/kb/spaces";
 
 export const REVIEWS_ALL_VALUE = "all";
 const SEARCH_DEBOUNCE_MS = 300;
@@ -41,9 +36,27 @@ export interface ReviewsFiltersProps {
 
 export function ReviewsFilters({ values, onChange }: ReviewsFiltersProps) {
   const [searchDraft, setSearchDraft] = useSourceOverride(values.q, values.q);
+  const [spaceSearchDraft, setSpaceSearchDraft] = useState("");
+  const [spaceSearch, setSpaceSearch] = useState("");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const { data: spacesPage } = useKbSpaces();
+  const { data: spacesPage } = useKbSpaces({ q: spaceSearch || undefined, limit: 50 });
   const spaces = spacesPage?.data ?? [];
+  const selectedSpaceId = Number(values.spaceId);
+  const { data: selectedSpace } = useKbSpace(
+    Number.isSafeInteger(selectedSpaceId) && selectedSpaceId > 0 ? selectedSpaceId : 0,
+  );
+  const spaceOptions = [
+    { value: REVIEWS_ALL_VALUE, label: "All spaces" },
+    ...spaces.map((space) => ({ value: String(space.id), label: space.name })),
+  ];
+  if (selectedSpace && !spaces.some((space) => space.id === selectedSpace.id)) {
+    spaceOptions.push({ value: String(selectedSpace.id), label: selectedSpace.name });
+  }
+
+  useEffect(() => {
+    const timer = setTimeout(() => setSpaceSearch(spaceSearchDraft.trim().slice(0, 200)), SEARCH_DEBOUNCE_MS);
+    return () => clearTimeout(timer);
+  }, [spaceSearchDraft]);
 
   useEffect(() => {
     return () => {
@@ -140,22 +153,16 @@ export function ReviewsFilters({ values, onChange }: ReviewsFiltersProps) {
         <ResponsivePopoverContent className="w-[280px] space-y-3 p-3" align="end">
           <div className="space-y-1.5">
             <Label className="text-xs">Space</Label>
-            <Select
+            <Combobox
               value={values.spaceId || REVIEWS_ALL_VALUE}
-              onValueChange={handleSpaceChange}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="All spaces" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={REVIEWS_ALL_VALUE}>All spaces</SelectItem>
-                {spaces.map((space) => (
-                  <SelectItem key={space.id} value={String(space.id)}>
-                    {space.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              onChange={handleSpaceChange}
+              onSearchChange={setSpaceSearchDraft}
+              options={spaceOptions}
+              aria-label="Space"
+              placeholder="All spaces"
+              searchPlaceholder="Search spaces…"
+              emptyText="No matching spaces"
+            />
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs">Reviewer</Label>

@@ -1,5 +1,5 @@
 import React from "react";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import ReviewsPage from "./reviews-page";
 
 jest.mock("next/navigation", () => ({
@@ -19,6 +19,31 @@ jest.mock("@/hooks/api/kb/spaces", () => ({
   useKbSpaces: jest.fn(() => ({
     data: { data: [{ id: 9, name: "Engineering", icon: null }] },
   })),
+  useKbSpace: jest.fn(() => ({ data: undefined })),
+}));
+
+jest.mock("@/components/ui/combobox", () => ({
+  Combobox: ({ options, value, onChange, onSearchChange, "aria-label": ariaLabel }: {
+    options: { value: string; label: string }[];
+    value: string;
+    onChange: (value: string) => void;
+    onSearchChange: (value: string) => void;
+    "aria-label": string;
+  }) => (
+    <div>
+      <button type="button" role="combobox" aria-label={ariaLabel} aria-expanded="false" aria-controls="review-space-options">
+        {options.find((option) => option.value === value)?.label ?? "Unknown space"}
+      </button>
+      <input aria-label="Search spaces" onChange={(event) => onSearchChange(event.target.value)} />
+      <div id="review-space-options">
+        {options.map((option) => (
+          <button key={option.value} type="button" onClick={() => onChange(option.value)}>
+            {`Choose ${option.label}`}
+          </button>
+        ))}
+      </div>
+    </div>
+  ),
 }));
 
 jest.mock("@/hooks/api/access", () => ({
@@ -81,6 +106,10 @@ jest.mock("@/lib/knowledge-routes", () => ({
 const { useKbPageReviews } = jest.requireMock("@/hooks/api/kb/page-reviews") as {
   useKbPageReviews: jest.Mock;
 };
+const { useKbSpaces, useKbSpace } = jest.requireMock("@/hooks/api/kb/spaces") as {
+  useKbSpaces: jest.Mock;
+  useKbSpace: jest.Mock;
+};
 
 const { useSearchParams } = jest.requireMock("next/navigation") as {
   useSearchParams: jest.Mock;
@@ -92,6 +121,8 @@ const replace = jest.fn();
 
 beforeEach(() => {
   jest.clearAllMocks();
+  useKbSpaces.mockReturnValue({ data: { data: [{ id: 9, name: "Engineering", icon: null }] } });
+  useKbSpace.mockReturnValue({ data: undefined });
   useRouter.mockReturnValue({ push: jest.fn(), replace });
   useSearchParams.mockReturnValue(new URLSearchParams());
   useKbPageReviews.mockReturnValue({
@@ -100,6 +131,46 @@ beforeEach(() => {
     isError: false,
     error: undefined,
     refetch: jest.fn(),
+  });
+});
+
+describe("ReviewsPage — space filter discovery", () => {
+  it("searches the server for a space beyond the first page and selects it", () => {
+    jest.useFakeTimers();
+    useKbSpaces.mockImplementation(({ q }: { q?: string }) => ({
+      data: {
+        data: q === "Deep" ? [{ id: 200, name: "Deep Research" }] : [{ id: 9, name: "Engineering" }],
+      },
+    }));
+
+    try {
+      const { rerender } = render(<ReviewsPage />);
+      expect(screen.getByRole("combobox", { name: "Space" })).toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "Choose Deep Research" })).toBeNull();
+
+      fireEvent.change(screen.getByRole("textbox", { name: "Search spaces" }), {
+        target: { value: "Deep" },
+      });
+      act(() => jest.advanceTimersByTime(300));
+      rerender(<ReviewsPage />);
+
+      expect(useKbSpaces).toHaveBeenLastCalledWith({ q: "Deep", limit: 50 });
+      fireEvent.click(screen.getByRole("button", { name: "Choose Deep Research" }));
+      const params = new URL(replace.mock.lastCall?.[0], "https://example.test").searchParams;
+      expect(params.get("spaceId")).toBe("200");
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it("keeps a bookmarked space labeled even when it is outside the first list page", () => {
+    useSearchParams.mockReturnValue(new URLSearchParams("spaceId=200"));
+    useKbSpace.mockReturnValue({ data: { id: 200, name: "Deep Research" } });
+
+    render(<ReviewsPage />);
+
+    expect(useKbSpace).toHaveBeenCalledWith(200);
+    expect(screen.getByRole("combobox", { name: "Space" })).toHaveTextContent("Deep Research");
   });
 });
 
