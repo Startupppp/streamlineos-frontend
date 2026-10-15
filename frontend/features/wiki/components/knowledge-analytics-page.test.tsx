@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 const mockAssignGapMutate = jest.fn();
 
 const useAccess = jest.fn();
+const useCan = jest.fn(() => true);
 const accessLoading = { data: undefined, isLoading: true };
 const accessGranted = {
   data: { isOrgOwner: false, scopes: { "kb:analytics:view": "all" }, modules: {} },
@@ -39,7 +40,7 @@ jest.mock("@/hooks/api/kb/spaces", () => ({
 }));
 
 jest.mock("@/hooks/api/access", () => ({
-  useCan: () => true,
+  useCan: (permission: string) => useCan(permission),
   useAccess: () => useAccess(),
 }));
 
@@ -138,6 +139,7 @@ beforeEach(() => {
     isLoading: false,
   });
   useAccess.mockReturnValue(accessGranted);
+  useCan.mockReturnValue(true);
   useKbAnalyticsOverview.mockReturnValue(settled(OVERVIEW));
   useKbNoResults.mockReturnValue(settled([]));
   usePageAnalytics.mockReturnValue(settledPages([]));
@@ -162,7 +164,7 @@ describe("KnowledgeAnalyticsPage — access is three-valued, not a boolean", () 
 
     render(<KnowledgeAnalyticsPage />);
 
-    expect(screen.getByText(/permission/i)).toBeInTheDocument();
+    expect(screen.getByText(/You need the Kb.*Analytics.*View permission/i)).toBeInTheDocument();
   });
 });
 
@@ -411,6 +413,19 @@ describe("KnowledgeAnalyticsPage — gap rows render without crashing and suppor
     expect(screen.getByRole("button", { name: /assign gap owner/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /dismiss gap/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /create fix page/i })).toBeInTheDocument();
+  });
+
+  it("keeps page-creation actions hidden from analytics viewers without page-create permission", () => {
+    useKnowledgeGaps.mockReturnValue(
+      settledGaps([{ query: "export report", count: 3, lastOccurredAt: "2024-03-01T00:00:00Z" }]),
+    );
+    useCan.mockImplementation((permission: string) => permission !== "kb:pages:create");
+
+    render(<KnowledgeAnalyticsPage />);
+
+    expect(screen.getByText("export report")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /create fix page/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Page" })).not.toBeInTheDocument();
   });
 
   it("shows the related-pages section when a gap row is clicked", () => {

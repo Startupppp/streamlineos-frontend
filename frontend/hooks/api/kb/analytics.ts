@@ -264,7 +264,7 @@ export function useDismissGap() {
 
 export function useCreateGapFix() {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation("kb:analytics:view", {
+  return useAuthorizedMutation("kb:pages:create", {
     mutationKey: ["knowledge", "kb", "gaps", "create-fix"],
     mutationFn: (body: { query: string; spaceId?: number }) =>
       apiClient.post("/kb/analytics/gaps/create-fix", body, undefined, kbAnalyticsGapActionContract),

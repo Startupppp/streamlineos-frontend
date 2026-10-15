@@ -34,6 +34,7 @@ import {
 import { useState } from "react";
 import { useKbSpaces } from "@/hooks/api/kb/spaces";
 import { usePageState } from "@/hooks/api/use-page-state";
+import { useCan } from "@/hooks/api/access";
 import { PageState } from "@/components/shared/page-state";
 import {
   Select,
@@ -160,6 +161,7 @@ const GapTableRow = memo(function GapTableRow({
   isDismissing,
   onCreateFix,
   isCreatingFix,
+  canCreatePage,
 }: {
   row: KbGapRow;
   onCreatePage: (q: string) => void;
@@ -172,6 +174,7 @@ const GapTableRow = memo(function GapTableRow({
   isDismissing: boolean;
   onCreateFix: (query: string) => void;
   isCreatingFix: boolean;
+  canCreatePage: boolean;
 }) {
   const [assignOpen, setAssignOpen] = useState(false);
   const [assignValue, setAssignValue] = useState("");
@@ -266,29 +269,33 @@ const GapTableRow = memo(function GapTableRow({
         >
           Dismiss
         </Button>
-        <Button
-          size="sm"
-          variant="ghost"
-          className="px-2 text-xs gap-1 shrink-0"
-          onClick={handleCreateFixClick}
-          disabled={isCreatingFix || !row.query}
-          type="button"
-          aria-label="Create fix page for gap"
-        >
-          <KbPlusIcon className="h-3 w-3" />
-          Fix
-        </Button>
-        <Button
-          size="sm"
-          variant="ghost"
-          className="px-2 text-xs gap-1 shrink-0"
-          onClick={handleCreatePageClick}
-          disabled={isCreating || !row.query}
-          type="button"
-        >
-          <KbPlusIcon className="h-3 w-3" />
-          Page
-        </Button>
+        {canCreatePage ? (
+          <>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="px-2 text-xs gap-1 shrink-0"
+              onClick={handleCreateFixClick}
+              disabled={isCreatingFix || !row.query}
+              type="button"
+              aria-label="Create fix page for gap"
+            >
+              <KbPlusIcon className="h-3 w-3" />
+              Fix
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="px-2 text-xs gap-1 shrink-0"
+              onClick={handleCreatePageClick}
+              disabled={isCreating || !row.query}
+              type="button"
+            >
+              <KbPlusIcon className="h-3 w-3" />
+              Page
+            </Button>
+          </>
+        ) : null}
       </div>
       {assignOpen && (
         <form
@@ -406,6 +413,7 @@ export default function KnowledgeAnalyticsPage() {
   const [selectedGapQuery, setSelectedGapQuery] = useState<string | undefined>(
     undefined,
   );
+  const canCreatePage = useCan("kb:pages:create");
 
   const { data: spacesPage } = useKbSpaces();
   const spaces = spacesPage?.data ?? [];
@@ -843,6 +851,7 @@ export default function KnowledgeAnalyticsPage() {
                       isDismissing={dismissGap.isPending}
                       onCreateFix={handleCreateGapFix}
                       isCreatingFix={createGapFix.isPending}
+                      canCreatePage={canCreatePage}
                     />
                     {selectedGapQuery === row.query && (
                       <div className="px-3 py-2 bg-muted/30 border-t border-border/40">
