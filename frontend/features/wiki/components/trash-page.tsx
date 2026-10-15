@@ -32,16 +32,14 @@ import {
   useKbTrashPurgeImpact,
 } from "@/hooks/api/kb/pages";
 import { useKbSpaces } from "@/hooks/api/kb/spaces";
-import { useOrgMembers } from "@/hooks/api/organization";
-import { getUserDisplayName } from "@/lib/person-display";
 import { KbRotateCcwIcon, KbTrash2Icon } from "@/features/wiki/lib/kb-icons";
 import type { KbPageListItem } from "@/hooks/api/kb/page-types";
 import { kbTimeAgo } from "@/features/wiki/lib/kb-date-utils";
 import { TrashRetentionSection } from "@/features/wiki/components/trash-retention-section";
+import { TrashMemberFilter } from "@/features/wiki/components/trash-member-filter";
 import { getErrorMessage } from "@/lib/get-error-message";
 
 const DEFAULT_LIMIT = 50;
-const ALL_MEMBERS_VALUE = "all";
 const ALL_SPACES_VALUE = "all";
 
 function TrashSkeleton() {
@@ -86,8 +84,6 @@ export default function TrashPage() {
   };
 
   const { data, isLoading, isError, error, refetch } = useKbPagesTrash(params);
-  const { data: membersPage } = useOrgMembers(1, 100);
-  const members = membersPage?.data ?? [];
   const { data: spacesPage } = useKbSpaces();
   const spaces = spacesPage?.data ?? [];
 
@@ -133,7 +129,7 @@ export default function TrashPage() {
   function handleMemberChange(value: string) {
     cursorState.reset();
     updateFilters({
-      deletedByMembershipId: value === ALL_MEMBERS_VALUE ? null : value,
+      deletedByMembershipId: value === "all" ? null : value,
     });
   }
 
@@ -302,29 +298,7 @@ export default function TrashPage() {
               className="max-w-sm"
               aria-label="Search deleted pages"
             />
-            <Select
-              value={
-                deletedByMembershipId !== undefined
-                  ? String(deletedByMembershipId)
-                  : ALL_MEMBERS_VALUE
-              }
-              onValueChange={handleMemberChange}
-            >
-              <SelectTrigger className="w-52" aria-label="Deleted by member">
-                <SelectValue placeholder="All members" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={ALL_MEMBERS_VALUE}>All members</SelectItem>
-                {members.map((member) => (
-                  <SelectItem
-                    key={member.membershipId}
-                    value={String(member.membershipId)}
-                  >
-                    {getUserDisplayName(member)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <TrashMemberFilter value={deletedByMembershipId} onChange={handleMemberChange} />
             <Select
               value={spaceId !== undefined ? String(spaceId) : ALL_SPACES_VALUE}
               onValueChange={handleSpaceChange}

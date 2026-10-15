@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, act } from "@testing-library/react";
 import TrashPage from "./trash-page";
 import type { KbPageListItem } from "@/hooks/api/kb/page-types";
 import type { DataTableColumn } from "@/components/ui/data-table.types";
@@ -132,6 +132,9 @@ const { useSearchParams } = jest.requireMock("next/navigation") as {
 const { useCan } = jest.requireMock("@/hooks/api/access") as {
   useCan: jest.Mock;
 };
+const { useOrgMembers } = jest.requireMock("@/hooks/api/organization") as {
+  useOrgMembers: jest.Mock;
+};
 const { useCursorPagination } = jest.requireMock("@/hooks/common/use-cursor-pagination") as {
   useCursorPagination: jest.Mock;
 };
@@ -237,6 +240,20 @@ describe("trash page deleted-by filter", () => {
     expect(useKbPagesTrash).toHaveBeenCalledWith(
       expect.not.objectContaining({ deletedByMembershipId: expect.anything() }),
     );
+  });
+
+  it("searches the member directory so choices are not limited to its first page", () => {
+    jest.useFakeTimers();
+    try {
+      render(<TrashPage />);
+      fireEvent.change(screen.getByRole("searchbox", { name: "Find member" }), {
+        target: { value: "Zoe" },
+      });
+      act(() => jest.advanceTimersByTime(300));
+      expect(useOrgMembers).toHaveBeenLastCalledWith(1, 100, "Zoe");
+    } finally {
+      jest.useRealTimers();
+    }
   });
 });
 
