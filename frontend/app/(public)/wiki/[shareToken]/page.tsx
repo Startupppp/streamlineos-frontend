@@ -77,28 +77,35 @@ export default async function PublicWikiPage({ params }: Props) {
   const brokerContent = rewritePublicMediaUrls(data.content, shareToken);
 
   return (
-    <main>
-      {hasCover && (
-        <div className="w-full h-40" style={coverStyle} aria-hidden="true" />
-      )}
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
-        <div className="flex items-center gap-3 mb-2">
-          {data.icon && (
-            <span className="text-3xl leading-none" aria-hidden="true">
-              {data.icon}
-            </span>
-          )}
-          <h1 className="text-2xl font-bold text-foreground leading-tight">
-            {data.title || "Untitled"}
-          </h1>
+    <div className="min-h-dvh bg-background">
+      <header className="border-b border-border">
+        <div className="mx-auto max-w-3xl px-4 sm:px-6 py-3">
+          <span className="text-sm font-semibold text-foreground">Knowledge Base</span>
         </div>
-        {data.updatedAt && (
-          <p className="text-xs text-muted-foreground mb-8">
-            Last updated {format(new Date(data.updatedAt), "MMM d, yyyy")}
-          </p>
+      </header>
+      <main>
+        {hasCover && (
+          <div className="w-full h-40" style={coverStyle} aria-hidden="true" />
         )}
-        <PublicPageContentLoader content={brokerContent} />
-      </div>
-    </main>
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
+          <div className="flex items-center gap-3 mb-2">
+            {data.icon && (
+              <span className="text-3xl leading-none" aria-hidden="true">
+                {data.icon}
+              </span>
+            )}
+            <h1 className="text-2xl font-bold text-foreground leading-tight">
+              {data.title || "Untitled"}
+            </h1>
+          </div>
+          {data.updatedAt && (
+            <time dateTime={data.updatedAt} className="mb-8 block text-xs text-muted-foreground">
+              Last updated {format(new Date(data.updatedAt), "MMM d, yyyy")}
+            </time>
+          )}
+          <PublicPageContentLoader content={brokerContent} />
+        </div>
+      </main>
+    </div>
   );
 }

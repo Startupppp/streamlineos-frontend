@@ -67,6 +67,16 @@ describe("public wiki share page — no raw object reference reaches the viewer"
     expect(getByTestId("public-content")).toBeTruthy();
   });
 
+  it("keeps public branding separate from the article and exposes the update date semantically", async () => {
+    const updatedAt = "2026-10-01T12:00:00.000Z";
+    const { getByRole, container } = await renderRoute("tok-read-1", pageData({ updatedAt }));
+
+    expect(getByRole("banner")).toHaveTextContent("Knowledge Base");
+    expect(getByRole("main")).toContainElement(getByRole("heading", { level: 1 }));
+    expect(container.querySelector("time")).toHaveAttribute("dateTime", updatedAt);
+    expect(container.querySelector("time")).toHaveTextContent("Last updated Oct 1, 2026");
+  });
+
   it("routes the cover image through the share broker instead of emitting its object key", async () => {
     const { container } = await renderRoute(
       "tok-cover-1",
