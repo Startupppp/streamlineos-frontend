@@ -110,9 +110,15 @@ function articleToDraft(article: KbArticleDetail): ArticleDraft {
 export function KbArticleEditor({
   article,
   categories,
+  hasMoreCategories,
+  isLoadingMoreCategories,
+  onLoadMoreCategories,
 }: {
   article: KbArticleDetail;
   categories: KbCategory[];
+  hasMoreCategories?: boolean;
+  isLoadingMoreCategories?: boolean;
+  onLoadMoreCategories?: () => void;
 }) {
   const scope = useOrgStorageScope();
   const update = useUpdateSupportKbArticle();
@@ -352,6 +358,17 @@ export function KbArticleEditor({
                     ))}
                   </SelectContent>
                 </Select>
+                {hasMoreCategories && onLoadMoreCategories && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={onLoadMoreCategories}
+                    disabled={isLoadingMoreCategories}
+                  >
+                    {isLoadingMoreCategories ? "Loading categories…" : "Load more categories"}
+                  </Button>
+                )}
               </div>
               <div className="space-y-1">
                 <Label>Status</Label>

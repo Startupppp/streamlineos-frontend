@@ -102,6 +102,10 @@ export function KbManagerContent() {
   const categoriesQuery = useSupportKbCategories({ enabled: supportEnabled });
   const categories = useMemo(() => categoriesQuery.data ?? [], [categoriesQuery.data]);
 
+  function handleLoadMoreCategories() {
+    void categoriesQuery.fetchNextPage();
+  }
+
   const articleParams = useMemo(
     () => ({
       status: isStatus(statusParam) ? statusParam : undefined,
@@ -371,6 +375,25 @@ export function KbManagerContent() {
 
         {filters}
 
+        {tab !== "analytics" && categoriesQuery.access.allowed && categoriesQuery.hasNextPage && (
+          <div className="space-y-2">
+            {categoriesQuery.isFetchNextPageError && (
+              <p role="alert" className="text-sm text-destructive">
+                Could not load more categories. {getErrorMessage(categoriesQuery.error)}
+              </p>
+            )}
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleLoadMoreCategories}
+              disabled={categoriesQuery.isFetchingNextPage}
+            >
+              {categoriesQuery.isFetchingNextPage ? "Loading categories…" : categoriesQuery.isFetchNextPageError ? "Retry loading categories" : "Load more categories"}
+            </Button>
+          </div>
+        )}
+
         <TabsContent value="articles" className="mt-0">
           {articlesQuery.isLoading ? (
             <LoadingState variant="list" />
@@ -422,7 +445,7 @@ export function KbManagerContent() {
         <TabsContent value="categories" className="mt-0">
           {categoriesQuery.isLoading ? (
             <LoadingState variant="list" />
-          ) : categoriesQuery.error ? (
+          ) : categoriesQuery.error && categories.length === 0 ? (
             <ErrorState
               description={getErrorMessage(categoriesQuery.error)}
               error={categoriesQuery.error}
@@ -460,7 +483,13 @@ export function KbManagerContent() {
         <KbCategoryDialog category={editCategory} onClose={handleCloseEditCategory} />
       )}
       {newArticleOpen && (
-        <KbNewArticleDialog categories={categories} onClose={handleCloseNewArticle} />
+        <KbNewArticleDialog
+          categories={categories}
+          hasMoreCategories={categoriesQuery.hasNextPage}
+          isLoadingMoreCategories={categoriesQuery.isFetchingNextPage}
+          onLoadMoreCategories={handleLoadMoreCategories}
+          onClose={handleCloseNewArticle}
+        />
       )}
 
       <AlertDialog open={!!deleteCategory} onOpenChange={handleDeleteCategoryOpenChange}>

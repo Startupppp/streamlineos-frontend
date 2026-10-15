@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { cursorPageContract } from "@/hooks/api/cursor-page-schema";
 
 export const kbCategoryRowContract = z.object({
   id: z.number(),
@@ -15,7 +16,7 @@ export const kbCategoryRowContract = z.object({
   updatedAt: z.string(),
 });
 
-export const kbCategoryListContract = z.array(kbCategoryRowContract);
+export const kbCategoryListContract = cursorPageContract(kbCategoryRowContract);
 
 export const kbArticleRowContract = z.object({
   id: z.number(),
@@ -92,7 +93,7 @@ export const kbCommentRowContract = z.object({
   updatedAt: z.string(),
 });
 
-export const kbCommentListContract = z.array(kbCommentRowContract);
+export const kbCommentListContract = cursorPageContract(kbCommentRowContract);
 
 export const kbAttachmentRowContract = z.object({
   id: z.number().int(),

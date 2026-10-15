@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { ApiError } from "@/lib/api-envelope";
 import { permissionGate } from "@/lib/rbac/permission-gate";
 import { KbManagerContent } from "./kb-manager-content";
@@ -148,5 +148,34 @@ describe("KbManagerContent — the article load failure quotes its request id", 
 
     expect(screen.getByRole("alert")).toBeInTheDocument();
     expect(screen.queryByText("Reference")).not.toBeInTheDocument();
+  });
+});
+
+describe("KbManagerContent — category collection pagination", () => {
+  it("offers more category options when the server has another page", () => {
+    const fetchNextPage = jest.fn();
+    useSupportKbCategories.mockReturnValue(listQuery({
+      data: [{ id: 1, name: "Guides", description: null, isPublished: true }],
+      hasNextPage: true,
+      isFetchingNextPage: false,
+      fetchNextPage,
+    }));
+
+    render(<KbManagerContent />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Load more categories" }));
+    expect(fetchNextPage).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not offer category paging while permission is denied", () => {
+    useSupportKbCategories.mockReturnValue(listQuery({
+      access: DENIED,
+      hasNextPage: true,
+      fetchNextPage: jest.fn(),
+    }));
+
+    render(<KbManagerContent />);
+
+    expect(screen.queryByRole("button", { name: "Load more categories" })).not.toBeInTheDocument();
   });
 });
