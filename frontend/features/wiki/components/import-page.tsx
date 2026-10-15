@@ -46,6 +46,7 @@ const VALID_TABS = ["import", "export"] as const;
 type ImportExportTab = (typeof VALID_TABS)[number];
 
 const MAX_FILE_BYTES = 5 * 1024 * 1024;
+const MAX_CONTENT_LENGTH = 50000;
 const SUPPORTED_FILE_NAME = /\.(md|markdown|txt)$/i;
 
 function resolveTab(tabParam: string | null): ImportExportTab {
@@ -210,7 +211,20 @@ export default function ImportPage() {
           const result = ev.target?.result;
           const text = typeof result === "string" ? result : "";
           const title = file.name.replace(/\.(md|markdown|txt)$/i, "");
-          newItems.push({ title, contentText: text, sizeBytes: file.size });
+          if (text.length > MAX_CONTENT_LENGTH) {
+            toast.error(`${file.name} exceeds the 50,000-character page limit and was skipped`);
+          } else if (text.includes("\0")) {
+            toast.error(`${file.name} contains binary content and was skipped`);
+          } else {
+            newItems.push({ title, contentText: text, sizeBytes: file.size });
+          }
+          completed++;
+          if (completed === toProcess.length) {
+            setItems((prev) => [...prev, ...newItems].slice(0, 100));
+          }
+        };
+        reader.onerror = () => {
+          toast.error(`${file.name} could not be read and was skipped`);
           completed++;
           if (completed === toProcess.length) {
             setItems((prev) => [...prev, ...newItems].slice(0, 100));
@@ -246,6 +260,14 @@ export default function ImportPage() {
     }
     if (items.length >= 100) {
       toast.error("Maximum 100 items reached");
+      return;
+    }
+    if (pasteText.length > MAX_CONTENT_LENGTH) {
+      toast.error("Content exceeds the 50,000-character page limit");
+      return;
+    }
+    if (pasteText.includes("\0")) {
+      toast.error("Content contains binary data");
       return;
     }
     setItems((prev) => [

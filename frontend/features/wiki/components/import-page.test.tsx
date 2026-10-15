@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import ImportPage from "./import-page";
 
@@ -44,6 +44,7 @@ jest.mock("@/hooks/api/kb", () => ({
   useImportKbPages: () => ({ mutate: mockImportMutate, isPending: false }),
   useKbImportJob: (jobId: number | null) => mockUseKbImportJob(jobId),
   useCancelImportJob: () => ({ mutate: mockCancelMutate, isPending: false }),
+  useRetryImportJob: () => ({ mutate: jest.fn(), isPending: false }),
   useDryRunImport: () => ({ mutate: jest.fn(), isPending: false, data: undefined, reset: jest.fn() }),
   useKbImportJobs: () => ({
     data: [],
@@ -147,6 +148,31 @@ describe("ImportPage — Import / Export tabs", () => {
     expect(toast.error).toHaveBeenCalledWith(
       expect.stringContaining("diagram.png"),
     );
+  });
+
+  it("skips a text file that exceeds the backend page-content limit", async () => {
+    const { container } = render(<ImportPage />);
+    const input = container.querySelector('input[type="file"]');
+    expect(input).not.toBeNull();
+
+    fireEvent.change(input!, {
+      target: { files: [new File(["x".repeat(50001)], "large.md", { type: "text/markdown" })] },
+    });
+
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith(expect.stringContaining("50,000-character")));
+    expect(screen.getByText("0/100 files loaded")).toBeInTheDocument();
+  });
+
+  it("keeps oversized pasted content out of the import list", async () => {
+    const user = userEvent.setup();
+    render(<ImportPage />);
+    await user.click(screen.getByRole("button", { name: /paste text/i }));
+    fireEvent.change(screen.getByLabelText("Page title"), { target: { value: "Policy" } });
+    fireEvent.change(screen.getByLabelText("Content"), { target: { value: "x".repeat(50001) } });
+    await user.click(screen.getByRole("button", { name: "Add to list" }));
+
+    expect(toast.error).toHaveBeenCalledWith("Content exceeds the 50,000-character page limit");
+    expect(screen.getByText("0/100 files loaded")).toBeInTheDocument();
   });
 
   it("shows numeric progress as the import job processes pages", async () => {
