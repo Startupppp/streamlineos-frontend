@@ -17,8 +17,9 @@ import {
   TabsTrigger,
   TABS_CONTENT_PAGE_BODY_CLASS,
 } from "@/components/ui/tabs";
-import { useCan, useCanState } from "@/hooks/api/access";
+import { useCanState } from "@/hooks/api/access";
 import { NoPermissionState } from "@/components/shared/no-permission-state";
+import { LoadingState } from "@/components/shared/loading-state";
 import {
   useImportKbPages,
   useKbImportJob,
@@ -59,8 +60,6 @@ function failedTitlesFromReport(report: Record<string, unknown> | null): string[
 }
 
 export default function ImportPage() {
-  const canImport = useCan("kb:pages:import");
-  const canExport = useCan("kb:pages:export");
   const importAccess = useCanState("kb:pages:import");
   const exportAccess = useCanState("kb:pages:export");
   const importMutation = useImportKbPages();
@@ -70,9 +69,9 @@ export default function ImportPage() {
   const searchParams = useSearchParams();
   const requestedTab = resolveTab(searchParams.get("tab"));
   const activeTab =
-    requestedTab === "import" && !canImport
+    requestedTab === "import" && importAccess === "denied"
       ? "export"
-      : requestedTab === "export" && !canExport
+      : requestedTab === "export" && exportAccess === "denied"
         ? "import"
         : requestedTab;
 
@@ -355,6 +354,14 @@ export default function ImportPage() {
     else params.set("tab", value);
     const qs = params.toString();
     router.replace(qs ? `${KB_IMPORT}?${qs}` : KB_IMPORT, { scroll: false });
+  }
+
+  if (importAccess === "loading" || exportAccess === "loading") {
+    return (
+      <PageWrapper title="Import & Export">
+        <LoadingState variant="form" rows={3} />
+      </PageWrapper>
+    );
   }
 
   if (importAccess === "denied" && exportAccess === "denied") {

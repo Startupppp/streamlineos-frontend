@@ -4,6 +4,7 @@ import ImportPage from "./import-page";
 const mockReplace = jest.fn();
 let mockSearchParams = new URLSearchParams();
 let grantedPermissions: string[] = [];
+let loadingPermissions: string[] = [];
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ replace: mockReplace }),
@@ -13,7 +14,11 @@ jest.mock("next/navigation", () => ({
 jest.mock("@/hooks/api/access", () => ({
   useCan: (permission: string) => grantedPermissions.includes(permission),
   useCanState: (permission: string) =>
-    grantedPermissions.includes(permission) ? "granted" : "denied",
+    loadingPermissions.includes(permission)
+      ? "loading"
+      : grantedPermissions.includes(permission)
+        ? "granted"
+        : "denied",
   usePermissionGate: (permission: string) => ({
     permission,
     allowed: grantedPermissions.includes(permission),
@@ -56,6 +61,7 @@ beforeEach(() => {
   mockReplace.mockClear();
   mockSearchParams = new URLSearchParams();
   grantedPermissions = [];
+  loadingPermissions = [];
 });
 
 describe("Import and Export tabs are gated separately", () => {
@@ -111,6 +117,45 @@ describe("Import and Export tabs are gated separately", () => {
     mockSearchParams = new URLSearchParams("tab=import");
 
     render(<ImportPage />);
+
+    expect(screen.getByRole("tab", { name: /^export$/i })).toHaveAttribute(
+      "data-state",
+      "active",
+    );
+  });
+
+  it("keeps the requested Import tab hidden until access resolves without showing denial", () => {
+    mockSearchParams = new URLSearchParams("tab=import");
+    loadingPermissions = ["kb:pages:import", "kb:pages:export"];
+
+    const view = render(<ImportPage />);
+
+    expect(screen.getByRole("status", { name: /loading/i })).toBeInTheDocument();
+    expect(screen.queryByRole("tab")).not.toBeInTheDocument();
+    expect(screen.queryByText(/access restricted/i)).not.toBeInTheDocument();
+
+    loadingPermissions = [];
+    grantedPermissions = ["kb:pages:import", "kb:pages:export"];
+    view.rerender(<ImportPage />);
+
+    expect(screen.getByRole("tab", { name: /^import$/i })).toHaveAttribute(
+      "data-state",
+      "active",
+    );
+  });
+
+  it("waits for the second permission before falling back from a denied tab", () => {
+    mockSearchParams = new URLSearchParams("tab=import");
+    loadingPermissions = ["kb:pages:export"];
+
+    const view = render(<ImportPage />);
+
+    expect(screen.getByRole("status", { name: /loading/i })).toBeInTheDocument();
+    expect(screen.queryByRole("tab")).not.toBeInTheDocument();
+
+    loadingPermissions = [];
+    grantedPermissions = ["kb:pages:export"];
+    view.rerender(<ImportPage />);
 
     expect(screen.getByRole("tab", { name: /^export$/i })).toHaveAttribute(
       "data-state",
