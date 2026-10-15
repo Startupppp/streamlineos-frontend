@@ -11,6 +11,7 @@ export const kbImportJobContract = z.object({
   succeededItems: z.number().int(),
   failedItems: z.number().int(),
   duplicateItems: z.number().int(),
+  canRetry: z.boolean(),
   errorReport: z.record(z.string(), z.unknown()).nullable(),
   createdById: z.string().nullable(),
   createdAt: z.string(),

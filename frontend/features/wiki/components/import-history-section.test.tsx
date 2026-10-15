@@ -34,6 +34,7 @@ function intersect(index = 0) {
 
 jest.mock("@/hooks/api/kb", () => ({
   useKbImportJobs: jest.fn(),
+  useRetryImportJob: jest.fn(),
 }));
 
 jest.mock("@/hooks/api/access", () => ({
@@ -48,9 +49,11 @@ jest.mock("@/lib/knowledge-routes", () => ({
   KNOWLEDGE_BASE: "/wiki",
 }));
 
-const { useKbImportJobs } = jest.requireMock("@/hooks/api/kb") as {
+const { useKbImportJobs, useRetryImportJob } = jest.requireMock("@/hooks/api/kb") as {
   useKbImportJobs: jest.Mock;
+  useRetryImportJob: jest.Mock;
 };
+const mockRetryMutate = jest.fn();
 
 const mockJob = {
   id: 1,
@@ -63,6 +66,7 @@ const mockJob = {
   succeededItems: 3,
   failedItems: 0,
   duplicateItems: 0,
+  canRetry: false,
   errorReport: null,
   createdById: null,
   createdAt: new Date().toISOString(),
@@ -73,6 +77,7 @@ beforeEach(() => {
   observers.length = 0;
   Reflect.set(globalThis, "IntersectionObserver", FakeIntersectionObserver);
   jest.clearAllMocks();
+  useRetryImportJob.mockReturnValue({ mutate: mockRetryMutate, isPending: false, variables: undefined });
 });
 
 afterEach(() => {
@@ -143,5 +148,28 @@ describe("ImportHistorySection failed items", () => {
     await userEvent.click(screen.getByText("2 failed pages"));
     expect(screen.getByText("Policy A")).toBeInTheDocument();
     expect(screen.getByText("Policy B")).toBeInTheDocument();
+  });
+
+  it("offers Retry only when the server marks the failed job eligible", async () => {
+    useKbImportJobs.mockReturnValue({
+      data: [
+        { ...mockJob, id: 1, canRetry: true, failedItems: 1, errorReport: { failedTitles: ["Policy A"] } },
+        { ...mockJob, id: 2, canRetry: false, failedItems: 1, errorReport: { failedTitles: ["Policy B"] } },
+      ],
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+      hasNextPage: false,
+      isFetchingNextPage: false,
+      fetchNextPage: jest.fn(),
+    });
+
+    render(<ImportHistorySection />);
+
+    const retryButtons = screen.getAllByRole("button", { name: "Retry failed pages" });
+    expect(retryButtons).toHaveLength(1);
+    await userEvent.click(retryButtons[0]!);
+    expect(mockRetryMutate).toHaveBeenCalledWith(1, expect.any(Object));
   });
 });

@@ -15,6 +15,7 @@ const importJob = {
   succeededItems: 3,
   failedItems: 0,
   duplicateItems: 0,
+  canRetry: false,
   errorReport: null,
   createdById: "user-1",
   createdAt: "2026-09-25T00:00:00.000Z",
@@ -59,5 +60,16 @@ describe("kb import/export job list contracts", () => {
     });
     expect(parsed.pagination.nextCursor).toBe("cursor-2");
     expect(parsed.pagination.hasMore).toBe(true);
+  });
+
+  it("requires the server-computed retry eligibility on every import job", () => {
+    expect(() => kbImportJobListPageContract.parse({
+      data: [{ ...importJob, canRetry: undefined }],
+      pagination,
+    })).toThrow(ZodError);
+    expect(kbImportJobListPageContract.parse({
+      data: [{ ...importJob, canRetry: true }],
+      pagination,
+    }).data[0]?.canRetry).toBe(true);
   });
 });

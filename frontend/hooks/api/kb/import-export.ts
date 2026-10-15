@@ -7,6 +7,7 @@ import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
 import { selectFlatPages, type Page } from "@/lib/api/select-flat-pages";
 
 export type KbImportItem = {
@@ -46,6 +47,7 @@ export type KbImportJob = {
   succeededItems: number;
   failedItems: number;
   duplicateItems: number;
+  canRetry: boolean;
   errorReport: Record<string, unknown> | null;
   createdById: string | null;
   createdAt: string;
@@ -131,6 +133,28 @@ export function useCancelImportJob() {
     onSuccess: (_data, jobId) => {
       qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.importJob(jobId) });
       qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.importJobs() });
+    },
+  });
+}
+
+export function useRetryImportJob() {
+  const qc = useQueryClient();
+  const operation = useIdempotentOperation();
+  return useAuthorizedMutation("kb:pages:import", {
+    mutationKey: ["kb", "import-job", "retry"],
+    mutationFn: (jobId: number) =>
+      apiClient.post<ImportAccepted>(
+        `/kb/import-jobs/${jobId}/retry`,
+        undefined,
+        operation.configFor({ jobId }),
+        kbImportAcceptedContract,
+      ),
+    onSuccess: () => {
+      operation.settle();
+      qc.invalidateQueries({
+        queryKey: knowledgeAndSurveysQueryKeys.kb.importJobs(),
+        exact: true,
+      });
     },
   });
 }

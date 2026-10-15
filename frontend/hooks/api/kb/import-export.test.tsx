@@ -3,13 +3,15 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 
 const mockGet = jest.fn<Promise<unknown>, [string, unknown, unknown, unknown]>();
+const mockPost = jest.fn<Promise<unknown>, [string, unknown, unknown, unknown]>();
 const mockUseCan = jest.fn<boolean, [string]>();
 
 jest.mock("@/lib/api-client", () => ({
   apiClient: {
     get: (path: string, params: unknown, signal: unknown, contract: unknown) =>
       mockGet(path, params, signal, contract),
-    post: jest.fn(),
+    post: (path: string, body: unknown, config: unknown, contract: unknown) =>
+      mockPost(path, body, config, contract),
   },
 }));
 
@@ -24,7 +26,7 @@ jest.mock("@/hooks/api/authorized-mutation", () => ({
   },
 }));
 
-import { useKbImportJobs, useKbExportJobs } from "./import-export";
+import { useKbImportJobs, useKbExportJobs, useRetryImportJob } from "./import-export";
 
 const PAGINATION = { limit: 20, hasMore: false, nextCursor: null };
 
@@ -39,6 +41,7 @@ const IMPORT_JOB = {
   succeededItems: 3,
   failedItems: 0,
   duplicateItems: 0,
+  canRetry: false,
   errorReport: null,
   createdById: "user-1",
   createdAt: "2026-09-25T00:00:00.000Z",
@@ -152,5 +155,37 @@ describe("useKbExportJobs — wire-shape is visible through selectFlatPages", ()
 
     await waitFor(() => expect(mockGet).toHaveBeenCalled());
     expect(mockGet.mock.calls[0]?.[0]).toBe("/kb/export-jobs");
+  });
+});
+
+describe("useRetryImportJob", () => {
+  it("sends a bodyless retry with a stable idempotency key until the retry succeeds", async () => {
+    mockPost.mockRejectedValueOnce(new Error("Connection lost"));
+    mockPost.mockResolvedValueOnce({ jobId: 5, status: "pending" });
+    mockPost.mockResolvedValueOnce({ jobId: 6, status: "pending" });
+
+    const { result } = renderHook(() => useRetryImportJob(), { wrapper });
+
+    await expect(result.current.mutateAsync(1)).rejects.toThrow("Connection lost");
+    await act(async () => {
+      await result.current.mutateAsync(1);
+    });
+
+    expect(mockPost).toHaveBeenNthCalledWith(
+      1,
+      "/kb/import-jobs/1/retry",
+      undefined,
+      expect.any(Object),
+      expect.any(Function),
+    );
+    const firstConfig = mockPost.mock.calls[0]?.[2] as { headers: Record<string, string> };
+    const secondConfig = mockPost.mock.calls[1]?.[2] as { headers: Record<string, string> };
+    expect(secondConfig.headers["Idempotency-Key"]).toBe(firstConfig.headers["Idempotency-Key"]);
+
+    await act(async () => {
+      await result.current.mutateAsync(2);
+    });
+    const thirdConfig = mockPost.mock.calls[2]?.[2] as { headers: Record<string, string> };
+    expect(thirdConfig.headers["Idempotency-Key"]).not.toBe(firstConfig.headers["Idempotency-Key"]);
   });
 });
