@@ -100,6 +100,21 @@ describe("ReviewsPage — every documented filter reaches the server", () => {
     );
   });
 
+  it("updates the search control when URL navigation changes the query", () => {
+    useSearchParams.mockReturnValue(new URLSearchParams("q=first"));
+
+    const { rerender } = render(<ReviewsPage />);
+    expect(screen.getByRole("searchbox", { name: "Search reviews" })).toHaveValue("first");
+
+    useSearchParams.mockReturnValue(new URLSearchParams("q=second"));
+    rerender(<ReviewsPage />);
+
+    expect(screen.getByRole("searchbox", { name: "Search reviews" })).toHaveValue("second");
+    expect(useKbPageReviews).toHaveBeenLastCalledWith(
+      expect.objectContaining({ q: "second" }),
+    );
+  });
+
   it("sends spaceId from the URL as a number the backend filter accepts", () => {
     useSearchParams.mockReturnValue(new URLSearchParams("spaceId=9"));
 

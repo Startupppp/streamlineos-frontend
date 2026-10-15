@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useRef, useCallback, useEffect } from "react";
+import { useSourceOverride } from "@/hooks/common/use-source-override";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -39,7 +40,7 @@ export interface ReviewsFiltersProps {
 }
 
 export function ReviewsFilters({ values, onChange }: ReviewsFiltersProps) {
-  const [searchDraft, setSearchDraft] = useState(values.q);
+  const [searchDraft, setSearchDraft] = useSourceOverride(values.q, values.q);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { data: spacesPage } = useKbSpaces();
   const spaces = spacesPage?.data ?? [];
@@ -48,7 +49,7 @@ export function ReviewsFilters({ values, onChange }: ReviewsFiltersProps) {
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, []);
+  }, [values.q]);
 
   const handleSearchChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -59,7 +60,7 @@ export function ReviewsFilters({ values, onChange }: ReviewsFiltersProps) {
         onChange({ q: next || null });
       }, SEARCH_DEBOUNCE_MS);
     },
-    [onChange],
+    [onChange, setSearchDraft],
   );
 
   const handleStatusChange = useCallback(
