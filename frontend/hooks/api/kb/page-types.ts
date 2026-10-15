@@ -48,6 +48,7 @@ export type KbPageDetail = KbPage & {
 
 export type KbPageTreeNode = {
   id: number;
+  contentRevision: number;
   parentPageId: number | null;
   spaceId: number | null;
   projectId: number | null;
@@ -110,11 +111,24 @@ type KbPageMetadataPatch = {
   ownerUserId?: string | null;
 };
 
-export type UpdateKbPageInput = KbPageMetadataPatch &
-  (
-    | { content: unknown; expectedContentRevision: number }
-    | { content?: undefined; expectedContentRevision?: number }
-  );
+type KbPageRevisionedPatch = KbPageMetadataPatch & {
+  content?: unknown;
+  expectedContentRevision: number;
+};
+
+type KbPageNonIndexedPatch = Omit<
+  KbPageMetadataPatch,
+  "contentText" | "title" | "contentType" | "status"
+> & {
+  content?: never;
+  contentText?: never;
+  title?: never;
+  contentType?: never;
+  status?: never;
+  expectedContentRevision?: number;
+};
+
+export type UpdateKbPageInput = KbPageRevisionedPatch | KbPageNonIndexedPatch;
 
 export type MoveKbPageInput = {
   parentPageId: number | null;

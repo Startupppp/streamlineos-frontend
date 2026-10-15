@@ -127,7 +127,7 @@ describe("a page mutation reaches the list the wiki actually renders", () => {
 
   it("useUpdateKbPage invalidates the page collection when the edit touches a listed field", async () => {
     seed();
-    await run(useUpdateKbPage, { pageId: PAGE_ID, title: "renamed" });
+    await run(useUpdateKbPage, { pageId: PAGE_ID, title: "renamed", expectedContentRevision: 1 });
     expect(invalidated(COLLECTION_KEY)).toBe(true);
   });
 

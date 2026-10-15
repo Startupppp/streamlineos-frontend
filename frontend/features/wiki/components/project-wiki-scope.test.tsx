@@ -18,9 +18,11 @@ jest.mock("@/hooks/api/access", () => ({
 
 const duplicateMutate = jest.fn();
 const createPageMutate = jest.fn();
+const updatePageMutate = jest.fn();
 
 const ROOT_NODE: KbPageTreeNode = {
   id: 42,
+  contentRevision: 3,
   parentPageId: null,
   spaceId: null,
   projectId: 7,
@@ -65,7 +67,7 @@ jest.mock("@/hooks/api/kb", () => ({
   useKbPageBacklinks: () => ({ data: [] }),
   useCreateKbPage: () => ({ mutate: createPageMutate, isPending: false }),
   useDeleteKbPage: () => ({ mutate: jest.fn(), isPending: false }),
-  useUpdateKbPage: () => ({ mutate: jest.fn(), isPending: false }),
+  useUpdateKbPage: () => ({ mutate: updatePageMutate, isPending: false }),
   useKbPageTreeInfinite: () => treeLevel([ROOT_NODE]),
   useKbPageChildrenLevel: (_pageId: number, enabled: boolean) =>
     enabled
@@ -228,6 +230,22 @@ describe("project wiki history path stays inside the project", () => {
 });
 
 describe("project wiki page tree links stay inside the project", () => {
+  it("sends the tree node revision when renaming a page", async () => {
+    const user = userEvent.setup();
+    render(<PageTree projectId={7} baseHref="/build/7/wiki" />);
+
+    await user.click(screen.getByRole("button", { name: "Page options" }));
+    await user.click(screen.getByRole("menuitem", { name: "Rename" }));
+    const input = screen.getByRole("textbox");
+    await user.clear(input);
+    await user.type(input, "Updated runbook{Enter}");
+
+    expect(updatePageMutate).toHaveBeenCalledWith(
+      { pageId: 42, title: "Updated runbook", expectedContentRevision: 3 },
+      expect.any(Object),
+    );
+  });
+
   it("renders a root page link under the project wiki base href rather than the global knowledge base when baseHref is supplied", () => {
     render(<PageTree projectId={7} baseHref="/build/7/wiki" />);
 

@@ -99,14 +99,14 @@ export default function PageMetadataSheet({
 
   function handleStatusChange(value: string) {
     updatePage.mutate(
-      { pageId, status: value as "draft" | "in_review" | "published" | "archived" },
+      { pageId, status: value as "draft" | "in_review" | "published" | "archived", expectedContentRevision: page.contentRevision },
       { onError: () => toast.error("Failed to update status") }
     );
   }
 
   function handleContentTypeChange(value: string) {
     updatePage.mutate(
-      { pageId, contentType: value },
+      { pageId, contentType: value, expectedContentRevision: page.contentRevision },
       { onError: () => toast.error("Failed to update content type") }
     );
   }

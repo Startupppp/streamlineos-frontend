@@ -181,7 +181,7 @@ const PageTreeItem = memo(function PageTreeItemInner({
       return;
     }
     updatePage.mutate(
-      { pageId: node.id, title: trimmed },
+      { pageId: node.id, title: trimmed, expectedContentRevision: node.contentRevision },
       {
         onSuccess: () => setRenaming(false),
         onError: () => {

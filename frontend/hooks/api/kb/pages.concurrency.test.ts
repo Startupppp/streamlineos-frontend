@@ -169,7 +169,7 @@ describe("useUpdateKbPage — optimistic concurrency", () => {
     });
 
     await act(async () => {
-      await result.current.mutateAsync({ pageId: 1, title: "Renamed" });
+      await result.current.mutateAsync({ pageId: 1, title: "Renamed", expectedContentRevision: 2 });
     });
 
     expect(invalidate).toHaveBeenCalledWith({
