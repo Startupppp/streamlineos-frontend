@@ -196,6 +196,11 @@ describe("public calendar booking page", () => {
       undefined,
       expect.anything(),
     );
+    await user.click(screen.getByRole("button", { name: "Refresh booking status" }));
+    const confirmCalls = mockedPost.mock.calls.filter(([path]) => String(path).endsWith("/confirm"));
+    expect(confirmCalls).toHaveLength(2);
+    expect(confirmCalls[1][1]).toEqual(confirmCalls[0][1]);
+    expect(mockedPost.mock.calls.filter(([path]) => String(path).endsWith("/holds"))).toHaveLength(1);
     postMessage.mockRestore();
   });
 
