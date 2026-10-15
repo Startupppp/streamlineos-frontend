@@ -162,17 +162,19 @@ export function useKbPageChildrenLevel(
   nodeId: number,
   enabled: boolean,
   spaceId?: number,
+  projectId?: number,
 ) {
   const canView = useCan("kb:pages:view");
   return useInfiniteQuery({
     ...INLINE_READ_ERROR,
-    queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTreeLevelInfinite({ parentId: nodeId, spaceId }),
+    queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTreeLevelInfinite({ parentId: nodeId, spaceId, projectId }),
     queryFn: ({ pageParam, signal }) =>
       apiClient.get<KbPageTreeLevel>(
         "/kb/pages/tree",
         {
           parentId: nodeId,
           ...(spaceId === undefined ? {} : { spaceId }),
+          ...(projectId === undefined ? {} : { projectId }),
           ...(pageParam === undefined ? {} : { cursor: pageParam }),
         },
         signal,

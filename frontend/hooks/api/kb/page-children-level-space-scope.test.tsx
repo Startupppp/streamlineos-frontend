@@ -71,4 +71,19 @@ describe("useKbPageChildrenLevel — tree-expand request scope", () => {
     expect(params).not.toHaveProperty("spaceId");
     expect(params).toMatchObject({ parentId: 9 });
   });
+
+  it("carries projectId on a project tree child request", async () => {
+    renderHook(() => useKbPageChildrenLevel(9, true, undefined, 7), {
+      wrapper: wrapper(client),
+    });
+
+    await waitFor(() => expect(getMock).toHaveBeenCalled());
+
+    expect(getMock).toHaveBeenCalledWith(
+      "/kb/pages/tree",
+      expect.objectContaining({ parentId: 9, projectId: 7 }),
+      expect.anything(),
+      expect.anything(),
+    );
+  });
 });

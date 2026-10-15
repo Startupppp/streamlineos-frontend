@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { PageDocumentToolbar } from "./page-document-toolbar";
 import PageHistorySheet from "./page-history-sheet";
@@ -43,6 +43,8 @@ const CHILD_NODE: KbPageTreeNode = {
   hasChildren: false,
 };
 
+let rootNode = ROOT_NODE;
+
 function treeLevel(nodes: KbPageTreeNode[]) {
   return {
     data: {
@@ -68,7 +70,7 @@ jest.mock("@/hooks/api/kb", () => ({
   useCreateKbPage: () => ({ mutate: createPageMutate, isPending: false }),
   useDeleteKbPage: () => ({ mutate: jest.fn(), isPending: false }),
   useUpdateKbPage: () => ({ mutate: updatePageMutate, isPending: false }),
-  useKbPageTreeInfinite: () => treeLevel([ROOT_NODE]),
+  useKbPageTreeInfinite: () => treeLevel([rootNode]),
   useKbPageChildrenLevel: (_pageId: number, enabled: boolean) =>
     enabled
       ? treeLevel([CHILD_NODE])
@@ -166,6 +168,7 @@ async function openDuplicateItem() {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  rootNode = ROOT_NODE;
 });
 
 describe("project wiki read path stays inside the project", () => {
@@ -230,6 +233,57 @@ describe("project wiki history path stays inside the project", () => {
 });
 
 describe("project wiki page tree links stay inside the project", () => {
+  it("creates a child with the parent page's project scope", async () => {
+    const user = userEvent.setup();
+    render(<PageTree projectId={7} baseHref="/build/7/wiki" />);
+
+    await user.click(screen.getByRole("button", { name: "Add child page" }));
+
+    expect(createPageMutate).toHaveBeenCalledWith(
+      { parentPageId: 42, projectId: 7 },
+      expect.any(Object),
+    );
+  });
+
+  it("creates a nested child with its parent page's project scope", async () => {
+    const user = userEvent.setup();
+    render(<PageTree projectId={7} baseHref="/build/7/wiki" />);
+
+    await user.click(screen.getByRole("button", { name: "Expand" }));
+    await user.click(screen.getAllByRole("button", { name: "Add child page" })[1]);
+
+    expect(createPageMutate).toHaveBeenCalledWith(
+      { parentPageId: 108, projectId: 7 },
+      expect.any(Object),
+    );
+  });
+
+  it("creates a child with the parent page's space scope", async () => {
+    rootNode = { ...ROOT_NODE, spaceId: 5, projectId: null };
+    const user = userEvent.setup();
+    render(<PageTree spaceId={5} />);
+
+    await user.click(screen.getByRole("button", { name: "Add child page" }));
+
+    expect(createPageMutate).toHaveBeenCalledWith(
+      { parentPageId: 42, spaceId: 5 },
+      expect.any(Object),
+    );
+  });
+
+  it("omits container scope when the parent page has none", async () => {
+    rootNode = { ...ROOT_NODE, projectId: null };
+    const user = userEvent.setup();
+    render(<PageTree />);
+
+    await user.click(screen.getByRole("button", { name: "Add child page" }));
+
+    expect(createPageMutate).toHaveBeenCalledWith(
+      { parentPageId: 42 },
+      expect.any(Object),
+    );
+  });
+
   it("sends the tree node revision when renaming a page", async () => {
     const user = userEvent.setup();
     render(<PageTree projectId={7} baseHref="/build/7/wiki" />);
@@ -293,7 +347,7 @@ describe("project wiki page tree links stay inside the project", () => {
     const handlers = createPageMutate.mock.calls[0]?.[1] as {
       onSuccess: (created: { id: number }) => void;
     };
-    handlers.onSuccess({ id: 501 });
+    act(() => handlers.onSuccess({ id: 501 }));
 
     expect(routerPush).toHaveBeenCalledWith("/build/7/wiki/501");
   });
@@ -307,7 +361,7 @@ describe("project wiki page tree links stay inside the project", () => {
     const handlers = createPageMutate.mock.calls[0]?.[1] as {
       onSuccess: (created: { id: number }) => void;
     };
-    handlers.onSuccess({ id: 501 });
+    act(() => handlers.onSuccess({ id: 501 }));
 
     expect(routerPush).toHaveBeenCalledWith("/knowledge/wiki/doc/501");
   });

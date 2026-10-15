@@ -54,6 +54,7 @@ interface PageTreeItemProps {
   depth: number;
   onCloseMobile?: () => void;
   spaceId?: number;
+  projectId?: number;
   baseHref?: string;
 }
 
@@ -69,6 +70,7 @@ const PageTreeItem = memo(function PageTreeItemInner({
   depth,
   onCloseMobile,
   spaceId,
+  projectId,
   baseHref,
 }: PageTreeItemProps) {
   const router = useRouter();
@@ -98,7 +100,7 @@ const PageTreeItem = memo(function PageTreeItemInner({
     hasNextPage: childrenHasNextPage,
     isFetchingNextPage: childrenFetchingNext,
     fetchNextPage: fetchChildrenNextPage,
-  } = useKbPageChildrenLevel(node.id, isExpanded, spaceId);
+  } = useKbPageChildrenLevel(node.id, isExpanded, spaceId, projectId);
 
   const children: KbPageTreeNode[] = childrenData?.pages.flatMap((p) => p.data) ?? [];
 
@@ -117,7 +119,11 @@ const PageTreeItem = memo(function PageTreeItemInner({
     e.stopPropagation();
     if (!canCreate) return;
     createPage.mutate(
-      { parentPageId: node.id },
+      {
+        parentPageId: node.id,
+        ...(node.spaceId !== null ? { spaceId: node.spaceId } : {}),
+        ...(node.projectId !== null ? { projectId: node.projectId } : {}),
+      },
       {
         onSuccess: (page) => {
           setExpanded(true);
@@ -362,6 +368,7 @@ const PageTreeItem = memo(function PageTreeItemInner({
                   depth={depth + 1}
                   onCloseMobile={onCloseMobile}
                   spaceId={spaceId}
+                  projectId={projectId}
                   baseHref={baseHref}
                 />
               ))}
