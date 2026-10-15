@@ -13,6 +13,7 @@ import { ErrorState } from "@/components/shared";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
@@ -46,7 +47,17 @@ export default function PageCommentsSheet({ pageId, open, onOpenChange, content 
   const { data: session } = useSession();
   const currentUserId = session?.user?.id ?? null;
   const canUpdate = useCan("kb:pages:update");
-  const { data: comments = [], isLoading, isError, error, refetch } = useKbPageComments(pageId);
+  const {
+    data: comments = [],
+    isLoading,
+    isError,
+    isFetchNextPageError,
+    error,
+    refetch,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  } = useKbPageComments(pageId);
   const createComment = useCreateKbPageComment();
   const [newContent, setNewContent] = useState("");
   const [replyingTo, setReplyingTo] = useState<KbPageComment | null>(null);
@@ -108,6 +119,10 @@ export default function PageCommentsSheet({ pageId, open, onOpenChange, content 
     void refetch();
   }
 
+  function handleLoadMoreComments() {
+    void fetchNextPage();
+  }
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="p-0 flex flex-col gap-0 sm:max-w-md">
@@ -123,7 +138,7 @@ export default function PageCommentsSheet({ pageId, open, onOpenChange, content 
         </SheetHeader>
         <ScrollArea className="flex-1 min-h-0">
           <div className="px-6 py-4">
-            {isError && (
+            {isError && comments.length === 0 && (
               <ErrorState
                 title="Couldn't load comments"
                 description={getErrorMessage(error)}
@@ -144,7 +159,7 @@ export default function PageCommentsSheet({ pageId, open, onOpenChange, content 
                 ))}
               </div>
             )}
-            {!isLoading && !isError && topLevel.length === 0 && resolved.length === 0 && (
+            {!isLoading && !isError && !hasNextPage && topLevel.length === 0 && resolved.length === 0 && (
               <EmptyState
                 title="No comments yet"
                 description="Be the first to add a comment."
@@ -188,6 +203,22 @@ export default function PageCommentsSheet({ pageId, open, onOpenChange, content 
                     ))}
                   </ul>
                 </>
+              )}
+              {isFetchNextPageError && (
+                <p role="alert" className="text-sm text-destructive">
+                  Could not load more comments. {getErrorMessage(error)}
+                </p>
+              )}
+              {hasNextPage && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleLoadMoreComments}
+                  disabled={isFetchingNextPage}
+                >
+                  {isFetchingNextPage ? "Loading comments…" : isFetchNextPageError ? "Retry loading comments" : "Load more comments"}
+                </Button>
               )}
             </div>
           </div>

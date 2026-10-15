@@ -177,6 +177,72 @@ describe("PageCommentsSheet — WCAG 1.3.1 list semantics", () => {
   });
 });
 
+describe("PageCommentsSheet — bounded comments", () => {
+  beforeEach(() => {
+    useSession.mockReturnValue({ data: { user: { id: "user-other" } } });
+    useCan.mockReturnValue(false);
+  });
+
+  it("offers the next page while keeping already loaded comments visible", () => {
+    const fetchNextPage = jest.fn();
+    useKbPageComments.mockReturnValue({
+      data: [{
+        id: 10,
+        orgId: "org-1",
+        pageId: 1,
+        authorId: "user-author",
+        authorName: "Alice",
+        parentId: null,
+        content: "First page comment",
+        resolvedAt: null,
+        createdAt: "2026-09-01T10:00:00.000Z",
+        updatedAt: "2026-09-01T10:00:00.000Z",
+      }],
+      isLoading: false,
+      isError: false,
+      hasNextPage: true,
+      isFetchingNextPage: false,
+      fetchNextPage,
+    });
+
+    const view = render(<PageCommentsSheet pageId={1} open onOpenChange={jest.fn()} />);
+    expect(view.getByText("First page comment")).toBeInTheDocument();
+    fireEvent.click(view.getByRole("button", { name: "Load more comments" }));
+    expect(fetchNextPage).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps loaded comments and offers retry after a later page fails", () => {
+    const fetchNextPage = jest.fn();
+    useKbPageComments.mockReturnValue({
+      data: [{
+        id: 10,
+        orgId: "org-1",
+        pageId: 1,
+        authorId: "user-author",
+        authorName: "Alice",
+        parentId: null,
+        content: "First page comment",
+        resolvedAt: null,
+        createdAt: "2026-09-01T10:00:00.000Z",
+        updatedAt: "2026-09-01T10:00:00.000Z",
+      }],
+      isLoading: false,
+      isError: true,
+      isFetchNextPageError: true,
+      error: new Error("Connection lost"),
+      hasNextPage: true,
+      isFetchingNextPage: false,
+      fetchNextPage,
+    });
+
+    const view = render(<PageCommentsSheet pageId={1} open onOpenChange={jest.fn()} />);
+    expect(view.getByText("First page comment")).toBeInTheDocument();
+    expect(view.getByRole("alert")).toHaveTextContent("Connection lost");
+    fireEvent.click(view.getByRole("button", { name: "Retry loading comments" }));
+    expect(fetchNextPage).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe("PageCommentsSheet — WCAG 4.1.3 status announcements", () => {
   beforeEach(() => {
     useSession.mockReturnValue({ data: { user: { id: "user-other" } } });

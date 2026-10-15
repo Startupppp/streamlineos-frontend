@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
@@ -11,6 +11,8 @@ const noContentC = lazyContract(() =>
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
+import { selectFlatPages, type Page } from "@/lib/api/select-flat-pages";
 
 export type KbPageComment = {
   id: number;
@@ -34,6 +36,8 @@ export type CreateKbPageCommentInput = {
   anchorQuote?: string | null;
 };
 
+export type KbPageCommentsPage = Page<KbPageComment>;
+
 const kbPageCommentListContract = lazyContract(() =>
   import("@/hooks/api/kb/kb-comments-schema").then((m) => m.kbPageCommentListContract),
 );
@@ -44,20 +48,19 @@ const kbPageCommentContract = lazyContract(() =>
 
 export function useKbPageComments(pageId: number) {
   const canViewPages = useCan("kb:pages:view");
-  return useQuery({
+  return useInfiniteQuery({
     ...INLINE_READ_ERROR,
     queryKey: knowledgeAndSurveysQueryKeys.kb.pageComments(pageId),
-    queryFn: async ({ signal }) => {
-      const page = await apiClient.get<{
-        data: KbPageComment[];
-        pagination: {
-          limit: number;
-          hasMore: boolean;
-          nextCursor: string | null;
-        };
-      }>(`/kb/pages/${pageId}/comments`, undefined, signal, kbPageCommentListContract);
-      return page.data;
-    },
+    initialPageParam: NO_CURSOR_YET,
+    queryFn: ({ signal, pageParam }) =>
+      apiClient.get<KbPageCommentsPage>(
+        `/kb/pages/${pageId}/comments`,
+        pageParam !== undefined ? { cursor: pageParam } : undefined,
+        signal,
+        kbPageCommentListContract,
+      ),
+    getNextPageParam: (last) => last.pagination.nextCursor ?? undefined,
+    select: selectFlatPages,
     staleTime: 30_000,
     enabled: canViewPages && pageId > 0,
   });
