@@ -31,6 +31,7 @@ Documents owns source identity, audience, versions and safe file retrieval. Know
 
 - [ ] KD-01 page visibility
 - [ ] KD-02 page-change event
+  - 2026-10-16 partial evidence: backend `d120246d9` and `3fa9fcec4` route text-only, empty-text and generic metadata PATCH writes through expected revision guards, canonical critical audit and page-change outbox in one transaction. Status, visibility, tree, restore, import and version paths have a source census recorded under `KB-OPEN-014`. Focused suites passed; real database rollback, failed-worker replay, frontend caller parity and deployed search recovery remain open.
 - [ ] KD-03 retrieval and citation
 - [ ] KD-04 provider connection budget
   - 2026-10-16 partial evidence: backend `ffddcf4df` moved the storage sweep's provider deletion outside its tenant transaction and kept pending-purge/quarantine reads and writes in short tenant transactions. The transaction-boundary focused suites passed 20/20. A small-pool brown-out run with measured connection occupancy remains open.
