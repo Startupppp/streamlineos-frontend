@@ -6,6 +6,7 @@ import { format, addDays } from "date-fns";
 import { Tag } from "lucide-react";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { AppSheet } from "@/components/shared/app-sheet";
+import { useIsMobile } from "@/hooks/common/use-mobile";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Sheet,
@@ -313,10 +314,11 @@ function MeetingWorkspaceSheet({
   open,
   onOpenChange,
 }: MeetingWorkspaceSheetProps) {
+  const isMobile = useIsMobile();
   const eventId = event ? parseCalendarEventId(event.id)?.eventId ?? null : null;
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent overlayClassName="z-[110]" className="z-[110] flex w-full flex-col gap-0 p-0 sm:max-w-2xl">
+      <SheetContent side={isMobile ? "bottom" : "right"} overlayClassName="z-[110]" className="z-[110] flex h-[92dvh] w-full flex-col gap-0 p-0 md:h-full sm:max-w-2xl">
         <SheetHeader className="shrink-0 gap-1 border-b px-5 py-4">
           <p className="text-xs font-medium text-muted-foreground">Meeting workspace</p>
           <SheetTitle className="text-base font-semibold tracking-tight">
