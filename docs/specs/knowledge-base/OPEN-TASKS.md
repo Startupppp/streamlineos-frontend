@@ -35,7 +35,7 @@ Evidence:
 
 ## Product and release gates
 
-Latest read-only migration check, 2026-10-16: 1,174 applied of 1,179 journal entries, five pending in order: unrelated Calendar 2043, then Knowledge Base 2044 through 2047. No orphan, duplicate, or unreachable entries. The configured Neon URL has not been proven to be the deployed service's database, the current Railway login lacks project access, and a recoverable backup/isolated rehearsal is unverified. Do not use the standard runner for this KB-only task while Calendar 2043 remains pending.
+Latest read-only migration check, 2026-10-16: 1,174 applied of 1,182 journal entries, eight pending in order: unrelated Calendar 2043, Knowledge Base 2044 through 2047, unrelated Calendar 2048 and 2049, and unrelated Payroll 2050. No orphan, duplicate, or unreachable entries. Payroll 2050 was uncommitted in another session's working tree when observed. The configured Neon URL has not been proven to be the deployed service's database, the current Railway login lacks project access, and a recoverable backup/isolated rehearsal is unverified. Do not use the standard runner for this KB-only task while Calendar 2043 remains pending.
 
 KB-OPEN-072 source and focused-test update, 2026-10-16: the public page rewrites content media and cover keys through the broker without relying on `NEXT_PUBLIC_R2_PUBLIC_URL`. A pre-page cover upload can have a null attachment page ID. Backend `2cd842b1f` permits that attachment only when its key exactly matches the token-validated page's stored cover key, retaining the tenant, soft-delete, status, share, and malware gates. The public media ownership and attachment suites passed 17/17. Historical absolute cover URLs and real revocation/object replay still need verification.
 
