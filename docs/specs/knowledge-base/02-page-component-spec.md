@@ -258,6 +258,38 @@ Every collection uses cursor pagination unless it is explicitly bounded: recents
 
 **Acceptance:** queued, running, completed, failed, denied, and source-revoked states have an explicit recovery path. Reopening a queued or running brief resumes status polling; repeated retry or conversion does not duplicate work or pages.
 
+## 22. Knowledge Entry — `/knowledge`
+
+**Customer job:** reach the Knowledge product from one stable entry route.
+
+**Rules:** redirect to `/knowledge/chat`; the destination enforces the current session and KB entitlement. Record redirect use without disclosing the tenant or access state in the redirect response.
+
+**Acceptance:** permitted and unentitled actors land in their correct destination state, and the redirect is visible in live telemetry.
+
+## 23. Project Wiki Adapters — `/build/[projectId]/wiki`, `/build/[projectId]/wiki/[pageId]`, and `/build/[projectId]/wiki/[pageId]/history`
+
+**Customer job:** browse, edit, and inspect the history of project knowledge without leaving the project context.
+
+**Rules:** reuse the canonical wiki list, document, version, editor, and search interfaces. Bind every read, create, move, restore, citation, and attachment to the current project and actor. The project back path remains available; there is no second project page store.
+
+**Acceptance:** a member of another project cannot learn a page title, history, count, or attachment URL through an adapter. The three routes retain the shared loading, denied, error, empty, and edit-conflict behavior.
+
+## 24. Support Knowledge Management — `/support/kb` and `/support/kb/[articleId]`
+
+**Customer job:** maintain help content during the documented page cutover.
+
+**Rules:** keep the retained Support contract and its current callers until the migration reconciliation is signed. Any article-to-page identity mapping is explicit; an article id must not be interpreted as a page id. Publication remains a human action subject to the current audience policy.
+
+**Acceptance:** list and detail routes preserve authorized creation, editing, and publication during cutover. Remove a route only after caller, redirect, data, and rollback evidence in `06-code-removal-and-reuse.md` is complete.
+
+## 25. Public Help — `/help/[orgId]` and `/help/[orgId]/[articleSlug]`
+
+**Customer job:** find and read deliberately published help content without an authenticated session.
+
+**Rules:** project only public, published content for the requested organization. Public cache policy and rate limits are separate from authenticated Knowledge reads. A private title, count, snippet, attachment, or citation cannot be inferred through public search or an old slug.
+
+**Acceptance:** valid content, unknown slug, withdrawn content, and revoked public access have distinct safe outcomes; retained redirects resolve without exposing another tenant's content.
+
 ## Shared module inventory
 
 Reuse or deepen these modules before creating page-specific versions:

@@ -30,15 +30,16 @@ No destructive action or content mutation was used. Dynamic routes without a val
 | `/knowledge/wiki/doc/[pageId]/history` | KEEP | Observed heading + Source | Dedicated version destination | Add version list skeleton/error/empty, actor/time/change summary, diff, compare pair, guarded restore, current-version marker, cursor paging | P0 |
 | `/knowledge/wiki/search` | ADDED — now exists | Source 2026-09-27 | Route shipped since this row was written | Row said “Observed 404”; re-audit the shipped surface against its page contract | P0 |
 | `/knowledge/wiki/manage` | ADDED — now exists | Source 2026-09-27 | Route shipped since this row was written | Row said “Observed 404”; re-audit the shipped surface against its page contract | P1 |
-| `/knowledge/research-briefs`, `/knowledge/research-briefs/[briefId]` | MOVED — not to the path this row specifies | Source 2026-09-27 | List and detail shipped under Knowledge | Shipped at `/knowledge/research-briefs`, **not** `/knowledge/wiki/research-briefs`. Confirm the citation lifecycle and whether the old Support owner was removed | P1 |
-| `/knowledge/wiki/company-documents`, `/knowledge/wiki/company-documents/[linkedDocumentId]` | KEEP — was absent from this census | Source 2026-09-27 | Linked-document list and detail surfaces exist | Never audited. Needs a page contract, authorization review, bounded collection and state coverage | P1 |
-| `/support/knowledge-gaps` | KEEP — was absent from this census | Source 2026-09-27 | Knowledge-gap surface exists | Never audited. Confirm ownership between Support and Knowledge, and its authorization semantics | P1 |
+| `/knowledge/research-briefs`, `/knowledge/research-briefs/[briefId]` | KEEP at shipped path | Source 2026-10-16 | List and detail shipped under Knowledge; page contract in Step 2 | Confirm citation lifecycle and remove a former Support route only after caller proof | P1 |
+| `/knowledge/wiki/company-documents`, `/knowledge/wiki/company-documents/[linkedDocumentId]` | KEEP | Source 2026-10-16 | Linked-document list and detail exist; page contracts in Step 2 | Authorization, bounded collection, and browser state evidence remain | P1 |
+| `/support/knowledge-gaps` | KEEP | Source 2026-10-16 | Support-owned triage surface exists; page contract in Step 2 | Verify detection, draft, dismissal, and browser state through current routes | P1 |
 | `/build/[projectId]/wiki` | KEEP adapter | Source | Reuses wiki home | Scope every list/search/create/read by project; project back path; no duplicate data or editor | P0 |
 | `/build/[projectId]/wiki/[pageId]` | KEEP adapter | Source | Reuses document surface | Enforce project membership on every path; add history adapter | P0 |
+| `/build/[projectId]/wiki/[pageId]/history` | KEEP adapter | Source 2026-10-16 | History adapter route exists | Verify project membership and version access through the route | P0 |
 | `/wiki/[shareToken]` | KEEP | Source | Public token renderer and rate limiting exist | Prove 404 for invalid/revoked, no sibling/title leakage, accessible typography, optional feedback; expiry/password only after demand | P0/P2 |
 | `/support/kb/**` | DUAL-RUN then REMOVE/MIGRATE | Source | Existing help-centre CMS remains usable | Stop mixing article ids and page URLs; publish from pages or maintain explicit record kind until cutover | P1 |
 | `/help/**` | KEEP renderer | Source | Public help job is distinct | Reuse published page projections only after migration; keep public cache and analytics separate | P1 |
-| `/ask` | MERGE/REMOVE | Contract + Source | — | Redirect to `/knowledge/chat`, move callers, delete duplicate product surface | P0 |
+| `/ask` | REMOVED route candidate | Source 2026-10-16 | No `frontend/app/**/ask/page.tsx` route exists | Verify any external caller or promised redirect before closing cleanup | P0 |
 
 ## What already works well
 
