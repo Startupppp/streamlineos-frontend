@@ -53,7 +53,7 @@ export function PublicCalendarBookingPage() {
   const description = session?.copy.description ?? offering?.description;
 
   return (
-    <main className="surface-soft flex min-h-dvh items-start justify-center px-4 py-8 sm:py-12">
+    <main lang={session?.locale} className="surface-soft flex min-h-dvh items-start justify-center px-4 py-8 sm:py-12">
       <div className="w-full max-w-3xl">
         <div
           className="gradient-brand rounded-t-2xl px-6 py-8 text-center text-white shadow-noir"
