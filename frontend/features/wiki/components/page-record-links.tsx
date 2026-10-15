@@ -96,7 +96,7 @@ export function PageRecordLinks({ pageId }: PageRecordLinksProps) {
   const [targetId, setTargetId] = useState("");
   const [label, setLabel] = useState("");
 
-  const { data: links = [] } = useKbPageRecordLinks(pageId);
+  const { data: links = [], hasNextPage, fetchNextPage, isFetchingNextPage } = useKbPageRecordLinks(pageId);
   const addLink = useAddKbPageRecordLink();
   const removeLink = useRemoveKbPageRecordLink();
 
@@ -155,6 +155,16 @@ export function PageRecordLinks({ pageId }: PageRecordLinksProps) {
             />
           ))}
         </div>
+      )}
+      {hasNextPage && (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => void fetchNextPage()}
+          disabled={isFetchingNextPage}
+        >
+          {isFetchingNextPage ? "Loading…" : "Load more linked records"}
+        </Button>
       )}
       {canUpdate && (
         <div className="space-y-2 pt-1">

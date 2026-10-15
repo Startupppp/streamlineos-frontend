@@ -83,7 +83,7 @@ function Stat({
 
 function PanelContent({ pageId, page, wordCount, onNavigate }: PanelContentProps) {
   const { data: backlinks = [] } = useKbPageBacklinks(pageId);
-  const { data: recordLinks = [] } = useKbPageRecordLinks(pageId);
+  const { data: recordLinks = [], hasNextPage: hasMoreRecordLinks } = useKbPageRecordLinks(pageId);
   const memberIds = [page.lastEditedById, page.ownerUserId].filter(
     (id): id is string => id !== null && id !== undefined,
   );
@@ -190,7 +190,7 @@ function PanelContent({ pageId, page, wordCount, onNavigate }: PanelContentProps
       <section className="border-t border-border/70 pt-4">
         <div className="mb-2 flex items-baseline justify-between gap-2">
           <h3 className="text-sm font-medium text-foreground">Linked records</h3>
-          <span className="text-xs tabular-nums text-muted-foreground">{recordLinks.length}</span>
+          <span className="text-xs tabular-nums text-muted-foreground">{recordLinks.length}{hasMoreRecordLinks ? "+" : ""}</span>
         </div>
         {recordLinks.length === 0 ? (
           <p className="text-xs text-muted-foreground">No linked records.</p>
@@ -205,7 +205,7 @@ function PanelContent({ pageId, page, wordCount, onNavigate }: PanelContentProps
             </ul>
             {recordLinks.length > RECORD_LINK_DISPLAY_LIMIT ? (
               <p className="mt-1 px-1.5 text-xs text-muted-foreground">
-                +{recordLinks.length - RECORD_LINK_DISPLAY_LIMIT} more
+                +{recordLinks.length - RECORD_LINK_DISPLAY_LIMIT}{hasMoreRecordLinks ? "+" : ""} more
               </p>
             ) : null}
           </>
