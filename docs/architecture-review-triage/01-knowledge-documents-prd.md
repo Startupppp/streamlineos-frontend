@@ -44,6 +44,7 @@ Documents owns source identity, audience, versions and safe file retrieval. Know
 - [ ] KD-14 production predicate test
 
 - [ ] KD-D1: public Ask rate, spend and abuse limits; prove unauthenticated request cost is bounded.
+  - 2026-10-16 partial evidence: backend `9c0a81b58` makes the public Ask organization budget fail closed with 503 when Redis is unavailable, before retrieval or provider work on both JSON and streaming routes; 34 focused tests passed. The existing per-IP guard, org tier and credit reservation are present in source. Live rate, credit-spend and abuse measurements remain open.
 - [ ] KD-D2: newly created page indexing and retry visibility.
 - [ ] KD-D3: HR metadata PII gate after publish and citation replay.
 - [ ] KD-D4: trash purge progress for replicas and interruption recovery.
