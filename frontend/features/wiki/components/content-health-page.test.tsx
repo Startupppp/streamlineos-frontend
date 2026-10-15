@@ -1,4 +1,5 @@
 import { render as rtlRender, screen, fireEvent } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import type { ReactElement } from "react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
@@ -193,6 +194,29 @@ describe("ContentHealthPage — populated state", () => {
     render(<ContentHealthPage />);
     expect(screen.getByRole("button", { name: /dismiss/i })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Policy Draft" })).toBeInTheDocument();
+  });
+});
+
+describe("ContentHealthPage — bulk repair dialog", () => {
+  it("names and describes the dialog, then closes on Escape while preserving the selected page", async () => {
+    const user = userEvent.setup();
+    render(<ContentHealthPage />);
+
+    await user.click(screen.getByRole("checkbox", { name: "Select Policy Draft" }));
+    const trigger = screen.getByRole("button", { name: "Bulk repair (1)" });
+    await user.click(trigger);
+
+    const dialog = screen.getByRole("dialog", { name: "Bulk repair — 1 page" });
+    expect(dialog).toHaveAccessibleDescription(
+      "Choose the action to apply to the selected pages.",
+    );
+
+    await user.keyboard("{Escape}");
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(trigger).toBeInTheDocument();
+    expect(trigger).toHaveFocus();
+    expect(screen.getByRole("checkbox", { name: "Select Policy Draft" })).toBeChecked();
   });
 });
 

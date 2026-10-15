@@ -13,6 +13,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -222,6 +230,7 @@ interface BulkRepairDialogProps {
   selectedIds: number[];
   activeSignal: ContentHealthSignalType;
   onClose: () => void;
+  onSuccess: () => void;
 }
 
 const REPAIR_ACTIONS = [
@@ -232,7 +241,7 @@ const REPAIR_ACTIONS = [
 
 type RepairAction = (typeof REPAIR_ACTIONS)[number]["value"];
 
-function BulkRepairDialog({ selectedIds, activeSignal, onClose }: BulkRepairDialogProps) {
+function BulkRepairDialog({ selectedIds, activeSignal, onClose, onSuccess }: BulkRepairDialogProps) {
   const bulkRepair = useBulkRepairHealthItems();
   const [repairAction, setRepairAction] = useState<RepairAction>("request_review");
 
@@ -248,7 +257,7 @@ function BulkRepairDialog({ selectedIds, activeSignal, onClose }: BulkRepairDial
         onSuccess: (result) => {
           const count = result.results.filter((r) => r.outcome === "applied").length;
           toast.success(`Repaired ${count} pages`);
-          onClose();
+          onSuccess();
         },
         onError: (err) => {
           toast.error(getErrorMessage(err));
@@ -257,12 +266,21 @@ function BulkRepairDialog({ selectedIds, activeSignal, onClose }: BulkRepairDial
     );
   }
 
+  function handleOpenChange(open: boolean) {
+    if (!open) onClose();
+  }
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="bg-card border border-border rounded-xl shadow-xl p-6 w-full max-w-sm space-y-4">
-        <h2 className="text-sm font-semibold text-foreground">
-          Bulk repair — {selectedIds.length} pages
-        </h2>
+    <Dialog open onOpenChange={handleOpenChange}>
+      <DialogContent className="md:max-w-sm">
+        <DialogHeader>
+          <DialogTitle>
+            Bulk repair — {selectedIds.length} {selectedIds.length === 1 ? "page" : "pages"}
+          </DialogTitle>
+          <DialogDescription>
+            Choose the action to apply to the selected pages.
+          </DialogDescription>
+        </DialogHeader>
         <Select
           value={repairAction}
           onValueChange={handleRepairActionChange}
@@ -278,7 +296,7 @@ function BulkRepairDialog({ selectedIds, activeSignal, onClose }: BulkRepairDial
             ))}
           </SelectContent>
         </Select>
-        <div className="flex items-center gap-2 justify-end pt-2">
+        <DialogFooter>
           <Button type="button" variant="outline" size="sm" className="text-xs h-7" onClick={onClose}>
             Cancel
           </Button>
@@ -292,9 +310,9 @@ function BulkRepairDialog({ selectedIds, activeSignal, onClose }: BulkRepairDial
           >
             Confirm
           </LoadingButton>
-        </div>
-      </div>
-    </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -466,6 +484,10 @@ export default function ContentHealthPage() {
   }
 
   function handleBulkRepairClose() {
+    setBulkRepairOpen(false);
+  }
+
+  function handleBulkRepairSuccess() {
     setBulkRepairOpen(false);
     setSelectedIds(new Set());
   }
@@ -703,6 +725,7 @@ export default function ContentHealthPage() {
           selectedIds={Array.from(selectedIds)}
           activeSignal={activeSignal}
           onClose={handleBulkRepairClose}
+          onSuccess={handleBulkRepairSuccess}
         />
       )}
     </PageWrapper>
