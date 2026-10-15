@@ -100,7 +100,7 @@ jest.mock("@/lib/knowledge-routes", () => ({
 
 jest.mock("@/features/wiki/lib/starter-templates", () => ({
   STARTER_TEMPLATES: [],
-  STARTER_TEMPLATE_CATEGORIES: [],
+  STARTER_TEMPLATE_CATEGORIES: ["Process & Operations", "Meetings & Decisions"],
   deriveContentText: jest.fn(() => ""),
 }));
 
@@ -188,6 +188,24 @@ describe("TemplatesPage — URL search across tabs", () => {
     view.rerender(<TemplatesPage />);
 
     expect(screen.getByRole("searchbox", { name: "Search templates" })).toHaveValue("second");
+  });
+
+  it("names the category filter and applies its URL value independently of search", () => {
+    STARTER_TEMPLATES.push(
+      makeStarter("operations", "Operations guide", "A maintenance runbook"),
+      {
+        ...makeStarter("decision", "Decision record", "A recorded decision"),
+        category: "Meetings & Decisions",
+      },
+    );
+    mockSearchParams = new URLSearchParams("category=Meetings+%26+Decisions");
+    useKbPageTemplates.mockReturnValue({ data: [], isLoading: false, isError: false });
+
+    render(<TemplatesPage />);
+
+    expect(screen.getByRole("combobox", { name: "Filter templates by category" })).toBeInTheDocument();
+    expect(screen.getByTestId("starter-decision")).toBeInTheDocument();
+    expect(screen.queryByTestId("starter-operations")).not.toBeInTheDocument();
   });
 });
 describe("TemplatesPage sentinel (saved tab)", () => {

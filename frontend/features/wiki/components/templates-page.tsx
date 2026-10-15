@@ -237,7 +237,7 @@ export default function TemplatesPage() {
         <TabsContent value="starters" className={TABS_CONTENT_PAGE_BODY_CLASS}>
           <div className="mb-3 flex items-center gap-2">
             <Select value={activeCategory} onValueChange={handleCategoryChange}>
-              <SelectTrigger className="w-[220px]">
+              <SelectTrigger className="w-[220px]" aria-label="Filter templates by category">
                 <SelectValue placeholder="All categories" />
               </SelectTrigger>
               <SelectContent>

@@ -45,7 +45,9 @@ export function TemplatePreviewDialog({
       }
     >
       <div className="space-y-3">
+        <h2 className="text-sm font-medium text-foreground">Expected output</h2>
         <p className="text-sm text-muted-foreground">{template.expectedOutput}</p>
+        <h2 className="text-sm font-medium text-foreground">Preview</h2>
         <div className="rounded-lg border border-border bg-muted/20 p-3 space-y-1.5">
           {template.content.children.map((block, index) => {
             const text = blockText(block.children);

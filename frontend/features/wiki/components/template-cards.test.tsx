@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { TemplateCard } from "./template-cards";
+import { TemplatePreviewDialog } from "./template-preview-dialog";
 import type { KbPageTemplate } from "@/hooks/api/kb/page-templates";
 
 jest.mock("@/hooks/api/kb", () => ({
@@ -66,5 +67,34 @@ describe("TemplateCard usage metadata", () => {
 
     expect(screen.getByText(/never used/i)).toBeInTheDocument();
     expect(screen.queryByText(/last used/i)).not.toBeInTheDocument();
+  });
+});
+
+describe("TemplatePreviewDialog", () => {
+  it("labels the expected output and previews the starter content", () => {
+    render(
+      <TemplatePreviewDialog
+        template={{
+          key: "meeting-notes",
+          name: "Meeting Notes",
+          icon: "📝",
+          description: "Capture meeting outcomes",
+          category: "Meetings & Decisions",
+          expectedOutput: "A page with Decisions and Action Items sections.",
+          content: {
+            type: "doc",
+            children: [{ type: "h2", children: [{ text: "Decisions" }] }],
+          },
+        }}
+        onOpenChange={jest.fn()}
+        onUse={jest.fn()}
+        isPending={false}
+      />,
+    );
+
+    expect(screen.getByRole("heading", { name: "Expected output" })).toBeInTheDocument();
+    expect(screen.getByText("A page with Decisions and Action Items sections.")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Preview" })).toBeInTheDocument();
+    expect(screen.getByText("Decisions")).toBeInTheDocument();
   });
 });
