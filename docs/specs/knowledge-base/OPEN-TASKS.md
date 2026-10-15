@@ -230,6 +230,7 @@ KB-OPEN-074 source update, 2026-10-16: frontend `fb1e2b928` now calls `recordLeg
 - [ ] **KB-OPEN-068** **BLOCKED:** Provider context contains only authorized passages; document content is data, never instruction AV-04: prompt injection protection verification requires running the AI path in a live environment. BLOCKED.
   - Previous consolidated ID: `KB-OPEN-297`
 - [ ] **KB-OPEN-069** **BLOCKED:** Remove confidence percentages, uncited prose, hidden auto-selected sources, drafts in browser storage AV-04: browser UI verification required. BLOCKED.
+  - 2026-10-16 source progress: frontend `0ce5c44df` shows the default Ask scope as “Searching all accessible knowledge” with Edit before send, so broad automatic selection is visible. Focused scope tests passed 16/16. Current Ask source has no confidence percentage or prompt local/session storage use. Citation completeness and browser presentation/privacy remain open.
   - Previous consolidated ID: `KB-OPEN-298`
 - [ ] **KB-OPEN-070** **BLOCKED:** Accessible reading typography; brand-light header; last updated; optional helpful feedback Browser verification required. BLOCKED.
   - Previous consolidated ID: `KB-OPEN-299`
