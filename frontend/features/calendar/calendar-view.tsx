@@ -26,7 +26,6 @@ import type { CalendarListItem } from "@/hooks/api/calendar";
 import type { CalendarSearchResponse } from "@/hooks/api/calendar-types";
 import {
   CalendarAgendaPreview,
-  CalendarEventDetailFallback,
   CalendarListFallback,
   CalendarLoadingStatus,
   CalendarSheetFallback,
@@ -77,6 +76,9 @@ import type {
   CalendarOfflineIntent,
 } from "./calendar-offline-intent";
 import type { CalendarScenarioDraftStep } from "./calendar-scenario-draft";
+import { EventDetailSheet } from "./event-detail-sheet";
+import { ExternalEventDetailSheet } from "./external-event-detail-sheet";
+import { HrEventDetailSheet } from "./hr-event-detail-sheet";
 
 const CalendarGridLayer = dynamic(
   () =>
@@ -106,39 +108,6 @@ const loadEventCreateDialog = () =>
   }));
 
 const EventCreateDialog = dynamic(loadEventCreateDialog, { ssr: false });
-
-const EventDetailSheet = dynamic(
-  () =>
-    import("./event-detail-sheet").then((m) => ({
-      default: m.EventDetailSheet,
-    })),
-  {
-    ssr: false,
-    loading: () => <CalendarEventDetailFallback label="Loading event" />,
-  },
-);
-
-const ExternalEventDetailSheet = dynamic(
-  () =>
-    import("./external-event-detail-sheet").then((m) => ({
-      default: m.ExternalEventDetailSheet,
-    })),
-  {
-    ssr: false,
-    loading: () => <CalendarEventDetailFallback label="Loading event" />,
-  },
-);
-
-const HrEventDetailSheet = dynamic(
-  () =>
-    import("./hr-event-detail-sheet").then((m) => ({
-      default: m.HrEventDetailSheet,
-    })),
-  {
-    ssr: false,
-    loading: () => <CalendarEventDetailFallback label="Loading event" />,
-  },
-);
 
 const CalendarAccountsSheet = dynamic(
   () =>
