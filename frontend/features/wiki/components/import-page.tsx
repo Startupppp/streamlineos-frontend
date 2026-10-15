@@ -44,6 +44,7 @@ const VALID_TABS = ["import", "export"] as const;
 type ImportExportTab = (typeof VALID_TABS)[number];
 
 const MAX_FILE_BYTES = 5 * 1024 * 1024;
+const SUPPORTED_FILE_NAME = /\.(md|markdown|txt)$/i;
 
 function resolveTab(tabParam: string | null): ImportExportTab {
   return VALID_TABS.find((t) => t === tabParam) ?? "import";
@@ -173,14 +174,23 @@ export default function ImportPage() {
       const files = Array.from(e.target.files ?? []);
       if (files.length === 0) return;
 
-      const oversized = files.filter((f) => f.size > MAX_FILE_BYTES);
+      const unsupported = files.filter((file) => !SUPPORTED_FILE_NAME.test(file.name));
+      if (unsupported.length > 0) {
+        toast.error(
+          `${unsupported.length} unsupported file${unsupported.length === 1 ? " was" : "s were"} skipped: ${unsupported.map((file) => file.name).join(", ")}. Choose .md, .markdown or .txt files.`,
+        );
+      }
+
+      const supported = files.filter((file) => SUPPORTED_FILE_NAME.test(file.name));
+
+      const oversized = supported.filter((file) => file.size > MAX_FILE_BYTES);
       if (oversized.length > 0) {
         toast.error(
           `${oversized.length} file${oversized.length === 1 ? "" : "s"} exceed the 5 MB limit and were skipped: ${oversized.map((f) => f.name).join(", ")}`,
         );
       }
 
-      const validFiles = files.filter((f) => f.size <= MAX_FILE_BYTES);
+      const validFiles = supported.filter((file) => file.size <= MAX_FILE_BYTES);
       const remaining = 100 - items.length;
       const toProcess = validFiles.slice(0, remaining);
 

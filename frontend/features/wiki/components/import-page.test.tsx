@@ -1,6 +1,14 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import ImportPage from "./import-page";
+
+jest.mock("sonner", () => ({
+  toast: { error: jest.fn(), success: jest.fn(), info: jest.fn() },
+}));
+
+const { toast } = jest.requireMock("sonner") as {
+  toast: { error: jest.Mock };
+};
 
 const mockReplace = jest.fn();
 let mockSearchParams = new URLSearchParams();
@@ -59,6 +67,7 @@ jest.mock("@/hooks/api/kb", () => ({
 describe("ImportPage — Import / Export tabs", () => {
   beforeEach(() => {
     mockReplace.mockClear();
+    toast.error.mockClear();
     mockSearchParams = new URLSearchParams();
   });
 
@@ -108,6 +117,28 @@ describe("ImportPage — Import / Export tabs", () => {
     expect(mockReplace).toHaveBeenCalledWith(
       "/knowledge/wiki/import?tab=export",
       { scroll: false },
+    );
+  });
+
+  it("skips unsupported file formats even when a file input supplies them directly", async () => {
+    const { container } = render(<ImportPage />);
+    const input = container.querySelector('input[type="file"]');
+    expect(input).not.toBeNull();
+
+    fireEvent.change(input!, {
+      target: {
+        files: [
+          new File(["# Guide"], "guide.MD", { type: "text/markdown" }),
+          new File(["binary"], "diagram.png", { type: "image/png" }),
+        ],
+      },
+    });
+
+    expect(await screen.findByText("1/100 files loaded")).toBeInTheDocument();
+    expect(screen.getByText("guide")).toBeInTheDocument();
+    expect(screen.queryByText("diagram")).not.toBeInTheDocument();
+    expect(toast.error).toHaveBeenCalledWith(
+      expect.stringContaining("diagram.png"),
     );
   });
 });
