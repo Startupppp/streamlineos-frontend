@@ -17,7 +17,6 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Skeleton } from "@/components/ui/skeleton";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { useEventAttendees, type CalendarEventDetail, type CalendarListItem } from "@/hooks/api/calendar";
 import { cn, resolveImageUrl } from "@/lib/utils";
@@ -122,8 +121,8 @@ export function EventDetailContent({
     pendingRsvp && pendingRsvp.eventId === numericEventId
       ? pendingRsvp.status
       : serverRsvp;
-  const description = (isCalendarEvent ? detail?.description : event?.description) ?? null;
-  const creatorName = (isCalendarEvent ? detail?.creatorName : event?.creatorName) ?? null;
+  const description = (isCalendarEvent && !detailLoading ? detail?.description : event?.description) ?? null;
+  const creatorName = (isCalendarEvent && !detailLoading ? detail?.creatorName : event?.creatorName) ?? null;
   const rsvpBusy = deleteEventIsPending || rsvpMutationIsPending;
 
   const chooseRsvp = useCallback(
@@ -156,17 +155,13 @@ export function EventDetailContent({
                 )}
               </DetailFact>
             ) : null}
-            {detailLoading && isCalendarEvent ? (
-              <Skeleton className="h-11 w-full rounded-xl" />
-            ) : detail?.meetingUrl ? (
+            {detail?.meetingUrl ? (
               <JoinMeetingLink href={detail.meetingUrl} />
             ) : null}
-            {detailLoading && isCalendarEvent ? (
-              <Skeleton className="h-16 w-full rounded-xl" />
-            ) : description ? (
+            {description ? (
               <p className="text-sm leading-relaxed text-foreground">{description}</p>
             ) : null}
-            {detailLoading && isCalendarEvent ? null : creatorName ? (
+            {creatorName ? (
               <DetailFact index={1} icon={UserRound} well="bg-muted text-foreground">
                 <span>
                   Created by <span className="font-medium">{creatorName}</span>
@@ -178,16 +173,14 @@ export function EventDetailContent({
                 <DetailFact index={2} icon={Ticket} well="bg-status-info-surface text-status-info-ink">
                   <span className="font-medium">Linked ticket</span>
                 </DetailFact>
-                {detailLoading && isCalendarEvent ? (
-                  <Skeleton className="h-10 w-full rounded-lg" />
-                ) : (
+                {!detailLoading || !isCalendarEvent ? (
                   <LinkedTicketRow
                     linkedTicket={detail?.linkedTicket ?? null}
                     canUpdate={canUpdate}
                     onClose={onClose}
                     onRequestUnlink={onRequestUnlink}
                   />
-                )}
+                ) : null}
               </div>
             ) : null}
             {isCalendarEvent ? (
