@@ -273,7 +273,15 @@ describe("ImportPage — Import / Export tabs", () => {
         id: 9,
         status: "failed",
         failedItems: 1,
-        errorReport: { failedTitles: ["Failed Guide"] },
+        errorReport: {
+          failedTitles: ["Failed Guide"],
+          itemErrors: [{
+            index: 0,
+            title: "Failed Guide",
+            code: "INVALID_SPACE",
+            reason: "Choose an existing space and import again.",
+          }],
+        },
       } : undefined,
     }));
 
@@ -284,6 +292,8 @@ describe("ImportPage — Import / Export tabs", () => {
     await user.click(screen.getByRole("button", { name: "Import 1 page" }));
 
     expect(screen.getByText("Failed Guide")).toBeInTheDocument();
+    expect(screen.getByText("Item 1:")).toBeInTheDocument();
+    expect(screen.getByText("Choose an existing space and import again.")).toBeInTheDocument();
     expect(toast.error).toHaveBeenCalledWith("Import failed — 1 page could not be imported");
   });
 });

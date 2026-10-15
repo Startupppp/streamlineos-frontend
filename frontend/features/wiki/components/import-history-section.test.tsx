@@ -150,6 +150,39 @@ describe("ImportHistorySection failed items", () => {
     expect(screen.getByText("Policy B")).toBeInTheDocument();
   });
 
+  it("keeps repeated failed titles distinct by original item index and shows safe reasons", async () => {
+    useKbImportJobs.mockReturnValue({
+      data: [{
+        ...mockJob,
+        succeededItems: 1,
+        failedItems: 2,
+        errorReport: {
+          failedTitles: ["Policy", "Policy"],
+          itemErrors: [
+            { index: 0, title: "Policy", code: "INVALID_PARENT", reason: "Choose an existing parent and import again." },
+            { index: 2, title: "Policy", code: "WRITE_FAILED", reason: "The page could not be saved." },
+          ],
+        },
+      }],
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+      hasNextPage: false,
+      isFetchingNextPage: false,
+      fetchNextPage: jest.fn(),
+    });
+
+    render(<ImportHistorySection />);
+    await userEvent.click(screen.getByText("2 failed pages"));
+
+    expect(screen.getAllByText("Policy")).toHaveLength(2);
+    expect(screen.getByText("Item 1:")).toBeInTheDocument();
+    expect(screen.getByText("Item 3:")).toBeInTheDocument();
+    expect(screen.getByText("Choose an existing parent and import again.")).toBeInTheDocument();
+    expect(screen.getByText("The page could not be saved.")).toBeInTheDocument();
+  });
+
   it("offers Retry only when the server marks the failed job eligible", async () => {
     useKbImportJobs.mockReturnValue({
       data: [

@@ -39,7 +39,11 @@ import {
   type ImportPendingItem,
 } from "./import-pending-list";
 import { ImportDryRunCard } from "./import-dry-run-card";
-import { ImportFailedTitlesAlert } from "./import-failed-titles-alert";
+import {
+  ImportFailedTitlesAlert,
+  failedItemsFromReport,
+  type ImportFailedItem,
+} from "./import-failed-titles-alert";
 import { ImportFormControls } from "./import-form-controls";
 
 const VALID_TABS = ["import", "export"] as const;
@@ -51,13 +55,6 @@ const SUPPORTED_FILE_NAME = /\.(md|markdown|txt)$/i;
 
 function resolveTab(tabParam: string | null): ImportExportTab {
   return VALID_TABS.find((t) => t === tabParam) ?? "import";
-}
-
-function failedTitlesFromReport(report: Record<string, unknown> | null): string[] {
-  const raw = report?.["failedTitles"];
-  return Array.isArray(raw)
-    ? raw.filter((title): title is string => typeof title === "string")
-    : [];
 }
 
 export default function ImportPage() {
@@ -92,7 +89,7 @@ export default function ImportPage() {
   const [dryRunResult, setDryRunResult] = useState<ImportDryRunResult | null>(
     null,
   );
-  const [completedFailedTitles, setCompletedFailedTitles] = useState<string[]>(
+  const [completedFailedItems, setCompletedFailedItems] = useState<ImportFailedItem[]>(
     [],
   );
 
@@ -114,8 +111,8 @@ export default function ImportPage() {
   useEffect(() => {
     if (!activeJob) return;
     if (activeJob.status === "completed") {
-      const titles = failedTitlesFromReport(activeJob.errorReport);
-      if (titles.length > 0) setCompletedFailedTitles(titles);
+      const failedItems = failedItemsFromReport(activeJob.errorReport);
+      if (failedItems.length > 0) setCompletedFailedItems(failedItems);
       const partialCounts = [
         activeJob.duplicateItems > 0 ? `${activeJob.duplicateItems} skipped` : null,
         activeJob.failedItems > 0 ? `${activeJob.failedItems} failed` : null,
@@ -132,11 +129,11 @@ export default function ImportPage() {
       setItems([]);
       setActiveJobId(null);
     } else if (activeJob.status === "failed") {
-      const failedTitles = failedTitlesFromReport(activeJob.errorReport);
-      if (failedTitles.length > 0) setCompletedFailedTitles(failedTitles);
+      const failedItems = failedItemsFromReport(activeJob.errorReport);
+      if (failedItems.length > 0) setCompletedFailedItems(failedItems);
       toast.error(
-        failedTitles.length > 0
-          ? `Import failed — ${failedTitles.length} page${failedTitles.length === 1 ? "" : "s"} could not be imported`
+        failedItems.length > 0
+          ? `Import failed — ${failedItems.length} page${failedItems.length === 1 ? "" : "s"} could not be imported`
           : "Import failed",
       );
       setActiveJobId(null);
@@ -288,7 +285,7 @@ export default function ImportPage() {
   }
   function handleClearAll() {
     setItems([]);
-    setCompletedFailedTitles([]);
+    setCompletedFailedItems([]);
   }
   function handleTargetSpaceChange(value: string) {
     setTargetSpaceId(value);
@@ -308,7 +305,7 @@ export default function ImportPage() {
     setDryRunResult(null);
   }
   function handleDismissFailedTitles() {
-    setCompletedFailedTitles([]);
+    setCompletedFailedItems([]);
   }
 
   function handleDryRun() {
@@ -332,7 +329,7 @@ export default function ImportPage() {
 
   function handleImport() {
     if (items.length === 0) return;
-    setCompletedFailedTitles([]);
+    setCompletedFailedItems([]);
     const parentId =
       targetParentPageId !== "none" ? Number(targetParentPageId) : undefined;
     importMutation.mutate(
@@ -485,9 +482,9 @@ export default function ImportPage() {
               exists.
             </p>
 
-            {completedFailedTitles.length > 0 ? (
+            {completedFailedItems.length > 0 ? (
               <ImportFailedTitlesAlert
-                titles={completedFailedTitles}
+                items={completedFailedItems}
                 onDismiss={handleDismissFailedTitles}
               />
             ) : null}

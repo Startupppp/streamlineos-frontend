@@ -72,4 +72,31 @@ describe("kb import/export job list contracts", () => {
       pagination,
     }).data[0]?.canRetry).toBe(true);
   });
+
+  it("parses indexed safe item reasons and strips unrelated report details", () => {
+    const parsed = kbImportJobListPageContract.parse({
+      data: [{
+        ...importJob,
+        failedItems: 2,
+        errorReport: {
+          failedTitles: ["Policy", "Policy"],
+          itemErrors: [
+            { index: 0, title: "Policy", code: "INVALID_PARENT", reason: "Choose an existing parent and import again." },
+            { index: 2, title: "Policy", code: "WRITE_FAILED", reason: "The page could not be saved." },
+          ],
+          rawError: "database detail must not reach the UI",
+          retryItems: [{ contentText: "private draft" }],
+        },
+      }],
+      pagination,
+    });
+
+    expect(parsed.data[0]?.errorReport).toEqual({
+      failedTitles: ["Policy", "Policy"],
+      itemErrors: [
+        { index: 0, title: "Policy", code: "INVALID_PARENT", reason: "Choose an existing parent and import again." },
+        { index: 2, title: "Policy", code: "WRITE_FAILED", reason: "The page could not be saved." },
+      ],
+    });
+  });
 });

@@ -36,6 +36,18 @@ export type ImportDryRunResult = {
   invalidItems: string[];
 };
 
+export type KbImportItemError = {
+  index: number;
+  title: string;
+  code: "INVALID_PARENT" | "INVALID_SPACE" | "DUPLICATE_REFERENCE" | "WRITE_FAILED";
+  reason: string;
+};
+
+export type KbImportErrorReport = {
+  failedTitles?: string[];
+  itemErrors?: KbImportItemError[];
+};
+
 export type KbImportJob = {
   id: number;
   orgId: string;
@@ -48,7 +60,7 @@ export type KbImportJob = {
   failedItems: number;
   duplicateItems: number;
   canRetry: boolean;
-  errorReport: Record<string, unknown> | null;
+  errorReport: KbImportErrorReport | null;
   createdById: string | null;
   createdAt: string;
   updatedAt: string;

@@ -18,6 +18,7 @@ import { KbFileTextIcon } from "@/features/wiki/lib/kb-icons";
 import { kbTimeAgo } from "@/features/wiki/lib/kb-date-utils";
 import { importJobDisplayName } from "@/features/wiki/lib/import-job-label";
 import type { KbImportJob } from "@/hooks/api/kb/import-export";
+import { failedItemsFromReport, ImportFailedItemsList } from "./import-failed-titles-alert";
 
 interface ImportJobRowProps {
   job: KbImportJob;
@@ -27,10 +28,7 @@ interface ImportJobRowProps {
 }
 
 function ImportJobRow({ job, retryDisabled, retryPending, onRetry }: ImportJobRowProps) {
-  const rawFailedTitles = job.errorReport?.["failedTitles"];
-  const failedTitles = Array.isArray(rawFailedTitles)
-    ? rawFailedTitles.filter((title): title is string => typeof title === "string")
-    : [];
+  const failedItems = failedItemsFromReport(job.errorReport);
 
   function handleRetry() {
     onRetry(job.id);
@@ -60,16 +58,14 @@ function ImportJobRow({ job, retryDisabled, retryPending, onRetry }: ImportJobRo
           {kbTimeAgo(job.createdAt)}
         </span>
       </div>
-      {failedTitles.length > 0 ? (
+      {failedItems.length > 0 ? (
         <details className="mt-2 text-xs">
           <summary className="cursor-pointer text-destructive">
-            {failedTitles.length} failed page{failedTitles.length === 1 ? "" : "s"}
+            {failedItems.length} failed page{failedItems.length === 1 ? "" : "s"}
           </summary>
-          <ul className="mt-2 list-disc space-y-1 pl-5 text-muted-foreground">
-            {failedTitles.map((title, index) => (
-              <li key={`${title}-${index}`}>{title}</li>
-            ))}
-          </ul>
+          <div className="mt-2 pl-5">
+            <ImportFailedItemsList items={failedItems} />
+          </div>
         </details>
       ) : null}
       {job.canRetry ? (

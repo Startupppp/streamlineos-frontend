@@ -1,5 +1,17 @@
 import { z } from "zod";
 
+const kbImportItemErrorContract = z.object({
+  index: z.number().int().nonnegative(),
+  title: z.string(),
+  code: z.enum(["INVALID_PARENT", "INVALID_SPACE", "DUPLICATE_REFERENCE", "WRITE_FAILED"]),
+  reason: z.string(),
+});
+
+const kbImportErrorReportContract = z.object({
+  failedTitles: z.array(z.string()).optional(),
+  itemErrors: z.array(kbImportItemErrorContract).optional(),
+});
+
 export const kbImportJobContract = z.object({
   id: z.number().int(),
   orgId: z.string(),
@@ -12,7 +24,7 @@ export const kbImportJobContract = z.object({
   failedItems: z.number().int(),
   duplicateItems: z.number().int(),
   canRetry: z.boolean(),
-  errorReport: z.record(z.string(), z.unknown()).nullable(),
+  errorReport: kbImportErrorReportContract.nullable(),
   createdById: z.string().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
