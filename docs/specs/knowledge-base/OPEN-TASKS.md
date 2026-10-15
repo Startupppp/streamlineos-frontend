@@ -209,6 +209,7 @@ KB-OPEN-074 source update, 2026-10-16: frontend `fb1e2b928` now calls `recordLeg
   - Previous consolidated ID: `KB-OPEN-281`
 - [ ] **KB-OPEN-053** **BLOCKED:** Using a template goes through the same page-create command and returns an editable page `kb-page-template-usage.spec.ts` exists; requires running the spec and tracing the create flow to confirm.
   - 2026-10-16 source and focused-test correction: the template UI passes `templateId` through `useCreateKbPage`, then navigates to the returned page id; the backend page-create command loads the tenant template and returns the new page. Template suites passed 20/20. Browser navigation and editable result remain open.
+  - Frontend `72eee7db4` passes the starter template's Plate children to the page content update; the created page normalizes to readable editor text in the focused test. If the content update fails after page creation, the UI keeps the created page id and offers a retry on that page instead of navigating to blank content. Focused template suites passed 12/12. Browser rendering and retry remain open.
   - Previous consolidated ID: `KB-OPEN-282`
 - [ ] **KB-OPEN-054** **BLOCKED:** Separately gated import/export tabs AV-10: browser verification required.
   - 2026-10-16 source and focused-test update: frontend `2504ae249` keeps both tabs in a loading state until access resolves and falls back only on explicit denial; Import and gating suites passed 17/17. The real role and browser transition remain open.
