@@ -19,7 +19,7 @@ export type KbPageTemplate = {
   name: string;
   icon: string | null;
   description: string | null;
-  content: Record<string, unknown> | null;
+  content: Record<string, unknown> | Record<string, unknown>[] | null;
   createdById: string | null;
   createdByName: string | null;
   useCount: number;

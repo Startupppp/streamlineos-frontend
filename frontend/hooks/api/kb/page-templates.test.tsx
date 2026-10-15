@@ -31,6 +31,8 @@ jest.mock("@/hooks/api/cursor-page-schema", () => ({
 }));
 
 import { useKbPageTemplates } from "./page-templates";
+import { parseApiResponse } from "@/lib/api-envelope";
+import { kbPageTemplateListPageContract } from "./kb-templates-schema";
 
 const PAGINATION = { limit: 50, hasMore: false, nextCursor: null };
 
@@ -64,6 +66,30 @@ beforeEach(() => {
 });
 
 describe("useKbPageTemplates — wire-shape is visible through selectFlatPages", () => {
+  it("parses an HTTP 200 template list with Plate blocks from the response envelope", async () => {
+    const blocks = [{ type: "p", children: [{ text: "Meeting agenda" }] }];
+    const wire = JSON.stringify({
+      success: true,
+      data: {
+        data: [{ ...TEMPLATE, content: blocks }],
+        pagination: PAGINATION,
+      },
+    });
+
+    const parsed = await parseApiResponse(
+      {
+        ok: true,
+        status: 200,
+        statusText: "OK",
+        json: async () => JSON.parse(wire),
+      },
+      kbPageTemplateListPageContract,
+      "/kb/page-templates",
+    );
+
+    expect(parsed.data[0]?.content).toEqual(blocks);
+  });
+
   it("returns the flat templates array when the wire sends { data: [], pagination }", async () => {
     mockGet.mockResolvedValue({ data: [TEMPLATE], pagination: PAGINATION });
 
