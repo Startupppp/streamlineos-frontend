@@ -1,4 +1,5 @@
 import { render as rtlRender, screen, fireEvent } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import type { ReactElement } from "react";
 
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -513,6 +514,36 @@ describe("KnowledgeAnalyticsPage — gap rows render without crashing and suppor
 
     expect(screen.getByText("Password Reset Guide")).toBeInTheDocument();
     expect(useGapRelatedPages).toHaveBeenCalledWith("reset password");
+  });
+
+  it("keeps keyboard action activation separate from gap selection", async () => {
+    useKnowledgeGaps.mockReturnValue(
+      settledGaps([{ query: "reset password", count: 5, lastOccurredAt: "2024-03-01T00:00:00Z" }]),
+    );
+    const user = userEvent.setup();
+    render(<KnowledgeAnalyticsPage />);
+
+    const gap = screen.getByRole("button", { name: "Gap: reset password" });
+    const assign = screen.getByRole("button", { name: "Assign gap owner" });
+    const dismiss = screen.getByRole("button", { name: "Dismiss gap" });
+    expect(gap.contains(assign)).toBe(false);
+    expect(gap.contains(dismiss)).toBe(false);
+
+    assign.focus();
+    await user.keyboard("{Enter}");
+    expect(screen.getByTestId("user-combobox")).toBeInTheDocument();
+    expect(gap).toHaveAttribute("aria-expanded", "false");
+
+    dismiss.focus();
+    await user.keyboard(" ");
+    expect(screen.getByPlaceholderText("Reason for dismissal")).toBeInTheDocument();
+    expect(gap).toHaveAttribute("aria-expanded", "false");
+
+    gap.focus();
+    await user.keyboard("{Enter}");
+    expect(gap).toHaveAttribute("aria-expanded", "true");
+    await user.keyboard(" ");
+    expect(gap).toHaveAttribute("aria-expanded", "false");
   });
 });
 

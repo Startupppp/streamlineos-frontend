@@ -222,31 +222,30 @@ const GapTableRow = memo(function GapTableRow({
   }
   return (
     <div>
-      <div
-        className={`flex items-center gap-3 px-3 py-2 transition-colors cursor-pointer ${isSelected ? "bg-muted/60" : "hover:bg-muted/40"}`}
-        onClick={handleSelectClick}
-        role="button"
-        tabIndex={0}
-        aria-expanded={isSelected}
-        aria-label={`Gap: ${row.query ?? "(empty)"}`}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") handleSelectClick();
-        }}
-      >
-        <TruncatedText
-          text={row.query ?? "(empty)"}
-          className="flex-1 text-sm"
-        />
-        <span className="text-xs tabular-nums text-muted-foreground shrink-0">
-          {row.count}
-        </span>
-        <span className="text-xs text-muted-foreground shrink-0 w-28 text-right">
-          {new Date(row.lastOccurredAt).toLocaleDateString("en", {
-            month: "short",
-            day: "numeric",
-            year: "numeric",
-          })}
-        </span>
+      <div className={`flex items-center gap-3 px-3 py-2 transition-colors ${isSelected ? "bg-muted/60" : "hover:bg-muted/40"}`}>
+        <button
+          type="button"
+          className="flex min-w-0 flex-1 items-center gap-3 rounded-sm text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          onClick={handleSelectClick}
+          disabled={!row.query}
+          aria-expanded={isSelected}
+          aria-label={`Gap: ${row.query ?? "(empty)"}`}
+        >
+          <TruncatedText
+            text={row.query ?? "(empty)"}
+            className="min-w-0 flex-1 text-sm"
+          />
+          <span className="text-xs tabular-nums text-muted-foreground shrink-0">
+            {row.count}
+          </span>
+          <span className="text-xs text-muted-foreground shrink-0 w-28 text-right">
+            {new Date(row.lastOccurredAt).toLocaleDateString("en", {
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+            })}
+          </span>
+        </button>
         <Button
           size="sm"
           variant="ghost"
