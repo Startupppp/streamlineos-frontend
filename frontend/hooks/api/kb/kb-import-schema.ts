@@ -10,6 +10,8 @@ const kbImportItemErrorContract = z.object({
 const kbImportErrorReportContract = z.object({
   failedTitles: z.array(z.string()).optional(),
   itemErrors: z.array(kbImportItemErrorContract).optional(),
+  code: z.literal("PROGRESS_RECONCILIATION_REQUIRED").optional(),
+  reason: z.string().optional(),
 });
 
 export const kbImportJobContract = z.object({

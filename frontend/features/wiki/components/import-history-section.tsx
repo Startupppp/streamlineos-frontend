@@ -58,6 +58,11 @@ function ImportJobRow({ job, retryDisabled, retryPending, onRetry }: ImportJobRo
           {kbTimeAgo(job.createdAt)}
         </span>
       </div>
+      {job.errorReport?.code === "PROGRESS_RECONCILIATION_REQUIRED" ? (
+        <p role="alert" className="mt-2 text-xs text-destructive">
+          {job.errorReport.reason ?? "Import progress needs manual reconciliation. Contact support before retrying."}
+        </p>
+      ) : null}
       {failedItems.length > 0 ? (
         <details className="mt-2 text-xs">
           <summary className="cursor-pointer text-destructive">

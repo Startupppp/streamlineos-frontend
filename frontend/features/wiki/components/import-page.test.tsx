@@ -296,4 +296,29 @@ describe("ImportPage — Import / Export tabs", () => {
     expect(screen.getByText("Choose an existing space and import again.")).toBeInTheDocument();
     expect(toast.error).toHaveBeenCalledWith("Import failed — 1 page could not be imported");
   });
+
+  it("keeps manual reconciliation guidance visible after the active job fails", async () => {
+    const user = userEvent.setup();
+    const reason = "Saved import progress cannot be mapped to individual pages. Contact support before retrying the remaining items.";
+    mockImportMutate.mockImplementation((_input, options) => {
+      options.onSuccess({ jobId: 12, status: "pending" });
+    });
+    mockUseKbImportJob.mockImplementation((jobId) => ({
+      data: jobId === 12 ? {
+        id: 12,
+        status: "failed",
+        failedItems: 0,
+        errorReport: { code: "PROGRESS_RECONCILIATION_REQUIRED", reason },
+      } : undefined,
+    }));
+
+    render(<ImportPage />);
+    await user.click(screen.getByRole("button", { name: "Paste text" }));
+    await user.type(screen.getByLabelText("Page title"), "Policy");
+    await user.click(screen.getByRole("button", { name: "Add to list" }));
+    await user.click(screen.getByRole("button", { name: "Import 1 page" }));
+
+    expect(screen.getByRole("alert")).toHaveTextContent(reason);
+    expect(toast.error).toHaveBeenCalledWith(reason);
+  });
 });

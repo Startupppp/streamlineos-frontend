@@ -46,6 +46,8 @@ export type KbImportItemError = {
 export type KbImportErrorReport = {
   failedTitles?: string[];
   itemErrors?: KbImportItemError[];
+  code?: "PROGRESS_RECONCILIATION_REQUIRED";
+  reason?: string;
 };
 
 export type KbImportJob = {

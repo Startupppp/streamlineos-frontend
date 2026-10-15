@@ -205,4 +205,25 @@ describe("ImportHistorySection failed items", () => {
     await userEvent.click(retryButtons[0]!);
     expect(mockRetryMutate).toHaveBeenCalledWith(1, expect.any(Object));
   });
+
+  it("shows manual reconciliation guidance without a retry control", () => {
+    useKbImportJobs.mockReturnValue({
+      data: [{ ...mockJob, status: "failed", canRetry: false, errorReport: {
+        code: "PROGRESS_RECONCILIATION_REQUIRED",
+        reason: "Saved import progress cannot be mapped to individual pages. Contact support before retrying the remaining items.",
+      } }],
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+      hasNextPage: false,
+      isFetchingNextPage: false,
+      fetchNextPage: jest.fn(),
+    });
+
+    render(<ImportHistorySection />);
+
+    expect(screen.getByRole("alert")).toHaveTextContent("Contact support before retrying the remaining items.");
+    expect(screen.queryByRole("button", { name: "Retry failed pages" })).not.toBeInTheDocument();
+  });
 });

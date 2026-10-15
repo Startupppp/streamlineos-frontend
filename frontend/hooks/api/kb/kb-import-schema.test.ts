@@ -99,4 +99,26 @@ describe("kb import/export job list contracts", () => {
       ],
     });
   });
+
+  it("retains the manual reconciliation code and safe reason while stripping retry payloads", () => {
+    const parsed = kbImportJobListPageContract.parse({
+      data: [{
+        ...importJob,
+        status: "failed",
+        canRetry: false,
+        errorReport: {
+          code: "PROGRESS_RECONCILIATION_REQUIRED",
+          reason: "Saved import progress cannot be mapped to individual pages. Contact support before retrying the remaining items.",
+          retryItems: [{ contentText: "private draft" }],
+        },
+      }],
+      pagination,
+    });
+
+    expect(parsed.data[0]?.canRetry).toBe(false);
+    expect(parsed.data[0]?.errorReport).toEqual({
+      code: "PROGRESS_RECONCILIATION_REQUIRED",
+      reason: "Saved import progress cannot be mapped to individual pages. Contact support before retrying the remaining items.",
+    });
+  });
 });

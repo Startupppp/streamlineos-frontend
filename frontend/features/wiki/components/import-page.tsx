@@ -92,6 +92,7 @@ export default function ImportPage() {
   const [completedFailedItems, setCompletedFailedItems] = useState<ImportFailedItem[]>(
     [],
   );
+  const [reconciliationReason, setReconciliationReason] = useState<string | null>(null);
 
   const { data: activeJob } = useKbImportJob(activeJobId);
   const { data: spacesPage } = useKbSpaces();
@@ -131,8 +132,12 @@ export default function ImportPage() {
     } else if (activeJob.status === "failed") {
       const failedItems = failedItemsFromReport(activeJob.errorReport);
       if (failedItems.length > 0) setCompletedFailedItems(failedItems);
+      const needsReconciliation = activeJob.errorReport?.code === "PROGRESS_RECONCILIATION_REQUIRED";
+      if (needsReconciliation) setReconciliationReason(activeJob.errorReport?.reason ?? "Import progress needs manual reconciliation. Contact support before retrying.");
       toast.error(
-        failedItems.length > 0
+        needsReconciliation
+          ? activeJob.errorReport?.reason ?? "Import progress needs manual reconciliation."
+          : failedItems.length > 0
           ? `Import failed — ${failedItems.length} page${failedItems.length === 1 ? "" : "s"} could not be imported`
           : "Import failed",
       );
@@ -330,6 +335,7 @@ export default function ImportPage() {
   function handleImport() {
     if (items.length === 0) return;
     setCompletedFailedItems([]);
+    setReconciliationReason(null);
     const parentId =
       targetParentPageId !== "none" ? Number(targetParentPageId) : undefined;
     importMutation.mutate(
@@ -481,6 +487,12 @@ export default function ImportPage() {
               duplicate policy to control what happens when a page title already
               exists.
             </p>
+
+            {reconciliationReason ? (
+              <p role="alert" className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive">
+                {reconciliationReason}
+              </p>
+            ) : null}
 
             {completedFailedItems.length > 0 ? (
               <ImportFailedTitlesAlert
