@@ -6,6 +6,8 @@
 
 > **Post-journal ledger check:** `node --env-file=.env src/scripts/check-migration-ledger.mjs` passed with 1,174 applied rows, 1,176 journal entries, and two pending migrations: unrelated Calendar 2043 followed by Knowledge Base 2044. The standard migration runner would advance through both in order. Apply neither from this Knowledge Base task while Calendar 2043 is pending; coordinate that predecessor with its owner before the 2044 production cutover.
 
+> **Deployment identity refinement:** GitHub deployment `7102456888` on the backend repository identifies Railway project `8a7c68dd-4ec9-4b76-830b-41bc3f6f1d19`, production environment `1eb500a2-4a59-4db5-9d82-29087c45edba`, and deployed ref `20b6076d8948df1c8a0729dfa4ca9d5eb235ad63`; its latest status was success. `railway status --project ... --environment ... --json` returned `Unauthorized` with the current CLI login. The deployment record does not reveal the service's database endpoint or establish that the configured local Neon URL is the deployed production database. Obtain access to that specific project and verify its runtime database identity before a migration or deployment.
+
 > **September 27 scope clarification, superseded where noted above:** the historical measurements below apply to named migrations at their recorded dates. They did not prove newer Knowledge Base migrations were applied. The formerly unjournalled `1370_kb_chunk_acl_dead_index.sql` is included in the 2026-10-16 ledger/hash check above. Do not reapply 1174 or activate rejected 1347 from a stale checklist.
 
 ## Current state: **all ten applied, 1174 included. The cutover is closed.**
