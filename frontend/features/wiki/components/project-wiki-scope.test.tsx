@@ -84,6 +84,14 @@ jest.mock("@/hooks/api/kb", () => ({
               changeSummary: null,
               createdAt: "2026-09-01T10:00:00.000Z",
             },
+            {
+              id: 2,
+              versionNumber: 2,
+              title: "Earlier runbook",
+              authorName: "Bob",
+              changeSummary: null,
+              createdAt: "2026-08-01T10:00:00.000Z",
+            },
           ],
           pagination: { limit: 50, nextCursor: null, hasMore: false },
         },
@@ -94,7 +102,15 @@ jest.mock("@/hooks/api/kb", () => ({
     fetchNextPage: jest.fn(),
     isFetchingNextPage: false,
   }),
-  useKbPageVersionDetail: () => ({ data: undefined, isLoading: false }),
+  useKbPageVersionDetail: () => ({
+    data: {
+      title: "Earlier runbook",
+      content: { type: "doc", content: [] },
+      authorName: "Bob",
+      createdAt: "2026-08-01T10:00:00.000Z",
+    },
+    isLoading: false,
+  }),
   useRestoreKbVersion: () => ({ mutate: jest.fn(), isPending: false }),
 }));
 
@@ -183,6 +199,31 @@ describe("project wiki history path stays inside the project", () => {
     expect(
       screen.getByRole("link", { name: /full history/i }),
     ).toHaveAttribute("href", "/knowledge/wiki/doc/5/history");
+  });
+
+  it("takes a selected project version to its project-scoped preview before restore", async () => {
+    const user = userEvent.setup();
+    render(
+      <PageHistorySheet pageId={5} open onOpenChange={jest.fn()} projectId={7} />,
+    );
+
+    await user.click(screen.getByRole("button", { name: /Version 2/ }));
+
+    expect(
+      screen.getByRole("link", { name: "Preview and restore version 2" }),
+    ).toHaveAttribute("href", "/build/7/wiki/5/history?version=2");
+    expect(screen.queryByRole("button", { name: "Restore" })).not.toBeInTheDocument();
+  });
+
+  it("takes a selected global version to its global preview before restore", async () => {
+    const user = userEvent.setup();
+    render(<PageHistorySheet pageId={5} open onOpenChange={jest.fn()} />);
+
+    await user.click(screen.getByRole("button", { name: /Version 2/ }));
+
+    expect(
+      screen.getByRole("link", { name: "Preview and restore version 2" }),
+    ).toHaveAttribute("href", "/knowledge/wiki/doc/5/history?version=2");
   });
 });
 

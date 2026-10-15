@@ -6,32 +6,19 @@ import dynamic from "next/dynamic";
 import {
   KbChevronRightIcon,
   KbHistoryIcon,
-  KbLoader2Icon,
   KbRotateCcwIcon,
 } from "@/features/wiki/lib/kb-icons";
 import { kbTimeAgo } from "@/features/wiki/lib/kb-date-utils";
-import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetBody, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { EmptyState } from "@/components/ui/empty-state";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
-import { useKbPageVersionsInfinite, useKbPageVersionDetail, useRestoreKbVersion } from "@/hooks/api/kb";
+import { useKbPageVersionsInfinite, useKbPageVersionDetail } from "@/hooks/api/kb";
 import type { KbPageVersion } from "@/hooks/api/kb/page-types";
 import { pageHistoryHref } from "@/lib/knowledge-routes";
-import { getErrorMessage } from "@/lib/get-error-message";
 
 const PlateDocumentEditor = dynamic(
   () => import("@/components/editor/plate/plate-document-editor"),
@@ -48,7 +35,6 @@ interface PageHistorySheetProps {
 export default function PageHistorySheet({ pageId, open, onOpenChange, projectId }: PageHistorySheetProps) {
   const isProjectScoped = projectId !== undefined && projectId > 0;
   const [selectedVersion, setSelectedVersion] = useState<number | null>(null);
-  const [restoreAlertOpen, setRestoreAlertOpen] = useState(false);
   const { data: versionsData, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } = useKbPageVersionsInfinite(pageId);
   const allVersions = versionsData?.pages.flatMap((p) => p.data) ?? [];
   const currentVersionNumber = allVersions[0]?.versionNumber ?? null;
@@ -57,37 +43,15 @@ export default function PageHistorySheet({ pageId, open, onOpenChange, projectId
     pageId,
     selectedVersion ?? 0
   );
-  const restoreVersion = useRestoreKbVersion();
-
   const hasContent = Boolean(versionDetail?.content);
+  const historyHref = isProjectScoped
+    ? `/build/${projectId}/wiki/${pageId}/history`
+    : pageHistoryHref(pageId);
 
   function handleVersionButtonClick(e: React.MouseEvent<HTMLButtonElement>) {
     const vn = e.currentTarget.dataset.versionNumber;
     if (!vn) return;
     setSelectedVersion(Number(vn));
-  }
-
-  function handleRestore() {
-    if (!selectedVersion || !hasContent) return;
-    setRestoreAlertOpen(true);
-  }
-
-  function handleConfirmRestore() {
-    if (!selectedVersion) return;
-    restoreVersion.mutate(
-      { pageId, versionNumber: selectedVersion },
-      {
-        onSuccess: () => {
-          toast.success("Version restored");
-          onOpenChange(false);
-        },
-        onError: (err) => toast.error(getErrorMessage(err)),
-      }
-    );
-  }
-
-  function handleRestoreAlertOpenChange(open: boolean) {
-    setRestoreAlertOpen(open);
   }
 
   function handleCloseSheet() {
@@ -103,7 +67,6 @@ export default function PageHistorySheet({ pageId, open, onOpenChange, projectId
   }
 
   return (
-    <>
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="p-0 flex flex-col gap-0 overflow-hidden sm:max-w-md">
         <SheetHeader className="shrink-0 px-6 py-4 border-b">
@@ -181,7 +144,7 @@ export default function PageHistorySheet({ pageId, open, onOpenChange, projectId
             {!isProjectScoped && (
               <SheetFooter className="border-t px-6 py-3 flex items-center justify-end">
                 <Link
-                  href={pageHistoryHref(pageId)}
+                  href={historyHref}
                   className="text-xs text-muted-foreground hover:text-foreground transition-colors"
                   onClick={handleCloseSheet}
                 >
@@ -227,45 +190,27 @@ export default function PageHistorySheet({ pageId, open, onOpenChange, projectId
               )}
             </SheetBody>
             <SheetFooter className="border-t px-6 py-4">
-              <Button
-                onClick={handleRestore}
-                disabled={restoreVersion.isPending || detailLoading || !hasContent}
-                className="w-full gap-2 h-9"
-                size="sm"
-              >
-                {restoreVersion.isPending ? (
-                  <KbLoader2Icon className="h-4 w-4 animate-spin" />
-                ) : (
+              {hasContent ? (
+                <Link
+                  href={`${historyHref}?version=${selectedVersion}`}
+                  onClick={handleCloseSheet}
+                  className="inline-flex w-full h-9 items-center justify-center gap-2 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+                >
                   <KbRotateCcwIcon className="h-4 w-4" />
-                )}
-                {hasContent ? "Restore this version" : "No content to restore"}
-              </Button>
+                  {selectedVersion === currentVersionNumber
+                    ? `View current version ${selectedVersion}`
+                    : `Preview and restore version ${selectedVersion}`}
+                </Link>
+              ) : (
+                <Button disabled className="w-full gap-2 h-9" size="sm">
+                  No content to restore
+                </Button>
+              )}
             </SheetFooter>
           </div>
         )}
       </SheetContent>
     </Sheet>
 
-    <AlertDialog open={restoreAlertOpen} onOpenChange={handleRestoreAlertOpenChange}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Restore this version?</AlertDialogTitle>
-          <AlertDialogDescription>
-            The current content will be saved as a new version before restoring.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            onClick={handleConfirmRestore}
-            disabled={restoreVersion.isPending}
-          >
-            Restore
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
-    </>
   );
 }
