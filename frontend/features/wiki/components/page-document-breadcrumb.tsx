@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import {
@@ -10,6 +11,7 @@ import {
 } from "@/features/wiki/lib/kb-icons";
 import { KNOWLEDGE_BASE, KB_SPACES, pageHref, projectPageHref } from "@/lib/knowledge-routes";
 import type { KbPageDetail } from "@/hooks/api/kb/page-types";
+import type { PageSaveState } from "./use-page-autosave";
 import {
   KB_STATUS_LABELS,
   KB_STATUS_BADGE_CLASS,
@@ -17,9 +19,10 @@ import {
 
 interface PageDocumentBreadcrumbProps {
   page: KbPageDetail;
-  saveState: "idle" | "pending" | "saving" | "saved";
+  saveState: PageSaveState;
   savedAt?: Date | null;
   isOffline?: boolean;
+  onRetrySave?: () => void;
   projectId?: number;
 }
 
@@ -52,6 +55,7 @@ export function PageDocumentBreadcrumb({
   saveState,
   savedAt,
   isOffline,
+  onRetrySave,
   projectId,
 }: PageDocumentBreadcrumbProps) {
   const ancestors = page.ancestors ?? [];
@@ -109,7 +113,7 @@ export function PageDocumentBreadcrumb({
         {isOffline && (
           <span className="flex items-center gap-1 text-xs text-status-warning-ink">
             <KbAlertCircleIcon className="h-3 w-3" />
-            Offline — edits queued
+            {saveState === "pending" || saveState === "failed" ? "Offline — edits queued" : "Offline"}
           </span>
         )}
         {!isOffline && (saveState === "pending" || saveState === "saving") && (
@@ -121,6 +125,17 @@ export function PageDocumentBreadcrumb({
         {!isOffline && saveState === "saved" && (
           <span className="text-xs text-muted-foreground" suppressHydrationWarning>
             {savedAt ? `Saved at ${formatSavedAt(savedAt)}` : "Saved"}
+          </span>
+        )}
+        {!isOffline && saveState === "failed" && (
+          <span className="flex items-center gap-1 text-xs text-status-danger-ink" role="alert">
+            <KbAlertCircleIcon className="h-3 w-3" />
+            Save failed
+            {onRetrySave ? (
+              <Button type="button" variant="link" size="sm" className="h-auto p-0 text-xs" onClick={onRetrySave}>
+                Retry
+              </Button>
+            ) : null}
           </span>
         )}
 

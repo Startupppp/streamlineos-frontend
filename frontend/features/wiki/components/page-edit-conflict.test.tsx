@@ -44,6 +44,15 @@ describe("PageEditConflict", () => {
     expect(screen.getByRole("button", { name: "Load theirs" })).toBeInTheDocument();
   });
 
+  it("keeps local edits paused when the server cannot identify its current revision", () => {
+    renderConflict({
+      conflict: { currentContentRevision: null, lastEditedByName: null, lastEditedAt: null },
+    });
+
+    expect(screen.getByRole("button", { name: "Keep my version" })).toBeDisabled();
+    expect(screen.getByRole("alert")).toHaveTextContent("latest revision could not be confirmed");
+  });
+
   it("keeps the editor's work with one click — the safe path needs no confirmation", async () => {
     const user = userEvent.setup();
     const { onKeepMine, onDiscardMine } = renderConflict();

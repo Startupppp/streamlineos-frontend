@@ -47,6 +47,7 @@ beforeEach(() => {
 afterEach(() => {
   jest.runOnlyPendingTimers();
   jest.useRealTimers();
+  Reflect.deleteProperty(navigator, "onLine");
 });
 
 async function settle() {
@@ -243,6 +244,73 @@ describe("wiki autosave — flushing before the editor goes away", () => {
     });
 
     expect(sent).toHaveLength(1);
+  });
+});
+
+describe("wiki autosave — connectivity and retry", () => {
+  it("starts offline and keeps the queued field visible until one reconnect save", async () => {
+    Object.defineProperty(navigator, "onLine", { configurable: true, value: false });
+    const { hook, sent } = harness();
+
+    expect(hook.result.current.isOffline).toBe(true);
+    act(() => {
+      hook.result.current.schedule({ title: "Offline title" });
+    });
+    await settle();
+
+    expect(sent).toHaveLength(0);
+    expect(hook.result.current.saveState).toBe("pending");
+    expect(hook.result.current.pendingFields).toEqual(["title"]);
+
+    await act(async () => {
+      Object.defineProperty(navigator, "onLine", { configurable: true, value: true });
+      window.dispatchEvent(new Event("online"));
+    });
+
+    expect(sent).toHaveLength(1);
+    expect(sent[0]!.title).toBe("Offline title");
+    expect(hook.result.current.saveState).toBe("saved");
+    expect(hook.result.current.pendingFields).toEqual([]);
+
+    act(() => {
+      window.dispatchEvent(new Event("online"));
+    });
+    expect(sent).toHaveLength(1);
+  });
+
+  it("keeps a failed save available for explicit retry without another edit", async () => {
+    const save = jest.fn()
+      .mockRejectedValueOnce(new ApiError("Temporary failure", 503))
+      .mockResolvedValueOnce({ contentRevision: 5 });
+    const hook = renderHook(() => usePageAutosave({
+      pageId: 12,
+      contentRevision: 4,
+      save,
+      onConflict: jest.fn(),
+      onSaveError: jest.fn(),
+      delayMs: 1500,
+    }));
+
+    act(() => {
+      hook.result.current.schedule({ contentText: "unsaved text" });
+    });
+    await settle();
+
+    expect(hook.result.current.saveState).toBe("failed");
+    expect(hook.result.current.pendingFields).toEqual(["contentText"]);
+    expect(save).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      hook.result.current.retry();
+    });
+
+    expect(save).toHaveBeenCalledTimes(2);
+    expect(save.mock.calls[1]?.[0]).toEqual(expect.objectContaining({
+      contentText: "unsaved text",
+      expectedContentRevision: 4,
+    }));
+    expect(hook.result.current.saveState).toBe("saved");
+    expect(hook.result.current.pendingFields).toEqual([]);
   });
 });
 
@@ -476,6 +544,12 @@ describe("wiki autosave — a real conflict is resolvable without losing either 
       lastEditedByName: null,
       lastEditedAt: null,
     });
+    expect(hook.result.current.pendingFields).toEqual(["contentText"]);
+    act(() => {
+      hook.result.current.keepLocalEdits();
+    });
+    expect(hook.result.current.conflict).not.toBeNull();
+    expect(hook.result.current.pendingFields).toEqual(["contentText"]);
   });
 
   it("keeps collecting keystrokes while the banner stands, and sends them all on Keep my version", async () => {
@@ -486,6 +560,7 @@ describe("wiki autosave — a real conflict is resolvable without losing either 
     });
     await settle();
     expect(sent).toHaveLength(1);
+    expect(hook.result.current.pendingFields).toEqual(["contentText"]);
 
     act(() => {
       hook.result.current.schedule({ contentText: "before the conflict, and after it" });
