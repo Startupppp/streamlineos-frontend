@@ -227,10 +227,30 @@ export function PublicCalendarBookingForm({
         {receipt.externalEffectsStatus === "pending" && <p className="text-sm text-muted-foreground">Invitations and other follow-ups are in progress.</p>}
         {receipt.externalEffectsStatus === "failed" && <p className="text-sm text-muted-foreground">A booking follow-up needs attention.</p>}
         {receipt.externalEffectsStatus === "uncertain" && <p className="text-sm text-muted-foreground">Booking follow-ups have not been confirmed yet.</p>}
-        {replayPayload.current && ["confirmed", "pending", "uncertain"].includes(receipt.outcome) && <button type="button" className="text-sm font-medium text-primary underline disabled:opacity-50" disabled={confirmBooking.isPending} onClick={() => { if (replayPayload.current) void confirmBooking.mutateAsync(replayPayload.current); }}>{confirmBooking.isPending ? "Checking booking status…" : "Refresh booking status"}</button>}
+        {replayPayload.current && ["confirmed", "pending", "uncertain"].includes(receipt.outcome) && <button type="button" className="text-sm font-medium text-primary underline disabled:opacity-50" disabled={confirmBooking.isPending} onClick={() => { if (replayPayload.current) confirmBooking.mutate(replayPayload.current); }}>{confirmBooking.isPending ? "Checking booking status…" : "Refresh booking status"}</button>}
         {confirmBooking.isError && <p className="text-sm text-destructive" role="alert">{getErrorMessage(confirmBooking.error) || "Booking status could not be refreshed. Try again."}</p>}
         {receipt.alternatives.length > 0 && <div className="space-y-2"><p className="text-sm font-medium">Other available times</p>{receipt.alternatives.map((alternative) => <button key={alternative.start} type="button" className="block w-full rounded-md border px-3 py-2 text-sm text-primary hover:bg-muted" onClick={() => chooseAnotherTime(alternative.start)}>Review {slotTime(alternative.start, offering.timeZone)}</button>)}</div>}
         {["rejected", "expired", "cancelled", "uncertain"].includes(receipt.outcome) && <button type="button" className="text-sm font-medium text-primary underline" onClick={() => chooseAnotherTime()}>Choose another time</button>}
+      </div>
+    );
+  }
+
+  if (replayPayload.current && confirmBooking.isError) {
+    return (
+      <div className="space-y-4 py-12 text-center" role="alert">
+        <h2 className="text-xl font-semibold text-foreground">Booking status needs confirmation</h2>
+        <p className="text-sm text-muted-foreground">Your request may have succeeded. Check its status before choosing another time.</p>
+        <p className="text-sm text-destructive">{getErrorMessage(confirmBooking.error) || "Booking status could not be checked."}</p>
+        <button
+          type="button"
+          className="text-sm font-medium text-primary underline disabled:opacity-50"
+          disabled={confirmBooking.isPending}
+          onClick={() => {
+            if (replayPayload.current) confirmBooking.mutate(replayPayload.current);
+          }}
+        >
+          Check booking status
+        </button>
       </div>
     );
   }
