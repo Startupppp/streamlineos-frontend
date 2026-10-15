@@ -16,6 +16,7 @@ import { Label } from "@/components/ui/label";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { TrustBadge } from "@/features/wiki/components/kb-collection-badges";
 import { useApprovePageReview, useRejectPageReview } from "@/hooks/api/kb/page-reviews";
 import type { KbPageReview } from "@/hooks/api/kb/page-reviews";
 
@@ -61,11 +62,14 @@ export function ApproveDialog({ review, onClose }: ApproveDialogProps) {
             lines={2}
             className="text-sm text-muted-foreground"
           />
+          {review.pageTrustState && <TrustBadge trustState={review.pageTrustState} />}
           <div className="space-y-1.5">
-            <Label className="text-xs">Note (optional)</Label>
+            <Label htmlFor="approve-review-note" className="text-xs">Note (optional)</Label>
             <Textarea
+              id="approve-review-note"
               value={note}
               onChange={handleNoteChange}
+              maxLength={2000}
               placeholder="Add a note…"
               className="text-sm resize-none"
               rows={3}
@@ -134,13 +138,17 @@ export function RejectDialog({ review, onClose }: RejectDialogProps) {
             lines={2}
             className="text-sm text-muted-foreground"
           />
+          {review.pageTrustState && <TrustBadge trustState={review.pageTrustState} />}
           <div className="space-y-1.5">
-            <Label className="text-xs">
+            <Label htmlFor="reject-review-reason" className="text-xs">
               Reason <span className="text-destructive">*</span>
             </Label>
             <Textarea
+              id="reject-review-reason"
               value={note}
               onChange={handleNoteChange}
+              maxLength={2000}
+              required
               placeholder="Explain why this review is rejected…"
               className="text-sm resize-none"
               rows={3}
