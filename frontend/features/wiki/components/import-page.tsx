@@ -51,6 +51,13 @@ function resolveTab(tabParam: string | null): ImportExportTab {
   return VALID_TABS.find((t) => t === tabParam) ?? "import";
 }
 
+function failedTitlesFromReport(report: Record<string, unknown> | null): string[] {
+  const raw = report?.["failedTitles"];
+  return Array.isArray(raw)
+    ? raw.filter((title): title is string => typeof title === "string")
+    : [];
+}
+
 export default function ImportPage() {
   const canImport = useCan("kb:pages:import");
   const canExport = useCan("kb:pages:export");
@@ -107,20 +114,14 @@ export default function ImportPage() {
   useEffect(() => {
     if (!activeJob) return;
     if (activeJob.status === "completed") {
-      const report = activeJob.errorReport;
-      const titles: string[] = [];
-      if (
-        report &&
-        typeof report === "object" &&
-        "failedTitles" in report &&
-        Array.isArray(report.failedTitles)
-      ) {
-        for (const t of report.failedTitles)
-          if (typeof t === "string") titles.push(t);
-      }
+      const titles = failedTitlesFromReport(activeJob.errorReport);
       if (titles.length > 0) setCompletedFailedTitles(titles);
+      const partialCounts = [
+        activeJob.duplicateItems > 0 ? `${activeJob.duplicateItems} skipped` : null,
+        activeJob.failedItems > 0 ? `${activeJob.failedItems} failed` : null,
+      ].filter((count): count is string => count !== null);
       toast.success(
-        `Imported ${activeJob.succeededItems} page${activeJob.succeededItems === 1 ? "" : "s"}${activeJob.failedItems > 0 ? ` (${activeJob.failedItems} failed)` : ""}`,
+        `Imported ${activeJob.succeededItems} page${activeJob.succeededItems === 1 ? "" : "s"}${partialCounts.length > 0 ? ` (${partialCounts.join(", ")})` : ""}`,
         {
           action: {
             label: "View wiki",
@@ -131,14 +132,8 @@ export default function ImportPage() {
       setItems([]);
       setActiveJobId(null);
     } else if (activeJob.status === "failed") {
-      const report = activeJob.errorReport;
-      const failedTitles =
-        report !== null &&
-        typeof report === "object" &&
-        "failedTitles" in report &&
-        Array.isArray(report.failedTitles)
-          ? (report.failedTitles as string[])
-          : [];
+      const failedTitles = failedTitlesFromReport(activeJob.errorReport);
+      if (failedTitles.length > 0) setCompletedFailedTitles(failedTitles);
       toast.error(
         failedTitles.length > 0
           ? `Import failed — ${failedTitles.length} page${failedTitles.length === 1 ? "" : "s"} could not be imported`
@@ -153,6 +148,7 @@ export default function ImportPage() {
     activeJob?.status,
     activeJob?.succeededItems,
     activeJob?.failedItems,
+    activeJob?.duplicateItems,
     activeJob?.errorReport,
     activeJob?.id,
   ]);

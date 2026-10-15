@@ -7,7 +7,7 @@ jest.mock("sonner", () => ({
 }));
 
 const { toast } = jest.requireMock("sonner") as {
-  toast: { error: jest.Mock };
+  toast: { error: jest.Mock; success: jest.Mock };
 };
 
 const mockReplace = jest.fn();
@@ -41,7 +41,7 @@ jest.mock("@/hooks/api/kb/spaces", () => ({
 
 jest.mock("@/hooks/api/kb", () => ({
   useImportKbPages: () => ({ mutate: mockImportMutate, isPending: false }),
-  useKbImportJob: () => mockUseKbImportJob(),
+  useKbImportJob: (jobId: number | null) => mockUseKbImportJob(jobId),
   useCancelImportJob: () => ({ mutate: jest.fn(), isPending: false }),
   useDryRunImport: () => ({ mutate: jest.fn(), isPending: false, data: undefined, reset: jest.fn() }),
   useKbImportJobs: () => ({
@@ -72,6 +72,7 @@ describe("ImportPage — Import / Export tabs", () => {
     mockImportMutate.mockReset();
     mockUseKbImportJob.mockReturnValue({ data: undefined });
     toast.error.mockClear();
+    toast.success.mockClear();
     mockSearchParams = new URLSearchParams();
   });
 
@@ -178,5 +179,58 @@ describe("ImportPage — Import / Export tabs", () => {
       "aria-valuetext",
       "2 of 3 pages processed",
     );
+  });
+
+  it("reports imported, skipped, and failed counts when a partial import completes", async () => {
+    const user = userEvent.setup();
+    mockImportMutate.mockImplementation((_input, options) => {
+      options.onSuccess({ jobId: 7, status: "pending" });
+    });
+    mockUseKbImportJob.mockImplementation((jobId) => ({
+      data: jobId === 7 ? {
+        id: 7,
+        status: "completed",
+        succeededItems: 1,
+        duplicateItems: 1,
+        failedItems: 1,
+        errorReport: { failedTitles: ["Failed Policy"] },
+      } : undefined,
+    }));
+
+    render(<ImportPage />);
+    await user.click(screen.getByRole("button", { name: "Paste text" }));
+    await user.type(screen.getByLabelText("Page title"), "Policy");
+    await user.click(screen.getByRole("button", { name: "Add to list" }));
+    await user.click(screen.getByRole("button", { name: "Import 1 page" }));
+
+    expect(toast.success).toHaveBeenCalledWith(
+      "Imported 1 page (1 skipped, 1 failed)",
+      expect.anything(),
+    );
+    expect(screen.getByText("Failed Policy")).toBeInTheDocument();
+  });
+
+  it("shows failed page titles in the alert when the import job fails", async () => {
+    const user = userEvent.setup();
+    mockImportMutate.mockImplementation((_input, options) => {
+      options.onSuccess({ jobId: 9, status: "pending" });
+    });
+    mockUseKbImportJob.mockImplementation((jobId) => ({
+      data: jobId === 9 ? {
+        id: 9,
+        status: "failed",
+        failedItems: 1,
+        errorReport: { failedTitles: ["Failed Guide"] },
+      } : undefined,
+    }));
+
+    render(<ImportPage />);
+    await user.click(screen.getByRole("button", { name: "Paste text" }));
+    await user.type(screen.getByLabelText("Page title"), "Policy");
+    await user.click(screen.getByRole("button", { name: "Add to list" }));
+    await user.click(screen.getByRole("button", { name: "Import 1 page" }));
+
+    expect(screen.getByText("Failed Guide")).toBeInTheDocument();
+    expect(toast.error).toHaveBeenCalledWith("Import failed — 1 page could not be imported");
   });
 });
