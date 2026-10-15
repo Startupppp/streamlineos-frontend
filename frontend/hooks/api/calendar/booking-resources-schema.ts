@@ -33,6 +33,11 @@ export const inventoryCalendarEquipmentContract = z.array(z.object({
   updatedAt: z.string(),
 }));
 
+export const inventoryCalendarEquipmentPageContract = z.object({
+  items: inventoryCalendarEquipmentContract,
+  nextCursor: z.number().int().positive().nullable(),
+});
+
 export const bookingRuleResourceContract = z.object({
   resourceId: z.number().int().positive(),
   units: z.number().int().positive(),
@@ -104,6 +109,7 @@ export const bookingAllocationResolutionContract = z.object({
 
 export type BookingResource = z.infer<typeof bookingResourceContract>;
 export type InventoryCalendarEquipment = z.infer<typeof inventoryCalendarEquipmentContract>[number];
+export type InventoryCalendarEquipmentPage = z.infer<typeof inventoryCalendarEquipmentPageContract>;
 export type BookingRuleResource = z.infer<typeof bookingRuleResourceContract>;
 export type BookingResourceMaintenance = z.infer<typeof bookingResourceMaintenanceContract>;
 export type BookingAllocation = z.infer<typeof bookingAllocationContract>;

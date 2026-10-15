@@ -173,7 +173,6 @@ function CalendarBookingRulesSheetInner({ identity, onClose }: { identity: strin
         await pause.mutateAsync(rule.id);
         toast.success("Booking page paused");
       } else {
-        if (!window.confirm(`Revoke “${rule.title}”? Its public link will stop working.`)) return;
         await revoke.mutateAsync(rule.id);
         toast.success("Booking page revoked");
       }

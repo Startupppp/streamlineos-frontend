@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -215,13 +216,7 @@ export function CalendarSchedulingPollsPanel({
   }
 
   async function cancelPoll() {
-    if (
-      !detail.data ||
-      !window.confirm(
-        `Cancel “${detail.data.title}”? Voters will no longer be able to respond.`,
-      )
-    )
-      return;
+    if (!detail.data) return;
     try {
       await cancel.mutateAsync({
         pollId: detail.data.id,
@@ -559,24 +554,28 @@ export function CalendarSchedulingPollsPanel({
                   </span>
                   {detail.data?.status === "open" &&
                   option.status === "proposed" ? (
-                    <Button
-                      size="sm"
-                      onClick={() => void finalizeOption(option.id)}
-                      disabled={finalize.isPending}
-                    >
-                      Finalize
-                    </Button>
+                    <ConfirmDialog
+                      title="Finalize this option?"
+                      description="The poll will close and this time will become the scheduled event."
+                      confirmLabel="Finalize"
+                      destructive
+                      isPending={finalize.isPending}
+                      onConfirm={() => void finalizeOption(option.id)}
+                      trigger={<Button size="sm" disabled={finalize.isPending}>Finalize</Button>}
+                    />
                   ) : null}
                 </div>
               ))}
               {detail.data.status === "open" ? (
-                <Button
-                  variant="outline"
-                  onClick={() => void cancelPoll()}
-                  disabled={cancel.isPending}
-                >
-                  Cancel poll
-                </Button>
+                <ConfirmDialog
+                  title={`Cancel “${detail.data.title}”?`}
+                  description="Voters will no longer be able to respond."
+                  confirmLabel="Cancel poll"
+                  destructive
+                  isPending={cancel.isPending}
+                  onConfirm={() => void cancelPoll()}
+                  trigger={<Button variant="outline" disabled={cancel.isPending}>Cancel poll</Button>}
+                />
               ) : null}
               {finalized?.outcome === "unavailable" ? (
                 <div className="space-y-2">

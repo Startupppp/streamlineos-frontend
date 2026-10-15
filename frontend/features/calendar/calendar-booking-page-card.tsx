@@ -2,6 +2,7 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import type { CalendarBookingRule } from "@/hooks/api/calendar/booking-rules-schema";
 import { statusToneClasses, type StatusTone } from "@/lib/design-tokens";
 import { cn } from "@/lib/utils";
@@ -94,15 +95,24 @@ export function BookingPageCard({
         </div>
       ) : null}
       {revoked ? null : (
-        <Button
-          size="sm"
-          variant="outline"
-          className="w-full text-destructive hover:bg-destructive/10 hover:text-destructive"
-          onClick={onRevoke}
-          disabled={busy}
-        >
-          Revoke
-        </Button>
+        <ConfirmDialog
+          title={`Revoke “${rule.title}”?`}
+          description="Its public link will stop working."
+          confirmLabel="Revoke page"
+          destructive
+          isPending={busy}
+          onConfirm={onRevoke}
+          trigger={
+            <Button
+              size="sm"
+              variant="outline"
+              className="w-full text-destructive hover:bg-destructive/10 hover:text-destructive"
+              disabled={busy}
+            >
+              Revoke
+            </Button>
+          }
+        />
       )}
     </article>
   );

@@ -12,8 +12,8 @@ export const calendarBookingQueryKeys = {
     ["calendar", "booking-rules", "operations", orgId, userId, membershipId, accessVersion, canRead, ruleId] as const,
   resources: (orgId: string, userId: string, membershipId: number | null, accessVersion: number, canRead: boolean) =>
     ["calendar", "booking-rules", "resources", orgId, userId, membershipId, accessVersion, canRead] as const,
-  inventoryEquipment: (orgId: string, userId: string, membershipId: number | null, accessVersion: number) =>
-    ["calendar", "booking-rules", "inventory-equipment", orgId, userId, membershipId, accessVersion] as const,
+  inventoryEquipment: (orgId: string, userId: string, membershipId: number | null, accessVersion: number, cursor: number | null) =>
+    ["calendar", "booking-rules", "inventory-equipment", orgId, userId, membershipId, accessVersion, cursor] as const,
   allocations: (orgId: string, userId: string, membershipId: number | null, accessVersion: number, canRead: boolean, bookingId: string) =>
     ["calendar", "booking-rules", "allocations", orgId, userId, membershipId, accessVersion, canRead, bookingId] as const,
   pendingAllocations: (orgId: string, userId: string, membershipId: number | null, accessVersion: number, canRead: boolean, cursor: string | null) =>

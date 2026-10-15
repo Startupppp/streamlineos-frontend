@@ -21,7 +21,7 @@ import type {
   BookingResource,
   BookingResourceMaintenance,
   BookingRuleResource,
-  InventoryCalendarEquipment,
+  InventoryCalendarEquipmentPage,
   PendingBookingAllocationPage,
 } from "./booking-resources-schema";
 
@@ -65,9 +65,9 @@ const allocationResolutionContract = lazyContract(() =>
     (module) => module.bookingAllocationResolutionContract,
   ),
 );
-const inventoryEquipmentContract = lazyContract(() =>
+const inventoryEquipmentPageContract = lazyContract(() =>
   import("./booking-resources-schema").then(
-    (module) => module.inventoryCalendarEquipmentContract,
+    (module) => module.inventoryCalendarEquipmentPageContract,
   ),
 );
 const approvalPermissions = [
@@ -131,7 +131,7 @@ export function useCalendarBookingResources(enabled = true) {
   });
 }
 
-export function useInventoryCalendarEquipment(enabled = true) {
+export function useInventoryCalendarEquipment(cursor: number | null = null, enabled = true) {
   const scope = useBookingScope();
   return useGatedQuery("inventory:warehouses:read", {
     queryKey: calendarBookingQueryKeys.inventoryEquipment(
@@ -139,13 +139,14 @@ export function useInventoryCalendarEquipment(enabled = true) {
       scope.userId,
       scope.membershipId,
       scope.accessVersion,
+      cursor,
     ),
     queryFn: ({ signal }) =>
-      apiClient.get<InventoryCalendarEquipment[]>(
+      apiClient.get<InventoryCalendarEquipmentPage>(
         "/inventory/calendar-equipment",
-        undefined,
+        { limit: 50, ...(cursor ? { cursor } : {}) },
         signal,
-        inventoryEquipmentContract,
+        inventoryEquipmentPageContract,
       ),
     enabled: enabled && Boolean(scope.orgId && scope.userId),
     staleTime: 30_000,

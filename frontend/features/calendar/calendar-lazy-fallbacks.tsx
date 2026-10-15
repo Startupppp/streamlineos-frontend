@@ -4,6 +4,7 @@ import Image from "next/image";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import type { CalendarListItem } from "@/hooks/api/calendar";
 import { formatEventDate, formatEventTimeRange } from "@/lib/date-utils";
 import { EVENT_COLORS } from "./calendar-event-constants";
@@ -71,18 +72,21 @@ export function CalendarAgendaPreview({
 
 export function CalendarSheetFallback({ label }: { label: string }) {
   return (
-    <div
-      role="status"
-      aria-live="polite"
-      aria-label={label}
-      className="fixed inset-y-0 right-0 z-50 flex w-full max-w-sm flex-col gap-3 border-l border-border bg-card p-5 shadow-panel"
-    >
-      <Skeleton className="h-6 w-3/5" />
-      <Skeleton className="h-4 w-4/5" />
-      <Skeleton className="h-4 w-2/3" />
-      <Skeleton className="h-4 w-1/2" />
-      <Skeleton className="h-32 w-full" />
-    </div>
+    <Sheet open>
+      <SheetContent showCloseButton={false}>
+        <SheetHeader>
+          <SheetTitle className="sr-only">{label}</SheetTitle>
+          <SheetDescription className="sr-only">Calendar panel is loading</SheetDescription>
+        </SheetHeader>
+        <div role="status" aria-live="polite" aria-label={label} className="flex flex-col gap-3">
+          <Skeleton className="h-6 w-3/5" />
+          <Skeleton className="h-4 w-4/5" />
+          <Skeleton className="h-4 w-2/3" />
+          <Skeleton className="h-4 w-1/2" />
+          <Skeleton className="h-32 w-full" />
+        </div>
+      </SheetContent>
+    </Sheet>
   );
 }
 
