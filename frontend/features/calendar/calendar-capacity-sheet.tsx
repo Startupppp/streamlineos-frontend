@@ -5,7 +5,7 @@ import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { AppSheet } from "@/components/shared/app-sheet";
 import {
   Select,
   SelectContent,
@@ -13,12 +13,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useCalendarCapacity,
@@ -96,18 +90,15 @@ export function CalendarCapacitySheet({ onClose }: { onClose: () => void }) {
     mode === "warehouse",
   );
   return (
-    <Sheet
+    <AppSheet
       open
       onOpenChange={(open) => {
         if (!open) onClose();
       }}
+      title="Capacity"
+      className="sm:max-w-xl"
     >
-      <SheetContent className="flex w-full flex-col gap-0 p-0 sm:max-w-xl">
-        <SheetHeader className="border-b px-5 py-4">
-          <SheetTitle>Capacity</SheetTitle>
-        </SheetHeader>
-        <ScrollArea className="min-h-0 flex-1">
-        <div className="space-y-4 px-5 py-4">
+        <div className="space-y-4">
           <p className="text-sm text-muted-foreground">
             Inspect confirmed allocations, tentative holds, and maintenance
             before choosing a time. Capacity is read only here.
@@ -458,8 +449,6 @@ export function CalendarCapacitySheet({ onClose }: { onClose: () => void }) {
             </>
           ) : null}
         </div>
-        </ScrollArea>
-      </SheetContent>
-    </Sheet>
+    </AppSheet>
   );
 }
