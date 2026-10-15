@@ -204,6 +204,34 @@ describe("public calendar booking page", () => {
     postMessage.mockRestore();
   });
 
+  it("does not post callback facts when the returned signature belongs to another session", async () => {
+    mockedGet.mockImplementation(async (path) => {
+      if (String(path).includes("/callback"))
+        return {
+          type: "streamline.calendar.booking.completed",
+          signature: "another-session-signature",
+          facts: { outcome: "confirmed" },
+        };
+      return offering;
+    });
+    const postMessage = jest.spyOn(window.parent, "postMessage").mockImplementation();
+    const user = userEvent.setup();
+    renderPage();
+    await screen.findByRole("heading", { name: "Meet Northwind" });
+    await user.click(screen.getByRole("radio"));
+    await user.type(screen.getByLabelText("Name"), "Ada Lovelace");
+    await user.type(screen.getByLabelText("Email"), "ada@example.com");
+    await user.type(screen.getByLabelText("Organization"), "Analytical Engines");
+    await user.click(screen.getByRole("checkbox"));
+    await user.click(screen.getByRole("button", { name: "Confirm booking" }));
+    expect(await screen.findByRole("heading", { name: "Your booking is confirmed" })).toBeInTheDocument();
+    await waitFor(() => expect(mockedGet.mock.calls.some(([path]) =>
+      String(path).endsWith("/sessions/session-token-value-long-enough/callback"),
+    )).toBe(true));
+    expect(postMessage).not.toHaveBeenCalled();
+    postMessage.mockRestore();
+  });
+
   it("rechecks an ambiguous confirmation with the original key and without another hold", async () => {
     let confirmations = 0;
     mockedPost.mockImplementation(async (path) => {

@@ -127,12 +127,18 @@ export function PublicCalendarBookingForm({
     paidBooking.error;
 
   useEffect(() => {
-    if (!callbackQuery.data || !session.targetOrigin || !callbackState) return;
+    if (
+      !callbackQuery.data ||
+      !session.targetOrigin ||
+      !session.callbackSignature ||
+      callbackQuery.data.signature !== session.callbackSignature ||
+      !callbackState
+    ) return;
     window.parent.postMessage(
       { ...callbackQuery.data, state: callbackState },
       session.targetOrigin,
     );
-  }, [callbackQuery.data, callbackState, session.targetOrigin]);
+  }, [callbackQuery.data, callbackState, session.callbackSignature, session.targetOrigin]);
 
   useEffect(() => {
     if (confirmBooking.data) setLastReceipt(confirmBooking.data);
