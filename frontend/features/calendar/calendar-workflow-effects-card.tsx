@@ -85,7 +85,7 @@ export function CalendarWorkflowEffectsCard() {
         )}
         {effectsQuery.isFetchNextPageError ? <ErrorState title="Older workflow effects could not be loaded" onRetry={() => void effectsQuery.fetchNextPage()} /> : null}
         <div ref={sentinelRef} aria-hidden="true" />
-        {effectsQuery.isFetchingNextPage ? <Skeleton className="mt-3 h-14 w-full" /> : null}
+        {isFetchingNextPage ? <Skeleton className="mt-3 h-14 w-full" /> : null}
       </CardContent>
     </Card>
   );

@@ -43,6 +43,8 @@ export const platformHierarchyQueryKeys = {
     search: (orgId: string, userId: string, membershipId: number | null, accessVersion: number, readScope: string, canView: boolean, filters: Readonly<object>) =>
       [...base, "calendar", "search", orgId, userId, membershipId, accessVersion, readScope, canView, filters] as const,
     savedViews: [...base, "calendar", "saved-views"] as const,
+    savedViewsForAccess: (membershipId: number | null, version: number, readScope: string, peopleScope: string, adminScope: string, isOrgOwner: boolean) =>
+      [...base, "calendar", "saved-views", membershipId, version, readScope, peopleScope, adminScope, isOrgOwner] as const,
     protectedWork: [...base, "calendar", "protected-work"] as const,
     commitments: [...base, "calendar", "commitments"] as const,
     coach: (orgId: string, userId: string) => [...base, "calendar", "coach", orgId, userId] as const,
