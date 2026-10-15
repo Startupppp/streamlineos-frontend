@@ -6,6 +6,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
+import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -55,16 +56,16 @@ function outcomeTitle(outcome: string): string {
   return "Your booking needs attention";
 }
 
-function bookingTime(value: string, timeZone: string): string {
-  return new Intl.DateTimeFormat(undefined, {
+function bookingTime(value: string, timeZone: string, locale: string): string {
+  return new Intl.DateTimeFormat(locale, {
     dateStyle: "full",
     timeStyle: "short",
     timeZone,
   }).format(new Date(value));
 }
 
-function slotTime(value: string, timeZone: string): string {
-  return new Intl.DateTimeFormat(undefined, {
+function slotTime(value: string, timeZone: string, locale: string): string {
+  return new Intl.DateTimeFormat(locale, {
     weekday: "short",
     month: "short",
     day: "numeric",
@@ -240,7 +241,7 @@ export function PublicCalendarBookingForm({
           {outcomeTitle(receipt.outcome)}
         </h2>
         <p className="text-sm text-muted-foreground">
-          {bookingTime(receipt.startAt, offering.timeZone)} · {offering.timeZone}
+          {bookingTime(receipt.startAt, offering.timeZone, session.locale)} · {offering.timeZone}
         </p>
         {receipt.reasonCode && (
           <p className="text-sm text-muted-foreground">
@@ -253,10 +254,10 @@ export function PublicCalendarBookingForm({
         {receipt.externalEffectsStatus === "pending" && <p className="text-sm text-muted-foreground">Invitations and other follow-ups are in progress.</p>}
         {receipt.externalEffectsStatus === "failed" && <p className="text-sm text-muted-foreground">A booking follow-up needs attention.</p>}
         {receipt.externalEffectsStatus === "uncertain" && <p className="text-sm text-muted-foreground">Booking follow-ups have not been confirmed yet.</p>}
-        {replayPayload.current && ["confirmed", "pending", "uncertain"].includes(receipt.outcome) && <button type="button" className="text-sm font-medium text-primary underline disabled:opacity-50" disabled={confirmBooking.isPending} onClick={() => { if (replayPayload.current) confirmBooking.mutate(replayPayload.current); }}>{confirmBooking.isPending ? "Checking booking status…" : "Refresh booking status"}</button>}
+        {replayPayload.current && ["confirmed", "pending", "uncertain"].includes(receipt.outcome) && <Button type="button" variant="link" disabled={confirmBooking.isPending} onClick={() => { if (replayPayload.current) confirmBooking.mutate(replayPayload.current); }}>{confirmBooking.isPending ? "Checking booking status…" : "Refresh booking status"}</Button>}
         {confirmBooking.isError && <p className="text-sm text-destructive" role="alert">{getErrorMessage(confirmBooking.error) || "Booking status could not be refreshed. Try again."}</p>}
-        {receipt.alternatives.length > 0 && <div className="space-y-2"><p className="text-sm font-medium">Other available times</p>{receipt.alternatives.map((alternative) => <button key={alternative.start} type="button" className="block w-full rounded-md border px-3 py-2 text-sm text-primary hover:bg-muted" onClick={() => chooseAnotherTime(alternative.start)}>Review {slotTime(alternative.start, offering.timeZone)}</button>)}</div>}
-        {["rejected", "expired", "cancelled", "uncertain"].includes(receipt.outcome) && <button type="button" className="text-sm font-medium text-primary underline" onClick={() => chooseAnotherTime()}>Choose another time</button>}
+        {receipt.alternatives.length > 0 && <div className="space-y-2"><p className="text-sm font-medium">Other available times</p>{receipt.alternatives.map((alternative) => <Button key={alternative.start} type="button" variant="outline" className="w-full justify-start" onClick={() => chooseAnotherTime(alternative.start)}>Review {slotTime(alternative.start, offering.timeZone, session.locale)}</Button>)}</div>}
+        {["rejected", "expired", "cancelled", "uncertain"].includes(receipt.outcome) && <Button type="button" variant="link" onClick={() => chooseAnotherTime()}>Choose another time</Button>}
       </div>
     );
   }
@@ -267,16 +268,16 @@ export function PublicCalendarBookingForm({
         <h2 className="text-xl font-semibold text-foreground">Booking status needs confirmation</h2>
         <p className="text-sm text-muted-foreground">Your request may have succeeded. Check its status before choosing another time.</p>
         <p className="text-sm text-destructive">{getErrorMessage(confirmBooking.error) || "Booking status could not be checked."}</p>
-        <button
+        <Button
           type="button"
-          className="text-sm font-medium text-primary underline disabled:opacity-50"
+          variant="link"
           disabled={confirmBooking.isPending}
           onClick={() => {
             if (replayPayload.current) confirmBooking.mutate(replayPayload.current);
           }}
         >
           Check booking status
-        </button>
+        </Button>
       </div>
     );
   }
@@ -318,7 +319,7 @@ export function PublicCalendarBookingForm({
                     onBlur={field.onBlur}
                   />
                   <span className="text-sm font-medium text-foreground">
-                    {slotTime(slot.start, offering.timeZone)}
+                    {slotTime(slot.start, offering.timeZone, session.locale)}
                   </span>
                 </Label>
               ))}
@@ -440,7 +441,7 @@ export function PublicCalendarBookingForm({
           (session.consentRequired && !form.watch("consentAccepted"))}
       >
         {session.payment
-          ? `Pay ${new Intl.NumberFormat(undefined, { style: "currency", currency: session.payment.currency }).format(session.payment.amountMinor / 100)} and book`
+          ? `Pay ${new Intl.NumberFormat(session.locale, { style: "currency", currency: session.payment.currency }).format(session.payment.amountMinor / 100)} and book`
           : "Confirm booking"}
       </LoadingButton>
     </form>

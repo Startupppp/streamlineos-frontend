@@ -158,6 +158,35 @@ describe("public calendar booking page", () => {
     expect(screen.getByText("I agree to scheduling contact")).toBeInTheDocument();
   });
 
+  it("uses the approved session language for the page, slots, and payment amount", async () => {
+    mockedPost.mockImplementation(async (path) => {
+      if (String(path).endsWith("/sessions")) return {
+        ...session,
+        locale: "fr-FR",
+        copy: { ...session.copy, locale: "fr-FR" },
+        payment: { amountMinor: 2500, currency: "INR" },
+      };
+      throw new Error("Unexpected request");
+    });
+    renderPage();
+    const title = await screen.findByRole("heading", { name: "Meet Northwind" });
+    expect(title.closest("main")).toHaveAttribute("lang", "fr-FR");
+    const formattedTime = new Intl.DateTimeFormat("fr-FR", {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      timeZone: offering.timeZone,
+    }).format(new Date(offering.slots[0].start));
+    expect(screen.getByRole("radio")).toHaveAccessibleName(formattedTime);
+    const formattedPrice = new Intl.NumberFormat("fr-FR", {
+      style: "currency",
+      currency: "INR",
+    }).format(25);
+    expect(screen.getByRole("button", { name: `Pay ${formattedPrice} and book` })).toBeInTheDocument();
+  });
+
   it("has no automated accessibility violations", async () => {
     const { container } = renderPage();
     await screen.findByRole("heading", { name: "Meet Northwind" });
