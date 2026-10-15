@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe } from "jest-axe";
 import { apiClient } from "@/lib/api-client";
@@ -162,6 +162,61 @@ describe("public calendar booking page", () => {
     const { container } = renderPage();
     await screen.findByRole("heading", { name: "Meet Northwind" });
     expect(await axe(container)).toHaveNoViolations();
+  });
+
+  it("focuses a missing required intake field before acquiring a hold", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await screen.findByRole("heading", { name: "Meet Northwind" });
+    await user.click(screen.getByRole("radio"));
+    await user.type(screen.getByLabelText("Name"), "Ada Lovelace");
+    await user.type(screen.getByLabelText("Email"), "ada@example.com");
+    await user.click(screen.getByRole("checkbox"));
+    await user.click(screen.getByRole("button", { name: "Confirm booking" }));
+    const intake = screen.getByLabelText("Organization");
+    expect(await screen.findByRole("alert", { name: "" })).toHaveTextContent("Enter Organization");
+    expect(intake).toHaveAttribute("aria-invalid", "true");
+    expect(intake).toHaveFocus();
+    expect(mockedPost.mock.calls.some(([path]) => String(path).endsWith("/holds"))).toBe(false);
+    await user.type(intake, "Analytical Engines");
+    await user.click(screen.getByRole("button", { name: "Confirm booking" }));
+    expect(await screen.findByRole("heading", { name: "Your booking is confirmed" })).toBeInTheDocument();
+    expect(mockedPost.mock.calls.filter(([path]) => String(path).endsWith("/holds"))).toHaveLength(1);
+  });
+
+  it("uses accessible shadcn slot and choice controls with required choice validation", async () => {
+    const choiceOffering = {
+      ...offering,
+      intakeFields: [{ key: "service", label: "Service", type: "select", required: true, options: ["Planning", "Support"] }],
+    };
+    mockedGet.mockResolvedValue(choiceOffering);
+    mockedPost.mockImplementation(async (path) => {
+      const value = String(path);
+      if (value.endsWith("/sessions")) return { ...session, intakeKeys: ["service"], copy: { ...session.copy, fieldLabels: {} } };
+      if (value.endsWith("/holds")) return hold;
+      return receipt;
+    });
+    const user = userEvent.setup();
+    renderPage();
+    const radio = await screen.findByRole("radio");
+    expect(radio).toHaveAccessibleName();
+    act(() => radio.focus());
+    await user.keyboard("[Space]");
+    expect(radio).toHaveAttribute("aria-checked", "true");
+    await user.type(screen.getByLabelText("Name"), "Ada Lovelace");
+    await user.type(screen.getByLabelText("Email"), "ada@example.com");
+    await user.click(screen.getByRole("checkbox"));
+    await user.click(screen.getByRole("button", { name: "Confirm booking" }));
+    const choice = screen.getByRole("combobox", { name: "Service" });
+    expect(await screen.findByText("Enter Service")).toHaveAttribute("role", "alert");
+    expect(choice).toHaveAttribute("aria-invalid", "true");
+    expect(choice).toHaveFocus();
+    expect(mockedPost.mock.calls.some(([path]) => String(path).endsWith("/holds"))).toBe(false);
+    await user.keyboard("[Space][ArrowDown][Enter]");
+    await user.click(screen.getByRole("button", { name: "Confirm booking" }));
+    expect(await screen.findByRole("heading", { name: "Your booking is confirmed" })).toBeInTheDocument();
+    expect(mockedPost.mock.calls.find(([path]) => String(path).endsWith("/confirm"))?.[1])
+      .toEqual(expect.objectContaining({ intake: { service: "Support" } }));
   });
 
   it("commits once and posts the server-projected callback to the approved origin", async () => {
