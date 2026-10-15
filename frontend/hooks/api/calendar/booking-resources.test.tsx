@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { usePendingCalendarBookingAllocations, useResolveCalendarBookingAllocation } from "./booking-resources";
+import { useInventoryCalendarEquipment, usePendingCalendarBookingAllocations, useResolveCalendarBookingAllocation } from "./booking-resources";
 
 const get = jest.fn();
 const put = jest.fn();
@@ -9,6 +9,13 @@ let accessSnapshot: { isOrgOwner: boolean; scopes: Record<string, "all"> } | und
 
 jest.mock("@/hooks/api/access", () => ({
   useAccess: () => ({ data: accessSnapshot, isError: false, refetch: async () => ({ data: accessSnapshot }) }),
+  usePermissionGate: (permission: string) => ({
+    permission,
+    allowed: Boolean(accessSnapshot?.scopes[permission]),
+    denied: Boolean(accessSnapshot) && !accessSnapshot?.scopes[permission],
+    pending: !accessSnapshot,
+    unavailable: false,
+  }),
 }));
 
 jest.mock("./booking-rules", () => ({
@@ -53,4 +60,16 @@ it("does not expose the approval endpoint or mutation to a Calendar reader", asy
   expect(get).not.toHaveBeenCalled();
   await expect(result.current.resolve.mutateAsync({ resourceId: 3, expectedVersion: 2, outcome: "approved", ownerReceiptId: "receipt-1" })).rejects.toThrow("Missing permission");
   expect(put).not.toHaveBeenCalled();
+});
+
+it("requests the selected Inventory equipment catalog page", async () => {
+  accessSnapshot = { isOrgOwner: false, scopes: { "inventory:warehouses:read": "all" } };
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } });
+  renderHook(() => useInventoryCalendarEquipment(12), { wrapper: wrapper(client) });
+  await waitFor(() => expect(get).toHaveBeenCalledWith(
+    "/inventory/calendar-equipment",
+    { limit: 50, cursor: 12 },
+    expect.anything(),
+    expect.anything(),
+  ));
 });

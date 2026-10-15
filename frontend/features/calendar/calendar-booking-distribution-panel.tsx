@@ -4,6 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -131,7 +132,6 @@ export function CalendarBookingDistributionPanel({ rule, onBack }: { rule: Calen
   }
 
   async function revoke(linkId: string) {
-    if (!window.confirm("Revoke this booking link? It will stop accepting new visitors.")) return;
     try {
       await revokeLink.mutateAsync(linkId);
       if (issuedLink?.id === linkId) setIssuedLink(null);
@@ -178,7 +178,7 @@ export function CalendarBookingDistributionPanel({ rule, onBack }: { rule: Calen
         <div className="space-y-1"><Label htmlFor="link-source">Attribution source (optional)</Label><Input id="link-source" value={source} onChange={(event) => setSource(event.target.value)} /></div>
         {canWrite ? <Button onClick={() => void issueLink()} disabled={createLink.isPending}>Create link</Button> : null}
         {issuedLink ? <div className="space-y-2 rounded-md border p-2"><p className="text-sm font-medium">Save this link now. Its token is shown once.</p><Input readOnly value={issuedLink.href} aria-label="New booking link" /><Button variant="outline" onClick={async () => { try { await navigator.clipboard.writeText(issuedLink.href); toast.success("Link copied"); } catch { toast.error("Could not copy the link"); } }}>Copy link</Button>{issuedLink.channel === "embed" ? <div className="space-y-2"><p className="text-xs text-muted-foreground">Embed on {issuedLink.origin}.</p><Textarea readOnly aria-label="Booking embed code" value={calendarBookingEmbedCode(issuedLink.href)} /><Button variant="outline" onClick={async () => { try { await navigator.clipboard.writeText(calendarBookingEmbedCode(issuedLink.href)); toast.success("Embed code copied"); } catch { toast.error("Could not copy the embed code"); } }}>Copy embed code</Button></div> : null}</div> : null}
-        {links.access.denied ? <p className="text-sm">Links are unavailable to this account.</p> : links.access.unavailable ? <ErrorState title="Links unavailable" onRetry={() => void links.refetch()} /> : links.access.pending || links.isPending ? <p role="status">Loading links…</p> : links.isError ? <ErrorState error={links.error} onRetry={() => void links.refetch()} /> : links.data?.length ? <div className="space-y-2">{links.data.map((link) => <div key={link.id} className="flex items-center justify-between gap-2 rounded-md border p-2 text-sm"><span>{link.channel} · {link.status} · {link.singleUse ? "single use" : "reusable"}{link.expiresAt ? ` · expires ${localDateTime(link.expiresAt)}` : ""}</span>{link.status === "active" && canWrite ? <Button size="sm" variant="outline" onClick={() => void revoke(link.id)} disabled={revokeLink.isPending}>Revoke</Button> : null}</div>)}</div> : <p className="text-sm text-muted-foreground">No links yet.</p>}
+        {links.access.denied ? <p className="text-sm">Links are unavailable to this account.</p> : links.access.unavailable ? <ErrorState title="Links unavailable" onRetry={() => void links.refetch()} /> : links.access.pending || links.isPending ? <p role="status">Loading links…</p> : links.isError ? <ErrorState error={links.error} onRetry={() => void links.refetch()} /> : links.data?.length ? <div className="space-y-2">{links.data.map((link) => <div key={link.id} className="flex items-center justify-between gap-2 rounded-md border p-2 text-sm"><span>{link.channel} · {link.status} · {link.singleUse ? "single use" : "reusable"}{link.expiresAt ? ` · expires ${localDateTime(link.expiresAt)}` : ""}</span>{link.status === "active" && canWrite ? <ConfirmDialog title="Revoke booking link?" description="This link will stop accepting new visitors." confirmLabel="Revoke link" destructive isPending={revokeLink.isPending} onConfirm={() => void revoke(link.id)} trigger={<Button size="sm" variant="outline" disabled={revokeLink.isPending}>Revoke</Button>} /> : null}</div>)}</div> : <p className="text-sm text-muted-foreground">No links yet.</p>}
       </section> : null}
     </>}
   </div>;
