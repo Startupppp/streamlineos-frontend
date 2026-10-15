@@ -19,6 +19,15 @@ jest.mock("@/hooks/api/kb/pages", () => ({
   useKbBulkRestorePages: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   useKbBulkPurgePages: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   useKbTrashPurgeImpact: jest.fn(() => ({ data: undefined })),
+  useKbTrashDeleters: jest.fn(() => ({
+    data: { pages: [{ data: [
+      { membershipId: 7, name: "Alice Chen" },
+      { membershipId: 8, name: "Bob Smith" },
+    ], selected: null }] },
+    hasNextPage: false,
+    fetchNextPage: jest.fn(),
+    isFetchingNextPage: false,
+  })),
 }));
 
 jest.mock("@/hooks/api/access", () => ({
@@ -94,19 +103,6 @@ jest.mock("@/hooks/common/use-cursor-pagination", () => ({
   })),
 }));
 
-jest.mock("@/hooks/api/organization", () => ({
-  useOrgMembers: jest.fn(() => ({
-    data: {
-      data: [
-        { membershipId: 7, userId: "user-7", name: "Alice Chen", email: "alice@example.com", image: null, role: "member", joinedAt: "2024-01-01T00:00:00Z", totpEnabled: false },
-        { membershipId: 8, userId: "user-8", name: "Bob Smith", email: "bob@example.com", image: null, role: "member", joinedAt: "2024-01-02T00:00:00Z", totpEnabled: false },
-      ],
-      pagination: { hasMore: false, nextCursor: null, limit: 100 },
-    },
-    isLoading: false,
-  })),
-}));
-
 jest.mock("@/hooks/api/kb/spaces", () => ({
   useKbSpaces: jest.fn(() => ({
     data: {
@@ -132,8 +128,8 @@ const { useSearchParams } = jest.requireMock("next/navigation") as {
 const { useCan } = jest.requireMock("@/hooks/api/access") as {
   useCan: jest.Mock;
 };
-const { useOrgMembers } = jest.requireMock("@/hooks/api/organization") as {
-  useOrgMembers: jest.Mock;
+const { useKbTrashDeleters } = jest.requireMock("@/hooks/api/kb/pages") as {
+  useKbTrashDeleters: jest.Mock;
 };
 const { useCursorPagination } = jest.requireMock("@/hooks/common/use-cursor-pagination") as {
   useCursorPagination: jest.Mock;
@@ -250,7 +246,7 @@ describe("trash page deleted-by filter", () => {
         target: { value: "Zoe" },
       });
       act(() => jest.advanceTimersByTime(300));
-      expect(useOrgMembers).toHaveBeenLastCalledWith(1, 100, "Zoe");
+      expect(useKbTrashDeleters).toHaveBeenLastCalledWith("Zoe", undefined);
     } finally {
       jest.useRealTimers();
     }

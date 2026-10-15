@@ -9,9 +9,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useOrgMembers } from "@/hooks/api/organization";
+import { useKbTrashDeleters } from "@/hooks/api/kb/pages";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
-import { getUserDisplayName } from "@/lib/person-display";
 
 interface TrashMemberFilterProps {
   value?: number;
@@ -19,23 +18,28 @@ interface TrashMemberFilterProps {
 }
 
 const ALL_MEMBERS_VALUE = "all";
+const MORE_MEMBERS_VALUE = "more";
 
 export function TrashMemberFilter({ value, onChange }: TrashMemberFilterProps) {
   const [search, setSearch] = useState("");
   const [selectedMember, setSelectedMember] = useState<{ id: number; name: string } | null>(null);
   const debouncedSearch = useDebouncedValue(search.trim(), 300);
-  const { data } = useOrgMembers(1, 100, debouncedSearch || undefined);
-  const members = data?.data ?? [];
+  const { data, hasNextPage, fetchNextPage, isFetchingNextPage } = useKbTrashDeleters(debouncedSearch, value);
+  const members = data?.pages.flatMap((page) => page.data) ?? [];
   const selectedInResults = members.find((member) => member.membershipId === value);
   const selectedName = selectedInResults
-    ? getUserDisplayName(selectedInResults)
+    ? selectedInResults.name
     : selectedMember !== null && selectedMember.id === value
       ? selectedMember.name
-      : "Selected member";
+      : data?.pages[0]?.selected?.name ?? "Selected member";
 
   function handleMemberChange(next: string) {
+    if (next === MORE_MEMBERS_VALUE) {
+      void fetchNextPage();
+      return;
+    }
     const member = members.find((candidate) => String(candidate.membershipId) === next);
-    if (member) setSelectedMember({ id: member.membershipId, name: getUserDisplayName(member) });
+    if (member) setSelectedMember({ id: member.membershipId, name: member.name });
     onChange(next);
   }
 
@@ -63,9 +67,14 @@ export function TrashMemberFilter({ value, onChange }: TrashMemberFilterProps) {
           )}
           {members.map((member) => (
             <SelectItem key={member.membershipId} value={String(member.membershipId)}>
-              {getUserDisplayName(member)}
+              {member.name}
             </SelectItem>
           ))}
+          {hasNextPage && (
+            <SelectItem value={MORE_MEMBERS_VALUE} disabled={isFetchingNextPage}>
+              {isFetchingNextPage ? "Loading…" : "Load more members"}
+            </SelectItem>
+          )}
         </SelectContent>
       </Select>
     </div>

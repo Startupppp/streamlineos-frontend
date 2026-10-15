@@ -142,6 +142,17 @@ export const kbTrashPageListContract = z.object({
   }),
 });
 
+const kbTrashDeleterContract = z.object({ membershipId: z.number().int(), name: z.string() });
+export const kbTrashDeletersContract = z.object({
+  data: z.array(kbTrashDeleterContract),
+  pagination: z.object({
+    limit: z.number().int(),
+    hasMore: z.boolean(),
+    nextCursor: z.string().nullable(),
+  }),
+  selected: kbTrashDeleterContract.nullable(),
+});
+
 export const kbBulkPageResultContract = z.object({
   results: z.array(
     z.object({

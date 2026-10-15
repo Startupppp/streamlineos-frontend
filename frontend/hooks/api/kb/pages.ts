@@ -64,6 +64,10 @@ const kbFavoritePageListContract = lazyContract(() =>
   import("@/hooks/api/kb/kb-pages-schema").then((m) => m.kbFavoritePageListContract),
 );
 
+const kbTrashDeletersContract = lazyContract(() =>
+  import("@/hooks/api/kb/kb-pages-schema").then((m) => m.kbTrashDeletersContract),
+);
+
 const kbPageBacklinkContract = lazyContract(() =>
   import("@/hooks/api/kb/kb-pages-schema").then(
     (m) => m.kbPageBacklinksPageContract,
@@ -245,6 +249,34 @@ export function useKbPagesTrash(params?: TrashPageParams) {
         signal,
         kbTrashPageListContract,
       ),
+    staleTime: 30_000,
+    enabled: canView,
+  });
+}
+
+export interface KbTrashDeleter {
+  membershipId: number;
+  name: string;
+}
+
+export type KbTrashDeletersPage = Page<KbTrashDeleter> & {
+  selected: KbTrashDeleter | null;
+};
+
+export function useKbTrashDeleters(search: string, selectedMembershipId?: number) {
+  const canView = useCan("kb:pages:view");
+  return useInfiniteQuery({
+    ...INLINE_READ_ERROR,
+    queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTrashDeleters(search, selectedMembershipId),
+    initialPageParam: NO_CURSOR_YET,
+    queryFn: ({ signal, pageParam }) =>
+      apiClient.get<KbTrashDeletersPage>(
+        "/kb/pages/trash/deleters",
+        { limit: 50, search: search || undefined, selectedMembershipId, cursor: pageParam },
+        signal,
+        kbTrashDeletersContract,
+      ),
+    getNextPageParam: (last) => last.pagination.nextCursor ?? undefined,
     staleTime: 30_000,
     enabled: canView,
   });
