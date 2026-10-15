@@ -218,7 +218,7 @@ GitHub backend deployment `7102456888` identifies the StreamlineOS Railway proje
 
 - [ ] **KB-OPEN-075** **BLOCKED:** Pre-flight: resolve exact table/route/cache/index/blob targets and write them into this ledger before any destructive statement Operational step; requires migration execution context. BLOCKED.
   - Previous consolidated ID: `KB-OPEN-304`
-- [ ] **KB-OPEN-076** **BLOCKED:** Pre-flight: RDS snapshot taken and id recorded here Operational step; requires production database access. BLOCKED.
+- [ ] **KB-OPEN-076** **BLOCKED:** Pre-flight: identify the deployed Neon project, create a recoverable backup or isolated branch, rehearse restore, and record its id before migration. The old RDS snapshot wording is superseded by the current Neon provider. The five latest listed `cell-backup.yml` runs failed, including `38764969031` on 2026-10-15; that cell workflow does not prove a recoverable Knowledge Base migration backup. The current Railway login lacks access to the StreamlineOS production project.
   - Previous consolidated ID: `KB-OPEN-305`
 - [ ] **KB-OPEN-077** **BLOCKED:** Per-record reconciliation of status, slug, redirects, comments, attachments, versions, translations, public URL, citations Operational step; requires production data. BLOCKED.
   - Previous consolidated ID: `KB-OPEN-306`

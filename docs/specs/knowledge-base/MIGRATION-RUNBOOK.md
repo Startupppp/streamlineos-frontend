@@ -8,6 +8,8 @@
 
 > **Deployment identity refinement:** GitHub deployment `7102456888` on the backend repository identifies Railway project `8a7c68dd-4ec9-4b76-830b-41bc3f6f1d19`, production environment `1eb500a2-4a59-4db5-9d82-29087c45edba`, and deployed ref `20b6076d8948df1c8a0729dfa4ca9d5eb235ad63`; its latest status was success. `railway status --project ... --environment ... --json` returned `Unauthorized` with the current CLI login. The deployment record does not reveal the service's database endpoint or establish that the configured local Neon URL is the deployed production database. Obtain access to that specific project and verify its runtime database identity before a migration or deployment.
 
+> **Backup gate:** GitHub's five latest listed `cell-backup.yml` runs all concluded `failure`, including run `38764969031` on 2026-10-15. That workflow is a cell logical-backup path and does not by itself establish a recoverable snapshot for this Knowledge Base migration. No current backup artifact, Neon branch, or restore rehearsal was verified for 2044.
+
 > **September 27 scope clarification, superseded where noted above:** the historical measurements below apply to named migrations at their recorded dates. They did not prove newer Knowledge Base migrations were applied. The formerly unjournalled `1370_kb_chunk_acl_dead_index.sql` is included in the 2026-10-16 ledger/hash check above. Do not reapply 1174 or activate rejected 1347 from a stale checklist.
 
 ## Current state: **all ten applied, 1174 included. The cutover is closed.**
