@@ -7,14 +7,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useReplaceSchedulingPollGuest } from "@/hooks/api/calendar/scheduling-polls";
-import type { SchedulingPoll } from "@/hooks/api/calendar/scheduling-polls-schema";
+import type { ReplacedSchedulingPollGuest, SchedulingPoll } from "@/hooks/api/calendar/scheduling-polls-schema";
 
 type GuestVoter = NonNullable<SchedulingPoll["guestVoters"]>[number];
 
 export function CalendarPollGuestReplacement({ pollId, guest, onReplaced }: {
   pollId: string;
   guest: GuestVoter;
-  onReplaced: () => void;
+  onReplaced: (result: ReplacedSchedulingPollGuest) => void;
 }) {
   const [editing, setEditing] = useState(false);
   const [email, setEmail] = useState(guest.email ?? "");
@@ -35,7 +35,7 @@ export function CalendarPollGuestReplacement({ pollId, guest, onReplaced }: {
       setLink(`${window.location.origin}/calendar/polls/${encodeURIComponent(result.token)}`);
       setEditing(false);
       setError(null);
-      onReplaced();
+      onReplaced(result);
       toast.success("Guest link replaced");
     } catch (cause) {
       setError(getErrorMessage(cause));

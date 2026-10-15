@@ -18,26 +18,48 @@ import {
   useSchedulingPolls,
   type CreateSchedulingPollInput,
 } from "@/hooks/api/calendar/scheduling-polls";
-import type { CreatedSchedulingPoll, FinalizedSchedulingPoll } from "@/hooks/api/calendar/scheduling-polls-schema";
+import type {
+  CreatedSchedulingPoll,
+  FinalizedSchedulingPoll,
+  ReplacedSchedulingPollGuest,
+  SchedulingPoll,
+} from "@/hooks/api/calendar/scheduling-polls-schema";
 import { CalendarPollGuestReplacement } from "./calendar-poll-guest-replacement";
 
 type PollVoter = CreateSchedulingPollInput["voters"][number];
+type GuestVoter = NonNullable<SchedulingPoll["guestVoters"]>[number];
 
 function localDateTime(value: Date): string {
-  return new Date(value.getTime() - value.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
+  return new Date(value.getTime() - value.getTimezoneOffset() * 60_000)
+    .toISOString()
+    .slice(0, 16);
 }
 
 function displayTime(value: string, timeZone: string): string {
-  return new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short", timeZone }).format(new Date(value));
+  return new Intl.DateTimeFormat(undefined, {
+    dateStyle: "medium",
+    timeStyle: "short",
+    timeZone,
+  }).format(new Date(value));
 }
 
-export function CalendarSchedulingPollsPanel({ rule, onBack }: { rule: CalendarBookingRule; onBack: () => void }) {
+export function CalendarSchedulingPollsPanel({
+  rule,
+  onBack,
+}: {
+  rule: CalendarBookingRule;
+  onBack: () => void;
+}) {
   const [cursor, setCursor] = useState<string | null>(null);
-  const [previousCursors, setPreviousCursors] = useState<Array<string | null>>([]);
+  const [previousCursors, setPreviousCursors] = useState<Array<string | null>>(
+    [],
+  );
   const [selectedPollId, setSelectedPollId] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [title, setTitle] = useState("");
-  const [expiresAt, setExpiresAt] = useState(() => localDateTime(new Date(Date.now() + 86_400_000)));
+  const [expiresAt, setExpiresAt] = useState(() =>
+    localDateTime(new Date(Date.now() + 86_400_000)),
+  );
   const [holdOptions, setHoldOptions] = useState(false);
   const [selectedStarts, setSelectedStarts] = useState<string[]>([]);
   const [voters, setVoters] = useState<PollVoter[]>([]);
@@ -46,24 +68,54 @@ export function CalendarSchedulingPollsPanel({ rule, onBack }: { rule: CalendarB
   const [memberSearch, setMemberSearch] = useState("");
   const [memberId, setMemberId] = useState("");
   const [created, setCreated] = useState<CreatedSchedulingPoll | null>(null);
-  const [finalized, setFinalized] = useState<FinalizedSchedulingPoll | null>(null);
+  const [finalized, setFinalized] = useState<FinalizedSchedulingPoll | null>(
+    null,
+  );
   const [error, setError] = useState<string | null>(null);
   const requestKeys = useRef(new Map<string, string>());
-  const [{ from, to }] = useState(() => ({ from: new Date().toISOString(), to: new Date(Date.now() + 14 * 86_400_000).toISOString() }));
+  const [{ from, to }] = useState(() => ({
+    from: new Date().toISOString(),
+    to: new Date(Date.now() + 14 * 86_400_000).toISOString(),
+  }));
   const polls = useSchedulingPolls(rule.id, cursor);
   const detail = useSchedulingPoll(selectedPollId);
   const preview = useCalendarBookingRulePreview(rule.id, from, to, createOpen);
-  const members = useMemberDirectory({ kind: "org" }, { search: memberSearch, enabled: createOpen, selectedIds: voters.filter((voter) => voter.kind === "member").map((voter) => voter.userId) });
+  const members = useMemberDirectory(
+    { kind: "org" },
+    {
+      search: memberSearch,
+      enabled: createOpen,
+      selectedIds: voters
+        .filter((voter) => voter.kind === "member")
+        .map((voter) => voter.userId),
+    },
+  );
   const create = useCreateSchedulingPoll();
   const finalize = useFinalizeSchedulingPoll();
   const cancel = useCancelSchedulingPoll();
 
   function addGuest() {
     const email = guestEmail.trim().toLowerCase();
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return setError("Enter a valid guest email.");
-    if (voters.some((voter) => voter.kind === "guest" && voter.email.toLowerCase() === email)) return setError("This guest is already included.");
-    if (voters.length >= 100) return setError("A poll supports at most 100 voters.");
-    setVoters([...voters, { kind: "guest", email, name: guestName.trim() || null, requirement: "required" }]);
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+      return setError("Enter a valid guest email.");
+    if (
+      voters.some(
+        (voter) =>
+          voter.kind === "guest" && voter.email.toLowerCase() === email,
+      )
+    )
+      return setError("This guest is already included.");
+    if (voters.length >= 100)
+      return setError("A poll supports at most 100 voters.");
+    setVoters([
+      ...voters,
+      {
+        kind: "guest",
+        email,
+        name: guestName.trim() || null,
+        requirement: "required",
+      },
+    ]);
     setGuestEmail("");
     setGuestName("");
     setError(null);
@@ -72,22 +124,41 @@ export function CalendarSchedulingPollsPanel({ rule, onBack }: { rule: CalendarB
   function addMember() {
     const member = members.members.find((item) => item.id === memberId);
     if (!member) return setError("Choose a current organization member.");
-    if (voters.some((voter) => voter.kind === "member" && voter.userId === member.id)) return setError("This member is already included.");
-    if (voters.length >= 100) return setError("A poll supports at most 100 voters.");
-    setVoters([...voters, { kind: "member", userId: member.id, requirement: "required" }]);
+    if (
+      voters.some(
+        (voter) => voter.kind === "member" && voter.userId === member.id,
+      )
+    )
+      return setError("This member is already included.");
+    if (voters.length >= 100)
+      return setError("A poll supports at most 100 voters.");
+    setVoters([
+      ...voters,
+      { kind: "member", userId: member.id, requirement: "required" },
+    ]);
     setMemberId("");
     setError(null);
   }
 
   async function submit() {
-    if (preview.data?.availabilityState !== "available") return setError("Available options must load before creating a poll.");
-    const options = preview.data.slots.filter((slot) => selectedStarts.includes(slot.start)).map((slot) => ({ startAt: slot.start, endAt: slot.end }));
-    if (options.length < 2 || options.length > 20) return setError("Choose between 2 and 20 available times.");
+    if (preview.data?.availabilityState !== "available")
+      return setError("Available options must load before creating a poll.");
+    const options = preview.data.slots
+      .filter((slot) => selectedStarts.includes(slot.start))
+      .map((slot) => ({ startAt: slot.start, endAt: slot.end }));
+    if (options.length < 2 || options.length > 20)
+      return setError("Choose between 2 and 20 available times.");
     if (!title.trim()) return setError("Enter a poll title.");
     if (voters.length === 0) return setError("Add at least one voter.");
     const expiry = new Date(expiresAt);
-    if (!Number.isFinite(expiry.getTime()) || expiry.getTime() < Date.now() + 5 * 60_000 || expiry.getTime() > Date.now() + 30 * 86_400_000)
-      return setError("Choose an expiry between 5 minutes and 30 days from now.");
+    if (
+      !Number.isFinite(expiry.getTime()) ||
+      expiry.getTime() < Date.now() + 5 * 60_000 ||
+      expiry.getTime() > Date.now() + 30 * 86_400_000
+    )
+      return setError(
+        "Choose an expiry between 5 minutes and 30 days from now.",
+      );
     const payload = {
       ruleId: rule.id,
       expectedRuleVersion: rule.version,
@@ -121,19 +192,38 @@ export function CalendarSchedulingPollsPanel({ rule, onBack }: { rule: CalendarB
   async function finalizeOption(optionId: string) {
     if (!detail.data) return;
     try {
-      const result = await finalize.mutateAsync({ pollId: detail.data.id, optionId, expectedVersion: detail.data.version });
+      const result = await finalize.mutateAsync({
+        pollId: detail.data.id,
+        optionId,
+        expectedVersion: detail.data.version,
+      });
       setFinalized(result);
       setError(null);
-      toast.success(result.outcome === "finalized" ? "Poll finalized" : result.outcome === "pending" ? "Finalization is pending" : "That option is unavailable");
+      toast.success(
+        result.outcome === "finalized"
+          ? "Poll finalized"
+          : result.outcome === "pending"
+            ? "Finalization is pending"
+            : "That option is unavailable",
+      );
     } catch (cause) {
       setError(getErrorMessage(cause));
     }
   }
 
   async function cancelPoll() {
-    if (!detail.data || !window.confirm(`Cancel “${detail.data.title}”? Voters will no longer be able to respond.`)) return;
+    if (
+      !detail.data ||
+      !window.confirm(
+        `Cancel “${detail.data.title}”? Voters will no longer be able to respond.`,
+      )
+    )
+      return;
     try {
-      await cancel.mutateAsync({ pollId: detail.data.id, expectedVersion: detail.data.version });
+      await cancel.mutateAsync({
+        pollId: detail.data.id,
+        expectedVersion: detail.data.version,
+      });
       setError(null);
       toast.success("Poll cancelled");
     } catch (cause) {
@@ -141,29 +231,440 @@ export function CalendarSchedulingPollsPanel({ rule, onBack }: { rule: CalendarB
     }
   }
 
-  return <div className="space-y-4">
-    <Button variant="outline" onClick={onBack}>Back to booking pages</Button>
-    <div className="flex items-center justify-between gap-2"><div><h3 className="font-medium">Scheduling polls</h3><p className="text-sm text-muted-foreground">{rule.title} · {rule.timeZone}</p></div><Button onClick={() => { setCreateOpen(true); setSelectedPollId(null); setCreated(null); setFinalized(null); setError(null); }}>New poll</Button></div>
-    {error ? <p role="alert" className="rounded-md border border-destructive p-2 text-sm text-destructive">{error}</p> : null}
-    {created?.poll.id === selectedPollId && created.voterLinks.length ? <div className="space-y-2 rounded-md border p-3"><p className="text-sm font-medium">Guest voting links</p><p className="text-xs text-muted-foreground">Copy these links now. Tokens are shown only after creation.</p>{created.voterLinks.map((link) => { const href = `${window.location.origin}/calendar/polls/${encodeURIComponent(link.token)}`; return <div key={link.voterId} className="space-y-1"><Label htmlFor={`poll-link-${link.voterId}`}>{link.email}</Label><Input id={`poll-link-${link.voterId}`} readOnly value={href} /><Button size="sm" variant="outline" onClick={async () => { try { await navigator.clipboard.writeText(href); toast.success("Voting link copied"); } catch { toast.error("Could not copy the link"); } }}>Copy link</Button></div>; })}</div> : null}
-    {createOpen ? <div className="space-y-4 rounded-md border p-3">
-      <div className="space-y-1"><Label htmlFor="poll-title">Title</Label><Input id="poll-title" maxLength={200} value={title} onChange={(event) => setTitle(event.target.value)} /></div>
-      <div className="space-y-1"><Label htmlFor="poll-expires">Voting closes</Label><Input id="poll-expires" type="datetime-local" value={expiresAt} onChange={(event) => setExpiresAt(event.target.value)} /></div>
-      <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={holdOptions} onChange={(event) => setHoldOptions(event.target.checked)} />Temporarily hold proposed capacity</label>
-      <fieldset className="space-y-2"><legend className="text-sm font-medium">Proposed times</legend>{preview.access.unavailable || preview.isError ? <ErrorState title="Available times unavailable" error={preview.error} onRetry={() => void preview.refetch()} /> : preview.access.pending || preview.isPending ? <p role="status">Checking available times…</p> : preview.data?.availabilityState !== "available" ? <p className="text-sm text-muted-foreground">{preview.data?.message ?? "No safe times are available."}</p> : preview.data.slots.length ? <div className="max-h-64 space-y-1 overflow-y-auto">{preview.data.slots.map((slot) => <label key={slot.start} className="flex items-center gap-2 rounded-md border p-2 text-sm"><input type="checkbox" checked={selectedStarts.includes(slot.start)} disabled={!selectedStarts.includes(slot.start) && selectedStarts.length >= 20} onChange={(event) => setSelectedStarts(event.target.checked ? [...selectedStarts, slot.start] : selectedStarts.filter((value) => value !== slot.start))} />{displayTime(slot.start, rule.timeZone)}</label>)}</div> : <p className="text-sm text-muted-foreground">No available times.</p>}</fieldset>
-      <fieldset className="space-y-2"><legend className="text-sm font-medium">Voters</legend>{voters.map((voter, index) => <div key={`${voter.kind}:${voter.kind === "guest" ? voter.email : voter.userId}`} className="flex items-center justify-between gap-2 rounded-md border p-2 text-sm"><span>{voter.kind === "guest" ? voter.email : members.selectedMembers.find((member) => member.id === voter.userId)?.name ?? voter.userId}</span><select aria-label={`Voter ${index + 1} priority`} value={voter.requirement} onChange={(event) => setVoters(voters.map((item, position) => position === index ? { ...item, requirement: event.target.value as "required" | "optional" } : item))} className="rounded-md border bg-background p-1"><option value="required">Required</option><option value="optional">Optional</option></select><Button size="sm" variant="outline" onClick={() => setVoters(voters.filter((_, position) => position !== index))}>Remove</Button></div>)}
-        <div className="grid grid-cols-2 gap-2"><div className="space-y-1"><Label htmlFor="poll-guest-email">Guest email</Label><Input id="poll-guest-email" type="email" value={guestEmail} onChange={(event) => setGuestEmail(event.target.value)} /></div><div className="space-y-1"><Label htmlFor="poll-guest-name">Guest name</Label><Input id="poll-guest-name" value={guestName} onChange={(event) => setGuestName(event.target.value)} /></div></div><Button variant="outline" onClick={addGuest}>Add guest</Button>
-        <div className="space-y-1"><Label htmlFor="poll-member-search">Find a team member</Label><Input id="poll-member-search" value={memberSearch} onChange={(event) => setMemberSearch(event.target.value)} /></div><div className="flex gap-2"><select aria-label="Team member" className="min-w-0 flex-1 rounded-md border bg-background p-2 text-sm" value={memberId} onChange={(event) => setMemberId(event.target.value)}><option value="">Choose a member</option>{members.members.map((member) => <option key={member.id} value={member.id}>{member.name ?? member.email}</option>)}</select><Button variant="outline" onClick={addMember} disabled={members.isLoading}>Add member</Button></div>
-      </fieldset>
-      <div className="flex gap-2"><Button onClick={() => void submit()} disabled={create.isPending}>Create poll</Button><Button variant="outline" onClick={() => setCreateOpen(false)}>Cancel</Button></div>
-    </div> : selectedPollId ? <div className="space-y-3 rounded-md border p-3"><Button variant="outline" onClick={() => { setSelectedPollId(null); setFinalized(null); }}>Back to polls</Button>{detail.access.unavailable || detail.isError ? <ErrorState title="Poll unavailable" error={detail.error} onRetry={() => void detail.refetch()} /> : detail.access.pending || detail.isPending ? <p role="status">Loading poll…</p> : detail.data ? <><div><h4 className="font-medium">{detail.data.title}</h4><p className="text-sm text-muted-foreground">{detail.data.status} · Voting closes {displayTime(detail.data.expiresAt, rule.timeZone)}</p></div>{detail.data.options.map((option) => <div key={option.id} className="flex items-center justify-between gap-2 rounded-md border p-2 text-sm"><span>{displayTime(option.startAt, rule.timeZone)} · {option.status}</span><span>Yes {option.votes.yes} · Maybe {option.votes.maybe} · No {option.votes.no}</span>{detail.data?.status === "open" && option.status === "proposed" ? <Button size="sm" onClick={() => void finalizeOption(option.id)} disabled={finalize.isPending}>Finalize</Button> : null}</div>)}{detail.data.status === "open" ? <Button variant="outline" onClick={() => void cancelPoll()} disabled={cancel.isPending}>Cancel poll</Button> : null}{finalized?.outcome === "unavailable" ? <div className="space-y-2"><p className="text-sm">That option is unavailable. Votes remain visible; choose another current option.</p>{finalized.alternatives.map((alternative) => <p key={alternative.start} className="text-sm text-muted-foreground">Alternative: {displayTime(alternative.start, rule.timeZone)}</p>)}</div> : null}</> : null}</div> : <>
-      {polls.access.unavailable || polls.isError ? <ErrorState title="Polls unavailable" error={polls.error} onRetry={() => void polls.refetch()} /> : polls.access.pending || polls.isPending ? <p role="status">Loading polls…</p> : polls.data?.items.length ? <div className="space-y-2">{polls.data.items.map((poll) => <button key={poll.id} type="button" className="flex w-full items-center justify-between rounded-md border p-3 text-left text-sm hover:bg-muted" onClick={() => { setSelectedPollId(poll.id); setFinalized(null); }}>{poll.title}<span className="capitalize text-muted-foreground">{poll.status}</span></button>)}</div> : <p className="text-sm text-muted-foreground">No polls for this booking page yet.</p>}
-      <div className="flex gap-2">{previousCursors.length ? <Button variant="outline" onClick={() => { setCursor(previousCursors.at(-1) ?? null); setPreviousCursors(previousCursors.slice(0, -1)); }}>Newer</Button> : null}{polls.data?.nextCursor ? <Button variant="outline" onClick={() => { setPreviousCursors([...previousCursors, cursor]); setCursor(polls.data.nextCursor); }}>Older</Button> : null}</div>
-    </>}
-    {selectedPollId && detail.data?.status === "open" && detail.data.guestVoters?.length ? <section className="space-y-2 rounded-md border p-3" aria-label="Poll guests">
-      <h4 className="font-medium">Guest voters</h4>
-      <p className="text-xs text-muted-foreground">Correcting a guest replaces their signed link and clears that guest’s votes.</p>
-      {detail.data.guestVoters.map((guest) => <CalendarPollGuestReplacement key={guest.voterId} pollId={selectedPollId} guest={guest} onReplaced={() => setCreated(null)} />)}
-    </section> : null}
-  </div>;
+  function handleGuestReplaced(result: ReplacedSchedulingPollGuest) {
+    setCreated((current) =>
+      current && current.poll.id === selectedPollId
+        ? {
+            ...current,
+            voterLinks: current.voterLinks.filter(
+              (link) => link.voterId !== result.voterId,
+            ),
+          }
+        : current,
+    );
+  }
+
+  function renderGuestVoter(guest: GuestVoter) {
+    if (!selectedPollId) return null;
+    return (
+      <CalendarPollGuestReplacement
+        key={guest.voterId}
+        pollId={selectedPollId}
+        guest={guest}
+        onReplaced={handleGuestReplaced}
+      />
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <Button variant="outline" onClick={onBack}>
+        Back to booking pages
+      </Button>
+      <div className="flex items-center justify-between gap-2">
+        <div>
+          <h3 className="font-medium">Scheduling polls</h3>
+          <p className="text-sm text-muted-foreground">
+            {rule.title} · {rule.timeZone}
+          </p>
+        </div>
+        <Button
+          onClick={() => {
+            setCreateOpen(true);
+            setSelectedPollId(null);
+            setCreated(null);
+            setFinalized(null);
+            setError(null);
+          }}
+        >
+          New poll
+        </Button>
+      </div>
+      {error ? (
+        <p
+          role="alert"
+          className="rounded-md border border-destructive p-2 text-sm text-destructive"
+        >
+          {error}
+        </p>
+      ) : null}
+      {created?.poll.id === selectedPollId && created.voterLinks.length ? (
+        <div className="space-y-2 rounded-md border p-3">
+          <p className="text-sm font-medium">Guest voting links</p>
+          <p className="text-xs text-muted-foreground">
+            Copy these links now. Tokens are shown only after creation.
+          </p>
+          {created.voterLinks.map((link) => {
+            const href = `${window.location.origin}/calendar/polls/${encodeURIComponent(link.token)}`;
+            return (
+              <div key={link.voterId} className="space-y-1">
+                <Label htmlFor={`poll-link-${link.voterId}`}>
+                  {link.email}
+                </Label>
+                <Input id={`poll-link-${link.voterId}`} readOnly value={href} />
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={async () => {
+                    try {
+                      await navigator.clipboard.writeText(href);
+                      toast.success("Voting link copied");
+                    } catch {
+                      toast.error("Could not copy the link");
+                    }
+                  }}
+                >
+                  Copy link
+                </Button>
+              </div>
+            );
+          })}
+        </div>
+      ) : null}
+      {createOpen ? (
+        <div className="space-y-4 rounded-md border p-3">
+          <div className="space-y-1">
+            <Label htmlFor="poll-title">Title</Label>
+            <Input
+              id="poll-title"
+              maxLength={200}
+              value={title}
+              onChange={(event) => setTitle(event.target.value)}
+            />
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="poll-expires">Voting closes</Label>
+            <Input
+              id="poll-expires"
+              type="datetime-local"
+              value={expiresAt}
+              onChange={(event) => setExpiresAt(event.target.value)}
+            />
+          </div>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={holdOptions}
+              onChange={(event) => setHoldOptions(event.target.checked)}
+            />
+            Temporarily hold proposed capacity
+          </label>
+          <fieldset className="space-y-2">
+            <legend className="text-sm font-medium">Proposed times</legend>
+            {preview.access.unavailable || preview.isError ? (
+              <ErrorState
+                title="Available times unavailable"
+                error={preview.error}
+                onRetry={() => void preview.refetch()}
+              />
+            ) : preview.access.pending || preview.isPending ? (
+              <p role="status">Checking available times…</p>
+            ) : preview.data?.availabilityState !== "available" ? (
+              <p className="text-sm text-muted-foreground">
+                {preview.data?.message ?? "No safe times are available."}
+              </p>
+            ) : preview.data.slots.length ? (
+              <div className="max-h-64 space-y-1 overflow-y-auto">
+                {preview.data.slots.map((slot) => (
+                  <label
+                    key={slot.start}
+                    className="flex items-center gap-2 rounded-md border p-2 text-sm"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedStarts.includes(slot.start)}
+                      disabled={
+                        !selectedStarts.includes(slot.start) &&
+                        selectedStarts.length >= 20
+                      }
+                      onChange={(event) =>
+                        setSelectedStarts(
+                          event.target.checked
+                            ? [...selectedStarts, slot.start]
+                            : selectedStarts.filter(
+                                (value) => value !== slot.start,
+                              ),
+                        )
+                      }
+                    />
+                    {displayTime(slot.start, rule.timeZone)}
+                  </label>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                No available times.
+              </p>
+            )}
+          </fieldset>
+          <fieldset className="space-y-2">
+            <legend className="text-sm font-medium">Voters</legend>
+            {voters.map((voter, index) => (
+              <div
+                key={`${voter.kind}:${voter.kind === "guest" ? voter.email : voter.userId}`}
+                className="flex items-center justify-between gap-2 rounded-md border p-2 text-sm"
+              >
+                <span>
+                  {voter.kind === "guest"
+                    ? voter.email
+                    : (members.selectedMembers.find(
+                        (member) => member.id === voter.userId,
+                      )?.name ?? voter.userId)}
+                </span>
+                <select
+                  aria-label={`Voter ${index + 1} priority`}
+                  value={voter.requirement}
+                  onChange={(event) =>
+                    setVoters(
+                      voters.map((item, position) =>
+                        position === index
+                          ? {
+                              ...item,
+                              requirement: event.target.value as
+                                | "required"
+                                | "optional",
+                            }
+                          : item,
+                      ),
+                    )
+                  }
+                  className="rounded-md border bg-background p-1"
+                >
+                  <option value="required">Required</option>
+                  <option value="optional">Optional</option>
+                </select>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() =>
+                    setVoters(
+                      voters.filter((_, position) => position !== index),
+                    )
+                  }
+                >
+                  Remove
+                </Button>
+              </div>
+            ))}
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1">
+                <Label htmlFor="poll-guest-email">Guest email</Label>
+                <Input
+                  id="poll-guest-email"
+                  type="email"
+                  value={guestEmail}
+                  onChange={(event) => setGuestEmail(event.target.value)}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="poll-guest-name">Guest name</Label>
+                <Input
+                  id="poll-guest-name"
+                  value={guestName}
+                  onChange={(event) => setGuestName(event.target.value)}
+                />
+              </div>
+            </div>
+            <Button variant="outline" onClick={addGuest}>
+              Add guest
+            </Button>
+            <div className="space-y-1">
+              <Label htmlFor="poll-member-search">Find a team member</Label>
+              <Input
+                id="poll-member-search"
+                value={memberSearch}
+                onChange={(event) => setMemberSearch(event.target.value)}
+              />
+            </div>
+            <div className="flex gap-2">
+              <select
+                aria-label="Team member"
+                className="min-w-0 flex-1 rounded-md border bg-background p-2 text-sm"
+                value={memberId}
+                onChange={(event) => setMemberId(event.target.value)}
+              >
+                <option value="">Choose a member</option>
+                {members.members.map((member) => (
+                  <option key={member.id} value={member.id}>
+                    {member.name ?? member.email}
+                  </option>
+                ))}
+              </select>
+              <Button
+                variant="outline"
+                onClick={addMember}
+                disabled={members.isLoading}
+              >
+                Add member
+              </Button>
+            </div>
+          </fieldset>
+          <div className="flex gap-2">
+            <Button onClick={() => void submit()} disabled={create.isPending}>
+              Create poll
+            </Button>
+            <Button variant="outline" onClick={() => setCreateOpen(false)}>
+              Cancel
+            </Button>
+          </div>
+        </div>
+      ) : selectedPollId ? (
+        <div className="space-y-3 rounded-md border p-3">
+          <Button
+            variant="outline"
+            onClick={() => {
+              setSelectedPollId(null);
+              setFinalized(null);
+            }}
+          >
+            Back to polls
+          </Button>
+          {detail.access.unavailable || detail.isError ? (
+            <ErrorState
+              title="Poll unavailable"
+              error={detail.error}
+              onRetry={() => void detail.refetch()}
+            />
+          ) : detail.access.pending || detail.isPending ? (
+            <p role="status">Loading poll…</p>
+          ) : detail.data ? (
+            <>
+              <div>
+                <h4 className="font-medium">{detail.data.title}</h4>
+                <p className="text-sm text-muted-foreground">
+                  {detail.data.status} · Voting closes{" "}
+                  {displayTime(detail.data.expiresAt, rule.timeZone)}
+                </p>
+              </div>
+              {detail.data.options.map((option) => (
+                <div
+                  key={option.id}
+                  className="flex items-center justify-between gap-2 rounded-md border p-2 text-sm"
+                >
+                  <span>
+                    {displayTime(option.startAt, rule.timeZone)} ·{" "}
+                    {option.status}
+                  </span>
+                  <span>
+                    Yes {option.votes.yes} · Maybe {option.votes.maybe} · No{" "}
+                    {option.votes.no}
+                  </span>
+                  {detail.data?.status === "open" &&
+                  option.status === "proposed" ? (
+                    <Button
+                      size="sm"
+                      onClick={() => void finalizeOption(option.id)}
+                      disabled={finalize.isPending}
+                    >
+                      Finalize
+                    </Button>
+                  ) : null}
+                </div>
+              ))}
+              {detail.data.status === "open" ? (
+                <Button
+                  variant="outline"
+                  onClick={() => void cancelPoll()}
+                  disabled={cancel.isPending}
+                >
+                  Cancel poll
+                </Button>
+              ) : null}
+              {finalized?.outcome === "unavailable" ? (
+                <div className="space-y-2">
+                  <p className="text-sm">
+                    That option is unavailable. Votes remain visible; choose
+                    another current option.
+                  </p>
+                  {finalized.alternatives.map((alternative) => (
+                    <p
+                      key={alternative.start}
+                      className="text-sm text-muted-foreground"
+                    >
+                      Alternative:{" "}
+                      {displayTime(alternative.start, rule.timeZone)}
+                    </p>
+                  ))}
+                </div>
+              ) : null}
+            </>
+          ) : null}
+        </div>
+      ) : (
+        <>
+          {polls.access.unavailable || polls.isError ? (
+            <ErrorState
+              title="Polls unavailable"
+              error={polls.error}
+              onRetry={() => void polls.refetch()}
+            />
+          ) : polls.access.pending || polls.isPending ? (
+            <p role="status">Loading polls…</p>
+          ) : polls.data?.items.length ? (
+            <div className="space-y-2">
+              {polls.data.items.map((poll) => (
+                <button
+                  key={poll.id}
+                  type="button"
+                  className="flex w-full items-center justify-between rounded-md border p-3 text-left text-sm hover:bg-muted"
+                  onClick={() => {
+                    setSelectedPollId(poll.id);
+                    setFinalized(null);
+                  }}
+                >
+                  {poll.title}
+                  <span className="capitalize text-muted-foreground">
+                    {poll.status}
+                  </span>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              No polls for this booking page yet.
+            </p>
+          )}
+          <div className="flex gap-2">
+            {previousCursors.length ? (
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setCursor(previousCursors.at(-1) ?? null);
+                  setPreviousCursors(previousCursors.slice(0, -1));
+                }}
+              >
+                Newer
+              </Button>
+            ) : null}
+            {polls.data?.nextCursor ? (
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setPreviousCursors([...previousCursors, cursor]);
+                  setCursor(polls.data.nextCursor);
+                }}
+              >
+                Older
+              </Button>
+            ) : null}
+          </div>
+        </>
+      )}
+      {selectedPollId &&
+      detail.data?.status === "open" &&
+      detail.data.guestVoters?.length ? (
+        <section
+          className="space-y-2 rounded-md border p-3"
+          aria-label="Poll guests"
+        >
+          <h4 className="font-medium">Guest voters</h4>
+          <p className="text-xs text-muted-foreground">
+            Correcting a guest replaces their signed link and clears that
+            guest’s votes.
+          </p>
+          {detail.data.guestVoters.map(renderGuestVoter)}
+        </section>
+      ) : null}
+    </div>
+  );
 }

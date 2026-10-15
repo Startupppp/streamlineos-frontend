@@ -16,61 +16,69 @@ import {
 } from "@/components/ui/select";
 import { useCalendarSources } from "@/hooks/api/calendar";
 import { useInfiniteProjects } from "@/hooks/api/build/projects";
-import { usePeople } from "@/hooks/api/directory/people";
-import { useDebouncedValue } from "@/hooks/common/use-debounce";
+import {
+  useMemberDirectory,
+  type DirectoryMember,
+} from "@/hooks/api/members/use-member-directory";
 import { useCalendarConnections } from "./use-calendar-connections";
 import type { CalendarSavedViewFormValues } from "./calendar-saved-view-form-schema";
+
+function toMemberOption(member: DirectoryMember): MemberOption {
+  return {
+    id: member.id,
+    email: member.email,
+    image: member.image,
+    name: member.name,
+    firstName: member.firstName,
+    lastName: member.lastName,
+  };
+}
 
 function CalendarSavedViewOwnerField({ actorMembershipId }: { actorMembershipId: number | null }) {
   const form = useFormContext<CalendarSavedViewFormValues>();
   const [ownerSearch, setOwnerSearch] = useState("");
-  const search = useDebouncedValue(ownerSearch, 300);
-  const people = usePeople({ limit: 100, search });
+  const [pickedUserId, setPickedUserId] = useState("");
   const ownerValue = form.watch("ownerMembershipId");
-  const candidates = useMemo<MemberOption[]>(
-    () =>
-      (people.data?.data ?? []).flatMap((person) => {
-        if (person.organizationMembershipId === null) return [];
-        return [{
-          id: String(person.organizationMembershipId),
-          email: person.workEmail ?? person.personalEmail ?? "",
-          image: person.avatarUrl,
-          name: person.displayName,
-          firstName: person.firstName,
-          lastName: person.lastName,
-        }];
-      }),
-    [people.data?.data],
-  );
-  const pickerValue =
+  const targetMembership =
     ownerValue === "all"
-      ? ""
-      : ownerValue === "me" && actorMembershipId
-        ? String(actorMembershipId)
-        : ownerValue;
-  const knownMembers = useMemo<MemberOption[] | undefined>(() => {
-    if (!pickerValue || candidates.some((member) => member.id === pickerValue)) return undefined;
-    return [{
-      id: pickerValue,
-      email: "",
-      image: null,
-      name: ownerValue === "me" ? "Me" : "Selected member",
-    }];
-  }, [pickerValue, candidates, ownerValue]);
+      ? null
+      : ownerValue === "me"
+        ? actorMembershipId
+        : Number(ownerValue);
+  const selectedIds = useMemo(
+    () => (pickedUserId ? [pickedUserId] : []),
+    [pickedUserId],
+  );
+  const { members, selectedMembers } = useMemberDirectory(
+    { kind: "org" },
+    { search: ownerSearch, enabled: true, selectedIds },
+  );
+  const roster = useMemo(() => {
+    const byId = new Map<string, DirectoryMember>();
+    for (const member of [...selectedMembers, ...members]) byId.set(member.id, member);
+    return [...byId.values()];
+  }, [members, selectedMembers]);
+  const resolvedUserId =
+    roster.find((member) => member.membershipId === targetMembership)?.id ?? "";
+  const pickerValue = pickedUserId || resolvedUserId;
+  const candidates = useMemo(() => roster.map(toMemberOption), [roster]);
 
   function handleOwnerSearch(value: string) {
     setOwnerSearch(value);
   }
 
-  function handleOwnerChange(membershipId: string | null) {
-    if (!membershipId) {
+  function handleOwnerChange(userId: string | null) {
+    setPickedUserId(userId ?? "");
+    if (!userId) {
       form.setValue("ownerMembershipId", "all", { shouldDirty: true });
       return;
     }
+    const member = roster.find((item) => item.id === userId);
+    if (!member?.membershipId) return;
     const next =
-      actorMembershipId !== null && membershipId === String(actorMembershipId)
+      actorMembershipId !== null && member.membershipId === actorMembershipId
         ? "me"
-        : membershipId;
+        : String(member.membershipId);
     form.setValue("ownerMembershipId", next, { shouldDirty: true });
   }
 
@@ -82,7 +90,6 @@ function CalendarSavedViewOwnerField({ actorMembershipId }: { actorMembershipId:
         value={pickerValue}
         onChange={handleOwnerChange}
         candidates={candidates}
-        knownMembers={knownMembers}
         allowUnassigned
         unassignedLabel="Anyone"
         placeholder="Anyone"
