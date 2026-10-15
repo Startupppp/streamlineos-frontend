@@ -16,7 +16,6 @@ import {
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { useEventAttendees, type CalendarEventDetail, type CalendarListItem } from "@/hooks/api/calendar";
 import { cn, resolveImageUrl } from "@/lib/utils";
@@ -135,8 +134,7 @@ export function EventDetailContent({
   );
 
   return (
-    <ScrollArea className="min-h-0 flex-1">
-      <div className="space-y-5 px-4 py-4">
+    <div className="space-y-5">
         {event ? (
           <>
             {event.location ? (
@@ -206,8 +204,7 @@ export function EventDetailContent({
             ) : null}
           </>
         ) : null}
-      </div>
-    </ScrollArea>
+    </div>
   );
 }
 

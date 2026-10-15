@@ -99,9 +99,22 @@ function agendaZonelessAllDay(): CalendarListItem {
 }
 
 function detailText(): string {
-  const content = document.querySelector("[data-slot='dialog-content']");
+  const content = document.querySelector("[data-slot='sheet-content']");
   return content?.textContent ?? "";
 }
+
+it("keeps connected and HR event details on a single responsive sheet without skeletons", () => {
+  const external = render(<ExternalEventDetailSheet event={externalTimed()} onClose={jest.fn()} />);
+  expect(screen.getByRole("dialog", { name: "Partner sync" })).toHaveAttribute("data-slot", "sheet-content");
+  expect(document.querySelector("[data-slot='dialog-content']")).toBeNull();
+  expect(document.querySelector("[data-slot='skeleton']")).toBeNull();
+  external.unmount();
+
+  render(<HrEventDetailSheet event={hrAllDay()} onClose={jest.fn()} />);
+  expect(screen.getByRole("dialog", { name: "Founders Day" })).toHaveAttribute("data-slot", "sheet-content");
+  expect(document.querySelector("[data-slot='dialog-content']")).toBeNull();
+  expect(document.querySelector("[data-slot='skeleton']")).toBeNull();
+});
 
 describe("ExternalEventDetailSheet — provider events carry no authored zone", () => {
   it("keeps an all-day provider event on its own calendar day for a reader west of UTC", () => {
