@@ -2,17 +2,9 @@
 
 import { Info } from "lucide-react";
 import { toast } from "sonner";
+import { AppSheet } from "@/components/shared/app-sheet";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -123,59 +115,47 @@ export function CalendarCoachSheet({ onClose }: { onClose: () => void }) {
   };
 
   return (
-    <Sheet
+    <AppSheet
       open
       onOpenChange={(open) => {
         if (!open) onClose();
       }}
+      title="My time insights"
+      description="Private, optional schedule guidance for you. These totals are not an employee score."
+      className="w-full overflow-hidden sm:max-w-lg"
+      footer={insight ? (
+        <InsightConsent
+          enabled={insight.consent.enabled}
+          pending={update.isPending}
+          onConsentChange={(checked) => {
+            void changeConsent(checked);
+          }}
+        />
+      ) : undefined}
     >
-      <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">
-        <SheetHeader className="gap-1 border-b border-border bg-background px-5 py-4">
-          <SheetTitle className="text-base font-semibold tracking-tight">
-            My time insights
-          </SheetTitle>
-          <SheetDescription>
-            Private, optional schedule guidance for you. These totals are not an
-            employee score.
-          </SheetDescription>
-        </SheetHeader>
-        <ScrollArea className="min-h-0 flex-1 bg-background" fill>
-          <div className="space-y-4 bg-background px-5 py-4">
-            {coach.isLoading ? (
-              <div role="status" aria-label="Loading your preference" className="grid grid-cols-2 gap-3">
-                <Skeleton className="h-20 w-full rounded-xl" />
-                <Skeleton className="h-20 w-full rounded-xl" />
-              </div>
-            ) : null}
-            {coach.isError ? (
-              <div className={cn(INSIGHT_CARD, "space-y-3 p-4")}>
-                <p className="text-sm text-destructive">{getErrorMessage(coach.error)}</p>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    void coach.refetch();
-                  }}
-                >
-                  Retry
-                </Button>
-              </div>
-            ) : null}
-            {insight ? <InsightBody insight={insight} /> : null}
+      <div className="space-y-4 bg-background">
+        {coach.isLoading ? (
+          <div role="status" aria-label="Loading your preference" className="grid grid-cols-2 gap-3">
+            <Skeleton className="h-20 w-full rounded-xl" />
+            <Skeleton className="h-20 w-full rounded-xl" />
           </div>
-        </ScrollArea>
-        {insight ? (
-          <SheetFooter className="border-t bg-surface-raised px-5 py-3">
-            <InsightConsent
-              enabled={insight.consent.enabled}
-              pending={update.isPending}
-              onConsentChange={(checked) => {
-                void changeConsent(checked);
-              }}
-            />
-          </SheetFooter>
         ) : null}
-      </SheetContent>
-    </Sheet>
+        {coach.isError ? (
+          <div className={cn(INSIGHT_CARD, "space-y-3 p-4")}>
+            <p className="text-sm text-destructive">{getErrorMessage(coach.error)}</p>
+            <Button
+              variant="outline"
+              onClick={() => {
+                void coach.refetch();
+              }}
+            >
+              Retry
+            </Button>
+          </div>
+        ) : null}
+        {insight ? <InsightBody insight={insight} /> : null}
+      </div>
+    </AppSheet>
   );
 }
 
