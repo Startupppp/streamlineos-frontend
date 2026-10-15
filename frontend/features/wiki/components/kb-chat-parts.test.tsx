@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { AnswerFeedbackBar, CopyAnswerButton, CreateKnowledgeGapButton, InsufficientEvidenceBanner, VerificationBadge } from "./kb-chat-parts";
+import { AnswerFeedbackBar, CitationEvidenceList, CopyAnswerButton, CreateKnowledgeGapButton, InsufficientEvidenceBanner, VerificationBadge } from "./kb-chat-parts";
 
 const mockMutate = jest.fn();
 const mockCreateGapMutate = jest.fn();
@@ -120,5 +120,30 @@ describe("VerificationBadge", () => {
     expect(screen.getByLabelText("Not verified source")).toBeInTheDocument();
     expect(screen.getByLabelText("Verification unavailable")).toBeInTheDocument();
     expect(screen.queryByLabelText("Verified source")).not.toBeInTheDocument();
+  });
+});
+
+describe("CitationEvidenceList", () => {
+  it("preserves distinct passages from one source and removes repeated evidence across rerenders", () => {
+    const first = { kind: "page" as const, pageId: 8, title: "Leave policy", spaceId: null, updatedAt: "2026-10-10T00:00:00.000Z", passage: "Annual leave is 20 days." };
+    const second = { ...first, passage: "Carryover is limited to five days." };
+    const error = jest.spyOn(console, "error").mockImplementation(() => undefined);
+
+    try {
+      const view = render(<CitationEvidenceList citations={[first, second, first]} />);
+
+      expect(screen.getAllByRole("listitem")).toHaveLength(2);
+      expect(screen.getByText("Annual leave is 20 days.")).toBeInTheDocument();
+      expect(screen.getByText("Carryover is limited to five days.")).toBeInTheDocument();
+
+      view.rerender(<CitationEvidenceList citations={[second, first, second]} />);
+
+      expect(screen.getAllByRole("listitem")).toHaveLength(2);
+      expect(screen.getByText("Annual leave is 20 days.")).toBeInTheDocument();
+      expect(screen.getByText("Carryover is limited to five days.")).toBeInTheDocument();
+      expect(error).not.toHaveBeenCalled();
+    } finally {
+      error.mockRestore();
+    }
   });
 });
