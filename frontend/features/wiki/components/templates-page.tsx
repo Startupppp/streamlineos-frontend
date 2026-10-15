@@ -106,9 +106,7 @@ export default function TemplatesPage() {
     void refetchTemplates();
   }
 
-  function handleLoadMore() {
-    void fetchNextPage();
-  }
+  function handleLoadMore() { void fetchNextPage(); }
 
   function updateParams(patch: Record<string, string | null>) {
     const params = new URLSearchParams(queryString);
@@ -131,9 +129,7 @@ export default function TemplatesPage() {
   function handleSearchChange(value: string) {
     setSearchDraft(value);
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => {
-      updateParams({ q: value || null });
-    }, 300);
+    debounceRef.current = setTimeout(() => updateParams({ q: value || null }), 300);
   }
 
   function handlePreviewOpenChange(open: boolean) {
@@ -178,19 +174,27 @@ export default function TemplatesPage() {
         { title: template.name },
         {
           onSuccess: (page) => {
-            updatePage.mutate(
-              {
-                pageId: page.id,
-                content: template.content as Record<string, unknown>,
-                contentText: deriveContentText(template.content),
-                expectedContentRevision: page.contentRevision,
-              },
-              {
-                onSettled: () => {
-                  router.push(pageHref(page.id));
+            function saveContent() {
+              setPendingTemplateKey(starterTemplateKey(template));
+              updatePage.mutate(
+                {
+                  pageId: page.id,
+                  content: template.content.children,
+                  contentText: deriveContentText(template.content),
+                  expectedContentRevision: page.contentRevision,
                 },
-              },
-            );
+                {
+                  onSuccess: () => router.push(pageHref(page.id)),
+                  onError: () => {
+                    setPendingTemplateKey(null);
+                    toast.error("Page created, but template content was not saved", {
+                      action: { label: "Retry content", onClick: saveContent },
+                    });
+                  },
+                },
+              );
+            }
+            saveContent();
           },
           onError: () => {
             setPendingTemplateKey(null);
@@ -206,10 +210,7 @@ export default function TemplatesPage() {
     setPreviewTemplate(template);
   }, []);
 
-  const subtitle =
-    activeTab === "saved"
-      ? "Templates created from your wiki pages"
-      : "Built-in skeletons ready to use";
+  const subtitle = activeTab === "saved" ? "Templates created from your wiki pages" : "Built-in skeletons ready to use";
 
   return (
     <PageWrapper
