@@ -12,7 +12,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useCursorPagination } from "@/hooks/common/use-cursor-pagination";
 import { useUrlFilters, parseEnum } from "@/lib/url-state/use-url-filters";
 import { useCan } from "@/hooks/api/access";
 import { TrustBadge } from "@/features/wiki/components/kb-collection-badges";
@@ -156,6 +155,15 @@ export default function ReviewsPage() {
   const reviewerFilter = searchParams.get("reviewer") ?? "";
   const dueFromFilter = searchParams.get("dueFrom") ?? "";
   const dueToFilter = searchParams.get("dueTo") ?? "";
+  const cursor = searchParams.get("cursor") || undefined;
+  const cursorTrailValue = searchParams.get("cursorTrail");
+  const cursorTrail = useMemo(() => {
+    if (!cursor || !cursorTrailValue) return [];
+    const entries = cursorTrailValue.split(".");
+    return entries.length <= 100 && entries.every((entry) => entry === "~" || /^[A-Za-z0-9_-]{1,1024}$/.test(entry))
+      ? entries
+      : [];
+  }, [cursor, cursorTrailValue]);
 
   const hasFilters =
     statusFilter !== "all" ||
@@ -167,13 +175,12 @@ export default function ReviewsPage() {
     dueFromFilter !== "" ||
     dueToFilter !== "";
 
-  const cursorState = useCursorPagination();
   const canManage = useCan("kb:reviews:manage");
 
   const parsedSpaceId = Number(spaceFilter);
 
   const params = {
-    cursor: cursorState.cursor,
+    cursor,
     limit: DEFAULT_LIMIT,
     status: statusFilter === "all" ? undefined : statusFilter,
     type: typeFilter === "all" ? undefined : typeFilter,
@@ -205,18 +212,16 @@ export default function ReviewsPage() {
 
   const handleFilterPatch = useCallback(
     (patch: Record<string, string | null>) => {
-      updateFilters(patch);
-      cursorState.reset();
+      updateFilters({ ...patch, cursorTrail: null });
     },
-    [updateFilters, cursorState],
+    [updateFilters],
   );
 
   const handleSortChange = useCallback(
     (_field: string, direction: "asc" | "desc") => {
-      updateFilters({ sortDir: direction === "asc" ? null : "desc" });
-      cursorState.reset();
+      updateFilters({ sortDir: direction === "asc" ? null : "desc", cursorTrail: null });
     },
-    [updateFilters, cursorState],
+    [updateFilters],
   );
 
   function handleClearFilters() {
@@ -229,8 +234,8 @@ export default function ReviewsPage() {
       reviewer: null,
       dueFrom: null,
       dueTo: null,
+      cursorTrail: null,
     });
-    cursorState.reset();
   }
 
   const handleCloseApprove = useCallback(() => setApproveTarget(null), []);
@@ -272,11 +277,20 @@ export default function ReviewsPage() {
   );
 
   function handleGoNext() {
-    cursorState.goNext(pagination?.nextCursor);
+    if (!pagination?.nextCursor) return;
+    updateFilters({
+      cursor: pagination.nextCursor,
+      cursorTrail: [...cursorTrail, cursor ?? "~"].join("."),
+    });
   }
 
   function handleGoPrevious() {
-    cursorState.goPrevious();
+    if (cursorTrail.length === 0) return;
+    const previousCursor = cursorTrail[cursorTrail.length - 1];
+    updateFilters({
+      cursor: previousCursor === "~" ? null : previousCursor,
+      cursorTrail: cursorTrail.length > 1 ? cursorTrail.slice(0, -1).join(".") : null,
+    });
   }
 
   const sortState: DataTableSortState = {
@@ -392,7 +406,7 @@ export default function ReviewsPage() {
     [canManage],
   );
 
-  const emptyNode = cursorState.hasPrevious ? (
+  const emptyNode = cursorTrail.length > 0 ? (
     <EmptyState
       illustrationPreset="default"
       title="No reviews on this page."
@@ -487,9 +501,9 @@ export default function ReviewsPage() {
             pagination={{
               mode: "cursor",
               pageSize: DEFAULT_LIMIT,
-              pageNumber: cursorState.pageNumber,
+              pageNumber: cursorTrail.length + 1,
               hasMore: pagination?.hasMore ?? false,
-              hasPrevious: cursorState.hasPrevious,
+              hasPrevious: cursorTrail.length > 0,
               onNext: handleGoNext,
               onPrevious: handleGoPrevious,
             }}

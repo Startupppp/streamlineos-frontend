@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import ReviewsPage from "./reviews-page";
 
 jest.mock("next/navigation", () => ({
@@ -34,7 +34,22 @@ jest.mock("@/components/shared/page-state", () => ({
 }));
 
 jest.mock("@/components/ui/data-table", () => ({
-  DataTable: () => <div data-testid="data-table" />,
+  DataTable: ({ pagination, sortState }: {
+    pagination: {
+      pageNumber: number;
+      hasMore: boolean;
+      hasPrevious: boolean;
+      onNext: () => void;
+      onPrevious: () => void;
+    };
+    sortState: { onChange: (field: string, direction: "asc" | "desc") => void };
+  }) => (
+    <div data-testid="data-table" data-page-number={pagination.pageNumber}>
+      {pagination.hasMore && <button onClick={pagination.onNext}>Next page</button>}
+      {pagination.hasPrevious && <button onClick={pagination.onPrevious}>Previous page</button>}
+      <button onClick={() => sortState.onChange("dueAt", "desc")}>Sort due descending</button>
+    </div>
+  ),
 }));
 
 jest.mock("@/components/ui/responsive-popover", () => ({
@@ -70,9 +85,14 @@ const { useKbPageReviews } = jest.requireMock("@/hooks/api/kb/page-reviews") as 
 const { useSearchParams } = jest.requireMock("next/navigation") as {
   useSearchParams: jest.Mock;
 };
+const { useRouter } = jest.requireMock("next/navigation") as {
+  useRouter: jest.Mock;
+};
+const replace = jest.fn();
 
 beforeEach(() => {
   jest.clearAllMocks();
+  useRouter.mockReturnValue({ push: jest.fn(), replace });
   useSearchParams.mockReturnValue(new URLSearchParams());
   useKbPageReviews.mockReturnValue({
     data: { data: [], pagination: { limit: 50, hasMore: false, nextCursor: null } },
@@ -169,5 +189,55 @@ describe("ReviewsPage — every documented filter reaches the server", () => {
 
     expect(screen.getByTestId("reviewer-combobox")).toBeInTheDocument();
     expect(screen.getByTestId("due-range")).toBeInTheDocument();
+  });
+
+  it("stores cursor navigation in the URL and restores a bookmarked later page", () => {
+    useSearchParams.mockReturnValue(new URLSearchParams("status=pending"));
+    useKbPageReviews.mockReturnValue({
+      data: { data: [], pagination: { limit: 50, hasMore: true, nextCursor: "page-two" } },
+      isLoading: false,
+      isError: false,
+      error: undefined,
+      refetch: jest.fn(),
+    });
+
+    const { unmount } = render(<ReviewsPage />);
+    fireEvent.click(screen.getByRole("button", { name: "Next page" }));
+
+    const nextUrl = replace.mock.lastCall?.[0];
+    const nextParams = new URL(nextUrl, "https://example.test").searchParams;
+    expect(nextParams.get("status")).toBe("pending");
+    expect(nextParams.get("cursor")).toBe("page-two");
+    expect(nextParams.get("cursorTrail")).toBe("~");
+
+    unmount();
+    useSearchParams.mockReturnValue(nextParams);
+    render(<ReviewsPage />);
+
+    expect(useKbPageReviews).toHaveBeenLastCalledWith(
+      expect.objectContaining({ cursor: "page-two", status: "pending" }),
+    );
+    expect(screen.getByTestId("data-table")).toHaveAttribute("data-page-number", "2");
+    fireEvent.click(screen.getByRole("button", { name: "Previous page" }));
+
+    const previousParams = new URL(replace.mock.lastCall?.[0], "https://example.test").searchParams;
+    expect(previousParams.get("status")).toBe("pending");
+    expect(previousParams.has("cursor")).toBe(false);
+    expect(previousParams.has("cursorTrail")).toBe(false);
+  });
+
+  it("removes cursor and trail in the same URL update as a due-date sort change", () => {
+    useSearchParams.mockReturnValue(
+      new URLSearchParams("status=pending&cursor=page-two&cursorTrail=~"),
+    );
+
+    render(<ReviewsPage />);
+    fireEvent.click(screen.getByRole("button", { name: "Sort due descending" }));
+
+    const sortedParams = new URL(replace.mock.lastCall?.[0], "https://example.test").searchParams;
+    expect(sortedParams.get("status")).toBe("pending");
+    expect(sortedParams.get("sortDir")).toBe("desc");
+    expect(sortedParams.has("cursor")).toBe(false);
+    expect(sortedParams.has("cursorTrail")).toBe(false);
   });
 });
