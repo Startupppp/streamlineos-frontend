@@ -82,6 +82,15 @@ export interface DismissHealthItemParams {
   dismissalExpiresAt?: string;
 }
 
+export const bulkRepairHealthItemsInputSchema = z.object({
+  pageIds: z.array(z.number().int().positive()).min(1).max(100),
+  kind: contentHealthSignalTypeSchema,
+  repairAction: z.literal("assign_owner"),
+  assigneeMembershipId: z.number().int().positive(),
+}).strict();
+
+export type BulkRepairParams = z.infer<typeof bulkRepairHealthItemsInputSchema>;
+
 const bulkRepairOutcomeSchema = z.enum(["applied", "already_resolved", "skipped"]);
 
 const bulkRepairResultItemSchema = z.object({

@@ -2,6 +2,7 @@ import { render as rtlRender, screen, fireEvent, within } from "@testing-library
 import userEvent from "@testing-library/user-event";
 import type { ReactElement } from "react";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { bulkRepairHealthItemsInputSchema } from "@/hooks/api/kb/content-health-schema";
 
 const useAccess = jest.fn();
 const accessLoading = { data: undefined, isLoading: true };
@@ -248,6 +249,23 @@ describe("ContentHealthPage — bulk repair dialog", () => {
       },
       expect.anything(),
     );
+  });
+});
+
+describe("Content Health bulk assignment request contract", () => {
+  const request = {
+    pageIds: [42],
+    kind: "unowned",
+    repairAction: "assign_owner",
+    assigneeMembershipId: 99,
+  };
+
+  it("accepts only a bounded assignment with a required membership ID", () => {
+    expect(bulkRepairHealthItemsInputSchema.safeParse(request).success).toBe(true);
+    expect(bulkRepairHealthItemsInputSchema.safeParse({ ...request, assigneeMembershipId: undefined }).success).toBe(false);
+    expect(bulkRepairHealthItemsInputSchema.safeParse({ ...request, repairAction: "request_review" }).success).toBe(false);
+    expect(bulkRepairHealthItemsInputSchema.safeParse({ ...request, repairAction: "mark_needs_content" }).success).toBe(false);
+    expect(bulkRepairHealthItemsInputSchema.safeParse({ ...request, pageIds: [] }).success).toBe(false);
   });
 });
 
