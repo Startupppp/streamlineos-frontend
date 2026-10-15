@@ -120,9 +120,10 @@ describe("Ask KB answer parts are mounted on a cited answer", () => {
     expect(screen.getAllByLabelText("Verified source").length).toBe(1);
   });
 
-  it("shows no passage and no verification badge for an unverified citation without a passage (positive pair)", () => {
+  it("labels a citation with no verification result as unavailable rather than silently omitting its status", () => {
     renderPage();
     expect(screen.queryByText(/Unreviewed draft passage/)).not.toBeInTheDocument();
     expect(screen.getAllByLabelText("Verified source").length).toBe(1);
+    expect(screen.getAllByLabelText("Verification unavailable").length).toBe(1);
   });
 });

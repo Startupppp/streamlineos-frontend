@@ -292,9 +292,9 @@ export default function KnowledgeBasePage() {
           if (activeConversationId === null) setConversation(data.conversationId);
           void qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.chatConversations() });
           if (!data.hasContext) {
-            setPending((prev) => prev ? { ...prev, hasContext: false, citations: data.citations } : prev);
+            setPending((prev) => prev ? { ...prev, answer: undefined, hasContext: false, citations: data.citations } : prev);
           } else if (data.disagreement) {
-            setPending((prev) => prev ? { ...prev, hasContext: true, disagreement: data.disagreement, citations: data.citations } : prev);
+            setPending((prev) => prev ? { ...prev, answer: undefined, hasContext: true, disagreement: data.disagreement, citations: data.citations } : prev);
           } else {
             setPending(null);
           }
@@ -549,7 +549,7 @@ export default function KnowledgeBasePage() {
                         />
                       ),
                     )}
-                    {pending && (
+                    {pending && (ask.isPending || pending.error || pending.isQuotaError) && (
                       <ChatBubble key="pending-user" message={{ id: "pending-user", role: "user", content: pending.question }} onCitation={handleCitationClick} reduce={Boolean(reduce)} />
                     )}
                     {pending?.isQuotaError && (

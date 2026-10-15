@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { AnswerFeedbackBar, CopyAnswerButton, CreateKnowledgeGapButton, InsufficientEvidenceBanner } from "./kb-chat-parts";
+import { AnswerFeedbackBar, CopyAnswerButton, CreateKnowledgeGapButton, InsufficientEvidenceBanner, VerificationBadge } from "./kb-chat-parts";
 
 const mockMutate = jest.fn();
 const mockCreateGapMutate = jest.fn();
@@ -110,5 +110,15 @@ describe("InsufficientEvidenceBanner", () => {
     render(<InsufficientEvidenceBanner />);
 
     expect(screen.queryByRole("button", { name: /create a knowledge gap/i })).not.toBeInTheDocument();
+  });
+});
+
+describe("VerificationBadge", () => {
+  it("distinguishes an explicitly unverified source from an unavailable verification result", () => {
+    render(<><VerificationBadge verified={false} /><VerificationBadge /></>);
+
+    expect(screen.getByLabelText("Not verified source")).toBeInTheDocument();
+    expect(screen.getByLabelText("Verification unavailable")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Verified source")).not.toBeInTheDocument();
   });
 });

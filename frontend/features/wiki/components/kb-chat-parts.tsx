@@ -235,18 +235,19 @@ export function FreshnessTag({ updatedAt }: FreshnessTagProps) {
 }
 
 interface VerificationBadgeProps {
-  verified: boolean;
+  verified?: boolean;
 }
 
 export function VerificationBadge({ verified }: VerificationBadgeProps) {
-  if (!verified) return null;
+  const label = verified === true ? "Verified" : verified === false ? "Not verified" : "Verification unavailable";
+  const accessibleLabel = verified === true ? "Verified source" : verified === false ? "Not verified source" : label;
   return (
     <span
-      aria-label="Verified source"
-      className={`inline-flex items-center gap-0.5 text-micro ${successTone.ink}`}
+      aria-label={accessibleLabel}
+      className={`inline-flex items-center gap-0.5 text-micro ${verified === true ? successTone.ink : warningTone.ink}`}
     >
-      <CheckCircle2 className="h-2.5 w-2.5 shrink-0" aria-hidden="true" />
-      Verified
+      {verified === true ? <CheckCircle2 className="h-2.5 w-2.5 shrink-0" aria-hidden="true" /> : <HelpCircle className="h-2.5 w-2.5 shrink-0" aria-hidden="true" />}
+      {label}
     </span>
   );
 }
@@ -267,7 +268,7 @@ export function CitationEvidenceList({ citations }: { citations: KbAskCitationWi
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-dense font-medium text-foreground">{citation.title}</span>
             <FreshnessTag updatedAt={citation.updatedAt} />
-            <VerificationBadge verified={citation.verified === true} />
+            <VerificationBadge verified={citation.verified} />
           </div>
           <CitationPassage citation={citation} index={index} />
         </li>
