@@ -132,6 +132,11 @@ export function PublicCalendarBookingForm({
   }, [callbackQuery.data, callbackState, session.targetOrigin]);
 
   async function handleSubmit(values: BookingFormValues) {
+    if (!offering.slots.some((slot) => slot.start === values.slotStart)) {
+      form.setValue("slotStart", "", { shouldValidate: true });
+      await queryClient.invalidateQueries({ queryKey: ["public", "calendar", "booking", token, "offering"] });
+      return;
+    }
     let hold: PublicCalendarBookingHold;
     try {
       hold = await acquireHold.mutateAsync({
@@ -177,13 +182,13 @@ export function PublicCalendarBookingForm({
     form.setValue("consentAccepted", checked === true, { shouldValidate: true });
   }
 
-  function chooseAnotherTime() {
+  function chooseAnotherTime(preferredStart?: string) {
     const currentSlot = form.getValues("slotStart");
     if (currentSlot) holdKeys.current.delete(currentSlot);
     if (acquireHold.data?.id) commitKeys.current.delete(acquireHold.data.id);
     acquireHold.reset();
     confirmBooking.reset();
-    form.setValue("slotStart", "");
+    form.setValue("slotStart", offering.slots.some((slot) => slot.start === preferredStart) ? preferredStart ?? "" : "");
     void queryClient.invalidateQueries({ queryKey: ["public", "calendar", "booking", token, "offering"] });
   }
 
@@ -218,8 +223,8 @@ export function PublicCalendarBookingForm({
         {receipt.externalEffectsStatus === "pending" && <p className="text-sm text-muted-foreground">Invitations and other follow-ups are in progress.</p>}
         {receipt.externalEffectsStatus === "failed" && <p className="text-sm text-muted-foreground">A booking follow-up needs attention.</p>}
         {receipt.externalEffectsStatus === "uncertain" && <p className="text-sm text-muted-foreground">Booking follow-ups have not been confirmed yet.</p>}
-        {receipt.alternatives.length > 0 && <div className="space-y-2"><p className="text-sm font-medium">Other available times</p>{receipt.alternatives.map((alternative) => <p key={alternative.start} className="text-sm text-muted-foreground">{slotTime(alternative.start, offering.timeZone)}</p>)}</div>}
-        {["rejected", "expired", "cancelled"].includes(receipt.outcome) && <button type="button" className="text-sm font-medium text-primary underline" onClick={chooseAnotherTime}>Choose another time</button>}
+        {receipt.alternatives.length > 0 && <div className="space-y-2"><p className="text-sm font-medium">Other available times</p>{receipt.alternatives.map((alternative) => <button key={alternative.start} type="button" className="block w-full rounded-md border px-3 py-2 text-sm text-primary hover:bg-muted" onClick={() => chooseAnotherTime(alternative.start)}>Review {slotTime(alternative.start, offering.timeZone)}</button>)}</div>}
+        {["rejected", "expired", "cancelled", "uncertain"].includes(receipt.outcome) && <button type="button" className="text-sm font-medium text-primary underline" onClick={() => chooseAnotherTime()}>Choose another time</button>}
       </div>
     );
   }

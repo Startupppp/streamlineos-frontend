@@ -199,7 +199,7 @@ describe("public calendar booking page", () => {
     postMessage.mockRestore();
   });
 
-  it("uses a new idempotency identity after a rejected slot while preserving retries for each slot", async () => {
+  it.each(["rejected", "uncertain"] as const)("uses a new idempotency identity after a %s slot and offers recovery", async (outcome) => {
     const secondSlot = {
       start: "2026-10-20T11:00:00.000Z",
       end: "2026-10-20T11:30:00.000Z",
@@ -217,7 +217,7 @@ describe("public calendar booking page", () => {
       if (value.endsWith("/holds")) return { ...hold, id: (input as { start: string }).start === secondSlot.start ? secondHoldId : hold.id };
       if (value.endsWith("/confirm")) return (input as { holdId: string }).holdId === secondHoldId
         ? receipt
-        : { ...receipt, bookingId: null, outcome: "rejected", reasonCode: "slot_unavailable", alternatives: [{ start: secondSlot.start, end: secondSlot.end }] };
+        : { ...receipt, bookingId: null, outcome, reasonCode: outcome === "uncertain" ? "availability_uncertain" : "slot_unavailable", alternatives: [{ start: secondSlot.start, end: secondSlot.end }] };
       throw new Error("Unexpected request");
     });
     const user = userEvent.setup();
@@ -229,10 +229,10 @@ describe("public calendar booking page", () => {
     await user.type(screen.getByLabelText("Organization"), "Analytical Engines");
     await user.click(screen.getByRole("checkbox"));
     await user.click(screen.getByRole("button", { name: "Confirm booking" }));
-    expect(await screen.findByRole("heading", { name: "Your booking needs attention" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: outcome === "uncertain" ? "We could not confirm availability yet" : "Your booking needs attention" })).toBeInTheDocument();
     expect(screen.getByText("Other available times")).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Choose another time" }));
-    await user.click(screen.getAllByRole("radio")[1]);
+    await user.click(screen.getByRole("button", { name: /^Review / }));
+    expect(screen.getAllByRole("radio")[1]).toBeChecked();
     await user.click(screen.getByRole("button", { name: "Confirm booking" }));
     expect(await screen.findByRole("heading", { name: "Your booking is confirmed" })).toBeInTheDocument();
     const holdCalls = mockedPost.mock.calls.filter(([path]) => String(path).endsWith("/holds"));
