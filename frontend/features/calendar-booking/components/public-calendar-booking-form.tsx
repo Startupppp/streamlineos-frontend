@@ -4,12 +4,14 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Clock3, ShieldCheck } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import {
   useConfirmPublicCalendarBooking,
@@ -24,6 +26,7 @@ import type {
 } from "@/hooks/api/calendar-booking-public-schema";
 import { isApiError } from "@/lib/api-envelope";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { cn } from "@/lib/utils";
 import { usePaidCalendarBooking } from "../hooks/use-paid-calendar-booking";
 import { PublicCalendarBookingPaymentStatus } from "./public-calendar-booking-payment-status";
 
@@ -145,6 +148,16 @@ export function PublicCalendarBookingForm({
   }, [confirmBooking.data]);
 
   async function handleSubmit(values: BookingFormValues) {
+    for (const field of visibleIntakeFields) {
+      if (field.required && !values.intake[field.key]?.trim()) {
+        form.setError(`intake.${field.key}`, {
+          type: "required",
+          message: `Enter ${session.copy.fieldLabels[field.key] ?? field.label}`,
+        });
+        form.setFocus(`intake.${field.key}`);
+        return;
+      }
+    }
     if (!offering.slots.some((slot) => slot.start === values.slotStart)) {
       form.setValue("slotStart", "", { shouldValidate: true });
       await queryClient.invalidateQueries({ queryKey: ["public", "calendar", "booking", token, "offering"] });
@@ -281,28 +294,36 @@ export function PublicCalendarBookingForm({
           {offering.durationMinutes} minutes · {offering.timeZone}
         </p>
         {offering.slots.length > 0 ? (
-          <div
-            className="mt-4 grid max-h-72 gap-2 overflow-y-auto sm:grid-cols-2"
-            role="radiogroup"
-            aria-label="Available times"
-          >
-            {offering.slots.map((slot) => (
-              <label
-                key={slot.start}
-                className="flex cursor-pointer items-center gap-3 rounded-xl border bg-background p-3 has-[:checked]:border-primary has-[:checked]:ring-1 has-[:checked]:ring-primary"
-              >
-                <input
-                  type="radio"
-                  value={slot.start}
-                  className="size-4 accent-primary"
-                  {...form.register("slotStart")}
-                />
-                <span className="text-sm font-medium text-foreground">
-                  {slotTime(slot.start, offering.timeZone)}
-                </span>
-              </label>
-            ))}
-          </div>
+          <Controller control={form.control} name="slotStart" render={({ field }) => (
+            <RadioGroup
+              value={field.value}
+              onValueChange={field.onChange}
+              required
+              aria-label="Available times"
+              className="mt-4 grid max-h-72 gap-2 overflow-y-auto sm:grid-cols-2"
+            >
+              {offering.slots.map((slot, index) => (
+                <Label
+                  key={slot.start}
+                  htmlFor={`booking-slot-${index}`}
+                  className={cn(
+                    "flex cursor-pointer items-center gap-3 rounded-xl border bg-background p-3 font-normal",
+                    field.value === slot.start && "border-primary ring-1 ring-primary",
+                  )}
+                >
+                  <RadioGroupItem
+                    id={`booking-slot-${index}`}
+                    value={slot.start}
+                    ref={index === 0 ? field.ref : undefined}
+                    onBlur={field.onBlur}
+                  />
+                  <span className="text-sm font-medium text-foreground">
+                    {slotTime(slot.start, offering.timeZone)}
+                  </span>
+                </Label>
+              ))}
+            </RadioGroup>
+          )} />
         ) : (
           <p className="mt-4 rounded-xl border bg-muted/30 p-4 text-sm text-muted-foreground">
             {offering.message}
@@ -339,27 +360,45 @@ export function PublicCalendarBookingForm({
                 <Textarea
                   id={`intake-${field.key}`}
                   required={field.required}
+                  aria-invalid={Boolean(form.formState.errors.intake?.[field.key])}
+                  aria-describedby={form.formState.errors.intake?.[field.key] ? `intake-${field.key}-error` : undefined}
                   {...form.register(`intake.${field.key}`)}
                 />
               ) : field.type === "select" ? (
-                <select
-                  id={`intake-${field.key}`}
-                  required={field.required}
-                  className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
-                  {...form.register(`intake.${field.key}`)}
-                >
-                  <option value="">Choose an option</option>
-                  {field.options?.map((option) => (
-                    <option key={option} value={option}>{option}</option>
-                  ))}
-                </select>
+                <Controller control={form.control} name={`intake.${field.key}`} defaultValue="" render={({ field: choice }) => (
+                  <Select value={choice.value ?? ""} onValueChange={choice.onChange}>
+                    <SelectTrigger
+                      id={`intake-${field.key}`}
+                      ref={choice.ref}
+                      onBlur={choice.onBlur}
+                      aria-required={field.required}
+                      aria-invalid={Boolean(form.formState.errors.intake?.[field.key])}
+                      aria-describedby={form.formState.errors.intake?.[field.key] ? `intake-${field.key}-error` : undefined}
+                      className="w-full"
+                    >
+                      <SelectValue placeholder="Choose an option" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {field.options?.map((option) => (
+                        <SelectItem key={option} value={option}>{option}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )} />
               ) : (
                 <Input
                   id={`intake-${field.key}`}
                   type={field.type === "email" ? "email" : field.type === "phone" ? "tel" : "text"}
                   required={field.required}
+                  aria-invalid={Boolean(form.formState.errors.intake?.[field.key])}
+                  aria-describedby={form.formState.errors.intake?.[field.key] ? `intake-${field.key}-error` : undefined}
                   {...form.register(`intake.${field.key}`)}
                 />
+              )}
+              {form.formState.errors.intake?.[field.key] && (
+                <p id={`intake-${field.key}-error`} className="text-sm text-destructive" role="alert">
+                  {form.formState.errors.intake[field.key]?.message}
+                </p>
               )}
             </div>
           ))}
