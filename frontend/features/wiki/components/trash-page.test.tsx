@@ -132,6 +132,9 @@ const { useSearchParams } = jest.requireMock("next/navigation") as {
 const { useCan } = jest.requireMock("@/hooks/api/access") as {
   useCan: jest.Mock;
 };
+const { useCursorPagination } = jest.requireMock("@/hooks/common/use-cursor-pagination") as {
+  useCursorPagination: jest.Mock;
+};
 
 const emptyListResponse = {
   data: [] as KbPageListItem[],
@@ -183,6 +186,14 @@ const nonEmptyListResponse = {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  useCursorPagination.mockReturnValue({
+    cursor: undefined,
+    pageNumber: 1,
+    hasPrevious: false,
+    goNext: jest.fn(),
+    goPrevious: jest.fn(),
+    reset: jest.fn(),
+  });
   useSearchParams.mockReturnValue(new URLSearchParams());
   useKbPagesTrash.mockReturnValue({
     data: emptyListResponse,
@@ -460,6 +471,25 @@ describe("trash page retention permission split", () => {
 });
 
 describe("trash page first-empty is not the same claim as filtered-empty", () => {
+  it("offers the previous page instead of claiming the whole trash is empty when a later cursor page is empty", () => {
+    const goPrevious = jest.fn();
+    useCursorPagination.mockReturnValue({
+      cursor: "later-page",
+      pageNumber: 2,
+      hasPrevious: true,
+      goNext: jest.fn(),
+      goPrevious,
+      reset: jest.fn(),
+    });
+
+    render(<TrashPage />);
+
+    expect(screen.getByText("No deleted pages on this page")).toBeInTheDocument();
+    expect(screen.queryByText("Trash is empty")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Previous page" }));
+    expect(goPrevious).toHaveBeenCalledTimes(1);
+  });
+
   it("with no filters in the URL the empty branch claims the trash itself is empty and offers no Clear filters escape", () => {
     useSearchParams.mockReturnValue(new URLSearchParams());
 

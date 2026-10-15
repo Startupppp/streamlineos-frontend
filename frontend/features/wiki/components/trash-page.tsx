@@ -365,20 +365,29 @@ export default function TrashPage() {
             resolution={pageState}
             loading={<TrashSkeleton />}
             empty={
-              <EmptyState
-                illustration={
-                  <KbTrash2Icon className="h-8 w-8 text-muted-foreground" />
-                }
-                title="Trash is empty"
-                description={
-                  filtersActive
-                    ? "Deleted pages are being hidden by the filters above."
-                    : "Deleted pages will appear here and can be restored or permanently removed."
-                }
-                filtersActive={filtersActive}
-                filteredTitle="No deleted pages match your filters."
-                onClearFilters={handleClearFilters}
-              />
+              cursorState.hasPrevious ? (
+                <EmptyState
+                  illustration={<KbTrash2Icon className="h-8 w-8 text-muted-foreground" />}
+                  title="No deleted pages on this page"
+                  description="The deleted pages on this page may have changed. Go back to continue browsing."
+                  action={{ label: "Previous page", onClick: cursorState.goPrevious }}
+                />
+              ) : (
+                <EmptyState
+                  illustration={
+                    <KbTrash2Icon className="h-8 w-8 text-muted-foreground" />
+                  }
+                  title="Trash is empty"
+                  description={
+                    filtersActive
+                      ? "Deleted pages are being hidden by the filters above."
+                      : "Deleted pages will appear here and can be restored or permanently removed."
+                  }
+                  filtersActive={filtersActive}
+                  filteredTitle="No deleted pages match your filters."
+                  onClearFilters={handleClearFilters}
+                />
+              )
             }
             onRetry={refetch}
           >
