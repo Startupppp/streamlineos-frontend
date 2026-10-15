@@ -56,6 +56,20 @@ export const bookingAllocationContract = z.object({
 
 export const bookingAllocationsContract = z.array(bookingAllocationContract);
 
+export const pendingBookingAllocationsContract = z.array(z.object({
+  bookingId: z.string().uuid(),
+  resourceId: z.number().int().positive(),
+  resourceName: z.string(),
+  ownership: z.enum(["calendar", "source"]),
+  startAt: z.string(),
+  endAt: z.string(),
+  state: z.enum(["pending", "uncertain"]),
+  reasonCode: z.string().nullable(),
+  version: z.number().int().positive(),
+  canApprove: z.boolean(),
+  approvalReceiptId: z.string().nullable(),
+}));
+
 export const bookingAllocationResolutionContract = z.object({
   bookingId: z.string().uuid(),
   bookingStatus: z.enum(["pending", "confirmed", "declined"]),
@@ -74,4 +88,5 @@ export type BookingResource = z.infer<typeof bookingResourceContract>;
 export type BookingRuleResource = z.infer<typeof bookingRuleResourceContract>;
 export type BookingResourceMaintenance = z.infer<typeof bookingResourceMaintenanceContract>;
 export type BookingAllocation = z.infer<typeof bookingAllocationContract>;
+export type PendingBookingAllocation = z.infer<typeof pendingBookingAllocationsContract>[number];
 export type BookingAllocationResolution = z.infer<typeof bookingAllocationResolutionContract>;
