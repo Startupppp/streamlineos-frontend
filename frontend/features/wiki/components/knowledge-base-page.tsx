@@ -559,6 +559,9 @@ export default function KnowledgeBasePage() {
                       <ChatBubble key="pending-error" message={{ id: "pending-error", role: "assistant", content: pending.error, isError: true }} onCitation={handleCitationClick} reduce={Boolean(reduce)} />
                     )}
                     {pending?.error && !pending.isQuotaError && !ask.isPending && <Button variant="outline" onClick={handleRegenerate}>Generate a new answer</Button>}
+                    {pending?.answer && pending.error && (
+                      <p role="status" className="text-xs text-muted-foreground">Partial answer — generation did not complete.</p>
+                    )}
                     {pending?.hasContext === false && (
                       <InsufficientEvidenceBanner question={pending.question} spaceId={pending.spaceId} />
                     )}
@@ -574,7 +577,7 @@ export default function KnowledgeBasePage() {
                           pending.citations?.length ? <CitationEvidenceList citations={pending.citations} /> : undefined
                         }
                         actions={
-                          !ask.isPending ? (
+                          !ask.isPending && !pending.error && !pending.isQuotaError ? (
                             <>
                               <CopyAnswerButton text={pending.answer} />
                               <AnswerFeedbackBar question={pending.question} />
