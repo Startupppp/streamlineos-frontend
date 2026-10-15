@@ -68,6 +68,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 
 interface Pending {
   question: string;
+  spaceId?: number;
   answer?: string;
   error?: string;
   citations?: KbAskCitation[];
@@ -256,7 +257,7 @@ export default function KnowledgeBasePage() {
     sendingRef.current = true;
     setInput("");
     isNearBottomRef.current = true;
-    setPending({ question: trimmed });
+    setPending({ question: trimmed, ...(scopeSpaceId !== null ? { spaceId: scopeSpaceId } : {}) });
     const generation = ++generationRef.current;
     function handleToken(token: string) {
       if (generationRef.current === generation)
@@ -559,7 +560,7 @@ export default function KnowledgeBasePage() {
                     )}
                     {pending?.error && !pending.isQuotaError && !ask.isPending && <Button variant="outline" onClick={handleRegenerate}>Generate a new answer</Button>}
                     {pending?.hasContext === false && (
-                      <InsufficientEvidenceBanner question={pending.question} />
+                      <InsufficientEvidenceBanner question={pending.question} spaceId={pending.spaceId} />
                     )}
                     {pending?.disagreement && (
                       <DisagreementBanner summary={pending.disagreement.summary} />

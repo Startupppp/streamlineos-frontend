@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 const mockAskMutate = jest.fn();
+const mockCreateGapMutate = jest.fn();
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
@@ -23,7 +24,7 @@ jest.mock("@/hooks/api/kb/ask", () => ({
     resetAttempt: jest.fn(),
   }),
   useKbAiAnswerFeedback: () => ({ mutate: jest.fn(), isPending: false }),
-  useCreateKbKnowledgeGap: () => ({ mutate: jest.fn(), isPending: false }),
+  useCreateKbKnowledgeGap: () => ({ mutate: mockCreateGapMutate, isPending: false }),
 }));
 
 jest.mock("@/hooks/api/access", () => ({
@@ -121,6 +122,7 @@ async function confirmAndAsk(user: ReturnType<typeof userEvent.setup>) {
 
 beforeEach(() => {
   mockAskMutate.mockReset();
+  mockCreateGapMutate.mockReset();
 });
 
 describe("KnowledgeBasePage — every scope dimension the sheet edits reaches the ask request body", () => {
@@ -170,6 +172,23 @@ describe("KnowledgeBasePage — every scope dimension the sheet edits reaches th
     await confirmAndAsk(user);
 
     expect(await sentBody()).toHaveProperty("spaceId", 10);
+  });
+
+  it("reports the selected question space on an insufficient-evidence gap", async () => {
+    mockAskMutate.mockImplementation((_input, options) =>
+      options.onSuccess({ hasContext: false, answer: "", citations: [], conversationId: 9 }),
+    );
+    const user = renderPage();
+    await openScopeSheet(user);
+    await user.click(screen.getByRole("button", { name: "Engineering" }));
+    await confirmAndAsk(user);
+
+    await user.click(await screen.findByRole("button", { name: /create a knowledge gap/i }));
+
+    expect(mockCreateGapMutate).toHaveBeenCalledWith(
+      { question: "What is the policy?", spaceId: 10 },
+      expect.objectContaining({ onSuccess: expect.any(Function), onError: expect.any(Function) }),
+    );
   });
 
   it("omits spaceId when the space control is left on All", async () => {

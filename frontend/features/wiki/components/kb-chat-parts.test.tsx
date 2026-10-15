@@ -86,6 +86,17 @@ describe("CreateKnowledgeGapButton", () => {
     );
     expect(await screen.findByText(/knowledge gap flagged/i)).toBeInTheDocument();
   });
+
+  it("includes the selected Ask space when reporting a knowledge gap", async () => {
+    render(<CreateKnowledgeGapButton question="Where is the policy?" spaceId={10} />);
+
+    await userEvent.click(screen.getByRole("button", { name: /create a knowledge gap/i }));
+
+    expect(mockCreateGapMutate).toHaveBeenCalledWith(
+      { question: "Where is the policy?", spaceId: 10 },
+      expect.objectContaining({ onSuccess: expect.any(Function), onError: expect.any(Function) }),
+    );
+  });
 });
 
 describe("InsufficientEvidenceBanner", () => {

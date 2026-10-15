@@ -115,13 +115,13 @@ export function EmptyChat({
   );
 }
 
-export function CreateKnowledgeGapButton({ question }: { question: string }) {
+export function CreateKnowledgeGapButton({ question, spaceId }: { question: string; spaceId?: number }) {
   const createGap = useCreateKbKnowledgeGap();
   const [created, setCreated] = useState(false);
 
   function handleCreate() {
     createGap.mutate(
-      { question },
+      { question, ...(spaceId !== undefined ? { spaceId } : {}) },
       {
         onSuccess: () => {
           setCreated(true);
@@ -150,7 +150,7 @@ export function CreateKnowledgeGapButton({ question }: { question: string }) {
   );
 }
 
-export function InsufficientEvidenceBanner({ question }: { question?: string }) {
+export function InsufficientEvidenceBanner({ question, spaceId }: { question?: string; spaceId?: number }) {
   return (
     <div
       role="status"
@@ -165,7 +165,7 @@ export function InsufficientEvidenceBanner({ question }: { question?: string }) 
         </p>
         {question ? (
           <div className="mt-1.5">
-            <CreateKnowledgeGapButton question={question} />
+            <CreateKnowledgeGapButton question={question} spaceId={spaceId} />
           </div>
         ) : null}
       </div>

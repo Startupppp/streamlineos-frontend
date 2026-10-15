@@ -75,7 +75,7 @@ export function useKbAiAnswerFeedback() {
 export function useCreateKbKnowledgeGap() {
   return useAuthorizedMutation("kb:pages:view", {
     mutationKey: ["kb", "ask", "knowledge-gap"],
-    mutationFn: (input: { question: string }) =>
+    mutationFn: (input: { question: string; spaceId?: number }) =>
       apiClient.post<{ success: boolean }>("/kb/ask/knowledge-gap", input, undefined, kbAiFeedbackContract),
   });
 }

@@ -2,7 +2,7 @@ import { selectFlatPages } from "./select-flat-pages";
 
 const PAGINATION = { hasMore: false, nextCursor: null, limit: 20 };
 
-describe("selectFlatPages — flattens InfiniteData<{ data: T[] }> to T[]", () => {
+describe("selectFlatPages — the selected result is a flat item array while raw pages retain pagination", () => {
   it("returns the items from a single page in the same order they arrived", () => {
     const result = selectFlatPages({
       pages: [{ data: [1, 2, 3], pagination: PAGINATION }],
@@ -42,5 +42,16 @@ describe("selectFlatPages — flattens InfiniteData<{ data: T[] }> to T[]", () =
       pageParams: [undefined],
     });
     expect(result).toEqual([item]);
+  });
+
+  it("does not attach cursor metadata to the selected result or mutate the raw pages", () => {
+    const raw = {
+      pages: [{ data: [{ id: 1 }], pagination: { limit: 20, hasMore: true, nextCursor: "next-2" } }],
+      pageParams: [undefined],
+    };
+    const selected = selectFlatPages(raw);
+    expect(selected).toEqual([{ id: 1 }]);
+    expect(Object.hasOwn(selected, "pages")).toBe(false);
+    expect(raw.pages[0]?.pagination.nextCursor).toBe("next-2");
   });
 });
