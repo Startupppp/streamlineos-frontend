@@ -1,6 +1,6 @@
 # Calendar acceptance audit
 
-This audit uses the approved 36-ticket breakdown, the current code, and [release evidence](./release-evidence.md). The 36 original ticket bodies were previously recovered from this chat's saved publishing output into `.scratch/calendar/issues/` on 2026-10-14, but that temporary directory is absent in the current checkout as of 2026-10-15. Recover the original acceptance criteria before claiming further ticket completion. A local implementation or passing fixture does not close a ticket whose acceptance needs a database, provider, or authenticated workflow.
+This audit uses the approved 36-ticket breakdown, the current code, and [release evidence](./release-evidence.md). All 36 original ticket bodies and their acceptance criteria were restored byte-for-byte from this chat's saved 2026-10-12 publishing output into [tickets](./tickets/) on 2026-10-15. Those original criteria govern completion. A local implementation or passing fixture does not close a ticket whose acceptance needs a database, provider, or authenticated workflow.
 
 Accepted against the original ticket checklists: 13 of 36. Open: 23.
 
