@@ -70,7 +70,7 @@ export function CalendarAgendaPreview({
 
 export function CalendarSheetFallback({ label }: { label: string }) {
   return (
-    <AppSheet open onOpenChange={() => {}} title={label}>
+    <AppSheet open onOpenChange={() => {}} title={label} description="Opening this Calendar panel.">
       <p role="status" aria-live="polite" aria-label={label} className="text-sm text-muted-foreground">{label}…</p>
     </AppSheet>
   );

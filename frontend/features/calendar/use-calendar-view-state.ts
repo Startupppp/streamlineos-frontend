@@ -187,9 +187,16 @@ export function useCalendarViewState() {
           : event.resource?.source === "hr"
             ? "hr"
             : "calendar")) as CalendarSelectionSource;
-      navigate({ event: String(event.id), eventSource: source });
+      window.history.pushState(
+        null,
+        "",
+        calendarUrl(new URLSearchParams(window.location.search), {
+          event: String(event.id),
+          eventSource: source,
+        }),
+      );
     },
-    [navigate],
+    [],
   );
 
   const handlePrev = useCallback(() => {
@@ -215,8 +222,15 @@ export function useCalendarViewState() {
     [setCurrentDate],
   );
   const handleCloseSelected = useCallback(() => {
-    navigate({ event: null, eventSource: null }, "replace");
-  }, [navigate]);
+    window.history.replaceState(
+      null,
+      "",
+      calendarUrl(new URLSearchParams(window.location.search), {
+        event: null,
+        eventSource: null,
+      }),
+    );
+  }, []);
   const handleOpenAccounts = useCallback(() => setAccountsOpen(true), []);
   const handleCloseAccounts = useCallback(() => setAccountsOpen(false), []);
   return {
