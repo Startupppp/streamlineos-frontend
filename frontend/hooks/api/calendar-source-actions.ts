@@ -1,6 +1,7 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
+import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { platformHierarchyQueryKeys } from "@/lib/query-keys/platform-hierarchy";
@@ -16,6 +17,9 @@ const proposalContract = lazyContract(() =>
 );
 const capabilitiesContract = lazyContract(() =>
   import("./calendar-source-actions-schema").then((module) => module.calendarSourceActionCapabilitiesContract),
+);
+const proposalListContract = lazyContract(() =>
+  import("./calendar-source-actions-schema").then((module) => module.calendarSourceActionProposalListContract),
 );
 
 export interface CreateCalendarSourceActionProposalInput {
@@ -45,8 +49,46 @@ export function useCalendarSourceActionCapabilities() {
   });
 }
 
+export function useCalendarSourceActionProposals(enabled = true) {
+  const { data: session } = useSession();
+  const orgId = session?.orgId ?? "";
+  const userId = session?.user?.id ?? "";
+  return useGatedQuery("calendar:read", {
+    queryKey: platformHierarchyQueryKeys.calendar.sourceActionProposals(orgId, userId),
+    queryFn: ({ signal }) => apiClient.get<CalendarSourceActionProposal[]>(
+      "/calendar/source-actions/proposals",
+      undefined,
+      signal,
+      proposalListContract,
+    ),
+    enabled: Boolean(enabled && orgId && userId),
+    staleTime: 30_000,
+  });
+}
+
+export function useCalendarSourceActionProposal(proposalId: string | null) {
+  const { data: session } = useSession();
+  const orgId = session?.orgId ?? "";
+  const userId = session?.user?.id ?? "";
+  return useGatedQuery("calendar:read", {
+    queryKey: platformHierarchyQueryKeys.calendar.sourceActionProposal(orgId, userId, proposalId ?? ""),
+    queryFn: ({ signal }) => apiClient.get<CalendarSourceActionProposal>(
+      `/calendar/source-actions/proposals/${proposalId}`,
+      undefined,
+      signal,
+      proposalContract,
+    ),
+    enabled: Boolean(orgId && userId && proposalId),
+    staleTime: 0,
+    refetchInterval: (query) => query.state.data?.status === "APPLYING" ? 5000 : false,
+  });
+}
+
 export function useCreateCalendarSourceActionProposal() {
   const queryClient = useQueryClient();
+  const { data: session } = useSession();
+  const orgId = session?.orgId ?? "";
+  const userId = session?.user?.id ?? "";
   return useAuthorizedMutation("calendar:read", {
     mutationKey: ["calendar", "source-actions", "create"],
     mutationFn: (input: CreateCalendarSourceActionProposalInput) =>
@@ -56,15 +98,21 @@ export function useCreateCalendarSourceActionProposal() {
         undefined,
         proposalContract,
       ),
-    onSuccess: (proposal) => queryClient.setQueryData(
-      platformHierarchyQueryKeys.calendar.sourceActionProposal(proposal.id),
-      proposal,
-    ),
+    onSuccess: (proposal) => {
+      queryClient.setQueryData(
+        platformHierarchyQueryKeys.calendar.sourceActionProposal(orgId, userId, proposal.id),
+        proposal,
+      );
+      void queryClient.invalidateQueries({ queryKey: platformHierarchyQueryKeys.calendar.sourceActionProposals(orgId, userId) });
+    },
   });
 }
 
 export function useConfirmCalendarSourceActionProposal() {
   const queryClient = useQueryClient();
+  const { data: session } = useSession();
+  const orgId = session?.orgId ?? "";
+  const userId = session?.user?.id ?? "";
   return useAuthorizedMutation("calendar:read", {
     mutationKey: ["calendar", "source-actions", "confirm"],
     mutationFn: ({
@@ -83,9 +131,10 @@ export function useConfirmCalendarSourceActionProposal() {
     ),
     onSuccess: (proposal) => {
       queryClient.setQueryData(
-        platformHierarchyQueryKeys.calendar.sourceActionProposal(proposal.id),
+        platformHierarchyQueryKeys.calendar.sourceActionProposal(orgId, userId, proposal.id),
         proposal,
       );
+      void queryClient.invalidateQueries({ queryKey: platformHierarchyQueryKeys.calendar.sourceActionProposals(orgId, userId) });
       void queryClient.invalidateQueries({ queryKey: platformHierarchyQueryKeys.calendar.eventsAll });
     },
   });
@@ -93,6 +142,9 @@ export function useConfirmCalendarSourceActionProposal() {
 
 export function useRepairCalendarSourceActionStep() {
   const queryClient = useQueryClient();
+  const { data: session } = useSession();
+  const orgId = session?.orgId ?? "";
+  const userId = session?.user?.id ?? "";
   return useAuthorizedMutation("calendar:read", {
     mutationKey: ["calendar", "source-actions", "repair"],
     mutationFn: ({
@@ -113,9 +165,10 @@ export function useRepairCalendarSourceActionStep() {
     ),
     onSuccess: (proposal) => {
       queryClient.setQueryData(
-        platformHierarchyQueryKeys.calendar.sourceActionProposal(proposal.id),
+        platformHierarchyQueryKeys.calendar.sourceActionProposal(orgId, userId, proposal.id),
         proposal,
       );
+      void queryClient.invalidateQueries({ queryKey: platformHierarchyQueryKeys.calendar.sourceActionProposals(orgId, userId) });
       void queryClient.invalidateQueries({ queryKey: platformHierarchyQueryKeys.calendar.eventsAll });
     },
   });

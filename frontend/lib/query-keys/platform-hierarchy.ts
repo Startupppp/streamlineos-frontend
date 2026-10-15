@@ -86,8 +86,10 @@ export const platformHierarchyQueryKeys = {
       "source-actions",
       "capabilities",
     ] as const,
-    sourceActionProposal: (proposalId: string) =>
-      [...base, "calendar", "source-actions", "proposal", proposalId] as const,
+    sourceActionProposals: (orgId: string, userId: string) =>
+      [...base, "calendar", "source-actions", "proposals", orgId, userId] as const,
+    sourceActionProposal: (orgId: string, userId: string, proposalId: string) =>
+      [...base, "calendar", "source-actions", "proposal", orgId, userId, proposalId] as const,
     meetingWorkspace: (eventId: number) =>
       [...base, "calendar", "meeting-workspace", eventId] as const,
   },
