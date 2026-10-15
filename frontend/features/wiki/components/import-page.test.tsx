@@ -12,6 +12,7 @@ const { toast } = jest.requireMock("sonner") as {
 
 const mockReplace = jest.fn();
 const mockImportMutate = jest.fn();
+const mockCancelMutate = jest.fn();
 const mockUseKbImportJob = jest.fn();
 let mockSearchParams = new URLSearchParams();
 
@@ -42,7 +43,7 @@ jest.mock("@/hooks/api/kb/spaces", () => ({
 jest.mock("@/hooks/api/kb", () => ({
   useImportKbPages: () => ({ mutate: mockImportMutate, isPending: false }),
   useKbImportJob: (jobId: number | null) => mockUseKbImportJob(jobId),
-  useCancelImportJob: () => ({ mutate: jest.fn(), isPending: false }),
+  useCancelImportJob: () => ({ mutate: mockCancelMutate, isPending: false }),
   useDryRunImport: () => ({ mutate: jest.fn(), isPending: false, data: undefined, reset: jest.fn() }),
   useKbImportJobs: () => ({
     data: [],
@@ -70,6 +71,7 @@ describe("ImportPage — Import / Export tabs", () => {
   beforeEach(() => {
     mockReplace.mockClear();
     mockImportMutate.mockReset();
+    mockCancelMutate.mockReset();
     mockUseKbImportJob.mockReturnValue({ data: undefined });
     toast.error.mockClear();
     toast.success.mockClear();
@@ -164,6 +166,7 @@ describe("ImportPage — Import / Export tabs", () => {
     await user.click(screen.getByRole("button", { name: "Import 1 page" }));
 
     expect(screen.getByText("Processing import… 1/3 pages")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Cancel" })).not.toBeInTheDocument();
     expect(screen.getByRole("progressbar", { name: "Import progress" })).toHaveAttribute(
       "aria-valuetext",
       "1 of 3 pages processed",
@@ -179,6 +182,30 @@ describe("ImportPage — Import / Export tabs", () => {
       "aria-valuetext",
       "2 of 3 pages processed",
     );
+  });
+
+  it("offers Cancel while a job is pending before processing starts", async () => {
+    const user = userEvent.setup();
+    mockImportMutate.mockImplementation((_input, options) => {
+      options.onSuccess({ jobId: 11, status: "pending" });
+    });
+    mockUseKbImportJob.mockImplementation((jobId) => ({
+      data: jobId === 11 ? {
+        id: 11,
+        status: "pending",
+        processedItems: 0,
+        totalItems: 1,
+      } : undefined,
+    }));
+
+    render(<ImportPage />);
+    await user.click(screen.getByRole("button", { name: "Paste text" }));
+    await user.type(screen.getByLabelText("Page title"), "Policy");
+    await user.click(screen.getByRole("button", { name: "Add to list" }));
+    await user.click(screen.getByRole("button", { name: "Import 1 page" }));
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+
+    expect(mockCancelMutate).toHaveBeenCalledWith(11, expect.anything());
   });
 
   it("reports imported, skipped, and failed counts when a partial import completes", async () => {

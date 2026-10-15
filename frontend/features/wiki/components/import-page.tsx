@@ -484,15 +484,17 @@ export default function ImportPage() {
                     />
                   ) : null}
                 </div>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="ghost"
-                  onClick={handleCancelImport}
-                  disabled={cancelMutation.isPending}
-                >
-                  Cancel
-                </Button>
+                {activeJob?.status === "pending" ? (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    onClick={handleCancelImport}
+                    disabled={cancelMutation.isPending}
+                  >
+                    Cancel
+                  </Button>
+                ) : null}
               </div>
             ) : null}
 
