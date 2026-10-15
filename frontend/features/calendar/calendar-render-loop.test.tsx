@@ -35,7 +35,6 @@ jest.mock("next-auth/react", () => ({
 jest.mock("@/hooks/api/access", () => ({
   useCan: () => true,
   useScope: () => "all",
-  useModuleEnabled: () => true,
   usePermissionGate: () => mockCalendarPermission,
   useModuleEnabled: (moduleKey: string) =>
     moduleKey === "calendar" ? mockCalendarModuleEnabled : true,
@@ -161,7 +160,7 @@ describe("/calendar render stability", () => {
     mockSearchParams = new URLSearchParams("mode=list&date=2026-09-15");
     mockApiGet.mockImplementation((path: unknown) =>
       Promise.resolve(
-        path === "/calendar/events"
+        typeof path === "string" && path.startsWith("/calendar/events")
           ? {
               ...CALENDAR_EVENTS,
               events: [{
@@ -306,7 +305,9 @@ describe("/calendar render stability", () => {
   it("removes an inaccessible real event ID from the URL without opening detail", async () => {
     mockSearchParams = new URLSearchParams("event=event-42&eventSource=calendar");
     mockApiGet.mockImplementation((path: unknown) => Promise.resolve(
-      path === "/calendar/events" ? { ...CALENDAR_EVENTS, events: [] } : routeGet(path),
+      typeof path === "string" && path.startsWith("/calendar/events")
+        ? { ...CALENDAR_EVENTS, events: [] }
+        : routeGet(path),
     ));
 
     await renderCalendar();

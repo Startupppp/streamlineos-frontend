@@ -221,7 +221,7 @@ export async function saveOfflineCalendarSnapshot(
     return;
   const writeEpoch = cacheEpoch;
   const busyWindows = result.events.filter((event) => event.availability !== "free");
-  const truncated = busyWindows.length > 2000;
+  const truncated = result.truncated || busyWindows.length > 2000;
   const snapshot: OfflineCalendarSnapshot = {
     identity,
     fetchedAt: Date.now(),

@@ -195,6 +195,23 @@ describe("Calendar offline cache identity", () => {
     expect((db.puts[0] as { windows: unknown[] }).windows).toHaveLength(2000);
   });
 
+  it("does not report complete offline coverage when the server truncated a source", async () => {
+    const db = fakeIndexedDb();
+    sessionStorage.setItem("streamline-calendar-offline-session-identity", "org-1:user-1");
+    localStorage.setItem("streamline-calendar-offline-identity", "org-1:user-1");
+    allowOfflineCalendarPolicy("org-1:user-1", 1);
+    const pending = saveOfflineCalendarSnapshot("org-1:user-1", new Date("2026-10-13T09:00:00.000Z"), new Date("2026-10-13T10:00:00.000Z"), {
+      events: [], failures: [], truncated: true, coverageState: "complete",
+      coverage: [{ sourceKey: "external:outlook:1", state: "complete", nextCursor: null }],
+    }, { version: 1, maxAgeDays: 1 }, "Asia/Kolkata");
+    db.openNext();
+    await pending;
+    expect(db.puts).toEqual([expect.objectContaining({
+      coverage: "partial",
+      sources: [{ sourceKey: "external:outlook:1", state: "partial" }],
+    })]);
+  });
+
   it("rejects a stale enabled policy after another tab disables caching", async () => {
     const db = fakeIndexedDb();
     sessionStorage.setItem("streamline-calendar-offline-session-identity", "org-1:user-1");
