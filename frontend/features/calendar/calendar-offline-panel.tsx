@@ -5,7 +5,6 @@ import { format } from "date-fns";
 import { useSession } from "next-auth/react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { usePermissionGate } from "@/hooks/api/access";
@@ -22,6 +21,7 @@ import type {
   CalendarOfflineEditIntent,
   CalendarOfflineIntent,
 } from "./calendar-offline-intent";
+import { CalendarDateTimePicker } from "./calendar-date-time-picker";
 
 const IDENTITY_KEY = "streamline-calendar-offline-identity";
 
@@ -255,23 +255,23 @@ export function CalendarOfflinePanel({
                 account, current policy, and availability before you can open
                 the event form.
               </p>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
                 <div className="space-y-1">
                   <Label htmlFor="offline-draft-start">Start</Label>
-                  <Input
+                  <CalendarDateTimePicker
                     id="offline-draft-start"
-                    type="datetime-local"
+                    label="Start"
                     value={draftStart}
-                    onChange={(event) => setDraftStart(event.target.value)}
+                    onChange={setDraftStart}
                   />
                 </div>
                 <div className="space-y-1">
                   <Label htmlFor="offline-draft-end">End</Label>
-                  <Input
+                  <CalendarDateTimePicker
                     id="offline-draft-end"
-                    type="datetime-local"
+                    label="End"
                     value={draftEnd}
-                    onChange={(event) => setDraftEnd(event.target.value)}
+                    onChange={setDraftEnd}
                   />
                 </div>
               </div>
@@ -329,23 +329,23 @@ export function CalendarOfflinePanel({
                     ))}
                   </SelectContent>
                 </Select>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
                   <div className="space-y-1">
                     <Label htmlFor="offline-edit-start">New start</Label>
-                    <Input
+                    <CalendarDateTimePicker
                       id="offline-edit-start"
-                      type="datetime-local"
+                      label="New start"
                       value={editStart}
-                      onChange={(change) => setEditStart(change.target.value)}
+                      onChange={setEditStart}
                     />
                   </div>
                   <div className="space-y-1">
                     <Label htmlFor="offline-edit-end">New end</Label>
-                    <Input
+                    <CalendarDateTimePicker
                       id="offline-edit-end"
-                      type="datetime-local"
+                      label="New end"
                       value={editEnd}
-                      onChange={(change) => setEditEnd(change.target.value)}
+                      onChange={setEditEnd}
                     />
                   </div>
                 </div>

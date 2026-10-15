@@ -38,6 +38,7 @@ import {
 } from "./event-detail-content";
 import { CalendarListFallback } from "./calendar-lazy-fallbacks";
 import { CalendarSourceActionPanel } from "./calendar-source-action-panel";
+import { CalendarNativeScenarioMove } from "./calendar-native-scenario-move";
 import type { CalendarScenarioDraftStep } from "./calendar-scenario-draft";
 import type { CommitmentReference } from "@/hooks/api/calendar-commitment-schema";
 
@@ -213,6 +214,8 @@ export function EventDetailSheet({ event, onClose, onQueueScenarioStep }: EventD
             onRsvp={handleRsvp}
           />
           {event ? <CalendarSourceActionPanel key={`${event.id}:${event.sourceVersion}`} event={event} onQueueScenarioStep={onQueueScenarioStep} /> : null}
+          {detail && canMutateEvent && !detail.isRecurring && !detail.allDay && commitmentRoot && onQueueScenarioStep ?
+            <CalendarNativeScenarioMove key={`${detail.id}:${detail.localVersion}`} detail={detail} root={commitmentRoot} onQueue={onQueueScenarioStep} /> : null}
           <EventDetailActions
             showMeeting={isCalendarEvent && event?.category !== "huddle"}
             showHuddle={event?.category === "huddle" && Boolean(event.entityId)}

@@ -5,11 +5,12 @@ import { createPortal } from "react-dom";
 import { setMonth, setYear } from "date-fns";
 import { ChevronLeftIcon, ChevronRightIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { Button } from "@/components/ui/button";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+  ResponsivePopover,
+  ResponsivePopoverContent,
+  ResponsivePopoverTrigger,
+} from "@/components/ui/responsive-popover";
 import { cn } from "@/lib/utils";
 
 const MONTHS_SHORT = [
@@ -45,18 +46,17 @@ interface MonthButtonProps {
 function MonthButton({ label, index, isSelected, onSelect }: MonthButtonProps) {
   const handleClick = useCallback(() => onSelect(index), [index, onSelect]);
   return (
-    <button
+    <Button
       type="button"
+      variant={isSelected ? "default" : "ghost"}
       onClick={handleClick}
       className={cn(
-        "rounded-md py-2 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-        isSelected
-          ? "bg-primary text-primary-foreground"
-          : "text-foreground hover:bg-muted",
+        "h-9 w-full text-xs font-medium",
+        !isSelected && "text-foreground",
       )}
     >
       {label}
-    </button>
+    </Button>
   );
 }
 
@@ -70,20 +70,17 @@ interface YearButtonProps {
 function YearButton({ year, isSelected, isCurrentYear, onSelect }: YearButtonProps) {
   const handleClick = useCallback(() => onSelect(year), [year, onSelect]);
   return (
-    <button
+    <Button
       type="button"
+      variant={isSelected ? "default" : "ghost"}
       onClick={handleClick}
       className={cn(
-        "rounded-md py-2 text-xs font-medium tabular-nums transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-        isSelected
-          ? "bg-primary text-primary-foreground"
-          : isCurrentYear
-            ? "bg-muted text-foreground"
-            : "text-foreground hover:bg-muted",
+        "h-9 w-full text-xs font-medium tabular-nums",
+        !isSelected && (isCurrentYear ? "bg-muted text-foreground" : "text-foreground"),
       )}
     >
       {year}
-    </button>
+    </Button>
   );
 }
 
@@ -192,18 +189,19 @@ export const CalendarMonthYearPicker = memo(function CalendarMonthYearPicker({
   }, []);
 
   return (
-    <Popover open={open} onOpenChange={handleOpenChange}>
+    <ResponsivePopover open={open} onOpenChange={handleOpenChange}>
       <PeriodAnnouncement title={title} />
-      <PopoverTrigger asChild>
-        <button
+      <ResponsivePopoverTrigger asChild>
+        <Button
           type="button"
+          variant="ghost"
           className="w-fit shrink-0 whitespace-nowrap rounded-md px-2 py-1 text-left text-foreground transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
           aria-label={`Choose month and year, currently ${title}`}
         >
           {title}
-        </button>
-      </PopoverTrigger>
-      <PopoverContent className="w-64 p-3" align="start">
+        </Button>
+      </ResponsivePopoverTrigger>
+      <ResponsivePopoverContent className="w-64 p-3" align="start" title="Choose month and year">
         {pickerMode === "month" ? (
           <>
             <div className="mb-3 flex items-center justify-between">
@@ -216,14 +214,15 @@ export const CalendarMonthYearPicker = memo(function CalendarMonthYearPicker({
                 aria-label="Previous year"
                 onClick={handlePrevYear}
               />
-              <button
+              <Button
                 type="button"
+                variant="ghost"
                 onClick={handleShowYearPicker}
                 className="rounded-md px-2 py-0.5 text-sm font-semibold tabular-nums text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 aria-label={`Select year, currently ${pickerYear}`}
               >
                 {pickerYear}
-              </button>
+              </Button>
               <AnimatedIconButton
                 icon={ChevronRightIcon}
                 iconSize={16}
@@ -284,7 +283,7 @@ export const CalendarMonthYearPicker = memo(function CalendarMonthYearPicker({
             </div>
           </>
         )}
-      </PopoverContent>
-    </Popover>
+      </ResponsivePopoverContent>
+    </ResponsivePopover>
   );
 });

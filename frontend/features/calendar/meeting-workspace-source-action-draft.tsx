@@ -17,6 +17,7 @@ import type { CalendarMeetingWorkspace } from "@/hooks/api/calendar-meeting-work
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import { actionConfig, inputValue, sourceValue } from "./calendar-source-action-fields";
+import { CalendarDateTimePicker } from "./calendar-date-time-picker";
 
 const sourceDraftSchema = z.object({
   targetId: z.string().min(1),
@@ -125,7 +126,7 @@ export function MeetingWorkspaceSourceActionDraft({ workspace }: MeetingWorkspac
                   ariaLabel={config.label}
                 />
               ) : (
-                <Input id={`meeting-source-value-${workspace.id}`} type="datetime-local" {...form.register("value")} />
+                <CalendarDateTimePicker id={`meeting-source-value-${workspace.id}`} label={config.label} value={form.watch("value")} onChange={(value) => form.setValue("value", value, { shouldValidate: true })} />
               )}
               <Label htmlFor={`meeting-source-effect-${workspace.id}`}>Intended effect</Label>
               <Input id={`meeting-source-effect-${workspace.id}`} {...form.register("effect")} />
