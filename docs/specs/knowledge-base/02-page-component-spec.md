@@ -258,11 +258,11 @@ Every collection uses cursor pagination unless it is explicitly bounded: recents
 
 **Acceptance:** queued, running, completed, failed, denied, and source-revoked states have an explicit recovery path. Reopening a queued or running brief resumes status polling; repeated retry or conversion does not duplicate work or pages.
 
-## 22. Knowledge Entry — `/knowledge`
+## 22. Knowledge Entry and Redirect Aliases — `/knowledge`, `/ask`, `/docs`, `/kb`, and `/knowledge/wiki/pages/[pageId]`
 
 **Customer job:** reach the Knowledge product from one stable entry route.
 
-**Rules:** redirect to `/knowledge/chat`; the destination enforces the current session and KB entitlement. Record redirect use without disclosing the tenant or access state in the redirect response.
+**Rules:** `/knowledge` and `/ask` redirect to `/knowledge/chat`; `/docs` and `/kb` redirect to `/knowledge/wiki`; the legacy `/knowledge/wiki/pages/[pageId]` and `/history` paths redirect to the canonical document and history routes. The destination enforces the current session, entitlement, and object access. Record redirect use without disclosing the tenant or access state in the redirect response.
 
 **Acceptance:** permitted and unentitled actors land in their correct destination state, and the redirect is visible in live telemetry.
 

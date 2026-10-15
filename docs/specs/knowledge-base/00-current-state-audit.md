@@ -28,6 +28,7 @@ No destructive action or content mutation was used. Dynamic routes without a val
 | `/knowledge/wiki/trash` | KEEP | Observed + Source | Retention explanation and setting | Add searchable table, deleted-by/date filters, cursor paging, selection, bulk restore/purge, purge impact, retention permission split | P0 |
 | `/knowledge/wiki/doc/[pageId]` | KEEP | Observed page `34` + Source | Autosave state, draft marker, title/editor, cover/icon, rich formatting, undo/redo, AI, sharing, breadcrumbs | Add visible favorite/comments/info/history access, mobile metadata, backlinks/record links, trust/owner/review state, source-backed AI, offline/conflict recovery, granular action gates | P0/P1 |
 | `/knowledge/wiki/doc/[pageId]/history` | KEEP | Observed heading + Source | Dedicated version destination | Add version list skeleton/error/empty, actor/time/change summary, diff, compare pair, guarded restore, current-version marker, cursor paging | P0 |
+| `/knowledge/wiki/pages/[pageId]`, `/knowledge/wiki/pages/[pageId]/history` | KEEP redirect aliases | Source 2026-10-16 | `next.config.ts` redirects to canonical document and history routes | Verify parameters and links preserve the intended page and version | P0 |
 | `/knowledge/wiki/search` | ADDED — now exists | Source 2026-09-27 | Route shipped since this row was written | Row said “Observed 404”; re-audit the shipped surface against its page contract | P0 |
 | `/knowledge/wiki/manage` | ADDED — now exists | Source 2026-09-27 | Route shipped since this row was written | Row said “Observed 404”; re-audit the shipped surface against its page contract | P1 |
 | `/knowledge/research-briefs`, `/knowledge/research-briefs/[briefId]` | KEEP at shipped path | Source 2026-10-16 | List and detail shipped under Knowledge; page contract in Step 2 | Confirm citation lifecycle and remove a former Support route only after caller proof | P1 |
@@ -39,7 +40,8 @@ No destructive action or content mutation was used. Dynamic routes without a val
 | `/wiki/[shareToken]` | KEEP | Source | Public token renderer and rate limiting exist | Prove 404 for invalid/revoked, no sibling/title leakage, accessible typography, optional feedback; expiry/password only after demand | P0/P2 |
 | `/support/kb/**` | DUAL-RUN then REMOVE/MIGRATE | Source | Existing help-centre CMS remains usable | Stop mixing article ids and page URLs; publish from pages or maintain explicit record kind until cutover | P1 |
 | `/help/**` | KEEP renderer | Source | Public help job is distinct | Reuse published page projections only after migration; keep public cache and analytics separate | P1 |
-| `/ask` | REMOVED route candidate | Source 2026-10-16 | No `frontend/app/**/ask/page.tsx` route exists | Verify any external caller or promised redirect before closing cleanup | P0 |
+| `/ask` | KEEP redirect alias | Source 2026-10-16 | `next.config.ts` redirects to `/knowledge/chat`; no duplicate page route exists | Verify caller migration and live redirect behavior before retiring the alias | P0 |
+| `/docs`, `/kb` | KEEP redirect aliases | Source 2026-10-16 | `next.config.ts` redirects both to `/knowledge/wiki` | Verify live redirect behavior and retain while promised callers exist | P0 |
 
 ## What already works well
 
