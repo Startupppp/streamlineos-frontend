@@ -81,6 +81,21 @@ jest.mock("@/components/ui/confirm-dialog", () => ({
   ConfirmDialog: jest.fn(() => null),
 }));
 
+jest.mock("@/components/ui/date-picker", () => ({
+  DatePicker: jest.fn(({ ariaLabel, value, onChange }: {
+    ariaLabel: string;
+    value: string;
+    onChange: (value: string) => void;
+  }) => (
+    <input
+      type="date"
+      aria-label={ariaLabel}
+      value={value}
+      onChange={(event) => onChange(event.target.value)}
+    />
+  )),
+}));
+
 jest.mock("./trash-retention-section", () => ({
   TrashRetentionSection: jest.fn(() => <div data-testid="trash-retention" />),
 }));
@@ -291,9 +306,56 @@ describe("trash page date filter", () => {
     expect(screen.getByLabelText(/deleted from/i)).toBeInTheDocument();
   });
 
-  it("renders a deletedBefore date input to close the upper end of the date range", () => {
+  it("renders an inclusive deleted-through date input", () => {
     render(<TrashPage />);
-    expect(screen.getByLabelText(/deleted before/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/deleted through/i)).toBeInTheDocument();
+  });
+
+  it("writes date-only filters to the URL and resets pagination", () => {
+    const update = jest.fn();
+    const reset = jest.fn();
+    const { useUrlFilters } = jest.requireMock("@/lib/url-state/use-url-filters") as {
+      useUrlFilters: jest.Mock;
+    };
+    useUrlFilters.mockReturnValue({ update, isPending: false });
+    useCursorPagination.mockReturnValue({
+      cursor: undefined,
+      pageNumber: 1,
+      hasPrevious: false,
+      goNext: jest.fn(),
+      goPrevious: jest.fn(),
+      reset,
+    });
+
+    render(<TrashPage />);
+    fireEvent.change(screen.getByLabelText(/deleted from/i), {
+      target: { value: "2026-06-01" },
+    });
+    fireEvent.change(screen.getByLabelText(/deleted through/i), {
+      target: { value: "2026-06-30" },
+    });
+
+    expect(update).toHaveBeenNthCalledWith(1, { deletedFrom: "2026-06-01" });
+    expect(update).toHaveBeenNthCalledWith(2, { deletedBefore: "2026-06-30" });
+    expect(reset).toHaveBeenCalledTimes(2);
+  });
+
+  it("sends local-day boundaries with an exclusive next-day upper bound", () => {
+    useSearchParams.mockReturnValue(new URLSearchParams(
+      "deletedFrom=2026-06-01&deletedBefore=2026-06-30",
+    ));
+
+    render(<TrashPage />);
+
+    const from = new Date(2026, 5, 1);
+    const afterThroughDay = new Date(2026, 6, 1);
+    expect(useKbPagesTrash).toHaveBeenCalledWith(expect.objectContaining({
+      deletedFrom: from.toISOString(),
+      deletedBefore: afterThroughDay.toISOString(),
+    }));
+    expect(screen.getByLabelText(/deleted from/i)).toHaveValue("2026-06-01");
+    expect(screen.getByLabelText(/deleted through/i)).toHaveValue("2026-06-30");
+    expect(new Date(afterThroughDay.getTime() - 1).getDate()).toBe(30);
   });
 
   it("passes deletedFrom from the URL to the trash hook when the param is present", () => {

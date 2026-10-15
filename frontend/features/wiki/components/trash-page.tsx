@@ -3,6 +3,7 @@
 import { DatePicker } from "@/components/ui/date-picker";
 
 import { useState, useRef } from "react";
+import { addDays, format, isValid, parseISO } from "date-fns";
 import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -42,6 +43,21 @@ import { getErrorMessage } from "@/lib/get-error-message";
 const DEFAULT_LIMIT = 50;
 const ALL_SPACES_VALUE = "all";
 
+function dateFilterBoundary(value: string | null, throughDay: boolean): string | undefined {
+  if (!value) return undefined;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+  const date = parseISO(value);
+  if (!isValid(date)) return undefined;
+  return (throughDay ? addDays(date, 1) : date).toISOString();
+}
+
+function dateFilterDisplay(value: string | null): string {
+  if (!value) return "";
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+  const date = parseISO(value);
+  return isValid(date) ? format(date, "yyyy-MM-dd") : "";
+}
+
 function TrashSkeleton() {
   return (
     <div className="space-y-2">
@@ -66,8 +82,10 @@ export default function TrashPage() {
     deletedByRaw && Number.isInteger(Number(deletedByRaw)) && Number(deletedByRaw) > 0
       ? Number(deletedByRaw)
       : undefined;
-  const deletedFrom = searchParams.get("deletedFrom") ?? undefined;
-  const deletedBefore = searchParams.get("deletedBefore") ?? undefined;
+  const deletedFromRaw = searchParams.get("deletedFrom");
+  const deletedBeforeRaw = searchParams.get("deletedBefore");
+  const deletedFrom = dateFilterBoundary(deletedFromRaw, false);
+  const deletedBefore = dateFilterBoundary(deletedBeforeRaw, true);
 
   const [searchDraft, setSearchDraft] = useState(q ?? "");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -140,12 +158,12 @@ export default function TrashPage() {
 
   function handleDeletedFromChange(value: string) {
     cursorState.reset();
-    updateFilters({ deletedFrom: value ? new Date(value).toISOString() : null });
+    updateFilters({ deletedFrom: value || null });
   }
 
   function handleDeletedBeforeChange(value: string) {
     cursorState.reset();
-    updateFilters({ deletedBefore: value ? new Date(value).toISOString() : null });
+    updateFilters({ deletedBefore: value || null });
   }
 
   function handleClearFilters() {
@@ -317,7 +335,7 @@ export default function TrashPage() {
             </Select>
             <DatePicker
               ariaLabel="Deleted from"
-              value={deletedFrom ? deletedFrom.slice(0, 10) : ""}
+              value={dateFilterDisplay(deletedFromRaw)}
               onChange={handleDeletedFromChange}
               placeholder="From"
               dateFormat="dd MMM yyyy"
@@ -325,10 +343,10 @@ export default function TrashPage() {
               className="w-40"
             />
             <DatePicker
-              ariaLabel="Deleted before"
-              value={deletedBefore ? deletedBefore.slice(0, 10) : ""}
+              ariaLabel="Deleted through"
+              value={dateFilterDisplay(deletedBeforeRaw)}
               onChange={handleDeletedBeforeChange}
-              placeholder="Before"
+              placeholder="Through"
               dateFormat="dd MMM yyyy"
               clearable
               className="w-40"
