@@ -117,14 +117,19 @@ export const kbAnalyticsGapRelatedPagesContract = z.object({
   }),
 });
 
-export const kbAnalyticsContentGapsContract = z.array(
-  z.object({
+export const kbAnalyticsContentGapsContract = z.object({
+  data: z.array(z.object({
     query: z.string().nullable(),
     count: z.number().int(),
     lastOccurredAt: z.string(),
     gapKind: z.enum(["search", "ai_no_context"]),
+  })),
+  pagination: z.object({
+    limit: z.number().int(),
+    hasMore: z.boolean(),
+    nextCursor: z.string().nullable(),
   }),
-);
+});
 
 export const kbAnalyticsCitationReuseContract = z.object({
   data: z.array(z.object({

@@ -286,12 +286,24 @@ export function useCreateGapFix() {
   });
 }
 
-export function useKbContentGaps(range?: KbAnalyticsRange) {
+export function useKbContentGaps(range?: KbAnalyticsRange, kind?: "search" | "ai_no_context") {
   const canViewAnalytics = useCan("kb:analytics:view");
-  const queryParams: Record<string, unknown> = { from: range?.from, to: range?.to };
-  return useQuery({
+  const queryParams: Record<string, unknown> = {
+    from: range?.from,
+    to: range?.to,
+    ...(kind !== undefined ? { kind } : {}),
+  };
+  return useInfiniteQuery({
     queryKey: knowledgeAndSurveysQueryKeys.kb.contentGaps(queryParams),
-    queryFn: ({ signal }) => apiClient.get<KbContentGapRow[]>("/kb/analytics/content-gaps", queryParams, signal, kbAnalyticsContentGapsContract),
+    initialPageParam: NO_CURSOR_YET,
+    queryFn: ({ signal, pageParam }) => apiClient.get<Page<KbContentGapRow>>(
+      "/kb/analytics/content-gaps",
+      { ...queryParams, ...(pageParam !== undefined ? { cursor: pageParam } : {}) },
+      signal,
+      kbAnalyticsContentGapsContract,
+    ),
+    getNextPageParam: (last) => last.pagination.nextCursor ?? undefined,
+    select: selectFlatPages,
     staleTime: 60_000,
     enabled: canViewAnalytics,
   });

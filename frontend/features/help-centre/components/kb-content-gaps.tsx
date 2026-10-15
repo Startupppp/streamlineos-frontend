@@ -7,6 +7,7 @@ import { LoadingState } from "@/components/shared/loading-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { ErrorState } from "@/components/shared/error-state";
+import { Button } from "@/components/ui/button";
 import { useKbContentGaps } from "@/hooks/api/kb/analytics";
 import type { KbAnalyticsRange, KbContentGapRow } from "@/types/kb";
 
@@ -52,13 +53,16 @@ function GapRow({ row }: { row: KbContentGapRow }) {
 }
 
 export function KbContentGaps({ range, filter = "all" }: KbContentGapsProps) {
-  const { data, isLoading, error, refetch } = useKbContentGaps(range);
-
-  const filtered = useMemo(() => {
-    if (!data) return [];
-    if (filter === "all") return data;
-    return data.filter((r) => r.gapKind === filter);
-  }, [data, filter]);
+  const {
+    data,
+    isLoading,
+    error,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useKbContentGaps(range, filter === "all" ? undefined : filter);
+  const rows = data ?? [];
 
   function handleRetry() {
     void refetch();
@@ -74,7 +78,7 @@ export function KbContentGaps({ range, filter = "all" }: KbContentGapsProps) {
       />
     );
   }
-  if (filtered.length === 0) {
+  if (rows.length === 0) {
     return (
       <EmptyState
         compact
@@ -92,9 +96,19 @@ export function KbContentGaps({ range, filter = "all" }: KbContentGapsProps) {
         <span className="shrink-0">Count</span>
         <span className="shrink-0 w-[90px] text-right">Last seen</span>
       </div>
-      {filtered.map((row, idx) => (
+      {rows.map((row, idx) => (
         <GapRow key={`${row.gapKind}-${row.query ?? "null"}-${idx}`} row={row} />
       ))}
+      {hasNextPage ? (
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => void fetchNextPage()}
+          disabled={isFetchingNextPage}
+        >
+          {isFetchingNextPage ? "Loading content gaps..." : "Load more content gaps"}
+        </Button>
+      ) : null}
     </div>
   );
 }
