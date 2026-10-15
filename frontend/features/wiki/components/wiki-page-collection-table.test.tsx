@@ -365,6 +365,50 @@ describe("WikiPageCollectionTable — filter and empty states", () => {
 });
 
 describe("WikiPageCollectionTable — cursor pagination", () => {
+  it("offers the previous page when a later cursor page becomes empty", async () => {
+    const user = userEvent.setup();
+    useKbPageCollection.mockReturnValue({
+      data: makeResponse([makeItem(1)], { hasMore: true, nextCursor: "cursor-abc" }),
+      isLoading: false,
+      isError: false,
+      error: undefined,
+      refetch: jest.fn(),
+    });
+    usePageState.mockReturnValue({ kind: "ready" });
+
+    const view = render(
+      <WikiPageCollectionTable
+        fixedParams={{ sharedWithMe: "1" }}
+        emptyTitle="Nothing shared with you"
+        accessLostTitle="Your access may have changed"
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: /next page/i }));
+
+    useKbPageCollection.mockReturnValue({
+      data: makeResponse([]),
+      isLoading: false,
+      isError: false,
+      error: undefined,
+      refetch: jest.fn(),
+    });
+    usePageState.mockReturnValue({ kind: "empty" });
+    view.rerender(
+      <WikiPageCollectionTable
+        fixedParams={{ sharedWithMe: "1" }}
+        emptyTitle="Nothing shared with you"
+        accessLostTitle="Your access may have changed"
+      />,
+    );
+
+    expect(screen.getByText("No pages on this page")).toBeInTheDocument();
+    expect(screen.queryByText("Your access may have changed")).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Previous page" }));
+    expect(useKbPageCollection).toHaveBeenLastCalledWith(
+      expect.objectContaining({ cursor: undefined }),
+    );
+  });
+
   it("advances cursor to next page without losing the sort filter from the URL", async () => {
     const user = userEvent.setup();
     mockSearchParams = new URLSearchParams("sort=title_asc");
