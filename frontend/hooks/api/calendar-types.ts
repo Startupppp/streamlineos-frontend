@@ -211,7 +211,7 @@ export interface EventSyncStatusResponse {
   status: "synced" | "pending" | "in_flight" | "failed" | "not_synced";
   attemptCount: number;
   lastError: string | null;
-  operation: "create" | "update" | "delete" | null;
+  operation: "create" | "update" | "delete" | "restore" | null;
   queuedAt: string | null;
   processedAt: string | null;
   retryable: boolean;

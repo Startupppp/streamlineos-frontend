@@ -60,6 +60,7 @@ export const replacedSchedulingPollGuestContract = z.object({
   email: z.string().email(),
   token: z.string(),
   voterVersion: z.number().int().positive(),
+  optionVotes: z.array(z.object({ id: z.string().uuid(), votes: voteCounts })),
 });
 
 export type SchedulingPoll = z.infer<typeof schedulingPollContract>;

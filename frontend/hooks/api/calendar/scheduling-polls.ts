@@ -120,10 +120,13 @@ export function useReplaceSchedulingPollGuest() {
       replacedGuestContract,
     ),
     onSuccess: (result, input) => {
+      const pollKey = calendarBookingQueryKeys.poll(scope.orgId, scope.userId, scope.membershipId, scope.accessVersion, scope.canRead, input.pollId);
+      const voteCounts = new Map(result.optionVotes.map((option) => [option.id, option.votes]));
       queryClient.setQueryData<SchedulingPoll>(
-        calendarBookingQueryKeys.poll(scope.orgId, scope.userId, scope.membershipId, scope.accessVersion, scope.canRead, input.pollId),
+        pollKey,
         (current) => current ? {
           ...current,
+          options: current.options.map((option) => ({ ...option, votes: voteCounts.get(option.id) ?? option.votes })),
           guestVoters: current.guestVoters?.map((voter) => voter.voterId === result.voterId
             ? { ...voter, email: result.email, name: input.name, voterVersion: result.voterVersion }
             : voter),
