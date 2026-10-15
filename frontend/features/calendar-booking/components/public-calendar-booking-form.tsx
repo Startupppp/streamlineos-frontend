@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Clock3, ShieldCheck } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -19,6 +19,7 @@ import {
 import type {
   PublicCalendarBookingHold,
   PublicCalendarBookingOffering,
+  PublicCalendarBookingReceipt,
   PublicCalendarBookingSession,
 } from "@/hooks/api/calendar-booking-public-schema";
 import { isApiError } from "@/lib/api-envelope";
@@ -94,7 +95,8 @@ export function PublicCalendarBookingForm({
   const queryClient = useQueryClient();
   const paidBooking = usePaidCalendarBooking(token, offering, session);
   const paymentResult = paidBooking.result;
-  const receipt = paymentResult?.receipt ?? confirmBooking.data;
+  const [lastReceipt, setLastReceipt] = useState<PublicCalendarBookingReceipt | null>(null);
+  const receipt = paymentResult?.receipt ?? confirmBooking.data ?? lastReceipt;
   const callbackQuery = usePublicCalendarBookingCallback(
     token,
     session.sessionToken,
@@ -131,6 +133,10 @@ export function PublicCalendarBookingForm({
       session.targetOrigin,
     );
   }, [callbackQuery.data, callbackState, session.targetOrigin]);
+
+  useEffect(() => {
+    if (confirmBooking.data) setLastReceipt(confirmBooking.data);
+  }, [confirmBooking.data]);
 
   async function handleSubmit(values: BookingFormValues) {
     if (!offering.slots.some((slot) => slot.start === values.slotStart)) {
@@ -190,6 +196,7 @@ export function PublicCalendarBookingForm({
     if (currentSlot) holdKeys.current.delete(currentSlot);
     if (acquireHold.data?.id) commitKeys.current.delete(acquireHold.data.id);
     replayPayload.current = null;
+    setLastReceipt(null);
     acquireHold.reset();
     confirmBooking.reset();
     form.setValue("slotStart", offering.slots.some((slot) => slot.start === preferredStart) ? preferredStart ?? "" : "");

@@ -235,6 +235,36 @@ describe("public calendar booking page", () => {
     expect(mockedPost.mock.calls.filter(([path]) => String(path).endsWith("/holds"))).toHaveLength(1);
   });
 
+  it("keeps the confirmed receipt visible while refreshing provider status", async () => {
+    let completeReplay!: (value: typeof receipt) => void;
+    const replay = new Promise<typeof receipt>((resolve) => {
+      completeReplay = resolve;
+    });
+    let confirmations = 0;
+    mockedPost.mockImplementation(async (path) => {
+      const value = String(path);
+      if (value.endsWith("/sessions")) return session;
+      if (value.endsWith("/holds")) return hold;
+      if (value.endsWith("/confirm")) return ++confirmations === 1 ? receipt : replay;
+      throw new Error("Unexpected request");
+    });
+    const user = userEvent.setup();
+    renderPage();
+    await screen.findByRole("heading", { name: "Meet Northwind" });
+    await user.click(screen.getByRole("radio"));
+    await user.type(screen.getByLabelText("Name"), "Ada Lovelace");
+    await user.type(screen.getByLabelText("Email"), "ada@example.com");
+    await user.type(screen.getByLabelText("Organization"), "Analytical Engines");
+    await user.click(screen.getByRole("checkbox"));
+    await user.click(screen.getByRole("button", { name: "Confirm booking" }));
+    expect(await screen.findByRole("heading", { name: "Your booking is confirmed" })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Refresh booking status" }));
+    expect(screen.getByRole("heading", { name: "Your booking is confirmed" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Confirm booking" })).not.toBeInTheDocument();
+    completeReplay({ ...receipt, providerSyncStatus: "synced" });
+    await waitFor(() => expect(screen.queryByText("Calendar synchronization is in progress.")).not.toBeInTheDocument());
+  });
+
   it.each(["rejected", "uncertain"] as const)("uses a new idempotency identity after a %s slot and offers recovery", async (outcome) => {
     const secondSlot = {
       start: "2026-10-20T11:00:00.000Z",
