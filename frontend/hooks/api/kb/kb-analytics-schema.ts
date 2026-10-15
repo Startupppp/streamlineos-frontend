@@ -126,14 +126,19 @@ export const kbAnalyticsContentGapsContract = z.array(
   }),
 );
 
-export const kbAnalyticsCitationReuseContract = z.array(
-  z.object({
+export const kbAnalyticsCitationReuseContract = z.object({
+  data: z.array(z.object({
     kind: z.string(),
     refId: z.number().int(),
     title: z.string(),
     reuseCount: z.number().int(),
+  })),
+  pagination: z.object({
+    limit: z.number().int(),
+    hasMore: z.boolean(),
+    nextCursor: z.string().nullable(),
   }),
-);
+});
 
 export const kbAnalyticsReviewSlaContract = z.object({
   decided: z.number().int(),

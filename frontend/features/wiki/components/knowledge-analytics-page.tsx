@@ -458,7 +458,12 @@ export default function KnowledgeAnalyticsPage() {
     isFetchingNextPage: isFetchingNextGaps,
   } = useKnowledgeGaps(spaceId !== undefined ? { ...range, spaceId } : range);
   const gaps = loadedGaps ?? [];
-  const { data: citationReuse } = useCitationReuse(range);
+  const {
+    data: citationReuse,
+    fetchNextPage: fetchNextCitationReuse,
+    hasNextPage: hasNextCitationReuse,
+    isFetchingNextPage: isFetchingNextCitationReuse,
+  } = useCitationReuse(spaceId !== undefined ? { ...range, spaceId } : range);
   const { data: reviewSla } = useReviewSla(range);
   const {
     pages: relatedPages = [],
@@ -673,13 +678,24 @@ export default function KnowledgeAnalyticsPage() {
             {citationReuse ? (
               <StatCard
                 label="Reused citations"
-                value={citationReuse.length}
+                value={`${citationReuse.length}${hasNextCitationReuse ? "+" : ""}`}
                 icon={KbLink2Icon}
                 tone="violet"
               />
             ) : null}
           </StatCardGrid>
         )}
+        {hasNextCitationReuse ? (
+          <Button
+            type="button"
+            variant="outline"
+            className="mb-4"
+            onClick={() => void fetchNextCitationReuse()}
+            disabled={isFetchingNextCitationReuse}
+          >
+            {isFetchingNextCitationReuse ? "Loading citations..." : "Load more citation results"}
+          </Button>
+        ) : null}
 
         <div className="space-y-4">
           <section className="space-y-2">

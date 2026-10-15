@@ -134,10 +134,18 @@ export function useCitationReuse(range?: KbAnalyticsRange) {
     to: range?.to,
     ...(range?.spaceId !== undefined ? { spaceId: range.spaceId } : {}),
   };
-  return useQuery({
+  return useInfiniteQuery({
     queryKey: knowledgeAndSurveysQueryKeys.kb.citationReuse(queryParams),
-    queryFn: ({ signal }) =>
-      apiClient.get<KbCitationReuseRow[]>("/kb/analytics/citation-reuse", queryParams, signal, kbAnalyticsCitationReuseContract),
+    initialPageParam: NO_CURSOR_YET,
+    queryFn: ({ signal, pageParam }) =>
+      apiClient.get<Page<KbCitationReuseRow>>(
+        "/kb/analytics/citation-reuse",
+        { ...queryParams, ...(pageParam !== undefined ? { cursor: pageParam } : {}) },
+        signal,
+        kbAnalyticsCitationReuseContract,
+      ),
+    getNextPageParam: (last) => last.pagination.nextCursor ?? undefined,
+    select: selectFlatPages,
     staleTime: 5 * 60_000,
     enabled: canViewAnalytics,
     ...INLINE_READ_ERROR,

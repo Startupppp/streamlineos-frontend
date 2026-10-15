@@ -152,6 +152,24 @@ beforeEach(() => {
 });
 
 describe("KnowledgeAnalyticsPage — access is three-valued, not a boolean", () => {
+  it("shows citation reuse as a lower bound and offers continuation", () => {
+    const fetchNextPage = jest.fn();
+    useCitationReuse.mockReturnValue({
+      ...settledPages([
+        { kind: "page", refId: 1, title: "A", reuseCount: 3 },
+        { kind: "page", refId: 2, title: "B", reuseCount: 2 },
+      ]),
+      fetchNextPage,
+      hasNextPage: true,
+    });
+
+    render(<KnowledgeAnalyticsPage />);
+
+    expect(screen.getByText("2+")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Load more citation results" }));
+    expect(fetchNextPage).toHaveBeenCalledTimes(1);
+  });
+
   it("shows the skeleton while the access snapshot is still in flight, never an access denial", () => {
     useAccess.mockReturnValue(accessLoading);
 
