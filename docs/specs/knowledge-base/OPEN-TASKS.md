@@ -164,6 +164,7 @@ KB-OPEN-074 source update, 2026-10-16: frontend `fb1e2b928` now calls `recordLeg
 - [ ] **KB-OPEN-039** **BLOCKED:** Read/edit modes by permission AV-10: browser verification required.
   - Previous consolidated ID: `KB-OPEN-268`
 - [ ] **KB-OPEN-040** **BLOCKED:** Trust header: owner, status, visibility, verification, next review, updated-by/time AV-10: browser verification required. Backend fields are present on `kb_pages`.
+  - 2026-10-16 source progress: the existing page metadata footer already showed status, verification, visibility, scheduled review, resolved owner and updater under the title. Frontend `744bb0e5c` now names unassigned owner and unscheduled review states, falls back safely for unresolved people, and gives updated time a semantic exact `<time dateTime>`. Focused tests passed 17/17 and scoped lint passed. Role-specific browser layout, freshness and screen-reader behavior remain open.
   - Previous consolidated ID: `KB-OPEN-269`
 - [ ] **KB-OPEN-041** **BLOCKED:** Slash/insert menu, link preview, heading outline, anchored comments, citation blocks AV-10: browser/editor behavior. Anchored comments exist (`1216_kb_page_comment_anchor.sql`); others require editor interaction.
   - Previous consolidated ID: `KB-OPEN-270`
