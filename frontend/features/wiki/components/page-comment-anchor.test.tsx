@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import PageCommentsSheet from "./page-comments-sheet";
 import { PageCommentThread } from "./page-comment-thread";
 import { kbPageCommentContract } from "@/hooks/api/kb/kb-comments-schema";
@@ -94,6 +95,36 @@ describe("extractCommentAnchorTargets", () => {
 });
 
 describe("PageCommentsSheet — anchoring a comment to a block", () => {
+  it("keeps the mobile anchor picker compact and keyboard-selectable", async () => {
+    const mutate = jest.fn();
+    useCreateKbPageComment.mockReturnValue({ mutate, isPending: false });
+    const user = userEvent.setup();
+
+    render(
+      <PageCommentsSheet
+        pageId={7}
+        open
+        onOpenChange={jest.fn()}
+        content={PAGE_CONTENT}
+      />,
+    );
+
+    const picker = screen.getByRole("combobox", { name: "Anchor this comment to a block" });
+    expect(picker).toHaveClass("sm:hidden");
+    picker.focus();
+    await user.keyboard("{Enter}{ArrowDown}{ArrowDown}{Enter}");
+    await user.type(screen.getByRole("textbox", { name: "Write a comment" }), "Check this block");
+    await user.click(screen.getByRole("button", { name: "Post comment" }));
+
+    expect(mutate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        anchorBlockIndex: 1,
+        anchorQuote: "Refunds are issued within 30 days.",
+      }),
+      expect.anything(),
+    );
+  });
+
   it("sends the chosen block index and its quote when a top-level comment is anchored", () => {
     const mutate = jest.fn();
     useCreateKbPageComment.mockReturnValue({ mutate, isPending: false });

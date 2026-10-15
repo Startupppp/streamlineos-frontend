@@ -17,6 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   useKbPageComments,
   useCreateKbPageComment,
@@ -93,6 +94,10 @@ export default function PageCommentsSheet({ pageId, open, onOpenChange, content 
   function handleAnchorSelect(e: React.MouseEvent<HTMLButtonElement>) {
     const raw = e.currentTarget.dataset.blockIndex;
     setAnchorBlockIndex(raw === undefined ? null : Number(raw));
+  }
+
+  function handleMobileAnchorSelect(value: string) {
+    setAnchorBlockIndex(value === "page" ? null : Number(value));
   }
 
   function handleNewContentChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
@@ -202,39 +207,57 @@ export default function PageCommentsSheet({ pageId, open, onOpenChange, content 
             </div>
           )}
           {!replyingTo && anchorTargets.length > 0 && (
-            <div
-              role="group"
-              aria-label="Anchor this comment to a block"
-              className="flex flex-wrap gap-1"
-            >
-              <button
-                type="button"
-                aria-pressed={anchorBlockIndex === null}
-                onClick={handleAnchorSelect}
-                className={cn(ANCHOR_CHIP_CLASS, anchorBlockIndex === null && ANCHOR_CHIP_SELECTED_CLASS)}
+            <>
+              <Select
+                value={anchorBlockIndex === null ? "page" : String(anchorBlockIndex)}
+                onValueChange={handleMobileAnchorSelect}
               >
-                Whole page
-              </button>
-              {anchorTargets.map((target) => (
+                <SelectTrigger className="sm:hidden" aria-label="Anchor this comment to a block">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="page">Whole page</SelectItem>
+                  {anchorTargets.map((target) => (
+                    <SelectItem key={target.blockIndex} value={String(target.blockIndex)}>
+                      {target.quote}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <div
+                role="group"
+                aria-label="Anchor this comment to a block"
+                className="hidden flex-wrap gap-1 sm:flex"
+              >
                 <button
-                  key={target.blockIndex}
                   type="button"
-                  data-block-index={String(target.blockIndex)}
-                  aria-pressed={anchorBlockIndex === target.blockIndex}
+                  aria-pressed={anchorBlockIndex === null}
                   onClick={handleAnchorSelect}
-                  className={cn(
-                    ANCHOR_CHIP_CLASS,
-                    "max-w-[12rem] truncate",
-                    anchorBlockIndex === target.blockIndex && ANCHOR_CHIP_SELECTED_CLASS,
-                  )}
+                  className={cn(ANCHOR_CHIP_CLASS, anchorBlockIndex === null && ANCHOR_CHIP_SELECTED_CLASS)}
                 >
-                  {target.quote}
+                  Whole page
                 </button>
-              ))}
-            </div>
+                {anchorTargets.map((target) => (
+                  <button
+                    key={target.blockIndex}
+                    type="button"
+                    data-block-index={String(target.blockIndex)}
+                    aria-pressed={anchorBlockIndex === target.blockIndex}
+                    onClick={handleAnchorSelect}
+                    className={cn(
+                      ANCHOR_CHIP_CLASS,
+                      "max-w-[12rem] truncate",
+                      anchorBlockIndex === target.blockIndex && ANCHOR_CHIP_SELECTED_CLASS,
+                    )}
+                  >
+                    {target.quote}
+                  </button>
+                ))}
+              </div>
+            </>
           )}
           {selectedAnchor && (
-            <blockquote className="border-l-2 border-border pl-2 text-xs italic text-muted-foreground">
+            <blockquote className="line-clamp-2 border-l-2 border-border pl-2 text-xs italic text-muted-foreground">
               {selectedAnchor.quote}
             </blockquote>
           )}
