@@ -48,6 +48,7 @@ Evidence:
 - [ ] **KB-OPEN-005** Every collection is bounded and signals `hasMore`.
   - Previous consolidated ID: `KB-OPEN-231`
 - [ ] **KB-OPEN-006** Expected revision protects content writes; idempotency protects retriable creates/bulk.
+  - 2026-10-16 partial evidence: backend `5b8a70c1a` added `@Idempotent("kb.article.from-ticket")`, one tenant-scoped source-ticket identity per article, pre-AI retry lookup and a unique-race winner path; 57 focused tests passed. Backend `3d1944b5f` guards version restore with the expected content revision before audit/outbox; 16 focused tests passed. Migration 2044 is journaled locally but unapplied, broad backend typechecks were interrupted, and other create/bulk routes plus database and browser retry flows remain to be verified.
   - Previous consolidated ID: `KB-OPEN-232`
 - [ ] **KB-OPEN-007** Revocation, restore, purge, queue replay, cache failure, replica lag, and provider outage drills pass. **BLOCKED 2026-09-27:** production is the only database; there is no non-production PostgreSQL to drill against, and a restore/failover rehearsal against production is prohibited. Revocation and cache-failure are unit-testable and partly covered; restore, replica lag and queue replay are not.
   - Previous consolidated ID: `KB-OPEN-233`
@@ -202,6 +203,8 @@ Evidence:
 ### Migration state checked 2026-10-16
 
 Read-only `node --env-file=.env src/scripts/check-migration-ledger.mjs` against the backend's configured database reported 1,174 applied rows, 1,175 journal entries, watermark `1803110800307`, one pending entry, and no orphan, duplicate, or unreachable rows. The pending entry is unrelated `2043_calendar_inventory_equipment`. A read-only ledger-hash comparison found all 85 Knowledge Base or knowledge-tagged journal entries applied with exact on-disk SHA-256 matches: zero missing and zero drift. Catalog reads found `kb_pages`, `kb_page_tags`, `kb_health_items.repair_action`, and `idx_kb_pages_org_space_title_lower_published`; `kb_articles`, `kb_pages.source_article_id`, and `idx_kb_chunks_org_page_acl` were absent. No Knowledge Base migration is pending in that configured database, so none was applied. Both backend environment files identify a Neon PostgreSQL pooler, while `MIGRATION-RUNBOOK.md` describes Aurora/RDS; the database's production identity and backup procedure remain unverified. The historical snapshot registry records `1174` as `no_snapshot` and `1226` as `not_needed`; no current Knowledge Base snapshot id was verified. These reads do not close the deployment, snapshot, rehearsal, or signed-reconciliation gates below.
+
+The read-only ledger check predates the new ticket-to-article identity migration `2044_kb_pages_source_ticket_identity.sql`; it does not establish that migration as applied. The local Railway CLI context resolves to a different workspace's `jubilant-charm` project with no linked service, and the StreamlineOS root is unlinked. The production service-to-Neon identity, recoverable backup, isolated rehearsal and 2044 application remain open.
 
 - [ ] **KB-OPEN-075** **BLOCKED:** Pre-flight: resolve exact table/route/cache/index/blob targets and write them into this ledger before any destructive statement Operational step; requires migration execution context. BLOCKED.
   - Previous consolidated ID: `KB-OPEN-304`
