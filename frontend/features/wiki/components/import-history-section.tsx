@@ -18,28 +18,47 @@ import { importJobDisplayName } from "@/features/wiki/lib/import-job-label";
 import type { KbImportJob } from "@/hooks/api/kb/import-export";
 
 function ImportJobRow({ job }: { job: KbImportJob }) {
+  const rawFailedTitles = job.errorReport?.["failedTitles"];
+  const failedTitles = Array.isArray(rawFailedTitles)
+    ? rawFailedTitles.filter((title): title is string => typeof title === "string")
+    : [];
+
   return (
-    <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border bg-card text-sm">
-      <KbFileTextIcon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-      <TruncatedText text={importJobDisplayName(job)} className="flex-1 font-medium" />
-      <span className="text-xs text-muted-foreground">
-        {job.succeededItems}/{job.totalItems} pages
-      </span>
-      <Badge
-        variant={
-          job.status === "completed"
-            ? "secondary"
-            : job.status === "failed"
-              ? "destructive"
-              : "outline"
-        }
-        className="text-micro h-4 px-1.5"
-      >
-        {job.status}
-      </Badge>
-      <span className="text-xs text-muted-foreground shrink-0">
-        {kbTimeAgo(job.createdAt)}
-      </span>
+    <div className="rounded-lg border border-border bg-card px-3 py-2 text-sm">
+      <div className="flex items-center gap-3">
+        <KbFileTextIcon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+        <TruncatedText text={importJobDisplayName(job)} className="flex-1 font-medium" />
+        <span className="text-xs text-muted-foreground">
+          {job.succeededItems}/{job.totalItems} pages
+        </span>
+        <Badge
+          variant={
+            job.status === "completed"
+              ? "secondary"
+              : job.status === "failed"
+                ? "destructive"
+                : "outline"
+          }
+          className="text-micro h-4 px-1.5"
+        >
+          {job.status}
+        </Badge>
+        <span className="text-xs text-muted-foreground shrink-0">
+          {kbTimeAgo(job.createdAt)}
+        </span>
+      </div>
+      {failedTitles.length > 0 ? (
+        <details className="mt-2 text-xs">
+          <summary className="cursor-pointer text-destructive">
+            {failedTitles.length} failed page{failedTitles.length === 1 ? "" : "s"}
+          </summary>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-muted-foreground">
+            {failedTitles.map((title, index) => (
+              <li key={`${title}-${index}`}>{title}</li>
+            ))}
+          </ul>
+        </details>
+      ) : null}
     </div>
   );
 }

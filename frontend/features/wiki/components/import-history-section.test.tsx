@@ -1,4 +1,5 @@
 import { render, screen, cleanup } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { ImportHistorySection } from "./import-history-section";
 
 type IntersectionCallback = (entries: IntersectionObserverEntry[]) => void;
@@ -116,5 +117,31 @@ describe("ImportHistorySection sentinel", () => {
     render(<ImportHistorySection />);
 
     expect(screen.getByRole("button", { name: "Load more import jobs" })).toBeInTheDocument();
+  });
+});
+
+describe("ImportHistorySection failed items", () => {
+  it("shows failed page titles from a completed partial import", async () => {
+    useKbImportJobs.mockReturnValue({
+      data: [{
+        ...mockJob,
+        succeededItems: 1,
+        failedItems: 2,
+        errorReport: { failedTitles: ["Policy A", "Policy B"] },
+      }],
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+      hasNextPage: false,
+      isFetchingNextPage: false,
+      fetchNextPage: jest.fn(),
+    });
+
+    render(<ImportHistorySection />);
+
+    await userEvent.click(screen.getByText("2 failed pages"));
+    expect(screen.getByText("Policy A")).toBeInTheDocument();
+    expect(screen.getByText("Policy B")).toBeInTheDocument();
   });
 });
