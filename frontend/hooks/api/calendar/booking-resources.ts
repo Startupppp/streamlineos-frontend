@@ -253,7 +253,9 @@ export function usePendingCalendarBookingAllocations(
       }
     },
     enabled: access.allowed && enabled && Boolean(scope.orgId && scope.userId),
-    staleTime: 15_000,
+    staleTime: 0,
+    refetchInterval: 15_000,
+    refetchOnWindowFocus: true,
     ...INLINE_READ_ERROR,
   });
   const refetch: typeof query.refetch = async (options) => {

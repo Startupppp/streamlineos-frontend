@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { act, renderHook, waitFor } from "@testing-library/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { focusManager, QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useCalendarBookingResources, useInventoryCalendarEquipment, usePendingCalendarBookingAllocations, useResolveCalendarBookingAllocation } from "./booking-resources";
 
 const get = jest.fn();
@@ -49,6 +49,48 @@ it("allows an Inventory manager without Calendar read to load and resolve resour
     await result.current.resolve.mutateAsync({ resourceId: 3, expectedVersion: 2, outcome: "approved", ownerReceiptId: "receipt-1" });
   });
   expect(put).toHaveBeenCalledWith("/calendar/resources/bookings/booking-1/allocations/3", expect.objectContaining({ ownerReceiptId: "receipt-1" }), undefined, expect.anything());
+});
+
+it("reloads an empty approval queue when an owner returns after an external booking", async () => {
+  accessSnapshot = { isOrgOwner: true, scopes: { "calendar:admin:manage": "all" } };
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  const first = renderHook(() => usePendingCalendarBookingAllocations(), { wrapper: wrapper(client) });
+  await waitFor(() => expect(first.result.current.data?.items).toEqual([]));
+  first.unmount();
+
+  const allocation = {
+    bookingId: "booking-qa",
+    resourceId: 1,
+    resourceName: "Calendar QA room",
+    ownership: "calendar",
+    startAt: "2026-10-22T05:30:00.000Z",
+    endAt: "2026-10-22T06:00:00.000Z",
+    state: "pending",
+    reasonCode: "resource_approval_pending",
+    version: 1,
+    canApprove: true,
+    approvalReceiptId: "calendar:1:1",
+  };
+  get.mockResolvedValue({ items: [allocation], nextCursor: null });
+  const second = renderHook(() => usePendingCalendarBookingAllocations(), { wrapper: wrapper(client) });
+  await waitFor(() => expect(second.result.current.data?.items).toEqual([allocation]));
+  expect(get).toHaveBeenCalledTimes(2);
+  second.unmount();
+});
+
+it("refreshes a visible empty approval queue after a guest booking changes it", async () => {
+  accessSnapshot = { isOrgOwner: true, scopes: { "calendar:admin:manage": "all" } };
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false, refetchOnWindowFocus: false } } });
+  const hook = renderHook(() => usePendingCalendarBookingAllocations(), { wrapper: wrapper(client) });
+  await waitFor(() => expect(hook.result.current.data?.items).toEqual([]));
+
+  get.mockResolvedValue({ items: [{ bookingId: "booking-qa" }], nextCursor: null });
+  focusManager.setFocused(false);
+  focusManager.setFocused(true);
+  await waitFor(() => expect(hook.result.current.data?.items).toHaveLength(1));
+  expect(get).toHaveBeenCalledTimes(2);
+  hook.unmount();
+  focusManager.setFocused(undefined);
 });
 
 it("does not expose the approval endpoint or mutation to a Calendar reader", async () => {
