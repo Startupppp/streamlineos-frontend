@@ -163,6 +163,7 @@ KB-OPEN-074 source update, 2026-10-16: frontend `fb1e2b928` now calls `recordLeg
 - [ ] **KB-OPEN-038** **BLOCKED:** Every child request carries `spaceId`, tenant, parent/cursor, current access Cannot verify request payload composition without browser/network inspection.
   - Previous consolidated ID: `KB-OPEN-267`
 - [ ] **KB-OPEN-039** **BLOCKED:** Read/edit modes by permission AV-10: browser verification required.
+  - 2026-10-16 source progress: frontend `f08869ec7` requires both `kb:pages:update` and explicit backend `canEdit === true` for editor/title mode, retaining the existing lock/manage condition; read-only records no longer expose Share/Move toolbar actions. Focused role tests passed 29/29 and scoped lint exited without errors. Real role transitions and browser editor behavior remain open.
   - Previous consolidated ID: `KB-OPEN-268`
 - [ ] **KB-OPEN-040** **BLOCKED:** Trust header: owner, status, visibility, verification, next review, updated-by/time AV-10: browser verification required. Backend fields are present on `kb_pages`.
   - 2026-10-16 source progress: the existing page metadata footer already showed status, verification, visibility, scheduled review, resolved owner and updater under the title. Frontend `744bb0e5c` now names unassigned owner and unscheduled review states, falls back safely for unresolved people, and gives updated time a semantic exact `<time dateTime>`. Focused tests passed 17/17 and scoped lint passed. Role-specific browser layout, freshness and screen-reader behavior remain open.
