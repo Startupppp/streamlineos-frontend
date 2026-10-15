@@ -11,6 +11,8 @@ const { toast } = jest.requireMock("sonner") as {
 };
 
 const mockReplace = jest.fn();
+const mockImportMutate = jest.fn();
+const mockUseKbImportJob = jest.fn();
 let mockSearchParams = new URLSearchParams();
 
 jest.mock("next/navigation", () => ({
@@ -38,8 +40,8 @@ jest.mock("@/hooks/api/kb/spaces", () => ({
 }));
 
 jest.mock("@/hooks/api/kb", () => ({
-  useImportKbPages: () => ({ mutate: jest.fn(), isPending: false }),
-  useKbImportJob: () => ({ data: undefined }),
+  useImportKbPages: () => ({ mutate: mockImportMutate, isPending: false }),
+  useKbImportJob: () => mockUseKbImportJob(),
   useCancelImportJob: () => ({ mutate: jest.fn(), isPending: false }),
   useDryRunImport: () => ({ mutate: jest.fn(), isPending: false, data: undefined, reset: jest.fn() }),
   useKbImportJobs: () => ({
@@ -67,6 +69,8 @@ jest.mock("@/hooks/api/kb", () => ({
 describe("ImportPage — Import / Export tabs", () => {
   beforeEach(() => {
     mockReplace.mockClear();
+    mockImportMutate.mockReset();
+    mockUseKbImportJob.mockReturnValue({ data: undefined });
     toast.error.mockClear();
     mockSearchParams = new URLSearchParams();
   });
@@ -139,6 +143,40 @@ describe("ImportPage — Import / Export tabs", () => {
     expect(screen.queryByText("diagram")).not.toBeInTheDocument();
     expect(toast.error).toHaveBeenCalledWith(
       expect.stringContaining("diagram.png"),
+    );
+  });
+
+  it("shows numeric progress as the import job processes pages", async () => {
+    const user = userEvent.setup();
+    mockImportMutate.mockImplementation((_input, options) => {
+      options.onSuccess({ jobId: 7, status: "pending" });
+    });
+    mockUseKbImportJob.mockReturnValue({
+      data: { id: 7, status: "processing", processedItems: 1, totalItems: 3 },
+    });
+
+    const view = render(<ImportPage />);
+    await user.click(screen.getByRole("button", { name: "Paste text" }));
+    await user.type(screen.getByLabelText("Page title"), "Policy");
+    await user.type(screen.getByLabelText("Content"), "Body");
+    await user.click(screen.getByRole("button", { name: "Add to list" }));
+    await user.click(screen.getByRole("button", { name: "Import 1 page" }));
+
+    expect(screen.getByText("Processing import… 1/3 pages")).toBeInTheDocument();
+    expect(screen.getByRole("progressbar", { name: "Import progress" })).toHaveAttribute(
+      "aria-valuetext",
+      "1 of 3 pages processed",
+    );
+
+    mockUseKbImportJob.mockReturnValue({
+      data: { id: 7, status: "processing", processedItems: 2, totalItems: 3 },
+    });
+    view.rerender(<ImportPage />);
+
+    expect(screen.getByText("Processing import… 2/3 pages")).toBeInTheDocument();
+    expect(screen.getByRole("progressbar", { name: "Import progress" })).toHaveAttribute(
+      "aria-valuetext",
+      "2 of 3 pages processed",
     );
   });
 });

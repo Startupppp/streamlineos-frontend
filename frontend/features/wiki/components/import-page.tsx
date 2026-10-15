@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { PageWrapper, PageSection } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -375,6 +376,12 @@ export default function ImportPage() {
   const isProcessing =
     activeJobId !== null &&
     (activeJob?.status === "pending" || activeJob?.status === "processing");
+  const processedItems = activeJob
+    ? Math.min(activeJob.processedItems, activeJob.totalItems)
+    : 0;
+  const progressPercent = activeJob && activeJob.totalItems > 0
+    ? Math.round((processedItems / activeJob.totalItems) * 100)
+    : 0;
 
   return (
     <PageWrapper
@@ -462,13 +469,24 @@ export default function ImportPage() {
 
             {isProcessing ? (
               <div className="rounded-lg border border-border bg-muted/40 px-3 py-2 text-sm flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-primary" />
-                  <span className="text-sm text-muted-foreground">
-                    {activeJob?.status === "processing"
-                      ? "Processing import…"
-                      : "Import queued…"}
-                  </span>
+                <div className="flex min-w-0 flex-1 flex-col gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-primary" />
+                    <span className="text-sm text-muted-foreground">
+                      {activeJob?.status === "processing"
+                        ? "Processing import…"
+                        : "Import queued…"}{" "}
+                      {processedItems}/{activeJob?.totalItems ?? 0} pages
+                    </span>
+                  </div>
+                  {activeJob && activeJob.totalItems > 0 ? (
+                    <Progress
+                      value={progressPercent}
+                      aria-label="Import progress"
+                      valueLabel={`${processedItems} of ${activeJob.totalItems} pages processed`}
+                      className="h-1.5"
+                    />
+                  ) : null}
                 </div>
                 <Button
                   type="button"
