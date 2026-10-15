@@ -179,8 +179,8 @@ export function PageDocumentToolbar({
       <KbPageAiActions
         pageId={pageId}
         currentContent={currentContent}
-        onApplyImprovement={onApplyImprovement}
-        onInsertSummary={onInsertSummary}
+        onApplyImprovement={isEditable && canUpdate ? onApplyImprovement : undefined}
+        onInsertSummary={isEditable && canUpdate ? onInsertSummary : undefined}
       />
       {canUpdate ? (
         <PageSharePopover page={page} />

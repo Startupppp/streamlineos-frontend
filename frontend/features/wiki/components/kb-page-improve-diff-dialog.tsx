@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { statusToneClasses } from "@/lib/design-tokens";
 import { cn } from "@/lib/utils";
+import { AiCitationChips, type Citation } from "@/components/ai/ai-citation-chips";
 
 type DiffKind = "unchanged" | "removed" | "added";
 
@@ -79,6 +80,9 @@ interface KbPageImproveDiffDialogProps {
   open: boolean;
   proposedText: string;
   currentContent?: string;
+  title?: string;
+  applyLabel?: string;
+  sources?: Citation[];
   onApply: () => void;
   onDiscard: () => void;
 }
@@ -87,6 +91,9 @@ export function KbPageImproveDiffDialog({
   open,
   proposedText,
   currentContent,
+  title = "Review proposed changes",
+  applyLabel = "Apply changes",
+  sources,
   onApply,
   onDiscard,
 }: KbPageImproveDiffDialogProps) {
@@ -103,7 +110,7 @@ export function KbPageImproveDiffDialog({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Review proposed changes</DialogTitle>
+          <DialogTitle>{title}</DialogTitle>
           <DialogDescription>
             {diff
               ? "Lines in red will be removed; lines in green will be added."
@@ -139,13 +146,19 @@ export function KbPageImproveDiffDialog({
               {proposedText}
             </p>
           )}
+          {sources?.length ? (
+            <div className="mt-4 space-y-2 border-t border-border pt-3">
+              <p className="text-xs font-medium text-muted-foreground">Sources</p>
+              <AiCitationChips citations={sources} />
+            </div>
+          ) : null}
         </DialogBody>
         <DialogFooter>
           <Button type="button" variant="ghost" onClick={onDiscard}>
             Discard
           </Button>
           <LoadingButton type="button" onClick={onApply}>
-            Apply changes
+            {applyLabel}
           </LoadingButton>
         </DialogFooter>
       </DialogContent>
