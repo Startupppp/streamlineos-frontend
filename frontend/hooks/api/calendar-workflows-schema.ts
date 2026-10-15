@@ -49,7 +49,10 @@ const recipientSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("actor") }),
   z.object({ type: z.literal("organizer") }),
   z.object({ type: z.literal("attendees") }),
-  z.object({ type: z.literal("members"), membershipIds: z.array(z.number().int().positive()) }),
+  z.object({
+    type: z.literal("members"),
+    membershipIds: z.array(z.number().int().positive()),
+  }),
 ]);
 export const calendarWorkflowActionSchema = z.object({
   type: z.literal("notification"),
@@ -85,7 +88,9 @@ export const calendarWorkflowRuleContract = z.object({
   updatedAt: z.string(),
 });
 
-export const calendarWorkflowRulesContract = z.array(calendarWorkflowRuleContract);
+export const calendarWorkflowRulesContract = z.array(
+  calendarWorkflowRuleContract,
+);
 
 export const calendarWorkflowEffectContract = z.object({
   id: z.string().uuid(),
@@ -99,7 +104,15 @@ export const calendarWorkflowEffectContract = z.object({
   triggerEvent: triggerSchema,
   actionIndex: z.number().int().nonnegative(),
   action: calendarWorkflowActionSchema,
-  status: z.enum(["PENDING", "IN_FLIGHT", "SUCCEEDED", "FAILED", "DEAD_LETTERED", "SUPPRESSED", "DRY_RUN"]),
+  status: z.enum([
+    "PENDING",
+    "IN_FLIGHT",
+    "SUCCEEDED",
+    "FAILED",
+    "DEAD_LETTERED",
+    "SUPPRESSED",
+    "DRY_RUN",
+  ]),
   version: z.number().int().positive(),
   attemptCount: z.number().int().nonnegative(),
   replayCount: z.number().int().nonnegative(),
@@ -113,22 +126,39 @@ export const calendarWorkflowEffectContract = z.object({
   updatedAt: z.string(),
 });
 
-export const calendarWorkflowEffectsContract = z.array(calendarWorkflowEffectContract);
+export const calendarWorkflowEffectsContract = z.object({
+  items: z.array(calendarWorkflowEffectContract),
+  nextCursor: z.string().uuid().nullable(),
+});
+
 export const calendarWorkflowDryRunContract = z.object({
   matchedRuleIds: z.array(z.number().int().positive()),
-  effects: z.array(z.object({
-    ruleId: z.number().int().positive(),
-    ruleName: z.string(),
-    actionIndex: z.number().int().nonnegative(),
-    action: calendarWorkflowActionSchema,
-  })),
+  effects: z.array(
+    z.object({
+      ruleId: z.number().int().positive(),
+      ruleName: z.string(),
+      actionIndex: z.number().int().nonnegative(),
+      action: calendarWorkflowActionSchema,
+    }),
+  ),
   limited: z.boolean(),
 });
 
-export type CalendarWorkflowPolicy = z.infer<typeof calendarWorkflowPolicyContract>;
+export type CalendarWorkflowPolicy = z.infer<
+  typeof calendarWorkflowPolicyContract
+>;
 export type CalendarWorkflowRule = z.infer<typeof calendarWorkflowRuleContract>;
-export type CalendarWorkflowEffect = z.infer<typeof calendarWorkflowEffectContract>;
-export type CalendarWorkflowDryRun = z.infer<typeof calendarWorkflowDryRunContract>;
+export type CalendarWorkflowEffect = z.infer<
+  typeof calendarWorkflowEffectContract
+>;
+export type CalendarWorkflowEffectPage = z.infer<
+  typeof calendarWorkflowEffectsContract
+>;
+export type CalendarWorkflowDryRun = z.infer<
+  typeof calendarWorkflowDryRunContract
+>;
 export type CalendarWorkflowTrigger = (typeof calendarWorkflowTriggers)[number];
 export type CalendarWorkflowChannel = (typeof calendarWorkflowChannels)[number];
-export type CalendarWorkflowAction = z.infer<typeof calendarWorkflowActionSchema>;
+export type CalendarWorkflowAction = z.infer<
+  typeof calendarWorkflowActionSchema
+>;
