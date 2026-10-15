@@ -42,8 +42,8 @@ export function KbAnalyticsTab() {
         <StatCardGrid cols={4}>
           <StatCard label="Total articles" value={stats.total} icon={BookOpen} />
           <StatCard label="Published" value={stats.published} icon={BookOpen} tone="emerald" />
-          <StatCard label="AI answers" value={stats.aiAnswers} icon={Sparkles} tone="blue" />
-          <StatCard label="AI no context" value={stats.aiNoContext} icon={AlertCircle} tone="amber" />
+          <StatCard label="AI answers" value={stats.aiAnswers ?? "—"} icon={Sparkles} tone="blue" />
+          <StatCard label="AI no context" value={stats.aiNoContext ?? "—"} icon={AlertCircle} tone="amber" />
         </StatCardGrid>
       )}
 

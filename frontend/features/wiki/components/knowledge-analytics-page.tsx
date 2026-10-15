@@ -429,12 +429,13 @@ export default function KnowledgeAnalyticsPage() {
     "wiki",
   );
   const {
-    data: noResults = [],
+    data: noResultsResponse,
     isLoading: noResultsLoading,
     isError: noResultsError,
     error: noResultsQueryError,
     refetch: refetchNoResults,
-  } = useKbNoResults(range);
+  } = useKbNoResults(spaceId !== undefined ? { ...range, spaceId } : range);
+  const noResults = noResultsResponse?.data ?? [];
   const {
     data: pageAnalytics = [],
     isLoading: pagesLoading,
@@ -446,7 +447,8 @@ export default function KnowledgeAnalyticsPage() {
     isFetchingNextPage,
   } = usePageAnalytics(staleOnly ? { spaceId, staleOnly: true } : { spaceId });
   const {
-    gaps = [],
+    gaps: loadedGaps,
+    scopeComplete: gapsScopeComplete,
     isLoading: gapsLoading,
     isError: gapsError,
     error: gapsQueryError,
@@ -454,7 +456,8 @@ export default function KnowledgeAnalyticsPage() {
     fetchNextPage: fetchNextGaps,
     hasNextPage: hasNextGaps,
     isFetchingNextPage: isFetchingNextGaps,
-  } = useKnowledgeGaps(range);
+  } = useKnowledgeGaps(spaceId !== undefined ? { ...range, spaceId } : range);
+  const gaps = loadedGaps ?? [];
   const { data: citationReuse } = useCitationReuse(range);
   const { data: reviewSla } = useReviewSla(range);
   const {
@@ -512,7 +515,7 @@ export default function KnowledgeAnalyticsPage() {
 
   function handleCreatePageFromGap(query: string) {
     createPage.mutate(
-      { title: query },
+      { title: query, ...(spaceId !== undefined ? { spaceId } : {}) },
       {
         onSuccess(page) {
           router.push(pageHref(page.id));
@@ -530,7 +533,7 @@ export default function KnowledgeAnalyticsPage() {
   }
 
   function handleCreateGapFix(query: string) {
-    createGapFix.mutate({ query });
+    createGapFix.mutate({ query, ...(spaceId !== undefined ? { spaceId } : {}) });
   }
 
   const pageState = usePageState({
@@ -626,7 +629,7 @@ export default function KnowledgeAnalyticsPage() {
             />
             <StatCard
               label="Searches"
-              value={overview.searches}
+              value={overview.searches ?? "—"}
               icon={KbSearchIcon}
               tone="violet"
             />
@@ -638,7 +641,7 @@ export default function KnowledgeAnalyticsPage() {
             />
             <StatCard
               label="Search success"
-              value={formatRatioAsPercent(overview.searchSuccessRate)}
+              value={overview.searchSuccessRate === null ? "—" : formatRatioAsPercent(overview.searchSuccessRate)}
               icon={KbBarChart2Icon}
               tone="amber"
             />
@@ -649,6 +652,12 @@ export default function KnowledgeAnalyticsPage() {
               tone="emerald"
             />
           </StatCardGrid>
+        ) : null}
+
+        {spaceId !== undefined && overview && !overview.searchScopeComplete ? (
+          <p role="status" className="mb-4 text-sm text-muted-foreground">
+            Space-scoped search and Ask history is incomplete for this date range. Choose a newer range or All spaces to see complete activity metrics.
+          </p>
         ) : null}
 
         {(reviewSla || citationReuse) && (
@@ -684,7 +693,11 @@ export default function KnowledgeAnalyticsPage() {
                 </span>
               )}
             </div>
-            {noResults.length === 0 ? (
+            {spaceId !== undefined && noResultsResponse && !noResultsResponse.scopeComplete ? (
+              <p role="status" className="text-sm text-muted-foreground">
+                Zero-result searches for this space are unavailable because older events lack space information.
+              </p>
+            ) : noResults.length === 0 ? (
               <EmptyState
                 illustration={
                   <KbSearchIcon className="h-6 w-6 text-muted-foreground" />
@@ -804,7 +817,11 @@ export default function KnowledgeAnalyticsPage() {
                 </span>
               )}
             </div>
-            {gaps.length === 0 ? (
+            {spaceId !== undefined && !gapsScopeComplete && !gapsLoading ? (
+              <p role="status" className="text-sm text-muted-foreground">
+                Knowledge gaps for this space are unavailable because older events lack space information.
+              </p>
+            ) : gaps.length === 0 ? (
               <EmptyState
                 illustration={
                   <KbSearchIcon className="h-6 w-6 text-muted-foreground" />

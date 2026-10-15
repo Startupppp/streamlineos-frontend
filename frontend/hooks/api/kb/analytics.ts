@@ -82,7 +82,7 @@ export function useKbNoResults(range?: KbAnalyticsRange) {
   };
   return useQuery({
     queryKey: knowledgeAndSurveysQueryKeys.kb.noResults(queryParams),
-    queryFn: ({ signal }) => apiClient.get<KbNoResultRow[]>("/kb/analytics/no-results", queryParams, signal, kbAnalyticsNoResultsContract),
+    queryFn: ({ signal }) => apiClient.get<{ data: KbNoResultRow[]; scopeComplete: boolean }>("/kb/analytics/no-results", queryParams, signal, kbAnalyticsNoResultsContract),
     staleTime: 5 * 60_000,
     enabled: canViewAnalytics,
   });
@@ -160,14 +160,15 @@ export function useReviewSla(range?: KbAnalyticsRange) {
   });
 }
 
-export type GapsPage = Page<KbGapRow>;
+export type GapsPage = Page<KbGapRow> & { scopeComplete: boolean };
 
 export function useKnowledgeGaps(range?: KbAnalyticsRange) {
   const canViewAnalytics = useCan("kb:analytics:view");
-  const { from, to } = range ?? {};
+  const { from, to, spaceId } = range ?? {};
   const keyParams: Record<string, unknown> = {
     ...(from !== undefined ? { from } : {}),
     ...(to !== undefined ? { to } : {}),
+    ...(spaceId !== undefined ? { spaceId } : {}),
   };
   const query = useInfiniteQuery({
     queryKey: knowledgeAndSurveysQueryKeys.kb.knowledgeGaps(
@@ -179,6 +180,7 @@ export function useKnowledgeGaps(range?: KbAnalyticsRange) {
         ...(pageParam !== undefined ? { cursor: pageParam } : {}),
         ...(from !== undefined ? { from } : {}),
         ...(to !== undefined ? { to } : {}),
+        ...(spaceId !== undefined ? { spaceId } : {}),
       };
       return apiClient.get<GapsPage>(
         "/kb/analytics/gaps",
@@ -188,14 +190,14 @@ export function useKnowledgeGaps(range?: KbAnalyticsRange) {
       );
     },
     getNextPageParam: (last) => last.pagination.nextCursor ?? undefined,
-    select: selectFlatPages,
     staleTime: 60_000,
     enabled: canViewAnalytics,
   });
 
   return {
     ...query,
-    gaps: query.data,
+    gaps: query.data?.pages.flatMap((page) => page.data),
+    scopeComplete: query.data?.pages.every((page) => page.scopeComplete) ?? false,
   };
 }
 

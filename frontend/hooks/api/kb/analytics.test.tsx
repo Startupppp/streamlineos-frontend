@@ -48,6 +48,7 @@ describe("kbAnalyticsGapsContract", () => {
         },
       ],
       pagination: { limit: 1, hasMore: false, nextCursor: null },
+      scopeComplete: false,
     });
   });
 
@@ -55,6 +56,7 @@ describe("kbAnalyticsGapsContract", () => {
     const result = kbAnalyticsGapsContract.safeParse({
       data: [GAP_ROW],
       pagination: PAGINATION,
+      scopeComplete: true,
     });
     expect(result.success).toBe(true);
   });

@@ -99,11 +99,12 @@ export interface KbAnalyticsOverview {
   helpfulUp: number;
   helpfulDown: number;
   helpfulRatio: number;
-  searches: number;
-  noResults: number;
-  searchSuccessRate: number;
-  aiAnswers: number;
-  aiNoContext: number;
+  searches: number | null;
+  noResults: number | null;
+  searchSuccessRate: number | null;
+  aiAnswers: number | null;
+  aiNoContext: number | null;
+  searchScopeComplete: boolean;
   views: number;
   ticketsDeflected: number;
   verifiedPublished: number;

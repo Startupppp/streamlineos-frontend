@@ -6,7 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 const mockAssignGapMutate = jest.fn();
 
 const useAccess = jest.fn();
-const useCan = jest.fn(() => true);
+const useCan = jest.fn((_permission: string) => true);
 const accessLoading = { data: undefined, isLoading: true };
 const accessGranted = {
   data: { isOrgOwner: false, scopes: { "kb:analytics:view": "all" }, modules: {} },
@@ -91,6 +91,7 @@ const OVERVIEW = {
   searches: 100,
   noResults: 15,
   searchSuccessRate: 0.85,
+  searchScopeComplete: true,
   aiAnswers: 4,
   aiNoContext: 1,
   views: 340,
@@ -115,6 +116,7 @@ function settledPages<T>(data: T) {
 function settledGaps(rows: { query: string | null; count: number; lastOccurredAt: string }[]) {
   return {
     gaps: rows,
+    scopeComplete: true,
     data: { pages: [{ data: rows, pagination: { limit: 50, hasMore: false, nextCursor: null } }], pageParams: [undefined] },
     isLoading: false,
     isError: false,
@@ -141,7 +143,7 @@ beforeEach(() => {
   useAccess.mockReturnValue(accessGranted);
   useCan.mockReturnValue(true);
   useKbAnalyticsOverview.mockReturnValue(settled(OVERVIEW));
-  useKbNoResults.mockReturnValue(settled([]));
+  useKbNoResults.mockReturnValue(settled({ data: [], scopeComplete: true }));
   usePageAnalytics.mockReturnValue(settledPages([]));
   useKnowledgeGaps.mockReturnValue(settledGaps([]));
   useGapRelatedPages.mockReturnValue({ pages: [], isLoading: false, fetchNextPage: jest.fn(), hasNextPage: false, isFetchingNextPage: false });
@@ -316,6 +318,30 @@ describe("KnowledgeAnalyticsPage — the reader can narrow the figures to one sp
       expect.not.objectContaining({ spaceId: expect.anything() }),
       "wiki",
     );
+  });
+
+  it("does not show a false zero for space search and gap history with unknown provenance", () => {
+    searchParams = new URLSearchParams({ space: "42" });
+    useKbAnalyticsOverview.mockReturnValue(settled({
+      ...OVERVIEW,
+      searches: null,
+      noResults: null,
+      searchSuccessRate: null,
+      aiAnswers: null,
+      aiNoContext: null,
+      searchScopeComplete: false,
+    }));
+    useKbNoResults.mockReturnValue(settled({ data: [], scopeComplete: false }));
+    useKnowledgeGaps.mockReturnValue({ ...settledGaps([]), scopeComplete: false });
+
+    render(<KnowledgeAnalyticsPage />);
+
+    expect(screen.getByText(/Space-scoped search and Ask history is incomplete/i)).toBeInTheDocument();
+    expect(screen.getByText(/Zero-result searches for this space are unavailable/i)).toBeInTheDocument();
+    expect(screen.getByText(/Knowledge gaps for this space are unavailable/i)).toBeInTheDocument();
+    expect(screen.queryByText("No zero-result searches")).not.toBeInTheDocument();
+    expect(useKbNoResults).toHaveBeenCalledWith(expect.objectContaining({ spaceId: 42 }));
+    expect(useKnowledgeGaps).toHaveBeenCalledWith(expect.objectContaining({ spaceId: 42 }));
   });
 });
 
