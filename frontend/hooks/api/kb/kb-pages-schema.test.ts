@@ -4,6 +4,7 @@ import {
   kbPageWithAncestorsContract,
   kbPageListItemContract,
   kbPageListContract,
+  kbFavoritePageListContract,
   kbPageContract,
 } from "./kb-pages-schema";
 import { kbPageCommentListContract } from "./kb-comments-schema";
@@ -207,6 +208,16 @@ describe("kbPageListItemContract — backend-required fields must be required in
 });
 
 describe("kbPageListItemContract — server/client schema parity for the recent and favorites list endpoints (FE-28)", () => {
+  it("parses a favorites cursor page and preserves continuation metadata", () => {
+    const response = {
+      data: [KB_PAGE_LIST_ITEM_FIXTURE],
+      pagination: { limit: 50, hasMore: true, nextCursor: "next" },
+    };
+    const parsed = kbFavoritePageListContract.parse(response);
+    expect(parsed.data[0]?.id).toBe(KB_PAGE_LIST_ITEM_FIXTURE.id);
+    expect(parsed.pagination).toEqual(response.pagination);
+  });
+
   it("parses a complete KB_PAGE_LIST_COLUMNS wire fixture for a newly created page without error so a freshly inserted row does not break the recent pages strip", () => {
     expect(kbPageListItemContract.safeParse(KB_PAGE_LIST_ITEM_FIXTURE).success).toBe(true);
   });

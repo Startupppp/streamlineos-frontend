@@ -11,6 +11,7 @@ import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { useCan } from "@/hooks/api/access";
 import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
+import { selectFlatPages, type Page } from "@/lib/api/select-flat-pages";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
 import { useKbSpaces } from "./spaces";
@@ -58,6 +59,9 @@ const kbPageContract = lazyContract(() =>
 );
 const kbPageListContract = lazyContract(() =>
   import("@/hooks/api/kb/kb-pages-schema").then((m) => m.kbPageListContract),
+);
+const kbFavoritePageListContract = lazyContract(() =>
+  import("@/hooks/api/kb/kb-pages-schema").then((m) => m.kbFavoritePageListContract),
 );
 
 const kbPageBacklinkContract = lazyContract(() =>
@@ -197,16 +201,19 @@ export function useKbPagesRecent() {
 
 export function useKbPagesFavorites() {
   const canView = useCan("kb:pages:view");
-  return useQuery({
+  return useInfiniteQuery({
     ...INLINE_READ_ERROR,
     queryKey: knowledgeAndSurveysQueryKeys.kb.pagesFavorites(),
-    queryFn: ({ signal }) =>
-      apiClient.get<KbPageListItem[]>(
+    initialPageParam: NO_CURSOR_YET,
+    queryFn: ({ signal, pageParam }) =>
+      apiClient.get<Page<KbPageListItem>>(
         "/kb/pages/favorites",
-        undefined,
+        pageParam !== undefined ? { cursor: pageParam } : undefined,
         signal,
-        kbPageListContract,
+        kbFavoritePageListContract,
       ),
+    getNextPageParam: (last) => last.pagination.nextCursor ?? undefined,
+    select: selectFlatPages,
     staleTime: 30_000,
     enabled: canView,
   });
