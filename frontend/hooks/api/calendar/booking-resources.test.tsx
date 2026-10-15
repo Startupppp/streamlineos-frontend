@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useInventoryCalendarEquipment, usePendingCalendarBookingAllocations, useResolveCalendarBookingAllocation } from "./booking-resources";
+import { useCalendarBookingResources, useInventoryCalendarEquipment, usePendingCalendarBookingAllocations, useResolveCalendarBookingAllocation } from "./booking-resources";
 
 const get = jest.fn();
 const put = jest.fn();
@@ -69,6 +69,19 @@ it("requests the selected Inventory equipment catalog page", async () => {
   await waitFor(() => expect(get).toHaveBeenCalledWith(
     "/inventory/calendar-equipment",
     { limit: 50, cursor: 12 },
+    expect.anything(),
+    expect.anything(),
+  ));
+});
+
+it("requests the selected Calendar resource catalog page", async () => {
+  accessSnapshot = { isOrgOwner: false, scopes: { "calendar:read": "all" } };
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } });
+  renderHook(() => useCalendarBookingResources("42"), { wrapper: wrapper(client) });
+
+  await waitFor(() => expect(get).toHaveBeenCalledWith(
+    "/calendar/resources",
+    { limit: 50, cursor: "42" },
     expect.anything(),
     expect.anything(),
   ));

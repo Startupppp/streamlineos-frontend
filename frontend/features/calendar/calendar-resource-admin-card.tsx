@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ErrorState } from "@/components/shared/error-state";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
+import { useCursorPager } from "@/components/ui/table-pagination";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
 import {
@@ -52,7 +55,9 @@ function fromResource(resource: BookingResource): CalendarResourceInput {
 }
 
 export function CalendarResourceAdminCard() {
-  const resources = useCalendarBookingResources();
+  const { data: session } = useSession();
+  const resourcePager = useCursorPager(`${session?.orgId ?? ""}:${session?.user?.id ?? ""}`);
+  const resources = useCalendarBookingResources(resourcePager.cursor);
   const canManageInventoryEquipment = useCan("inventory:warehouses:manage");
   const create = useCreateCalendarResource();
   const update = useUpdateCalendarResource();
@@ -171,6 +176,7 @@ export function CalendarResourceAdminCard() {
       <div className="flex gap-2"><Button onClick={() => void save()} disabled={create.isPending || update.isPending}>Save resource</Button><Button variant="outline" onClick={() => setForm(null)}>Cancel</Button></div>
     </div> : null}
     {maintenanceTarget ? <div className="space-y-3 rounded-md border p-3"><h3 className="font-medium">Maintenance for {maintenanceTarget.name}</h3><div className="grid grid-cols-1 gap-2 md:grid-cols-2"><div className="space-y-1"><Label htmlFor="maintenance-start">Starts</Label><CalendarDateTimePicker id="maintenance-start" label="Starts" value={maintenanceStart} onChange={setMaintenanceStart} /></div><div className="space-y-1"><Label htmlFor="maintenance-end">Ends</Label><CalendarDateTimePicker id="maintenance-end" label="Ends" value={maintenanceEnd} onChange={setMaintenanceEnd} /></div></div><div className="space-y-1"><Label htmlFor="maintenance-reason">Reason</Label><Input id="maintenance-reason" value={maintenanceReason} onChange={(event) => setMaintenanceReason(event.target.value)} /></div><div className="flex gap-2"><Button onClick={() => void scheduleMaintenance()} disabled={addMaintenance.isPending}>Schedule maintenance</Button><Button variant="outline" onClick={() => setMaintenanceTarget(null)}>Cancel</Button></div></div> : null}
-    {resources.access.denied ? <p className="text-sm">Resource inventory is unavailable to this account.</p> : resources.access.unavailable ? <ErrorState title="Resource inventory unavailable" onRetry={() => void resources.refetch()} /> : resources.access.pending || resources.isPending ? <p role="status">Loading resources…</p> : resources.isError ? <ErrorState error={resources.error} onRetry={() => void resources.refetch()} /> : resources.data?.length ? <div className="space-y-2">{resources.data.map((resource) => <div key={resource.id} className="flex flex-wrap items-center justify-between gap-2 rounded-md border p-3"><div><p className="text-sm font-medium">{resource.name}</p><p className="text-xs text-muted-foreground">{resource.kind} · {resource.status} · capacity {resource.capacity}{resource.location ? ` · ${resource.location}` : ""}{resource.requiresApproval ? " · approval required" : ""}</p></div><div className="flex gap-2"><Button size="sm" variant="outline" onClick={() => open(resource)}>Edit</Button>{resource.status !== "retired" ? <Button size="sm" variant="outline" onClick={() => { setMaintenanceTarget(resource); setForm(null); setError(null); }}>Maintenance</Button> : null}</div></div>)}</div> : <p className="text-sm text-muted-foreground">No rooms or equipment yet.</p>}
+    {resources.access.denied ? <p className="text-sm">Resource inventory is unavailable to this account.</p> : resources.access.unavailable ? <ErrorState title="Resource inventory unavailable" onRetry={() => void resources.refetch()} /> : resources.access.pending || resources.isPending ? <p role="status">Loading resources…</p> : resources.isError ? <ErrorState error={resources.error} onRetry={() => void resources.refetch()} /> : resources.data?.items.length ? <div className="space-y-2">{resources.data.items.map((resource) => <div key={resource.id} className="flex flex-wrap items-center justify-between gap-2 rounded-md border p-3"><div><p className="text-sm font-medium">{resource.name}</p><p className="text-xs text-muted-foreground">{resource.kind} · {resource.status} · capacity {resource.capacity}{resource.location ? ` · ${resource.location}` : ""}{resource.requiresApproval ? " · approval required" : ""}</p></div><div className="flex gap-2"><Button size="sm" variant="outline" onClick={() => open(resource)}>Edit</Button>{resource.status !== "retired" ? <Button size="sm" variant="outline" onClick={() => { setMaintenanceTarget(resource); setForm(null); setError(null); }}>Maintenance</Button> : null}</div></div>)}</div> : <p className="text-sm text-muted-foreground">No rooms or equipment yet.</p>}
+    {resourcePager.hasPrevious || resources.data?.nextCursor ? <CursorPageControls page={resourcePager.pageNumber} hasNext={Boolean(resources.data?.nextCursor)} disabled={resources.isFetching} onPrevious={resourcePager.goPrevious} onNext={() => resourcePager.goNext(resources.data?.nextCursor)} /> : null}
   </section>;
 }
