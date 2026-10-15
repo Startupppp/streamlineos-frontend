@@ -126,6 +126,14 @@ beforeEach(() => {
 });
 
 describe("KnowledgeBasePage — every scope dimension the sheet edits reaches the ask request body", () => {
+  it("states the broad default search scope beside the composer before the user sends a question", async () => {
+    const user = renderPage();
+
+    expect(screen.getByText("Searching all accessible knowledge.")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Edit" }));
+    expect(screen.getByText(/all ready sources and pages will be searched/i)).toBeInTheDocument();
+  });
+
   it("sends status when the status control is set, because a control that renders without reaching the payload scopes nothing", async () => {
     const user = renderPage();
     await openScopeSheet(user);

@@ -608,16 +608,17 @@ export default function KnowledgeBasePage() {
                     </motion.span>
                   </Button>
                 </div>
-                {scopeActive && (
-                  <p className="mt-1.5 text-micro text-muted-foreground">
-                    {scopeItemCount > 0
+                <p className="mt-1.5 text-micro text-muted-foreground">
+                  {scopeActive
+                    ? scopeItemCount > 0
                       ? `Searching ${scopeItemCount} selected item${scopeItemCount === 1 ? "" : "s"}.`
-                      : "Searching with selected filters."}{" "}
-                    <button type="button" onClick={handleScopeClick} className="underline hover:text-foreground">Edit</button>
-                    {" · "}
-                    <button type="button" onClick={handleClearScope} className="underline hover:text-foreground">Clear</button>
-                  </p>
-                )}
+                      : "Searching with selected filters."
+                    : "Searching all accessible knowledge."}{" "}
+                  <button type="button" onClick={handleScopeClick} className="underline hover:text-foreground">Edit</button>
+                  {scopeActive && (
+                    <>{" · "}<button type="button" onClick={handleClearScope} className="underline hover:text-foreground">Clear</button></>
+                  )}
+                </p>
               </div>
             </>
           )}
