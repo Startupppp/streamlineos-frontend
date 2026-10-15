@@ -182,7 +182,7 @@ export function PageDocumentToolbar({
         onApplyImprovement={isEditable && canUpdate ? onApplyImprovement : undefined}
         onInsertSummary={isEditable && canUpdate ? onInsertSummary : undefined}
       />
-      {canUpdate ? (
+      {canUpdate && isEditable ? (
         <PageSharePopover page={page} />
       ) : (
         <Button
