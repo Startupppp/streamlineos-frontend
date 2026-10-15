@@ -428,11 +428,6 @@ const nextConfig: NextConfig = {
       permanent: false,
     },
     {
-      source: "/knowledge",
-      destination: "/knowledge/chat",
-      permanent: false,
-    },
-    {
       source: "/ask",
       destination: "/knowledge/chat",
       permanent: false,

@@ -82,11 +82,12 @@ describe("route-level redirect pages are not shadowed by next.config.ts (S20)", 
   it("static aliases are served by next.config.ts, not by redirect-only page files", () => {
     const sources = declaredRedirectSources(CONFIG_SOURCE);
     expect(sources).toEqual(
-      expect.arrayContaining(["/announcements", "/chat/settings", "/docs", "/kb", "/knowledge", "/ask"]),
+      expect.arrayContaining(["/announcements", "/chat/settings", "/docs", "/kb", "/ask"]),
     );
     const pages = routesServedByARedirectPage();
-    for (const alias of ["/announcements", "/chat/settings", "/docs", "/kb", "/knowledge"]) {
+    for (const alias of ["/announcements", "/chat/settings", "/docs", "/kb"]) {
       expect(pages).not.toContain(alias);
     }
+    expect(pages).toContain("/knowledge");
   });
 });

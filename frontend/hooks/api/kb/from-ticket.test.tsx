@@ -134,4 +134,28 @@ describe("POST /kb/articles/from-ticket/:ticketId is bound to the article the ba
     expect(post.mock.calls[0]?.[0]).toBe("/kb/articles/from-ticket/7");
     expect(post.mock.calls[0]?.[1]).toEqual({ spaceId: 4 });
   });
+
+  it("reuses the operation key on retry and starts a new key after success", async () => {
+    post.mockRejectedValueOnce(new Error("network interrupted")).mockResolvedValue(ARTICLE);
+    const { result } = renderHook(() => useCreateKbArticleFromTicket(), { wrapper });
+    await act(async () => {
+      await expect(result.current.mutateAsync({ ticketId: 7, spaceId: 4 })).rejects.toThrow("network interrupted");
+    });
+    await act(async () => {
+      await result.current.mutateAsync({ ticketId: 7, spaceId: 4 });
+    });
+    await act(async () => {
+      await result.current.mutateAsync({ ticketId: 7, spaceId: 4 });
+    });
+    const keys = post.mock.calls.map((call) => {
+      const config = call[2];
+      if (typeof config !== "object" || config === null || !("headers" in config)) return null;
+      const headers = config.headers;
+      if (typeof headers !== "object" || headers === null || !("Idempotency-Key" in headers)) return null;
+      return headers["Idempotency-Key"];
+    });
+    expect(typeof keys[0]).toBe("string");
+    expect(keys[0]).toBe(keys[1]);
+    expect(keys[2]).not.toBe(keys[1]);
+  });
 });

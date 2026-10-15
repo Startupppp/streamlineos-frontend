@@ -236,23 +236,23 @@ const PageTreeItem = memo(function PageTreeItemInner({
                 : "bg-muted-foreground/50 opacity-0 group-hover:opacity-100",
             )}
           />
-          <button
-            type="button"
-            className="shrink-0 h-4 w-4 flex items-center justify-center text-muted-foreground hover:text-foreground"
-            onClick={handleToggleExpand}
-            aria-label={isExpanded ? "Collapse" : "Expand"}
-            tabIndex={-1}
-          >
-            {showChevron ? (
-              isExpanded ? (
+          {showChevron ? (
+            <button
+              type="button"
+              className="shrink-0 h-4 w-4 flex items-center justify-center text-muted-foreground hover:text-foreground"
+              onClick={handleToggleExpand}
+              aria-label={isExpanded ? "Collapse" : "Expand"}
+              aria-expanded={isExpanded}
+            >
+              {isExpanded ? (
                 <KbChevronDownIcon className="h-3 w-3" />
               ) : (
                 <KbChevronRightIcon className="h-3 w-3" />
-              )
-            ) : (
-              <span className="h-3 w-3" />
-            )}
-          </button>
+              )}
+            </button>
+          ) : (
+            <span className="shrink-0 h-4 w-4" aria-hidden="true" />
+          )}
 
           {renaming ? (
             <>
@@ -301,14 +301,13 @@ const PageTreeItem = memo(function PageTreeItemInner({
 
           {!renaming && (
             <span
-              className={`${menuOpen ? "flex" : "hidden group-hover:flex"} items-center gap-0.5 shrink-0`}
+              className={`${menuOpen ? "flex" : "hidden group-hover:flex group-focus-within:flex"} items-center gap-0.5 shrink-0`}
             >
               {canCreate && (
                 <button
                   type="button"
                   className="h-5 w-5 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted"
                   onClick={handleAddChild}
-                  tabIndex={-1}
                   aria-label="Add child page"
                 >
                   <KbPlusIcon className="h-3 w-3" />
@@ -320,7 +319,6 @@ const PageTreeItem = memo(function PageTreeItemInner({
                     type="button"
                     className="h-5 w-5 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted"
                     onClick={handleMoreClick}
-                    tabIndex={-1}
                     aria-label="Page options"
                   >
                     <KbMoreHorizontalIcon className="h-3 w-3" />
