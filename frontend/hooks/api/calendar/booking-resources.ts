@@ -2,13 +2,13 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { lazyContract } from "@/lib/api-envelope";
+import { isApiError, lazyContract } from "@/lib/api-envelope";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { calendarBookingQueryKeys } from "@/lib/query-keys/calendar-booking";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useBookingScope } from "./booking-rules";
-import type { BookingAllocation, BookingAllocationResolution, BookingResource, BookingResourceMaintenance, BookingRuleResource, PendingBookingAllocation } from "./booking-resources-schema";
+import type { BookingAllocation, BookingAllocationResolution, BookingResource, BookingResourceMaintenance, BookingRuleResource, PendingBookingAllocationPage } from "./booking-resources-schema";
 
 const resourcesContract = lazyContract(() => import("./booking-resources-schema").then((module) => module.bookingResourcesContract));
 const requirementsContract = lazyContract(() => import("./booking-resources-schema").then((module) => module.bookingRuleResourcesContract));
@@ -16,6 +16,7 @@ const resourceContract = lazyContract(() => import("./booking-resources-schema")
 const maintenanceContract = lazyContract(() => import("./booking-resources-schema").then((module) => module.bookingResourceMaintenanceContract));
 const allocationsContract = lazyContract(() => import("./booking-resources-schema").then((module) => module.bookingAllocationsContract));
 const pendingAllocationsContract = lazyContract(() => import("./booking-resources-schema").then((module) => module.pendingBookingAllocationsContract));
+const legacyPendingAllocationsContract = lazyContract(() => import("./booking-resources-schema").then((module) => module.legacyPendingBookingAllocationsContract));
 const allocationResolutionContract = lazyContract(() => import("./booking-resources-schema").then((module) => module.bookingAllocationResolutionContract));
 
 export interface CalendarResourceInput {
@@ -75,11 +76,21 @@ export function useCalendarBookingAllocations(bookingId: string) {
   });
 }
 
-export function usePendingCalendarBookingAllocations(enabled = true) {
+export function usePendingCalendarBookingAllocations(cursor: string | null = null, enabled = true) {
   const scope = useBookingScope();
   return useGatedQuery("calendar:read", {
-    queryKey: calendarBookingQueryKeys.pendingAllocations(scope.orgId, scope.userId, scope.membershipId, scope.accessVersion, scope.canRead),
-    queryFn: ({ signal }) => apiClient.get<PendingBookingAllocation[]>("/calendar/resources/pending-allocations", undefined, signal, pendingAllocationsContract),
+    queryKey: calendarBookingQueryKeys.pendingAllocations(scope.orgId, scope.userId, scope.membershipId, scope.accessVersion, scope.canRead, cursor),
+    queryFn: async ({ signal }): Promise<PendingBookingAllocationPage> => {
+      try {
+        return await apiClient.get<PendingBookingAllocationPage>("/calendar/resources/pending-allocation-pages", cursor ? { cursor } : undefined, signal, pendingAllocationsContract);
+      } catch (error) {
+        if (!cursor && isApiError(error) && error.status === 404) {
+          const items = await apiClient.get<PendingBookingAllocationPage["items"]>("/calendar/resources/pending-allocations", undefined, signal, legacyPendingAllocationsContract);
+          return { items, nextCursor: null };
+        }
+        throw error;
+      }
+    },
     enabled: enabled && Boolean(scope.orgId && scope.userId),
     staleTime: 15_000,
     ...INLINE_READ_ERROR,
