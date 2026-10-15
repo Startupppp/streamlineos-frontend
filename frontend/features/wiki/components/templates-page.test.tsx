@@ -1,7 +1,8 @@
 import React from "react";
-import { render, screen, cleanup } from "@testing-library/react";
+import { render, screen, cleanup, fireEvent, act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import TemplatesPage from "./templates-page";
+import { STARTER_TEMPLATES, type StarterTemplate } from "@/features/wiki/lib/starter-templates";
 
 type IntersectionCallback = (entries: IntersectionObserverEntry[]) => void;
 
@@ -104,7 +105,9 @@ jest.mock("@/features/wiki/lib/starter-templates", () => ({
 }));
 
 jest.mock("./template-cards", () => ({
-  StarterTemplateCard: () => null,
+  StarterTemplateCard: ({ template }: { template: StarterTemplate }) => (
+    <div data-testid={`starter-${template.key}`}>{template.name}</div>
+  ),
   TemplateCard: ({ template }: { template: { id: number; name: string } }) => (
     <div data-testid={`template-${template.id}`}>{template.name}</div>
   ),
@@ -122,6 +125,7 @@ const mockTemplate = { id: 1, name: "My Template" };
 
 beforeEach(() => {
   observers.length = 0;
+  STARTER_TEMPLATES.length = 0;
   Reflect.set(globalThis, "IntersectionObserver", FakeIntersectionObserver);
   mockSearchParams = new URLSearchParams();
   jest.clearAllMocks();
@@ -132,6 +136,60 @@ afterEach(() => {
   Reflect.deleteProperty(globalThis, "IntersectionObserver");
 });
 
+function makeStarter(key: string, name: string, expectedOutput: string): StarterTemplate {
+  return {
+    key,
+    name,
+    icon: "📄",
+    description: "Reusable page layout",
+    category: "Process & Operations",
+    expectedOutput,
+    content: { type: "doc", children: [] },
+  };
+}
+
+describe("TemplatesPage — URL search across tabs", () => {
+  it("filters starter use cases from the q URL parameter and shows the search input", () => {
+    STARTER_TEMPLATES.push(
+      makeStarter("onboarding", "Process guide", "An onboarding checklist"),
+      makeStarter("operations", "Operations guide", "A maintenance runbook"),
+    );
+    mockSearchParams = new URLSearchParams("tab=starters&q=onboarding");
+    useKbPageTemplates.mockReturnValue({ data: [], isLoading: false, isError: false });
+
+    render(<TemplatesPage />);
+
+    expect(screen.getByRole("searchbox", { name: "Search templates" })).toHaveValue("onboarding");
+    expect(screen.getByTestId("starter-onboarding")).toBeInTheDocument();
+    expect(screen.queryByTestId("starter-operations")).not.toBeInTheDocument();
+  });
+
+  it("updates the starter search URL after the debounce", () => {
+    jest.useFakeTimers();
+    STARTER_TEMPLATES.push(makeStarter("onboarding", "Process guide", "An onboarding checklist"));
+    useKbPageTemplates.mockReturnValue({ data: [], isLoading: false, isError: false });
+
+    render(<TemplatesPage />);
+    fireEvent.change(screen.getByRole("searchbox", { name: "Search templates" }), {
+      target: { value: "onboarding" },
+    });
+    act(() => jest.advanceTimersByTime(300));
+
+    expect(mockReplace).toHaveBeenCalledWith("/wiki/templates?q=onboarding", { scroll: false });
+    jest.useRealTimers();
+  });
+
+  it("refreshes the search input when URL q changes through navigation", () => {
+    useKbPageTemplates.mockReturnValue({ data: [], isLoading: false, isError: false });
+    mockSearchParams = new URLSearchParams("q=first");
+    const view = render(<TemplatesPage />);
+
+    mockSearchParams = new URLSearchParams("q=second");
+    view.rerender(<TemplatesPage />);
+
+    expect(screen.getByRole("searchbox", { name: "Search templates" })).toHaveValue("second");
+  });
+});
 describe("TemplatesPage sentinel (saved tab)", () => {
   it("calls fetchNextPage when the sentinel scrolls into view instead of requiring a button click", () => {
     mockSearchParams = new URLSearchParams("tab=saved");
