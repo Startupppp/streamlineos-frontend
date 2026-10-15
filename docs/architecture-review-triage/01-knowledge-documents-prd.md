@@ -39,6 +39,7 @@ Documents owns source identity, audience, versions and safe file retrieval. Know
 - [ ] KD-07 chunk ACL
 - [ ] KD-08 page contract
 - [ ] KD-09 Help Centre authority
+  - 2026-10-16 code-backed direction: retain `kb_pages` as the content identity, with `support_article` edited/published by Support at `/support/kb/{articleId}` and read publicly at `/help/{orgId}/{slug}`; Wiki excludes this content type. Keep the Support article slug distinct from the Wiki public slug, and use numeric IDs for internal editor links. Frontend `accb03827` corrects the knowledge-gap draft link; backend `ab747bc64` corrects Support AI suggestion links. Focused tests and scoped lint passed. The permanent editor/adapter decision, full caller census, per-record data reconciliation, role/browser parity and migration rollback remain open.
 - [ ] KD-10 dead-route census
 - [ ] KD-11 Documents identities
 - [ ] KD-13 cache/import/ACL check
