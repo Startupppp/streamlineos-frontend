@@ -202,6 +202,7 @@ export type KbResearchBriefListItem = Omit<KbResearchBrief, "report" | "citation
 
 export interface KbResearchBriefListPage {
   items: KbResearchBriefListItem[];
+  hasMore: boolean;
   nextCursor: number | null;
 }
 

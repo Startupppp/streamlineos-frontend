@@ -3,6 +3,24 @@ import {
   researchBriefPollInterval,
 } from "./research-briefs";
 import type { KbResearchBrief } from "@/types/kb";
+import { kbResearchBriefListContract } from "./kb-research-schema";
+
+describe("Research Brief list response contract", () => {
+  it("retains hasMore and nextCursor for an unfinished page", () => {
+    expect(kbResearchBriefListContract.parse({
+      items: [],
+      hasMore: true,
+      nextCursor: 42,
+    })).toEqual({ items: [], hasMore: true, nextCursor: 42 });
+  });
+
+  it("requires hasMore so a deployment mismatch cannot silently appear complete", () => {
+    expect(() => kbResearchBriefListContract.parse({
+      items: [],
+      nextCursor: null,
+    })).toThrow();
+  });
+});
 
 const ALL_STATUSES: KbResearchBrief["status"][] = [
   "queued",
