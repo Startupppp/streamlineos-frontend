@@ -3,7 +3,6 @@
 import Image from "next/image";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import type { CalendarListItem } from "@/hooks/api/calendar";
 import { formatEventDate, formatEventTimeRange } from "@/lib/date-utils";
@@ -87,28 +86,6 @@ export function CalendarSheetFallback({ label }: { label: string }) {
         </div>
       </SheetContent>
     </Sheet>
-  );
-}
-
-export function CalendarEventDetailFallback({ label }: { label: string }) {
-  return (
-    <Dialog open>
-      <DialogContent className="gap-0 overflow-hidden p-0" showCloseButton={false}>
-        <DialogHeader className="shrink-0 border-b px-5 py-4 text-left">
-          <DialogTitle className="sr-only">{label}</DialogTitle>
-          <DialogDescription className="sr-only">Event details are loading</DialogDescription>
-          <div role="status" aria-live="polite" aria-label={label} className="space-y-2">
-            <Skeleton className="h-5 w-3/5" />
-            <Skeleton className="h-4 w-2/5" />
-          </div>
-        </DialogHeader>
-        <div className="space-y-4 px-5 py-4" aria-hidden>
-          <Skeleton className="h-4 w-4/5" />
-          <Skeleton className="h-4 w-2/3" />
-          <Skeleton className="h-20 w-full" />
-        </div>
-      </DialogContent>
-    </Dialog>
   );
 }
 
