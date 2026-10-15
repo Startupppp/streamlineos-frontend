@@ -50,9 +50,19 @@ jest.mock("./wiki-page-collection-table", () => ({
   },
 }));
 
+const mockPageTree = jest.fn();
 jest.mock("./page-tree", () => ({
   __esModule: true,
-  default: () => <div data-testid="page-tree" />,
+  default: (props: { spaceId?: number; onCloseMobile?: () => void }) => {
+    mockPageTree(props);
+    return (
+      <div data-testid="page-tree">
+        {props.onCloseMobile && (
+          <button type="button" onClick={props.onCloseMobile}>Select page</button>
+        )}
+      </div>
+    );
+  },
 }));
 
 const mockMembers = jest.fn();
@@ -191,6 +201,18 @@ describe("SpaceDetailPage", () => {
 
     expect(screen.getByTestId("page-tree")).toBeInTheDocument();
     expect(screen.getByTestId("page-collection")).toBeInTheDocument();
+  });
+
+  it("opens a space-scoped hierarchy on mobile and closes it after selecting a page", async () => {
+    render(<SpaceDetailPage spaceId={5} />);
+
+    await userEvent.click(screen.getByRole("button", { name: "Browse hierarchy" }));
+    expect(screen.getByRole("dialog", { name: "Hierarchy" })).toBeInTheDocument();
+    expect(mockPageTree).toHaveBeenCalledWith(
+      expect.objectContaining({ spaceId: 5, onCloseMobile: expect.any(Function) }),
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Select page" }));
+    expect(screen.queryByRole("dialog", { name: "Hierarchy" })).not.toBeInTheDocument();
   });
 
   it("BITE: shows a New page button that creates a page scoped to this space when the actor can create pages", async () => {

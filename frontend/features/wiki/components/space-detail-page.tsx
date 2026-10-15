@@ -31,6 +31,14 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import {
+  Sheet,
+  SheetBody,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { WikiPageCollectionTable } from "./wiki-page-collection-table";
 import { SpaceMembersSheet } from "./space-members-sheet";
 import { SpaceManagerHealthSummary } from "./space-manager-health-summary";
@@ -81,6 +89,7 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
   const restoreSpace = useRestoreKbSpace();
   const [membersOpen, setMembersOpen] = useState(false);
   const [archiveConfirmOpen, setArchiveConfirmOpen] = useState(false);
+  const [hierarchyOpen, setHierarchyOpen] = useState(false);
 
   const isNotFound = isApiError(error) && error.status === 404;
 
@@ -108,6 +117,14 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
 
   function handleMembersOpenChange(open: boolean) {
     setMembersOpen(open);
+  }
+
+  function handleCloseHierarchy() {
+    setHierarchyOpen(false);
+  }
+
+  function handleOpenHierarchy() {
+    setHierarchyOpen(true);
   }
 
   function handleOpenMembers() {
@@ -271,6 +288,16 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
             pagesOverdueForReview={pagesOverdueForReview}
           />
 
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="self-start md:hidden"
+            onClick={handleOpenHierarchy}
+          >
+            Browse hierarchy
+          </Button>
+
           <div className="flex min-h-0 flex-1 gap-4">
             <div className="hidden w-56 shrink-0 flex-col overflow-hidden rounded-xl border border-border bg-card/50 p-2 md:flex">
               <p className="px-2 py-1 text-xs font-medium text-muted-foreground uppercase tracking-wider">
@@ -297,6 +324,20 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
         open={membersOpen}
         onOpenChange={handleMembersOpenChange}
       />
+
+      <Sheet open={hierarchyOpen} onOpenChange={setHierarchyOpen}>
+        <SheetContent side="left" className="gap-0 p-0 sm:max-w-sm">
+          <SheetHeader className="border-b border-border px-4 py-3">
+            <SheetTitle>Hierarchy</SheetTitle>
+            <SheetDescription>Pages in {space?.name ?? "this space"}</SheetDescription>
+          </SheetHeader>
+          <SheetBody className="p-3">
+            {hierarchyOpen && (
+              <PageTree spaceId={spaceId} onCloseMobile={handleCloseHierarchy} />
+            )}
+          </SheetBody>
+        </SheetContent>
+      </Sheet>
 
       <ConfirmDialog
         open={archiveConfirmOpen}
