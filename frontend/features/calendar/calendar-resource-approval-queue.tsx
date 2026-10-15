@@ -1,9 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
+import { useCursorPager } from "@/components/ui/table-pagination";
 import { ErrorState } from "@/components/shared/error-state";
 import { usePendingCalendarBookingAllocations, useResolveCalendarBookingAllocation } from "@/hooks/api/calendar/booking-resources";
 import type { PendingBookingAllocation } from "@/hooks/api/calendar/booking-resources-schema";
@@ -33,8 +36,8 @@ function ApprovalRow({ allocation }: { allocation: PendingBookingAllocation }) {
 }
 
 export function CalendarResourceApprovalQueue({ onBack }: { onBack?: () => void }) {
-  const [cursor, setCursor] = useState<string | null>(null);
-  const [previousCursors, setPreviousCursors] = useState<Array<string | null>>([]);
-  const pending = usePendingCalendarBookingAllocations(cursor);
-  return <div className="space-y-4">{onBack ? <Button variant="outline" onClick={onBack}>Back to booking pages</Button> : null}<div><h3 className="font-medium">Resource approvals</h3><p className="text-sm text-muted-foreground">Review rooms and source-owned equipment awaiting an owner decision.</p></div>{pending.access.denied ? <p className="text-sm text-muted-foreground">Resource approvals are unavailable to this account.</p> : pending.access.unavailable || pending.isError ? <ErrorState title="Resource approvals unavailable" error={pending.error} onRetry={() => void pending.refetch()} /> : pending.access.pending || pending.isPending ? <p role="status">Loading resource approvals…</p> : pending.data?.items.length ? <div className="space-y-2">{pending.data.items.map((allocation) => <ApprovalRow key={`${allocation.bookingId}:${allocation.resourceId}`} allocation={allocation} />)}</div> : <p className="text-sm text-muted-foreground">No resource approvals are waiting on this page.</p>}<div className="flex gap-2">{previousCursors.length ? <Button variant="outline" onClick={() => { setCursor(previousCursors.at(-1) ?? null); setPreviousCursors(previousCursors.slice(0, -1)); }}>Earlier</Button> : null}{pending.data?.nextCursor ? <Button variant="outline" onClick={() => { setPreviousCursors([...previousCursors, cursor]); setCursor(pending.data.nextCursor); }}>Later</Button> : null}</div></div>;
+  const { data: session } = useSession();
+  const pager = useCursorPager(`${session?.orgId ?? ""}:${session?.user?.id ?? ""}`);
+  const pending = usePendingCalendarBookingAllocations(pager.cursor ?? null);
+  return <div className="space-y-4">{onBack ? <Button variant="outline" onClick={onBack}>Back to booking pages</Button> : null}<div><h3 className="font-medium">Resource approvals</h3><p className="text-sm text-muted-foreground">Review rooms and source-owned equipment awaiting an owner decision.</p></div>{pending.access.denied ? <p className="text-sm text-muted-foreground">Resource approvals are unavailable to this account.</p> : pending.access.unavailable || pending.isError ? <ErrorState title="Resource approvals unavailable" error={pending.error} onRetry={() => void pending.refetch()} /> : pending.access.pending || pending.isPending ? <p role="status">Loading resource approvals…</p> : pending.data?.items.length ? <div className="space-y-2">{pending.data.items.map((allocation) => <ApprovalRow key={`${allocation.bookingId}:${allocation.resourceId}`} allocation={allocation} />)}</div> : <p className="text-sm text-muted-foreground">No resource approvals are waiting on this page.</p>}{pager.hasPrevious || pending.data?.nextCursor ? <CursorPageControls page={pager.pageNumber} hasNext={Boolean(pending.data?.nextCursor)} disabled={pending.isFetching} onPrevious={pager.goPrevious} onNext={() => pager.goNext(pending.data?.nextCursor)} /> : null}</div>;
 }

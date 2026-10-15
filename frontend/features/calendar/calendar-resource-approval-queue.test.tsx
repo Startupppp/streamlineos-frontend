@@ -1,0 +1,40 @@
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { CalendarResourceApprovalQueue } from "./calendar-resource-approval-queue";
+
+const requestedCursors: Array<string | null> = [];
+
+jest.mock("next-auth/react", () => ({
+  useSession: () => ({ data: { orgId: "org-1", user: { id: "user-1" } } }),
+}));
+
+jest.mock("@/hooks/api/calendar/booking-resources", () => ({
+  usePendingCalendarBookingAllocations: (cursor: string | null) => {
+    requestedCursors.push(cursor);
+    return {
+      data: cursor === "next-page"
+        ? { items: [{ bookingId: "booking-2", resourceId: 2, resourceName: "Second room", state: "pending", startAt: "2026-10-22T10:00:00.000Z", version: 1, canApprove: true, approvalReceiptId: "receipt-2" }], nextCursor: null }
+        : { items: [{ bookingId: "booking-1", resourceId: 1, resourceName: "First room", state: "pending", startAt: "2026-10-22T09:00:00.000Z", version: 1, canApprove: true, approvalReceiptId: "receipt-1" }], nextCursor: "next-page" },
+      access: { allowed: true, denied: false, pending: false, unavailable: false },
+      isFetching: false,
+      isPending: false,
+      isError: false,
+    };
+  },
+  useResolveCalendarBookingAllocation: () => ({ isPending: false, mutateAsync: jest.fn() }),
+}));
+
+it("shows a later approval page and returns to the first page", async () => {
+  requestedCursors.length = 0;
+  const user = userEvent.setup();
+  render(<CalendarResourceApprovalQueue />);
+
+  expect(screen.getByText("First room")).toBeInTheDocument();
+  await user.click(screen.getByRole("button", { name: "Next page" }));
+  expect(screen.getByText("Second room")).toBeInTheDocument();
+  expect(requestedCursors).toContain("next-page");
+
+  await user.click(screen.getByRole("button", { name: "Previous page" }));
+  expect(screen.getByText("First room")).toBeInTheDocument();
+  expect(requestedCursors.at(-1)).toBeNull();
+});
