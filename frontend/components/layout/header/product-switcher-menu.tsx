@@ -27,10 +27,12 @@ import {
   getProductFromPathname,
 } from "../sidebar/sidebar-nav-items";
 import { cn } from "@/lib/utils";
+import { ErrorState } from "@/components/shared/error-state";
+import { LoadingState } from "@/components/shared/loading-state";
 
 const ProductGrid = dynamic(
   () => import("./product-grid").then((m) => ({ default: m.ProductGrid })),
-  { ssr: false, loading: () => null },
+  { ssr: false, loading: () => <LoadingState variant="list" rows={4} /> },
 );
 
 const HOVER_CLOSE_DELAY_MS = 175;
@@ -64,7 +66,7 @@ export function ProductSwitcherMenu({
   const { data: entitlements } = useEntitlements(open);
   const lockedModules = entitlements?.lockedModules ?? [];
   const canManageModules = useCan("settings:manage");
-  const { data: access } = useAccess();
+  const { data: access, error: accessError, refetch: refetchAccess } = useAccess();
   const effectiveRole =
     access?.isOrgOwner === true
       ? "OWNER"
@@ -81,6 +83,10 @@ export function ProductSwitcherMenu({
     },
     [isControlled, controlledOnOpenChange],
   );
+
+  const handleRetryAccess = useCallback(() => {
+    void refetchAccess();
+  }, [refetchAccess]);
 
   const handleClose = useCallback(
     () => handleOpenChange(false),
@@ -186,6 +192,19 @@ export function ProductSwitcherMenu({
     shouldReduceMotion: false,
   };
 
+  const menuBody = access ? (
+    <ProductGrid {...gridProps} />
+  ) : accessError ? (
+    <ErrorState
+      compact
+      title="Couldn't load your modules"
+      error={accessError}
+      onRetry={handleRetryAccess}
+    />
+  ) : (
+    <LoadingState variant="list" rows={4} />
+  );
+
   const drawerContent = (
     <DrawerContent className="flex h-[min(96dvh,40rem)] max-h-[96dvh] w-full flex-col gap-0 overflow-hidden rounded-t-xl border-t bg-sidebar p-4 pb-[env(safe-area-inset-bottom)] shadow-2xl">
       <DrawerTitle className="sr-only">Modules</DrawerTitle>
@@ -193,7 +212,7 @@ export function ProductSwitcherMenu({
         The product modules enabled for this organization. Choosing one moves
         the workspace into it; locked modules are shown but cannot be opened.
       </DrawerDescription>
-      {open && <ProductGrid {...gridProps} />}
+      {open && menuBody}
     </DrawerContent>
   );
 
@@ -229,7 +248,7 @@ export function ProductSwitcherMenu({
       >
         {open && (
           <div className="w-full rounded-md border bg-popover text-popover-foreground shadow-md p-2 animate-in fade-in-0 zoom-in-95 duration-150">
-            <ProductGrid {...gridProps} />
+            {menuBody}
           </div>
         )}
       </PopoverContent>

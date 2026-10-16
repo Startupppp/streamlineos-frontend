@@ -1,7 +1,18 @@
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, act } from "@testing-library/react";
 import type { WizardData } from "../lib/wizard-data-schema";
 import { DEFAULT_DATA, MODULE_CATALOG, MODULE_QUESTIONS, ALWAYS_ENABLED_MODULES, MODULE_GROUPS } from "../lib/constants";
 import { StepProducts } from "./step-products";
+
+const mockPreview = jest.fn((payload: { modules: string[] }) =>
+  Promise.resolve({
+    modules: payload.modules.map((moduleKey) => ({ moduleKey, eligible: true })),
+    quotaSnapshot: { seats: 0, usedSeats: 0 },
+    expiresAt: new Date().toISOString(),
+  }),
+);
+jest.mock("@/hooks/api/org-setup", () => ({
+  useOrgSetupPreviewMutation: () => ({ mutateAsync: mockPreview, isPending: false }),
+}));
 
 function wizard(overrides: Partial<WizardData> = {}): WizardData {
   return {
@@ -244,5 +255,29 @@ describe("StepProducts — nav buttons", () => {
     );
     fireEvent.click(screen.getByRole("button", { name: /^back$/i }));
     expect(onBack).toHaveBeenCalled();
+  });
+});
+
+describe("StepProducts — availability check failure", () => {
+  it("shows an inline error with Retry, and Retry re-runs the check", async () => {
+    jest.useFakeTimers();
+    mockPreview.mockRejectedValueOnce(new Error("Request timed out. Please try again."));
+    render(
+      <StepProducts
+        data={wizard({ modules: [...ALWAYS_ENABLED_MODULES, "hr"] })}
+        patch={jest.fn()}
+        onBack={jest.fn()}
+        onNext={jest.fn()}
+      />,
+    );
+    await act(async () => { jest.advanceTimersByTime(350); });
+    expect(await screen.findByText(/couldn't verify product availability/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Checking product availability/)).toBeNull();
+    const calls = mockPreview.mock.calls.length;
+    fireEvent.click(screen.getByRole("button", { name: "Retry" }));
+    await act(async () => { jest.advanceTimersByTime(350); });
+    expect(mockPreview.mock.calls.length).toBe(calls + 1);
+    expect(screen.queryByText(/couldn't verify product availability/i)).toBeNull();
+    jest.useRealTimers();
   });
 });

@@ -4,7 +4,7 @@ import { cookies, headers } from "next/headers";
 import { HydrationBoundary } from "@tanstack/react-query";
 
 import { LayoutClient } from "./layout-client";
-import { resolveWizardGate } from "../../lib/wizard-gate";
+import { onboardingGateYieldsToDenial, resolveWizardGate } from "../../lib/wizard-gate";
 import { prefetchAccess } from "../../lib/prefetch/access";
 import { resolveShellVariant } from "../../lib/shell-variant";
 import { requireSession } from "../../lib/rbac/require-permission";
@@ -32,7 +32,11 @@ export default async function DashboardLayout({
 
   const gate = resolveWizardGate(session, cookieStore, pathname);
 
-  if (gate) redirect(gate);
+  if (gate === "/employee-onboarding") {
+    const gateAccess = await getServerAccessResult();
+    if (!gateAccess.ok || !onboardingGateYieldsToDenial(pathname, gateAccess.access))
+      redirect(gate);
+  } else if (gate) redirect(gate);
 
   const isMfaRemedyRoute = pathname === "/settings";
 

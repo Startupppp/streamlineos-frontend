@@ -92,6 +92,8 @@ function AuditLogBody({ moduleKey, open }: AuditLogBodyProps) {
   const auditQuery = useModuleAuditLog(moduleKey, PAGE_SIZE, { enabled: open });
 
   const entries = auditQuery.data?.pages.flatMap((p) => p.data) ?? [];
+  const { refetch } = auditQuery;
+  const handleRetry = useCallback(() => void refetch(), [refetch]);
 
   return (
     <div className="flex flex-col flex-1 min-h-0">
@@ -106,18 +108,15 @@ function AuditLogBody({ moduleKey, open }: AuditLogBodyProps) {
           illustrationPreset="permissions"
           title="Failed to load audit log"
           description="Check your connection and try again."
-          action={{
-            label: "Retry",
-            onClick: () => void auditQuery.refetch(),
-          }}
+          action={{ label: "Retry", onClick: handleRetry }}
           compact
           className="border-0 bg-transparent flex-1"
         />
       ) : entries.length === 0 ? (
         <EmptyState
           illustrationPreset="permissions"
-          title="No audit events yet"
-          description="Access changes will appear here."
+          title="No access changes yet"
+          description="This log records changes to who can use this module: role groups, members, grants and ownership. Day-to-day work inside the module is not listed here; see Settings → Audit log."
           compact
           className="border-0 bg-transparent flex-1"
         />
