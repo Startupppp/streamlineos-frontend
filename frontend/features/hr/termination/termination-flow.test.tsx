@@ -81,6 +81,8 @@ describe("TerminationFormSheet prefill from a profile link", () => {
         onSeveranceAmountChange={noop}
         internalNotes=""
         onInternalNotesChange={noop}
+        saveAsDraft={false}
+        onSaveAsDraftChange={noop}
       />,
     );
   }
@@ -93,6 +95,11 @@ describe("TerminationFormSheet prefill from a profile link", () => {
   it("falls back to the placeholder when nothing resolved the id", () => {
     renderSheet(false);
     expect(screen.getByTestId("employee-combobox")).toHaveTextContent("Select an employee…");
+  });
+
+  it("lets an approver keep the termination as a draft (HR-U-026)", () => {
+    renderSheet(false);
+    expect(screen.getByRole("switch", { name: "Save as draft" })).toBeInTheDocument();
   });
 });
 

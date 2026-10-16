@@ -25,6 +25,7 @@ function createdTerminationMessage(status: Termination["status"], effectiveDate:
 }
 
 interface UseTerminationActionsOptions {
+  canApproveExit: boolean;
   terminations: Termination[];
   employees: EmployeeListItem[];
   employeeUserIdParam: string | null;
@@ -32,6 +33,7 @@ interface UseTerminationActionsOptions {
 }
 
 export function useTerminationActions({
+  canApproveExit,
   terminations,
   employees,
   employeeUserIdParam,
@@ -54,6 +56,8 @@ export function useTerminationActions({
   const [noticePeriodWaived, setNoticePeriodWaived] = useState(false);
   const [severanceAmount, setSeveranceAmount] = useState("");
   const [internalNotes, setInternalNotes] = useState("");
+  const [saveAsDraft, setSaveAsDraft] = useState(false);
+  const [confirmCreateOpen, setConfirmCreateOpen] = useState(false);
   const [submitTerminationId, setSubmitTerminationId] = useState<number | null>(null);
   const [reviewRecord, setReviewRecord] = useState<Termination | null>(null);
   const [reviewDecision, setReviewDecision] = useState<"approve" | "reject" | null>(null);
@@ -81,7 +85,44 @@ export function useTerminationActions({
     setNoticePeriodWaived(false);
     setSeveranceAmount("");
     setInternalNotes("");
+    setSaveAsDraft(false);
   }, [employeeUserIdParam, router]);
+
+  const performCreate = useCallback(() => {
+    createTermination.mutate(
+      {
+        employeeUserId: selectedEmployeeUserId,
+        reasons: [selectedReason],
+        detailedExplanation: remarks.trim(),
+        effectiveDate,
+        severanceAmount: severanceAmount ? Number(severanceAmount) : undefined,
+        noticePeriodWaived,
+        internalNotes: internalNotes.trim() || undefined,
+        saveAsDraft: canApproveExit ? saveAsDraft : undefined,
+      },
+      {
+        onSuccess: (created) => {
+          toast.success(createdTerminationMessage(created.status, created.effectiveDate));
+          setConfirmCreateOpen(false);
+          setCreateOpen(false);
+          resetCreateForm();
+        },
+        onError: (mutationError) => toast.error(getErrorMessage(mutationError)),
+      },
+    );
+  }, [
+    selectedEmployeeUserId,
+    selectedReason,
+    remarks,
+    effectiveDate,
+    severanceAmount,
+    noticePeriodWaived,
+    internalNotes,
+    canApproveExit,
+    saveAsDraft,
+    createTermination,
+    resetCreateForm,
+  ]);
 
   const handleCreateSubmit = useCallback(() => {
     if (!selectedEmployeeUserId) {
@@ -134,25 +175,11 @@ export function useTerminationActions({
       return;
     }
 
-    createTermination.mutate(
-      {
-        employeeUserId: selectedEmployeeUserId,
-        reasons: [selectedReason],
-        detailedExplanation: remarks.trim(),
-        effectiveDate,
-        severanceAmount: severanceAmount ? Number(severanceAmount) : undefined,
-        noticePeriodWaived,
-        internalNotes: internalNotes.trim() || undefined,
-      },
-      {
-        onSuccess: (created) => {
-          toast.success(createdTerminationMessage(created.status, created.effectiveDate));
-          setCreateOpen(false);
-          resetCreateForm();
-        },
-        onError: (mutationError) => toast.error(getErrorMessage(mutationError)),
-      },
-    );
+    if (canApproveExit && !saveAsDraft) {
+      setConfirmCreateOpen(true);
+      return;
+    }
+    performCreate();
   }, [
     selectedEmployeeUserId,
     employees,
@@ -161,11 +188,15 @@ export function useTerminationActions({
     remarks,
     effectiveDate,
     severanceAmount,
-    noticePeriodWaived,
     internalNotes,
-    createTermination,
-    resetCreateForm,
+    canApproveExit,
+    saveAsDraft,
+    performCreate,
   ]);
+
+  const handleConfirmCreateOpenChange = useCallback((open: boolean) => {
+    if (!open) setConfirmCreateOpen(false);
+  }, []);
 
   const handleSubmitForApproval = useCallback(() => {
     if (!submitTerminationId) return;
@@ -240,7 +271,7 @@ export function useTerminationActions({
     completeTermination.mutate(completeTerminationId, {
       onSuccess: () => {
         toast.success(
-          "Termination completed. Employee deactivated, final settlement and asset return initiated.",
+          "Termination completed. Organization access removed; final settlement draft, asset returns and exit checklist created.",
         );
         setCompleteTerminationId(null);
       },
@@ -366,6 +397,11 @@ export function useTerminationActions({
     handleSeveranceAmountChange,
     internalNotes,
     handleInternalNotesChange,
+    saveAsDraft,
+    setSaveAsDraft,
+    confirmCreateOpen,
+    handleConfirmCreateOpenChange,
+    performCreate,
     submitTerminationId,
     handleSetSubmitTerminationId,
     handleSubmitForApproval,

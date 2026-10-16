@@ -42,6 +42,8 @@ interface CreateTerminationInput {
   severanceAmount?: number;
   noticePeriodWaived?: boolean;
   internalNotes?: string;
+  /** An approver keeps the record as a DRAFT instead of approving it on create. */
+  saveAsDraft?: boolean;
 }
 
 export interface TerminationPagination {
