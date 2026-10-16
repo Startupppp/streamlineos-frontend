@@ -36,7 +36,7 @@ function toMemberOption(member: DirectoryMember): MemberOption {
 function CalendarSavedViewOwnerField({ actorMembershipId }: { actorMembershipId: number | null }) {
   const form = useFormContext<CalendarSavedViewFormValues>();
   const [ownerSearch, setOwnerSearch] = useState("");
-  const [pickedUserId, setPickedUserId] = useState("");
+  const [pickedOwner, setPickedOwner] = useState<{ userId: string; membershipId: number } | null>(null);
   const ownerValue = form.watch("ownerMembershipId");
   const targetMembership =
     ownerValue === "all"
@@ -45,8 +45,8 @@ function CalendarSavedViewOwnerField({ actorMembershipId }: { actorMembershipId:
         ? actorMembershipId
         : Number(ownerValue);
   const selectedIds = useMemo(
-    () => (pickedUserId ? [pickedUserId] : []),
-    [pickedUserId],
+    () => (pickedOwner?.membershipId === targetMembership ? [pickedOwner.userId] : []),
+    [pickedOwner, targetMembership],
   );
   const { members, selectedMembers } = useMemberDirectory(
     { kind: "org" },
@@ -59,7 +59,7 @@ function CalendarSavedViewOwnerField({ actorMembershipId }: { actorMembershipId:
   }, [members, selectedMembers]);
   const resolvedUserId =
     roster.find((member) => member.membershipId === targetMembership)?.id ?? "";
-  const pickerValue = pickedUserId || resolvedUserId;
+  const pickerValue = pickedOwner?.membershipId === targetMembership ? pickedOwner.userId : resolvedUserId;
   const candidates = useMemo(() => roster.map(toMemberOption), [roster]);
 
   function handleOwnerSearch(value: string) {
@@ -67,13 +67,14 @@ function CalendarSavedViewOwnerField({ actorMembershipId }: { actorMembershipId:
   }
 
   function handleOwnerChange(userId: string | null) {
-    setPickedUserId(userId ?? "");
     if (!userId) {
+      setPickedOwner(null);
       form.setValue("ownerMembershipId", "all", { shouldDirty: true });
       return;
     }
     const member = roster.find((item) => item.id === userId);
     if (!member?.membershipId) return;
+    setPickedOwner({ userId, membershipId: member.membershipId });
     const next =
       actorMembershipId !== null && member.membershipId === actorMembershipId
         ? "me"
