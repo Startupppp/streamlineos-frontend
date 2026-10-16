@@ -59,8 +59,8 @@ export default function PageHistorySheet({ pageId, open, onOpenChange, projectId
   const detailState = usePageState({
     permission: "kb:pages:view",
     isLoading: detailLoading,
-    isError: detailError,
-    error: detailReadError,
+    isError: detailError || listAccessLost,
+    error: listAccessLost ? error : detailReadError,
   });
   const historyHref = isProjectScoped
     ? `/build/${projectId}/wiki/${pageId}/history`
@@ -194,7 +194,7 @@ export default function PageHistorySheet({ pageId, open, onOpenChange, projectId
           </>
         ) : (
           <div className="flex-1 flex flex-col min-h-0">
-            {versionDetail && !detailLoading && (
+            {versionDetail && !detailLoading && !detailError && !listAccessLost && (
               <div className="shrink-0 px-6 py-3 border-b bg-muted/30">
                 {versionDetail.authorName && (
                   <p className="text-xs text-muted-foreground">
@@ -211,7 +211,7 @@ export default function PageHistorySheet({ pageId, open, onOpenChange, projectId
               </div>
             )}
             <SheetBody className="px-6 py-4">
-              <PageState resolution={detailState} compact onRetry={handleRetryDetail} loading={<Skeleton className="h-64 w-full" />}>
+              <PageState resolution={detailState} compact onRetry={listAccessLost ? handleRetryList : handleRetryDetail} loading={<Skeleton className="h-64 w-full" />}>
                 {hasContent && versionDetail ? (
                   <PlateDocumentEditor
                     value={versionDetail.content}
@@ -228,7 +228,7 @@ export default function PageHistorySheet({ pageId, open, onOpenChange, projectId
                 )}
               </PageState>
             </SheetBody>
-            {!detailError && <SheetFooter className="border-t px-6 py-4">
+            {!detailError && !listAccessLost && <SheetFooter className="border-t px-6 py-4">
               {hasContent ? (
                 <Link
                   href={`${historyHref}?version=${selectedVersion}`}
