@@ -72,12 +72,22 @@ export function useCalendarSourceActionProposal(proposalId: string | null) {
   const userId = session?.user?.id ?? "";
   return useGatedQuery("calendar:read", {
     queryKey: platformHierarchyQueryKeys.calendar.sourceActionProposal(orgId, userId, proposalId ?? ""),
-    queryFn: ({ signal }) => apiClient.get<CalendarSourceActionProposal>(
-      `/calendar/source-actions/proposals/${proposalId}`,
-      undefined,
-      signal,
-      proposalContract,
-    ),
+    queryFn: async ({ signal }) => {
+      const proposal = await apiClient.get<CalendarSourceActionProposal>(
+        `/calendar/source-actions/proposals/${proposalId}`,
+        undefined,
+        signal,
+        proposalContract,
+      );
+      return proposal.status === "APPLYING"
+        ? apiClient.post<CalendarSourceActionProposal>(
+            `/calendar/source-actions/proposals/${proposalId}/recover`,
+            undefined,
+            { signal },
+            proposalContract,
+          )
+        : proposal;
+    },
     enabled: Boolean(orgId && userId && proposalId),
     staleTime: 0,
     refetchInterval: (query) => query.state.data?.status === "APPLYING" ? 5000 : false,
