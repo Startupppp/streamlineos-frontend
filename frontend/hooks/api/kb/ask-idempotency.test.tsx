@@ -2,7 +2,7 @@ import { renderHook, act, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { IDEMPOTENCY_HEADER } from "@/lib/idempotency-key";
-import { clearBackendTokenCache, resetOutageCircuit, seedBackendToken } from "@/lib/api-client";
+import { apiClient, clearBackendTokenCache, resetOutageCircuit, seedBackendToken } from "@/lib/api-client";
 import { ApiContractError } from "@/lib/api-envelope";
 import { installAbortSignalPolyfill } from "@/test-utils/abort-signal-polyfill";
 
@@ -27,7 +27,7 @@ jest.mock("@/hooks/api/authorized-mutation", () => ({
   },
 }));
 
-import { useKbAsk, useKbAskPageOwners } from "./ask";
+import { useKbAiAnswerFeedback, useKbAsk, useKbAskPageOwners } from "./ask";
 
 installAbortSignalPolyfill();
 
@@ -138,6 +138,36 @@ describe("useKbAsk idempotency key", () => {
     expect(post.mock.calls[0]?.[0].signal).toBeInstanceOf(
       AbortSignal,
     );
+  });
+});
+
+describe("useKbAiAnswerFeedback idempotency key", () => {
+  it("reuses one key after a failed submission and mints another after success", async () => {
+    const feedbackPost = jest.spyOn(apiClient, "post")
+      .mockRejectedValueOnce(new Error("network timeout"))
+      .mockResolvedValue({ success: true });
+    try {
+      const { result } = renderHook(() => useKbAiAnswerFeedback(), { wrapper });
+      const input = { rating: "helpful" as const, question: "leave policy?" };
+      await act(async () => {
+        await expect(result.current.mutateAsync(input)).rejects.toThrow("network timeout");
+      });
+      await act(async () => {
+        await result.current.mutateAsync(input);
+      });
+      const firstKey = (feedbackPost.mock.calls[0]?.[2] as { headers?: Record<string, string> } | undefined)?.headers?.[IDEMPOTENCY_HEADER];
+      const retryKey = (feedbackPost.mock.calls[1]?.[2] as { headers?: Record<string, string> } | undefined)?.headers?.[IDEMPOTENCY_HEADER];
+      expect(firstKey).toEqual(expect.any(String));
+      expect(retryKey).toBe(firstKey);
+      await act(async () => {
+        await result.current.mutateAsync(input);
+      });
+      const nextKey = (feedbackPost.mock.calls[2]?.[2] as { headers?: Record<string, string> } | undefined)?.headers?.[IDEMPOTENCY_HEADER];
+      expect(nextKey).toEqual(expect.any(String));
+      expect(nextKey).not.toBe(firstKey);
+    } finally {
+      feedbackPost.mockRestore();
+    }
   });
 });
 

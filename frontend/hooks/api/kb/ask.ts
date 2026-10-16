@@ -94,10 +94,12 @@ export function useKbAsk() {
 }
 
 export function useKbAiAnswerFeedback() {
+  const operation = useIdempotentOperation();
   return useAuthorizedMutation("kb:pages:view", {
     mutationKey: ["kb", "ai-feedback"],
     mutationFn: (input: KbAiFeedbackInput) =>
-      apiClient.post<{ success: boolean }>("/kb/ai/feedback", input, undefined, kbAiFeedbackContract),
+      apiClient.post<{ success: boolean }>("/kb/ai/feedback", input, operation.configFor(input), kbAiFeedbackContract),
+    onSuccess: () => operation.settle(),
   });
 }
 
