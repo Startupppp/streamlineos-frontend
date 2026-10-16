@@ -8,20 +8,20 @@ jest.mock("next/navigation", () => ({
 
 describe("WikiSidebarNav — company documents", () => {
   it("does not list company documents unless HR documents are switched on", () => {
-    renderWithProviders(<WikiSidebarNav canViewAnalytics={false} canViewReviews={false} canManageContent={false} />);
+    renderWithProviders(<WikiSidebarNav canViewAnalytics={false} canViewReviews={false} canManageContent={false} canManageTemplates={false} canImportPages={false} canViewSpaces={false} />);
 
     expect(screen.queryByRole("link", { name: "Company documents" })).toBeNull();
   });
 
   it("lists company documents next to the other places a reader browses once they are switched on", () => {
-    renderWithProviders(<WikiSidebarNav canViewAnalytics={false} canViewReviews={false} canManageContent={false} showCompanyDocuments />);
+    renderWithProviders(<WikiSidebarNav canViewAnalytics={false} canViewReviews={false} canManageContent={false} canManageTemplates={false} canImportPages={false} canViewSpaces={false} showCompanyDocuments />);
 
     expect(screen.getByRole("link", { name: "Company documents" })).toHaveAttribute("href", "/knowledge/wiki/company-documents");
     expect(screen.getByRole("link", { name: "My pages" })).toBeInTheDocument();
   });
 
   it("labels the owned-pages destination My pages, matching the heading that route renders, not the retired Private wording", () => {
-    renderWithProviders(<WikiSidebarNav canViewAnalytics={false} canViewReviews={false} canManageContent={false} />);
+    renderWithProviders(<WikiSidebarNav canViewAnalytics={false} canViewReviews={false} canManageContent={false} canManageTemplates={false} canImportPages={false} canViewSpaces={false} />);
 
     expect(screen.getByRole("link", { name: "My pages" })).toHaveAttribute("href", "/knowledge/wiki/private");
     expect(screen.queryByRole("link", { name: "Private" })).toBeNull();
@@ -34,7 +34,7 @@ describe("WikiSidebarNav — wiki hides the Documents product sidebar", () => {
       <WikiSidebarNav
         canViewAnalytics={false}
         canViewReviews={false}
-        canManageContent={false}
+        canManageContent={false} canManageTemplates={false} canImportPages={false} canViewSpaces={false}
       />,
     );
 
@@ -49,7 +49,7 @@ describe("WikiSidebarNav — wiki hides the Documents product sidebar", () => {
       <WikiSidebarNav
         canViewAnalytics={false}
         canViewReviews={false}
-        canManageContent={false}
+        canManageContent={false} canManageTemplates canImportPages={false} canViewSpaces={false}
       />,
     );
 
@@ -66,7 +66,7 @@ describe("WikiSidebarNav — wiki hides the Documents product sidebar", () => {
         isCollapsed
         canViewAnalytics={false}
         canViewReviews={false}
-        canManageContent={false}
+        canManageContent={false} canManageTemplates={false} canImportPages={false} canViewSpaces={false}
       />,
     );
 
@@ -81,7 +81,7 @@ describe("WikiSidebarNav — wiki hides the Documents product sidebar", () => {
       <WikiSidebarNav
         canViewAnalytics={false}
         canViewReviews={false}
-        canManageContent={false}
+        canManageContent={false} canManageTemplates={false} canImportPages={false} canViewSpaces={false}
       />,
     );
 
@@ -94,11 +94,52 @@ describe("WikiSidebarNav — wiki hides the Documents product sidebar", () => {
         canViewAnalytics={false}
         canViewReviews={false}
         canManageContent
+        canManageTemplates={false}
+        canImportPages={false}
+        canViewSpaces={false}
       />,
     );
 
     expect(
       screen.getByRole("link", { name: "Content Health" }),
     ).toHaveAttribute("href", "/knowledge/wiki/manage");
+  });
+});
+
+describe("WikiSidebarNav — management links follow the route permission keys", () => {
+  it("hides Templates, Import & Export and Spaces when the actor holds none of their keys", () => {
+    renderWithProviders(
+      <WikiSidebarNav
+        canViewAnalytics={false}
+        canViewReviews={false}
+        canManageContent={false}
+        canManageTemplates={false}
+        canImportPages={false}
+        canViewSpaces={false}
+      />,
+    );
+
+    expect(screen.queryByRole("link", { name: "Templates" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Import & Export" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Spaces" })).toBeNull();
+    expect(screen.queryByText("Manage")).toBeNull();
+    expect(screen.getByRole("link", { name: "My pages" })).toBeInTheDocument();
+  });
+
+  it("shows Templates, Import & Export and Spaces when the actor holds their keys", () => {
+    renderWithProviders(
+      <WikiSidebarNav
+        canViewAnalytics={false}
+        canViewReviews={false}
+        canManageContent={false}
+        canManageTemplates
+        canImportPages
+        canViewSpaces
+      />,
+    );
+
+    expect(screen.getByRole("link", { name: "Templates" })).toHaveAttribute("href", "/knowledge/wiki/templates");
+    expect(screen.getByRole("link", { name: "Import & Export" })).toHaveAttribute("href", "/knowledge/wiki/import");
+    expect(screen.getByRole("link", { name: "Spaces" })).toHaveAttribute("href", "/knowledge/wiki/spaces");
   });
 });
