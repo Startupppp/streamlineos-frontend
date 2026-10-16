@@ -147,6 +147,32 @@ describe("ImportHistorySection read error", () => {
     await userEvent.click(screen.getByRole("button", { name: "Try again" }));
     expect(refetch).toHaveBeenCalledTimes(1);
   });
+
+  it("keeps loaded imports and retries only the failed later cursor page", async () => {
+    const refetch = jest.fn();
+    const fetchNextPage = jest.fn();
+    useKbImportJobs.mockReturnValue({
+      data: [mockJob],
+      isLoading: false,
+      isError: true,
+      isFetchNextPageError: true,
+      error: new ApiContractError("GET /kb/import-jobs", 200, [], "import-page-2"),
+      refetch,
+      hasNextPage: true,
+      isFetchingNextPage: false,
+      fetchNextPage,
+    });
+
+    render(<ImportHistorySection />);
+
+    expect(screen.getByText("3/3 pages")).toBeInTheDocument();
+    expect(screen.getByText("Couldn't load more import jobs")).toBeInTheDocument();
+    expect(screen.getByText("import-page-2")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Load more import jobs" })).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Try again" }));
+    expect(fetchNextPage).toHaveBeenCalledTimes(1);
+    expect(refetch).not.toHaveBeenCalled();
+  });
 });
 
 describe("ImportHistorySection failed items", () => {

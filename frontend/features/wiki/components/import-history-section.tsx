@@ -97,6 +97,7 @@ export function ImportHistorySection() {
     data: jobs = [],
     isLoading,
     isError,
+    isFetchNextPageError,
     error,
     refetch,
     hasNextPage,
@@ -105,6 +106,10 @@ export function ImportHistorySection() {
   } = useKbImportJobs();
 
   function handleRetryLoad() {
+    if (isFetchNextPageError) {
+      void fetchNextPage();
+      return;
+    }
     void refetch();
   }
 
@@ -134,7 +139,7 @@ export function ImportHistorySection() {
         </div>
       )}
 
-      {!isLoading && isError && (
+      {!isLoading && isError && jobs.length === 0 && (
         <ErrorState
           compact
           title="Couldn't load import history"
@@ -156,7 +161,7 @@ export function ImportHistorySection() {
         />
       )}
 
-      {!isLoading && !isError && jobs.length > 0 && (
+      {!isLoading && jobs.length > 0 && (
         <div className="space-y-1.5">
           {jobs.map((job) => (
             <ImportJobRow
@@ -174,12 +179,22 @@ export function ImportHistorySection() {
             </Link>
             .
           </p>
-          <InfiniteScrollSentinel
-            hasNextPage={hasNextPage ?? false}
-            isFetchingNextPage={isFetchingNextPage}
-            onLoadMore={handleLoadMore}
-            label="Load more import jobs"
-          />
+          {isError ? (
+            <ErrorState
+              compact
+              title={isFetchNextPageError ? "Couldn't load more import jobs" : "Couldn't refresh import history"}
+              description={getErrorMessage(error)}
+              error={error}
+              onRetry={handleRetryLoad}
+            />
+          ) : (
+            <InfiniteScrollSentinel
+              hasNextPage={hasNextPage ?? false}
+              isFetchingNextPage={isFetchingNextPage}
+              onLoadMore={handleLoadMore}
+              label="Load more import jobs"
+            />
+          )}
         </div>
       )}
     </PageSection>
