@@ -154,9 +154,9 @@
 - `/crm/import` · **CRM** · hooks: `→ feature/crm/import`
 
 ### Revenue & Lifecycle
-- `/crm/commissions` · **CRM** · hooks: `usePageState`, `→ features/crm/commissions` — commission tracking; `useOrgDisplay` for period
+- `/crm/commissions` · **CRM** · hooks: `usePageState`, `→ features/crm/commissions` — commission tracking; `useOrgDisplay` for period; Plans tab: New plan, Open → versions/assignments sheet (edit plan, new/edit unsealed version, assign, end) on `crm:commission-plans:manage`; Earnings: Calculate for a deal (`crm:commission-earnings:calculate`); Rebuild accrual (`crm:commission-accruals:rebuild`)
 - `/crm/health` · **CRM** · hooks: `→ features/crm/lifecycle`
-- `/crm/renewals` · **CRM** · hooks: `→ features/crm/lifecycle`
+- `/crm/renewals` · **CRM** · hooks: `→ features/crm/lifecycle` — renewal book; row Details sheet (signals, record signal / renew / close on `crm:lifecycle:manage`, consider now on `crm:lifecycle-triggers:run`); header "Run renewal sweep" on `crm:lifecycle-triggers:run`
 - `/crm/segments` · **CRM** · hooks: `→ features/crm/segments` — gated by `RequireModule module="crm"`
 
 ### Call Intelligence
@@ -185,6 +185,7 @@
 - `/crm/settings/automations/[automationId]` · **CRM** · hooks: `→ feature/crm/settings`
 - `/crm/settings/blueprints` · **CRM** · hooks: `→ feature/crm/settings`
 - `/crm/settings/custom-fields` · **CRM** · hooks: `→ feature/crm/settings`
+- `/crm/settings/web-forms` · **CRM** · hooks: `useWebForms`, `usePageState`, `→ features/crm/web-forms` — lead-capture form CRUD, copy public link; plan feature `crm.web-forms` + `crm:web-forms:manage`
 - `/crm/settings/data-quality` · **CRM** · hooks: `→ feature/crm/settings`
 - `/crm/settings/data-quality/findings` · **CRM** · hooks: `→ feature/crm/settings`
 - `/crm/settings/email-templates` · **CRM** · hooks: `→ feature/crm/settings`
@@ -1043,6 +1044,7 @@ PM Workspace is removed from Build entirely (not renamed, not consolidated into 
 - `/interview-booking/[bookingToken]` · **HR (public)** · hooks: `→ features/careers`
 - `/offer/[offerToken]` · **HR (public)** · hooks: `→ features/careers`
 - `/nps/[npsToken]` · **Support (public)** · hooks: `→ features/support`
+- `/lead-form/[leadFormToken]` · **CRM (public)** · hooks: `usePublicLeadForm`, `useSubmitLeadForm`, `→ features/crm/web-forms` — renders a web form and submits it as a lead
 - `/ticket-feedback/[csatToken]` · **Support (public)** · hooks: `→ features/support`
 - `/help/[orgId]` · **Support (public KB)** · hooks: `→ features/support/kb`
 - `/help/[orgId]/[articleSlug]` · **Support (public KB)** · hooks: `→ features/support/kb`

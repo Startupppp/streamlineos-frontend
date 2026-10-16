@@ -18,6 +18,7 @@ const TABS = [
   { label: "SLA Policies", href: "/crm/settings/sla" },
   { label: "Email Templates", href: "/crm/settings/email-templates" },
   { label: "Custom Fields", href: "/crm/settings/custom-fields" },
+  { label: "Web Forms", href: "/crm/settings/web-forms" },
   { label: "Record Layouts", href: "/crm/settings/layouts" },
   { label: "Products", href: "/crm/settings/products" },
   { label: "Pricebooks", href: "/crm/settings/pricebooks" },

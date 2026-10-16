@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/table";
 import { ErrorState, NoPermissionState } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
-import { useCanState } from "@/hooks/api/access";
+import { useCan, useCanState } from "@/hooks/api/access";
 import { useCustomerLifecycles } from "@/hooks/api/crm/lifecycle";
 import { useOrgDisplay } from "@/hooks/api/org-display";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -30,6 +30,8 @@ import {
   formatDate,
   formatMinor,
 } from "./lifecycle-format";
+import { LifecycleDetailSheet } from "./lifecycle-detail-sheet";
+import { RenewalSweepDialog } from "./renewal-sweep-dialog";
 
 type RenewalFilter = "upcoming" | "risk" | "all";
 
@@ -52,6 +54,30 @@ export function RenewalsView() {
   }, [filter]);
 
   const lifecycles = useCustomerLifecycles(params);
+  const canRunSweep = useCan("crm:lifecycle-triggers:run");
+  const [selected, setSelected] = useState<{ id: string; partyName: string | null } | null>(null);
+  const [sweepOpen, setSweepOpen] = useState(false);
+  const handleSheetOpenChange = useCallback((open: boolean) => {
+    if (!open) setSelected(null);
+  }, []);
+  const handleOpenSweep = useCallback(() => setSweepOpen(true), []);
+  const handleDetails = useCallback(
+    (event: React.MouseEvent<HTMLButtonElement>) => {
+      const id = event.currentTarget.dataset.lifecycleId;
+      const row = lifecycles.data?.data.find((entry) => entry.customerLifecycleId === id);
+      if (row) setSelected({ id: row.customerLifecycleId, partyName: row.partyName });
+    },
+    [lifecycles.data],
+  );
+  const partyNames = useMemo(
+    () =>
+      new Map(
+        (lifecycles.data?.data ?? []).flatMap((row) =>
+          row.partyName ? [[row.partyId, row.partyName] as const] : [],
+        ),
+      ),
+    [lifecycles.data],
+  );
   const handleFilter = useCallback((value: string) => {
     const next = FILTERS.find((entry) => entry.value === value);
     if (next) setFilter(next.value);
@@ -66,6 +92,13 @@ export function RenewalsView() {
     <PageWrapper
       title="Renewals"
       subtitle="Recurring revenue ordered by date, risk and account evidence."
+      actions={
+        canRunSweep ? (
+          <Button size="sm" onClick={handleOpenSweep}>
+            Run renewal sweep
+          </Button>
+        ) : undefined
+      }
       filters={
         <Tabs value={filter} onValueChange={handleFilter}>
           <TabsList>
@@ -105,7 +138,7 @@ export function RenewalsView() {
                 <TableHead className="text-right">Value</TableHead>
                 <TableHead>Risk</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead className="w-24" />
+                <TableHead className="w-44" />
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -129,9 +162,19 @@ export function RenewalsView() {
                   </TableCell>
                   <TableCell>{STATUS_LABEL[row.status]}</TableCell>
                   <TableCell>
-                    <Button variant="outline" size="sm" asChild>
-                      <Link href={`/crm/deals/${row.sourceDealId}`}>Deal</Link>
-                    </Button>
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        data-lifecycle-id={row.customerLifecycleId}
+                        onClick={handleDetails}
+                      >
+                        Details
+                      </Button>
+                      <Button variant="outline" size="sm" asChild>
+                        <Link href={`/crm/deals/${row.sourceDealId}`}>Deal</Link>
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -139,6 +182,14 @@ export function RenewalsView() {
           </Table>
         </div>
       )}
+      <LifecycleDetailSheet
+        customerLifecycleId={selected?.id ?? null}
+        partyName={selected?.partyName ?? null}
+        currency={display.currency}
+        locale={display.locale}
+        onOpenChange={handleSheetOpenChange}
+      />
+      <RenewalSweepDialog open={sweepOpen} onOpenChange={setSweepOpen} partyNames={partyNames} />
     </PageWrapper>
   );
 }
