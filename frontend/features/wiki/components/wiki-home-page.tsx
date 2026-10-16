@@ -28,10 +28,7 @@ import {
   WikiPageCard,
   WIKI_PAGE_CARD_GRID_CLASS,
 } from "@/features/wiki/components/wiki-page-card";
-import {
-  WikiHomeAllPages,
-  KB_PAGE_CURSOR_PARAM,
-} from "./wiki-home-all-pages";
+import { WikiHomeAllPages, KB_PAGE_CURSOR_PARAM } from "./wiki-home-all-pages";
 import { WikiCompanyDocumentsStrip } from "./wiki-company-documents-strip";
 import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
 import { ShortcutHelpDialog } from "@/components/shared/shortcut-help-dialog";
@@ -125,11 +122,14 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
   const handleShortcutHelp = useCallback(() => setShortcutHelpOpen(true), []);
   const handleClearSelection = useCallback(() => {}, []);
 
-  const handleOpenPage = useCallback((index: number) => {
-    const row = allPagesRowsRef.current[index];
-    if (!row) return;
-    router.push(resolveHref(row.id));
-  }, [router, resolveHref]);
+  const handleOpenPage = useCallback(
+    (index: number) => {
+      const row = allPagesRowsRef.current[index];
+      if (!row) return;
+      router.push(resolveHref(row.id));
+    },
+    [router, resolveHref],
+  );
 
   const handleRowsChange = useCallback((rows: readonly { id: number }[]) => {
     allPagesRowsRef.current = [...rows];
@@ -168,63 +168,41 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
 
   return (
     <>
-    <PageWrapper
-      title="Wiki"
-      subtitle={
-        isProjectScoped
-          ? "Docs and decisions for this project"
-          : "Your team knowledge base"
-      }
-      actions={newPageAction}
-    >
-      <div className="flex min-h-0 flex-1 flex-col gap-6">
-        <form onSubmit={handleSearchFormSubmit} role="search">
-          <SearchInput
-            ref={searchInputRef}
-            value={searchValue}
-            onValueChange={setSearchValue}
-            onSubmitSearch={handleSearchSubmit}
-            placeholder={
-              isProjectScoped
-                ? "Filter this project's pages…"
-                : "Search wiki pages…"
-            }
-            fill
-          />
-        </form>
+      <PageWrapper
+        title="Wiki"
+        subtitle={
+          isProjectScoped
+            ? "Docs and decisions for this project"
+            : "Your team knowledge base"
+        }
+        actions={newPageAction}
+      >
+        <div className="flex min-h-0 flex-1 flex-col gap-6">
+          <form onSubmit={handleSearchFormSubmit} role="search">
+            <SearchInput
+              ref={searchInputRef}
+              value={searchValue}
+              onValueChange={setSearchValue}
+              onSubmitSearch={handleSearchSubmit}
+              placeholder={
+                isProjectScoped
+                  ? "Filter this project's pages…"
+                  : "Search wiki pages…"
+              }
+              fill
+            />
+          </form>
 
-        {!isProjectScoped && recentPages.length > 0 && (
-          <section>
-            <div className="flex items-center gap-2 mb-3">
-              <KbClockIcon className="h-4 w-4 text-muted-foreground" />
-              <h2 className="text-sm font-semibold text-foreground">
-                Recently visited
-              </h2>
-            </div>
-            <div className={WIKI_PAGE_CARD_GRID_CLASS}>
-              {recentPages.map((page) => (
-                <WikiPageCard
-                  key={page.id}
-                  icon={page.icon}
-                  title={page.title}
-                  subtitle={kbTimeAgo(page.updatedAt)}
-                  href={pageHref(page.id)}
-                  coverImage={page.coverImage}
-                />
-              ))}
-            </div>
-          </section>
-        )}
-
-        {!isProjectScoped && (favoritePages.length > 0 || favoritesQuery.isError) && (
-          <section>
-            <div className="flex items-center gap-2 mb-3">
-              <KbStarIcon className="h-4 w-4 text-muted-foreground" />
-              <h2 className="text-sm font-semibold text-foreground">Favorites</h2>
-            </div>
-            {favoritePages.length > 0 && (
+          {!isProjectScoped && recentPages.length > 0 && (
+            <section>
+              <div className="flex items-center gap-2 mb-3">
+                <KbClockIcon className="h-4 w-4 text-muted-foreground" />
+                <h2 className="text-sm font-semibold text-foreground">
+                  Recently visited
+                </h2>
+              </div>
               <div className={WIKI_PAGE_CARD_GRID_CLASS}>
-                {favoritePages.map((page) => (
+                {recentPages.map((page) => (
                   <WikiPageCard
                     key={page.id}
                     icon={page.icon}
@@ -235,59 +213,87 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
                   />
                 ))}
               </div>
-            )}
-            {favoritesQuery.isError && (
-              <ErrorState
-                title="Could not load favorites"
-                error={favoritesQuery.error}
-                onRetry={handleRetryFavorites}
-                compact
-                className="mt-3"
-              />
-            )}
-            {favoritesQuery.hasNextPage && !favoritesQuery.isError && (
-              <LoadingButton
-                type="button"
-                variant="outline"
-                size="sm"
-                className="mt-3"
-                onClick={handleLoadMoreFavorites}
-                isPending={favoritesQuery.isFetchingNextPage}
-                loadingText="Loading favorites…"
-              >
-                Load more favorites
-              </LoadingButton>
-            )}
-          </section>
-        )}
-
-        {!isProjectScoped && <WikiCompanyDocumentsStrip />}
-
-        <div className="flex min-h-0 flex-1 gap-4">
-          {isProjectScoped && (
-            <aside
-              className="hidden w-[200px] shrink-0 flex-col overflow-y-auto rounded-lg border border-border/60 bg-card/50 p-3 md:flex"
-              aria-label="Page tree"
-            >
-              <PageTree projectId={projectId} baseHref={baseHref} />
-            </aside>
+            </section>
           )}
-          <section className="flex min-h-0 flex-1 flex-col">
-            {!isProjectScoped && (
-              <h2 className="text-sm font-semibold text-foreground mb-3">
-                All pages
-              </h2>
+
+          {!isProjectScoped &&
+            (favoritePages.length > 0 || favoritesQuery.isError) && (
+              <section>
+                <div className="flex items-center gap-2 mb-3">
+                  <KbStarIcon className="h-4 w-4 text-muted-foreground" />
+                  <h2 className="text-sm font-semibold text-foreground">
+                    Favorites
+                  </h2>
+                </div>
+                {favoritePages.length > 0 && (
+                  <div className={WIKI_PAGE_CARD_GRID_CLASS}>
+                    {favoritePages.map((page) => (
+                      <WikiPageCard
+                        key={page.id}
+                        icon={page.icon}
+                        title={page.title}
+                        subtitle={kbTimeAgo(page.updatedAt)}
+                        href={pageHref(page.id)}
+                        coverImage={page.coverImage}
+                      />
+                    ))}
+                  </div>
+                )}
+                {favoritesQuery.isError && (
+                  <ErrorState
+                    title="Could not load favorites"
+                    error={favoritesQuery.error}
+                    onRetry={handleRetryFavorites}
+                    compact
+                    className="mt-3"
+                  />
+                )}
+                {favoritesQuery.hasNextPage && !favoritesQuery.isError && (
+                  <LoadingButton
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="mt-3"
+                    onClick={handleLoadMoreFavorites}
+                    isPending={favoritesQuery.isFetchingNextPage}
+                    loadingText="Loading favorites…"
+                  >
+                    Load more favorites
+                  </LoadingButton>
+                )}
+              </section>
             )}
-            <WikiHomeAllPages
-              projectId={isProjectScoped ? projectId : undefined}
-              onItemCountChange={handleItemCountChange}
-              onRowsChange={handleRowsChange}
-            />
-          </section>
+
+          {!isProjectScoped && <WikiCompanyDocumentsStrip />}
+
+          <div className="flex min-h-0 flex-1 gap-4">
+            {isProjectScoped && (
+              <aside
+                className="hidden w-[200px] shrink-0 flex-col overflow-y-auto rounded-lg border border-border/60 bg-card/50 p-3 md:flex"
+                aria-label="Page tree"
+              >
+                <PageTree projectId={projectId} baseHref={baseHref} />
+              </aside>
+            )}
+            <section className="flex min-h-0 flex-1 flex-col">
+              {!isProjectScoped && (
+                <h2 className="text-sm font-semibold text-foreground mb-3">
+                  All pages
+                </h2>
+              )}
+              <WikiHomeAllPages
+                projectId={isProjectScoped ? projectId : undefined}
+                onItemCountChange={handleItemCountChange}
+                onRowsChange={handleRowsChange}
+              />
+            </section>
+          </div>
         </div>
-      </div>
-    </PageWrapper>
-    <ShortcutHelpDialog open={shortcutHelpOpen} onOpenChange={setShortcutHelpOpen} />
+      </PageWrapper>
+      <ShortcutHelpDialog
+        open={shortcutHelpOpen}
+        onOpenChange={setShortcutHelpOpen}
+      />
     </>
   );
 }
