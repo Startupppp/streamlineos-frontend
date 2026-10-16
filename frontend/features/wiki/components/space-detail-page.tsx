@@ -97,6 +97,7 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
     error,
     isEmpty: !isLoading && !isError && !space,
   });
+  const visibleSpace = pageState.kind === "ready" ? space : undefined;
 
   function handleRetry() {
     void refetch();
@@ -159,7 +160,7 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
   const pagesOverdueForReview = space?.pagesOverdueForReview ?? 0;
   const pagesWithReviewPolicy = space?.pagesWithReviewPolicy ?? 0;
 
-  const headerActions = space ? (
+  const headerActions = visibleSpace ? (
     <div className="flex items-center gap-1.5">
       {canCreatePage && (
         <Button
@@ -203,9 +204,9 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
 
   return (
     <PageWrapper
-      title={space?.name ?? "Space"}
-      subtitle={space?.description ?? undefined}
-      leading={<SpaceBreadcrumb spaceName={space?.name ?? "Space"} />}
+      title={visibleSpace?.name ?? "Space"}
+      subtitle={visibleSpace?.description ?? undefined}
+      leading={<SpaceBreadcrumb spaceName={visibleSpace?.name ?? "Space"} />}
       actions={headerActions}
     >
       <PageState
@@ -326,19 +327,19 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
 
       <SpaceMembersSheet
         spaceId={spaceId}
-        spaceName={space?.name ?? ""}
-        open={membersOpen}
+        spaceName={visibleSpace?.name ?? ""}
+        open={membersOpen && Boolean(visibleSpace)}
         onOpenChange={handleMembersOpenChange}
       />
 
-      <Sheet open={hierarchyOpen} onOpenChange={setHierarchyOpen}>
+      <Sheet open={hierarchyOpen && Boolean(visibleSpace)} onOpenChange={setHierarchyOpen}>
         <SheetContent side="left" className="gap-0 p-0 sm:max-w-sm">
           <SheetHeader className="border-b border-border px-4 py-3">
             <SheetTitle>Hierarchy</SheetTitle>
-            <SheetDescription>Pages in {space?.name ?? "this space"}</SheetDescription>
+            <SheetDescription>Pages in {visibleSpace?.name ?? "this space"}</SheetDescription>
           </SheetHeader>
           <SheetBody className="p-3">
-            {hierarchyOpen && (
+            {hierarchyOpen && visibleSpace && (
               <PageTree spaceId={spaceId} onCloseMobile={handleCloseHierarchy} />
             )}
           </SheetBody>
@@ -346,13 +347,13 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
       </Sheet>
 
       <ConfirmDialog
-        open={archiveConfirmOpen}
+        open={archiveConfirmOpen && Boolean(visibleSpace)}
         onOpenChange={handleArchiveConfirmOpenChange}
         title="Archive space?"
         description={
           <>
-            {`Archiving "${space?.name ?? "this space"}" will hide it from users. Pages and content are preserved and can be restored.`}
-            {archiveConfirmOpen && <SpaceArchiveImpact spaceId={spaceId} />}
+            {`Archiving "${visibleSpace?.name ?? "this space"}" will hide it from users. Pages and content are preserved and can be restored.`}
+            {archiveConfirmOpen && visibleSpace && <SpaceArchiveImpact spaceId={spaceId} />}
           </>
         }
         confirmLabel="Archive"

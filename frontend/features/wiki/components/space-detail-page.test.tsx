@@ -177,6 +177,40 @@ describe("SpaceDetailPage", () => {
     expect(screen.queryByText("Space not found")).not.toBeInTheDocument();
   });
 
+  it("hides cached space metadata and actions after access is revoked", () => {
+    mockCan.mockReturnValue(true);
+    mockKbSpace.mockReturnValue(spaceQuery({
+      isError: true,
+      error: new ApiError("Forbidden", 403, "FORBIDDEN", {}, "/kb/spaces/5"),
+    }));
+
+    render(<SpaceDetailPage spaceId={5} />);
+
+    expect(screen.getByText("Access Restricted")).toBeInTheDocument();
+    expect(screen.queryByText("Engineering Hub")).not.toBeInTheDocument();
+    expect(screen.queryByText("Where engineers live")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /New page/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Members/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Archive/i })).not.toBeInTheDocument();
+  });
+
+  it("closes an open archive action when the space read is denied", async () => {
+    mockCan.mockImplementation((key) => key === "kb:spaces:manage");
+    const view = render(<SpaceDetailPage spaceId={5} />);
+
+    await userEvent.click(screen.getByRole("button", { name: /^Archive$/i }));
+    expect(screen.getByText(/Archiving "Engineering Hub" will hide it/)).toBeInTheDocument();
+
+    mockKbSpace.mockReturnValue(spaceQuery({
+      isError: true,
+      error: new ApiError("Forbidden", 403, "FORBIDDEN", {}, "/kb/spaces/5"),
+    }));
+    view.rerender(<SpaceDetailPage spaceId={5} />);
+
+    expect(screen.getByText("Access Restricted")).toBeInTheDocument();
+    expect(screen.queryByText(/Archiving "Engineering Hub" will hide it/)).not.toBeInTheDocument();
+  });
+
   it("renders the error state for a 500 response, not the not-found state", async () => {
     const refetch = jest.fn();
     mockKbSpace.mockReturnValue(
