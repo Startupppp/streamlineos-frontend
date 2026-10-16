@@ -3,6 +3,7 @@ import React from "react";
 import { act, render, screen, fireEvent } from "@testing-library/react";
 import WikiSearchPage from "./wiki-search-page";
 import { kbSearchResponseContract } from "@/hooks/api/kb/kb-search-schema";
+import { ApiError } from "@/lib/api-client";
 
 const mockRouterPush = jest.fn();
 const mockUseSearchParams = jest.fn(() => new URLSearchParams());
@@ -56,6 +57,7 @@ jest.mock("@/components/shared/page-state", () => ({
       children: React.ReactNode;
     }) => {
       if (resolution.kind === "loading") return <>{loading}</>;
+      if (resolution.kind === "denied" || resolution.kind === "error") return <div data-testid="page-read-error" />;
       if (resolution.kind === "empty") return <>{empty}</>;
       return <>{children}</>;
     },
@@ -207,7 +209,7 @@ function setupSearch(
   items: ReturnType<typeof mockSearchResult>[],
   extras: { hasMore?: boolean; facets?: unknown } = {},
 ) {
-  useKbPageFullSearch.mockReturnValue({
+  const result = {
     data: {
       pages: [
         {
@@ -226,7 +228,9 @@ function setupSearch(
     fetchNextPage: jest.fn(),
     hasNextPage: extras.hasMore ?? false,
     isFetchingNextPage: false,
-  });
+  };
+  useKbPageFullSearch.mockReturnValue(result);
+  return result;
 }
 
 beforeEach(() => {
@@ -646,6 +650,50 @@ describe("WikiSearchPage — cursor pagination", () => {
 
     expect(observers).toHaveLength(0);
     expect(screen.getByText("1 result")).toBeInTheDocument();
+  });
+
+  it("pauses automatic pagination after a later-page error and retries only the failed cursor", () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("q=guide"));
+    const prior = setupSearch([mockSearchResult({ id: 1, title: "Guide" })], { hasMore: true });
+    const fetchNextPage = jest.fn();
+    const refetch = jest.fn();
+    useKbPageFullSearch.mockReturnValue({
+      ...prior,
+      isError: true,
+      isFetchNextPageError: true,
+      error: new Error("Network unavailable"),
+      fetchNextPage,
+      refetch,
+    });
+
+    render(<WikiSearchPage />);
+
+    expect(usePageState).toHaveBeenCalledWith(expect.objectContaining({ isError: false }));
+    expect(screen.getByRole("link", { name: /Guide/i })).toBeInTheDocument();
+    expect(observers).toHaveLength(0);
+    expect(screen.getByText("Couldn't load more results")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /try again/i }));
+    expect(fetchNextPage).toHaveBeenCalledTimes(1);
+    expect(refetch).not.toHaveBeenCalled();
+  });
+
+  it.each([401, 403, 404])("hides cached search results after a %i cursor response", (status) => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("q=guide"));
+    const prior = setupSearch([mockSearchResult({ id: 1, title: "Guide" })], { hasMore: true });
+    useKbPageFullSearch.mockReturnValue({
+      ...prior,
+      isError: true,
+      isFetchNextPageError: true,
+      error: new ApiError("Access unavailable", status),
+    });
+    usePageState.mockImplementation(({ isError }: { isError: boolean }) => ({ kind: isError ? "error" : "ready" }));
+
+    render(<WikiSearchPage />);
+
+    expect(usePageState).toHaveBeenCalledWith(expect.objectContaining({ isError: true }));
+    expect(screen.getByTestId("page-read-error")).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /Guide/i })).toBeNull();
+    expect(observers).toHaveLength(0);
   });
 });
 
