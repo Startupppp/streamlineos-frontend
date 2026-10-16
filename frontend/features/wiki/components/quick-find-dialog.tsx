@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback } from "react";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useRouter } from "next/navigation";
 import {
@@ -12,11 +12,12 @@ import {
   CommandGroup,
 } from "@/components/ui/command";
 import { useKbPagesSearch } from "@/hooks/api/kb";
-import type { KbPageSearchResult } from "@/hooks/api/kb/page-types";
 import { pageHref, KB_SEARCH } from "@/lib/knowledge-routes";
 import { KbFileTextIcon, KbLoader2Icon } from "@/features/wiki/lib/kb-icons";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { SearchSnippetText } from "@/features/wiki/lib/search-snippet-text";
+import { ErrorState } from "@/components/shared";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 interface QuickFindDialogProps {
   open: boolean;
@@ -27,10 +28,8 @@ export default function QuickFindDialog({ open, onOpenChange }: QuickFindDialogP
   const router = useRouter();
   const [inputValue, setInputValue] = useState("");
   const debouncedQ = useDebouncedValue(inputValue.trim(), 300);
-  const { data: page, isFetching } = useKbPagesSearch(debouncedQ);
-  const results = page?.items ?? [];
-  const resultsRef = useRef<KbPageSearchResult[]>([]);
-  resultsRef.current = results;
+  const { data: page, isFetching, isError, error, refetch } = useKbPagesSearch(debouncedQ);
+  const results = isError ? [] : (page?.items ?? []);
 
   const handleOpenChange = useCallback(
     (nextOpen: boolean) => {
@@ -42,16 +41,13 @@ export default function QuickFindDialog({ open, onOpenChange }: QuickFindDialogP
     [onOpenChange]
   );
 
-  const handleResultSelect = useCallback(
-    (value: string) => {
-      const id = Number(value.split("-")[0]);
-      const result = resultsRef.current.find((r) => r.id === id);
-      if (!result) return;
-      router.push(pageHref(result.id));
-      handleOpenChange(false);
-    },
-    [router, handleOpenChange]
-  );
+  function handleResultSelect(value: string) {
+    const id = Number(value.split("-")[0]);
+    const result = results.find((r) => r.id === id);
+    if (!result) return;
+    router.push(pageHref(result.id));
+    handleOpenChange(false);
+  }
 
   function handleInputValueChange(value: string) {
     setInputValue(value);
@@ -60,6 +56,10 @@ export default function QuickFindDialog({ open, onOpenChange }: QuickFindDialogP
   function handleViewAllResults() {
     router.push(`${KB_SEARCH}?q=${encodeURIComponent(debouncedQ)}`);
     handleOpenChange(false);
+  }
+
+  function handleRetrySearch() {
+    void refetch();
   }
 
   return (
@@ -75,7 +75,16 @@ export default function QuickFindDialog({ open, onOpenChange }: QuickFindDialogP
             <KbLoader2Icon className="h-4 w-4 animate-spin text-muted-foreground" />
           </div>
         )}
-        {!isFetching && debouncedQ.length > 0 && results.length === 0 && (
+        {!isFetching && isError && debouncedQ.length > 0 && (
+          <ErrorState
+            title="Couldn't search pages"
+            description={getErrorMessage(error)}
+            error={error}
+            onRetry={handleRetrySearch}
+            compact
+          />
+        )}
+        {!isFetching && !isError && debouncedQ.length > 0 && results.length === 0 && (
           <CommandEmpty>No pages found for &ldquo;{debouncedQ}&rdquo;</CommandEmpty>
         )}
         {results.length > 0 && (
