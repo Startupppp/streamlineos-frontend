@@ -32,7 +32,7 @@ jest.mock("@tanstack/react-query", () => {
   const actual = jest.requireActual<object>("@tanstack/react-query");
   return {
     ...actual,
-    useQueryClient: jest.fn(() => ({ invalidateQueries: jest.fn() })),
+    useQueryClient: jest.fn(() => ({ invalidateQueries: jest.fn(), getQueryData: jest.fn(), setQueryData: jest.fn() })),
     useInfiniteQuery: jest.fn((opts: QueryOptions & { enabled?: boolean }) => {
       lastQueryEnabled = opts.enabled;
       lastQueryOptions = opts;
