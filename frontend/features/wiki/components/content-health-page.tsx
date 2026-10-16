@@ -8,6 +8,7 @@ import { useSearchParams } from "next/navigation";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
+import { useAccess } from "@/hooks/api/access";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -382,6 +383,7 @@ function AssignPopover({ pageId, kind }: AssignPopoverProps) {
 
 export default function ContentHealthPage() {
   const searchParams = useSearchParams();
+  const { data: accessData, isError: accessReadError, refetch: refetchAccess } = useAccess();
   const { update: updateFilters } = useUrlFilters({ pageParam: "cursor" });
   const cursorState = useCursorPagination();
   const { state: dismissState, openDismiss, closeDialog } = useDismissDialog();
@@ -423,6 +425,10 @@ export default function ContentHealthPage() {
   }
 
   function handleRetry() {
+    if (accessReadError && !accessData) {
+      void refetchAccess();
+      return;
+    }
     void refetchCounts();
     void refetchSignals();
   }

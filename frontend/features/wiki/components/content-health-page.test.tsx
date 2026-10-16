@@ -319,14 +319,43 @@ describe("ContentHealthPage — denied state", () => {
 
 describe("ContentHealthPage — error state", () => {
   it("renders a retry control when the counts query errors so the user is not stuck", () => {
+    const refetchCounts = jest.fn();
+    const refetchSignals = jest.fn();
     useContentHealthCounts.mockReturnValue({
       ...IDLE,
       isError: true,
       error: new Error("network"),
       data: undefined,
+      refetch: refetchCounts,
     });
+    useContentHealthSignals.mockReturnValue({ ...IDLE, data: SIGNAL_PAGE_WITH_ROWS, refetch: refetchSignals });
     render(<ContentHealthPage />);
-    expect(screen.getByRole("button", { name: /try again/i })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /try again/i }));
+    expect(refetchCounts).toHaveBeenCalledTimes(1);
+    expect(refetchSignals).toHaveBeenCalledTimes(1);
+  });
+
+  it("retries failed access before disabled Content Health reads", () => {
+    const refetchAccess = jest.fn();
+    const refetchCounts = jest.fn();
+    const refetchSignals = jest.fn();
+    useAccess.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: true,
+      error: new Error("Access service unavailable"),
+      refetch: refetchAccess,
+    });
+    useContentHealthCounts.mockReturnValue({ ...IDLE, data: undefined, refetch: refetchCounts });
+    useContentHealthSignals.mockReturnValue({ ...IDLE, data: undefined, refetch: refetchSignals });
+
+    render(<ContentHealthPage />);
+
+    expect(screen.getByText("Access service unavailable")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /try again/i }));
+    expect(refetchAccess).toHaveBeenCalledTimes(1);
+    expect(refetchCounts).not.toHaveBeenCalled();
+    expect(refetchSignals).not.toHaveBeenCalled();
   });
 });
 
