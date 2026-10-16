@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { act, render, screen, fireEvent, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import ImportPage from "./import-page";
 
@@ -15,6 +15,12 @@ const mockImportMutate = jest.fn();
 const mockCancelMutate = jest.fn();
 const mockUseKbImportJob = jest.fn();
 let mockSearchParams = new URLSearchParams();
+
+function completeRead(reader: FileReader, result: string) {
+  act(() => {
+    reader.onload?.({ target: { result } } as unknown as ProgressEvent<FileReader>);
+  });
+}
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ replace: mockReplace }),
@@ -188,6 +194,60 @@ describe("ImportPage — Import / Export tabs", () => {
 
     await waitFor(() => expect(toast.error).toHaveBeenCalledWith(expect.stringContaining("50,000-character")));
     expect(screen.getByText("0/100 files loaded")).toBeInTheDocument();
+  });
+
+  it("keeps selected files in their selection order when reads finish out of order", async () => {
+    const readers: FileReader[] = [];
+    const readAsText = jest.spyOn(FileReader.prototype, "readAsText").mockImplementation(function (this: FileReader) {
+      readers.push(this);
+    });
+    try {
+      const { container } = render(<ImportPage />);
+      const input = container.querySelector('input[type="file"]');
+      fireEvent.change(input!, {
+        target: { files: [new File(["A"], "first.md"), new File(["B"], "second.md")] },
+      });
+
+      completeRead(readers[1], "B");
+      completeRead(readers[0], "A");
+
+      expect(await screen.findByText("2/100 files loaded")).toBeInTheDocument();
+      const rows = screen.getAllByRole("button", { name: /Remove .* from import/ });
+      expect(rows.map((row) => row.getAttribute("aria-label"))).toEqual([
+        "Remove first from import",
+        "Remove second from import",
+      ]);
+    } finally {
+      readAsText.mockRestore();
+    }
+  });
+
+  it("does not restore cleared pages when an earlier file read finishes later", async () => {
+    const { container } = render(<ImportPage />);
+    const input = container.querySelector('input[type="file"]');
+    fireEvent.change(input!, {
+      target: { files: [new File(["A"], "first.md")] },
+    });
+    expect(await screen.findByText("1/100 files loaded")).toBeInTheDocument();
+
+    const readers: FileReader[] = [];
+    const readAsText = jest.spyOn(FileReader.prototype, "readAsText").mockImplementation(function (this: FileReader) {
+      readers.push(this);
+    });
+    try {
+      fireEvent.change(input!, {
+        target: { files: [new File(["B"], "late.md")] },
+      });
+      fireEvent.click(screen.getByRole("button", { name: "Clear all" }));
+
+      expect(screen.getByText("0/100 files loaded")).toBeInTheDocument();
+      completeRead(readers[0], "B");
+
+      expect(screen.getByText("0/100 files loaded")).toBeInTheDocument();
+      expect(screen.queryByText("late")).not.toBeInTheDocument();
+    } finally {
+      readAsText.mockRestore();
+    }
   });
 
   it("keeps oversized pasted content out of the import list", async () => {

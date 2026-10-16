@@ -4,7 +4,6 @@ import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { PageWrapper, PageSection } from "@/components/ui/page-wrapper";
-import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
@@ -31,7 +30,7 @@ import { useKbPageTreeInfinite } from "@/hooks/api/kb/pages";
 import { useKbSpaces } from "@/hooks/api/kb/spaces";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { KB_IMPORT, KNOWLEDGE_BASE } from "@/lib/knowledge-routes";
-import { KbUploadIcon, KbClipboardIcon } from "@/features/wiki/lib/kb-icons";
+import { KbClipboardIcon } from "@/features/wiki/lib/kb-icons";
 import { ExportJobsCard } from "./export-jobs-card";
 import { ImportHistorySection } from "./import-history-section";
 import {
@@ -104,6 +103,16 @@ export default function ImportPage() {
   const parentPages = parentPagesQuery.data?.pages.flatMap((p) => p.data) ?? [];
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const pendingReadersRef = useRef(new Set<FileReader>());
+  const readGenerationRef = useRef(0);
+
+  const cancelPendingReads = useCallback(() => {
+    readGenerationRef.current += 1;
+    for (const reader of pendingReadersRef.current) reader.abort();
+    pendingReadersRef.current.clear();
+  }, []);
+
+  useEffect(() => cancelPendingReads, [cancelPendingReads]);
 
   useEffect(() => {
     setDryRunResult(null);
@@ -127,6 +136,7 @@ export default function ImportPage() {
           },
         },
       );
+      cancelPendingReads();
       setItems([]);
       setActiveJobId(null);
     } else if (activeJob.status === "failed") {
@@ -153,6 +163,7 @@ export default function ImportPage() {
     activeJob?.duplicateItems,
     activeJob?.errorReport,
     activeJob?.id,
+    cancelPendingReads,
   ]);
 
   const titleCounts = useMemo(() => {
@@ -205,11 +216,22 @@ export default function ImportPage() {
       }
 
       let completed = 0;
-      const newItems: ImportPendingItem[] = [];
+      const newItems: Array<ImportPendingItem | null> = Array(toProcess.length).fill(null);
+      const readGeneration = readGenerationRef.current;
 
-      toProcess.forEach((file) => {
+      function finishRead() {
+        completed++;
+        if (completed === toProcess.length) {
+          setItems((prev) => [...prev, ...newItems.filter((item): item is ImportPendingItem => item !== null)].slice(0, 100));
+        }
+      }
+
+      toProcess.forEach((file, index) => {
         const reader = new FileReader();
+        pendingReadersRef.current.add(reader);
         reader.onload = (ev) => {
+          pendingReadersRef.current.delete(reader);
+          if (readGeneration !== readGenerationRef.current) return;
           const result = ev.target?.result;
           const text = typeof result === "string" ? result : "";
           const title = file.name.replace(/\.(md|markdown|txt)$/i, "");
@@ -218,19 +240,15 @@ export default function ImportPage() {
           } else if (text.includes("\0")) {
             toast.error(`${file.name} contains binary content and was skipped`);
           } else {
-            newItems.push({ title, contentText: text, sizeBytes: file.size });
+            newItems[index] = { title, contentText: text, sizeBytes: file.size };
           }
-          completed++;
-          if (completed === toProcess.length) {
-            setItems((prev) => [...prev, ...newItems].slice(0, 100));
-          }
+          finishRead();
         };
         reader.onerror = () => {
+          pendingReadersRef.current.delete(reader);
+          if (readGeneration !== readGenerationRef.current) return;
           toast.error(`${file.name} could not be read and was skipped`);
-          completed++;
-          if (completed === toProcess.length) {
-            setItems((prev) => [...prev, ...newItems].slice(0, 100));
-          }
+          finishRead();
         };
         reader.readAsText(file);
       });
@@ -289,6 +307,7 @@ export default function ImportPage() {
     setItems((prev) => prev.filter((_, i) => i !== index));
   }
   function handleClearAll() {
+    cancelPendingReads();
     setItems([]);
     setCompletedFailedItems([]);
   }
