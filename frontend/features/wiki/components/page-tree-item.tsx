@@ -50,6 +50,7 @@ import {
 } from "@/features/wiki/lib/kb-icons";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { isApiError } from "@/lib/api-envelope";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
 interface PageTreeItemProps {
@@ -102,6 +103,7 @@ const PageTreeItem = memo(function PageTreeItemInner({
     data: childrenData,
     isLoading: childrenLoading,
     isError: childrenError,
+    isFetchNextPageError: childrenFetchNextPageError,
     error: childrenReadError,
     refetch: refetchChildren,
     hasNextPage: childrenHasNextPage,
@@ -110,14 +112,20 @@ const PageTreeItem = memo(function PageTreeItemInner({
   } = useKbPageChildrenLevel(node.id, isExpanded, spaceId, projectId);
 
   const children: KbPageTreeNode[] = childrenData?.pages.flatMap((p) => p.data) ?? [];
+  const childrenAccessLost = childrenError && isApiError(childrenReadError) && [401, 403, 404].includes(childrenReadError.status);
+  const visibleChildren = childrenAccessLost ? [] : children;
 
-  const showChevron = node.hasChildren || children.length > 0;
+  const showChevron = node.hasChildren || visibleChildren.length > 0;
 
   function handleNavigate() {
     onCloseMobile?.();
   }
 
   function handleRetryChildren() {
+    if (childrenFetchNextPageError && !childrenAccessLost) {
+      void fetchChildrenNextPage();
+      return;
+    }
     void refetchChildren();
   }
 
@@ -364,7 +372,7 @@ const PageTreeItem = memo(function PageTreeItemInner({
         </div>
 
         <AnimatePresence initial={false}>
-          {isExpanded && (children.length > 0 || childrenHasNextPage || childrenLoading || childrenError) && (
+          {isExpanded && (visibleChildren.length > 0 || childrenHasNextPage || childrenLoading || childrenError) && (
             <motion.div
               className="min-w-0 overflow-hidden"
               initial={{ opacity: 0, y: shouldReduceMotion ? 0 : -4 }}
@@ -372,7 +380,7 @@ const PageTreeItem = memo(function PageTreeItemInner({
               exit={{ opacity: 0, y: shouldReduceMotion ? 0 : -4 }}
               transition={{ duration: shouldReduceMotion ? 0 : 0.15, ease: "easeOut" }}
             >
-              {childrenLoading && children.length === 0 && (
+              {childrenLoading && visibleChildren.length === 0 && (
                 <p role="status" className="px-2 py-2 text-xs text-muted-foreground" style={{ paddingLeft: (depth + 1) * 16 }}>
                   Loading child pages…
                 </p>
@@ -384,7 +392,7 @@ const PageTreeItem = memo(function PageTreeItemInner({
                   <Button type="button" size="sm" variant="outline" onClick={handleRetryChildren}>Retry child pages</Button>
                 </div>
               )}
-              {children.map((child) => (
+              {visibleChildren.map((child) => (
                 <PageTreeItem
                   key={child.id}
                   node={child}
@@ -396,7 +404,7 @@ const PageTreeItem = memo(function PageTreeItemInner({
                 />
               ))}
               <InfiniteScrollSentinel
-                hasNextPage={childrenHasNextPage}
+                hasNextPage={Boolean(childrenHasNextPage) && !childrenError}
                 isFetchingNextPage={childrenFetchingNext}
                 onLoadMore={fetchChildrenNextPage}
                 label="Load more child pages"

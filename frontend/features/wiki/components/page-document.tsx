@@ -170,15 +170,28 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
 
   const handleDiscardMine = useCallback(() => {
     setIsReloading(true);
-    function applyServerVersion() {
-      discardLocalEdits();
-      setTitleDraft(null);
-      setEditorDraft(null);
-      setReloadNonce(nextReload);
-      setIsReloading(false);
-    }
-    void refetch().then(applyServerVersion, applyServerVersion);
-  }, [discardLocalEdits, refetch]);
+    void refetch()
+      .then((result) => {
+        if (
+          !result.isSuccess ||
+          !result.data ||
+          (conflict?.currentContentRevision !== null &&
+            conflict?.currentContentRevision !== undefined &&
+            result.data.contentRevision < conflict.currentContentRevision)
+        ) {
+          toast.error("Couldn't load the latest page version. Your edits are still here.");
+          return;
+        }
+        discardLocalEdits();
+        setTitleDraft(null);
+        setEditorDraft(null);
+        editorSnapshotRef.current = null;
+        setReloadNonce(nextReload);
+      }, () => {
+        toast.error("Couldn't load the latest page version. Your edits are still here.");
+      })
+      .finally(() => setIsReloading(false));
+  }, [conflict?.currentContentRevision, discardLocalEdits, refetch]);
 
   const handleUploadFile = useCallback(
     (file: File) => uploadKbMedia(file, pageId),
