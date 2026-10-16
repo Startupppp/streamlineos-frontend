@@ -26,14 +26,9 @@ export function isExportJobActive(job: Pick<GdprExportJob, "status"> | undefined
   return job?.status === "pending" || job?.status === "running";
 }
 
-function saveExportJson(result: GdprExportResult): void {
+function saveExportJson(result: GdprExportResult): GdprExportResult {
   const blob = new Blob([JSON.stringify(result, null, 2)], { type: "application/json" });
   downloadBlob(blob, `personal-data-${result.subject.userId}-${result.exportedAt.slice(0, 10)}.json`);
-}
-
-async function postExport(path: string, reason?: string): Promise<GdprExportResult> {
-  const result = await apiClient.post<GdprExportResult>(path, reason ? { reason } : {}, undefined, exportResultC);
-  saveExportJson(result);
   return result;
 }
 
@@ -41,7 +36,8 @@ async function postExport(path: string, reason?: string): Promise<GdprExportResu
 export function useExportMyData() {
   return useMutation<GdprExportResult, Error, void>({
     mutationKey: ["privacy", "gdpr", "export-me"],
-    mutationFn: () => postExport("/gdpr/export/me"),
+    mutationFn: async () =>
+      saveExportJson(await apiClient.post<GdprExportResult>("/gdpr/export/me", {}, undefined, exportResultC)),
   });
 }
 
@@ -106,7 +102,15 @@ export function useRectifyMyProfile() {
 export function useExportPersonData() {
   return useAuthorizedMutation<GdprExportResult, Error, { personId: string; reason?: string }>(ADMIN_KEY, {
     mutationKey: ["privacy", "gdpr", "export-person"],
-    mutationFn: ({ personId, reason }) => postExport(`/gdpr/export/${encodeURIComponent(personId)}`, reason),
+    mutationFn: async ({ personId, reason }) =>
+      saveExportJson(
+        await apiClient.post<GdprExportResult>(
+          `/gdpr/export/${encodeURIComponent(personId)}`,
+          reason ? { reason } : {},
+          undefined,
+          exportResultC,
+        ),
+      ),
   });
 }
 
