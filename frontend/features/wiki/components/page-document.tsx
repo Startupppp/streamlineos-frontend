@@ -241,6 +241,23 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
     [editorDraft, page?.content],
   );
 
+  const handleCompareVersions = useCallback(async () => {
+    const result = await refetch();
+    if (
+      !result.isSuccess ||
+      !result.data ||
+      (conflict?.currentContentRevision !== null &&
+        conflict?.currentContentRevision !== undefined &&
+        result.data.contentRevision < conflict.currentContentRevision)
+    ) {
+      throw new Error("The latest page version is unavailable");
+    }
+    return {
+      title: result.data.title,
+      body: getPlainText(normalizePlateValue(result.data.content)),
+    };
+  }, [conflict?.currentContentRevision, refetch]);
+
   function handleInsertSummary(text: string) {
     const summary = plainTextToPlateValue(text);
     const body = normalizePlateValue(editorDraft ?? page?.content);
@@ -348,11 +365,15 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
             {conflict ? (
               <div className="mb-5">
                 <PageEditConflict
+                  key={`${pageId}:${conflict.currentContentRevision}`}
                   conflict={conflict}
                   isReloading={isReloading}
                   pendingFields={pendingFields}
+                  localTitle={localTitle}
+                  localBody={currentContentText}
                   onKeepMine={keepLocalEdits}
                   onDiscardMine={handleDiscardMine}
+                  onCompare={handleCompareVersions}
                 />
               </div>
             ) : null}
