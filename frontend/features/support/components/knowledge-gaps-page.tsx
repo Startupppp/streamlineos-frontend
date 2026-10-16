@@ -7,10 +7,12 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageState } from "@/components/shared/page-state";
+import { ErrorReference } from "@/components/shared/error-reference";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { isApiError } from "@/lib/api-envelope";
 import {
   useKnowledgeGaps,
   useDetectGaps,
@@ -50,10 +52,12 @@ export function KnowledgeGapsPage() {
     data,
     isLoading,
     isError,
+    isFetchNextPageError,
     error,
     refetch,
     fetchNextPage,
     hasNextPage,
+    isFetching,
     isFetchingNextPage,
   } = useKnowledgeGaps();
   const detectMutation = useDetectGaps();
@@ -61,13 +65,15 @@ export function KnowledgeGapsPage() {
   const dismissMutation = useDismissGap();
 
   const gaps = data?.pages.flatMap((page) => page.gaps) ?? [];
+  const accessLost = isApiError(error) && (error.status === 401 || error.status === 403 || error.status === 404);
+  const inlineReadError = isError && gaps.length > 0 && !accessLost;
 
   const pageState = usePageState({
     permission: "support:knowledge-gaps:view",
     isLoading,
-    isError,
+    isError: isError && !inlineReadError,
     error,
-    isEmpty: gaps.length === 0,
+    isEmpty: !isLoading && !isError && gaps.length === 0,
   });
 
   function handleDetect() {
@@ -104,7 +110,7 @@ export function KnowledgeGapsPage() {
 
   const canManage = useCan("support:knowledge-gaps:manage");
 
-  const detectAction = canManage ? (
+  const detectAction = canManage && (pageState.kind === "ready" || pageState.kind === "empty") ? (
     <LoadingButton
       size="sm"
       variant="outline"
@@ -151,8 +157,23 @@ export function KnowledgeGapsPage() {
               isDismissing={dismissMutation.isPending && dismissMutation.variables?.gapId === gap.id}
             />
           ))}
+          {inlineReadError && (
+            <div role="alert" className="space-y-2 text-sm text-destructive">
+              <p>{isFetchNextPageError ? "Could not load more knowledge gaps." : "Could not refresh knowledge gaps."} {getErrorMessage(error)}</p>
+              <ErrorReference error={error} />
+              <LoadingButton
+                type="button"
+                variant="outline"
+                isPending={Boolean(isFetchNextPageError ? isFetchingNextPage : isFetching)}
+                loadingText="Retrying…"
+                onClick={isFetchNextPageError ? handleLoadMore : handleRetry}
+              >
+                {isFetchNextPageError ? "Retry loading knowledge gaps" : "Retry refreshing knowledge gaps"}
+              </LoadingButton>
+            </div>
+          )}
           <InfiniteScrollSentinel
-            hasNextPage={hasNextPage}
+            hasNextPage={Boolean(hasNextPage) && !inlineReadError}
             isFetchingNextPage={isFetchingNextPage}
             onLoadMore={handleLoadMore}
             label="Load more knowledge gaps"
