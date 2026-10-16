@@ -128,7 +128,7 @@ function renderPage() {
   function Wrapper({ children }: { children: ReactNode }) {
     return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
   }
-  return render(<PublicCalendarBookingPage />, { wrapper: Wrapper });
+  return { ...render(<PublicCalendarBookingPage />, { wrapper: Wrapper }), client };
 }
 
 describe("public calendar booking page", () => {
@@ -644,5 +644,19 @@ describe("public calendar booking page", () => {
     expect(screen.getByText("It may have expired or already been used. Ask the organizer for a new booking link.")).toBeInTheDocument();
     expect(screen.queryByText("Booking page not found")).not.toBeInTheDocument();
     expect(screen.queryByText("Discovery call")).not.toBeInTheDocument();
+  });
+
+  it("hides cached booking details when a refreshed public link is revoked", async () => {
+    const { client } = renderPage();
+    expect(await screen.findByRole("heading", { name: "Meet Northwind" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Confirm booking" })).toBeInTheDocument();
+    mockedGet.mockRejectedValue(new ApiError("Booking page not found", 404));
+    await act(async () => {
+      await client.invalidateQueries({ queryKey: ["public", "calendar", "booking", "booking-token-value-long-enough", "offering"] });
+    });
+    expect(await screen.findByRole("alert")).toHaveTextContent("This booking link is unavailable");
+    expect(screen.queryByRole("heading", { name: "Meet Northwind" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Confirm booking" })).not.toBeInTheDocument();
+    expect(screen.queryByText("Scheduled with StreamlineOS")).not.toBeInTheDocument();
   });
 });

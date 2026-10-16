@@ -46,12 +46,12 @@ export function PublicCalendarBookingPage() {
   }), [attribution, callbackState, locale]);
   const offeringQuery = usePublicCalendarBookingOffering(token, range.from, range.to);
   const sessionQuery = usePublicCalendarBookingSession(token, sessionInput);
-  const offering = offeringQuery.data;
-  const session = sessionQuery.data;
+  const unavailable = offeringQuery.isError || sessionQuery.isError;
+  const offering = unavailable ? undefined : offeringQuery.data;
+  const session = unavailable ? undefined : sessionQuery.data;
   const uiLocale = publicBookingUiLocale(session?.locale ?? locale);
   const copy = publicBookingCopy(uiLocale);
   const loading = offeringQuery.isPending || sessionQuery.isPending;
-  const unavailable = offeringQuery.isError || sessionQuery.isError;
   const title = session?.copy.title ?? offering?.title ?? copy.defaultTitle;
   const description = session?.copy.description ?? offering?.description;
 
