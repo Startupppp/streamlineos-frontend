@@ -31,6 +31,11 @@ describe("Calendar booking embed code", () => {
     handler({ origin: "https://other.test", source: frameWindow, data });
     handler({ origin: "https://app.test", source: {}, data });
     handler({ origin: "https://app.test", source: frameWindow, data: { ...data, state: "wrong" } });
+    handler({ origin: "https://app.test", source: frameWindow, data: { ...data, facts: null } });
+    handler({ origin: "https://app.test", source: frameWindow, data: { ...data, facts: {} } });
+    handler({ origin: "https://app.test", source: frameWindow, data: { ...data, facts: { outcome: "confirmed", guestEmail: "private@example.test" } } });
+    handler({ origin: "https://app.test", source: frameWindow, data: { ...data, facts: { outcome: "rejected" } } });
+    handler({ origin: "https://app.test", source: frameWindow, data: { ...data, facts: { bookingId: 7 } } });
     expect(received).toHaveLength(0);
     handler({ origin: "https://app.test", source: frameWindow, data });
     handler({ origin: "https://app.test", source: frameWindow, data });
