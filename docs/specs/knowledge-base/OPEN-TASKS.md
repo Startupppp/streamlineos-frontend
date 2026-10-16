@@ -375,6 +375,7 @@ KB-OPEN-074 source update, 2026-10-16: frontend `fb1e2b928` now calls `recordLeg
   - Previous consolidated ID: `KB-OPEN-295`
 - [ ] **KB-OPEN-067** **BLOCKED:** Streaming stop/retry, network recovery, copy, helpful/unhelpful, report wrong/stale, create knowledge gap `POST /kb/ask/stream` exists at `kb-ask.controller.ts:134`. `POST /kb/ask/knowledge-gap` at line 217. Stop/retry/copy and UI recovery require browser. BLOCKED.
   - 2026-10-16 source progress: frontend `46f22b21f` labels stopped or failed partial streams as incomplete, withholds Copy/feedback/report actions for that partial text, and clears it before retrying the same question. Focused interaction tests passed 12/12 and scoped lint passed. Browser stop, network recovery, answer persistence and actual gap submission remain open.
+  - Frontend `ddbe58628` makes Copy confirmation follow the latest successful click, ignores stale clipboard results and cancels its reset timer on unmount. Focused Ask tests passed 12/12 and scoped lint exited without errors; its one `Date.now` purity warning was pre-existing. Browser copy, stop/retry, network recovery, feedback and gap submission remain open.
   - Previous consolidated ID: `KB-OPEN-296`
 - [ ] **KB-OPEN-068** **BLOCKED:** Provider context contains only authorized passages; document content is data, never instruction AV-04: prompt injection protection verification requires running the AI path in a live environment. BLOCKED.
   - Previous consolidated ID: `KB-OPEN-297`
