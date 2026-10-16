@@ -186,5 +186,10 @@ export function publicBookingCopy(locale: string | null | undefined): BookingCop
 
 export function publicBookingUiLocale(locale: string | null | undefined): string {
   const language = locale?.split("-")[0]?.toLowerCase();
-  return language === "en" || language === "hi" || language === "te" ? locale ?? "en-US" : "en-US";
+  if (!locale || (language !== "en" && language !== "hi" && language !== "te")) return "en-US";
+  try {
+    return Intl.DateTimeFormat.supportedLocalesOf(locale).length === 1 ? locale : "en-US";
+  } catch {
+    return "en-US";
+  }
 }
