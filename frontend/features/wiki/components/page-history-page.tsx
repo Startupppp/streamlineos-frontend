@@ -136,12 +136,6 @@ export default function PageHistoryPage({
     }
   }
 
-  function handleVersionKeyDown(e: React.KeyboardEvent<HTMLButtonElement>) {
-    if (e.key === "Enter" || e.key === " ") {
-      e.currentTarget.click();
-    }
-  }
-
   function handleToggleCompare() {
     const next = !compareMode;
     setSelectionState((previous) => ({ ...previous, compareMode: next, selectedB: next ? previous.selectedB : null }));
@@ -292,7 +286,6 @@ export default function PageHistoryPage({
                         type="button"
                         data-version-number={String(v.versionNumber)}
                         onClick={handleVersionSelect}
-                        onKeyDown={handleVersionKeyDown}
                         aria-label={`Select version ${v.versionNumber}${isCurrentVersion ? " (current)" : ""}`}
                         aria-pressed={isSelected}
                         className={`w-full text-left px-3 py-2.5 rounded-lg transition-colors mb-1 ${

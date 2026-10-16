@@ -1,5 +1,6 @@
 import React from "react";
 import { render, screen, cleanup, fireEvent, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import PageHistoryPage from "./page-history-page";
 import { ApiError } from "@/lib/api-envelope";
 import { toast } from "sonner";
@@ -383,13 +384,14 @@ describe("PageHistoryPage — restore gate", () => {
 });
 
 describe("PageHistoryPage — keyboard accessibility", () => {
-  it("selects a version on Enter without requiring a pointer click", () => {
+  it("selects a version on Enter without requiring a pointer click", async () => {
     mockBothVersions();
     useKbPageVersionDetail.mockReturnValue({ data: mockVersion, isLoading: false });
 
     render(<PageHistoryPage pageId={1} />);
     const versionButton = screen.getByRole("button", { name: "Select version 1" });
-    fireEvent.keyDown(versionButton, { key: "Enter" });
+    versionButton.focus();
+    await userEvent.setup().keyboard("{Enter}");
 
     expect(screen.queryByText("Select a version to preview")).not.toBeInTheDocument();
   });
@@ -567,6 +569,28 @@ describe("PageHistoryPage — restore preview", () => {
         "Preview: how this page changes when version 1 is restored",
       ),
     ).not.toBeInTheDocument();
+  });
+
+  it("selects a restore version once with the Enter key", async () => {
+    mockBothVersions();
+    render(<PageHistoryPage pageId={1} />);
+    const version = screen.getByRole("button", { name: "Select version 1" });
+    version.focus();
+    await userEvent.setup().keyboard("{Enter}");
+
+    expect(mockRouterReplace).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole("button", { name: /^Restore$/ })).toBeEnabled();
+  });
+
+  it("selects a restore version once with the Space key", async () => {
+    mockBothVersions();
+    render(<PageHistoryPage pageId={1} />);
+    const version = screen.getByRole("button", { name: "Select version 1" });
+    version.focus();
+    await userEvent.setup().keyboard(" ");
+
+    expect(mockRouterReplace).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole("button", { name: /^Restore$/ })).toBeEnabled();
   });
 
   it("carries a diff preview inside the confirmation, not only an are-you-sure prompt", () => {
