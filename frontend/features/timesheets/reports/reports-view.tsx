@@ -24,6 +24,7 @@ import { ClientProfitabilityTab } from "./client-profitability-tab";
 import { ComplianceTab } from "./compliance-tab";
 import { ApprovalSlaTab } from "./approval-sla-tab";
 import { BillingLeakageTab } from "./billing-leakage-tab";
+import { ProjectHoursTab } from "./project-hours-tab";
 
 const REPORT_TABS = [
   { value: "overview", label: "Overview" },
@@ -33,7 +34,13 @@ const REPORT_TABS = [
   { value: "compliance", label: "Compliance" },
   { value: "approval-sla", label: "Approval SLA" },
   { value: "billing-leakage", label: "Billing Leakage" },
+  { value: "project-hours", label: "Project Hours" },
 ] as const;
+
+function parseProjectId(raw: string | null): number | null {
+  const n = Number(raw);
+  return raw && Number.isInteger(n) && n > 0 ? n : null;
+}
 
 function buildSubtitle(start: string, end: string): string {
   try {
@@ -69,6 +76,7 @@ export function ReportsView() {
   // promised a filter it could not apply. It comes back when it has options.
   const userId = searchParams.get("userId") ?? undefined;
   const activeTab = searchParams.get("tab") ?? "overview";
+  const projectId = parseProjectId(searchParams.get("projectId"));
 
   const updateParams = useCallback(
     (updates: Record<string, string | null>) => {
@@ -89,6 +97,11 @@ export function ReportsView() {
     [updateParams],
   );
 
+
+  const handleProjectChange = useCallback(
+    (id: number) => updateParams({ projectId: String(id) }),
+    [updateParams],
+  );
 
   const handleTabChange = useCallback(
     (value: string) =>
@@ -248,6 +261,15 @@ export function ReportsView() {
             <BillingLeakageTab
               params={rangeParams}
               enabled={queryEnabled && activeTab === "billing-leakage"}
+            />
+          </TabsContent>
+
+          <TabsContent value="project-hours" className={TABS_CONTENT_PAGE_BODY_CLASS}>
+            <ProjectHoursTab
+              params={rangeParams}
+              projectId={projectId}
+              onProjectChange={handleProjectChange}
+              enabled={queryEnabled && activeTab === "project-hours"}
             />
           </TabsContent>
         </Tabs>
