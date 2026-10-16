@@ -11,11 +11,13 @@ jest.mock("@/hooks/api/access", () => ({ useCan: () => true }));
 
 // MP-B-008: a failed Insights widget read must stay inline, not take the
 // product route to its error boundary.
-it.each([
+const READS: Array<[string, () => { isError: boolean }]> = [
   ["opportunity pane", () => useOpportunity(7, 99)],
   ["evidence themes", () => useEvidenceThemes(7, {})],
   ["outcome reviews", () => useOutcomeReviews(7, {})],
-])("keeps a failed %s read inline", async (_name, useRead) => {
+];
+
+it.each(READS)("keeps a failed %s read inline", async (_name, useRead) => {
   jest.mocked(apiClient.get).mockRejectedValue(new ApiError("Not found", 404, "NOT_FOUND"));
   const client = createAppQueryClient();
   const wrapper = ({ children }: { children: ReactNode }) => createElement(QueryClientProvider, { client }, children);

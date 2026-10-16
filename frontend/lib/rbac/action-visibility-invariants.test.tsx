@@ -61,6 +61,10 @@ jest.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(),
 }));
 
+jest.mock("@/hooks/api/org-display", () => ({
+  useOrgTimeZone: () => "UTC",
+}));
+
 jest.mock("@/hooks/api/webhooks", () => ({
   useWebhooks: jest.fn(),
   useToggleWebhook: jest.fn(),
