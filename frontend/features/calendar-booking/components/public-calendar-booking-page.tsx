@@ -11,6 +11,7 @@ import {
   usePublicCalendarBookingSession,
 } from "@/hooks/api/calendar-booking-public";
 import { PublicCalendarBookingForm } from "./public-calendar-booking-form";
+import { publicBookingCopy } from "../lib/public-booking-copy";
 
 function queryValue(params: URLSearchParams, key: string): string | null {
   const value = params.get(key)?.trim();
@@ -47,9 +48,10 @@ export function PublicCalendarBookingPage() {
   const sessionQuery = usePublicCalendarBookingSession(token, sessionInput);
   const offering = offeringQuery.data;
   const session = sessionQuery.data;
+  const copy = publicBookingCopy(session?.locale ?? locale);
   const loading = offeringQuery.isPending || sessionQuery.isPending;
   const unavailable = offeringQuery.isError || sessionQuery.isError;
-  const title = session?.copy.title ?? offering?.title ?? "Book a time";
+  const title = session?.copy.title ?? offering?.title ?? copy.defaultTitle;
   const description = session?.copy.description ?? offering?.description;
 
   return (
@@ -77,7 +79,7 @@ export function PublicCalendarBookingPage() {
           )}
           <div className="min-w-0 space-y-1">
             <p className="text-xs font-medium text-muted-foreground">
-              {session?.branding.displayName ? `Booking with ${session.branding.displayName}` : "StreamlineOS Calendar"}
+              {session?.branding.displayName ? `${copy.brand} ${session.branding.displayName}` : copy.platform}
             </p>
             <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">{title}</h1>
             {description && <p className="text-sm text-muted-foreground">{description}</p>}
@@ -109,9 +111,9 @@ export function PublicCalendarBookingPage() {
                 <Link2Off className="size-6" aria-hidden="true" />
               </span>
               <div className="space-y-2">
-                <h2 className="text-xl font-semibold tracking-tight text-foreground">This booking link is unavailable</h2>
+                <h2 className="text-xl font-semibold tracking-tight text-foreground">{copy.unavailableTitle}</h2>
                 <p className="text-sm leading-relaxed text-muted-foreground">
-                  It may have expired or already been used. Ask the organizer for a new booking link.
+                  {copy.unavailableDescription}
                 </p>
               </div>
             </div>
@@ -129,7 +131,7 @@ export function PublicCalendarBookingPage() {
         </div>
         {session?.branding.showPoweredBy && (
           <footer className="border-t border-border px-5 py-4 text-center text-xs text-muted-foreground sm:px-8">
-            Scheduled with StreamlineOS
+            {copy.poweredBy}
           </footer>
         )}
       </Card>

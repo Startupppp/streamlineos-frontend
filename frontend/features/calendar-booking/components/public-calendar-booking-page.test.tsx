@@ -188,6 +188,35 @@ describe("public calendar booking page", () => {
     expect(screen.getByRole("button", { name: `Pay ${formattedPrice} and book` })).toBeInTheDocument();
   });
 
+  it("uses Hindi for booking controls, validation, and the confirmed receipt", async () => {
+    mockedPost.mockImplementation(async (path) => {
+      if (String(path).endsWith("/sessions")) return {
+        ...session,
+        locale: "hi-IN",
+        copy: { ...session.copy, locale: "hi-IN", title: "मुलाकात बुक करें", consentLabel: null },
+      };
+      if (String(path).endsWith("/holds")) return hold;
+      return receipt;
+    });
+    const user = userEvent.setup();
+    renderPage();
+    const title = await screen.findByRole("heading", { name: "मुलाकात बुक करें" });
+    expect(title.closest("main")).toHaveAttribute("lang", "hi-IN");
+    expect(screen.getByRole("heading", { name: "समय चुनें" })).toBeInTheDocument();
+    expect(screen.getByLabelText("आपका विवरण")).toBeInTheDocument();
+    await user.click(screen.getByRole("checkbox"));
+    await user.click(screen.getByRole("button", { name: "बुकिंग की पुष्टि करें" }));
+    expect(await screen.findByText("अपना नाम दर्ज करें")).toBeInTheDocument();
+    await user.click(screen.getByRole("radio"));
+    await user.type(screen.getByLabelText("नाम"), "Guest User");
+    await user.type(screen.getByLabelText("ईमेल"), "guest@example.test");
+    await user.type(screen.getByLabelText("Organization"), "Example");
+    await user.click(screen.getByRole("button", { name: "बुकिंग की पुष्टि करें" }));
+    expect(await screen.findByRole("heading", { name: "आपकी बुकिंग की पुष्टि हो गई है" })).toBeInTheDocument();
+    expect(screen.getByText("बुक किया गया समय")).toBeInTheDocument();
+    expect(screen.getByText("कैलेंडर से मिलान जारी है।")).toBeInTheDocument();
+  });
+
   it("has no automated accessibility violations", async () => {
     const { container } = renderPage();
     await screen.findByRole("heading", { name: "Meet Northwind" });
