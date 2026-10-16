@@ -4,6 +4,7 @@ import { keepPreviousData, useQuery, useInfiniteQuery } from "@tanstack/react-qu
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
 const employeeListPageLazy = lazyContract(() =>
   import("@/hooks/api/hr/employee-list-schema").then((m) => m.employeeListPageContract),
@@ -23,7 +24,7 @@ export type HrEmployeesParams = {
   limit?: number;
   search?: string;
   departmentId?: string;
-  isActive?: "true" | "false" | "all";
+  isActive?: "true" | "false" | "all" | "current";
   /** Server-side role filter (users.role). */
   role?: string;
 };
@@ -164,6 +165,7 @@ export function useInfiniteHrEmployees(
      * being allowed to land late.
      */
     placeholderData: keepPreviousData,
+    ...INLINE_READ_ERROR,
     enabled: hrEnabled && canView && (options?.enabled ?? true),
   });
 }
@@ -188,7 +190,7 @@ export function useHrEmployeeOptions(
 ) {
   const canView = useCan("hr:employees:view");
   const { enabled, ...rest } = params ?? {};
-  const merged = { limit: 100, isActive: "true" as const, ...rest };
+  const merged = { limit: 100, isActive: "current" as const, ...rest };
   const query = useHrEmployees(
     { ...merged, limit: Math.min(merged.limit, 100) },
     { enabled: canView && (enabled ?? true) },

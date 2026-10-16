@@ -29,6 +29,7 @@ export const PERCENT_BASE_BASIC = "basic";
 export const PERCENT_BASE_GROSS = "gross";
 
 const PERCENT_VALUE = /^\d+(\.\d{1,4})?$/;
+const NON_NEGATIVE_AMOUNT = /^\d+(\.\d{1,2})?$/;
 const PERCENT_OF_COMPONENT_FORMULA = /^([A-Z][A-Z0-9_]*) \* (\d+(?:\.\d{1,4})?) \/ 100$/;
 
 export const componentFormSchema = z.object({
@@ -65,6 +66,9 @@ export const componentFormSchema = z.object({
   includeInCtc: z.boolean(),
   sortOrder: z.string().optional(),
 }).superRefine((form, ctx) => {
+  if (form.calcMethod === "FIXED" && form.amount && !NON_NEGATIVE_AMOUNT.test(form.amount)) {
+    ctx.addIssue({ code: "custom", path: ["amount"], message: "Enter an amount of zero or more, with at most 2 decimals" });
+  }
   if (form.calcMethod !== "PERCENT_OF") return;
   if (!form.percentBase) ctx.addIssue({ code: "custom", path: ["percentBase"], message: "Pick what this is a percent of" });
   const percentStr = form.percent ?? "";

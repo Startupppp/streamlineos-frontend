@@ -42,7 +42,7 @@ import { formatShortDate } from "@/lib/date-utils";
 export function BonusesTab() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [createOpen, setCreateOpen] = useState(false);
+  const [createOpen, setCreateOpen] = useState(() => searchParams.get("create") === "1");
 
   const month = searchParams.get("b_month") ?? getCurrentMonth();
   const type = searchParams.get("b_type") ?? "all";

@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { motion } from "framer-motion";
 import { format } from "date-fns";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -256,12 +255,7 @@ export function DevicesPage() {
         ) : undefined
       }
     >
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.22, ease: "easeOut" }}
-        className="flex min-h-0 flex-1 flex-col"
-      >
+      <div className="flex min-h-0 flex-1 flex-col">
         <PageState resolution={pageState} loading={<SyncLogsSkeleton />} className="flex-1">
         <Tabs defaultValue="devices" className="flex min-h-0 flex-1 flex-col">
           <TabsList className="shrink-0">
@@ -287,7 +281,7 @@ export function DevicesPage() {
           </TabsContent>
         </Tabs>
         </PageState>
-      </motion.div>
+      </div>
 
       <DeviceSheet open={addOpen} onOpenChange={setAddOpen} />
       <DeviceSheet

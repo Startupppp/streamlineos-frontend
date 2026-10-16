@@ -64,7 +64,9 @@ export function useCreateHrAnnouncement() {
     mutationKey: ["hr", "announcements", "create"],
     mutationFn: (data: CreateHrAnnouncementData) =>
       apiClient.post<HrAnnouncement>("/org/announcements", data, undefined, announcementC),
-    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.announcements() }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.announcements() });
+    },
   });
 }
 
@@ -74,7 +76,9 @@ export function useUpdateHrAnnouncement() {
     mutationKey: ["hr", "announcements", "update"],
     mutationFn: ({ announcementId, ...data }: UpdateHrAnnouncementData) =>
       apiClient.patch<HrAnnouncement>(`/org/announcements/${announcementId}`, data, undefined, announcementC),
-    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.announcements() }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.announcements() });
+    },
   });
 }
 
@@ -83,7 +87,9 @@ export function useDeleteHrAnnouncement() {
   return useAuthorizedMutation("hr:announcements:manage", {
     mutationKey: ["hr", "announcements", "delete"],
     mutationFn: (announcementId: number) => apiClient.delete<{ success: boolean }>(`/org/announcements/${announcementId}`, undefined, undefined, announcementSuccessC),
-    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.announcements() }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.announcements() });
+    },
   });
 }
 
@@ -92,6 +98,8 @@ export function useMarkHrAnnouncementRead() {
   return useMutation({
     mutationKey: ["hr", "announcements", "read"],
     mutationFn: (announcementId: number) => apiClient.post<{ success: boolean }>(`/org/announcements/${announcementId}/read`, undefined, undefined, announcementSuccessC),
-    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.announcements() }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.announcements() });
+    },
   });
 }

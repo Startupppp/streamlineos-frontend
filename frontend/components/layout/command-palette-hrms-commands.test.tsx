@@ -81,10 +81,15 @@ describe("P2-003 — palette actions are permission-filtered", () => {
 
   it("gates each admin action on its own catalog key", () => {
     expect(availableLabels(["payroll:salaries:update"])).toEqual(["Add salary"]);
-    expect(availableLabels(["hr:exit:create"])).toEqual(["Start exit"]);
+    expect(availableLabels(["hr:exit:manage"])).toEqual(["Start exit"]);
+    expect(availableLabels(["hr:exit:create"])).toEqual([]);
     expect(availableLabels(["payroll:payslips:manage"])).toEqual([
       "Release payslips · 2026-09",
     ]);
+  });
+
+  it("offers every employee their own resignation, never the HR exit desk (QA-2026-10-14)", () => {
+    expect(availableLabels(["self:resignation"])).toEqual(["Submit my resignation"]);
   });
 
   it("hides Release payslips when no run is PAID", () => {
@@ -96,16 +101,17 @@ describe("P2-003 — palette actions are permission-filtered", () => {
 
   it("navigates instead of mutating for leave, payslips and exit", () => {
     const onSelect = jest.fn();
-    grant(["self:leaves", "payroll:payslips:manage", "hr:exit:create"]);
+    grant(["self:leaves", "payroll:payslips:manage", "hr:exit:manage", "self:resignation"]);
     const { result } = renderHook(() => useHrmsCommands(onSelect));
 
-    for (const id of ["hrms-request-leave", "hrms-release-payslips", "hrms-start-exit"])
+    for (const id of ["hrms-request-leave", "hrms-release-payslips", "hrms-start-exit", "hrms-submit-resignation"])
       void result.current.find((c) => c.id === id)?.execute();
 
     expect(onSelect.mock.calls).toEqual([
       ["/me/time-off?create=1"],
       ["/payroll/runs/11"],
       ["/hr/exit"],
+      ["/me/resignation"],
     ]);
   });
 });

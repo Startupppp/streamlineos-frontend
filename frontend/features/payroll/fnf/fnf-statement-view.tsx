@@ -36,7 +36,7 @@ export function FnfStatementView({ settlement, statement }: FnfStatementViewProp
       <div className="flex flex-col gap-0.5">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-sm font-semibold">{statement.employee.name}</span>
-          <FnfStatusBadge status={statement.status} />
+          <FnfStatusBadge status={settlement.status} />
         </div>
         <span className="text-dense text-muted-foreground">{statement.employee.email}</span>
         <span className="text-micro text-muted-foreground">Settlement #{settlement.id}</span>

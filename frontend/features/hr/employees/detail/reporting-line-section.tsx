@@ -143,7 +143,7 @@ export function ReportingLineSection({ employeeId }: { employeeId: string }) {
           {canManage ? (
             <Button type="button" size="sm" variant="ghost" className="gap-1" onClick={handleEdit}>
               <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
-              Edit
+              Edit reporting line
             </Button>
           ) : null}
         </div>

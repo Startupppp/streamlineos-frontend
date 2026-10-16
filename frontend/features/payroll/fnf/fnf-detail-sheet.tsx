@@ -29,7 +29,7 @@ import { FnfStatusBadge } from "./fnf-status-badge";
 import { FnfStatementView } from "./fnf-statement-view";
 import type { FnfStatus } from "@/types/payroll";
 
-const FINAL_STATUSES: FnfStatus[] = ["APPROVED", "PAID"];
+const NOT_APPROVABLE: FnfStatus[] = ["DRAFT", "APPROVED", "PAID"];
 
 interface FnfDetailSheetInnerProps {
   settlementId: number;
@@ -58,7 +58,7 @@ function FnfDetailSheetInner({ settlementId, onClose }: FnfDetailSheetInnerProps
 
   const isLoading = loadingSettlement || loadingStatement;
   const isError = settlementError || statementError;
-  const isFinal = settlement ? FINAL_STATUSES.includes(settlement.status) : false;
+  const isFinal = settlement ? NOT_APPROVABLE.includes(settlement.status) : false;
   const showApprove = canManage && !isFinal && !isError;
 
   const handleRetry = useCallback(() => {

@@ -72,6 +72,13 @@ describe("HRMS-UX-001 — the default visible HR tree is a lean founder tree", (
     }
   });
 
+  it.each(["/hr/employees/skills-matrix", "/hr/employees/find-expert"])(
+    "shows %s in the default tree, gated on hr:employees:view (QA 2026-10-13)",
+    (href) => {
+      expect(findRoute(visible, href)?.requiredPermission).toBe("hr:employees:view");
+    },
+  );
+
   it("leaves every default-hidden route reachable by deep link", () => {
     for (const href of HR_NAV_ADVANCED_HREFS) {
       expect(resolveNavRouteAccess(href).matched).toBe(true);

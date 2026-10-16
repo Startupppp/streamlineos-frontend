@@ -21,6 +21,8 @@ import { HrSheet } from "@/components/shared/hr-sheet";
 
 import { TERMINATION_REASONS, TERMINATION_REASON_OTHER } from "@/lib/constants/hr-separation";
 import type { EmployeeListItem } from "@/types/hr";
+import type { TerminationCandidate } from "@/hooks/api/hr/termination-schema";
+import { getUserDisplayName } from "@/lib/person-display";
 
 function buildLetterPreview(params: {
   employeeName: string;
@@ -80,6 +82,7 @@ interface TerminationFormSheetProps {
   submitDisabled?: boolean;
   onSubmit: () => void;
   employees: EmployeeListItem[];
+  prefilledEmployee: TerminationCandidate | null;
   selectedEmployeeUserId: string;
   onSelectedEmployeeUserIdChange: (employeeUserId: string) => void;
   selectedReason: string;
@@ -104,6 +107,7 @@ export function TerminationFormSheet({
   submitDisabled = false,
   onSubmit,
   employees,
+  prefilledEmployee,
   selectedEmployeeUserId,
   onSelectedEmployeeUserIdChange,
   selectedReason,
@@ -125,8 +129,8 @@ export function TerminationFormSheet({
     () =>
       employees.find(
         (employeeRecord) => employeeRecord.id === selectedEmployeeUserId,
-      ) ?? null,
-    [employees, selectedEmployeeUserId]
+      ) ?? (prefilledEmployee?.id === selectedEmployeeUserId ? prefilledEmployee : null),
+    [employees, prefilledEmployee, selectedEmployeeUserId]
   );
 
   const employeeOptions = useMemo(
@@ -148,6 +152,21 @@ export function TerminationFormSheet({
           };
         }),
     [employees]
+  );
+
+  const options = useMemo(
+    () =>
+      prefilledEmployee && !employeeOptions.some((option) => option.value === prefilledEmployee.id)
+        ? [
+            {
+              value: prefilledEmployee.id,
+              label: getUserDisplayName(prefilledEmployee),
+              sublabel: prefilledEmployee.designation ?? prefilledEmployee.email,
+            },
+            ...employeeOptions,
+          ]
+        : employeeOptions,
+    [employeeOptions, prefilledEmployee],
   );
 
   const letterPreview = useMemo(
@@ -197,7 +216,7 @@ export function TerminationFormSheet({
             Select Employee <span className="text-status-danger-ink">*</span>
           </Label>
           <Combobox
-            options={employeeOptions}
+            options={options}
             value={selectedEmployeeUserId}
             onChange={onSelectedEmployeeUserIdChange}
             placeholder="Select an employee…"

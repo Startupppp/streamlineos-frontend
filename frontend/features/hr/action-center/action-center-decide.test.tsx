@@ -9,8 +9,9 @@ import {
   mockPageWrapperModule,
   mockQueryClientModule,
   mockQueueState,
-  mockRegularizationModule,
+  mockApproversModule,
   mockSessionModule,
+  mockRegularizationModule,
   mockSonnerModule,
   mockWfhRow,
   mockEmployeeListModule,
@@ -35,6 +36,7 @@ jest.mock("@/hooks/api/payroll/payroll-cutoff", () => mockCutoffModule());
 jest.mock("@/components/ui/page-wrapper", () => mockPageWrapperModule());
 jest.mock("sonner", () => mockSonnerModule());
 jest.mock("next-auth/react", () => mockSessionModule());
+jest.mock("@/hooks/api/hr/approvers", () => mockApproversModule());
 jest.mock("@/features/hr/workflows/instance-detail-sheet", () => ({
   InstanceDetailSheet: () => null,
 }));
@@ -55,6 +57,31 @@ beforeEach(() => {
 });
 
 describe("HR Action Center — inline decide", () => {
+  it("offers no Approve or Reject on the viewer's own leave (QA 2026-10-13 P0)", () => {
+    mockQueueState.sessionUserId = "usr-member";
+    mockQueueState.leavePages = mockLeavePage([mockLeaveRow]);
+
+    render(<HrActionCenterPage />);
+
+    expect(screen.getByText("Needs another approver")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Approve" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Reject" })).not.toBeInTheDocument();
+  });
+
+  it("lets a sole owner decide their own leave when their leave route sends it back to them", async () => {
+    mockQueueState.sessionUserId = "usr-member";
+    mockQueueState.myLeaveRoute = { ownerSelfApproval: true, approver: { userId: "usr-member" } };
+    mockQueueState.leavePages = mockLeavePage([mockLeaveRow]);
+
+    render(<HrActionCenterPage />);
+    expect(screen.queryByText("Needs another approver")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Approve" }));
+
+    await waitFor(() =>
+      expect(mockQueueState.approveLeave).toHaveBeenCalledWith({ leaveId: 41 }),
+    );
+  });
+
   it("approves on the row itself, with no drawer round trip", async () => {
     mockQueueState.leavePages = mockLeavePage([mockLeaveRow]);
 
@@ -155,6 +182,7 @@ describe("HR Action Center — inline decide", () => {
 
 describe("HRMS-025: own leave request in the queue", () => {
   it("hides Approve and Reject on a leave row submitted by the current user", () => {
+    mockQueueState.sessionUserId = "usr-admin";
     const ownLeaveRow = { ...mockLeaveRow, id: 99, user: { id: "usr-admin", name: "Admin User", firstName: "Admin", lastName: "User", image: null } };
     mockQueueState.leavePages = mockLeavePage([ownLeaveRow]);
 

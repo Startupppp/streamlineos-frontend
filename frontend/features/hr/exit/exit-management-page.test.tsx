@@ -41,7 +41,7 @@ jest.mock("@/hooks/api/use-page-state", () => ({
 }));
 
 jest.mock("@/features/hr/exit/resignation-card", () => ({ ResignationCard: () => null }));
-jest.mock("@/features/hr/exit/resignation-form-sheet", () => ({ ResignationFormSheet: () => null }));
+jest.mock("@/components/hr/resignation-form-sheet", () => ({ ResignationFormSheet: () => null }));
 jest.mock("@/features/hr/exit/admin-resignation-form-sheet", () => ({ AdminResignationFormSheet: () => null }));
 jest.mock("@/features/hr/exit/resignation-review-sheets", () => ({ ResignationReviewSheets: () => null }));
 jest.mock("@/features/hr/exit/exit-path-strip", () => ({ ExitPathStrip: () => null }));
@@ -99,7 +99,7 @@ describe("ExitManagementPage exit actions", () => {
   });
 
   it("keeps the admin's own resignation action reachable beside the employee one, under a label that cannot be mistaken for it", () => {
-    granted = new Set(["hr:exit:view", "hr:exit:manage", "hr:exit:create"]);
+    granted = new Set(["hr:exit:view", "hr:exit:manage", "hr:exit:create", "self:resignation"]);
     withResignations([]);
     render(<ExitManagementPage />);
 
@@ -108,7 +108,7 @@ describe("ExitManagementPage exit actions", () => {
   });
 
   it("withholds Record resignation from someone who cannot manage exits, so no control leads to a denial", () => {
-    granted = new Set(["hr:exit:view", "hr:exit:create"]);
+    granted = new Set(["hr:exit:view", "self:resignation"]);
     withResignations([]);
     render(<ExitManagementPage />);
 
@@ -118,7 +118,7 @@ describe("ExitManagementPage exit actions", () => {
   });
 
   it("keeps the admin exit actions available while the admin's own resignation is pending", () => {
-    granted = new Set(["hr:exit:view", "hr:exit:manage", "hr:exit:create"]);
+    granted = new Set(["hr:exit:view", "hr:exit:manage", "hr:exit:create", "self:resignation"]);
     withResignations([{ id: 1, userId: "usr-1", status: "SUBMITTED" }]);
     render(<ExitManagementPage />);
 

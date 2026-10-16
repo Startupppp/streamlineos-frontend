@@ -24,7 +24,7 @@ import { EmptyPayroll } from "@/components/illustrations";
 import { useCommandCenter } from "@/hooks/api/payroll/command-center";
 import { usePayrollPolicyCurrent } from "@/hooks/api/payroll/policies";
 import { useCreateRun } from "@/hooks/api/payroll/runs";
-import { useCan } from "@/hooks/api/access";
+import { useAccess, useCan, usePermissionGate } from "@/hooks/api/access";
 import { payrollRunStartGate } from "@/features/payroll/runs/run-start-gate";
 import { PayrollSetupTour } from "@/features/payroll/setup-tour/payroll-setup-tour";
 import type { PayrollRunStatus } from "@/types/payroll/runs";
@@ -109,7 +109,8 @@ function PrimaryAction({
 export function PayrollCommandCenterPage() {
   const [month, setMonth] = useState(currentYearMonth);
   const router = useRouter();
-  const canView = useCan("payroll:runs:view");
+  const viewGate = usePermissionGate("payroll:runs:view");
+  const { refetch: refetchAccess } = useAccess();
   const canManage = useCan("payroll:runs:manage");
   const canViewPolicies = useCan("payroll:policies:view");
 
@@ -121,7 +122,20 @@ export function PayrollCommandCenterPage() {
     void refetch();
   }, [refetch]);
 
-  if (!canView) {
+  if (viewGate.unavailable) {
+    return (
+      <PageWrapper variant="display" title="Payroll">
+        <ErrorState
+          className="flex-1"
+          title="Couldn't load the payroll command center"
+          description="Your access could not be checked. Try again."
+          onRetry={refetchAccess}
+        />
+      </PageWrapper>
+    );
+  }
+
+  if (viewGate.denied) {
     return (
       <PageWrapper variant="display" title="Payroll">
         <EmptyState
@@ -153,10 +167,9 @@ export function PayrollCommandCenterPage() {
     ? null
     : payrollRunStartGate({
         policyReady: canViewPolicies ? Boolean(policy.data?.policy) : true,
-        employeeCount: header?.employeeCount ?? 0,
       });
 
-  const isPreSetup = !isLoading && !isError && !data;
+  const isPreSetup = viewGate.allowed && !isLoading && !isError && !data;
 
   return (
     <PageWrapper
@@ -189,7 +202,7 @@ export function PayrollCommandCenterPage() {
     >
       <PayrollSetupTour />
 
-      {isLoading && (
+      {(viewGate.pending || isLoading) && (
         <div className="flex flex-1 min-h-0 flex-col gap-4">
           <StatCardGridSkeleton cols={5} count={5} />
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -287,9 +300,7 @@ export function PayrollCommandCenterPage() {
                 canPay={
                   !!header &&
                   header.exceptionCounts.BLOCKER === 0 &&
-                  (header.status === "LOCKED" ||
-                    header.status === "APPROVED" ||
-                    header.status === "PAID")
+                  (header.status === "LOCKED" || header.status === "PAID")
                 }
                 totals={{
                   gross: formatMoney(header?.grossTotal),

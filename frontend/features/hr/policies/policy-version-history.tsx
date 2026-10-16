@@ -26,9 +26,11 @@ const STATUS_COLORS: Record<string, string> = {
 interface Props {
   policy: HrPolicy;
   canManage: boolean;
+  onActivated?: () => void;
+  unsavedChanges?: boolean;
 }
 
-export function PolicyVersionHistory({ policy, canManage }: Props) {
+export function PolicyVersionHistory({ policy, canManage, onActivated, unsavedChanges = false }: Props) {
   const createVersion = useCreatePolicyVersion();
   const activate = useActivatePolicy();
   const archive = useArchivePolicy();
@@ -49,6 +51,7 @@ export function PolicyVersionHistory({ policy, canManage }: Props) {
         onSuccess: () => {
           toast.success(force ? "Policy force-activated" : "Policy activated");
           setForceArmed(false);
+          onActivated?.();
         },
         onError: (err) => {
           toast.error(getErrorMessage(err));
@@ -111,7 +114,7 @@ export function PolicyVersionHistory({ policy, canManage }: Props) {
                   className="text-xs"
                   isPending={activate.isPending}
                   onClick={handleActivateClick}
-                  disabled={conflicts.isLoading}
+                  disabled={conflicts.isLoading || unsavedChanges}
                 >
                   Activate
                 </LoadingButton>
@@ -147,6 +150,9 @@ export function PolicyVersionHistory({ policy, canManage }: Props) {
           </div>
         )}
       </div>
+      {canManage && policy.status === "draft" && unsavedChanges ? (
+        <p className="text-xs text-muted-foreground">Save your changes before activating.</p>
+      ) : null}
     </div>
   );
 }

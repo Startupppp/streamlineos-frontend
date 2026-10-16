@@ -25,6 +25,7 @@ interface ActionCenterRowProps {
   selected: boolean;
   selectable: boolean;
   decidable: boolean;
+  ownRequest?: boolean;
   isDeciding: boolean;
   onToggleSelected: (itemId: string) => void;
   onOpenRequester: (item: ActionCenterItem) => void;
@@ -41,6 +42,7 @@ export function ActionCenterRow({
   selected,
   selectable,
   decidable,
+  ownRequest = false,
   isDeciding,
   onToggleSelected,
   onOpenRequester,
@@ -155,6 +157,10 @@ export function ActionCenterRow({
               Reject
             </Button>
           </div>
+        ) : ownRequest ? (
+          <span className="shrink-0 text-xs italic text-muted-foreground">
+            Needs another approver
+          </span>
         ) : null}
       </div>
 

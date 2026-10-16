@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { lazyContract } from "@/lib/api-envelope";
 import { payrollQueryKeys } from "@/lib/query-keys/payroll";
 import { useCan } from "@/hooks/api/access";
@@ -45,6 +46,7 @@ export function useRunEmployees(
       ),
     staleTime: 30_000,
     enabled: canView && runId > 0,
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -66,6 +68,7 @@ export function useRunVariance(runId: number) {
     queryFn: ({ signal }) => apiClient.get<VarianceData>(`/payroll/runs/${runId}/variance`, undefined, signal, runVarianceC),
     staleTime: 60_000,
     enabled: canView && runId > 0,
+    ...INLINE_READ_ERROR,
   });
 }
 

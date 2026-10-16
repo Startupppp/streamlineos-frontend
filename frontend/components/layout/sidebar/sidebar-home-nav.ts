@@ -15,6 +15,7 @@ import {
   Megaphone,
   BellDot,
   LifeBuoy,
+  LogOut,
   Users,
   Sun,
 } from "lucide-react";
@@ -127,6 +128,12 @@ export const HOME_NAV_GROUPS: NavGroup[] = [
         href: "/me/referrals",
         modulesAny: ["hrms"],
         icon: Contact2,
+      },
+      {
+        label: "Resignation",
+        href: "/me/resignation",
+        modulesAny: ["hrms"],
+        icon: LogOut,
       },
       {
         label: "Support",

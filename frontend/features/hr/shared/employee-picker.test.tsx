@@ -57,6 +57,21 @@ async function openList() {
 }
 
 describe("EmployeePicker", () => {
+  it("lists a hire who has not accepted the invite yet and says so, beside one who has", async () => {
+    useHrEmployeeOptions.mockReturnValue({
+      employees: [
+        { ...employees[0], hasAccepted: true },
+        { ...employees[1], hasAccepted: false },
+      ],
+      isFetching: false,
+    });
+    render(<EmployeePicker value={undefined} onChange={jest.fn()} />);
+    await openList();
+
+    expect(screen.getByRole("option", { name: /adityachalla01.*Invite pending/ })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: /Vikram Bisht/ })).not.toHaveTextContent("Invite pending");
+  });
+
   it("puts an avatar beside every name in the list", async () => {
     render(<EmployeePicker value={undefined} onChange={jest.fn()} />);
     await openList();

@@ -17,6 +17,9 @@ interface MockQueueState {
   processWfh: jest.Mock;
   toastSuccess: jest.Mock;
   toastError: jest.Mock;
+  sessionUserId: string;
+  leavePending: boolean;
+  myLeaveRoute: { ownerSelfApproval: boolean; approver: { userId: string } | null } | undefined;
 }
 
 export const mockQueueState: MockQueueState = {
@@ -38,6 +41,9 @@ export const mockQueueState: MockQueueState = {
   processWfh: jest.fn(() => Promise.resolve({ success: true })),
   toastSuccess: jest.fn(),
   toastError: jest.fn(),
+  sessionUserId: "usr-approver",
+  leavePending: false,
+  myLeaveRoute: undefined,
 };
 
 export const ALL_QUEUE_PERMISSIONS = [
@@ -61,6 +67,9 @@ export function resetMockQueueState(): void {
   mockQueueState.cutoff = null;
   mockQueueState.inboxDenied = false;
   mockQueueState.granted = new Set(ALL_QUEUE_PERMISSIONS);
+  mockQueueState.sessionUserId = "usr-approver";
+  mockQueueState.leavePending = false;
+  mockQueueState.myLeaveRoute = undefined;
   mockQueueState.approveLeave.mockImplementation((input) =>
     Promise.resolve({ success: true, leaveId: input.leaveId }),
   );
@@ -182,8 +191,9 @@ export function mockQueryClientModule() {
 export function mockHrModule() {
   return {
     useHrLeaveApprovals: () => ({
-      data: { pages: mockQueueState.leavePages },
+      data: mockQueueState.leavePending ? undefined : { pages: mockQueueState.leavePages },
       isLoading: false,
+      isPending: mockQueueState.leavePending,
       isError: false,
       refetch: jest.fn(),
     }),
@@ -296,8 +306,12 @@ export function mockSonnerModule() {
   };
 }
 
-export function mockSessionModule(userId = "usr-admin") {
+export function mockApproversModule() {
+  return { useMyApprover: () => ({ data: mockQueueState.myLeaveRoute }) };
+}
+
+export function mockSessionModule() {
   return {
-    useSession: () => ({ data: { user: { id: userId } } }),
+    useSession: () => ({ data: { user: { id: mockQueueState.sessionUserId } }, status: "authenticated" }),
   };
 }

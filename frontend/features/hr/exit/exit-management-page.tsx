@@ -28,7 +28,7 @@ import { EmptyPersonIllustration } from "@/components/illustrations";
 import { useSession } from "next-auth/react";
 import { useCan } from "@/hooks/api/access";
 import { ResignationCard } from "@/features/hr/exit/resignation-card";
-import { ResignationFormSheet } from "@/features/hr/exit/resignation-form-sheet";
+import { ResignationFormSheet } from "@/components/hr/resignation-form-sheet";
 import { AdminResignationFormSheet } from "@/features/hr/exit/admin-resignation-form-sheet";
 import { ResignationReviewSheets } from "@/features/hr/exit/resignation-review-sheets";
 import { useResignationReview } from "@/features/hr/exit/use-resignation-review";
@@ -38,8 +38,8 @@ import { OffboardingChecklistSummaryPanel } from "@/features/hr/exit/offboarding
 const ACTIVE_RESIGNATION_STATUSES = ["SUBMITTED", "PENDING_HR", "HR_APPROVED"];
 
 export function ExitManagementPage() {
-  const { data: session } = useSession();
   const router = useRouter();
+  const { data: session } = useSession();
   const pager = useCursorPager();
   const {
     data: resignationData,
@@ -66,7 +66,7 @@ export function ExitManagementPage() {
   const isAdmin = useCan("hr:exit:manage");
   const isHR = isAdmin;
   const canApproveExit = useCan("hr:exit:approve");
-  const canSubmit = useCan("hr:exit:create");
+  const canSelfResign = useCan("self:resignation");
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [adminSheetOpen, setAdminSheetOpen] = useState(false);
@@ -124,16 +124,19 @@ export function ExitManagementPage() {
     router.push("/hr/termination");
   }
 
-  const canSubmitOwn = canSubmit && !hasActiveResignation;
+  const canSubmit = canSelfResign && !hasActiveResignation;
+  const canStartResignation = isAdmin || canSubmit;
+  const handleStartResignation = isAdmin ? handleOpenAdminSheet : handleOpenSheet;
+
   const primaryAction =
-    hasActiveResignation || canSubmitOwn || isAdmin ? (
+    hasActiveResignation || canSubmit || isAdmin ? (
       <div className="flex items-center gap-2">
         {hasActiveResignation ? (
           <span className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border bg-status-warning-surface text-status-warning-ink border-status-warning-rule">
             Resignation pending
           </span>
         ) : null}
-        {canSubmitOwn ? (
+        {canSubmit ? (
           <AnimatedIconButton
             icon={PlusIcon}
             iconSize={14}
@@ -212,9 +215,8 @@ export function ExitManagementPage() {
     >
       <div className="mb-3 shrink-0">
         <ExitPathStrip
-          showReassignPrompt={
-            hasActiveResignation || (resignations?.length ?? 0) > 0
-          }
+          showReassignPrompt={hasActiveResignation || (resignations?.length ?? 0) > 0}
+          onStartResignation={canStartResignation ? handleStartResignation : undefined}
         />
       </div>
 
@@ -232,8 +234,8 @@ export function ExitManagementPage() {
                 : "You have no exit in progress."
           }
           action={
-            !hasActiveResignation && canSubmit
-              ? { label: "Submit resignation", onClick: handleOpenSheet }
+            canStartResignation
+              ? { label: isAdmin ? "Record resignation" : "Submit resignation", onClick: handleStartResignation }
               : undefined
           }
           compact

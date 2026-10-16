@@ -248,7 +248,7 @@ export function UserInvitationsPanel() {
     if (!cancellationInvitationId) return;
     cancel(cancellationInvitationId, {
       onSuccess: () => {
-        toast.success("Invitation cancelled");
+        toast.success("Invitation revoked");
         setCancellationInvitationId(null);
       },
       onError: (e) => {

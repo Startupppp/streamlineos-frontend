@@ -68,6 +68,10 @@ function TerminationCard({
     record;
 
   const reasonsList = reasons ?? [];
+  const isInEffect = effectiveDate <= format(new Date(), "yyyy-MM-dd");
+  const canSendLetter =
+    status === "APPROVED" || (status === "COMPLETED" && !record.emailSentAt);
+  const canCompleteNow = status === "SENT" || (status === "APPROVED" && isInEffect);
   const visibleReasons = reasonsList.slice(0, 2);
   const extraCount = reasonsList.length - 2;
 
@@ -207,7 +211,7 @@ function TerminationCard({
               </>
             )}
 
-            {canManageExit && status === "APPROVED" && (
+            {canManageExit && canSendLetter && (
               <Button
                 size="sm"
                 variant="outline"
@@ -220,7 +224,7 @@ function TerminationCard({
               </Button>
             )}
 
-            {canManageExit && status === "SENT" && (
+            {canManageExit && canCompleteNow && (
               <Button
                 size="sm"
                 variant="outline"

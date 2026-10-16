@@ -53,7 +53,7 @@ export function useCreateReimbursement() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:payroll:view", {
     mutationKey: ["hr", "reimbursements", "create"],
-    mutationFn: (data: { category: string; amount: number; description?: string; receiptUrl?: string }) =>
+    mutationFn: (data: { category: string; amount: number; description?: string; receiptUrl?: string; payrollMonth?: string }) =>
       apiClient.post<Reimbursement>("/hr/reimbursements", data, undefined, createReimbursementC),
     onSuccess: () => qc.invalidateQueries({ queryKey: reimbursementKeys.list() }),
   });

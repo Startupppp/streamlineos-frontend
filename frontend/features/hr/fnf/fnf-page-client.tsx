@@ -339,7 +339,15 @@ export function FnfPageClient() {
             onChange={handleUserIdChange}
             placeholder="Select employee…"
             ariaLabel="Employee"
+            includeInactive
           />
+          <p className="text-xs text-muted-foreground">
+            Settle for an employee who has resigned or been terminated. No exit recorded yet?{" "}
+            <Link href="/hr/exit" className="font-medium text-primary underline underline-offset-2">
+              Record the exit first
+            </Link>
+            .
+          </p>
           {userIdError ? (
             <p id="fnf-employee-error" role="alert" className="text-xs text-destructive">
               {userIdError}

@@ -78,7 +78,7 @@ export function parseEmployeeListFilters(
 /** Map UI filters → GET /hr/employees query params. */
 export function toHrEmployeesApiParams(
   filters: EmployeeListFilters,
-): HrEmployeesParams {
+): HrEmployeesParams & { isActive: Exclude<HrEmployeesParams["isActive"], "current"> } {
   return {
     limit: filters.size,
     search: filters.q.trim() || undefined,

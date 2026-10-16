@@ -13,9 +13,9 @@ jest.mock("@/hooks/api/organization", () => ({
   useOrgMembers: () => ({ data: undefined }),
   useOrgMembersByIds: () => ({ data: undefined }),
 }));
-jest.mock("@/hooks/api/build/projects", () => ({ useProjectMembers: () => ({ data: [] }) }));
+jest.mock("@/hooks/api/build/project-members", () => ({ useProjectMembers: () => ({ data: [] }) }));
 jest.mock("@/hooks/api/build/build-members", () => ({ useBuildMembers: () => ({ data: undefined }) }));
-jest.mock("@/hooks/api/module-access", () => ({ useModuleMemberCandidates: () => ({ data: undefined }) }));
+jest.mock("@/hooks/api/module-access/members", () => ({ useModuleMemberCandidates: () => ({ data: undefined }) }));
 
 function Harness({ onSubmit, onPick, lastStep = false }: { onSubmit: () => void; onPick: (id: string | null) => void; lastStep?: boolean }) {
   function handleKeyDown(event: KeyboardEvent<HTMLFormElement>) {
