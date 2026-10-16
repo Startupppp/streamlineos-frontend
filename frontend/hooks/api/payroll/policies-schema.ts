@@ -65,6 +65,7 @@ export const policyToggleImpactResponseContract = z.object({
   toggle: z.string(),
   affectedEmployeeCount: z.number(),
   affectedStatutoryCodes: z.array(z.string()),
+  affectedEmployeeNames: z.array(z.string()).default([]),
 });
 
 export const policyVersionsListResponseContract = z.array(payrollPolicyVersionRowContract);

@@ -25,6 +25,7 @@ import type {
 } from "@/hooks/api/payroll/employees-schema";
 import { cn } from "@/lib/utils";
 import { useSalaryPreview } from "@/hooks/api/payroll/salary-preview";
+import { isPolicyNotActiveError, PolicyNotActiveNotice } from "@/features/payroll/salary-structures/salary-breakup-preview";
 
 const STATUS_CONFIG: Record<SalaryProfileStatus, { className: string; label: string }> = {
   ACTIVE: { className: "bg-status-success-surface text-status-success-ink border-status-success-rule", label: "Active" },
@@ -52,6 +53,7 @@ function ProfileEstimate({ profile, components }: { profile: ProfileDetail; comp
     );
   }
   if (isLoading) return <StatCardGridSkeleton cols={2} count={2} />;
+  if (isError && isPolicyNotActiveError(error)) return <PolicyNotActiveNotice />;
   if (isError || !data) {
     return <p className="text-dense text-muted-foreground">Estimate unavailable: {getErrorMessage(error)}</p>;
   }

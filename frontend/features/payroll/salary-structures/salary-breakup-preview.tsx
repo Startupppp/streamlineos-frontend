@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { PageState } from "@/components/shared/page-state";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,6 +11,7 @@ import { formatMoney } from "@/features/payroll/shared/payroll-format";
 import { cn } from "@/lib/utils";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { usePageState } from "@/hooks/api/use-page-state";
+import { getApiErrorCode } from "@/lib/api-envelope";
 import { SALARY_PREVIEW_CTC, useSalaryPreview, type SalaryPreviewParams } from "@/hooks/api/payroll/salary-preview";
 import type { SalaryPreview, SalaryPreviewLine } from "@/hooks/api/payroll/salary-preview-schema";
 import { usePayrollComponents } from "@/hooks/api/payroll/components";
@@ -77,6 +79,23 @@ function BreakupBody({ data }: { data: SalaryPreview }) {
   );
 }
 
+/** The preview 409s with this code while the org has no active policy (draft or none). */
+export function isPolicyNotActiveError(error: unknown): boolean {
+  return getApiErrorCode(error) === "PAYROLL_POLICY_NOT_ACTIVE";
+}
+
+export function PolicyNotActiveNotice() {
+  return (
+    <p className="text-xs text-muted-foreground">
+      The breakup appears once your payroll policy is active.{" "}
+      <Link href="/payroll/setup" className="font-medium text-primary underline-offset-2 hover:underline">
+        Finish payroll setup
+      </Link>{" "}
+      to activate it.
+    </p>
+  );
+}
+
 function BreakupSkeleton() {
   return (
     <div className="space-y-2">
@@ -99,7 +118,9 @@ export function SalaryBreakupPreview({ annualCtc, regime, workerType, className 
 
   return (
     <div className={cn("rounded-xl border border-border bg-primary/5 px-4 py-3", className)}>
-      {validCtc ? (
+      {validCtc && isPolicyNotActiveError(error) ? (
+        <PolicyNotActiveNotice />
+      ) : validCtc ? (
         <PageState resolution={resolution} loading={<BreakupSkeleton />} onRetry={handleRetry} compact>
           {data ? <BreakupBody data={data} /> : <BreakupSkeleton />}
         </PageState>

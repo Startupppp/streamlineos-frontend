@@ -166,6 +166,7 @@ export type ToggleImpactResult = {
   toggle: ToggleKey;
   affectedEmployeeCount: number;
   affectedStatutoryCodes: string[];
+  affectedEmployeeNames: string[];
 };
 
 export type ActivateChecklistItem = {
