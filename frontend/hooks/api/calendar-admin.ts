@@ -12,6 +12,7 @@ import type {
   CalendarProviderWriteScope,
 } from "./calendar-admin-schema";
 import { platformHierarchyQueryKeys } from "@/lib/query-keys/platform-hierarchy";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
 const policyContract = lazyContract(() => import("./calendar-admin-schema").then((module) => module.calendarAdminPolicyContract));
 const analyticsContract = lazyContract(() => import("./calendar-admin-schema").then((module) => module.calendarAnalyticsContract));
@@ -44,6 +45,7 @@ export function useCalendarAdminPolicy() {
     queryKey: keys.policy,
     queryFn: ({ signal }) => apiClient.get<CalendarAdminPolicy>("/calendar/admin/governance", undefined, signal, policyContract),
     staleTime: 30_000,
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -52,6 +54,7 @@ export function useCalendarAnalytics(from: string, to: string) {
     queryKey: [...keys.analytics, from, to],
     queryFn: ({ signal }) => apiClient.get<CalendarAnalytics>("/calendar/admin/analytics", { from, to }, signal, analyticsContract),
     staleTime: 30_000,
+    ...INLINE_READ_ERROR,
   });
 }
 
