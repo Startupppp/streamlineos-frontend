@@ -41,6 +41,20 @@ jest.mock("@/hooks/api/payroll/people", () => ({
   usePayrollPeople: (...args: unknown[]) => mockUsePayrollPeople(...args),
 }));
 
+const catalog = [
+  { id: 1, code: "BASIC", name: "Basic Salary", type: "EARNING", isActive: true, profileCount: 0 },
+  { id: 2, code: "QA1015BASIC", name: "QA1015 Basic", type: "EARNING", isActive: true, profileCount: 0 },
+  { id: 3, code: "HRA", name: "House Rent Allowance", type: "EARNING", isActive: true, profileCount: 0 },
+];
+jest.mock("@/hooks/api/payroll/components", () => ({
+  usePayrollComponents: () => ({
+    data: { items: catalog, pagination: { limit: 100, hasMore: false, nextCursor: null } },
+    isLoading: false,
+    isError: false,
+    error: null,
+  }),
+}));
+
 const createUser = jest.fn();
 const createWorker = jest.fn();
 const patchUser = jest.fn();
@@ -261,5 +275,81 @@ describe("PAY-B-014 patch payload excludes effectiveFrom", () => {
     const [callArgs] = patchUser.mock.calls;
     const body = callArgs[0]?.body ?? callArgs[0];
     expect(body).not.toHaveProperty("effectiveFrom");
+  });
+});
+
+describe("PAY-B-012 components on the salary profile", () => {
+  const existingProfile = {
+    id: 42,
+    userId: "u-asha",
+    workerId: null,
+    workerType: "EMPLOYEE" as const,
+    currency: "INR",
+    payoutCurrency: null,
+    annualCtc: "1200000",
+    taxRegime: null,
+    costCenter: null,
+    status: "ACTIVE" as const,
+    effectiveFrom: "2025-01-01",
+  };
+  const existingComponents = [
+    { id: 9, componentId: 1, calcMethodOverride: null, amount: "30000.00", percent: null, formulaOverride: null, sortOrder: 0, code: "BASIC", name: "Basic Salary", type: "EARNING", calcMethod: "FIXED", taxable: true },
+  ];
+
+  it("sends the ticked components and keeps an existing line's override", async () => {
+    render(
+      <SalaryProfileSheet employeeUserId="u-asha" open onClose={jest.fn()} existingProfile={existingProfile} existingComponents={existingComponents} />,
+    );
+    expect(screen.getByRole("checkbox", { name: /Basic Salary/ })).toBeChecked();
+    fireEvent.click(screen.getByRole("checkbox", { name: /House Rent Allowance/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Update" }));
+
+    await waitFor(() => expect(patchUser).toHaveBeenCalled());
+    expect(patchUser.mock.calls[0][0].body.components).toEqual([
+      { componentId: 1, amount: "30000.00" },
+      { componentId: 3 },
+    ]);
+  });
+
+  it("warns when two ticked components fill the same role", () => {
+    render(
+      <SalaryProfileSheet employeeUserId="u-asha" open onClose={jest.fn()} existingProfile={existingProfile} existingComponents={existingComponents} />,
+    );
+    fireEvent.click(screen.getByRole("checkbox", { name: /QA1015 Basic/ }));
+    expect(screen.getByText(/Basic is selected more than once/)).toBeInTheDocument();
+  });
+
+  it("refuses to save an edit that unticks every component, because the server keeps them", async () => {
+    render(
+      <SalaryProfileSheet employeeUserId="u-asha" open onClose={jest.fn()} existingProfile={existingProfile} existingComponents={existingComponents} />,
+    );
+    fireEvent.click(screen.getByRole("checkbox", { name: /Basic Salary/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Update" }));
+
+    expect(await screen.findByText("Keep at least one component on this profile")).toBeInTheDocument();
+    expect(patchUser).not.toHaveBeenCalled();
+  });
+});
+
+describe("NEW annual CTC cap — the monthly amount bound capped CTC at about ₹1 crore a year", () => {
+  const existingProfile = {
+    id: 42, userId: "u-asha", workerId: null, workerType: "EMPLOYEE" as const, currency: "INR",
+    payoutCurrency: null, annualCtc: "1200000", taxRegime: null, costCenter: null,
+    status: "ACTIVE" as const, effectiveFrom: "2025-01-01",
+  };
+
+  it("accepts an annual CTC above ₹99,99,999", async () => {
+    render(<SalaryProfileSheet employeeUserId="u-asha" open onClose={jest.fn()} existingProfile={existingProfile} />);
+    fireEvent.change(screen.getByPlaceholderText("e.g. 1200000.00"), { target: { value: "15000000" } });
+    fireEvent.click(screen.getByRole("button", { name: "Update" }));
+    await waitFor(() => expect(patchUser).toHaveBeenCalled());
+  });
+
+  it("rejects an annual CTC above twelve months of the monthly bound", async () => {
+    render(<SalaryProfileSheet employeeUserId="u-asha" open onClose={jest.fn()} existingProfile={existingProfile} />);
+    fireEvent.change(screen.getByPlaceholderText("e.g. 1200000.00"), { target: { value: "119999989" } });
+    fireEvent.click(screen.getByRole("button", { name: "Update" }));
+    expect(await screen.findByText(/Annual CTC cannot exceed/)).toBeInTheDocument();
+    expect(patchUser).not.toHaveBeenCalled();
   });
 });
