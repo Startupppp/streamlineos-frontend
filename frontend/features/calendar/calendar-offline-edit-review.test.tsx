@@ -17,7 +17,7 @@ const policy = jest.requireMock<{ useCalendarOfflinePolicy: jest.Mock }>("@/hook
 const online = jest.requireMock<{ useOnlineStatus: jest.Mock }>("@/hooks/common/use-online-status").useOnlineStatus;
 const refetch = jest.fn();
 
-function setup(options: { moved?: boolean; isError?: boolean; stale?: boolean; online?: boolean } = {}) {
+function setup(options: { moved?: boolean; isError?: boolean; stale?: boolean; online?: boolean; truncated?: boolean } = {}) {
   const now = Date.now();
   const originalStart = new Date(now + 86_400_000);
   const originalEnd = new Date(originalStart.getTime() + 3_600_000);
@@ -40,6 +40,7 @@ function setup(options: { moved?: boolean; isError?: boolean; stale?: boolean; o
       },
       detail: { canManage: true, localVersion: 3, rrule: null },
       coverage: "complete",
+      truncated: options.truncated ?? false,
       availability: { evaluatedAt: new Date(now - (options.stale ? 61_000 : 0)).toISOString(), slots: [{ state: "free", coverageState: "complete", explanation: "Available" }] },
     },
     dataUpdatedAt: now,
@@ -86,6 +87,10 @@ describe("offline Calendar edit review", () => {
 
   it("rejects stale free data after a failed background refresh", () => {
     expect(setup({ isError: true })).toBeDisabled();
+  });
+
+  it("rejects a truncated occurrence result even when coverage reports complete", () => {
+    expect(setup({ truncated: true })).toBeDisabled();
   });
 
   it("blocks a previously valid review after connectivity drops", () => {

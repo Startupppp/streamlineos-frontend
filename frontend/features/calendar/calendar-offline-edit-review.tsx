@@ -57,7 +57,7 @@ export function CalendarOfflineEditReview({ intent, onDiscard, onContinue }: {
         apiClient.post<z.infer<typeof availabilityContract>>("/calendar/availability/evaluate", { slots: [{ start: intent.start, end: intent.end }], participants: [{ userId: session?.user?.id ?? "", requirement: "required" }], bufferBeforeMinutes: 0, bufferAfterMinutes: 0 }, { signal }, availabilityContract),
       ]);
       const event = events.events.find((item) => item.source === "event" && item.sourceRecordId === intent.sourceRecordId && item.occurrenceId === intent.occurrenceId) ?? null;
-      return { event, detail, availability, coverage: events.coverageState };
+      return { event, detail, availability, coverage: events.coverageState, truncated: events.truncated };
     },
     enabled: online && sameIdentity && canRead && canWrite && policyCurrent && valid,
     staleTime: 0,
@@ -68,7 +68,7 @@ export function CalendarOfflineEditReview({ intent, onDiscard, onContinue }: {
   const detail = review.data?.detail;
   const slot = review.data?.availability.slots[0];
   const sourceCurrent = Boolean(event?.actions.edit && detail?.canManage && event.sourceVersion === intent.expectedSourceVersion && String(detail.localVersion) === intent.expectedSourceVersion &&
-    new Date(event.start).getTime() === originalStart.getTime() && new Date(event.end).getTime() === originalEnd.getTime() && review.data?.coverage === "complete");
+    new Date(event.start).getTime() === originalStart.getTime() && new Date(event.end).getTime() === originalEnd.getTime() && review.data?.coverage === "complete" && review.data.truncated === false);
   const evaluationAge = review.data ? nowMs - new Date(review.data.availability.evaluatedAt).getTime() : NaN;
   const evaluationCurrent = review.isFetchedAfterMount && review.dataUpdatedAt >= intent.createdAt &&
     Number.isFinite(evaluationAge) && evaluationAge >= 0 && evaluationAge < 60_000;
