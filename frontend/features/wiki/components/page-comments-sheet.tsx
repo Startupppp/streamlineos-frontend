@@ -47,6 +47,7 @@ export default function PageCommentsSheet({ pageId, open, onOpenChange, content 
   const { data: session } = useSession();
   const currentUserId = session?.user?.id ?? null;
   const canUpdate = useCan("kb:pages:update");
+  const canManage = useCan("kb:pages:manage");
   const {
     data: comments = [],
     isLoading,
@@ -71,7 +72,7 @@ export default function PageCommentsSheet({ pageId, open, onOpenChange, content 
   const resolved = comments.filter((c) => c.parentId === null && !!c.resolvedAt);
 
   function handlePost() {
-    if (!newContent.trim()) return;
+    if (!canUpdate || !newContent.trim()) return;
     const isReply = replyingTo !== null;
     createComment.mutate(
       {
@@ -178,6 +179,7 @@ export default function PageCommentsSheet({ pageId, open, onOpenChange, content 
                       onReply={handleSetReplyingTo}
                       currentUserId={currentUserId}
                       canUpdate={canUpdate}
+                      canManage={canManage}
                     />
                   </li>
                 ))}
@@ -198,6 +200,7 @@ export default function PageCommentsSheet({ pageId, open, onOpenChange, content 
                           onReply={handleSetReplyingTo}
                           currentUserId={currentUserId}
                           canUpdate={canUpdate}
+                          canManage={canManage}
                         />
                       </li>
                     ))}
@@ -223,7 +226,7 @@ export default function PageCommentsSheet({ pageId, open, onOpenChange, content 
             </div>
           </div>
         </ScrollArea>
-        <div className="shrink-0 border-t px-6 py-4 space-y-2">
+        {canUpdate && <div className="shrink-0 border-t px-6 py-4 space-y-2">
           {replyingTo && (
             <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
               <span>Replying to comment…</span>
@@ -309,7 +312,7 @@ export default function PageCommentsSheet({ pageId, open, onOpenChange, content 
               Post comment
             </LoadingButton>
           </div>
-        </div>
+        </div>}
       </SheetContent>
     </Sheet>
   );

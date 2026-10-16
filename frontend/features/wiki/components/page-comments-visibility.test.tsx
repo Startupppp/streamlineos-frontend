@@ -76,11 +76,13 @@ describe("PageCommentsSheet — comment action visibility", () => {
       expect(resolveButtons).toBeNull();
     });
 
-    it("still shows Reply button (view-level action, available to all)", () => {
-      const { getByRole } = render(
+    it("hides Reply and the composer when update permission is denied", () => {
+      const { queryByRole } = render(
         <PageCommentsSheet pageId={1} open onOpenChange={jest.fn()} />,
       );
-      expect(getByRole("button", { name: /reply/i })).toBeInTheDocument();
+      expect(queryByRole("button", { name: /reply/i })).not.toBeInTheDocument();
+      expect(queryByRole("textbox", { name: "Write a comment" })).not.toBeInTheDocument();
+      expect(queryByRole("button", { name: "Post comment" })).not.toBeInTheDocument();
     });
   });
 
@@ -90,18 +92,18 @@ describe("PageCommentsSheet — comment action visibility", () => {
       useCan.mockReturnValue(false);
     });
 
-    it("shows Edit button to the comment author", () => {
-      const { getByRole } = render(
+    it("hides Edit from the author when the controller permission is denied", () => {
+      const { queryByRole } = render(
         <PageCommentsSheet pageId={1} open onOpenChange={jest.fn()} />,
       );
-      expect(getByRole("button", { name: /edit/i })).toBeInTheDocument();
+      expect(queryByRole("button", { name: /edit/i })).not.toBeInTheDocument();
     });
 
-    it("shows Delete button to the comment author", () => {
-      const { getByRole } = render(
+    it("hides Delete from the author when the controller permission is denied", () => {
+      const { queryByRole } = render(
         <PageCommentsSheet pageId={1} open onOpenChange={jest.fn()} />,
       );
-      expect(getByRole("button", { name: /delete/i })).toBeInTheDocument();
+      expect(queryByRole("button", { name: /delete/i })).not.toBeInTheDocument();
     });
 
     it("does not show Resolve to an author without kb:pages:update", () => {
@@ -112,6 +114,7 @@ describe("PageCommentsSheet — comment action visibility", () => {
     });
 
     it("describes the discussion and names the compose, reply and editing fields", async () => {
+      useCan.mockImplementation((permission: string) => permission === "kb:pages:update");
       const view = render(<PageCommentsSheet pageId={1} open onOpenChange={jest.fn()} />);
       expect(view.getByRole("dialog")).toHaveAccessibleDescription("Discuss this page and resolve feedback with your team.");
       expect(view.getByRole("textbox", { name: "Write a comment" })).toBeInTheDocument();
@@ -136,21 +139,21 @@ describe("PageCommentsSheet — comment action visibility", () => {
   describe("non-author with kb:pages:update (page editor)", () => {
     beforeEach(() => {
       useSession.mockReturnValue({ data: { user: { id: "user-editor" } } });
-      useCan.mockReturnValue(true);
+      useCan.mockImplementation((permission: string) => permission === "kb:pages:update");
     });
 
-    it("shows Edit button via update permission", () => {
-      const { getByRole } = render(
+    it("hides Edit because editing another author's comment also requires manage permission", () => {
+      const { queryByRole } = render(
         <PageCommentsSheet pageId={1} open onOpenChange={jest.fn()} />,
       );
-      expect(getByRole("button", { name: /edit/i })).toBeInTheDocument();
+      expect(queryByRole("button", { name: /edit/i })).not.toBeInTheDocument();
     });
 
-    it("shows Delete button via update permission", () => {
-      const { getByRole } = render(
+    it("hides Delete because deleting another author's comment also requires manage permission", () => {
+      const { queryByRole } = render(
         <PageCommentsSheet pageId={1} open onOpenChange={jest.fn()} />,
       );
-      expect(getByRole("button", { name: /delete/i })).toBeInTheDocument();
+      expect(queryByRole("button", { name: /delete/i })).not.toBeInTheDocument();
     });
 
     it("shows Resolve button via kb:pages:update", () => {
@@ -159,6 +162,28 @@ describe("PageCommentsSheet — comment action visibility", () => {
       );
       expect(getByRole("button", { name: /resolve/i })).toBeInTheDocument();
     });
+  });
+
+  it("allows a page manager to edit and delete another author's comment", () => {
+    useSession.mockReturnValue({ data: { user: { id: "user-editor" } } });
+    useCan.mockReturnValue(true);
+
+    const view = render(<PageCommentsSheet pageId={1} open onOpenChange={jest.fn()} />);
+
+    expect(view.getByRole("button", { name: "Edit" })).toBeInTheDocument();
+    expect(view.getByRole("button", { name: "Delete" })).toBeInTheDocument();
+  });
+
+  it("does not show write actions when manage is granted without the controller's update permission", () => {
+    useSession.mockReturnValue({ data: { user: { id: "user-editor" } } });
+    useCan.mockImplementation((permission: string) => permission === "kb:pages:manage");
+
+    const view = render(<PageCommentsSheet pageId={1} open onOpenChange={jest.fn()} />);
+
+    expect(view.queryByRole("button", { name: "Edit" })).not.toBeInTheDocument();
+    expect(view.queryByRole("button", { name: "Delete" })).not.toBeInTheDocument();
+    expect(view.queryByRole("button", { name: "Reply" })).not.toBeInTheDocument();
+    expect(view.queryByRole("textbox", { name: "Write a comment" })).not.toBeInTheDocument();
   });
 });
 
@@ -246,7 +271,7 @@ describe("PageCommentsSheet — bounded comments", () => {
 describe("PageCommentsSheet — WCAG 4.1.3 status announcements", () => {
   beforeEach(() => {
     useSession.mockReturnValue({ data: { user: { id: "user-other" } } });
-    useCan.mockReturnValue(false);
+    useCan.mockImplementation((permission: string) => permission === "kb:pages:update");
   });
 
   afterEach(() => {
