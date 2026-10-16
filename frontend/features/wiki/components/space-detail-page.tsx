@@ -9,7 +9,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { useCan } from "@/hooks/api/access";
-import { useCreateKbPage } from "@/hooks/api/kb";
 import {
   useKbSpace,
   useArchiveKbSpace,
@@ -17,6 +16,7 @@ import {
 } from "@/hooks/api/kb/spaces";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { pageHref } from "@/lib/knowledge-routes";
+import { useGuardedCreateKbPage } from "@/features/wiki/hooks/use-guarded-create-kb-page";
 import { getUserDisplayName } from "@/lib/person-display";
 import { kbTimeAgo } from "@/features/wiki/lib/kb-date-utils";
 import {
@@ -83,7 +83,7 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
   } = useKbSpace(spaceId);
   const canCreatePage = useCan("kb:pages:create");
   const canManage = useCan("kb:spaces:manage");
-  const createPage = useCreateKbPage();
+  const createPage = useGuardedCreateKbPage((page) => router.push(pageHref(page.id)));
   const archiveSpace = useArchiveKbSpace();
   const restoreSpace = useRestoreKbSpace();
   const [membersOpen, setMembersOpen] = useState(false);
@@ -104,13 +104,7 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
   }
 
   function handleNewPage() {
-    createPage.mutate(
-      { spaceId },
-      {
-        onSuccess: (page) => router.push(pageHref(page.id)),
-        onError: (err) => toast.error(getErrorMessage(err)),
-      },
-    );
+    void createPage.submit({ spaceId });
   }
 
   function handleMembersOpenChange(open: boolean) {
@@ -166,7 +160,7 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
         <Button
           size="sm"
           onClick={handleNewPage}
-          disabled={createPage.isPending}
+          disabled={createPage.isSubmitting}
         >
           <KbPlusIcon className="h-4 w-4 mr-1.5" />
           New page
