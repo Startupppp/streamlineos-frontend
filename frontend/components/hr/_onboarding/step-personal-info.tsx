@@ -22,6 +22,9 @@ import {
 
 type FormValues = z.infer<typeof onboardEmployeeInputSchema>;
 
+/** The rule `hrPersonNameField` enforces, stated before anyone breaks it (HR-U-004). */
+const NAME_RULE_HINT = "Letters, spaces, apostrophes, periods and hyphens. No numbers.";
+
 function dateOfBirthChange(
   onChange: (value: Date | null) => void,
 ): (value: string) => void {
@@ -68,6 +71,7 @@ export function StepPersonalInfo({ form }: StepPersonalInfoProps) {
             <FormControl>
               <Input placeholder="John" maxLength={80} {...field} />
             </FormControl>
+            <FormDescription>{NAME_RULE_HINT}</FormDescription>
             <FormMessage />
           </FormItem>
         )}
@@ -81,6 +85,7 @@ export function StepPersonalInfo({ form }: StepPersonalInfoProps) {
             <FormControl>
               <Input placeholder="Doe" maxLength={80} {...field} />
             </FormControl>
+            <FormDescription>{NAME_RULE_HINT}</FormDescription>
             <FormMessage />
           </FormItem>
         )}
