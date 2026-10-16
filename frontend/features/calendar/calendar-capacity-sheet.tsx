@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type KeyboardEvent, type UIEvent } from "react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -47,7 +47,8 @@ export function CalendarCapacitySheet({ onClose }: { onClose: () => void }) {
   const selectedWarehouseId = warehouseId || warehouses.data?.items[0]?.id || 0;
   const peopleScope = useScope("directory:people:view");
   const people = usePeople({ limit: 50, search: memberSearch });
-  const selectedId = resourceId || resources.data?.[0]?.id || 0;
+  const resourceItems = resources.data?.pages.flatMap((page) => page.items) ?? [];
+  const selectedId = resourceId || resourceItems[0]?.id || 0;
   const input = useMemo(() => {
     const begin = new Date(start);
     const finish = new Date(end);
@@ -89,6 +90,18 @@ export function CalendarCapacitySheet({ onClose }: { onClose: () => void }) {
     selectedWarehouseId,
     mode === "warehouse",
   );
+  const handleResourceListKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === "End" && resources.hasNextPage && !resources.isFetchingNextPage) {
+      void resources.fetchNextPage();
+    }
+  };
+  const handleResourceListScroll = (event: UIEvent<HTMLDivElement>) => {
+    const viewport = event.target;
+    if (!(viewport instanceof HTMLElement) || !resources.hasNextPage || resources.isFetchingNextPage) return;
+    if (viewport.scrollTop + viewport.clientHeight >= viewport.scrollHeight - 80) {
+      void resources.fetchNextPage();
+    }
+  };
   return (
     <AppSheet
       open
@@ -148,12 +161,16 @@ export function CalendarCapacitySheet({ onClose }: { onClose: () => void }) {
                 <SelectTrigger id="capacity-resource" className="w-full">
                   <SelectValue placeholder="Select a resource" />
                 </SelectTrigger>
-                <SelectContent>
-                  {resources.data?.map((resource) => (
+                <SelectContent
+                  onKeyDownCapture={handleResourceListKeyDown}
+                  onScrollCapture={handleResourceListScroll}
+                >
+                  {resourceItems.map((resource) => (
                     <SelectItem key={resource.id} value={String(resource.id)}>
                       {resource.name} · {resource.kind} · {resource.location ?? "No location"}
                     </SelectItem>
                   ))}
+                  {resources.isFetchingNextPage ? <p className="px-2 py-1 text-xs text-muted-foreground">Loading more resources</p> : null}
                 </SelectContent>
               </Select>
             </div>
