@@ -18,6 +18,7 @@ jest.mock("next/navigation", () => ({
 jest.mock("@/hooks/api/build/managed-product-members", () => ({
   useManagedProductMembers: jest.fn(),
   useRemoveManagedProductMember: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+  useUpdateManagedProductMemberRole: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
 }));
 
 jest.mock("@/hooks/api/access", () => ({
@@ -34,9 +35,12 @@ jest.mock("./add-product-member-dialog", () => ({
     open ? <div data-testid="add-member-dialog" /> : null,
 }));
 
-const { useManagedProductMembers, useRemoveManagedProductMember } = jest.requireMock(
-  "@/hooks/api/build/managed-product-members",
-) as { useManagedProductMembers: jest.Mock; useRemoveManagedProductMember: jest.Mock };
+const { useManagedProductMembers, useRemoveManagedProductMember, useUpdateManagedProductMemberRole } =
+  jest.requireMock("@/hooks/api/build/managed-product-members") as {
+    useManagedProductMembers: jest.Mock;
+    useRemoveManagedProductMember: jest.Mock;
+    useUpdateManagedProductMemberRole: jest.Mock;
+  };
 
 const MANAGED_PRODUCT_ID = 7;
 
@@ -95,6 +99,36 @@ describe("ProductSettingsMembersSection", () => {
 
     expect(mutate).toHaveBeenCalledWith(MEMBER.id, expect.any(Object));
     expect(screen.getByText("Cannot remove the last admin of a product.")).toBeInTheDocument();
+  });
+
+  it("offers a role selector per member and shows the server's refusal (MP-B-015)", async () => {
+    const { toast } = jest.requireMock("sonner") as { toast: { error: jest.Mock } };
+    const mutate = jest.fn((_vars: unknown, opts: { onError?: (e: unknown) => void }) =>
+      opts.onError?.(new ApiError("Cannot demote the last admin of a product", 409, "CONFLICT")),
+    );
+    useUpdateManagedProductMemberRole.mockReturnValue({ mutate, isPending: false });
+    useManagedProductMembers.mockReturnValue(result());
+    render(<ProductSettingsMembersSection managedProductId={MANAGED_PRODUCT_ID} />);
+
+    const trigger = screen.getByRole("combobox", { name: "Role for Ada Lovelace" });
+    expect(trigger).toHaveTextContent("Admin");
+    fireEvent.click(trigger);
+    await act(async () => {
+      fireEvent.click(await screen.findByRole("option", { name: "Member" }));
+    });
+
+    expect(mutate).toHaveBeenCalledWith({ membershipRowId: MEMBER.id, role: "member" }, expect.any(Object));
+    expect(toast.error).toHaveBeenCalledWith("Cannot demote the last admin of a product");
+  });
+
+  it("shows the role as text, with no selector, without update rights", () => {
+    const { useCan } = jest.requireMock("@/hooks/api/access") as { useCan: jest.Mock };
+    useCan.mockReturnValueOnce(false);
+    useManagedProductMembers.mockReturnValue(result());
+    render(<ProductSettingsMembersSection managedProductId={MANAGED_PRODUCT_ID} />);
+
+    expect(screen.queryByRole("combobox")).toBeNull();
+    expect(screen.getByText("Admin")).toBeInTheDocument();
   });
 
   it("lists the product members", () => {

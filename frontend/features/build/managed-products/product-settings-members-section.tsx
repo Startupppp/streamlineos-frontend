@@ -1,15 +1,23 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 import { UserPlus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { TablePagination } from "@/components/ui/table-pagination";
 import { useCan, useCanState } from "@/hooks/api/access";
 import {
   useManagedProductMembers,
   useRemoveManagedProductMember,
+  useUpdateManagedProductMemberRole,
 } from "@/hooks/api/build/managed-product-members";
 import type { ManagedProductMember } from "@/hooks/api/build/managed-product-members";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -35,6 +43,70 @@ function memberDisplayName(m: ManagedProductMember): string {
   return email;
 }
 
+const ROLE_LABELS: Record<ManagedProductMember["role"], string> = {
+  admin: "Admin",
+  member: "Member",
+};
+
+function isMemberRole(value: string): value is ManagedProductMember["role"] {
+  return value === "admin" || value === "member";
+}
+
+interface ProductMemberRowProps {
+  member: ManagedProductMember;
+  canUpdate: boolean;
+  onRemove: (m: ManagedProductMember) => void;
+  onRoleChange: (m: ManagedProductMember, role: ManagedProductMember["role"]) => void;
+}
+
+const ProductMemberRow = memo(function ProductMemberRow({
+  member,
+  canUpdate,
+  onRemove,
+  onRoleChange,
+}: ProductMemberRowProps) {
+  const name = memberDisplayName(member);
+  function handleRemove() {
+    onRemove(member);
+  }
+  function handleRoleChange(value: string) {
+    if (isMemberRole(value) && value !== member.role) onRoleChange(member, value);
+  }
+  return (
+    <li className="flex items-center justify-between gap-2 rounded-md border border-border px-3 py-2">
+      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+        <span className="truncate text-sm font-medium text-foreground">{name}</span>
+        {canUpdate ? null : (
+          <span className="text-xs text-muted-foreground">{ROLE_LABELS[member.role]}</span>
+        )}
+      </div>
+      {canUpdate ? (
+        <>
+          <Select value={member.role} onValueChange={handleRoleChange}>
+            <SelectTrigger className="w-28 shrink-0" aria-label={`Role for ${name}`}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="admin">{ROLE_LABELS.admin}</SelectItem>
+              <SelectItem value="member">{ROLE_LABELS.member}</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="w-7 shrink-0"
+            aria-label={`Remove ${name}`}
+            onClick={handleRemove}
+          >
+            <X aria-hidden="true" size={14} />
+          </Button>
+        </>
+      ) : null}
+    </li>
+  );
+});
+
 export function ProductSettingsMembersSection({
   managedProductId,
   canWrite: canWriteProp,
@@ -55,6 +127,20 @@ export function ProductSettingsMembersSection({
     { cursor: pager.cursor },
   );
   const removeMember = useRemoveManagedProductMember(managedProductId);
+  const updateRole = useUpdateManagedProductMemberRole(managedProductId);
+  const { mutate: mutateRole } = updateRole;
+
+  // Optimistic: the select shows the new role at once and rolls back on a
+  // refusal; the 409 text names why (last admin, product owner).
+  const handleRoleChange = useCallback(
+    (m: ManagedProductMember, role: ManagedProductMember["role"]) => {
+      mutateRole(
+        { membershipRowId: m.id, role },
+        { onError: (e) => toast.error(getErrorMessage(e)) },
+      );
+    },
+    [mutateRole],
+  );
 
   const handleRemoveRow = useCallback((m: ManagedProductMember) => {
     setRemoveBlockedMsg(null);
@@ -141,29 +227,13 @@ export function ProductSettingsMembersSection({
       ) : (
         <ul className="flex flex-col gap-1" aria-label="Product members">
           {members.map((m) => (
-            <li
+            <ProductMemberRow
               key={m.id}
-              className="flex items-center justify-between rounded-md border border-border px-3 py-2"
-            >
-              <div className="flex flex-col gap-0.5 min-w-0">
-                <span className="text-sm font-medium text-foreground truncate">
-                  {memberDisplayName(m)}
-                </span>
-                <span className="text-xs capitalize text-muted-foreground">{m.role}</span>
-              </div>
-              {canUpdate ? (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="w-7 shrink-0"
-                  aria-label={`Remove ${memberDisplayName(m)}`}
-                  onClick={() => handleRemoveRow(m)}
-                >
-                  <X aria-hidden="true" size={14} />
-                </Button>
-              ) : null}
-            </li>
+              member={m}
+              canUpdate={canUpdate}
+              onRemove={handleRemoveRow}
+              onRoleChange={handleRoleChange}
+            />
           ))}
           {members.length === 0 && !isLoading ? (
             <li className="py-4 text-center text-sm text-muted-foreground">No members yet.</li>
