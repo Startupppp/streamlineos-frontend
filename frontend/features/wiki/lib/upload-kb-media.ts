@@ -59,8 +59,14 @@ function getValidationError(file: File): string | null {
   if (DOC_TYPES.has(file.type)) {
     return file.size > DOC_MAX ? 'File too large (max 25 MB).' : null;
   }
-  return `Unsupported file type: ${file.type || 'unknown'}`;
+  const extension = /\.([a-z0-9]+)$/i.exec(file.name)?.[1];
+  const kind = extension ? `.${extension.toLowerCase()} files` : 'This file type';
+  return `${kind} can't be uploaded. ${ALLOWED_TYPES_COPY}`;
 }
+
+const ALLOWED_TYPES_COPY =
+  'You can upload images (JPEG, PNG, GIF, WebP), video (MP4, WebM), audio (MP3, WAV, OGG, M4A) ' +
+  'and documents (PDF, Word, Excel, PowerPoint, CSV, TXT, ZIP).';
 
 const mediaUploadKeys = new Map<string, string>();
 
@@ -76,17 +82,29 @@ function idempotencyKeyFor(signature: string): string {
   return minted;
 }
 
-export async function uploadKbMedia(file: File, pageId?: number): Promise<UploadedEditorMedia> {
-  const error = getValidationError(file);
-  if (error) throw new Error(error);
+// The same file dropped again while its first upload is in flight would reuse
+// the idempotency key and get a 409 "matching request in progress"; share the
+// in-flight upload instead.
+const inFlightUploads = new Map<string, Promise<UploadedEditorMedia>>();
+
+async function sendUpload(file: File, signature: string, pageId?: number): Promise<UploadedEditorMedia> {
   const fd = new FormData();
   fd.append('file', file);
   if (pageId != null) fd.append('pageId', String(pageId));
-
-  const signature = uploadSignature(file, pageId);
   const uploaded = await apiClient.upload<UploadedEditorMedia>('/kb/media', fd, kbMediaUploadContract, {
     headers: { [IDEMPOTENCY_HEADER]: idempotencyKeyFor(signature) },
   });
   mediaUploadKeys.delete(signature);
   return uploaded;
+}
+
+export function uploadKbMedia(file: File, pageId?: number): Promise<UploadedEditorMedia> {
+  const error = getValidationError(file);
+  if (error) return Promise.reject(new Error(error));
+  const signature = uploadSignature(file, pageId);
+  const pending = inFlightUploads.get(signature);
+  if (pending) return pending;
+  const upload = sendUpload(file, signature, pageId).finally(() => inFlightUploads.delete(signature));
+  inFlightUploads.set(signature, upload);
+  return upload;
 }

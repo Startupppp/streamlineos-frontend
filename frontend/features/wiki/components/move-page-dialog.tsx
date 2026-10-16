@@ -58,7 +58,7 @@ export default function MovePageDialog({
           toast.success("Page moved");
           onOpenChange(false);
         },
-        onError: () => toast.error("Failed to move page"),
+        onError: (error) => toast.error(getErrorMessage(error)),
       },
     );
   }

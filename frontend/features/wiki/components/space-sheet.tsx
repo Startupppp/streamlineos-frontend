@@ -56,8 +56,8 @@ export function SpaceSheet({
     resolver: zodResolver(spaceSchema),
     defaultValues: {
       name: editingSpace?.name ?? "",
-      description: editingSpace?.description ?? null,
-      icon: editingSpace?.icon ?? null,
+      description: editingSpace?.description ?? "",
+      icon: editingSpace?.icon ?? "",
       audience: (editingSpace?.audience ?? "internal") as KbAudience,
     },
   });
@@ -75,8 +75,9 @@ export function SpaceSheet({
         {
           spaceId: editingSpace.id,
           name: values.name,
-          description: values.description ?? null,
-          icon: values.icon ?? null,
+          // An emptied field is sent as null so the edit clears it.
+          description: values.description?.trim() || null,
+          icon: values.icon?.trim() || null,
           audience: values.audience,
         },
         {
@@ -92,8 +93,8 @@ export function SpaceSheet({
       createSpace.mutate(
         {
           name: values.name,
-          description: values.description ?? null,
-          icon: values.icon ?? null,
+          description: values.description?.trim() || undefined,
+          icon: values.icon?.trim() || undefined,
           audience: values.audience,
         },
         {

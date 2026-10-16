@@ -9,7 +9,8 @@ import {
   KbChevronRightIcon,
   KbLoader2Icon,
 } from "@/features/wiki/lib/kb-icons";
-import { KNOWLEDGE_BASE, KB_SPACES, pageHref, projectPageHref } from "@/lib/knowledge-routes";
+import { KNOWLEDGE_BASE, KB_SPACES, pageHref, projectPageHref, spaceHref } from "@/lib/knowledge-routes";
+import { useKbSpace } from "@/hooks/api/kb/spaces";
 import type { KbPageDetail } from "@/hooks/api/kb/page-types";
 import type { PageSaveState } from "./use-page-autosave";
 import {
@@ -60,6 +61,9 @@ export function PageDocumentBreadcrumb({
 }: PageDocumentBreadcrumbProps) {
   const ancestors = page.ancestors ?? [];
   const isProjectScoped = projectId !== undefined && projectId > 0;
+  // A space crumb only when the space read succeeds; a viewer without
+  // kb:spaces:view still gets Wiki › ancestors.
+  const { data: space } = useKbSpace(isProjectScoped ? 0 : page.spaceId ?? 0);
   const wikiHref = isProjectScoped ? `/build/${projectId}/wiki` : KNOWLEDGE_BASE;
 
   function resolveAncestorHref(id: number): string {
@@ -88,6 +92,18 @@ export function PageDocumentBreadcrumb({
         >
           Wiki
         </Link>
+        {space ? (
+          <span className="flex min-w-0 items-center gap-1">
+            <KbChevronRightIcon className="h-3 w-3 shrink-0" />
+            <Link
+              href={spaceHref(space.id)}
+              className="max-w-[7rem] min-w-0 truncate hover:text-foreground"
+              title={space.name}
+            >
+              {space.name}
+            </Link>
+          </span>
+        ) : null}
         {ancestors.map((a) => (
           <span key={a.id} className="hidden min-w-0 items-center gap-1 sm:flex">
             <KbChevronRightIcon className="h-3 w-3 shrink-0" />

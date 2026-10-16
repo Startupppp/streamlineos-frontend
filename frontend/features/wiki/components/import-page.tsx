@@ -43,6 +43,7 @@ import {
   failedItemsFromReport,
   type ImportFailedItem,
 } from "./import-failed-titles-alert";
+import { markdownImportItem } from "@/features/wiki/lib/markdown-import-title";
 import { ImportFormControls } from "./import-form-controls";
 
 const VALID_TABS = ["import", "export"] as const;
@@ -234,13 +235,12 @@ export default function ImportPage() {
           if (readGeneration !== readGenerationRef.current) return;
           const result = ev.target?.result;
           const text = typeof result === "string" ? result : "";
-          const title = file.name.replace(/\.(md|markdown|txt)$/i, "");
           if (text.length > MAX_CONTENT_LENGTH) {
             toast.error(`${file.name} exceeds the 50,000-character page limit and was skipped`);
           } else if (text.includes("\0")) {
             toast.error(`${file.name} contains binary content and was skipped`);
           } else {
-            newItems[index] = { title, contentText: text, sizeBytes: file.size };
+            newItems[index] = { ...markdownImportItem(text, file.name), sizeBytes: file.size };
           }
           finishRead();
         };

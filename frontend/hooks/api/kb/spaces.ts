@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
@@ -233,15 +233,19 @@ export function useKbSpaceMembers(
   options?: { enabled?: boolean },
 ) {
   const canManage = useCan("kb:spaces:manage");
-  return useQuery({
+  return useInfiniteQuery({
+    ...INLINE_READ_ERROR,
     queryKey: [...knowledgeAndSurveysQueryKeys.kb.space(spaceId), "members"],
-    queryFn: ({ signal }) =>
+    queryFn: ({ pageParam, signal }) =>
       apiClient.get(
         `/kb/spaces/${spaceId}/members`,
-        undefined,
+        pageParam ? { cursor: pageParam } : undefined,
         signal,
         kbSpaceMemberListContract,
       ),
+    initialPageParam: null as string | null,
+    getNextPageParam: (lastPage) => lastPage.pagination.nextCursor,
+    select: (data) => data.pages.flatMap((page) => page.data),
     enabled: canManage && Number.isFinite(spaceId) && spaceId > 0 && (options?.enabled ?? true),
     staleTime: 60_000,
   });

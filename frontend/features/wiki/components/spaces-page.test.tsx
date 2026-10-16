@@ -219,6 +219,44 @@ describe("SpacesPage", () => {
     expect(screen.getByText("Members — Engineering")).toBeInTheDocument();
   });
 
+  it("KB-B-029: Edit seeds the sheet with the clicked space, after a create was opened first", async () => {
+    mockCan.mockReturnValue(true);
+    renderPage();
+    await userEvent.click(screen.getByRole("button", { name: /New space/i }));
+    await userEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    await userEvent.click(screen.getByRole("button", { name: "Edit" }));
+    expect(screen.getByLabelText("Name")).toHaveValue("Engineering");
+    expect(screen.getByLabelText("Description")).toHaveValue("For engineers");
+  });
+
+  it("KB-B-001/026: Create omits empty description and icon instead of sending null", async () => {
+    mockCan.mockReturnValue(true);
+    const create = mutation();
+    mockCreate.mockReturnValue(create);
+    renderPage();
+    await userEvent.click(screen.getByRole("button", { name: /New space/i }));
+    await userEvent.type(screen.getByLabelText("Name"), "Ops");
+    await userEvent.click(screen.getByRole("button", { name: "Create" }));
+    expect(create.mutate).toHaveBeenCalledWith(
+      { name: "Ops", description: undefined, icon: undefined, audience: "internal" },
+      expect.anything(),
+    );
+  });
+
+  it("KB-B-001: Edit sends null for a cleared description so the field is cleared", async () => {
+    mockCan.mockReturnValue(true);
+    const update = mutation();
+    mockUpdate.mockReturnValue(update);
+    renderPage();
+    await userEvent.click(screen.getByRole("button", { name: "Edit" }));
+    await userEvent.clear(screen.getByLabelText("Description"));
+    await userEvent.click(screen.getByRole("button", { name: "Save" }));
+    expect(update.mutate).toHaveBeenCalledWith(
+      expect.objectContaining({ spaceId: 1, description: null, icon: "🔧" }),
+      expect.anything(),
+    );
+  });
+
   it("BITE: shows the owner and last-updated line on each card", () => {
     mockSpaces.mockReturnValue(listing([space({ ownerName: "Priya Shah" })]));
 
