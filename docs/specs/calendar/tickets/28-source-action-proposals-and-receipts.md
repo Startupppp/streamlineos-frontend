@@ -10,5 +10,5 @@
 - [ ] The user confirms each source-owned change before its owner reauthorizes and applies it.
 - [ ] Multi-record application reports committed, failed, declined, and uncertain outcomes per source.
 - [ ] Partial completion offers repair or compensation without claiming cross-module atomicity.
-- [ ] Tests cover stale version, permission loss, deleted source, owner rejection, timeout, retry, and duplicate confirmation.
+- [x] Tests cover stale version, permission loss, deleted source, owner rejection, timeout, retry, and duplicate confirmation.
 
