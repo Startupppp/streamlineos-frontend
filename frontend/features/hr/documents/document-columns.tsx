@@ -48,9 +48,15 @@ export function createDocumentColumns(
             </div>
             <div className="min-w-0">
               <TruncatedText
-                text={doc.fileName ?? doc.name}
+                text={doc.name}
                 className="text-sm font-medium text-foreground leading-snug"
               />
+              {doc.fileName && doc.fileName !== doc.name && (
+                <TruncatedText
+                  text={doc.fileName}
+                  className="text-xs text-muted-foreground leading-snug"
+                />
+              )}
               {doc.tags && doc.tags.length > 0 && (
                 <div className="flex gap-1 mt-0.5 flex-wrap">
                   {doc.tags.slice(0, 3).map((tag) => (
