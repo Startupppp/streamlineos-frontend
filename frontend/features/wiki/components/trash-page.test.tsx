@@ -5,6 +5,9 @@ import TrashPage from "./trash-page";
 import type { KbPageListItem } from "@/hooks/api/kb/page-types";
 import type { DataTableColumn } from "@/components/ui/data-table.types";
 import { DataTable } from "@/components/ui/data-table";
+import { toast } from "sonner";
+
+jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn() } }));
 
 jest.mock("next/navigation", () => ({
   useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn() })),
@@ -151,9 +154,10 @@ const { useKbTrashDeleters } = jest.requireMock("@/hooks/api/kb/pages") as {
 const { useCursorPagination } = jest.requireMock("@/hooks/common/use-cursor-pagination") as {
   useCursorPagination: jest.Mock;
 };
-const { useKbTrashPurgeImpact, useKbBulkPurgePages } = jest.requireMock("@/hooks/api/kb/pages") as {
+const { useKbTrashPurgeImpact, useKbBulkPurgePages, useKbBulkRestorePages } = jest.requireMock("@/hooks/api/kb/pages") as {
   useKbTrashPurgeImpact: jest.Mock;
   useKbBulkPurgePages: jest.Mock;
+  useKbBulkRestorePages: jest.Mock;
 };
 const { ConfirmDialog } = jest.requireMock("@/components/ui/confirm-dialog") as {
   ConfirmDialog: jest.Mock;
@@ -232,6 +236,37 @@ beforeEach(() => {
 });
 
 describe("trash bulk purge impact confirmation", () => {
+  it("reports only restored pages and retains failed selections after a partial restore", () => {
+    const mutate = jest.fn();
+    useKbBulkRestorePages.mockReturnValue({ mutate, isPending: false });
+    usePageState.mockReturnValue({ kind: "ready" });
+    useKbPagesTrash.mockReturnValue({ data: nonEmptyListResponse, isLoading: false, isError: false, error: null, refetch: jest.fn() });
+    render(<TrashPage />);
+    const table = DataTable as jest.Mock;
+    act(() => table.mock.calls.at(-1)?.[0].selection.onChange(new Set(["9", "10"])));
+
+    fireEvent.click(screen.getByRole("button", { name: "Restore 2" }));
+    act(() => mutate.mock.calls[0][1].onSuccess({ results: [{ pageId: 9, result: "succeeded" }, { pageId: 10, result: "notFound" }] }));
+
+    expect(toast.success).toHaveBeenCalledWith("Restored 1 page");
+    expect(toast.error).toHaveBeenCalledWith("1 page could not be restored");
+    expect(table.mock.calls.at(-1)?.[0].selection.selected).toEqual(new Set(["10"]));
+  });
+
+  it("does not claim permanent deletion when the bulk purge reports only conflicts", () => {
+    const mutate = jest.fn();
+    useKbBulkPurgePages.mockReturnValue({ mutate, isPending: false });
+    useKbTrashPurgeImpact.mockReturnValue({ data: { pageCount: 1, descendantCount: 0 }, isLoading: false, isError: false, error: null, refetch: jest.fn() });
+    openPurgeConfirmation();
+
+    act(() => purgeDialog().onConfirm());
+    act(() => mutate.mock.calls[0][1].onSuccess({ results: [{ pageId: 9, result: "conflict" }] }));
+
+    expect(toast.success).not.toHaveBeenCalled();
+    expect(toast.error).toHaveBeenCalledWith("1 page could not be permanently deleted");
+    expect((DataTable as jest.Mock).mock.calls.at(-1)?.[0].selection.selected).toEqual(new Set(["9"]));
+  });
+
   function openPurgeConfirmation() {
     usePageState.mockReturnValue({ kind: "ready" });
     useKbPagesTrash.mockReturnValue({ data: nonEmptyListResponse, isLoading: false, isError: false, error: null, refetch: jest.fn() });

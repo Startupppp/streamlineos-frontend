@@ -36,7 +36,8 @@ import {
   useKbTrashPurgeImpact,
 } from "@/hooks/api/kb/pages";
 import { useKbSpaces } from "@/hooks/api/kb/spaces";
-import { KbRotateCcwIcon, KbTrash2Icon } from "@/features/wiki/lib/kb-icons";
+import { KbTrash2Icon } from "@/features/wiki/lib/kb-icons";
+import { reportTrashBulkResult, TrashBulkActions } from "./trash-bulk-actions";
 import type { KbPageListItem } from "@/hooks/api/kb/page-types";
 import { kbTimeAgo } from "@/features/wiki/lib/kb-date-utils";
 import { TrashRetentionSection } from "@/features/wiki/components/trash-retention-section";
@@ -224,12 +225,7 @@ export default function TrashPage() {
 
   function handleBulkRestore() {
     bulkRestore.mutate(selectedIds, {
-      onSuccess: () => {
-        toast.success(
-          `Restored ${selectedIds.length} page${selectedIds.length === 1 ? "" : "s"}`,
-        );
-        setSelected(new Set());
-      },
+      onSuccess: (result) => reportTrashBulkResult(result, "restore", setSelected),
       onError: (e) => toast.error(getErrorMessage(e)),
     });
   }
@@ -237,12 +233,7 @@ export default function TrashPage() {
   function handleBulkPurge() {
     if (!canConfirmPurge) return;
     bulkPurge.mutate(selectedIds, {
-      onSuccess: () => {
-        toast.success(
-          `Permanently deleted ${selectedIds.length} page${selectedIds.length === 1 ? "" : "s"}`,
-        );
-        setSelected(new Set());
-      },
+      onSuccess: (result) => reportTrashBulkResult(result, "purge", setSelected),
       onError: (e) => toast.error(getErrorMessage(e)),
     });
     setBulkPurgeConfirmOpen(false);
@@ -264,47 +255,18 @@ export default function TrashPage() {
   const pageCount = data?.data.length ?? 0;
 
   const actions = (
-    <div className="flex items-center gap-2">
-      {selectedCount > 0 && (
-        <>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={handleBulkRestore}
-            disabled={bulkRestore.isPending}
-          >
-            <KbRotateCcwIcon className="mr-1.5 h-3.5 w-3.5" />
-            Restore {selectedCount}
-          </Button>
-          {canPurge && (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              disabled={bulkPurge.isPending}
-              onClick={() => setBulkPurgeConfirmOpen(true)}
-              className="text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive"
-            >
-              <KbTrash2Icon className="mr-1.5 h-3.5 w-3.5" />
-              Purge {selectedCount}
-            </Button>
-          )}
-        </>
-      )}
-      {canPurge && canManageSettings && pageCount > 0 && selectedCount === 0 && (
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => setEmptyConfirmOpen(true)}
-          disabled={emptyTrash.isPending}
-          className="text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive"
-        >
-          Empty Trash
-        </Button>
-      )}
-    </div>
+    <TrashBulkActions
+      selectedCount={selectedCount}
+      pageCount={pageCount}
+      canPurge={canPurge}
+      canManageSettings={canManageSettings}
+      restoring={bulkRestore.isPending}
+      purging={bulkPurge.isPending}
+      emptying={emptyTrash.isPending}
+      onRestore={handleBulkRestore}
+      onPurge={() => setBulkPurgeConfirmOpen(true)}
+      onEmpty={() => setEmptyConfirmOpen(true)}
+    />
   );
 
   const columns: DataTableColumn<KbPageListItem>[] = [
