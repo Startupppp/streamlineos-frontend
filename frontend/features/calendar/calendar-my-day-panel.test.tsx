@@ -113,6 +113,27 @@ describe("CalendarMyDayPanel", () => {
     expect(screen.queryByRole("button", { name: "Continue calendar items" })).toBeNull();
   });
 
+  it("continues an empty search after the search term changes", () => {
+    const onLoadMore = jest.fn();
+    const props = {
+      events: [],
+      pages: [],
+      onSearchChange: jest.fn(),
+      onSelectEvent: jest.fn(),
+      onLoadMore,
+      hasMore: true,
+      isLoadingMore: false,
+    };
+    const { rerender } = render(<CalendarMyDayPanel {...props} search="first" />);
+    expect(onLoadMore).toHaveBeenCalledTimes(1);
+
+    rerender(<CalendarMyDayPanel {...props} search="second" />);
+
+    expect(onLoadMore).toHaveBeenCalledTimes(2);
+    rerender(<CalendarMyDayPanel {...props} search="second" />);
+    expect(onLoadMore).toHaveBeenCalledTimes(2);
+  });
+
   it("names each action with its event and opens only the selected event", () => {
     const onSelectEvent = jest.fn();
     const first = event("first", "2026-01-01T09:00:00.000Z");

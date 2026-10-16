@@ -109,7 +109,7 @@ export function CalendarMyDayPanel({
   isLoadingMore: boolean;
 }) {
   const [now, setNow] = useState(() => Date.now());
-  const lastRequestedPageRef = useRef<CalendarSearchResponse | undefined | null>(null);
+  const lastRequestedPageRef = useRef<{ search: string; page: CalendarSearchResponse | undefined } | null>(null);
   const rows = useMemo<MyDayRow[]>(() => {
     const groups: Array<{ title: string; events: CalendarListItem[] }> = [
       { title: "Action needed", events: [] },
@@ -133,10 +133,11 @@ export function CalendarMyDayPanel({
   const rowHeight = useDynamicRowHeight({ defaultRowHeight: 104, key: heightKey });
   const incomplete = calendarSearchIsPartial(pages, hasMore);
   const requestMore = useCallback(() => {
-    if (!hasMore || isLoadingMore || lastRequestedPageRef.current === pages.at(-1)) return;
-    lastRequestedPageRef.current = pages.at(-1);
+    const page = pages.at(-1);
+    if (!hasMore || isLoadingMore || (lastRequestedPageRef.current?.search === search && lastRequestedPageRef.current.page === page)) return;
+    lastRequestedPageRef.current = { search, page };
     onLoadMore();
-  }, [hasMore, isLoadingMore, onLoadMore, pages]);
+  }, [hasMore, isLoadingMore, onLoadMore, pages, search]);
 
   useEffect(() => {
     const interval = window.setInterval(() => setNow(Date.now()), 60_000);
