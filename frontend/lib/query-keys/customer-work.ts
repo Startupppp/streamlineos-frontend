@@ -46,6 +46,7 @@ export const customerWorkQueryKeys = {
     competitors: (dealId: number) =>
       [...base, "deals", "competitors", dealId] as const,
     health: (dealId: number) => [...base, "deals", "health", dealId] as const,
+    linkedProject: (dealId: number) => [...base, "deals", "linkedProject", dealId] as const,
     forecastSnapshots: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "deals", "forecastSnapshots"] as const)

@@ -63,7 +63,6 @@ const CRM_INVENTORY_UNREACHABLE = [
   "crm.reportingRunsAll",
   "crm.salesDashboard",
   "crm.salesFunnel",
-  "deals.forecastCompare",
   "inventory.aiDigest",
   "salesAnalytics.cycleLength",
   "salesAnalytics.lostAnalysis",

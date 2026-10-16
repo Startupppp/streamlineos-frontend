@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { motion } from "framer-motion";
 import { TrendingUp, Target, Layers, Camera } from "lucide-react";
@@ -17,6 +17,7 @@ import { useDeals, useCaptureForecastSnapshot, useForecastSnapshots } from "@/ho
 import { DealForecastSummary } from "@/features/crm/deals/deal-forecast-summary";
 import { DealForecastChart } from "@/features/crm/deals/deal-forecast-chart";
 import { DealCloseDateList } from "@/features/crm/deals/deal-close-date-list";
+import { ForecastCompareCard } from "@/features/crm/deals/forecast-compare-card";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { PageState } from "@/components/shared/page-state";
 
@@ -42,6 +43,7 @@ export default function DealForecastPage() {
   const currentPeriod = new Date().toISOString().slice(0, 7);
 
   const allDeals = deals ?? [];
+  const snapshotPeriods = useMemo(() => [...new Set(snapshots.map((s) => s.period))], [snapshots]);
   const openDeals = allDeals.filter((d) => d.stage !== "LOST");
 
   const handleRefetch = useCallback(() => { void refetch(); }, [refetch]);
@@ -161,6 +163,10 @@ export default function DealForecastPage() {
                 )}
               </CardContent>
             </Card>
+          </motion.div>
+
+          <motion.div variants={fadeUp}>
+            <ForecastCompareCard periods={snapshotPeriods} />
           </motion.div>
         </motion.div>
       )}

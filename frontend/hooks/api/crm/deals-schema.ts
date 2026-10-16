@@ -289,3 +289,23 @@ export const dealBulkDeleteContract = z.object({ deleted: z.number().int() });
 export const dealCustomDataContract = z.object({
   customData: z.record(z.string(), z.unknown()).nullable(),
 });
+
+export const dealLinkedProjectContract = z
+  .object({ dealId: z.number().int(), projectId: z.number().int() })
+  .nullable();
+
+export const dealLinkProjectResultContract = z.object({
+  dealId: z.number().int(),
+  projectId: z.number().int(),
+});
+
+export const dealForecastCompareContract = z.object({
+  period: z.string(),
+  baseline: z.record(z.string(), z.unknown()),
+  current: z.record(z.string(), z.unknown()),
+  delta: z.object({
+    totalWeighted: z.number(),
+    totalBestCase: z.number(),
+    totalDeals: z.number().int(),
+  }),
+});
