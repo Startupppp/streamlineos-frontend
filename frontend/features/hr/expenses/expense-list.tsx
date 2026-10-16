@@ -144,7 +144,8 @@ interface MemberExpenseListProps {
   activeFilterCount: number;
   onEdit: (expense: ExpenseToEdit) => void;
   onResubmit: (expense: ExpenseWithRelations) => void;
-  onWithdraw: (expense: ExpenseWithRelations) => void;
+  /** Offered on pending rows only where the surface owns the withdraw confirm (/me/expenses). */
+  onWithdraw?: (expense: ExpenseWithRelations) => void;
   onShowAll: () => void;
   onCreateNew: () => void;
   onPageChange: (page: number) => void;
@@ -296,7 +297,7 @@ export function MemberExpenseList({
           onEdit(toEditPayload());
         }
         function handleWithdraw() {
-          onWithdraw(expense);
+          onWithdraw?.(expense);
         }
         function handleView() {
           const receipts = parseExpenseReceipts(expense.receiptUrl, expense.receiptFileName);
@@ -331,15 +332,17 @@ export function MemberExpenseList({
               >
                 <Pencil className="h-3.5 w-3.5" />
               </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="text-xs text-destructive hover:bg-destructive/10"
-                onClick={handleWithdraw}
-              >
-                Withdraw
-              </Button>
+              {onWithdraw ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="text-xs text-destructive hover:bg-destructive/10"
+                  onClick={handleWithdraw}
+                >
+                  Withdraw
+                </Button>
+              ) : null}
             </div>
           );
         }
