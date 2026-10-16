@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import {
   UploadIcon,
   PlusIcon,
@@ -33,6 +33,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Combobox } from "@/components/ui/combobox";
+import { ErrorReference } from "@/components/shared/error-reference";
 import { cn } from "@/lib/utils";
 import type { KbSource } from "@/hooks/api/kb/sources";
 import type { KbPageSearchResult } from "@/hooks/api/kb/page-types";
@@ -81,11 +82,16 @@ interface KbSourcesSheetScopeProps {
   onOwnerMembershipIdChange: (ownerMembershipId: OwnerMembershipFilter) => void;
   owners: ReadonlyArray<{
     membershipId: number;
-    name: string | null;
-    email: string;
+    name: string;
   }>;
+  selectedOwner: { membershipId: number; name: string } | null;
   onOwnerSearchChange: (search: string) => void;
   ownersAreLoading: boolean;
+  ownersHasMore: boolean;
+  ownersAreFetchingMore: boolean;
+  onOwnersLoadMore: () => void;
+  ownersError: unknown;
+  onOwnersRetry: () => void;
   statusScope: StatusScopeFilter;
   onStatusScopeChange: (status: StatusScopeFilter) => void;
   onConfirm: () => void;
@@ -310,23 +316,42 @@ function OwnerMembershipSelect({
   ownerMembershipId,
   onOwnerMembershipIdChange,
   owners,
+  selectedOwner,
   onOwnerSearchChange,
   ownersAreLoading,
+  ownersHasMore,
+  ownersAreFetchingMore,
+  onOwnersLoadMore,
+  ownersError,
+  onOwnersRetry,
 }: Pick<
   KbSourcesSheetScopeProps,
   | "ownerMembershipId"
   | "onOwnerMembershipIdChange"
   | "owners"
+  | "selectedOwner"
   | "onOwnerSearchChange"
   | "ownersAreLoading"
+  | "ownersHasMore"
+  | "ownersAreFetchingMore"
+  | "onOwnersLoadMore"
+  | "ownersError"
+  | "onOwnersRetry"
 >) {
-  const options = owners.map((owner) => ({
+  const [lastSelectedOwner, setLastSelectedOwner] = useState<{ membershipId: number; name: string } | null>(null);
+  const selected = owners.find((owner) => owner.membershipId === ownerMembershipId)
+    ?? (selectedOwner?.membershipId === ownerMembershipId ? selectedOwner : null)
+    ?? (lastSelectedOwner?.membershipId === ownerMembershipId ? lastSelectedOwner : null);
+  const choices = selected && !owners.some((owner) => owner.membershipId === selected.membershipId)
+    ? [selected, ...owners]
+    : owners;
+  const options = choices.map((owner) => ({
     value: String(owner.membershipId),
-    label: owner.name ?? owner.email,
-    sublabel: owner.name === null ? undefined : owner.email,
+    label: owner.name,
   }));
 
-  function handleChange(value: string) {
+  function handleChange(value: string, label?: string) {
+    if (value !== "" && label) setLastSelectedOwner({ membershipId: Number(value), name: label });
     onOwnerMembershipIdChange(value === "" ? null : Number(value));
   }
 
@@ -357,9 +382,22 @@ function OwnerMembershipSelect({
         onChange={handleChange}
         placeholder="Any owner"
         searchPlaceholder="Search members…"
-        emptyText={ownersAreLoading ? "Loading members…" : "No members found."}
+        emptyText={ownersAreLoading ? "Loading members…" : ownersError ? "Could not load members." : "No members found."}
         onSearchChange={onOwnerSearchChange}
         aria-label="Restrict answer to pages owned by a member"
+        footer={ownersError ? (
+          <div className="p-2 text-center text-sm" role="alert">
+            <span>Could not load members.</span>
+            <ErrorReference error={ownersError} />
+            <Button type="button" variant="ghost" size="sm" onClick={onOwnersRetry}>Retry members</Button>
+          </div>
+        ) : ownersHasMore ? (
+          <div className="p-2 text-center">
+            <Button type="button" variant="ghost" size="sm" disabled={ownersAreFetchingMore} onClick={onOwnersLoadMore}>
+              {ownersAreFetchingMore ? "Loading members…" : "Load more members"}
+            </Button>
+          </div>
+        ) : null}
       />
     </div>
   );
@@ -385,8 +423,14 @@ function KbSourcesScopeSheet({
   ownerMembershipId,
   onOwnerMembershipIdChange,
   owners,
+  selectedOwner,
   onOwnerSearchChange,
   ownersAreLoading,
+  ownersHasMore,
+  ownersAreFetchingMore,
+  onOwnersLoadMore,
+  ownersError,
+  onOwnersRetry,
   statusScope,
   onStatusScopeChange,
   onConfirm,
@@ -524,8 +568,14 @@ function KbSourcesScopeSheet({
           ownerMembershipId={ownerMembershipId}
           onOwnerMembershipIdChange={onOwnerMembershipIdChange}
           owners={owners}
+          selectedOwner={selectedOwner}
           onOwnerSearchChange={onOwnerSearchChange}
           ownersAreLoading={ownersAreLoading}
+          ownersHasMore={ownersHasMore}
+          ownersAreFetchingMore={ownersAreFetchingMore}
+          onOwnersLoadMore={onOwnersLoadMore}
+          ownersError={ownersError}
+          onOwnersRetry={onOwnersRetry}
         />
 
         <div className="flex items-center justify-between rounded-lg border border-border bg-card px-3 py-2">

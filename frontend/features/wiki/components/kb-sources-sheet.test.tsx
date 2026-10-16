@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { backendPath } from "@/test-utils/backend-repo";
 import { KB_ASK_STATUS_SCOPES } from "@/hooks/api/kb/ask";
 import { KB_PAGE_STATUSES } from "@/hooks/api/kb/kb-analytics-schema";
@@ -54,10 +55,16 @@ const SCOPE_PROPS = {
   ownerMembershipId: null,
   onOwnerMembershipIdChange: jest.fn(),
   owners: [
-    { membershipId: 77, name: "Ada Lovelace", email: "ada@example.com" },
+    { membershipId: 77, name: "Ada Lovelace" },
   ],
+  selectedOwner: null,
   onOwnerSearchChange: jest.fn(),
   ownersAreLoading: false,
+  ownersHasMore: false,
+  ownersAreFetchingMore: false,
+  onOwnersLoadMore: jest.fn(),
+  ownersError: null,
+  onOwnersRetry: jest.fn(),
   statusScope: null,
   onStatusScopeChange: jest.fn(),
   onConfirm: jest.fn(),
@@ -112,6 +119,34 @@ describe("KbSourcesSheet scope mode — all six scope dimensions are present and
     expect(
       screen.getByRole("combobox", { name: /restrict answer to pages owned by a member/i }),
     ).toBeInTheDocument();
+  });
+
+  it("retains a selected owner's label when that owner is outside the current search page", () => {
+    render(<KbSourcesSheet {...SCOPE_PROPS} ownerMembershipId={88} selectedOwner={{ membershipId: 88, name: "Grace Hopper" }} owners={[]} />);
+
+    expect(screen.getByRole("combobox", { name: /restrict answer to pages owned by a member/i })).toHaveTextContent("Grace Hopper");
+  });
+
+  it("loads another owner page from the keyboard accessible picker action", async () => {
+    const loadMore = jest.fn();
+    const user = userEvent.setup({ pointerEventsCheck: 0 });
+    render(<KbSourcesSheet {...SCOPE_PROPS} ownersHasMore onOwnersLoadMore={loadMore} />);
+
+    await user.click(screen.getByRole("combobox", { name: /restrict answer to pages owned by a member/i }));
+    await user.click(screen.getByRole("button", { name: "Load more members" }));
+
+    expect(loadMore).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows an owner read failure and retry inside the scope sheet", async () => {
+    const retry = jest.fn();
+    const user = userEvent.setup({ pointerEventsCheck: 0 });
+    render(<KbSourcesSheet {...SCOPE_PROPS} owners={[]} ownersError={new Error("read failed")} onOwnersRetry={retry} />);
+
+    await user.click(screen.getByRole("combobox", { name: /restrict answer to pages owned by a member/i }));
+    expect(screen.getByRole("alert")).toHaveTextContent("Could not load members.");
+    await user.click(screen.getByRole("button", { name: "Retry members" }));
+    expect(retry).toHaveBeenCalledTimes(1);
   });
 
   it("renders the space, verified-only and kind controls alongside them, which is the positive control proving this surface renders at all", () => {

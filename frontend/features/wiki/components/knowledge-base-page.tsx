@@ -13,7 +13,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
-import { useKbAsk } from "@/hooks/api/kb/ask";
+import { useKbAsk, useKbAskPageOwners } from "@/hooks/api/kb/ask";
 import { isAiStreamAbort } from "@/hooks/api/ai-text-stream";
 import { isApiError } from "@/lib/api-envelope";
 import {
@@ -42,7 +42,6 @@ import {
   type StatusScopeFilter,
 } from "@/features/wiki/components/kb-sources-sheet";
 import { useKbSpaces } from "@/hooks/api/kb/spaces";
-import { useOrgMembers } from "@/hooks/api/organization";
 import { KbNoteSheet } from "@/features/wiki/components/kb-note-sheet";
 import { KbConversationList } from "@/features/wiki/components/kb-conversation-list";
 import {
@@ -152,8 +151,21 @@ export default function KnowledgeBasePage() {
   const kbSpaces = spacesQuery.data?.data ?? [];
 
   const debouncedOwnerSearch = useDebouncedValue(ownerSearch.trim(), 300);
-  const ownersQuery = useOrgMembers(1, 100, debouncedOwnerSearch || undefined);
-  const scopeOwners = ownersQuery.data?.data ?? [];
+  const ownersQuery = useKbAskPageOwners(
+    debouncedOwnerSearch,
+    pendingOwnerMembershipId ?? undefined,
+    sourcesSheet.kind === "scope",
+  );
+  const scopeOwners = (ownersQuery.data?.pages ?? []).flatMap((page) => page.data);
+  const selectedScopeOwner = ownersQuery.data?.pages[0]?.selected ?? null;
+
+  function handleOwnersLoadMore() {
+    void ownersQuery.fetchNextPage();
+  }
+
+  function handleOwnersRetry() {
+    void ownersQuery.refetch();
+  }
 
   const debouncedPageSearchQuery = useDebouncedValue(pageSearchQuery.trim(), 300);
   const pageSearchResult = useKbPagesSearch(debouncedPageSearchQuery);
@@ -664,8 +676,14 @@ export default function KnowledgeBasePage() {
           ownerMembershipId={pendingOwnerMembershipId}
           onOwnerMembershipIdChange={setPendingOwnerMembershipId}
           owners={scopeOwners}
+          selectedOwner={selectedScopeOwner}
           onOwnerSearchChange={setOwnerSearch}
           ownersAreLoading={ownersQuery.isLoading}
+          ownersHasMore={ownersQuery.hasNextPage}
+          ownersAreFetchingMore={ownersQuery.isFetchingNextPage}
+          onOwnersLoadMore={handleOwnersLoadMore}
+          ownersError={ownersQuery.error}
+          onOwnersRetry={handleOwnersRetry}
           statusScope={pendingStatus}
           onStatusScopeChange={setPendingStatus}
           onConfirm={handleScopeConfirm}

@@ -23,6 +23,15 @@ jest.mock("@/hooks/api/kb/ask", () => ({
     stop: jest.fn(),
     resetAttempt: jest.fn(),
   }),
+  useKbAskPageOwners: () => ({
+    data: { pages: [{ data: [{ membershipId: 77, name: "Ada Lovelace" }, { membershipId: 88, name: "Grace Hopper" }], pagination: { limit: 50, hasMore: false, nextCursor: null }, selected: null }] },
+    isLoading: false,
+    hasNextPage: false,
+    isFetchingNextPage: false,
+    fetchNextPage: jest.fn(),
+    error: null,
+    refetch: jest.fn(),
+  }),
   useKbAiAnswerFeedback: () => ({ mutate: jest.fn(), isPending: false }),
   useCreateKbKnowledgeGap: () => ({ mutate: mockCreateGapMutate, isPending: false }),
 }));
@@ -30,19 +39,6 @@ jest.mock("@/hooks/api/kb/ask", () => ({
 jest.mock("@/hooks/api/access", () => ({
   useCan: () => true,
   useAccess: () => ({ data: { permissions: ["kb:ai:generate"] }, refetch: jest.fn() }),
-}));
-
-jest.mock("@/hooks/api/organization", () => ({
-  useOrgMembers: () => ({
-    data: {
-      data: [
-        { membershipId: 77, userId: "user-1", role: "MEMBER", joinedAt: "2026-01-01T00:00:00.000Z", name: "Ada Lovelace", email: "ada@example.com", image: null, totpEnabled: false },
-        { membershipId: 88, userId: "user-2", role: "MEMBER", joinedAt: "2026-01-01T00:00:00.000Z", name: "Grace Hopper", email: "grace@example.com", image: null, totpEnabled: false },
-      ],
-      pagination: { limit: 100, nextCursor: null, hasMore: false },
-    },
-    isLoading: false,
-  }),
 }));
 
 jest.mock("@/hooks/api/kb/chat-history", () => ({

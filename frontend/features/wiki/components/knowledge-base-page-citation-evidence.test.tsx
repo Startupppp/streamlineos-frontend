@@ -20,6 +20,7 @@ jest.mock("@/hooks/api/kb/ask", () => ({
     stop: jest.fn(),
     resetAttempt: jest.fn(),
   }),
+  useKbAskPageOwners: () => ({ data: { pages: [] }, isLoading: false, hasNextPage: false, isFetchingNextPage: false, fetchNextPage: jest.fn(), error: null, refetch: jest.fn() }),
   useKbAiAnswerFeedback: () => ({ mutate: jest.fn(), isPending: false }),
   useCreateKbKnowledgeGap: () => ({ mutate: jest.fn(), isPending: false }),
 }));
