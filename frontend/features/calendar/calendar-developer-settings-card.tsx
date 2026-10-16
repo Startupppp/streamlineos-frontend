@@ -14,6 +14,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { Copy, ExternalLink, KeyRound } from "lucide-react";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { isApiError } from "@/lib/api-envelope";
 import { useCalendarDeveloperCredentials, useCreateCalendarDeveloperCredential, useRevokeCalendarDeveloperCredential } from "@/hooks/api/calendar-developer";
 import { calendarApiScopes, type CalendarApiScope } from "@/hooks/api/calendar-developer-schema";
 
@@ -41,6 +42,7 @@ export function CalendarDeveloperSettingsCard() {
   const [expiresAt, setExpiresAt] = useState(defaultExpiry);
   const [scopes, setScopes] = useState<CalendarApiScope[]>(["calendar:availability:read"]);
   const [secret, setSecret] = useState<string | null>(null);
+  const [createNeedsReview, setCreateNeedsReview] = useState(false);
 
   function toggleScope(scope: CalendarApiScope, checked: boolean) {
     setScopes((current) => checked
@@ -62,9 +64,15 @@ export function CalendarDeveloperSettingsCard() {
       });
       setSecret(result.token);
       setName("");
+      setCreateNeedsReview(false);
       toast.success("Calendar API credential created");
     } catch (error) {
-      toast.error(getErrorMessage(error));
+      if (isApiError(error) && error.status === 409) {
+        setCreateNeedsReview(true);
+        toast.error("This credential was already created. Its secret cannot be shown again.");
+      } else {
+        toast.error(getErrorMessage(error));
+      }
     }
   }
 
@@ -88,9 +96,10 @@ export function CalendarDeveloperSettingsCard() {
       <CardHeader><CardTitle>Developer API</CardTitle><CardDescription>Create short-lived, least privilege credentials for the versioned Calendar API.</CardDescription></CardHeader>
       <CardContent className="space-y-5">
         {secret ? <Alert><KeyRound /><AlertTitle>Copy this credential now</AlertTitle><AlertDescription><div className="mt-1 flex flex-col gap-2 sm:flex-row sm:items-center"><code className="min-w-0 flex-1 break-all rounded bg-muted p-2 text-xs">{secret}</code><Button variant="outline" size="sm" onClick={() => void copySecret()}><Copy className="size-3.5" />Copy</Button><Button variant="ghost" size="sm" onClick={() => setSecret(null)}>Done</Button></div><p className="mt-2">It will not be shown again.</p></AlertDescription></Alert> : null}
+        {createNeedsReview ? <Alert variant="destructive"><AlertTitle>Credential secret unavailable</AlertTitle><AlertDescription><p>Check the credential list below and revoke the new credential if you did not receive its secret. Create a replacement only after reviewing the list.</p><Button variant="outline" size="sm" className="mt-3" onClick={() => setCreateNeedsReview(false)}>I reviewed the credentials</Button></AlertDescription></Alert> : null}
         <div className="grid gap-4 sm:grid-cols-2"><div className="space-y-1.5"><Label htmlFor="calendar-api-name">Credential name</Label><Input id="calendar-api-name" value={name} onChange={(event) => setName(event.target.value)} placeholder="Scheduling integration" /></div><div className="space-y-1.5"><Label htmlFor="calendar-api-expiry">Expires</Label><DatePicker id="calendar-api-expiry" value={expiresAt} onChange={setExpiresAt} disablePast /></div></div>
         <fieldset className="space-y-2"><legend className="text-sm font-medium">Scopes</legend><div className="grid gap-2 sm:grid-cols-2">{calendarApiScopes.map((scope) => <Label key={scope} className="flex items-center gap-2 rounded-md border px-3 py-2 font-normal"><Checkbox checked={scopes.includes(scope)} onCheckedChange={(value) => toggleScope(scope, value === true)} />{scopeLabels[scope]}</Label>)}</div></fieldset>
-        <div className="flex flex-wrap justify-between gap-2"><Button variant="outline" asChild><Link href="/settings/webhooks">Manage signed webhooks<ExternalLink className="size-3.5" /></Link></Button><LoadingButton isPending={create.isPending} onClick={() => void createCredential()}>Create credential</LoadingButton></div>
+        <div className="flex flex-wrap justify-between gap-2"><Button variant="outline" asChild><Link href="/settings/webhooks">Manage signed webhooks<ExternalLink className="size-3.5" /></Link></Button><LoadingButton isPending={create.isPending} disabled={createNeedsReview} onClick={() => void createCredential()}>Create credential</LoadingButton></div>
         {credentials.isError ? <Alert variant="destructive"><AlertTitle>Credentials unavailable</AlertTitle><AlertDescription><div className="flex flex-wrap items-center justify-between gap-2"><span>{getErrorMessage(credentials.error)}</span><Button variant="outline" size="sm" onClick={() => void credentials.refetch()}>Retry</Button></div></AlertDescription></Alert> : null}
         <div className="divide-y rounded-lg border">
           {(credentials.data?.data ?? []).map((credential) => <div key={credential.id} className="flex flex-col gap-2 p-3 sm:flex-row sm:items-center"><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><p className="font-medium">{credential.name}</p>{credential.isRevoked ? <Badge variant="destructive">Revoked</Badge> : <Badge variant="outline">Active</Badge>}</div><p className="text-xs text-muted-foreground">{credential.keyPrefix}… · {credential.scopes.map((scope) => scopeLabels[scope]).join(", ")} · expires {new Date(credential.expiresAt).toLocaleDateString()}</p></div>{!credential.isRevoked ? <LoadingButton variant="outline" size="sm" isPending={revoke.isPending && revoke.variables === credential.id} onClick={() => void revokeCredential(credential.id)}>Revoke</LoadingButton> : null}</div>)}

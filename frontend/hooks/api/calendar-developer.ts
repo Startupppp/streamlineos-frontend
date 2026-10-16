@@ -2,9 +2,10 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { lazyContract } from "@/lib/api-envelope";
+import { isApiError, lazyContract } from "@/lib/api-envelope";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
 import type {
   CalendarApiScope,
   CalendarDeveloperCredentialPage,
@@ -26,18 +27,32 @@ export function useCalendarDeveloperCredentials(cursor?: string) {
 
 export function useCreateCalendarDeveloperCredential() {
   const queryClient = useQueryClient();
+  const operation = useIdempotentOperation();
   return useAuthorizedMutation("calendar:admin:manage", {
     mutationKey: ["calendar", "developer", "create-credential"],
-    mutationFn: (input: { name: string; description: string | null; scopes: CalendarApiScope[]; expiresAt: string }) => apiClient.post<CreateCalendarDeveloperCredentialResult>("/calendar/admin/developer/credentials", input, undefined, createContract),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: keys.all }),
+    mutationFn: (input: { name: string; description: string | null; scopes: CalendarApiScope[]; expiresAt: string }) => apiClient.post<CreateCalendarDeveloperCredentialResult>("/calendar/admin/developer/credentials", input, operation.configFor(input), createContract),
+    onSuccess: () => {
+      operation.settle();
+      return queryClient.invalidateQueries({ queryKey: keys.all });
+    },
+    onError: (error: unknown) => {
+      if (isApiError(error) && error.status === 409) {
+        operation.settle();
+        return queryClient.invalidateQueries({ queryKey: keys.all });
+      }
+    },
   });
 }
 
 export function useRevokeCalendarDeveloperCredential() {
   const queryClient = useQueryClient();
+  const operation = useIdempotentOperation();
   return useAuthorizedMutation("calendar:admin:manage", {
     mutationKey: ["calendar", "developer", "revoke-credential"],
-    mutationFn: (credentialId: string) => apiClient.post<{ success: true }>(`/calendar/admin/developer/credentials/${credentialId}/revoke`, undefined, undefined, revokeContract),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: keys.all }),
+    mutationFn: (credentialId: string) => apiClient.post<{ success: true }>(`/calendar/admin/developer/credentials/${credentialId}/revoke`, undefined, operation.configFor({ credentialId }), revokeContract),
+    onSuccess: () => {
+      operation.settle();
+      return queryClient.invalidateQueries({ queryKey: keys.all });
+    },
   });
 }
