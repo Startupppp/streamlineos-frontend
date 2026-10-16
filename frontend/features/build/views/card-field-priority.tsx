@@ -43,6 +43,8 @@ export const InlinePriority = memo(function InlinePriority({
   showLabel = false,
 }: InlinePriorityProps) {
   const [open, setOpen] = useState(false);
+  const priorityKey = (currentPriority ?? "MEDIUM").toUpperCase();
+  const priorityLabel = PRIORITIES.find((p) => p.value === priorityKey)?.label ?? "Medium";
   const updateTicket = useUpdateTicket(projectId, {
     onError: (e) => toast.error(getErrorMessage(e)),
   });
@@ -61,7 +63,7 @@ export const InlinePriority = memo(function InlinePriority({
           <button
             type="button"
             className="inline-flex rounded p-0.5 hover:bg-muted/60 transition-colors"
-            aria-label="Change priority"
+            aria-label={`Change priority: ${priorityLabel}`}
           >
             <PriorityBadge
               priority={currentPriority}
