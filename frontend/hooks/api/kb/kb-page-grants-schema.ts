@@ -17,3 +17,10 @@ export const kbPageGrantItemContract = z.object({
 
 export const kbPageGrantListContract = cursorPageContract(kbPageGrantItemContract);
 export const kbPageGrantContract = kbPageGrantItemContract;
+
+export const kbPageGrantCandidatesContract = cursorPageContract(z.object({
+  membershipId: z.number().int().positive(),
+  userId: z.string(),
+  name: z.string().nullable(),
+  email: z.string(),
+}).strict());

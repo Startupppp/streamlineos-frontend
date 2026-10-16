@@ -33,6 +33,18 @@ export type KbPageGrantsPage = {
   };
 };
 
+export type KbPageGrantCandidate = {
+  membershipId: number;
+  userId: string;
+  name: string | null;
+  email: string;
+};
+
+export type KbPageGrantCandidatesPage = {
+  data: KbPageGrantCandidate[];
+  pagination: KbPageGrantsPage["pagination"];
+};
+
 export type CreateKbPageGrantInput =
   | { membershipId: number; role?: never; access: KbPageGrant["access"] }
   | { role: string; membershipId?: never; access: KbPageGrant["access"] };
@@ -43,6 +55,10 @@ const kbPageGrantListContract = lazyContract(() =>
 
 const kbPageGrantContract = lazyContract(() =>
   import("@/hooks/api/kb/kb-page-grants-schema").then((m) => m.kbPageGrantContract),
+);
+
+const kbPageGrantCandidatesContract = lazyContract(() =>
+  import("@/hooks/api/kb/kb-page-grants-schema").then((m) => m.kbPageGrantCandidatesContract),
 );
 
 const noContentC = lazyContract(() =>
@@ -66,6 +82,27 @@ export function useKbPageGrants(pageId: number) {
     select: selectFlatPages,
     staleTime: 30_000,
     enabled: canView && pageId > 0,
+  });
+}
+
+export function useKbPageGrantCandidates(pageId: number, search: string, enabled = true) {
+  const canUpdate = useCan("kb:pages:update");
+  const term = search.trim();
+  return useInfiniteQuery({
+    ...INLINE_READ_ERROR,
+    queryKey: knowledgeAndSurveysQueryKeys.kb.pageGrantCandidates(pageId, term),
+    initialPageParam: NO_CURSOR_YET,
+    queryFn: ({ signal, pageParam }) =>
+      apiClient.get<KbPageGrantCandidatesPage>(
+        `/kb/pages/${pageId}/grant-candidates`,
+        { search: term, limit: 20, cursor: pageParam },
+        signal,
+        kbPageGrantCandidatesContract,
+      ),
+    getNextPageParam: (last) => last.pagination.nextCursor ?? undefined,
+    select: selectFlatPages,
+    staleTime: 30_000,
+    enabled: enabled && canUpdate && pageId > 0 && term.length > 0,
   });
 }
 

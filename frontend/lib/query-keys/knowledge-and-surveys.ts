@@ -73,6 +73,8 @@ export const knowledgeAndSurveysQueryKeys = {
       params === undefined
         ? ([...base, "kb", "pages", pageId, "grants"] as const)
         : ([...base, "kb", "pages", pageId, "grants", params] as const),
+    pageGrantCandidates: (pageId: number, search: string) =>
+      [...base, "kb", "pages", pageId, "grant-candidates", search] as const,
     pageRecordLinks: (pageId: number) =>
       [...base, "kb", "pages", pageId, "record-links"] as const,
     importJobs: () => [...base, "kb", "import-jobs"] as const,

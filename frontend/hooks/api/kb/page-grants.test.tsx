@@ -18,7 +18,7 @@ jest.mock("@/hooks/api/authorized-mutation", () => ({
   },
 }));
 
-import { useCreateKbPageGrant, useKbPageGrants } from "./page-grants";
+import { useCreateKbPageGrant, useKbPageGrantCandidates, useKbPageGrants } from "./page-grants";
 
 installAbortSignalPolyfill();
 
@@ -71,6 +71,28 @@ afterEach(() => {
 });
 
 describe("KB page grants through the HTTP parser", () => {
+  it("searches KB grant candidates without a settings directory request and follows the cursor", async () => {
+    const first = { membershipId: 30, userId: "user-30", name: "Alice", email: "alice@example.com" };
+    const second = { membershipId: 31, userId: "user-31", name: null, email: "alina@example.com" };
+    fetchMock
+      .mockResolvedValueOnce(response({ data: [first], pagination: { limit: 20, hasMore: true, nextCursor: "cursor-2" } }))
+      .mockResolvedValueOnce(response({ data: [second], pagination: { limit: 20, hasMore: false, nextCursor: null } }));
+
+    const { result } = renderHook(() => useKbPageGrantCandidates(12, " Ali "), { wrapper });
+    await waitFor(() => expect(result.current.hasNextPage).toBe(true));
+    await act(async () => { await result.current.fetchNextPage(); });
+
+    await waitFor(() => expect(result.current.data).toEqual([first, second]));
+    expect(fetchMock.mock.calls[0]?.[0]).toContain("/kb/pages/12/grant-candidates?search=Ali&limit=20");
+    expect(fetchMock.mock.calls[1]?.[0]).toContain("cursor=cursor-2");
+    expect(fetchMock.mock.calls.some(([url]) => String(url).includes("/organization/members"))).toBe(false);
+  });
+
+  it("does not issue a grant-candidate read for an empty search", () => {
+    renderHook(() => useKbPageGrantCandidates(12, "  "), { wrapper });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it("reads the list envelope and retains cursor metadata in the query cache", async () => {
     fetchMock.mockResolvedValue(response({ data: [grant], pagination }));
     const { result } = renderHook(() => useKbPageGrants(12), { wrapper });
