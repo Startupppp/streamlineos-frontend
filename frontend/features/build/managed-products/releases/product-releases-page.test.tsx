@@ -40,6 +40,7 @@ jest.mock("@/components/shared/page-state", () => ({
   }) => {
     if (resolution.kind === "loading") return <div data-testid="page-loading" />;
     if (resolution.kind === "denied") return <div data-testid="no-permission" />;
+    if (resolution.kind === "not-found") return <div data-testid="page-not-found" />;
     if (resolution.kind === "empty") return <div data-testid="page-empty">{empty}</div>;
     return <div data-testid="page-ready">{children}</div>;
   },
@@ -131,6 +132,13 @@ describe("ProductReleasesPage", () => {
     expect(within(shipped).getByText("Winter polish")).toBeInTheDocument();
     expect(within(shipped).getByText("Faster search")).toBeInTheDocument();
     expect(screen.queryByText("Legacy beta")).not.toBeInTheDocument();
+  });
+
+  it("renders the product-not-found page without a New release action when the product is not reachable", () => {
+    mockUsePageState.mockReturnValue({ kind: "not-found" });
+    render(<ProductReleasesPage managedProductId={7} />);
+    expect(screen.getByTestId("page-not-found")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /New release/ })).not.toBeInTheDocument();
   });
 
   it("gates the page on the exact GET /releases permission", () => {

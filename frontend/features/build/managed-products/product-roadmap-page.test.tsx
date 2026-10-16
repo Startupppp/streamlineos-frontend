@@ -19,6 +19,13 @@ describe("ProductRoadmapPage — usePageState integration (BSN-01-027)", () => {
     );
   });
 
+  it("renders the product-not-found page without roadmap actions when the product is not reachable", () => {
+    usePageState.mockReturnValue({ kind: "not-found" });
+    render(<ProductRoadmapPage managedProductId={7} />);
+    expect(screen.getByTestId("page-state-not-found")).toBeInTheDocument();
+    expect(screen.queryByRole("tab", { name: "Board" })).not.toBeInTheDocument();
+  });
+
   it("shows NoPermissionState when usePageState resolution is denied for roadmap view", () => {
     usePageState.mockReturnValue({ kind: "denied", permission: "build:roadmap:view" });
     render(<ProductRoadmapPage managedProductId={7} />);
