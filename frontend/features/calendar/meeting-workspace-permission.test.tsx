@@ -1,12 +1,14 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { calendarMeetingWorkspaceContract } from "@/hooks/api/calendar-meeting-workspace-schema";
 import { MeetingWorkspaceContext } from "./meeting-workspace-context";
 import { MeetingWorkspaceGovernance } from "./meeting-workspace-governance";
 
+const mockUpdateMeetingWorkspace = jest.fn();
+
 jest.mock("@/hooks/api/calendar-meeting-workspace", () => ({
   useAddCalendarMeetingContext: () => ({ mutate: jest.fn(), isPending: false }),
   useUpdateCalendarMeetingContext: () => ({ mutate: jest.fn() }),
-  useUpdateCalendarMeetingWorkspace: () => ({ mutate: jest.fn() }),
+  useUpdateCalendarMeetingWorkspace: () => ({ mutate: mockUpdateMeetingWorkspace }),
 }));
 
 function workspace(canManage: boolean) {
@@ -66,6 +68,21 @@ describe("meeting workspace capability controls", () => {
     expect(screen.getByRole("button", { name: "Link context" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Revoke" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Record consent" })).toBeInTheDocument();
+  });
+
+  it("shows the latest retention date after a workspace update", () => {
+    const initial = { ...workspace(true), retentionUntil: "2026-11-01T23:59:59.999Z" };
+    const { rerender } = render(<MeetingWorkspaceGovernance workspace={initial} />);
+    expect(screen.getByRole("button", { name: "Remove retained workspace content after" })).toHaveTextContent("November 1st, 2026");
+
+    rerender(<MeetingWorkspaceGovernance workspace={{ ...initial, version: 2, retentionUntil: "2026-12-02T23:59:59.999Z" }} />);
+
+    expect(screen.getByRole("button", { name: "Remove retained workspace content after" })).toHaveTextContent("December 2nd, 2026");
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+    expect(mockUpdateMeetingWorkspace).toHaveBeenCalledWith(
+      { workspaceId: initial.id, expectedVersion: 2, retentionUntil: "2026-12-02T23:59:59.999Z" },
+      expect.any(Object),
+    );
   });
 
   it("shows failure states without opening unavailable source content", () => {

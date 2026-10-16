@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { Shield, TimerReset } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -8,11 +7,15 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
 import type { CalendarMeetingWorkspace } from "@/hooks/api/calendar-meeting-workspace-schema";
 import { useUpdateCalendarMeetingWorkspace } from "@/hooks/api/calendar-meeting-workspace";
+import { useSourceOverride } from "@/hooks/common/use-source-override";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 
 export function MeetingWorkspaceGovernance({ workspace }: { workspace: CalendarMeetingWorkspace }) {
-  const [retentionDate, setRetentionDate] = useState(workspace.retentionUntil?.slice(0, 10) ?? "");
+  const [retentionDate, setRetentionDate] = useSourceOverride(
+    `${workspace.id}:${workspace.retentionUntil ?? ""}`,
+    workspace.retentionUntil?.slice(0, 10) ?? "",
+  );
   const update = useUpdateCalendarMeetingWorkspace();
 
   const apply = (body: { retentionUntil?: string | null; recordingConsentStatus?: "PENDING" | "GRANTED" | "WITHDRAWN" }) => {
