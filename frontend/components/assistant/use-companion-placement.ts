@@ -62,10 +62,15 @@ export function useCompanionPlacement(scope: string, compact: boolean) {
       const bounded = stored ? clamp(stored) : null;
       positionRef.current = bounded;
       setPosition(bounded);
-      try { setMinimized(window.localStorage.getItem(minimizedKey) === "1"); } catch { setMinimized(false); }
+      // On a narrow viewport the full pet covers header actions (MP-U-015),
+      // so it starts minimised until the user chooses otherwise.
+      try {
+        const stored = window.localStorage.getItem(minimizedKey);
+        setMinimized(stored === null ? compact : stored === "1");
+      } catch { setMinimized(compact); }
     });
     return () => { cancelled = true; };
-  }, [clamp, minimizedKey, positionKey]);
+  }, [clamp, compact, minimizedKey, positionKey]);
 
   useEffect(() => {
     const onResize = () => {
