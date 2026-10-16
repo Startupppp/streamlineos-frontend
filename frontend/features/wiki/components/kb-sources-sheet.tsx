@@ -45,6 +45,11 @@ interface KbSourcesSheetManageProps {
   onOpenChange: (open: boolean) => void;
   sources: KbSource[];
   isLoading: boolean;
+  sourceError: unknown;
+  sourceHasMore: boolean;
+  sourceIsFetchingMore: boolean;
+  onSourceLoadMore: () => void;
+  onSourceRetry: () => void;
   readyCount: number;
   onUploadClick: () => void;
   uploadPending: boolean;
@@ -66,6 +71,11 @@ interface KbSourcesSheetScopeProps {
   onOpenChange: (open: boolean) => void;
   sources: KbSource[];
   isLoading: boolean;
+  sourceError: unknown;
+  sourceHasMore: boolean;
+  sourceIsFetchingMore: boolean;
+  onSourceLoadMore: () => void;
+  onSourceRetry: () => void;
   selectedIds: number[];
   onSelectionChange: (ids: number[]) => void;
   verifiedOnly: boolean;
@@ -119,6 +129,11 @@ function KbSourcesManageSheet({
   onOpenChange,
   sources,
   isLoading,
+  sourceError,
+  sourceHasMore,
+  sourceIsFetchingMore,
+  onSourceLoadMore,
+  onSourceRetry,
   readyCount,
   onUploadClick,
   uploadPending,
@@ -163,12 +178,23 @@ function KbSourcesManageSheet({
           </Button>
         </div>
 
-        <SourcesList
-          isLoading={isLoading}
-          sources={sources}
-          makeDeleteHandler={makeDeleteHandler}
-          deletingId={deletingId}
-          isDeleting={isDeleting}
+        {sourceError && sources.length === 0 ? (
+          <SourceReadError error={sourceError} onRetry={onSourceRetry} />
+        ) : (
+          <SourcesList
+            isLoading={isLoading}
+            sources={sources}
+            makeDeleteHandler={makeDeleteHandler}
+            deletingId={deletingId}
+            isDeleting={isDeleting}
+          />
+        )}
+        <SourcePagination
+          error={sources.length > 0 ? sourceError : null}
+          hasMore={sourceHasMore}
+          isFetchingMore={sourceIsFetchingMore}
+          onLoadMore={onSourceLoadMore}
+          onRetry={onSourceRetry}
         />
       </div>
     </AppSheet>
@@ -408,6 +434,11 @@ function KbSourcesScopeSheet({
   onOpenChange,
   sources,
   isLoading,
+  sourceError,
+  sourceHasMore,
+  sourceIsFetchingMore,
+  onSourceLoadMore,
+  onSourceRetry,
   selectedIds,
   onSelectionChange,
   verifiedOnly,
@@ -611,13 +642,24 @@ function KbSourcesScopeSheet({
           </div>
         )}
 
-        <ScopeSourcesList
-          isLoading={isLoading}
-          sources={sources}
-          selectedIds={selectedIds}
-          onToggle={handleToggleSource}
-          filtersActive={hasSourceFilter}
-          onClearFilters={handleClearSourceFilter}
+        {sourceError && sources.length === 0 ? (
+          <SourceReadError error={sourceError} onRetry={onSourceRetry} />
+        ) : (
+          <ScopeSourcesList
+            isLoading={isLoading}
+            sources={sources}
+            selectedIds={selectedIds}
+            onToggle={handleToggleSource}
+            filtersActive={hasSourceFilter}
+            onClearFilters={handleClearSourceFilter}
+          />
+        )}
+        <SourcePagination
+          error={sources.length > 0 ? sourceError : null}
+          hasMore={sourceHasMore}
+          isFetchingMore={sourceIsFetchingMore}
+          onLoadMore={onSourceLoadMore}
+          onRetry={onSourceRetry}
         />
 
         <div className="space-y-2">
@@ -676,6 +718,49 @@ interface SourcesListProps {
   makeDeleteHandler: (id: number) => () => void;
   deletingId: number | undefined;
   isDeleting: boolean;
+}
+
+function SourceReadError({ error, onRetry }: { error: unknown; onRetry: () => void }) {
+  return (
+    <div role="alert" className="space-y-2 text-sm text-destructive">
+      <p>Could not load sources.</p>
+      <ErrorReference error={error} />
+      <Button type="button" variant="outline" size="sm" onClick={onRetry}>Retry sources</Button>
+    </div>
+  );
+}
+
+function SourcePagination({
+  error,
+  hasMore,
+  isFetchingMore,
+  onLoadMore,
+  onRetry,
+}: {
+  error: unknown;
+  hasMore: boolean;
+  isFetchingMore: boolean;
+  onLoadMore: () => void;
+  onRetry: () => void;
+}) {
+  if (!hasMore && !error) return null;
+  return (
+    <div className="space-y-2">
+      {error && (
+        <div role="alert" className="text-sm text-destructive">
+          Could not load the full source list. <ErrorReference error={error} />
+        </div>
+      )}
+      {hasMore && (
+        <Button type="button" variant="outline" size="sm" disabled={isFetchingMore} onClick={onLoadMore}>
+          {isFetchingMore ? "Loading sources…" : error ? "Retry loading sources" : "Load more sources"}
+        </Button>
+      )}
+      {error && !hasMore && (
+        <Button type="button" variant="outline" size="sm" onClick={onRetry}>Retry sources</Button>
+      )}
+    </div>
+  );
 }
 
 function SourcesList({

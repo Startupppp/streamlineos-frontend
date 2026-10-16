@@ -151,6 +151,32 @@ beforeEach(() => {
   mockUseKbSources.mockReset();
 });
 
+describe("KnowledgeBasePage source pagination wiring", () => {
+  it("requests the next source page from the active scope query", async () => {
+    const fetchNextPage = jest.fn();
+    mockUseKbSources.mockImplementation(() => ({
+      ...notesOnlyPage(),
+      hasNextPage: true,
+      isFetchingNextPage: false,
+      fetchNextPage,
+      refetch: jest.fn(),
+    }));
+    const qc = new QueryClient({
+      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+    });
+    const user = userEvent.setup({ pointerEventsCheck: 0 });
+    render(
+      <QueryClientProvider client={qc}>
+        <KnowledgeBasePage />
+      </QueryClientProvider>,
+    );
+
+    await user.click(screen.getByRole("button", { name: /choose sources to search/i }));
+    await user.click(screen.getByRole("button", { name: "Load more sources" }));
+    expect(fetchNextPage).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe("KnowledgeBasePage — kind filter with empty results does not send an empty sourceIds array (FE-183)", () => {
   it("omits sourceIds entirely when the user switches to the Files kind filter with no file sources, confirms, then sends — an empty sourceIds array would be rejected with 400 by the backend askSchema min(1) constraint", async () => {
     const user = renderWithNotesOnly();

@@ -455,6 +455,7 @@ export default function KnowledgeBasePage() {
   const scopeDisplaySources = pendingSpaceId !== null
     ? baseDisplaySources.filter((s) => s.spaceId === pendingSpaceId)
     : baseDisplaySources;
+  const activeScopeSourcesQuery = hasScopeFilters ? scopeSourcesQuery : sourcesQuery;
 
   return (
     <PageWrapper
@@ -644,6 +645,11 @@ export default function KnowledgeBasePage() {
           onOpenChange={handleSourcesSheetOpenChange}
           sources={sources}
           isLoading={sourcesQuery.isLoading}
+          sourceError={sourcesQuery.isError ? sourcesQuery.error : null}
+          sourceHasMore={sourcesQuery.hasNextPage}
+          sourceIsFetchingMore={sourcesQuery.isFetchingNextPage}
+          onSourceLoadMore={() => { void sourcesQuery.fetchNextPage(); }}
+          onSourceRetry={() => { void sourcesQuery.refetch(); }}
           readyCount={readyCount}
           onUploadClick={handleUploadClick}
           uploadPending={uploadSource.isPending}
@@ -661,6 +667,11 @@ export default function KnowledgeBasePage() {
           onOpenChange={handleSourcesSheetOpenChange}
           sources={scopeDisplaySources}
           isLoading={hasScopeFilters ? scopeSourcesQuery.isLoading : sourcesQuery.isLoading}
+          sourceError={activeScopeSourcesQuery.isError ? activeScopeSourcesQuery.error : null}
+          sourceHasMore={activeScopeSourcesQuery.hasNextPage}
+          sourceIsFetchingMore={activeScopeSourcesQuery.isFetchingNextPage}
+          onSourceLoadMore={() => { void activeScopeSourcesQuery.fetchNextPage(); }}
+          onSourceRetry={() => { void activeScopeSourcesQuery.refetch(); }}
           selectedIds={pendingScopeIds}
           onSelectionChange={handleScopeSelectionChange}
           verifiedOnly={pendingVerifiedOnly}
