@@ -34,7 +34,6 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useCursorPagination } from "@/hooks/common/use-cursor-pagination";
 import { useUrlFilters, parseEnum } from "@/lib/url-state/use-url-filters";
 import {
   useContentHealthCounts,
@@ -385,7 +384,6 @@ export default function ContentHealthPage() {
   const searchParams = useSearchParams();
   const { data: accessData, isError: accessReadError, refetch: refetchAccess } = useAccess();
   const { update: updateFilters } = useUrlFilters({ pageParam: "cursor" });
-  const cursorState = useCursorPagination();
   const { state: dismissState, openDismiss, closeDialog } = useDismissDialog();
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [bulkRepairOpen, setBulkRepairOpen] = useState(false);
@@ -396,11 +394,21 @@ export default function ContentHealthPage() {
     "unowned",
   );
 
-  const rawAfter = cursorState.cursor
-    ? parseInt(cursorState.cursor, 10)
-    : undefined;
+  const rawCursor = searchParams.get("cursor");
   const afterId =
-    rawAfter !== undefined && Number.isFinite(rawAfter) ? rawAfter : undefined;
+    rawCursor && /^[1-9]\d*$/.test(rawCursor) && Number.isSafeInteger(Number(rawCursor))
+      ? Number(rawCursor)
+      : undefined;
+  const cursor = afterId?.toString();
+  const trailEntries = searchParams.get("cursorTrail")?.split(".") ?? [];
+  const cursorTrail =
+    cursor &&
+    trailEntries[0] === "~" &&
+    trailEntries.slice(1).every((entry) => /^[1-9]\d*$/.test(entry) && Number.isSafeInteger(Number(entry)))
+      ? trailEntries
+      : cursor
+        ? ["~"]
+        : [];
 
   const {
     data: countsData,
@@ -419,9 +427,8 @@ export default function ContentHealthPage() {
   } = useContentHealthSignals({ signalType: activeSignal, afterId });
 
   function handleSignalSelect(signal: string) {
-    cursorState.reset();
     setSelectedIds(new Set());
-    updateFilters({ signal });
+    updateFilters({ signal, cursorTrail: null });
   }
 
   function handleRetry() {
@@ -435,11 +442,19 @@ export default function ContentHealthPage() {
 
   function handleNext() {
     const next = signalsData?.nextCursor;
-    if (next != null) cursorState.goNext(String(next));
+    if (next == null) return;
+    setSelectedIds(new Set());
+    updateFilters({ cursor: String(next), cursorTrail: [...cursorTrail, cursor ?? "~"].join(".") });
   }
 
   function handlePrevious() {
-    cursorState.goPrevious();
+    if (!cursor) return;
+    setSelectedIds(new Set());
+    const previousCursor = cursorTrail[cursorTrail.length - 1];
+    updateFilters({
+      cursor: previousCursor === "~" ? null : previousCursor,
+      cursorTrail: cursorTrail.length > 1 ? cursorTrail.slice(0, -1).join(".") : null,
+    });
   }
 
   function handleDismissOpenChange(open: boolean) {
@@ -672,20 +687,20 @@ export default function ContentHealthPage() {
               </>
             )}
 
-            {(cursorState.hasPrevious || hasMore) && (
+            {(Boolean(cursor) || hasMore) && (
               <div className="flex items-center justify-between pt-1">
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
                   onClick={handlePrevious}
-                  disabled={!cursorState.hasPrevious}
+                  disabled={!cursor}
                   className="text-xs h-7"
                 >
                   Previous
                 </Button>
                 <span className="text-xs text-muted-foreground">
-                  Page {cursorState.pageNumber}
+                  Page {cursorTrail.length + 1}
                 </span>
                 <Button
                   type="button"
