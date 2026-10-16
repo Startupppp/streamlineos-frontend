@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { Users, Shield, Pencil, Settings2 } from "lucide-react";
+import { Users, Shield, Pencil, Settings2, Trash2 } from "lucide-react";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -15,33 +15,15 @@ import {
   RichPanel,
   RichSectionHeader,
 } from "@/components/shared/rich-surface";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import {
-  Form,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { LoadingButton } from "@/components/ui/loading-button";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import {
+  useDeleteGroup,
   usePrincipalGroups,
-  useRenameGroup,
   type PrincipalGroup,
 } from "@/hooks/api/principal-groups";
 import { CreateGroupDialog } from "./create-group-dialog";
 import { GroupDetailSheet } from "./group-detail-sheet";
-import { createGroupSchema, type CreateGroupFormValues } from "./create-group-schema";
+import { RenameGroupDialog } from "./rename-group-dialog";
 
 const PAGE_SIZE = 20;
 
@@ -55,91 +37,16 @@ function GroupsTableSkeleton() {
   );
 }
 
-interface RenameGroupDialogProps {
-  group: PrincipalGroup | null;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}
-
-function RenameGroupDialog({ group, open, onOpenChange }: RenameGroupDialogProps) {
-  const renameGroup = useRenameGroup(group?.id ?? "");
-  const form = useForm<CreateGroupFormValues>({
-    resolver: zodResolver(createGroupSchema),
-    defaultValues: { name: group?.name ?? "" },
-    values: { name: group?.name ?? "" },
-  });
-
-  const handleOpenChange = (next: boolean) => {
-    if (!next) form.reset({ name: group?.name ?? "" });
-    onOpenChange(next);
-  };
-
-  const onSubmit = (values: CreateGroupFormValues) => {
-    renameGroup.mutate(values, {
-      onSuccess: () => {
-        toast.success("Group renamed");
-        handleOpenChange(false);
-      },
-      onError: (err) => toast.error(getErrorMessage(err)),
-    });
-  };
-
-  return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-sm">
-        <DialogHeader>
-          <DialogTitle>Rename group</DialogTitle>
-        </DialogHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Group name</FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      autoComplete="off"
-                      className="h-9"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => handleOpenChange(false)}
-              >
-                Cancel
-              </Button>
-              <LoadingButton
-                type="submit"
-                isPending={renameGroup.isPending}
-                loadingText="Saving…"
-              >
-                Save
-              </LoadingButton>
-            </DialogFooter>
-          </form>
-        </Form>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
 interface GroupRowProps {
   group: PrincipalGroup;
   onRename: (group: PrincipalGroup) => void;
   onManage: (group: PrincipalGroup) => void;
+  onDelete: (group: PrincipalGroup) => void;
 }
 
-function GroupRow({ group, onRename, onManage }: GroupRowProps) {
+function GroupRow({ group, onRename, onManage, onDelete }: GroupRowProps) {
   const handleRename = useCallback(() => onRename(group), [group, onRename]);
+  const handleDelete = useCallback(() => onDelete(group), [group, onDelete]);
   const handleManage = useCallback(() => onManage(group), [group, onManage]);
 
   return (
@@ -179,6 +86,17 @@ function GroupRow({ group, onRename, onManage }: GroupRowProps) {
             <Pencil className="h-3.5 w-3.5" />
           </Button>
         )}
+        {group.kind === "CUSTOM" && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
+            aria-label="Delete group"
+            onClick={handleDelete}
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
+        )}
         <Button
           variant="ghost"
           size="sm"
@@ -199,6 +117,8 @@ export function GroupsPanel() {
   const [renameTarget, setRenameTarget] = useState<PrincipalGroup | null>(null);
   const [detailTarget, setDetailTarget] = useState<PrincipalGroup | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<PrincipalGroup | null>(null);
+  const deleteGroup = useDeleteGroup();
 
   const { data, isLoading, isError, error } = usePrincipalGroups({
     cursor: pageStack.cursor,
@@ -227,6 +147,25 @@ export function GroupsPanel() {
   const handleDetailClose = useCallback((open: boolean) => {
     if (!open) setDetailOpen(false);
   }, []);
+  const handleDelete = useCallback((group: PrincipalGroup) => setDeleteTarget(group), []);
+  const handleDeleteClose = useCallback((open: boolean) => {
+    if (!open) setDeleteTarget(null);
+  }, []);
+  const handleConfirmDelete = useCallback(() => {
+    if (!deleteTarget) return;
+    const { id, name } = deleteTarget;
+    deleteGroup.mutate(
+      { groupId: id },
+      {
+        onSuccess: () => {
+          toast.success(`Deleted group "${name}"`);
+          setDeleteTarget(null);
+          if (detailTarget?.id === id) setDetailOpen(false);
+        },
+        onError: (err) => toast.error(getErrorMessage(err)),
+      },
+    );
+  }, [deleteGroup, deleteTarget, detailTarget?.id]);
 
   return (
     <>
@@ -267,6 +206,7 @@ export function GroupsPanel() {
                   group={group}
                   onRename={handleRename}
                   onManage={handleManage}
+                  onDelete={handleDelete}
                 />
               ))}
             </div>
@@ -293,6 +233,21 @@ export function GroupsPanel() {
         group={detailTarget}
         open={detailOpen}
         onOpenChange={handleDetailClose}
+      />
+      <ConfirmDialog
+        open={!!deleteTarget}
+        onOpenChange={handleDeleteClose}
+        title="Delete permission group"
+        description={
+          deleteTarget
+            ? `Deleting "${deleteTarget.name}" removes its ${deleteTarget.roleCount === 1 ? "role" : "roles"} from ${deleteTarget.memberCount} ${deleteTarget.memberCount === 1 ? "member" : "members"}. Their direct roles are not affected. This cannot be undone.`
+            : ""
+        }
+        confirmLabel="Delete group"
+        destructive
+        keepOpenOnConfirm
+        isPending={deleteGroup.isPending}
+        onConfirm={handleConfirmDelete}
       />
     </>
   );
