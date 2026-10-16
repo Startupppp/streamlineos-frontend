@@ -1,6 +1,6 @@
 # PAGES.md — StreamlineOS Frontend Route Catalog
 
-**What this is:** one row per `page.tsx` under `frontend/app/`. It records what each route is and what it calls. **Total routes: 634.**
+**What this is:** one row per `page.tsx` under `frontend/app/`. It records what each route is and what it calls. **Total routes: 635.**
 
 **This is an inventory, not a task list.** It carries no checkboxes and no per-route audit state. A row is a fact about a route, never a to-do. Anything written here as `OPEN:` is a known unverified gap, not an assignment — do not infer work from a row.
 
@@ -185,6 +185,7 @@
 - `/crm/settings/blueprints` · **CRM** · hooks: `→ feature/crm/settings`
 - `/crm/settings/custom-fields` · **CRM** · hooks: `→ feature/crm/settings`
 - `/crm/settings/data-quality` · **CRM** · hooks: `→ feature/crm/settings`
+- `/crm/settings/data-quality/findings` · **CRM** · hooks: `→ feature/crm/settings`
 - `/crm/settings/email-templates` · **CRM** · hooks: `→ feature/crm/settings`
 - `/crm/settings/import-export` · **CRM** · hooks: `→ feature/crm/settings`
 - `/crm/settings/layouts` · **CRM** · hooks: `→ feature/crm/settings`

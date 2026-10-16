@@ -10,6 +10,7 @@ const TABS = [
   { label: "Subject Types", href: "/crm/settings/subject-types" },
   { label: "Validation Rules", href: "/crm/settings/validation-rules" },
   { label: "Data Quality", href: "/crm/settings/data-quality" },
+  { label: "Data Quality Findings", href: "/crm/settings/data-quality/findings" },
   { label: "Blueprints", href: "/crm/settings/blueprints" },
   { label: "Territories", href: "/crm/settings/territories" },
   { label: "Scoring Rules", href: "/crm/settings/scoring-rules" },
