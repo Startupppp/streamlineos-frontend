@@ -565,12 +565,12 @@ PM Workspace is removed from Build entirely (not renamed, not consolidated into 
 ### Invoices & Receivables
 - `/accounting/invoices` · **Accounting** · hooks: `useInvoices`, `useInvoiceStats`, `useVoidInvoice`, `useCan("accounting:receivables:manage")`
 - `/accounting/invoices/new` · **Accounting** · hooks: `→ features/accounting/sales` — invoice composer; gated `accounting:receivables:manage`
-- `/accounting/invoices/[invoiceId]` · **Accounting** · hooks: `→ features/accounting/sales`
+- `/accounting/invoices/[invoiceId]` · **Accounting** · hooks: `→ features/accounting/sales` — posted: Download PDF, e-invoicing card (status + submit, `accounting:receivables:manage`), attachments card (`accounting:attachments:read`/`:manage`)
 - `/accounting/recurring-invoices` · **Accounting** [RETIRED: no page.tsx found 2026-09-21; ARs may have been consolidated]
 - `/accounting/payments-received` · **Accounting** · hooks: `→ features/accounting`
 - `/accounting/credit-notes` · **Accounting** · hooks: `→ features/accounting/sales`
 - `/accounting/credit-notes/new` · **Accounting** · hooks: `→ features/accounting/sales` — credit note composer; gated `accounting:credit-notes:create`
-- `/accounting/credit-notes/[creditNoteId]` · **Accounting** · hooks: `→ features/accounting/sales` — credit note detail; gated `accounting:credit-notes:read`
+- `/accounting/credit-notes/[creditNoteId]` · **Accounting** · hooks: `→ features/accounting/sales` — credit note detail; gated `accounting:credit-notes:read`; posted: Download PDF, e-invoicing card, attachments card
 - `/accounting/customers/[partyId]` · **Accounting** · hooks: `→ features/accounting`
 - `/accounting/customers` · **Accounting** · hooks: `→ features/accounting`
 - `/accounting/payment-reminders` · **Accounting** [RETIRED: no page.tsx found 2026-09-21]
@@ -579,7 +579,7 @@ PM Workspace is removed from Build entirely (not renamed, not consolidated into 
 ### Purchase & Payables
 - `/accounting/purchase-bills` · **Accounting** · hooks: `usePurchaseBills`, `useCreatePurchaseBill`, `useCan("accounting:payables:approve")`, `useCan("accounting:payables:manage")` — cursor pagination; search + status filters URL-synced; `EmptyState` with `EmptyExpensesIllustration` ✓; minor: empty state action shows "New bill" without checking `canManage`
 - `/accounting/purchase-bills/new` · **Accounting** · hooks: `→ features/accounting/purchase-bills`
-- `/accounting/purchase-bills/[apDocumentId]` · **Accounting** · hooks: `→ features/accounting/purchase-bills`
+- `/accounting/purchase-bills/[apDocumentId]` · **Accounting** · hooks: `→ features/accounting/purchase-bills` — posted: Download PDF; attachments card in every state
 - `/accounting/vendor-payments` · **Accounting** · hooks: `useVendorPayments`, `useCreateVendorPayment`, `useCan("accounting:payables:manage")` — dual cursor queries (paid + partial) merged; vendor filter URL-synced; `EmptyState` with `illustrationPreset="tasks"` ✓
 - `/accounting/vendor-credits` · **Accounting** · hooks: `→ features/accounting`
 - `/accounting/vendor-credits/new` · **Accounting** · hooks: `→ features/accounting/purchases` — vendor credit composer (DEBIT_NOTE type); `ApDocumentNewPage`
@@ -646,6 +646,7 @@ PM Workspace is removed from Build entirely (not renamed, not consolidated into 
 ### Sub-reports
 - `/accounting/reports` · **Accounting** · hooks: `→ features/accounting/reports`
 - `/accounting/reports/aging` · **Accounting** · hooks: `→ features/accounting/reports` — AR/AP aging report
+- `/accounting/reports/stock-reconciliation` · **Accounting** · hooks: `useStockGlReconciliation`, `useUnpostedMovements` `→ features/accounting/reports` — stock ledger vs GL inventory accounts, plus the unposted-movements sample (`accounting:reports:read`)
 - `/accounting/reports/burn-rate` · **Accounting** [RETIRED: no page.tsx found 2026-09-21]
 - `/accounting/reports/customer-statement` · **Accounting** [RETIRED: no page.tsx found 2026-09-21]
 - `/accounting/reports/department-profitability` · **Accounting** [RETIRED: no page.tsx found 2026-09-21]

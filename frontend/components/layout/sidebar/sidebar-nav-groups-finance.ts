@@ -1,4 +1,5 @@
 import {
+  Boxes,
   ArrowDownToLine,
   BarChart3,
   BookOpen,
@@ -252,6 +253,12 @@ export const FINANCE_NAV_GROUPS: NavGroup[] = [
             icon: Percent,
             href: "/accounting/taxes",
             requiredPermission: "accounting:taxes:read",
+          },
+          {
+            label: "Stock vs ledger",
+            icon: Boxes,
+            href: "/accounting/reports/stock-reconciliation",
+            requiredPermission: "accounting:reports:read",
           },
         ],
       },
