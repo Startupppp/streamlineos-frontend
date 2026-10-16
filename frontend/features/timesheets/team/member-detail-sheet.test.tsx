@@ -8,8 +8,8 @@
  * nobody ever asked the server for. The sheet now has to say which it is.
  *
  * FE-TS-004: "Remind" fired `toast.success("Reminder sent to …")` with no
- * request behind it. The guard here is the general one: no success toast may
- * fire from this sheet at all, because it performs no mutation.
+ * request behind it. It now calls `POST /timesheets/team/remind`; the toast
+ * belongs to the mutation hook, so the sheet itself must never toast.
  */
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -25,6 +25,16 @@ jest.mock("sonner", () => ({
 jest.mock("@/hooks/api/timesheets-core/periods", () => ({
   usePeriod: jest.fn(),
   useCanViewPeriodDetail: jest.fn(),
+}));
+
+const mutate = jest.fn();
+jest.mock("@/hooks/api/timesheets-core/team", () => ({
+  useRemindTeamMember: () => ({ mutate, isPending: false }),
+}));
+
+const canRemind = jest.fn();
+jest.mock("@/hooks/api/access", () => ({
+  useCan: () => canRemind(),
 }));
 
 const period = usePeriod as unknown as jest.Mock;
@@ -55,13 +65,22 @@ const DRAFT: TimesheetPeriod = {
 
 function renderSheet() {
   return render(
-    <MemberDetailSheet period={DRAFT} open onOpenChange={jest.fn()} memberName="Dana Reed" />,
+    <MemberDetailSheet
+      period={DRAFT}
+      open
+      onOpenChange={jest.fn()}
+      memberName="Dana Reed"
+      memberUserId="user-dana"
+      weekStart="2026-09-07"
+      weekEnd="2026-09-13"
+    />,
   );
 }
 
 beforeEach(() => {
   jest.clearAllMocks();
   canViewDetail.mockReturnValue(true);
+  canRemind.mockReturnValue(true);
   period.mockReturnValue({ data: undefined, isLoading: false, isError: false });
 });
 
@@ -96,13 +115,23 @@ describe("FE-TS-003 — period detail gate", () => {
 });
 
 describe("FE-TS-004 — Remind", () => {
-  it("does not claim a reminder was sent", async () => {
+  it("sends a reminder for exactly the member and week the sheet shows", async () => {
     renderSheet();
-    const remind = screen.getByRole("button", { name: /remind/i });
+    await userEvent.click(screen.getByRole("button", { name: /remind/i }));
 
-    expect(remind).toBeDisabled();
-    await userEvent.click(remind);
-
+    expect(mutate).toHaveBeenCalledWith({
+      userId: "user-dana",
+      weekStart: "2026-09-07",
+      weekEnd: "2026-09-13",
+      memberName: "Dana Reed",
+    });
     expect(toast.success).not.toHaveBeenCalled();
+  });
+
+  it("offers no Remind control without timesheets:team:view", () => {
+    canRemind.mockReturnValue(false);
+    renderSheet();
+
+    expect(screen.queryByRole("button", { name: /remind/i })).not.toBeInTheDocument();
   });
 });
