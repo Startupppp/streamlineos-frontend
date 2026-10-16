@@ -312,6 +312,7 @@ describe("CalendarToolbarPrimaryActions — Add opens an event", () => {
       <CalendarToolbarPrimaryActions
         activeConnectionCount={0}
         onOpenAccounts={jest.fn()}
+        onOpenBookingPages={jest.fn()}
         onOpenCreate={onOpenCreate}
       />,
     );

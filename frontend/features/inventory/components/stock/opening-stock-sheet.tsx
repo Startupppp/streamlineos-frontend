@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
-import { useForm, useFieldArray } from "react-hook-form";
+import { useCallback } from "react";
+import { useForm, useFieldArray, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { AlertTriangle } from "lucide-react";
@@ -41,21 +41,19 @@ export function OpeningStockSheet({ open, onOpenChange }: OpeningStockSheetProps
     name: "lines",
   });
 
-  const watchedLines = form.watch("lines");
+  const watchedLines = useWatch({ control: form.control, name: "lines" }) ?? [];
 
-  const summary = useMemo(() => {
-    const totalQty = watchedLines.reduce((sum, l) => {
-      const n = Number(l.qty);
-      return sum + (isNaN(n) ? 0 : n);
-    }, 0);
-    const totalValue = watchedLines.reduce((sum, l) => {
-      const q = Number(l.qty);
-      const c = Number(l.unitCost);
-      if (isNaN(q) || isNaN(c)) return sum;
-      return sum + q * c;
-    }, 0);
-    return { lines: watchedLines.length, totalQty, totalValue };
-  }, [watchedLines]);
+  const totalQty = watchedLines.reduce((sum, line) => {
+    const quantity = Number(line.qty);
+    return sum + (Number.isNaN(quantity) ? 0 : quantity);
+  }, 0);
+  const totalValue = watchedLines.reduce((sum, line) => {
+    const quantity = Number(line.qty);
+    const unitCost = Number(line.unitCost);
+    if (Number.isNaN(quantity) || Number.isNaN(unitCost)) return sum;
+    return sum + quantity * unitCost;
+  }, 0);
+  const summary = { lines: watchedLines.length, totalQty, totalValue };
 
   const handleAddLine = useCallback(() => {
     append(defaultLine());
