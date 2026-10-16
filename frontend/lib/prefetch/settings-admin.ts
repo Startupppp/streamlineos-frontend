@@ -27,6 +27,8 @@ import { simulationCandidatesPageContract } from "@/hooks/api/roles-schema";
 import { usersResponseContract } from "@/hooks/api/users/extended-users-schema";
 import { userStatsContract } from "@/hooks/api/users/users-schema";
 import { webhookListContract } from "@/hooks/api/webhooks-schema";
+import { chatOrgSettingsContract } from "@/hooks/api/chat-schema/channel-settings-schema";
+import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { SIMULATION_CANDIDATE_PARAMS } from "@/lib/settings-initial-reads";
 
 function query(params: Record<string, string | undefined>): string {
@@ -63,6 +65,18 @@ export function usersListQuery(params: UserListParams): string {
     sortBy: params.sortBy,
     sortOrder: params.sortOrder,
   });
+}
+
+export async function prefetchChatOrgSettings() {
+  const queryClient = await createServerQueryClient();
+  const gate = await resolvePrefetchGate();
+  if (gate.can("chat:org-settings:manage") && gate.can("chat:channels:read"))
+    await queryClient.prefetchQuery({
+      queryKey: collaborationQueryKeys.chat.orgSettings(),
+      queryFn: () => serverGet("/chat/settings", chatOrgSettingsContract),
+      staleTime: 5 * 60_000,
+    });
+  return dehydrate(queryClient);
 }
 
 export async function prefetchOrgModules() {

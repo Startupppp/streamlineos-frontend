@@ -21,6 +21,7 @@ import {
   Megaphone,
   FileText,
   Plug,
+  MessageSquare,
 } from "lucide-react";
 import type { NavGroup } from "./sidebar-nav-types";
 
@@ -45,7 +46,7 @@ export const ADMINISTRATION_NAV_GROUPS: NavGroup[] = [
   {
     label: "Workspace",
     product: "administration",
-    requiredPermission: ["settings:manage", "ownership:transfer:respond"],
+    requiredPermission: ["settings:manage", "ownership:transfer:respond", "chat:org-settings:manage"],
     routes: [
       {
         label: "Organization Settings",
@@ -59,6 +60,12 @@ export const ADMINISTRATION_NAV_GROUPS: NavGroup[] = [
         icon: ArrowLeftRight,
         href: "/settings/incoming-transfer",
         requiredPermission: "ownership:transfer:respond",
+      },
+      {
+        label: "Chat Settings",
+        icon: MessageSquare,
+        href: "/settings/chat",
+        requiredPermission: "chat:org-settings:manage",
       },
     ],
   },

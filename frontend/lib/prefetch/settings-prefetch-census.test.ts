@@ -78,6 +78,15 @@ const CENSUS: readonly CensusEntry[] = [
     },
   },
   {
+    route: "/settings/chat",
+    classification: {
+      kind: "prefetch",
+      helper: "prefetchChatOrgSettings",
+      module: SETTINGS_ADMIN,
+      gate: "chat:org-settings:manage",
+    },
+  },
+  {
     route: "/settings/delegations",
     classification: {
       kind: "prefetch",
@@ -315,7 +324,7 @@ describe("the settings prefetch census", () => {
   const routes = settingsRoutes();
 
   it("reads real route files, so an empty sweep cannot pass", () => {
-    expect(routes.length).toBe(29);
+    expect(routes.length).toBe(30);
   });
 
   it("classifies every settings route on disk", () => {
@@ -348,8 +357,8 @@ describe("a prefetch classification is backed by real wiring", () => {
       entry.classification.kind === "prefetch",
   );
 
-  it("covers 28 of the 29 routes", () => {
-    expect(prefetched).toHaveLength(28);
+  it("covers 29 of the 30 routes", () => {
+    expect(prefetched).toHaveLength(29);
   });
 
   it.each(prefetched.map((entry) => [entry.route, entry] as const))(
