@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/tooltip";
 import { CalendarDays } from "lucide-react";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { InfoIcon, PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
@@ -43,22 +44,31 @@ interface OrgHolidayCalendarSectionProps {
   canEdit: boolean;
 }
 
-function DeleteHolidayButton({ holidayId, onDelete, disabled }: { holidayId: string; onDelete: (id: string) => void; disabled: boolean }) {
+function DeleteHolidayButton({ holidayId, holidayName, onDelete, disabled }: { holidayId: string; holidayName: string; onDelete: (id: string) => void; disabled: boolean }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
-  function handleClick() {
+  function handleConfirm() {
     onDelete(holidayId);
   }
   return (
-    <button
-      type="button"
-      aria-label="Delete holiday"
-      onClick={handleClick}
-      disabled={disabled}
-      className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-opacity"
-      {...hoverHandlers}
-    >
-      <Trash2Icon ref={iconRef} size={16} />
-    </button>
+    <ConfirmDialog
+      title="Delete holiday?"
+      description={`${holidayName} will be removed from the holiday calendar used for attendance, leave, and SLA calculations.`}
+      confirmLabel="Delete holiday"
+      destructive
+      isPending={disabled}
+      onConfirm={handleConfirm}
+      trigger={
+        <button
+          type="button"
+          aria-label={`Delete holiday ${holidayName}`}
+          disabled={disabled}
+          className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 text-muted-foreground hover:text-destructive transition-opacity"
+          {...hoverHandlers}
+        >
+          <Trash2Icon ref={iconRef} size={16} />
+        </button>
+      }
+    />
   );
 }
 
@@ -224,7 +234,7 @@ export function OrgHolidayCalendarSection({ canEdit }: OrgHolidayCalendarSection
                 </p>
               </div>
               {canEdit && (
-                <DeleteHolidayButton holidayId={h.id} onDelete={handleDelete} disabled={deleteMutation.isPending} />
+                <DeleteHolidayButton holidayId={h.id} holidayName={h.name} onDelete={handleDelete} disabled={deleteMutation.isPending} />
               )}
             </div>
           ))}
