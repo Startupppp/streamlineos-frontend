@@ -18,7 +18,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { MonthPicker } from "@/features/payroll/shared";
+import { MonthPicker, monthFromToday } from "@/features/payroll/shared/month-picker";
+import { ordinal, PAY_DAY_OPTIONS } from "@/features/payroll/setup/steps/step-profile-schema";
 import { useUpdatePolicy } from "@/hooks/api/payroll";
 import { CURRENCIES, PAY_FREQUENCIES } from "@/features/payroll/setup/lib/constants";
 import type { PolicyRow } from "@/types/payroll/setup";
@@ -36,11 +37,6 @@ const schema = z.object({
 });
 type ProfileForm = z.infer<typeof schema>;
 
-const ORDINAL_SUFFIX = ["st", "nd", "rd"];
-
-function ordinal(n: number): string {
-  return `${n}${ORDINAL_SUFFIX[n - 1] ?? "th"}`;
-}
 
 type PolicyProfileSectionProps = {
   policy: PolicyRow;
@@ -182,9 +178,9 @@ export function PolicyProfileSection({ policy }: PolicyProfileSectionProps) {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {Array.from({ length: 28 }, (_, i) => String(i + 1)).map((d) => (
-                  <SelectItem key={d} value={d}>
-                    {ordinal(Number(d))}
+                {PAY_DAY_OPTIONS.map((d) => (
+                  <SelectItem key={d.value} value={d.value}>
+                    {d.label}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -196,6 +192,7 @@ export function PolicyProfileSection({ policy }: PolicyProfileSectionProps) {
               value={watch("startMonth")}
               onChange={(val) => setValue("startMonth", val)}
               className=""
+              minMonth={monthFromToday(0)}
             />
           </div>
         </div>
