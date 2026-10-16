@@ -3,7 +3,7 @@ import {
   leaveOverlapMessage,
   type LeaveSpan,
 } from "@/features/hr/leaves/leave-overlap";
-import { leaveLopHint, LOP_HINT_PREFIX } from "@/features/hr/leaves/leave-lop-hint";
+import { leaveBalanceError, leaveLopHint, LOP_HINT_PREFIX } from "@/features/hr/leaves/leave-lop-hint";
 
 const APPROVED: LeaveSpan = {
   id: 7,
@@ -47,38 +47,47 @@ describe("findLeaveOverlap", () => {
 
 describe("leaveLopHint", () => {
   const base = {
-    typeName: "Casual Leave",
-    entitledDaysPerYear: 12,
-    balanceKnown: true,
-    availableDays: 3,
+    typeName: "Unpaid Leave",
+    entitledDaysPerYear: 0,
     requestedDays: 2,
   };
 
-  it("stays silent while the request fits the known balance", () => {
-    expect(leaveLopHint(base)).toBeNull();
-  });
-
   it("is labelled a hint, is qualitative, and carries no currency figure", () => {
-    const hint = leaveLopHint({ ...base, requestedDays: 5 });
+    const hint = leaveLopHint(base);
     expect(hint).not.toBeNull();
     expect(hint!.startsWith(LOP_HINT_PREFIX)).toBe(true);
-    expect(hint).toMatch(/may affect LOP/);
+    expect(hint).toMatch(/no paid entitlement/);
     expect(hint).not.toMatch(/[₹$]|\bINR\b|\brupee/i);
     expect(hint).not.toMatch(/proven|calculated|exact/i);
   });
 
-  it("flags a type with no paid entitlement configured", () => {
-    const hint = leaveLopHint({ ...base, entitledDaysPerYear: 0 });
-    expect(hint).toMatch(/no paid entitlement/);
-  });
-
-  it("never guesses when the balance is unknown", () => {
-    expect(
-      leaveLopHint({ ...base, balanceKnown: false, availableDays: null, requestedDays: 99 }),
-    ).toBeNull();
+  it("stays silent for a paid type, because the server refuses an over-balance request", () => {
+    expect(leaveLopHint({ ...base, entitledDaysPerYear: 12, requestedDays: 99 })).toBeNull();
   });
 
   it("says nothing before dates are picked", () => {
     expect(leaveLopHint({ ...base, requestedDays: 0 })).toBeNull();
+  });
+});
+
+describe("leaveBalanceError", () => {
+  const base = {
+    typeName: "Casual Leave",
+    entitledDaysPerYear: 12,
+    availableDays: 11,
+    requestedDays: 12,
+  };
+
+  it("names the requested and available days when a paid request exceeds the balance", () => {
+    expect(leaveBalanceError(base)).toMatch(/Requested 12 days exceeds your available 11 days of Casual Leave/);
+  });
+
+  it("allows a request that fits the balance", () => {
+    expect(leaveBalanceError({ ...base, requestedDays: 11 })).toBeNull();
+  });
+
+  it("never blocks an unpaid type or an unknown balance", () => {
+    expect(leaveBalanceError({ ...base, entitledDaysPerYear: 0 })).toBeNull();
+    expect(leaveBalanceError({ ...base, availableDays: null })).toBeNull();
   });
 });

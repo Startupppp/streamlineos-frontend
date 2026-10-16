@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { countWorkdays } from "./leave-date-helpers";
 import { findLeaveOverlap, leaveOverlapMessage, type LeaveSpan } from "./leave-overlap";
-import { leaveLopHint } from "./leave-lop-hint";
+import { leaveBalanceError, leaveLopHint } from "./leave-lop-hint";
 import type { LeaveBalance, LeaveType } from "./components/leaves-shared";
 
 export interface LeaveBalancePreviewValue {
@@ -19,6 +19,7 @@ export interface LeaveRequestValidation {
   lopHint: string | null;
   overlapMessage: string | null;
   dayLimitError: string | null;
+  balanceError: string | null;
 }
 
 export interface LeaveRequestValidationInput {
@@ -39,6 +40,7 @@ const EMPTY: LeaveRequestValidation = {
   lopHint: null,
   overlapMessage: null,
   dayLimitError: null,
+  balanceError: null,
 };
 
 export function useLeaveRequestValidation(
@@ -88,12 +90,16 @@ export function useLeaveRequestValidation(
       lopHint: leaveLopHint({
         typeName: selectedType.name,
         entitledDaysPerYear,
-        balanceKnown,
-        availableDays: balanceKnown ? available : null,
         requestedDays,
       }),
       overlapMessage,
       dayLimitError,
+      balanceError: leaveBalanceError({
+        typeName: selectedType.name,
+        entitledDaysPerYear,
+        availableDays: balanceKnown ? available : null,
+        requestedDays,
+      }),
     };
   }, [
     leaveTypeId,
