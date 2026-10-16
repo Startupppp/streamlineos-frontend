@@ -63,6 +63,16 @@ function outcomeTitle(outcome: string, locale: string): string {
   return copy.attention;
 }
 
+function receiptReason(reasonCode: string, outcome: string, locale: string): string {
+  const copy = publicBookingCopy(locale);
+  if (reasonCode === "hold_expired") return copy.reasonReservationExpired;
+  if (reasonCode === "rule_changed" || reasonCode === "policy_changed") return copy.reasonTermsChanged;
+  if (outcome === "uncertain" || reasonCode.includes("unavailable") || reasonCode.includes("uncertain") || reasonCode.includes("evaluation_failed")) {
+    return copy.reasonAvailabilityUncertain;
+  }
+  return copy.reasonTimeUnavailable;
+}
+
 function bookingTime(value: string, timeZone: string, locale: string): string {
   return new Intl.DateTimeFormat(locale, {
     dateStyle: "full",
@@ -275,9 +285,9 @@ export function PublicCalendarBookingForm({
           <h2 className="text-xl font-semibold tracking-tight text-foreground">
             {outcomeTitle(receipt.outcome, uiLocale)}
           </h2>
-          {receipt.reasonCode && (
+          {receipt.reasonCode && receipt.outcome !== "confirmed" && (
             <p className="text-sm text-muted-foreground">
-              {receipt.reasonCode.replaceAll("_", " ")}
+              {receiptReason(receipt.reasonCode, receipt.outcome, uiLocale)}
             </p>
           )}
         </div>

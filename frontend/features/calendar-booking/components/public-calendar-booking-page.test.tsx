@@ -239,6 +239,29 @@ describe("public calendar booking page", () => {
     expect(screen.getByText("कैलेंडर से मिलान जारी है।")).toBeInTheDocument();
   });
 
+  it("explains a rejected booking in the guest language without exposing a reason code", async () => {
+    mockedPost.mockImplementation(async (path) => {
+      if (String(path).endsWith("/sessions")) return {
+        ...session,
+        locale: "hi-IN",
+        copy: { ...session.copy, locale: "hi-IN", consentLabel: null },
+      };
+      if (String(path).endsWith("/holds")) return hold;
+      return { ...receipt, bookingId: null, outcome: "rejected", reasonCode: "capacity_lost" };
+    });
+    const user = userEvent.setup();
+    renderPage();
+    await screen.findByRole("heading", { name: "Meet Northwind" });
+    await user.click(screen.getByRole("radio"));
+    await user.type(screen.getByLabelText("नाम"), "Guest User");
+    await user.type(screen.getByLabelText("ईमेल"), "guest@example.test");
+    await user.type(screen.getByLabelText("Organization"), "Example");
+    await user.click(screen.getByRole("checkbox"));
+    await user.click(screen.getByRole("button", { name: "बुकिंग की पुष्टि करें" }));
+    expect(await screen.findByText("यह समय अब उपलब्ध नहीं है। दूसरा समय चुनें।")).toBeInTheDocument();
+    expect(screen.queryByText("capacity lost")).not.toBeInTheDocument();
+  });
+
   it("uses Telugu for booking controls, validation, and the confirmed receipt", async () => {
     mockedPost.mockImplementation(async (path) => {
       if (String(path).endsWith("/sessions")) return {
