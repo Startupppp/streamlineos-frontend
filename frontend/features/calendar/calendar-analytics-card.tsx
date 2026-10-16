@@ -55,7 +55,7 @@ export function CalendarAnalyticsCard({ timeZone, retentionDays }: { timeZone: s
               {analytics.data.metrics.map((metric) => (
                 <div key={metric.key} className="rounded-lg border p-4">
                   <div className="flex items-start justify-between gap-2"><p className="text-sm font-medium">{metric.label}</p><BarChart3 className="size-4 text-muted-foreground" /></div>
-                  <p className="mt-2 text-2xl font-semibold">{metric.value === null ? "Suppressed" : metric.unit === "percent" ? formatPercent(metric.value, "en-IN") : formatNumber(metric.value, "en-IN")}</p>
+                  <p className="mt-2 text-2xl font-semibold">{metric.value === null ? metric.suppressed ? "Suppressed" : "No data" : metric.unit === "percent" ? formatPercent(metric.value, "en-IN") : formatNumber(metric.value, "en-IN")}</p>
                   <p className="mt-1 text-xs text-muted-foreground">{metric.numerator !== null && metric.denominator !== null ? `${formatNumber(metric.numerator, "en-IN")} of ${formatNumber(metric.denominator, "en-IN")}` : metric.numerator !== null ? `${formatNumber(metric.numerator, "en-IN")} lifecycle subjects` : "Private cohort"}</p>
                   <p className="mt-2 text-xs leading-5 text-muted-foreground">{metric.definition}</p>
                 </div>

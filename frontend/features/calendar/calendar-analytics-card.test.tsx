@@ -80,3 +80,26 @@ it("shows the pending release date without exposing suppressed metrics", () => {
   expect(screen.queryByText("Source coverage")).not.toBeInTheDocument();
   expect(screen.queryByText("Small cohort protected")).not.toBeInTheDocument();
 });
+
+it("distinguishes a zero-denominator metric from a privacy-suppressed metric", () => {
+  mockUseCalendarAnalytics.mockReturnValue({
+    isLoading: false,
+    isError: false,
+    isFetching: false,
+    data: {
+      period: { retentionApplied: false, availableAt: "2026-10-08T00:00:00.000Z", timeZone: "Asia/Calcutta" },
+      coverage: { state: "complete", expectedSources: [], observedSources: [], missingSources: [], partialSources: [], failedSources: [] },
+      privacy: { minimumCohort: 5, cohortState: "sufficient", suppressed: false },
+      metrics: [
+        { key: "fallback", label: "Routing fallback rate", value: null, unit: "percent", numerator: 0, denominator: 0, definition: "Test", suppressed: false },
+        { key: "private", label: "Private metric", value: null, unit: "count", numerator: null, denominator: null, definition: "Test", suppressed: true },
+      ],
+      freshness: { latestEventAt: null, correctionEvents: 0, lateEvents: 0 },
+      methodology: { basis: "Test", denominator: "Test", deduplication: "Test", corrections: "Test", deletedRecords: "Test", lateEventDefinition: "Test" },
+    },
+  });
+  render(<CalendarAnalyticsCard timeZone="Asia/Calcutta" retentionDays={365} />);
+  expect(screen.getByText("No data")).toBeInTheDocument();
+  expect(screen.getByText("Suppressed")).toBeInTheDocument();
+  expect(screen.getByText("0 of 0")).toBeInTheDocument();
+});
