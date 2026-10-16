@@ -12,6 +12,7 @@ import type {
   BulkRepairParams,
 } from "@/hooks/api/kb/content-health-schema";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
 
 const contentHealthSignalsContract = lazyContract(() =>
   import("@/hooks/api/kb/content-health-schema").then(
@@ -134,16 +135,18 @@ const bulkRepairContract = lazyContract(() =>
 
 export function useBulkRepairHealthItems() {
   const queryClient = useQueryClient();
+  const operation = useIdempotentOperation();
   return useAuthorizedMutation("kb:pages:manage", {
     mutationKey: ["knowledge", "kb", "contentHealth", "bulkRepair"],
     mutationFn: (params: BulkRepairParams) =>
       apiClient.post(
         "/kb/wiki/content-health/signals/bulk-repair",
         params,
-        undefined,
+        operation.configFor(params),
         bulkRepairContract,
       ),
     onSuccess: () => {
+      operation.settle();
       void queryClient.invalidateQueries({
         queryKey: knowledgeAndSurveysQueryKeys.kb.contentHealthCounts(),
       });
