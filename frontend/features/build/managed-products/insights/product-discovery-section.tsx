@@ -74,10 +74,14 @@ export function ProductDiscoverySection({ managedProductId }: ProductDiscoverySe
 
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [openOpportunityId, setOpenOpportunityId] = useState<number | null>(() => {
-    const requested = Number(searchParams.get("opportunity"));
-    return Number.isSafeInteger(requested) && requested > 0 ? requested : null;
-  });
+  // The URL is the only source: a state copy read once at mount ignored a
+  // ?opportunity= that arrived later (reload after a tab normalisation,
+  // Back/Forward), so the deep link did not reopen the pane (MP-B-007).
+  const requestedOpportunity = Number(searchParams.get("opportunity"));
+  const openOpportunityId =
+    Number.isSafeInteger(requestedOpportunity) && requestedOpportunity > 0
+      ? requestedOpportunity
+      : null;
   const [compareOpen, setCompareOpen] = useState(false);
   const [compareSelected, setCompareSelected] = useState<ReadonlySet<number>>(new Set());
 
@@ -101,14 +105,12 @@ export function ProductDiscoverySection({ managedProductId }: ProductDiscoverySe
   }, [goToPreviousPage]);
 
   const handleRowClick = useCallback((row: { id: number }) => {
-    setOpenOpportunityId(row.id);
     const params = new URLSearchParams(searchParams.toString());
     params.set("opportunity", String(row.id));
     router.replace(`?${params.toString()}`, { scroll: false });
   }, [router, searchParams]);
 
   const handlePaneClose = useCallback(() => {
-    setOpenOpportunityId(null);
     const params = new URLSearchParams(searchParams.toString());
     params.delete("opportunity");
     router.replace(`?${params.toString()}`, { scroll: false });
