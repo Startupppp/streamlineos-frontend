@@ -15,7 +15,6 @@ import {
   useArchiveKbSpace,
   useRestoreKbSpace,
 } from "@/hooks/api/kb/spaces";
-import { isApiError } from "@/lib/api-envelope";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { pageHref } from "@/lib/knowledge-routes";
 import { getUserDisplayName } from "@/lib/person-display";
@@ -91,14 +90,12 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
   const [archiveConfirmOpen, setArchiveConfirmOpen] = useState(false);
   const [hierarchyOpen, setHierarchyOpen] = useState(false);
 
-  const isNotFound = isApiError(error) && error.status === 404;
-
   const pageState = usePageState({
     permission: "kb:spaces:view",
     isLoading,
-    isError: isError && !isNotFound,
-    error: isNotFound ? null : error,
-    isEmpty: !isLoading && (isNotFound || (!isError && !space)),
+    isError,
+    error,
+    isEmpty: !isLoading && !isError && !space,
   });
 
   function handleRetry() {
@@ -220,13 +217,22 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
             <Skeleton className="h-64 w-full rounded-xl" />
           </div>
         }
-        empty={
+        notFound={
           <EmptyState
             illustration={
               <KbLayoutGridIcon className="w-8 text-muted-foreground" />
             }
             title="Space not found"
             description="This space may have been deleted or you may not have access."
+            className={CONTENT_FILL_PANEL}
+          />
+        }
+        empty={
+          <EmptyState
+            illustration={<KbLayoutGridIcon className="w-8 text-muted-foreground" />}
+            title="Space unavailable"
+            description="Refresh to try loading this space again."
+            action={{ label: "Refresh", onClick: handleRetry }}
             className={CONTENT_FILL_PANEL}
           />
         }

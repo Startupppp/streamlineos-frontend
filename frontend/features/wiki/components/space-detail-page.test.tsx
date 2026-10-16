@@ -149,6 +149,32 @@ describe("SpaceDetailPage", () => {
 
     expect(screen.getByText("Space not found")).toBeInTheDocument();
     expect(screen.queryByText("Something went wrong")).not.toBeInTheDocument();
+    expect(screen.queryByText("Space unavailable")).not.toBeInTheDocument();
+  });
+
+  it("keeps an unexpected empty success distinct from a missing space and offers refresh", async () => {
+    const refetch = jest.fn();
+    mockKbSpace.mockReturnValue(spaceQuery({ data: undefined, refetch }));
+
+    render(<SpaceDetailPage spaceId={5} />);
+
+    expect(screen.getByText("Space unavailable")).toBeInTheDocument();
+    expect(screen.queryByText("Space not found")).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Refresh" }));
+    expect(refetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows a denied state for a 403 response instead of a missing space", () => {
+    mockKbSpace.mockReturnValue(spaceQuery({
+      data: undefined,
+      isError: true,
+      error: new ApiError("Forbidden", 403, "FORBIDDEN", {}, "/kb/spaces/5"),
+    }));
+
+    render(<SpaceDetailPage spaceId={5} />);
+
+    expect(screen.getByText("Access Restricted")).toBeInTheDocument();
+    expect(screen.queryByText("Space not found")).not.toBeInTheDocument();
   });
 
   it("renders the error state for a 500 response, not the not-found state", async () => {

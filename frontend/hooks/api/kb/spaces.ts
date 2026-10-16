@@ -76,6 +76,7 @@ export function useKbSpaces(params?: KbSpacesListParams) {
 export function useKbSpace(spaceId: number) {
   const canView = useCan("kb:spaces:view");
   return useQuery({
+    ...INLINE_READ_ERROR,
     queryKey: knowledgeAndSurveysQueryKeys.kb.space(spaceId),
     queryFn: ({ signal }) =>
       apiClient.get<KbSpace>(`/kb/spaces/${spaceId}`, undefined, signal, kbSpaceFullContract),
