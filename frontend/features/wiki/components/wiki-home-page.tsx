@@ -14,6 +14,7 @@ import {
 } from "@/hooks/api/kb";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { ErrorState } from "@/components/shared/error-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import { KB_SEARCH, pageHref, projectPageHref } from "@/lib/knowledge-routes";
@@ -113,6 +114,14 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
     void favoritesQuery.fetchNextPage();
   }
 
+  function handleRetryFavorites() {
+    if (favoritesQuery.isFetchNextPageError) {
+      void favoritesQuery.fetchNextPage();
+      return;
+    }
+    void favoritesQuery.refetch();
+  }
+
   const handleShortcutHelp = useCallback(() => setShortcutHelpOpen(true), []);
   const handleClearSelection = useCallback(() => {}, []);
 
@@ -207,25 +216,36 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
           </section>
         )}
 
-        {!isProjectScoped && favoritePages.length > 0 && (
+        {!isProjectScoped && (favoritePages.length > 0 || favoritesQuery.isError) && (
           <section>
             <div className="flex items-center gap-2 mb-3">
               <KbStarIcon className="h-4 w-4 text-muted-foreground" />
               <h2 className="text-sm font-semibold text-foreground">Favorites</h2>
             </div>
-            <div className={WIKI_PAGE_CARD_GRID_CLASS}>
-              {favoritePages.map((page) => (
-                <WikiPageCard
-                  key={page.id}
-                  icon={page.icon}
-                  title={page.title}
-                  subtitle={kbTimeAgo(page.updatedAt)}
-                  href={pageHref(page.id)}
-                  coverImage={page.coverImage}
-                />
-              ))}
-            </div>
-            {favoritesQuery.hasNextPage && (
+            {favoritePages.length > 0 && (
+              <div className={WIKI_PAGE_CARD_GRID_CLASS}>
+                {favoritePages.map((page) => (
+                  <WikiPageCard
+                    key={page.id}
+                    icon={page.icon}
+                    title={page.title}
+                    subtitle={kbTimeAgo(page.updatedAt)}
+                    href={pageHref(page.id)}
+                    coverImage={page.coverImage}
+                  />
+                ))}
+              </div>
+            )}
+            {favoritesQuery.isError && (
+              <ErrorState
+                title="Could not load favorites"
+                error={favoritesQuery.error}
+                onRetry={handleRetryFavorites}
+                compact
+                className="mt-3"
+              />
+            )}
+            {favoritesQuery.hasNextPage && !favoritesQuery.isError && (
               <LoadingButton
                 type="button"
                 variant="outline"

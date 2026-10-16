@@ -2,6 +2,7 @@ import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import WikiHomePage from "./wiki-home-page";
 import { kbSpacesQueryStub } from "@/test-utils/kb-spaces-fixture";
+import { ApiError } from "@/lib/api-envelope";
 
 const mockReplace = jest.fn();
 const mockPush = jest.fn();
@@ -238,7 +239,10 @@ beforeEach(() => {
     isError: false,
     hasNextPage: false,
     isFetchingNextPage: false,
+    isFetchNextPageError: false,
     fetchNextPage: jest.fn(),
+    refetch: jest.fn(),
+    error: undefined,
   });
   useCreateKbPage.mockReturnValue({ mutate: jest.fn(), isPending: false });
   useKbSpaces.mockReturnValue(kbSpacesQueryStub());
@@ -254,6 +258,50 @@ beforeEach(() => {
 });
 
 describe("WikiHomePage — favorites pagination", () => {
+  it("shows a first-read favorites error with request reference and retry", async () => {
+    const user = userEvent.setup();
+    const refetch = jest.fn();
+    useKbPagesFavorites.mockReturnValue({
+      data: undefined,
+      isError: true,
+      error: new ApiError("Unavailable", 503, "BACKEND_UNREACHABLE", { correlationId: "favorites-req-1" }),
+      hasNextPage: false,
+      isFetchNextPageError: false,
+      refetch,
+    });
+
+    render(<WikiHomePage />);
+
+    expect(screen.getByRole("heading", { name: "Favorites" })).toBeInTheDocument();
+    expect(screen.getByRole("alert")).toHaveTextContent("Could not load favorites");
+    expect(screen.getByText("favorites-req-1")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Try again" }));
+    expect(refetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps loaded favorites and retries only the failed next page", async () => {
+    const user = userEvent.setup();
+    const fetchNextPage = jest.fn();
+    const refetch = jest.fn();
+    useKbPagesFavorites.mockReturnValue({
+      data: [makeItem(7)],
+      isError: true,
+      error: new ApiError("Unavailable", 503),
+      hasNextPage: true,
+      isFetchNextPageError: true,
+      fetchNextPage,
+      refetch,
+    });
+
+    render(<WikiHomePage />);
+
+    expect(screen.getByText("Page 7")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Load more favorites" })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Try again" }));
+    expect(fetchNextPage).toHaveBeenCalledTimes(1);
+    expect(refetch).not.toHaveBeenCalled();
+  });
+
   it("loads the next page of favorites without replacing visible cards", async () => {
     const user = userEvent.setup();
     const fetchNextPage = jest.fn();
