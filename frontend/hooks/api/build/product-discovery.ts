@@ -54,6 +54,10 @@ export interface OpportunitiesParams {
   sort?: "score" | "updated" | "evidence";
 }
 
+// Every Insights read renders its own inline error (list, pane, themes,
+// reviews). Letting a first-load failure reach the route boundary took the
+// whole product route down for one widget (MP-B-008), e.g. a stale
+// ?opportunity= id returning 404.
 export function useOpportunities(
   managedProductId: number,
   params?: OpportunitiesParams,
@@ -111,6 +115,7 @@ export function useOpportunity(
       ),
     enabled: canView && managedProductId > 0 && opportunityId > 0,
     staleTime: 30_000,
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -133,6 +138,7 @@ export function useOpportunitiesCompare(
       ),
     enabled: canView && managedProductId > 0 && ids.length >= 2 && ids.length <= 5,
     staleTime: 30_000,
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -155,6 +161,7 @@ export function useOpportunityTrace(
       ),
     enabled: canView && managedProductId > 0 && opportunityId > 0,
     staleTime: 30_000,
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -184,6 +191,7 @@ export function useEvidenceThemes(
       ),
     enabled: canView && managedProductId > 0,
     staleTime: 2 * 60_000,
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -229,5 +237,6 @@ export function useOutcomeReviews(
       ),
     enabled: canView && managedProductId > 0,
     staleTime: 30_000,
+    ...INLINE_READ_ERROR,
   });
 }

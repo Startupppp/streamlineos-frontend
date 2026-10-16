@@ -227,9 +227,17 @@ export function ProductRoadmapPage({
     setCreateOpen(true);
   }, []);
 
+  const handleKeyboardOpen = useCallback(
+    (index: number) => {
+      const item = data?.data[index];
+      if (item) handleViewItem(item);
+    },
+    [data, handleViewItem],
+  );
+
   useBuildListKeyboard({
     itemCount: (data?.data ?? []).length,
-    onOpen: () => undefined,
+    onOpen: handleKeyboardOpen,
     onClearSelection: () => undefined,
     searchInputRef,
     enabled: !createOpen && !editTarget && !deleteTarget,

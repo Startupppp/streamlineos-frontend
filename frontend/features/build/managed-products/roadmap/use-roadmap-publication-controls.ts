@@ -11,6 +11,22 @@ import {
   useUnpublishProductRoadmap,
 } from "@/hooks/api/build/roadmap-public";
 
+/** Link lifetimes offered when publishing or rotating (MP-U-007). */
+export const LINK_EXPIRY_OPTIONS = [
+  { value: "never", label: "Never expires", days: null },
+  { value: "7", label: "Expires in 7 days", days: 7 },
+  { value: "30", label: "Expires in 30 days", days: 30 },
+  { value: "90", label: "Expires in 90 days", days: 90 },
+] as const;
+
+export type LinkExpiry = (typeof LINK_EXPIRY_OPTIONS)[number]["value"];
+
+function expiryInput(expiry: LinkExpiry): { expiresAt?: string } | undefined {
+  const days = LINK_EXPIRY_OPTIONS.find((o) => o.value === expiry)?.days ?? null;
+  if (days === null) return undefined;
+  return { expiresAt: new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString() };
+}
+
 export function useRoadmapPublicationControls(managedProductId: number) {
   const publication = useProductRoadmapPublication(managedProductId);
   const preview = useRoadmapPreview(managedProductId);
@@ -20,6 +36,7 @@ export function useRoadmapPublicationControls(managedProductId: number) {
   const [unpublishDialogOpen, setUnpublishDialogOpen] = useState(false);
   const [rotateDialogOpen, setRotateDialogOpen] = useState(false);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
+  const [linkExpiry, setLinkExpiry] = useState<LinkExpiry>("never");
   const { copied, copy } = useCopyFeedback();
 
   const previewBoard = preview.data?.roadmap;
@@ -52,17 +69,17 @@ export function useRoadmapPublicationControls(managedProductId: number) {
   }, [refetchPreview]);
 
   const handlePublish = useCallback(() => {
-    publishRoadmap(undefined, {
+    publishRoadmap(expiryInput(linkExpiry), {
       onSuccess: (issued) => {
         setShareUrl(`${window.location.origin}${issued.path}`);
         toast.success("Roadmap published");
       },
       onError: (e) => toast.error(getErrorMessage(e)),
     });
-  }, [publishRoadmap]);
+  }, [publishRoadmap, linkExpiry]);
 
   const handleRotate = useCallback(() => {
-    publishRoadmap(undefined, {
+    publishRoadmap(expiryInput(linkExpiry), {
       onSuccess: (issued) => {
         setShareUrl(`${window.location.origin}${issued.path}`);
         toast.success("Share link rotated");
@@ -70,10 +87,10 @@ export function useRoadmapPublicationControls(managedProductId: number) {
       },
       onError: (e) => toast.error(getErrorMessage(e)),
     });
-  }, [publishRoadmap]);
+  }, [publishRoadmap, linkExpiry]);
 
   const handleRotateAndCopy = useCallback(() => {
-    publishRoadmap(undefined, {
+    publishRoadmap(expiryInput(linkExpiry), {
       onSuccess: (issued) => {
         const url = `${window.location.origin}${issued.path}`;
         setShareUrl(url);
@@ -87,7 +104,7 @@ export function useRoadmapPublicationControls(managedProductId: number) {
       },
       onError: (e) => toast.error(getErrorMessage(e)),
     });
-  }, [publishRoadmap, copy]);
+  }, [publishRoadmap, copy, linkExpiry]);
 
   const handleUnpublish = useCallback(() => {
     unpublishRoadmap(undefined, {
@@ -129,6 +146,8 @@ export function useRoadmapPublicationControls(managedProductId: number) {
       isUnpublishing: unpublish.isPending,
       shareUrl,
       copied,
+      linkExpiry,
+      setLinkExpiry,
       unpublishDialogOpen,
       rotateDialogOpen,
       handleCopy,
@@ -156,6 +175,7 @@ export function useRoadmapPublicationControls(managedProductId: number) {
       unpublish.isPending,
       shareUrl,
       copied,
+      linkExpiry,
       unpublishDialogOpen,
       rotateDialogOpen,
       handleCopy,

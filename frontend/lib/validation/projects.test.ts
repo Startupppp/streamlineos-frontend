@@ -73,4 +73,9 @@ describe("updateProjectSettingsInputSchema — name trim (B-007)", () => {
     expect(result.success).toBe(true);
     if (result.success) expect(result.data.name).toBe("My Project");
   });
+
+  it("matches the server's 2..100 bounds after trimming", () => {
+    expect(updateProjectSettingsInputSchema.safeParse({ ...base, name: " a " }).success).toBe(false);
+    expect(updateProjectSettingsInputSchema.safeParse({ ...base, name: "x".repeat(101) }).success).toBe(false);
+  });
 });

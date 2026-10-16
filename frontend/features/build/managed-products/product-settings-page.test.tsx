@@ -79,6 +79,7 @@ jest.mock("@/hooks/api/build/managed-product-members", () => ({
   useManagedProductMembers: jest.fn(),
   useAddManagedProductMember: jest.fn(),
   useRemoveManagedProductMember: jest.fn(),
+  useUpdateManagedProductMemberRole: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
 }));
 
 jest.mock("@/hooks/api/build/build-members", () => ({
@@ -283,7 +284,7 @@ describe("ProductSettingsPage — members", () => {
     });
     render(<ProductSettingsPage managedProductId={7} />);
     expect(screen.getByText("Jane Doe")).toBeInTheDocument();
-    expect(screen.getByText("admin")).toBeInTheDocument();
+    expect(screen.getByText("Admin")).toBeInTheDocument();
   });
 
   it("shows Add member button when canUpdate is true", () => {

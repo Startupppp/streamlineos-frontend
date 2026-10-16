@@ -25,8 +25,10 @@ export interface BuildScopeIdentity {
   isInaccessible: boolean;
 }
 
+// A scope in another tenant (or deleted) is a 404, not a 403 (BE-22); both
+// mean the actor cannot use it, so neither may keep a remembered name (MP-B-021).
 function isMissingAccess(error: unknown): boolean {
-  return isApiError(error) && error.status === 403;
+  return isApiError(error) && (error.status === 403 || error.status === 404);
 }
 
 export function useBuildScopeIdentity(scope: BuildScope): BuildScopeIdentity {
@@ -66,7 +68,7 @@ export function useBuildScopeIdentity(scope: BuildScope): BuildScopeIdentity {
           ref: {
             ...base,
             id: String(scope.projectId ?? ""),
-            name: projectQuery.data?.name ?? base.name,
+            name: projectQuery.data?.name ?? (isMissingAccess(projectQuery.error) ? "" : base.name),
             projectKey: projectQuery.data?.key ?? base.projectKey,
           },
           isLoading: projectQuery.isLoading,
@@ -78,7 +80,7 @@ export function useBuildScopeIdentity(scope: BuildScope): BuildScopeIdentity {
           ref: {
             ...base,
             id: String(scope.managedProductId ?? ""),
-            name: productQuery.data?.name ?? base.name,
+            name: productQuery.data?.name ?? (isMissingAccess(productQuery.error) ? "" : base.name),
             projectKey: productQuery.data?.key ?? base.projectKey,
           },
           isLoading: productQuery.isLoading,

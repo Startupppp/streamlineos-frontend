@@ -16,12 +16,15 @@ jest.mock("@/hooks/api/build/projects", () => ({
   useProject: () => ({ data: undefined, isLoading: false, isError: false, error: null }),
 }));
 
+let mockProductError: unknown = null;
+let mockRecents: { key: string; name: string }[] = [];
+
 jest.mock("@/hooks/api/build/managed-products", () => ({
-  useManagedProduct: () => ({ data: undefined, isLoading: false, isError: false, error: null }),
+  useManagedProduct: () => ({ data: undefined, isLoading: false, isError: mockProductError !== null, error: mockProductError }),
 }));
 
 jest.mock("./use-build-nav-preferences", () => ({
-  useBuildScopeRecents: () => ({ recents: [] }),
+  useBuildScopeRecents: () => ({ recents: mockRecents }),
   useBuildScopeStars: () => ({ starred: [] }),
 }));
 
@@ -30,6 +33,19 @@ import { useBuildScopeIdentity } from "./use-build-scope-identity";
 beforeEach(() => {
   mockSessionData = null;
   mockOrganizations = undefined;
+  mockProductError = null;
+  mockRecents = [];
+});
+
+it("treats a 404 product (another tenant's id) as inaccessible and drops any remembered name (MP-B-021)", () => {
+  const { ApiError } = jest.requireActual("@/lib/api-envelope") as typeof import("@/lib/api-envelope");
+  mockProductError = new ApiError("Not found", 404, "NOT_FOUND");
+  mockRecents = [{ key: "product:3", name: "Remembered product" }];
+
+  const { result } = renderHook(() => useBuildScopeIdentity({ type: "product", managedProductId: 3, projectId: null, basePath: "/build/managed-products/3" }));
+
+  expect(result.current.isInaccessible).toBe(true);
+  expect(result.current.ref.name).toBe("");
 });
 
 it("returns the active organisation name for the organisation scope", () => {

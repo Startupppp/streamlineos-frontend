@@ -13,7 +13,48 @@ import {
 import { getErrorMessage } from "@/lib/get-error-message";
 import { ErrorState } from "@/components/shared/error-state";
 import { RoadmapPublicationActive } from "./roadmap-publication-active";
-import { useRoadmapPublicationControls } from "./use-roadmap-publication-controls";
+import {
+  LINK_EXPIRY_OPTIONS,
+  type LinkExpiry,
+  useRoadmapPublicationControls,
+} from "./use-roadmap-publication-controls";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+function isLinkExpiry(value: string): value is LinkExpiry {
+  return LINK_EXPIRY_OPTIONS.some((o) => o.value === value);
+}
+
+interface LinkExpirySelectProps {
+  value: LinkExpiry;
+  onChange: (value: LinkExpiry) => void;
+  label: string;
+}
+
+function LinkExpirySelect({ value, onChange, label }: LinkExpirySelectProps) {
+  function handleChange(next: string) {
+    if (isLinkExpiry(next)) onChange(next);
+  }
+  return (
+    <Select value={value} onValueChange={handleChange}>
+      <SelectTrigger className="w-full" aria-label={label}>
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        {LINK_EXPIRY_OPTIONS.map((option) => (
+          <SelectItem key={option.value} value={option.value}>
+            {option.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
 
 interface RoadmapPublicationPanelProps {
   managedProductId: number;
@@ -40,6 +81,7 @@ export function RoadmapPublicationPanel({ managedProductId, onClose }: RoadmapPu
                 error={controls.error}
               />
             ) : controls.isPublished ? (
+              <div className="flex flex-col gap-3">
               <RoadmapPublicationActive
                 publicItemCount={controls.publicItemCount}
                 publicItemCountError={controls.isPreviewError}
@@ -54,6 +96,12 @@ export function RoadmapPublicationPanel({ managedProductId, onClose }: RoadmapPu
                 onOpenUnpublish={controls.handleOpenUnpublish}
                 onRetryPublicItemCount={controls.handleRetryPreview}
               />
+              <LinkExpirySelect
+                value={controls.linkExpiry}
+                onChange={controls.setLinkExpiry}
+                label="Expiry for a rotated link"
+              />
+              </div>
             ) : (
               <div className="flex flex-col gap-4">
                 <div className="flex items-center gap-2">
@@ -69,6 +117,11 @@ export function RoadmapPublicationPanel({ managedProductId, onClose }: RoadmapPu
                       ? "No items are marked as public yet. Mark roadmap items public, then publish to share this board."
                       : `${String(controls.publicItemCount)} item${controls.publicItemCount === 1 ? "" : "s"} ready to publish.`}
                 </p>
+                <LinkExpirySelect
+                  value={controls.linkExpiry}
+                  onChange={controls.setLinkExpiry}
+                  label="Link expiry"
+                />
                 <LoadingButton
                   type="button"
                   size="sm"

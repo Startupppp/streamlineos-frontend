@@ -2,7 +2,8 @@
 
 import { useQuery } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, type QueryClient } from "@tanstack/react-query";
+import { z } from "zod";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
@@ -37,6 +38,32 @@ const addMemberContract = lazyContract(() =>
     (m) => m.managedProductRelationsAddMemberResponseSchema,
   ),
 );
+
+// PATCH …/members/:membershipRowId (MP-B-015). Inline until the generated
+// contracts are regenerated for the new route.
+const memberRoleSchema = z.object({ id: z.number().int(), role: z.enum(["member", "admin"]) });
+
+type MemberRole = z.infer<typeof memberRoleSchema>["role"];
+
+/** Rewrite every cached members page (first page and cursor pages) of one product. */
+function patchMemberPages(
+  qc: QueryClient,
+  managedProductId: number,
+  patch: (rows: ManagedProductMember[]) => ManagedProductMember[],
+) {
+  qc.setQueriesData<ManagedProductMembersResponse>(
+    { queryKey: buildWorkQueryKeys.projects.managedProducts.members(managedProductId) },
+    (old) => (old ? { ...old, data: patch(old.data) } : old),
+  );
+}
+
+/** Later cursor pages shift after an add or remove; mark them stale without refetching now. */
+function markMemberPagesStale(qc: QueryClient, managedProductId: number) {
+  void qc.invalidateQueries({
+    queryKey: buildWorkQueryKeys.projects.managedProducts.members(managedProductId),
+    refetchType: "none",
+  });
+}
 
 const noContentContract = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
@@ -89,13 +116,16 @@ export function useAddManagedProductMember(managedProductId: number) {
         undefined,
         addMemberContract,
       ),
-    onSuccess: () => {
-      void qc.invalidateQueries({
-        queryKey:
-          buildWorkQueryKeys.projects.managedProducts.members(managedProductId),
-        exact: false,
-        refetchType: "active",
-      });
+    onSuccess: (row) => {
+      // The response is the full row: show it on the first page now (MP-B-025).
+      qc.setQueryData<ManagedProductMembersResponse>(
+        buildWorkQueryKeys.projects.managedProducts.members(managedProductId),
+        (old) =>
+          old && !old.data.some((m) => m.id === row.id)
+            ? { ...old, data: [row, ...old.data] }
+            : old,
+      );
+      markMemberPagesStale(qc, managedProductId);
     },
   });
 }
@@ -117,13 +147,59 @@ export function useRemoveManagedProductMember(managedProductId: number) {
         undefined,
         noContentContract,
       ),
-    onSuccess: () => {
-      void qc.invalidateQueries({
-        queryKey:
-          buildWorkQueryKeys.projects.managedProducts.members(managedProductId),
-        exact: false,
-        refetchType: "active",
-      });
+    // Removed on success, not on mutate: the last admin or the owner is a
+    // 409 and must stay listed (MP-B-025).
+    onSuccess: (_void, membershipRowId) => {
+      patchMemberPages(qc, managedProductId, (rows) =>
+        rows.filter((m) => m.id !== membershipRowId),
+      );
+      markMemberPagesStale(qc, managedProductId);
     },
+  });
+}
+
+interface UpdateMemberRoleVariables {
+  membershipRowId: number;
+  role: MemberRole;
+}
+
+interface UpdateMemberRoleContext {
+  previousRole: MemberRole | undefined;
+}
+
+export function useUpdateManagedProductMemberRole(managedProductId: number) {
+  const qc = useQueryClient();
+  const setRole = (membershipRowId: number, role: MemberRole) =>
+    patchMemberPages(qc, managedProductId, (rows) =>
+      rows.map((m) => (m.id === membershipRowId ? { ...m, role } : m)),
+    );
+  return useAuthorizedMutation<
+    z.infer<typeof memberRoleSchema>,
+    Error,
+    UpdateMemberRoleVariables,
+    UpdateMemberRoleContext
+  >("build:managed-products:update", {
+    mutationKey: ["projects", "managed-products", managedProductId, "members", "role"],
+    mutationFn: ({ membershipRowId, role }) =>
+      apiClient.patch<z.infer<typeof memberRoleSchema>>(
+        `/build/managed-products/${managedProductId}/members/${membershipRowId}`,
+        { role },
+        undefined,
+        memberRoleSchema,
+      ),
+    onMutate: async ({ membershipRowId, role }) => {
+      const key = buildWorkQueryKeys.projects.managedProducts.members(managedProductId);
+      await qc.cancelQueries({ queryKey: key });
+      const previousRole = qc
+        .getQueriesData<ManagedProductMembersResponse>({ queryKey: key })
+        .flatMap(([, page]) => page?.data ?? [])
+        .find((m) => m.id === membershipRowId)?.role;
+      setRole(membershipRowId, role);
+      return { previousRole };
+    },
+    onError: (_error, { membershipRowId }, context) => {
+      if (context?.previousRole) setRole(membershipRowId, context.previousRole);
+    },
+    onSuccess: (data) => setRole(data.id, data.role),
   });
 }

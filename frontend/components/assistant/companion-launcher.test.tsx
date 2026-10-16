@@ -348,6 +348,17 @@ describe("companion keyboard focus", () => {
     expect(harness.current?.open).toBe(false);
     expect(window.localStorage.getItem("unscoped::companion-position")).toContain('"x":250');
   });
+  it("starts minimised on a narrow viewport until the user restores it (MP-U-015)", async () => {
+    server();
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(
+      <QueryClientProvider client={client}>
+        <Harness compact />
+      </QueryClientProvider>,
+    );
+    expect(await screen.findByRole("button", { name: "Restore Pip" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Open Pip, Ready" })).toBeNull();
+  });
   it("does not copy a desktop drag position into mobile storage", async () => {
     server();
     const view = renderLauncher();
