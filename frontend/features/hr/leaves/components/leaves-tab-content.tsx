@@ -95,10 +95,9 @@ export function LeavesTabContent({
               </div>
               <div className="min-w-0">
                 <TruncatedText
-                  text={typeName.replace(" Leave", "")}
+                  text={typeName}
                   className="text-sm font-semibold leading-tight text-foreground"
                 />
-                <p className="text-micro text-muted-foreground">Leave</p>
               </div>
             </div>
           );
@@ -376,7 +375,7 @@ const LeaveRequestMobileItem = memo(function LeaveRequestMobileItem({
         </div>
         <div className="min-w-0 flex-1">
           <TruncatedText
-            text={typeName.replace(" Leave", "")}
+            text={typeName}
             className="text-sm font-semibold leading-tight text-foreground"
           />
           <p className="text-xs text-muted-foreground">
