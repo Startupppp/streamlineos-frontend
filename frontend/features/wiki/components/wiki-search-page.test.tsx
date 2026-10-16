@@ -31,8 +31,8 @@ jest.mock("@/hooks/api/kb/spaces", () => ({
   useKbSpaces: jest.fn(),
 }));
 
-const mockFlags = jest.fn(() => ({ link: false, search: false, ai: false }));
-jest.mock("@/hooks/api/kb/hr-link-config", () => ({ useHrKbLinkFlags: () => mockFlags() }));
+const mockConfig = jest.fn(() => ({ data: { link: false, search: false, ai: false }, isLoading: false, isError: false }));
+jest.mock("@/hooks/api/kb/hr-link-config", () => ({ useHrKbLinkConfig: () => mockConfig() }));
 
 jest.mock("@/features/wiki/components/wiki-search-company-documents", () => ({
   WikiSearchCompanyDocuments: ({ query }: { query: string }) => <div data-testid="company-documents-group">{query}</div>,
@@ -244,7 +244,7 @@ beforeEach(() => {
   });
   useKbSpaces.mockReturnValue({ data: { data: [], pagination: { hasMore: false, nextCursor: null, limit: 100 } } });
   usePageState.mockReturnValue({ kind: "ready" });
-  mockFlags.mockReturnValue({ link: false, search: false, ai: false });
+  mockConfig.mockReturnValue({ data: { link: false, search: false, ai: false }, isLoading: false, isError: false });
 });
 
 describe("WikiSearchPage — company documents group", () => {
@@ -258,7 +258,7 @@ describe("WikiSearchPage — company documents group", () => {
   });
 
   it("says 'No pages found', not 'No results', when company documents are searched too, so a group below is not contradicted", () => {
-    mockFlags.mockReturnValue({ link: true, search: true, ai: false });
+    mockConfig.mockReturnValue({ data: { link: true, search: true, ai: false }, isLoading: false, isError: false });
     mockUseSearchParams.mockReturnValue(new URLSearchParams("q=leave"));
     setupSearch([]);
     usePageState.mockReturnValue({ kind: "empty" });
@@ -276,6 +276,28 @@ describe("WikiSearchPage — company documents group", () => {
     render(<WikiSearchPage />);
 
     expect(screen.getByTestId("empty-title")).toHaveTextContent("No results");
+  });
+
+  it("limits the empty claim to pages while company document settings are unresolved", () => {
+    mockConfig.mockReturnValue({ data: { link: false, search: false, ai: false }, isLoading: true, isError: false });
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("q=leave"));
+    setupSearch([]);
+    usePageState.mockReturnValue({ kind: "empty" });
+
+    render(<WikiSearchPage />);
+
+    expect(screen.getByTestId("empty-title")).toHaveTextContent("No pages found");
+  });
+
+  it("limits the empty claim to pages when company document settings failed", () => {
+    mockConfig.mockReturnValue({ data: { link: false, search: false, ai: false }, isLoading: false, isError: true });
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("q=leave"));
+    setupSearch([]);
+    usePageState.mockReturnValue({ kind: "empty" });
+
+    render(<WikiSearchPage />);
+
+    expect(screen.getByTestId("empty-title")).toHaveTextContent("No pages found");
   });
 });
 

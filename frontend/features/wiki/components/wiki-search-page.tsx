@@ -21,7 +21,7 @@ import {
 import { useUrlFilters, parseEnum } from "@/lib/url-state/use-url-filters";
 import { useKbPageFullSearch } from "@/hooks/api/kb/search";
 import { useKbSpaces } from "@/hooks/api/kb/spaces";
-import { useHrKbLinkFlags } from "@/hooks/api/kb/hr-link-config";
+import { useHrKbLinkConfig } from "@/hooks/api/kb/hr-link-config";
 import { WikiSearchCompanyDocuments } from "@/features/wiki/components/wiki-search-company-documents";
 import { pageHref } from "@/lib/knowledge-routes";
 import { kbTimeAgo } from "@/features/wiki/lib/kb-date-utils";
@@ -137,11 +137,11 @@ function SearchResultCard({
 export default function WikiSearchPage() {
   const searchInputId = useId();
   const searchParams = useSearchParams();
-  const hrDocumentSearch = useHrKbLinkFlags().search;
+  const hrSearchConfig = useHrKbLinkConfig();
+  const hrDocumentSearch = hrSearchConfig.data?.search === true || hrSearchConfig.isLoading || hrSearchConfig.isError;
   const { update } = useUrlFilters();
   const { data: spacesData } = useKbSpaces({ limit: 100 });
   const spacesById = new Map((spacesData?.data ?? []).map((s) => [s.id, s.name]));
-
   const q = searchParams.get("q") ?? "";
   const status = searchParams.get("status") ?? undefined;
   const type = searchParams.get("type") ?? undefined;

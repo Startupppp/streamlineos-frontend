@@ -8,7 +8,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCursorPager } from "@/components/ui/table-pagination";
-import { useHrKbLinkFlags } from "@/hooks/api/kb/hr-link-config";
+import { useHrKbLinkConfig } from "@/hooks/api/kb/hr-link-config";
 import { useLinkedDocuments, type LinkedDocumentItem } from "@/hooks/api/kb/linked-documents";
 import { isApiError } from "@/lib/api-envelope";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -40,9 +40,9 @@ function DocumentRow({ item }: { item: LinkedDocumentItem }) {
 }
 
 export function WikiSearchCompanyDocuments({ query }: { query: string }) {
-  const flags = useHrKbLinkFlags();
+  const config = useHrKbLinkConfig();
   const words = query.trim();
-  const active = flags.search && words.length >= MIN_QUERY_LENGTH;
+  const active = config.data?.search === true && words.length >= MIN_QUERY_LENGTH;
   const pager = useCursorPager(words);
   const { data, isError, error, refetch } = useLinkedDocuments({ q: words, cursor: pager.cursor, limit: GROUP_LIMIT }, { enabled: active });
 
@@ -50,6 +50,21 @@ export function WikiSearchCompanyDocuments({ query }: { query: string }) {
   const handlePrevious = useCallback(() => pager.goPrevious(), [pager]);
   const handleRetry = useCallback(() => void refetch(), [refetch]);
 
+  if (words.length < MIN_QUERY_LENGTH) return null;
+  if (config.isLoading) return <div role="status" aria-label="Loading company document search"><Skeleton className="h-16 w-full" /></div>;
+  if (config.isError)
+    return (
+      <Alert variant="destructive">
+        <AlertTitle>Company document search settings could not be loaded</AlertTitle>
+        <AlertDescription>
+          <p>{getErrorMessage(config.error)}</p>
+          <ErrorReference error={config.error} className="mt-2 justify-start" />
+          <Button type="button" variant="outline" size="sm" className="mt-2" onClick={() => void config.refetch()}>
+            Try again
+          </Button>
+        </AlertDescription>
+      </Alert>
+    );
   if (!active) return null;
   if (isError && isApiError(error) && error.status === 404) return null;
   if (isError)
