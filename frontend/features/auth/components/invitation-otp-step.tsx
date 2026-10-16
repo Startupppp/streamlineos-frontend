@@ -1,6 +1,6 @@
 "use client";
 
-import type { FormEvent } from "react";
+import type { ChangeEvent, FormEvent } from "react";
 import type { UseFormReturn } from "react-hook-form";
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
@@ -23,6 +23,15 @@ import {
 import { useMotionVariants } from "@/lib/motion-variants";
 
 type OtpValues = { emailOtp: string };
+
+/**
+ * HRMS-026: `maxLength={6}` let the browser cut a pasted " 123456" or "123 456"
+ * to six characters before anything saw it, silently dropping the last digit.
+ * Keep the digits, then cap at six.
+ */
+function otpDigits(raw: string): string {
+  return raw.replace(/\D/g, "").slice(0, 6);
+}
 
 interface InvitationOtpStepProps {
   invitedEmail: string;
@@ -65,7 +74,11 @@ export function InvitationOtpStep({
                 <FormField
                   control={otpForm.control}
                   name="emailOtp"
-                  render={({ field }) => (
+                  render={({ field }) => {
+                    function handleOtpChange(event: ChangeEvent<HTMLInputElement>) {
+                      field.onChange(otpDigits(event.target.value));
+                    }
+                    return (
                     <FormItem>
                       <FormLabel className="text-foreground text-xs font-medium">
                         Verification code
@@ -73,9 +86,9 @@ export function InvitationOtpStep({
                       <FormControl>
                         <Input
                           {...field}
+                          onChange={handleOtpChange}
                           type="text"
                           inputMode="numeric"
-                          maxLength={6}
                           placeholder="6-digit code"
                           autoComplete="one-time-code"
                           disabled={isVerifyPending}
@@ -84,7 +97,8 @@ export function InvitationOtpStep({
                       </FormControl>
                       <FormMessage />
                     </FormItem>
-                  )}
+                    );
+                  }}
                 />
 
                 <div className="space-y-1.5 pt-0.5">
