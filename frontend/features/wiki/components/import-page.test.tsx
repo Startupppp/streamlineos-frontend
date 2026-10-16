@@ -116,6 +116,33 @@ describe("ImportPage — Import / Export tabs", () => {
     expect(screen.getByLabelText("Page title")).toBeInTheDocument();
   });
 
+  it("names each import setting combobox for keyboard and screen reader navigation", async () => {
+    const user = userEvent.setup();
+    render(<ImportPage />);
+
+    await user.click(screen.getByRole("button", { name: /paste text/i }));
+
+    for (const name of ["Target space", "Parent page", "Default visibility", "Duplicate items"]) {
+      expect(screen.getByRole("combobox", { name })).toBeInTheDocument();
+    }
+    expect(screen.getByRole("combobox", { name: "Parent page" })).toBeDisabled();
+  });
+
+  it("names the pending page remove action and removes the selected page", async () => {
+    const user = userEvent.setup();
+    render(<ImportPage />);
+
+    await user.click(screen.getByRole("button", { name: /paste text/i }));
+    await user.type(screen.getByRole("textbox", { name: "Page title" }), "Policy A");
+    await user.type(screen.getByRole("textbox", { name: "Content" }), "Policy details");
+    await user.click(screen.getByRole("button", { name: "Add to list" }));
+
+    await user.click(screen.getByRole("button", { name: "Remove Policy A from import" }));
+
+    expect(screen.queryByText("Policy A")).not.toBeInTheDocument();
+    expect(screen.getByText("0/100 files loaded")).toBeInTheDocument();
+  });
+
   it("writes tab=export into the URL when Export is selected", async () => {
     const user = userEvent.setup();
     render(<ImportPage />);

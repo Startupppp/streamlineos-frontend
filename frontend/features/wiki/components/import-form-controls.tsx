@@ -51,7 +51,7 @@ export function ImportFormControls({
       <div className="space-y-1">
         <Label className="text-xs">Target space</Label>
         <Select value={targetSpaceId} onValueChange={onSpaceChange}>
-          <SelectTrigger className="text-sm">
+          <SelectTrigger className="text-sm" aria-label="Target space">
             <SelectValue placeholder="No space" />
           </SelectTrigger>
           <SelectContent>
@@ -72,7 +72,7 @@ export function ImportFormControls({
           onValueChange={onParentPageChange}
           disabled={targetSpaceId === "none"}
         >
-          <SelectTrigger className="text-sm">
+          <SelectTrigger className="text-sm" aria-label="Parent page">
             <SelectValue placeholder="Top level" />
           </SelectTrigger>
           <SelectContent>
@@ -89,7 +89,7 @@ export function ImportFormControls({
       <div className="space-y-1">
         <Label className="text-xs">Default visibility</Label>
         <Select value={visibility} onValueChange={onVisibilityChange}>
-          <SelectTrigger className="text-sm">
+          <SelectTrigger className="text-sm" aria-label="Default visibility">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -102,7 +102,7 @@ export function ImportFormControls({
       <div className="space-y-1">
         <Label className="text-xs">Duplicate items</Label>
         <Select value={duplicatePolicy} onValueChange={onDuplicatePolicyChange}>
-          <SelectTrigger className="text-sm">
+          <SelectTrigger className="text-sm" aria-label="Duplicate items">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
