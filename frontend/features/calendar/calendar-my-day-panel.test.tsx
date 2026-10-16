@@ -1,12 +1,15 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
+import type { ComponentType } from "react";
 import { List } from "react-window";
 import { CalendarMyDayPanel } from "./calendar-my-day-panel";
 import { calendarProjectionFields } from "./calendar-projection-fixtures";
 import type { CalendarListItem } from "@/hooks/api/calendar-types";
 
 jest.mock("react-window", () => ({
-  List: jest.fn(({ rowCount }: { rowCount: number }) => (
-    <div data-testid="virtual-list" data-row-count={String(rowCount)} />
+  List: jest.fn(({ rowCount, rowComponent: Row, rowProps }: { rowCount: number; rowComponent: ComponentType<Record<string, unknown>>; rowProps: Record<string, unknown> }) => (
+    <div data-testid="virtual-list" data-row-count={String(rowCount)}>
+      {Array.from({ length: rowCount }, (_, index) => <Row key={index} index={index} style={{}} ariaAttributes={{}} {...rowProps} />)}
+    </div>
   )),
   useDynamicRowHeight: jest.requireActual("react-window").useDynamicRowHeight,
 }));
@@ -108,5 +111,29 @@ describe("CalendarMyDayPanel", () => {
     expect(screen.queryByTestId("virtual-list")).toBeNull();
     expect(onLoadMore).toHaveBeenCalledTimes(1);
     expect(screen.queryByRole("button", { name: "Continue calendar items" })).toBeNull();
+  });
+
+  it("names each action with its event and opens only the selected event", () => {
+    const onSelectEvent = jest.fn();
+    const first = event("first", "2026-01-01T09:00:00.000Z");
+    const second = event("second", "2026-01-01T10:00:00.000Z");
+    render(
+      <CalendarMyDayPanel
+        events={[first, second]}
+        pages={[]}
+        search=""
+        onSearchChange={jest.fn()}
+        onSelectEvent={onSelectEvent}
+        onLoadMore={jest.fn()}
+        hasMore={false}
+        isLoadingMore={false}
+      />,
+    );
+
+    const firstAction = screen.getByRole("button", { name: /Open Event first, .*event to view/ });
+    expect(screen.getByRole("button", { name: /Open Event second, .*event to view/ })).toBeTruthy();
+    fireEvent.click(firstAction);
+    expect(onSelectEvent).toHaveBeenCalledWith(first);
+    expect(onSelectEvent).toHaveBeenCalledTimes(1);
   });
 });

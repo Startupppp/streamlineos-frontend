@@ -61,6 +61,11 @@ function MyDayVirtualRow({ index, style, ariaAttributes, rows, onSelectEvent }: 
 
   const event = row.event;
   const rail = EVENT_COLORS[event.color ?? "blue"] ?? EVENT_COLORS.blue;
+  const timeLabel = event.timeKind === "date" ? "All day" : formatEventTimeRange(event.start, event.end, event.timezone);
+  const action = nextAction(event);
+  function handleSelectEvent() {
+    onSelectEvent(event);
+  }
   return (
     <div style={{ ...style, padding: "0 16px 8px", boxSizing: "border-box" }} {...ariaAttributes}>
       <div className="flex overflow-hidden rounded-lg border bg-card shadow-xs transition-[border-color,box-shadow] hover:border-primary/40 hover:shadow-sm">
@@ -68,17 +73,15 @@ function MyDayVirtualRow({ index, style, ariaAttributes, rows, onSelectEvent }: 
         <div className="flex min-w-0 flex-1 items-start justify-between gap-3 p-3">
           <div className="min-w-0 space-y-1.5">
             <div className="truncate text-sm font-medium">{event.title}</div>
-            <p className="text-xs text-muted-foreground">
-              {event.timeKind === "date" ? "All day" : formatEventTimeRange(event.start, event.end, event.timezone)}
-            </p>
+            <p className="text-xs text-muted-foreground">{timeLabel}</p>
             <div className="flex flex-wrap gap-1">
               <Badge variant="secondary" className="capitalize">{event.source}</Badge>
               <Badge variant="outline">{event.status ?? "Scheduled"}</Badge>
               <Badge variant="outline">{freshnessLabel(event)}</Badge>
             </div>
           </div>
-          <Button type="button" variant="outline" size="sm" className="shrink-0" onClick={() => onSelectEvent(event)}>
-            {nextAction(event)}
+          <Button type="button" variant="outline" size="sm" className="shrink-0" onClick={handleSelectEvent} aria-label={`Open ${event.title}, ${timeLabel}, ${event.source} to ${action.toLowerCase()}`}>
+            {action}
           </Button>
         </div>
       </div>
