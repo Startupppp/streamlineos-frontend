@@ -1,5 +1,8 @@
 import { z } from "zod";
 
+const isoTimestamp = z.iso.datetime({ offset: true });
+const isoDate = z.iso.date();
+
 /**
  * Response contracts for the calendar module.
  * Derived from backend `calendar-response.schemas.ts`.
@@ -13,8 +16,8 @@ export const calendarEventsResponseContract = z.object({
     z.object({
       id: z.string(),
       title: z.string(),
-      start: z.string(),
-      end: z.string(),
+      start: isoTimestamp,
+      end: isoTimestamp,
       allDay: z.boolean(),
       color: z.string().nullable().optional(),
       category: z.string(),
@@ -40,14 +43,14 @@ export const calendarEventsResponseContract = z.object({
       time: z.discriminatedUnion("kind", [
         z.object({
           kind: z.literal("timed"),
-          start: z.string(),
-          end: z.string(),
+          start: isoTimestamp,
+          end: isoTimestamp,
           timezone: z.string().nullable(),
         }),
         z.object({
           kind: z.literal("date"),
-          startDate: z.string(),
-          endDate: z.string(),
+          startDate: isoDate,
+          endDate: isoDate,
         }),
       ]),
       availability: z.enum([
@@ -66,7 +69,7 @@ export const calendarEventsResponseContract = z.object({
       }),
       freshness: z.object({
         state: z.enum(["fresh", "stale", "unknown"]),
-        asOf: z.string().nullable(),
+        asOf: isoTimestamp.nullable(),
       }),
     }),
   ),
@@ -84,8 +87,8 @@ export const calendarEventsResponseContract = z.object({
 
 export const calendarHistoryResponseContract =
   calendarEventsResponseContract.extend({
-    windowStart: z.string(),
-    windowEnd: z.string(),
+    windowStart: isoTimestamp,
+    windowEnd: isoTimestamp,
     nextCursor: z.string().min(1).nullable(),
   });
 
@@ -120,8 +123,8 @@ export const calendarExternalEventsContract = z.object({
       accountEmail: z.string().nullable(),
       providerEventId: z.string(),
       title: z.string(),
-      start: z.string(),
-      end: z.string(),
+      start: isoTimestamp,
+      end: isoTimestamp,
       allDay: z.boolean(),
       timezone: z.string().nullable().optional(),
       location: z.string().nullable(),
@@ -143,7 +146,7 @@ export const calendarExternalEventsContract = z.object({
       }),
       freshness: z.object({
         state: z.enum(["fresh", "stale", "unknown"]),
-        asOf: z.string().nullable(),
+        asOf: isoTimestamp.nullable(),
       }),
     }),
   ),

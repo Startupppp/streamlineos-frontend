@@ -106,6 +106,21 @@ it("accepts a payload that omits the timezone, so a cached or zone-less event st
   expect(parsed?.events[0]?.id).toBe("ext-5-g4");
 });
 
+it("rejects malformed provider timestamps before consumers receive them", () => {
+  const event = response.events[0];
+  if (!event) throw new Error("fixture must carry one event");
+
+  expect(calendarExternalEventsContract.safeParse({
+    ...response,
+    events: [{ ...event, start: "not-a-date" }],
+  }).success).toBe(false);
+  expect(calendarExternalEventsContract.safeParse({
+    ...response,
+    events: [{ ...event, freshness: { state: "fresh", asOf: "yesterday" } }],
+  }).success).toBe(false);
+  expect(calendarExternalEventsContract.safeParse(response).success).toBe(true);
+});
+
 it("starts a new external window query after an organization switch", async () => {
   const client = createAppQueryClient();
   jest.mocked(apiClient.get).mockResolvedValue(response);
