@@ -4,6 +4,9 @@ import { CalendarResourceApprovalQueue } from "./calendar-resource-approval-queu
 
 const requestedCursors: Array<string | null> = [];
 const mockResolveAllocation = jest.fn();
+const mockFirstPageItems = jest.fn();
+
+afterEach(() => mockFirstPageItems.mockReset());
 
 jest.mock("next-auth/react", () => ({
   useSession: () => ({ data: { orgId: "org-1", user: { id: "user-1" } } }),
@@ -14,8 +17,8 @@ jest.mock("@/hooks/api/calendar/booking-resources", () => ({
     requestedCursors.push(cursor);
     return {
       data: cursor === "next-page"
-        ? { items: [{ bookingId: "booking-2", resourceId: 2, resourceName: "Second room", state: "pending", startAt: "2026-10-22T10:00:00.000Z", version: 1, canApprove: true, approvalReceiptId: "receipt-2" }], nextCursor: null }
-        : { items: [{ bookingId: "booking-1", resourceId: 1, resourceName: "First room", state: "pending", startAt: "2026-10-22T09:00:00.000Z", version: 1, canApprove: true, approvalReceiptId: "receipt-1" }], nextCursor: "next-page" },
+        ? { items: [{ bookingId: "booking-2", resourceId: 2, resourceName: "Second room", ownership: "calendar", sourceKey: null, state: "pending", startAt: "2026-10-22T10:00:00.000Z", version: 1, canApprove: true, approvalReceiptId: "receipt-2" }], nextCursor: null }
+        : { items: mockFirstPageItems() ?? [{ bookingId: "booking-1", resourceId: 1, resourceName: "First room", ownership: "calendar", sourceKey: null, state: "pending", startAt: "2026-10-22T09:00:00.000Z", version: 1, canApprove: true, approvalReceiptId: "receipt-1" }], nextCursor: "next-page" },
       access: { allowed: true, denied: false, pending: false, unavailable: false },
       isFetching: false,
       isPending: false,
@@ -56,4 +59,25 @@ it("keeps a rejected owner decision open on failure and closes after a successfu
   await waitFor(() => expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument());
   expect(mockResolveAllocation).toHaveBeenCalledTimes(2);
   expect(mockResolveAllocation).toHaveBeenLastCalledWith(expect.objectContaining({ outcome: "rejected", expectedVersion: 1 }));
+});
+
+it("blocks Inventory rejection without an owner receipt while retaining HR and Calendar decisions", async () => {
+  mockResolveAllocation.mockReset().mockResolvedValue({ bookingStatus: "declined" });
+  mockFirstPageItems.mockReturnValue([
+    { bookingId: "booking-inventory", resourceId: 7, resourceName: "Projector", ownership: "source", sourceKey: "inventory.equipment", state: "pending", startAt: "2100-01-01T10:00:00.000Z", version: 1, canApprove: false, approvalReceiptId: null },
+    { bookingId: "booking-hr", resourceId: 8, resourceName: "HR asset", ownership: "source", sourceKey: "hr.asset", state: "pending", startAt: "2100-01-01T10:00:00.000Z", version: 1, canApprove: false, approvalReceiptId: null },
+    { bookingId: "booking-room", resourceId: 9, resourceName: "Room", ownership: "calendar", sourceKey: null, state: "pending", startAt: "2100-01-01T10:00:00.000Z", version: 1, canApprove: true, approvalReceiptId: "calendar:9:1" },
+  ]);
+  const user = userEvent.setup();
+  render(<CalendarResourceApprovalQueue />);
+
+  const [inventoryReject, hrReject, roomReject] = screen.getAllByRole("button", { name: /^Reject$/ });
+  expect(inventoryReject).toBeDisabled();
+  await user.click(hrReject!);
+  await user.click(screen.getByRole("button", { name: "Reject booking" }));
+  await waitFor(() => expect(mockResolveAllocation).toHaveBeenCalledWith(expect.objectContaining({ resourceId: 8, outcome: "rejected", ownerReceiptId: "resource:8:1" })));
+  await user.click(roomReject!);
+  await user.click(screen.getByRole("button", { name: "Reject booking" }));
+  await waitFor(() => expect(mockResolveAllocation).toHaveBeenCalledWith(expect.objectContaining({ resourceId: 9, outcome: "rejected", ownerReceiptId: "calendar:9:1" })));
+  expect(mockResolveAllocation).toHaveBeenCalledTimes(2);
 });

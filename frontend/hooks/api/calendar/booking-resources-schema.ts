@@ -84,6 +84,7 @@ export const pendingBookingAllocationsContract = z.object({
   resourceId: z.number().int().positive(),
   resourceName: z.string(),
   ownership: z.enum(["calendar", "source"]),
+  sourceKey: z.string().nullable(),
   startAt: z.string(),
   endAt: z.string(),
   state: z.enum(["pending", "uncertain"]),
