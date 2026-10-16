@@ -113,6 +113,7 @@ export interface DataTableProps<T> {
   };
   pagination?: ClientPagination | ServerPagination | CursorPagination;
   isLoading?: boolean;
+  onStalledRetry?: () => void;
   emptyState?: ReactNode;
   footer?: ReactNode;
   minWidth?: string;
