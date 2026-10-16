@@ -18,6 +18,7 @@ import {
   formSchema, type DocumentFormData, DocumentFormFields,
 } from "@/features/hr/documents/document-form-fields";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { formatFileSize } from "@/lib/format-utils";
 import { cn } from "@/lib/utils";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 
@@ -44,11 +45,6 @@ function getFileTypeConfig(file: File): { icon: React.ComponentType<{ className?
     return { icon: FileImage, bg: "bg-status-warning-surface", text: "text-status-warning-ink", badge: "IMG" };
   }
   return { icon: File, bg: "bg-muted", text: "text-muted-foreground", badge: "FILE" };
-}
-
-function formatBytes(bytes: number): string {
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 function RemoveFileButton({
@@ -401,7 +397,7 @@ export function UploadDocumentDialog({
                           )}>
                             {config.badge}
                           </span>
-                          <span className="text-micro text-muted-foreground">{formatBytes(f.size)}</span>
+                          <span className="text-micro text-muted-foreground">{formatFileSize(f.size)}</span>
                         </div>
                       </div>
                       <RemoveFileButton index={i} onClick={handleRemoveFileAtIndex} />
