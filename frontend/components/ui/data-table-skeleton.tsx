@@ -76,19 +76,18 @@ export function DataTableSkeleton({
           ))}
         </div>
       ) : null}
-      <Table containerClassName={mobileCards ? "hidden sm:block" : undefined}>
+      {/* Without real headers the grid is pure placeholder: hide it from assistive tech
+          (the status line above announces the load) rather than invent "Column N" names. */}
+      <Table
+        containerClassName={mobileCards ? "hidden sm:block" : undefined}
+        containerFocusable={headers !== null}
+        aria-hidden={headers ? undefined : true}
+      >
         <TableHeader className="bg-muted/50 border-b border-border">
           <TableRow className="hover:bg-transparent">
             {Array.from({ length: columns }).map((_, colIdx) => (
               <TableHead key={colIdx} className="px-2 py-2">
-                {headers ? (
-                  headers[colIdx]
-                ) : (
-                  <>
-                    <Skeleton className="h-3.5 w-16" aria-hidden="true" />
-                    <span className="sr-only">Column {colIdx + 1}</span>
-                  </>
-                )}
+                {headers ? headers[colIdx] : <Skeleton className="h-3.5 w-16" />}
               </TableHead>
             ))}
           </TableRow>
