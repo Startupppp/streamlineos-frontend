@@ -29,6 +29,8 @@ import { userStatsContract } from "@/hooks/api/users/users-schema";
 import { webhookListContract } from "@/hooks/api/webhooks-schema";
 import { chatOrgSettingsContract } from "@/hooks/api/chat-schema/channel-settings-schema";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
+import { quarantineListContract, type QuarantineStatus } from "@/hooks/api/storage/quarantine-schema";
+import { subjectRequestListContract } from "@/hooks/api/privacy/subject-requests-schema";
 import { SIMULATION_CANDIDATE_PARAMS } from "@/lib/settings-initial-reads";
 
 function query(params: Record<string, string | undefined>): string {
@@ -216,6 +218,45 @@ export async function prefetchRoleSimulation() {
         serverGet(
           `/roles/simulate/candidates?limit=${SIMULATION_CANDIDATE_PARAMS.limit}`,
           simulationCandidatesPageContract,
+        ),
+      staleTime: 30_000,
+    });
+  return dehydrate(queryClient);
+}
+
+/** The first page of `useQuarantine`, keyed by the same `{ status, cursor, limit }` object. */
+export async function prefetchStorageQuarantine(params: {
+  status?: QuarantineStatus;
+  cursor?: string;
+  limit: number;
+}) {
+  const queryClient = await createServerQueryClient();
+  const gate = await resolvePrefetchGate();
+  if (gate.can("storage:quarantine:view"))
+    await queryClient.prefetchQuery({
+      queryKey: platformCoreQueryKeys.privacy.quarantine(params),
+      queryFn: () =>
+        serverGet(
+          `/storage/quarantine?${query({ status: params.status, cursor: params.cursor, limit: String(params.limit) })}`,
+          quarantineListContract,
+        ),
+      staleTime: 15_000,
+    });
+  return dehydrate(queryClient);
+}
+
+/** The subject-request queue, filtered by `?subject=` exactly as `useSubjectRequests` is. */
+export async function prefetchPrivacyRequests(subjectEmail: string | undefined) {
+  const queryClient = await createServerQueryClient();
+  const gate = await resolvePrefetchGate();
+  const params = subjectEmail ? { subjectEmail } : undefined;
+  if (gate.can("compliance:subject-requests:view"))
+    await queryClient.prefetchQuery({
+      queryKey: platformCoreQueryKeys.privacy.subjectRequests(params),
+      queryFn: () =>
+        serverGet(
+          params ? `/compliance/subject-requests?${query(params)}` : "/compliance/subject-requests",
+          subjectRequestListContract,
         ),
       staleTime: 30_000,
     });

@@ -15,7 +15,8 @@ type Classification =
       readonly kind: "prefetch";
       readonly helper: string;
       readonly module: string;
-      readonly gate: PermissionKey | "enforceRouteAccess";
+      /** An array is an any-of server check: `requirePermission([...])` in that order. */
+      readonly gate: PermissionKey | readonly PermissionKey[] | "enforceRouteAccess";
     }
   | { readonly kind: "no-prefetch"; readonly reason: string; readonly evidence: string };
 
@@ -120,6 +121,15 @@ const CENSUS: readonly CensusEntry[] = [
       helper: "prefetchNotificationBroadcasts",
       module: SETTINGS_NOTIFICATIONS,
       gate: "notifications:broadcasts:view",
+    },
+  },
+  {
+    route: "/settings/notifications/email-templates",
+    classification: {
+      kind: "prefetch",
+      helper: "prefetchEmailTemplatePreviews",
+      module: SETTINGS_NOTIFICATIONS,
+      gate: "settings:email-templates:manage",
     },
   },
   {
@@ -249,6 +259,15 @@ const CENSUS: readonly CensusEntry[] = [
     },
   },
   {
+    route: "/settings/privacy",
+    classification: {
+      kind: "prefetch",
+      helper: "prefetchPrivacyRequests",
+      module: SETTINGS_ADMIN,
+      gate: ["hr:retention:manage", "compliance:subject-requests:view"],
+    },
+  },
+  {
     route: "/settings/roles",
     classification: {
       kind: "prefetch",
@@ -282,6 +301,15 @@ const CENSUS: readonly CensusEntry[] = [
       helper: "prefetchRoleSimulation",
       module: SETTINGS_ADMIN,
       gate: "settings:rbac:manage",
+    },
+  },
+  {
+    route: "/settings/storage-quarantine",
+    classification: {
+      kind: "prefetch",
+      helper: "prefetchStorageQuarantine",
+      module: SETTINGS_ADMIN,
+      gate: "storage:quarantine:view",
     },
   },
   {
@@ -324,7 +352,7 @@ describe("the settings prefetch census", () => {
   const routes = settingsRoutes();
 
   it("reads real route files, so an empty sweep cannot pass", () => {
-    expect(routes.length).toBe(30);
+    expect(routes.length).toBe(33);
   });
 
   it("classifies every settings route on disk", () => {
@@ -357,8 +385,8 @@ describe("a prefetch classification is backed by real wiring", () => {
       entry.classification.kind === "prefetch",
   );
 
-  it("covers 29 of the 30 routes", () => {
-    expect(prefetched).toHaveLength(29);
+  it("covers 32 of the 33 routes", () => {
+    expect(prefetched).toHaveLength(32);
   });
 
   it.each(prefetched.map((entry) => [entry.route, entry] as const))(
@@ -397,7 +425,9 @@ describe("a prefetch classification is backed by real wiring", () => {
       const gateCall =
         gate === "enforceRouteAccess"
           ? source.indexOf("enforceRouteAccess(")
-          : source.indexOf(`requirePermission("${gate}")`);
+          : typeof gate === "string"
+            ? source.indexOf(`requirePermission("${gate}")`)
+            : source.indexOf(`requirePermission([${gate.map((key) => `"${key}"`).join(", ")}])`);
       expect([route, gateCall]).not.toEqual([route, -1]);
       expect([route, gateCall < source.indexOf(`${helper}(`)]).toEqual([route, true]);
     },

@@ -23,18 +23,14 @@ import {
   useRejectQuarantined,
   useReleaseQuarantined,
 } from "@/hooks/api/storage/quarantine";
-import { QUARANTINE_STATUSES, type QuarantineRecord, type QuarantineStatus } from "@/hooks/api/storage/quarantine-schema";
+import { QUARANTINE_STATUSES, type QuarantineRecord } from "@/hooks/api/storage/quarantine-schema";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { getUserDisplayName } from "@/lib/person-display";
 import { cn } from "@/lib/utils";
+import { QUARANTINE_PAGE_SIZE, readQuarantineStatus } from "./quarantine-list-state";
 import { QUARANTINE_HEADERS, STATUS_META, quarantineColumns, type QuarantineAction } from "./quarantine-columns";
 
-const PAGE_SIZE = 20;
 const ORG_SCOPE: DirectoryScope = { kind: "org" };
-
-function readStatus(value: string | null): QuarantineStatus | undefined {
-  return QUARANTINE_STATUSES.find((status) => status === value);
-}
 
 function rowKey(row: QuarantineRecord): string {
   return row.id;
@@ -45,12 +41,12 @@ export function QuarantinePage() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const status = readStatus(searchParams.get("status"));
+  const status = readQuarantineStatus(searchParams.get("status"));
   const pager = useCursorPager(status ?? "all");
   const canManage = useCan("storage:quarantine:manage");
   const [target, setTarget] = useState<{ action: QuarantineAction; row: QuarantineRecord } | null>(null);
 
-  const query = useQuarantine({ status, cursor: pager.cursor, limit: PAGE_SIZE });
+  const query = useQuarantine({ status, cursor: pager.cursor, limit: QUARANTINE_PAGE_SIZE });
   const rows = useMemo(() => query.data?.data ?? [], [query.data]);
   const uploaderIds = useMemo(() => [...new Set(rows.map((row) => row.uploadedBy))], [rows]);
   const { selectedMembers } = useMemberDirectory(ORG_SCOPE, { selectedIds: uploaderIds });
@@ -169,7 +165,7 @@ export function QuarantinePage() {
           className="flex-1 min-h-0"
           pagination={{
             mode: "cursor",
-            pageSize: PAGE_SIZE,
+            pageSize: QUARANTINE_PAGE_SIZE,
             hasMore: query.data?.pagination.hasMore ?? false,
             hasPrevious: pager.hasPrevious,
             onNext: handleNext,

@@ -3,7 +3,6 @@
 import { useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
-import { z } from "zod";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
@@ -21,12 +20,10 @@ import { downloadBlob } from "@/lib/download-blob";
 import { formatDateTime, formatShortDate } from "@/lib/date-utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { SubjectRequestDialog } from "./subject-request-dialog";
-import { toExecutePayload, type SubjectRequestValues } from "./subject-request-schema";
+import { readSubjectFilter, toExecutePayload, type SubjectRequestValues } from "./subject-request-schema";
 import { TypedEmailConfirmDialog } from "./typed-email-confirm-dialog";
 
 const HEADERS = ["Request", "Subject", "Status", "Records", "Requested", "Due"];
-const emailFilter = z.string().trim().toLowerCase().email();
-
 const COLUMNS: DataTableColumn<FiledSubjectRequest>[] = [
   { key: "kind", header: "Request", cell: (row) => (row.kind === "erasure" ? "Erasure" : "Export") },
   { key: "subjectEmail", header: "Subject", cell: (row) => <span className="truncate">{row.subjectEmail}</span> },
@@ -59,8 +56,7 @@ export function SubjectRequestsPanel() {
   const urlSubject = searchParams.get("subject") ?? "";
   const [search, setSearch] = useState(urlSubject);
   const debounced = useDebouncedValue(search, 300);
-  const parsed = emailFilter.safeParse(debounced);
-  const subject = parsed.success ? parsed.data : undefined;
+  const subject = readSubjectFilter(debounced);
 
   const canExecute = useCan("compliance:subject-requests:execute");
   const query = useSubjectRequests(subject);

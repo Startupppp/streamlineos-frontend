@@ -8,6 +8,14 @@ export const subjectRequestSchema = z.object({
   backupsExpireBy: z.string().trim().max(64, "Keep it under 64 characters"),
 });
 
+const subjectFilter = z.string().trim().toLowerCase().email();
+
+/** The queue's `?subject=` filter: a valid email narrows the list, anything else is no filter. */
+export function readSubjectFilter(value: string): string | undefined {
+  const parsed = subjectFilter.safeParse(value);
+  return parsed.success ? parsed.data : undefined;
+}
+
 export type SubjectRequestInput = z.input<typeof subjectRequestSchema>;
 export type SubjectRequestValues = z.output<typeof subjectRequestSchema>;
 

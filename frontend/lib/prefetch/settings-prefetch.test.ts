@@ -34,6 +34,11 @@ import { usersAndCommerceQueryKeys } from "@/lib/query-keys/users-and-commerce";
 import { readUsersListState } from "@/features/directory/users/users-list-state";
 import { readAuditLogFilters } from "@/features/settings/audit-log/audit-log-constants";
 import { readDelegationListState } from "@/features/settings/delegations/delegation-list-state";
+import { readSubjectFilter } from "@/features/settings/privacy/subject-request-schema";
+import {
+  QUARANTINE_PAGE_SIZE,
+  readQuarantineStatus,
+} from "@/features/settings/storage-quarantine/quarantine-list-state";
 import { RBAC_AUDIT_INITIAL_FILTERS } from "@/features/settings/roles/roles-audit-constants";
 import { parsePageSize } from "@/lib/list-pagination";
 import {
@@ -46,18 +51,21 @@ import {
 import { prefetchAccountSettings } from "./settings-account";
 import {
   prefetchOrgModules,
+  prefetchPrivacyRequests,
   prefetchRoleSimulation,
   prefetchRolesAudit,
   prefetchSettingsAuditLog,
   prefetchSettingsDelegations,
   prefetchSettingsUsers,
   prefetchSettingsWebhooks,
+  prefetchStorageQuarantine,
 } from "./settings-admin";
 import {
   prefetchAiCreditsSettings,
   prefetchBillingSettings,
 } from "./settings-billing";
 import {
+  prefetchEmailTemplatePreviews,
   prefetchMyNotificationPreferences,
   prefetchNotificationBroadcasts,
   prefetchNotificationEvents,
@@ -86,6 +94,9 @@ const ALL_KEYS = [
   "notifications:policy:view",
   "notifications:providers:view",
   "notifications:templates:view",
+  "settings:email-templates:manage",
+  "storage:quarantine:view",
+  "compliance:subject-requests:view",
 ] as const;
 
 function accessWith(keys: readonly string[]): AccessResponse {
@@ -341,6 +352,72 @@ const CASES: readonly PrefetchCase[] = [
         key: platformCoreQueryKeys.notifications.templates(),
         path: "/notification-templates",
         value: [{ readFrom: "/notification-templates" }],
+      },
+    ],
+  },
+  {
+    route: "/settings/notifications/email-templates",
+    run: prefetchEmailTemplatePreviews,
+    expected: [
+      {
+        key: platformCoreQueryKeys.notifications.emailTemplatePreviews(),
+        path: "/settings/email-templates/preview",
+      },
+    ],
+  },
+  {
+    route: "/settings/storage-quarantine",
+    run: () =>
+      prefetchStorageQuarantine({
+        status: readQuarantineStatus(NO_PARAMS.get("status")),
+        cursor: undefined,
+        limit: QUARANTINE_PAGE_SIZE,
+      }),
+    expected: [
+      {
+        // The page's own call shape: `useQuarantine({ status, cursor: pager.cursor, limit })`.
+        key: platformCoreQueryKeys.privacy.quarantine({
+          status: undefined,
+          cursor: undefined,
+          limit: 20,
+        }),
+        path: "/storage/quarantine?limit=20",
+      },
+    ],
+  },
+  {
+    route: "/settings/storage-quarantine?status=infected",
+    run: () =>
+      prefetchStorageQuarantine({
+        status: readQuarantineStatus("infected"),
+        cursor: undefined,
+        limit: QUARANTINE_PAGE_SIZE,
+      }),
+    expected: [
+      {
+        key: platformCoreQueryKeys.privacy.quarantine({
+          status: "infected",
+          cursor: undefined,
+          limit: 20,
+        }),
+        path: "/storage/quarantine?status=infected&limit=20",
+      },
+    ],
+  },
+  {
+    route: "/settings/privacy",
+    run: () => prefetchPrivacyRequests(readSubjectFilter(NO_PARAMS.get("subject") ?? "")),
+    expected: [
+      { key: platformCoreQueryKeys.privacy.subjectRequests(), path: "/compliance/subject-requests" },
+    ],
+  },
+  {
+    route: "/settings/privacy?subject=",
+    run: () => prefetchPrivacyRequests(readSubjectFilter(" Ada@Example.test ")),
+    expected: [
+      {
+        key: platformCoreQueryKeys.privacy.subjectRequests({ subjectEmail: "ada@example.test" }),
+        path: "/compliance/subject-requests?subjectEmail=ada%40example.test",
       },
     ],
   },
