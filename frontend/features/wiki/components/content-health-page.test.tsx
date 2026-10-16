@@ -1,4 +1,4 @@
-import { render as rtlRender, screen, fireEvent, within } from "@testing-library/react";
+import { render as rtlRender, screen, fireEvent, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactElement } from "react";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -25,6 +25,7 @@ const useContentHealthTrend = jest.fn();
 const mockUseAssignHealthItem = jest.fn();
 const mockUseBulkRepairHealthItems = jest.fn();
 const mockUseOrgMembersByIds = jest.fn();
+const mockDismissMutateAsync = jest.fn();
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
@@ -44,7 +45,7 @@ jest.mock("@/hooks/api/entitlements", () => ({
 jest.mock("@/hooks/api/kb/content-health", () => ({
   useContentHealthCounts: () => useContentHealthCounts(),
   useContentHealthSignals: () => useContentHealthSignals(),
-  useDismissHealthItem: () => ({ mutateAsync: jest.fn(), isPending: false }),
+  useDismissHealthItem: () => ({ mutateAsync: mockDismissMutateAsync, isPending: false }),
   useContentHealthTrend: () => useContentHealthTrend(),
   useAssignHealthItem: () => mockUseAssignHealthItem(),
   useContentHealthEvidence: () => ({ data: undefined, isLoading: false }),
@@ -74,6 +75,7 @@ jest.mock("@/components/ui/popover", () => ({
 }));
 
 import ContentHealthPage from "./content-health-page";
+import { ContentHealthDismissDialog } from "./content-health-dismiss-dialog";
 
 function render(ui: ReactElement) {
   return rtlRender(<TooltipProvider>{ui}</TooltipProvider>);
@@ -132,6 +134,7 @@ const IDLE = {
 };
 
 beforeEach(() => {
+  mockDismissMutateAsync.mockResolvedValue({});
   useAccess.mockReturnValue(accessGranted);
   useContentHealthCounts.mockReturnValue({ ...IDLE, data: MIXED_COUNTS });
   useContentHealthSignals.mockReturnValue({ ...IDLE, data: SIGNAL_PAGE_WITH_ROWS });
@@ -159,6 +162,57 @@ beforeEach(() => {
 });
 
 afterEach(() => jest.resetAllMocks());
+
+describe("ContentHealthDismissDialog snooze contract", () => {
+  it("submits a timezone-qualified timestamp for a selected local snooze time", async () => {
+    const user = userEvent.setup();
+    render(
+      <ContentHealthDismissDialog
+        open
+        onOpenChange={jest.fn()}
+        pageId={42}
+        pageTitle="Policy Draft"
+        kind="stale"
+      />,
+    );
+
+    await user.type(screen.getByRole("textbox", { name: "Reason" }), "Reviewed with owner");
+    fireEvent.change(screen.getByLabelText(/Snooze until/), {
+      target: { value: "2026-10-20T14:30" },
+    });
+    await user.click(screen.getByRole("button", { name: "Dismiss" }));
+
+    await waitFor(() => expect(mockDismissMutateAsync).toHaveBeenCalledWith({
+      pageId: 42,
+      kind: "stale",
+      reason: "Reviewed with owner",
+      dismissalExpiresAt: new Date("2026-10-20T14:30").toISOString(),
+    }));
+  });
+
+  it("omits expiry for a permanent dismissal", async () => {
+    const user = userEvent.setup();
+    render(
+      <ContentHealthDismissDialog
+        open
+        onOpenChange={jest.fn()}
+        pageId={42}
+        pageTitle="Policy Draft"
+        kind="stale"
+      />,
+    );
+
+    await user.type(screen.getByRole("textbox", { name: "Reason" }), "Accepted exception");
+    await user.click(screen.getByRole("button", { name: "Dismiss" }));
+
+    await waitFor(() => expect(mockDismissMutateAsync).toHaveBeenCalledWith({
+      pageId: 42,
+      kind: "stale",
+      reason: "Accepted exception",
+      dismissalExpiresAt: undefined,
+    }));
+  });
+});
 
 describe("ContentHealthPage — populated state", () => {
   it("renders count chips for all eight signals including overexposed and duplicate_candidate", () => {
