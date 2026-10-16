@@ -7,6 +7,19 @@ import {
 } from "./calendar-workflows-schema";
 
 describe("calendar workflow response contracts", () => {
+  it("accepts an uncreated workflow policy without a persisted version or update time", () => {
+    expect(calendarWorkflowPolicyContract.safeParse({
+      version: 0,
+      enabled: false,
+      dryRun: true,
+      allowedChannels: ["IN_APP"],
+      maxRules: 10,
+      maxEffectsPerEvent: 10,
+      maxEffectsPerDay: 100,
+      updatedAt: null,
+    }).success).toBe(true);
+  });
+
   it("keeps the legacy list and cursor page response shapes distinct", () => {
     expect(calendarWorkflowLegacyEffectsContract.safeParse([]).success).toBe(true);
     expect(calendarWorkflowEffectsContract.safeParse({ items: [], nextCursor: null }).success).toBe(true);

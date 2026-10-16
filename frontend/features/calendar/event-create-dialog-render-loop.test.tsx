@@ -85,7 +85,7 @@ describe("EventCreateDialog render loop (BUG-007)", () => {
     mockConnections = [];
     mockCreate.mockRejectedValue(new ApiError("Request timed out", 0));
     renderDialog();
-    await act(async () => { await lastProps?.onSave(); });
+    await act(async () => { await lastProps?.onSave({}); });
     expect(toast.error).toHaveBeenCalledWith(expect.stringMatching(/timed out/i));
   });
 });

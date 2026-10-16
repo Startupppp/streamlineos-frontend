@@ -62,14 +62,14 @@ export const calendarWorkflowActionSchema = z.object({
 });
 
 export const calendarWorkflowPolicyContract = z.object({
-  version: z.number().int().positive(),
+  version: z.number().int().nonnegative(),
   enabled: z.boolean(),
   dryRun: z.boolean(),
   allowedChannels: z.array(channelSchema),
   maxRules: z.number().int().positive(),
   maxEffectsPerEvent: z.number().int().positive(),
   maxEffectsPerDay: z.number().int().positive(),
-  updatedAt: z.string(),
+  updatedAt: z.string().nullable(),
 });
 
 export const calendarWorkflowRuleContract = z.object({
