@@ -76,7 +76,9 @@ export function StepWorkspace({
   restoreSlot,
 }: StepWorkspaceProps) {
   const [attempted, setAttempted] = useState(false);
-  const [advancedOpen, setAdvancedOpen] = useState(false);
+  const [advancedOpen, setAdvancedOpen] = useState(
+    () => data.phone.trim() !== "" || data.companyName.trim() !== "",
+  );
 
   const parsed = useMemo(() => parseWorkspaceStep(data), [data]);
 
@@ -87,6 +89,7 @@ export function StepWorkspace({
     teamSize: fieldError(attempted, issues, "teamSize"),
     companyName: fieldError(attempted, issues, "companyName"),
     industry: fieldError(attempted, issues, "industry"),
+    phone: fieldError(attempted, issues, "phone"),
   };
 
   const handleDisplayNameChange = useCallback(
@@ -132,6 +135,8 @@ export function StepWorkspace({
   function handleNext() {
     if (!parsed.success) {
       setAttempted(true);
+      if (issues.some((issue) => issue.path[0] === "phone" || issue.path[0] === "companyName"))
+        setAdvancedOpen(true);
       return;
     }
     onNext();
@@ -295,7 +300,7 @@ export function StepWorkspace({
 
             <div className="min-w-0 space-y-1">
               <Label htmlFor="workspace-phone" className="text-xs">
-                Contact phone
+                Your phone
               </Label>
               <Input
                 id="workspace-phone"
@@ -304,7 +309,10 @@ export function StepWorkspace({
                 onChange={handlePhoneChange}
                 placeholder="+91 98765 43210"
                 className="w-full text-sm"
+                aria-invalid={!!errors.phone}
+                aria-describedby={errors.phone ? "workspace-phone-error" : undefined}
               />
+              <InlineError id="workspace-phone-error" message={errors.phone} />
             </div>
           </div>
         )}
