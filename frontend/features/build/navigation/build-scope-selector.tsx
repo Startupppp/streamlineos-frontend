@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -61,13 +61,21 @@ export function BuildScopeSelector({
     isDirty: hasUnsavedWork,
   });
 
-  const currentRef = identity.ref;
-  const hasName = currentRef.name.length > 0;
+  // An unknown or foreign scope id has no name; say so instead of letting the
+  // avatar fall back to "BD" next to the type label ("BD Product", MP-B-021).
+  const currentRef = useMemo(
+    () =>
+      identity.isInaccessible
+        ? { ...identity.ref, name: "Unavailable", projectKey: null, parentPath: null }
+        : identity.ref,
+    [identity.isInaccessible, identity.ref],
+  );
+  const hasName = identity.ref.name.length > 0;
 
   useEffect(() => {
     if (!hasName || identity.isInaccessible) return;
-    recordScope(currentRef);
-  }, [hasName, identity.isInaccessible, currentRef, recordScope]);
+    recordScope(identity.ref);
+  }, [hasName, identity.isInaccessible, identity.ref, recordScope]);
 
   const settingsHrefFor = useCallback(
     (target: BuildScopeRef): string | null => {

@@ -13,7 +13,7 @@ import {
   isBuildDestinationActive,
   isBuildNavModelEmpty,
 } from "@/lib/build/build-nav-model";
-import type { BuildNavDestination } from "@/lib/build/nav/build-nav-destination";
+import type { BuildNavDestination, BuildNavModel } from "@/lib/build/nav/build-nav-destination";
 import { ErrorState } from "@/components/shared/error-state";
 import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { BuildAgentPulse } from "./build-agent-pulse";
@@ -28,6 +28,7 @@ import { useBuildScopeRecovery } from "./use-build-scope-recovery";
 import { useBuildNavModel, useBuildNavView } from "./use-build-nav-model";
 
 const BUILD_ACCENT: ModuleAccent = MODULE_ACCENTS.build;
+const NO_CREATE_ACTIONS: BuildNavModel["createActions"] = [];
 
 interface BuildSidebarProps {
   isCollapsed: boolean;
@@ -185,7 +186,7 @@ export function BuildSidebar({ isCollapsed, onNavigate }: BuildSidebarProps) {
         <BuildAgentPulse isCollapsed={isCollapsed} onNavigate={onNavigate} />
         <BuildQuickCreate
           scope={model.scope}
-          actions={model.createActions}
+          actions={identity.isInaccessible ? NO_CREATE_ACTIONS : model.createActions}
           isCollapsed={isCollapsed}
           onNavigate={onNavigate}
         />
