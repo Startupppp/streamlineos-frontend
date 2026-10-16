@@ -92,6 +92,7 @@ export function useKbSpaceArchiveImpact(
 ) {
   const canManage = useCan("kb:spaces:manage");
   return useQuery({
+    ...INLINE_READ_ERROR,
     queryKey: [...knowledgeAndSurveysQueryKeys.kb.space(spaceId), "archive-impact"],
     queryFn: ({ signal }) =>
       apiClient.get<KbSpaceArchiveImpact>(
