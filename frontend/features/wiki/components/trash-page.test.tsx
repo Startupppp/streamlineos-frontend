@@ -6,6 +6,7 @@ import type { KbPageListItem } from "@/hooks/api/kb/page-types";
 import type { DataTableColumn } from "@/components/ui/data-table.types";
 import { DataTable } from "@/components/ui/data-table";
 import { toast } from "sonner";
+import { ApiError } from "@/lib/api-envelope";
 
 jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn() } }));
 
@@ -139,6 +140,9 @@ jest.mock("@/hooks/api/kb/spaces", () => ({
 const { useKbPagesTrash } = jest.requireMock("@/hooks/api/kb") as {
   useKbPagesTrash: jest.Mock;
 };
+const { useEmptyKbTrash } = jest.requireMock("@/hooks/api/kb") as {
+  useEmptyKbTrash: jest.Mock;
+};
 const { usePageState } = jest.requireMock("@/hooks/api/use-page-state") as {
   usePageState: jest.Mock;
 };
@@ -236,6 +240,59 @@ beforeEach(() => {
 });
 
 describe("trash bulk purge impact confirmation", () => {
+  it("keeps Empty Trash open through a pending request and exposes a failed request reference for retry", () => {
+    const mutate = jest.fn();
+    useEmptyKbTrash.mockReturnValue({ mutate, isPending: false });
+    usePageState.mockReturnValue({ kind: "ready" });
+    useKbPagesTrash.mockReturnValue({ data: nonEmptyListResponse, isLoading: false, isError: false, error: null, refetch: jest.fn() });
+    const view = render(<TrashPage />);
+    fireEvent.click(screen.getByRole("button", { name: "Empty Trash" }));
+    const emptyDialog = () => (ConfirmDialog as jest.Mock).mock.calls.at(-2)?.[0];
+
+    act(() => emptyDialog().onConfirm());
+    expect(emptyDialog().open).toBe(true);
+    expect(emptyDialog().keepOpenOnConfirm).toBe(true);
+    useEmptyKbTrash.mockReturnValue({ mutate, isPending: true });
+    view.rerender(<TrashPage />);
+    expect(emptyDialog().isPending).toBe(true);
+
+    useEmptyKbTrash.mockReturnValue({ mutate, isPending: false });
+    act(() => mutate.mock.calls[0][1].onError(new ApiError("Unavailable", 503, "UNAVAILABLE", { correlationId: "empty-req-1" })));
+    view.rerender(<TrashPage />);
+    expect(emptyDialog().open).toBe(true);
+    render(<>{emptyDialog().content}</>);
+    expect(screen.getByText("empty-req-1")).toBeInTheDocument();
+    act(() => emptyDialog().onConfirm());
+    expect(mutate).toHaveBeenCalledTimes(2);
+    act(() => mutate.mock.calls[1][1].onSuccess({ purgedCount: 1 }));
+    expect(emptyDialog().open).toBe(false);
+  });
+
+  it("keeps bulk purge open after a failed write and exposes its request reference for retry", () => {
+    const mutate = jest.fn();
+    useKbBulkPurgePages.mockReturnValue({ mutate, isPending: false });
+    useKbTrashPurgeImpact.mockReturnValue({ data: { pageCount: 1, descendantCount: 0 }, isLoading: false, isError: false, error: null, refetch: jest.fn() });
+    const view = openPurgeConfirmation();
+
+    act(() => purgeDialog().onConfirm());
+    expect(purgeDialog().open).toBe(true);
+    expect(purgeDialog().keepOpenOnConfirm).toBe(true);
+    useKbBulkPurgePages.mockReturnValue({ mutate, isPending: true });
+    view.rerender(<TrashPage />);
+    expect(purgeDialog().isPending).toBe(true);
+
+    useKbBulkPurgePages.mockReturnValue({ mutate, isPending: false });
+    act(() => mutate.mock.calls[0][1].onError(new ApiError("Unavailable", 503, "UNAVAILABLE", { correlationId: "purge-req-1" })));
+    view.rerender(<TrashPage />);
+    expect(purgeDialog().open).toBe(true);
+    render(<>{purgeDialog().content}</>);
+    expect(screen.getByText("purge-req-1")).toBeInTheDocument();
+    act(() => purgeDialog().onConfirm());
+    expect(mutate).toHaveBeenCalledTimes(2);
+    act(() => mutate.mock.calls[1][1].onSuccess({ results: [{ pageId: 9, result: "succeeded" }] }));
+    expect(purgeDialog().open).toBe(false);
+  });
+
   it("reports only restored pages and retains failed selections after a partial restore", () => {
     const mutate = jest.fn();
     useKbBulkRestorePages.mockReturnValue({ mutate, isPending: false });
@@ -280,6 +337,9 @@ describe("trash bulk purge impact confirmation", () => {
 
   function purgeDialog() {
     return ConfirmDialog.mock.calls.at(-1)?.[0] as {
+      open: boolean;
+      keepOpenOnConfirm: boolean;
+      isPending: boolean;
       description: string;
       content?: React.ReactNode;
       hideConfirm: boolean;

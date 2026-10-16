@@ -3,8 +3,11 @@
 import type { Dispatch, SetStateAction } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { ErrorReference } from "@/components/shared/error-reference";
 import { KbRotateCcwIcon, KbTrash2Icon } from "@/features/wiki/lib/kb-icons";
 import type { BulkPageResult } from "@/hooks/api/kb/pages";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 type Selection = Set<string | number>;
 
@@ -88,5 +91,80 @@ export function TrashBulkActions({
         </Button>
       )}
     </div>
+  );
+}
+
+interface TrashEmptyConfirmationProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  pageCount: number;
+  hasMore: boolean;
+  isPending: boolean;
+  error: unknown;
+  onConfirm: () => void;
+}
+
+export function TrashEmptyConfirmation({ open, onOpenChange, pageCount, hasMore, isPending, error, onConfirm }: TrashEmptyConfirmationProps) {
+  return (
+    <ConfirmDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Empty the trash?"
+      description={hasMore
+        ? "This permanently deletes every page currently in the trash, not just the ones shown on this page. This cannot be undone."
+        : `All ${pageCount} page${pageCount === 1 ? "" : "s"} in the trash will be permanently deleted. This cannot be undone.`}
+      content={error ? <div role="alert" className="text-sm text-destructive">{getErrorMessage(error)}<ErrorReference error={error} /></div> : undefined}
+      confirmLabel="Empty Trash"
+      destructive
+      keepOpenOnConfirm
+      isPending={isPending}
+      onConfirm={onConfirm}
+    />
+  );
+}
+
+interface TrashBulkPurgeConfirmationProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  selectedCount: number;
+  description: string;
+  canPurge: boolean;
+  impactLoading: boolean;
+  impactError: boolean;
+  impactAvailable: boolean;
+  impactReadError: unknown;
+  writeError: unknown;
+  canConfirm: boolean;
+  isPending: boolean;
+  onRetryImpact: () => void;
+  onConfirm: () => void;
+}
+
+export function TrashBulkPurgeConfirmation({
+  open, onOpenChange, selectedCount, description, canPurge, impactLoading,
+  impactError, impactAvailable, impactReadError, writeError, canConfirm,
+  isPending, onRetryImpact, onConfirm,
+}: TrashBulkPurgeConfirmationProps) {
+  const impactFailure = canPurge && !impactLoading && (impactError || !impactAvailable);
+  return (
+    <ConfirmDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={`Permanently delete ${selectedCount} page${selectedCount === 1 ? "" : "s"}?`}
+      description={description}
+      content={writeError || impactFailure ? (
+        <div role="alert" className="space-y-2 text-sm text-destructive">
+          {writeError ? <>{getErrorMessage(writeError)}<ErrorReference error={writeError} /></> : null}
+          {impactError && <ErrorReference error={impactReadError} />}
+          {impactFailure && <Button type="button" variant="outline" size="sm" onClick={onRetryImpact}>Retry impact check</Button>}
+        </div>
+      ) : undefined}
+      confirmLabel="Delete Forever"
+      destructive
+      keepOpenOnConfirm
+      hideConfirm={!canConfirm}
+      isPending={isPending}
+      onConfirm={onConfirm}
+    />
   );
 }
