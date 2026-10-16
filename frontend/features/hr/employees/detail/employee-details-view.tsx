@@ -61,6 +61,7 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
   const canDraftReview = useCan("hr:performance:manage");
   const sensitiveScope = useScope("hr:sensitive:view");
   const canUpdateEmployee = useCan("hr:employees:update");
+  const manageScope = useScope("hr:employees:manage");
   const searchParams = useSearchParams();
   const defaultTab = searchParams.get("tab") ?? "overview";
   const [activeTab, setActiveTab] = useState(defaultTab);
@@ -85,7 +86,7 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
   const isSelf = hydrated && session?.user?.id === employee.id;
   const showManageActions = hydrated && canManageEmployees;
   const showSensitiveTab = hydrated && sensitiveScope !== "none" && (isSelf || sensitiveScope !== "own");
-  const showEditTab = hydrated && canUpdateEmployee;
+  const showEditTab = hydrated && canUpdateEmployee && (isSelf || manageScope === "all");
   // V-023/V-025: the same helper the header card uses. Composing first+last
   // here ignored `employee.name`, so a display-name-only person exported a PDF
   // called "Employee".
