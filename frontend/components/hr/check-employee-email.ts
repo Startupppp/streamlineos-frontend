@@ -34,6 +34,12 @@ const GUIDANCE: Record<EmployeeAdmissionStatus, EmployeeAdmissionGuidance> = {
     message:
       "This person was archived or suspended in this organization. Restore them from Users instead of onboarding them again.",
   },
+  invite: {
+    blocking: true,
+    attachToExistingMember: false,
+    message:
+      "This email already has a pending invitation. Resend or cancel it from People → Invitations instead of onboarding again.",
+  },
 };
 
 export function employeeAdmissionGuidance(

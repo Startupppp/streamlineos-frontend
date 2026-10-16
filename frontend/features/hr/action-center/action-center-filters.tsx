@@ -17,9 +17,9 @@ import {
 
 interface ActionCenterFiltersProps {
   state: ActionCenterFilterState;
-  counts: Record<ActionCenterFacet | "all", number>;
+  counts: Record<ActionCenterFacet | "all", number> | null;
   cutoffAvailable: boolean;
-  cutoffCount: number;
+  cutoffCount: number | null;
   onFacetChange: (facet: ActionCenterFacet | "all") => void;
   onCutoffToggle: () => void;
 }
@@ -51,7 +51,7 @@ export function ActionCenterFilters({
             key={facet.value}
             value={facet.value}
             label={facet.label}
-            count={counts[facet.value]}
+            count={counts?.[facet.value] ?? null}
             active={state.facet === facet.value}
             onSelect={onFacetChange}
           />
@@ -68,7 +68,7 @@ export function ActionCenterFilters({
           className="hidden h-8 shrink-0 text-dense sm:inline-flex"
         >
           Affects cutoff
-          <span className="ml-1 tabular-nums">{cutoffCount}</span>
+          <span className="ml-1 tabular-nums">{cutoffCount ?? "–"}</span>
         </Button>
       ) : null}
 
@@ -95,7 +95,7 @@ export function ActionCenterFilters({
                 key={facet.value}
                 value={facet.value}
                 label={facet.label}
-                count={counts[facet.value]}
+                count={counts?.[facet.value] ?? null}
                 active={state.facet === facet.value}
                 onSelect={onFacetChange}
                 onSelected={setOpen}
@@ -115,7 +115,7 @@ export function ActionCenterFilters({
                     <Check className="h-3.5 w-3.5" />
                   </span>
                   <span className="flex-1 text-left">Affects cutoff</span>
-                  <span className="tabular-nums">{cutoffCount}</span>
+                  <span className="tabular-nums">{cutoffCount ?? "–"}</span>
                 </button>
               </>
             ) : null}
@@ -135,7 +135,7 @@ function FacetButton({
 }: {
   value: ActionCenterFacet | "all";
   label: string;
-  count: number;
+  count: number | null;
   active: boolean;
   onSelect: (facet: ActionCenterFacet | "all") => void;
 }) {
@@ -153,7 +153,7 @@ function FacetButton({
       className="h-8 text-dense"
     >
       {label}
-      <span className="ml-1 tabular-nums text-muted-foreground">{count}</span>
+      <span className="ml-1 tabular-nums text-muted-foreground">{count ?? "–"}</span>
     </Button>
   );
 }
@@ -168,7 +168,7 @@ function FacetMenuItem({
 }: {
   value: ActionCenterFacet | "all";
   label: string;
-  count: number;
+  count: number | null;
   active: boolean;
   onSelect: (facet: ActionCenterFacet | "all") => void;
   onSelected: (open: boolean) => void;
@@ -190,7 +190,7 @@ function FacetMenuItem({
         <Check className="h-3.5 w-3.5" />
       </span>
       <span className="flex-1 text-left">{label}</span>
-      <span className="tabular-nums">{count}</span>
+      <span className="tabular-nums">{count ?? "–"}</span>
     </button>
   );
 }

@@ -41,7 +41,8 @@ export function useHrmsCommands(
   const canViewPayrollRuns = useCan("payroll:runs:view");
   const canUpdateSalaries = useCan("payroll:salaries:update");
   const canPublishPayslips = useCan("payroll:payslips:manage");
-  const canStartExit = useCan("hr:exit:create");
+  const canStartExit = useCan("hr:exit:manage");
+  const canResign = useCan("self:resignation");
   const hrEnabled = useModuleEnabled("hr");
   const payrollEnabled = useModuleEnabled("payroll");
 
@@ -139,6 +140,15 @@ export function useHrmsCommands(
         isAvailable: hrEnabled && (canStartExit),
         execute: () => handleSelect("/hr/exit"),
       },
+      {
+        id: "hrms-submit-resignation",
+        label: "Submit my resignation",
+        group: "actions",
+        keywords: ["resign", "resignation", "quit", "leave company", "notice", "इस्तीफ़ा"],
+        icon: DoorOpen,
+        isAvailable: hrEnabled && canResign,
+        execute: () => handleSelect("/me/resignation"),
+      },
     ],
     [
       canRequestLeave,
@@ -150,6 +160,7 @@ export function useHrmsCommands(
       canUpdateSalaries,
       canPublishPayslips,
       canStartExit,
+      canResign,
       hrEnabled,
       payrollEnabled,
       attendance,

@@ -110,7 +110,7 @@ export async function resolveAuthSession(
 ): Promise<Session> {
   try {
     const fresh = token.id
-      ? await fetchSessionDataCached(token.id, token.orgId)
+      ? await fetchSessionDataCached(token.id, token.orgId, token.claimsRefreshedAt)
       : null;
 
     applyClaimsToSession(session, token, fresh);
@@ -269,6 +269,7 @@ export const authConfig = {
         const userId = token.id;
         if (userId) {
           invalidateSessionData(userId);
+          token.claimsRefreshedAt = Date.now();
           // An org switch names its target; any other update keeps the session's own org.
           const requestedOrgId =
             isRecord(session) && typeof session.orgId === "string"

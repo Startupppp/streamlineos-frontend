@@ -8,9 +8,12 @@ import {
 } from "react";
 import dynamic from "next/dynamic";
 import { useSession } from "next-auth/react";
+import { LogOut } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -20,6 +23,7 @@ import {
 } from "@/components/ui/drawer";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useIsMobile } from "@/hooks/common/use-mobile";
+import { useSignOut } from "@/hooks/common/auth-hooks";
 import { resolveImageUrl, cn } from "@/lib/utils";
 
 /**
@@ -87,6 +91,9 @@ export function UserAvatarMenu({
   const image = resolveImageUrl(session?.user?.image);
   const initials = name.charAt(0).toUpperCase();
 
+  const { mutate: signOut, isPending: isSigningOut } = useSignOut();
+  const handleSignOut = useCallback(() => signOut(), [signOut]);
+
   const [internalOpen, setInternalOpen] = useState(false);
   const isControlled = controlledOpen !== undefined;
   const open = isControlled ? controlledOpen : internalOpen;
@@ -118,6 +125,17 @@ export function UserAvatarMenu({
         ) : null}
         <DrawerContent className="flex max-h-[min(92dvh,40rem)] flex-col gap-0 overflow-hidden rounded-t-xl border bg-card p-0 shadow-2xl">
           <UserAvatarMenuBody name={name} email={email} layout="drawer" />
+          <div className="shrink-0 border-t px-2 py-2 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+            <button
+              type="button"
+              onClick={handleSignOut}
+              disabled={isSigningOut}
+              className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm text-destructive hover:bg-destructive/10 transition-colors disabled:opacity-50"
+            >
+              <LogOut className="h-4 w-4 shrink-0" />
+              Sign out
+            </button>
+          </div>
         </DrawerContent>
       </Drawer>
     );
@@ -133,6 +151,16 @@ export function UserAvatarMenu({
         sideOffset={8}
       >
         <UserAvatarMenuBody name={name} email={email} layout="dropdown" />
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          variant="destructive"
+          className="gap-2 cursor-pointer"
+          onClick={handleSignOut}
+          disabled={isSigningOut}
+        >
+          <LogOut className="h-3.5 w-3.5" />
+          Sign out
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

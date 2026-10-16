@@ -30,7 +30,7 @@ import {
   type ModuleRoleGroup,
 } from "@/hooks/api/module-access";
 import { viewKey } from "@/hooks/api/module-access/types";
-import { useCanState } from "@/hooks/api/access";
+import { useAccess, usePermissionGate } from "@/hooks/api/access";
 import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { CreateGroupDialog } from "@/features/module-access/components/create-group-dialog";
 import {
@@ -233,10 +233,19 @@ export function RolesTab({
     [],
   );
 
-  const viewAccess = useCanState(viewKey(moduleKey));
+  const { refetch: refetchAccess } = useAccess();
+  const viewGate = usePermissionGate(viewKey(moduleKey));
   const isLoading =
-    viewAccess === "loading" || catalogQuery.isLoading || groupsQuery.isLoading;
-  const isError = catalogQuery.isError || groupsQuery.isError;
+    viewGate.pending || catalogQuery.isLoading || groupsQuery.isLoading;
+  const isError =
+    viewGate.unavailable || catalogQuery.isError || groupsQuery.isError;
+  const { refetch: refetchCatalog } = catalogQuery;
+  const { refetch: refetchGroups } = groupsQuery;
+  const handleRetry = useCallback(() => {
+    if (viewGate.unavailable) void refetchAccess();
+    void refetchCatalog();
+    void refetchGroups();
+  }, [viewGate.unavailable, refetchAccess, refetchCatalog, refetchGroups]);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4">
@@ -256,20 +265,14 @@ export function RolesTab({
 
       {isLoading ? (
         <GroupDetailSkeleton />
-      ) : viewAccess === "denied" ? (
+      ) : viewGate.denied ? (
         <NoPermissionState permission={viewKey(moduleKey)} />
       ) : isError ? (
         <EmptyState
           illustrationPreset="permissions"
           title="Failed to load access configuration"
           description="Check your connection and try again."
-          action={{
-            label: "Retry",
-            onClick: () => {
-              void catalogQuery.refetch();
-              void groupsQuery.refetch();
-            },
-          }}
+          action={{ label: "Retry", onClick: handleRetry }}
         />
       ) : (
         <div className="grid flex-1 min-h-0 gap-3 lg:grid-cols-[300px_1fr]">

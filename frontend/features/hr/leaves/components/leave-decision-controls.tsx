@@ -77,7 +77,7 @@ export function useLeaveDecisions(): LeaveDecisionControls {
       { leaveId: approvingId, ...(comment ? { comment } : {}) },
       {
         onSuccess: () => {
-          toast.success("Request approved successfully");
+          toast.success("Leave request approved");
           setApproveDialogOpen(false);
           setApprovingId(null);
           setApprovalComment("");
@@ -109,7 +109,7 @@ export function useLeaveDecisions(): LeaveDecisionControls {
         { leaveId: rejectingId, reason: values.reason },
         {
           onSuccess: () => {
-            toast.success("Request rejected successfully");
+            toast.success("Leave request rejected");
             setRejectDialogOpen(false);
             setRejectingId(null);
             rejectForm.reset();

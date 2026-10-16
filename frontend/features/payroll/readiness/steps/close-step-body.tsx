@@ -40,7 +40,7 @@ export function CloseStepBody({ stepKey, month, close, onRunCreated }: CloseStep
     );
   }
   if (runId === null || status === null) return null;
-  if (stepKey === "process") return <ProcessStep run={close.run} isCurrent={isCurrent} />;
+  if (stepKey === "process") return <ProcessStep run={close.run} failed={close.detail.isError} isCurrent={isCurrent} />;
   if (stepKey === "compare") {
     return <CompareStep runId={runId} headcount={close.run?.employeeCount ?? null} variance={close.variance} />;
   }

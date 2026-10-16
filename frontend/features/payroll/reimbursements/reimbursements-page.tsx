@@ -1,7 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useSession } from "next-auth/react";
+import { Plus } from "lucide-react";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -22,6 +26,7 @@ import { formatMonth } from "@/features/payroll/shared/payroll-format";
 import { useReimbursements, useProcessReimbursement } from "@/hooks/api/hr/reimbursements";
 import { useCan } from "@/hooks/api/access";
 import { EmptyExpensesIllustration } from "@/components/illustrations";
+import { ReimbursementSubmitSheet } from "@/features/payroll/ess";
 
 const CATEGORIES = [
   { value: "all", label: "All Categories" },
@@ -67,6 +72,16 @@ export function ReimbursementsPageContent() {
   const { data, isLoading, isError, error, refetch } = useReimbursements();
   const processReimbursement = useProcessReimbursement();
   const canApprove = useCan("hr:payroll:approve");
+  const { data: session } = useSession();
+  const [submitOpen, setSubmitOpen] = useState(() => searchParams.get("create") === "1");
+
+  function handleOpenSubmit() {
+    setSubmitOpen(true);
+  }
+
+  function handleCloseSubmit() {
+    setSubmitOpen(false);
+  }
 
   function updateParam(key: string, value: string) {
     const params = new URLSearchParams(searchParams.toString());
@@ -102,7 +117,7 @@ export function ReimbursementsPageContent() {
       { reimbursementId: claimId, status: "APPROVED" },
       {
         onSuccess: () => toast.success("Claim approved"),
-        onError: () => toast.error("Failed to approve claim"),
+        onError: (err) => toast.error(getErrorMessage(err)),
       },
     );
   }
@@ -112,7 +127,7 @@ export function ReimbursementsPageContent() {
       { reimbursementId: claimId, status: "REJECTED", rejectionReason: reason },
       {
         onSuccess: () => toast.success("Claim rejected"),
-        onError: () => toast.error("Failed to reject claim"),
+        onError: (err) => toast.error(getErrorMessage(err)),
       },
     );
   }
@@ -127,6 +142,7 @@ export function ReimbursementsPageContent() {
 
   const columns = buildReimbursementColumns({
     canApprove,
+    currentUserId: session?.user?.id,
     isProcessing: processReimbursement.isPending,
     onApprove: handleApprove,
     onReject: handleReject,
@@ -174,6 +190,12 @@ export function ReimbursementsPageContent() {
       title="Reimbursements"
       subtitle="Review and approve employee expense claims"
       filters={filterBar}
+      actions={
+        <Button size="sm" className="gap-1.5" onClick={handleOpenSubmit}>
+          <Plus className="h-3.5 w-3.5" />
+          Submit my claim
+        </Button>
+      }
     >
       <div className="flex flex-1 min-h-0 flex-col gap-3">
         <div className="shrink-0 rounded-lg border border-status-info-rule bg-status-info-surface px-3 py-2 text-xs text-status-info-ink">
@@ -203,7 +225,7 @@ export function ReimbursementsPageContent() {
                 description={
                   filtersActive
                     ? undefined
-                    : "Expense claims submitted by employees will appear here."
+                    : "Expense claims submitted by employees will appear here. Use Submit my claim to file your own."
                 }
                 filtersActive={filtersActive}
                 onClearFilters={handleClearFilters}
@@ -212,6 +234,7 @@ export function ReimbursementsPageContent() {
           />
         )}
       </div>
+      <ReimbursementSubmitSheet open={submitOpen} onClose={handleCloseSubmit} channel="payroll" />
     </PageWrapper>
   );
 }

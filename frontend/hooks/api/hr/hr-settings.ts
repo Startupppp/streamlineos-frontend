@@ -36,7 +36,9 @@ export function useCreateAsset() {
     mutationKey: ["hr", "assets", "create"],
     mutationFn: (data: CreateAssetInput) =>
       apiClient.post<Asset>("/hr/assets", data, undefined, lazyContract(() => import("@/hooks/api/hr/assets-schema").then(m => m.assetRowContract))),
-    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.assets() }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.assets() });
+    },
   });
 }
 
@@ -46,7 +48,9 @@ export function useUpdateAsset() {
     mutationKey: ["hr", "assets", "update"],
     mutationFn: ({ assetId, ...data }: UpdateAssetInput) =>
       apiClient.patch<{ success: boolean }>(`/hr/assets/${assetId}`, data, undefined, lazyContract(() => import("@/hooks/api/hr/hr-settings-schema").then(m => m.successResponseContract))),
-    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.assets() }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.assets() });
+    },
   });
 }
 
@@ -56,7 +60,9 @@ export function useAssignAsset() {
     mutationKey: ["hr", "assets", "assign"],
     mutationFn: (data: AssignAssetInput) =>
       apiClient.patch<{ success: boolean }>("/hr/assets", data, undefined, lazyContract(() => import("@/hooks/api/hr/hr-settings-schema").then(m => m.successResponseContract))),
-    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.assets() }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.assets() });
+    },
   });
 }
 
@@ -140,11 +146,12 @@ export function useCreateGoal() {
     mutationKey: ["hr", "goals", "create"],
     mutationFn: (data: CreateGoalInput) =>
       apiClient.post<Goal>("/hr/performance/goals", data, undefined, lazyContract(() => import("@/hooks/api/hr/hr-settings-schema").then(m => m.goalContract))),
-    onSuccess: () =>
-      qc.invalidateQueries({
+    onSuccess: () => {
+      void qc.invalidateQueries({
         queryKey: [...humanResourcesQueryKeys.hr.all, "goals"],
         exact: false,
-      }),
+      });
+    },
   });
 }
 

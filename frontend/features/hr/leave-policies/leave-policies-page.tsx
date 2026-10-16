@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { PlusIcon } from "@animateicons/react/lucide";
@@ -26,19 +25,14 @@ import { LeavePolicyTemplatesDialog } from "@/features/hr/leave-policies/leave-p
 
 function LeavePoliciesEmptyState({ onCreateClick }: { onCreateClick: () => void }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.22, ease: "easeOut" }}
-      className="flex-1 flex flex-col"
-    >
+    <div className="flex-1 flex flex-col">
       <UiEmptyState
         illustrationPreset="calendar"
         title="No leave policies yet"
         description="Define accrual rules and carry-forward policies for each leave type."
         action={{ label: "Create Policy", onClick: onCreateClick }}
       />
-    </motion.div>
+    </div>
   );
 }
 

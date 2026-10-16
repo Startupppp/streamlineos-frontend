@@ -86,7 +86,7 @@ export function ComponentFormSheet({ component, open, onOpenChange }: ComponentF
       taxable: data.taxable,
       showOnPayslip: data.showOnPayslip,
       includeInCtc: data.includeInCtc,
-      amount: data.amount || undefined,
+      amount: data.calcMethod === "FIXED" ? data.amount || undefined : undefined,
       sortOrder: data.sortOrder ? parseInt(data.sortOrder, 10) : undefined,
     };
 

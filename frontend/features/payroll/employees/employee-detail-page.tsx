@@ -114,7 +114,7 @@ function ComponentsBreakdown({ components }: { components: ProfileComponent[] })
 
   if (components.length === 0) {
     return (
-      <p className="text-dense text-muted-foreground">No components configured for this profile.</p>
+      <p className="text-dense text-muted-foreground">No components configured for this profile, so payroll computes gross ₹0. Edit the profile and save it to attach your organisation&apos;s salary components.</p>
     );
   }
 

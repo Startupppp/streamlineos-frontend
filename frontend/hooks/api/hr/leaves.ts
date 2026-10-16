@@ -44,6 +44,7 @@ export interface LeaveTeamListParams {
   from?: string;
   to?: string;
   limit?: number;
+  decidedBy?: "me";
 }
 
 export * from "@/hooks/api/hr/leave-request-mutations";

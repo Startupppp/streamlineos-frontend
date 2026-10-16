@@ -14,6 +14,7 @@ import {
 } from "@/hooks/api/calendar";
 import type { CalendarListItem } from "@/hooks/api/calendar";
 import { useCalendarConnections } from "./use-calendar-connections";
+import type { IntegrationConnection } from "@/hooks/api/integrations";
 import { toast } from "sonner";
 import type { TicketSearchResult } from "@/types/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -33,6 +34,8 @@ import {
   validateEventLocation,
   buildEventPayload,
 } from "./event-create-validators";
+
+const NO_CONNECTIONS: IntegrationConnection[] = [];
 
 interface UseEventCreateDialogProps {
   open: boolean;
@@ -55,7 +58,7 @@ export function useEventCreateDialog({
     [isEdit, event],
   );
   const [form, setForm] = useState<FormState>(() =>
-    isEdit && event ? toEditForm(event, rrule) : toDefaultForm(defaultSlot),
+    isEdit && event ? toEditForm(event, rrule) : { ...toDefaultForm(defaultSlot), syncConnectionId: "" },
   );
   const [showEndDate, setShowEndDate] = useState(() =>
     needsEndDateField(isEdit && event ? toEditForm(event, rrule) : toDefaultForm(defaultSlot)),
@@ -70,10 +73,10 @@ export function useEventCreateDialog({
   const updateEvent = useUpdateCalendarEvent();
   const upsertOccurrenceException = useUpsertOccurrenceException();
   const { data: members = [] } = useCalendarMemberLookup();
-  const { data: connections = [] } = useCalendarConnections();
+  const { data: connections = NO_CONNECTIONS } = useCalendarConnections();
   const { data: existingAttendees } = useEventAttendees(isEdit && open ? editNumericId : null);
   const { data: editingDetail } = useCalendarEvent(isEdit && open ? editNumericId : null);
-  const effectiveForm = useMemo(
+  const formWithDetail = useMemo(
     () => isEdit && !descriptionTouched && editingDetail && !parseCalendarEventId(event?.id ?? "")?.occurrenceStart
       ? { ...form, description: editingDetail.description ?? "" }
       : form,
@@ -83,7 +86,7 @@ export function useEventCreateDialog({
   useEffect(() => {
     if (!open) return;
     const base = isEdit && event ? toEditForm(event, rrule) : toDefaultForm(defaultSlot);
-    setForm(isEdit ? base : { ...base, syncConnectionId: "none" });
+    setForm(isEdit ? base : { ...base, syncConnectionId: "" });
     setShowEndDate(needsEndDateField(base));
     setDateTimeError("");
     setTitleError("");
@@ -94,17 +97,13 @@ export function useEventCreateDialog({
     );
   }, [open, defaultSlot, event, isEdit]);
 
-  useEffect(() => {
-    if (!open || isEdit) return;
+  const effectiveForm = useMemo(() => {
+    if (isEdit) return formWithDetail;
+    const chosen = formWithDetail.syncConnectionId;
+    if (chosen === "none" || connections.some((c) => String(c.id) === chosen)) return formWithDetail;
     const primary = connections.find((c) => c.isPrimary && c.status === "active");
-    const primaryId = primary ? String(primary.id) : "none";
-    setForm((f) => {
-      const currentIsValid =
-        f.syncConnectionId !== "none" && connections.some((c) => String(c.id) === f.syncConnectionId);
-      if (currentIsValid) return f;
-      return { ...f, syncConnectionId: primaryId };
-    });
-  }, [open, isEdit, connections]);
+    return { ...formWithDetail, syncConnectionId: primary ? String(primary.id) : "none" };
+  }, [formWithDetail, isEdit, connections]);
 
   useEffect(() => {
     if (!open || !isEdit || !existingAttendees || existingAttendees.length === 0) return;

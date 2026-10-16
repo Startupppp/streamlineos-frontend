@@ -47,7 +47,7 @@ type CreatePolicyInput = {
 
 type UpdatePolicyInput = {
   policyId: number;
-  data: Partial<CreatePolicyInput>;
+  data: Partial<Omit<CreatePolicyInput, "legalEntityName">> & { legalEntityName?: string | null };
 };
 
 type ActivatePolicyInput = {

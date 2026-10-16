@@ -36,7 +36,7 @@ export function LetterGenerationSheet({ open, onOpenChange, onSaved }: LetterGen
     {
       limit: 20,
       search: debouncedEmployeeSearch || undefined,
-      isActive: "true",
+      isActive: "current",
     },
     { enabled: open },
   );

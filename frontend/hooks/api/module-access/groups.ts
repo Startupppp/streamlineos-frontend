@@ -9,6 +9,7 @@ import {
 } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { directoryAndOwnershipQueryKeys } from "@/lib/query-keys/directory-and-ownership";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import { signalAccessInvalidation, useCan } from "@/hooks/api/access";
@@ -37,6 +38,7 @@ const moduleGroupPermissionsSetContract = lazyContract(() =>
 export function useModuleRoleGroups(moduleKey: string) {
   const canView = useCan(viewKey(moduleKey));
   return useInfiniteQuery<AuditCursorPage<ModuleRoleGroup>, Error>({
+    ...INLINE_READ_ERROR,
     queryKey: directoryAndOwnershipQueryKeys.moduleAccess.roleGroups(moduleKey),
     queryFn: ({ pageParam, signal }) => {
       const params = new URLSearchParams({ limit: "100" });

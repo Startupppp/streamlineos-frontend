@@ -53,6 +53,30 @@ describe("percent of another component", () => {
   });
 });
 
+describe("component amount (BUG-019)", () => {
+  const base = {
+    name: "Bonus", code: "BONUS", type: "EARNING", calcMethod: "FIXED",
+    taxable: true, showOnPayslip: true, includeInCtc: true,
+  };
+
+  it("refuses a negative amount on the amount field", () => {
+    const result = componentFormSchema.safeParse({ ...base, amount: "-500" });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues.map((i) => i.path[0])).toEqual(["amount"]);
+  });
+
+  it("refuses a non-numeric amount and more than two decimals", () => {
+    expect(componentFormSchema.safeParse({ ...base, amount: "5,000" }).success).toBe(false);
+    expect(componentFormSchema.safeParse({ ...base, amount: "10.123" }).success).toBe(false);
+  });
+
+  it("accepts zero, a positive amount and a blank amount", () => {
+    expect(componentFormSchema.safeParse({ ...base, amount: "0" }).success).toBe(true);
+    expect(componentFormSchema.safeParse({ ...base, amount: "5000.50" }).success).toBe(true);
+    expect(componentFormSchema.safeParse({ ...base, amount: "" }).success).toBe(true);
+  });
+});
+
 describe("PAY-B-003 PAY-B-027 componentFormSchema percent-of rejects > 100", () => {
   const base = {
     name: "HRA", code: "HRA", type: "EARNING", calcMethod: "PERCENT_OF",

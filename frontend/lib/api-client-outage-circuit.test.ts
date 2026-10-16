@@ -8,8 +8,8 @@ import {
   apiClient,
   clearBackendTokenCache,
   isApiError,
-  resetOutageCircuit,
 } from "@/lib/api-client";
+import { resetOutageCircuit } from "@/lib/api-outage-circuit";
 import { isTransientNetworkError } from "@/lib/query-error-policy";
 
 /**

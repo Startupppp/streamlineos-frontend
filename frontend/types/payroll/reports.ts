@@ -1,6 +1,7 @@
 import type { z } from "zod";
 import type { taxWindowContract } from "@/hooks/api/payroll/tax-schema";
 import type { fnfStatementContract } from "@/hooks/api/payroll/fnf-schema";
+import type { DB_ENUMS } from "@/contracts/db-enums.generated";
 import type { calendarEventContract } from "@/hooks/api/payroll/calendar-schema";
 import type {
   summaryReportContract,
@@ -112,7 +113,7 @@ export type UpdateTaxWindowInput = Partial<CreateTaxWindowInput> & { status?: Ta
 
 export type TaxDeclarationStatus = "DRAFT" | "SUBMITTED" | "VERIFIED";
 
-export type FnfStatus = "PENDING" | "HR_REVIEW" | "FINANCE_REVIEW" | "APPROVED" | "PAID";
+export type FnfStatus = (typeof DB_ENUMS.fnf_status)[number];
 
 export type FnfStatement = z.infer<typeof fnfStatementContract>;
 

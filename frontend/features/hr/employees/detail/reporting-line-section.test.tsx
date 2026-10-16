@@ -98,7 +98,7 @@ describe("Reporting line card", () => {
     expect(screen.getByText("Temporarily assigned by onboarding policy")).toBeInTheDocument();
     expect(screen.getByText(/Assigned by onboarding policy/)).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Keep as manager" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Edit" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Edit reporting line" })).not.toBeInTheDocument();
   });
 
   it("offers one-click keep and replace to a manager of reporting lines", async () => {
@@ -132,7 +132,7 @@ describe("Reporting line editor — change-warning UI (PRD D4)", () => {
   async function openEditor() {
     can.mockImplementation((key: string) => key === "hr:reporting-lines:manage");
     render(<ReportingLineSection employeeId="u-emp" />);
-    await userEvent.click(screen.getByRole("button", { name: "Edit" }));
+    await userEvent.click(screen.getByRole("button", { name: "Edit reporting line" }));
   }
 
   it("shows no warning under the threshold", async () => {
@@ -231,7 +231,7 @@ describe("Reporting line editor — scheduled additional managers (never re-date
   async function openEditor() {
     can.mockImplementation((key: string) => key === "hr:reporting-lines:manage");
     render(<ReportingLineSection employeeId="u-emp" />);
-    await userEvent.click(screen.getByRole("button", { name: "Edit" }));
+    await userEvent.click(screen.getByRole("button", { name: "Edit reporting line" }));
   }
 
   it("loads only current additional managers into the form and lists scheduled ones read-only with their start", async () => {

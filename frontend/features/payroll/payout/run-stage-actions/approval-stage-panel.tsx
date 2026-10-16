@@ -178,9 +178,13 @@ export function ApprovalStagePanel({ runId, status }: Props) {
   const canView = useCan("payroll:runs:view");
   const canApprove = useCan("payroll:runs:approve");
   const visible = VISIBLE_STATUSES.has(status) && canView;
-  const { data, isLoading } = useRunApprovals(runId, { enabled: visible });
+  const { data, isLoading, isError, error, refetch } = useRunApprovals(runId, { enabled: visible });
 
   if (!visible) return null;
+
+  function handleRetry() {
+    void refetch();
+  }
 
   return (
     <div className="bg-card border border-border rounded-xl p-4 space-y-3">
@@ -191,6 +195,15 @@ export function ApprovalStagePanel({ runId, status }: Props) {
           <Skeleton className="w-full h-8 rounded" />
           <Skeleton className="w-full h-8 rounded" />
           <Skeleton className="w-full h-8 rounded" />
+        </div>
+      )}
+
+      {!isLoading && isError && !data && (
+        <div role="alert" className="flex items-center gap-2 text-sm text-muted-foreground">
+          <span className="flex-1">Couldn&apos;t load approval stages. {getErrorMessage(error)}</span>
+          <Button type="button" size="sm" variant="outline" onClick={handleRetry}>
+            Retry
+          </Button>
         </div>
       )}
 

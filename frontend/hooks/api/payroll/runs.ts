@@ -2,6 +2,7 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { lazyContract } from "@/lib/api-envelope";
 import { payrollQueryKeys } from "@/lib/query-keys/payroll";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
@@ -44,6 +45,7 @@ export function usePayrollRun(runId: number) {
     queryFn: ({ signal }) => apiClient.get(`/payroll/runs/${runId}`, undefined, signal, payrollRunDetailContract),
     staleTime: 30_000,
     enabled: canView && payrollOn && runId > 0,
+    ...INLINE_READ_ERROR,
   });
 }
 

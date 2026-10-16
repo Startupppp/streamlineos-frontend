@@ -80,9 +80,11 @@ export const READINESS_CATEGORIES: readonly ReadinessCategory[] = [
     source: "run",
     codes: [
       "MISSING_SALARY_PROFILE",
+      "NO_EARNING_COMPONENTS",
       "FORMULA_ERROR",
       "BELOW_MINIMUM_WAGE",
       "NEGATIVE_NET_PAY",
+      "NEGATIVE_DEDUCTION",
       "ZERO_NET_PAY",
       "MISSING_FX_RATE",
       "HIGH_VARIANCE",
