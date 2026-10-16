@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { NavButtons } from "@/features/payroll/setup/nav-buttons";
 import { usePreviewPolicy } from "@/hooks/api/payroll";
 import { describeComponentBasis } from "@/features/payroll/shared";
+import { TOGGLE_META } from "@/features/payroll/setup/lib/constants";
 import type { SetupDraft } from "@/features/payroll/setup/lib/draft";
 import type { ComponentType, PolicyPreviewComponent } from "@/types/payroll/setup";
 
@@ -114,7 +115,9 @@ export function StepReview({ draft, goNext, goBack }: StepReviewProps) {
   const { components, approvalChain, essOptions, statutoryPack, calendarPlan } = preview.data;
   const grouped = groupComponents(components);
   const currency = draft.profile?.currency ?? "INR";
-  const enabledEssOptions = Object.entries(essOptions).filter(([, v]) => !!v).map(([k]) => k);
+  const enabledEssOptions = Object.entries(essOptions)
+    .filter(([, v]) => !!v)
+    .map(([k]) => TOGGLE_META[`ess${k.charAt(0).toUpperCase()}${k.slice(1)}`]?.label ?? k);
 
   return (
     <div className="space-y-4">
@@ -148,14 +151,11 @@ export function StepReview({ draft, goNext, goBack }: StepReviewProps) {
             </p>
             <ol className="space-y-1.5">
               {approvalChain.map((stage) => (
-                <li key={stage.stage} className="flex items-center gap-2 text-sm">
+                <li key={stage.stage} className="flex items-center gap-2 text-sm" title={`Needs ${stage.requiredPermission}`}>
                   <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-micro font-bold">
                     {stage.stage}
                   </span>
                   <span className="text-foreground">{stage.stageName}</span>
-                  <span className="text-xs text-muted-foreground ml-auto">
-                    {stage.requiredPermission}
-                  </span>
                 </li>
               ))}
             </ol>
