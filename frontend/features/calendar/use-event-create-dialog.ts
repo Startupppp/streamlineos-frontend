@@ -76,7 +76,7 @@ export function useEventCreateDialog({
   const { data: connections = NO_CONNECTIONS } = useCalendarConnections();
   const { data: existingAttendees } = useEventAttendees(isEdit && open ? editNumericId : null);
   const { data: editingDetail } = useCalendarEvent(isEdit && open ? editNumericId : null);
-  const effectiveForm = useMemo(
+  const formWithDetail = useMemo(
     () => isEdit && !descriptionTouched && editingDetail && !parseCalendarEventId(event?.id ?? "")?.occurrenceStart
       ? { ...form, description: editingDetail.description ?? "" }
       : form,
@@ -98,12 +98,12 @@ export function useEventCreateDialog({
   }, [open, defaultSlot, event, isEdit]);
 
   const effectiveForm = useMemo(() => {
-    if (isEdit) return form;
-    const chosen = form.syncConnectionId;
-    if (chosen === "none" || connections.some((c) => String(c.id) === chosen)) return form;
+    if (isEdit) return formWithDetail;
+    const chosen = formWithDetail.syncConnectionId;
+    if (chosen === "none" || connections.some((c) => String(c.id) === chosen)) return formWithDetail;
     const primary = connections.find((c) => c.isPrimary && c.status === "active");
-    return { ...form, syncConnectionId: primary ? String(primary.id) : "none" };
-  }, [form, isEdit, connections]);
+    return { ...formWithDetail, syncConnectionId: primary ? String(primary.id) : "none" };
+  }, [formWithDetail, isEdit, connections]);
 
   useEffect(() => {
     if (!open || !isEdit || !existingAttendees || existingAttendees.length === 0) return;
