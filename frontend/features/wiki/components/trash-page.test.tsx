@@ -573,6 +573,66 @@ describe("trash page mobile card selection", () => {
 });
 
 describe("trash page first-empty is not the same claim as filtered-empty", () => {
+  it("updates the search input when in-place navigation changes the URL query", () => {
+    useSearchParams.mockReturnValue(new URLSearchParams("q=invoice"));
+    const view = render(<TrashPage />);
+    expect(screen.getByRole("searchbox", { name: "Search deleted pages" })).toHaveValue("invoice");
+
+    useSearchParams.mockReturnValue(new URLSearchParams("q=policy"));
+    view.rerender(<TrashPage />);
+
+    expect(screen.getByRole("searchbox", { name: "Search deleted pages" })).toHaveValue("policy");
+    expect(useKbPagesTrash).toHaveBeenLastCalledWith(expect.objectContaining({ q: "policy" }));
+  });
+
+  it("does not let an old debounced search overwrite a navigated query", () => {
+    jest.useFakeTimers();
+    try {
+      const update = jest.fn();
+      const { useUrlFilters } = jest.requireMock(
+        "@/lib/url-state/use-url-filters",
+      ) as { useUrlFilters: jest.Mock };
+      useUrlFilters.mockReturnValue({ update, isPending: false });
+      useSearchParams.mockReturnValue(new URLSearchParams("q=invoice"));
+
+      const view = render(<TrashPage />);
+      fireEvent.change(screen.getByRole("searchbox", { name: "Search deleted pages" }), {
+        target: { value: "unfinished" },
+      });
+
+      useSearchParams.mockReturnValue(new URLSearchParams("q=policy"));
+      view.rerender(<TrashPage />);
+      act(() => jest.advanceTimersByTime(350));
+
+      expect(screen.getByRole("searchbox", { name: "Search deleted pages" })).toHaveValue("policy");
+      expect(update).not.toHaveBeenCalled();
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it("cancels a pending search update when Trash unmounts", () => {
+    jest.useFakeTimers();
+    try {
+      const update = jest.fn();
+      const { useUrlFilters } = jest.requireMock(
+        "@/lib/url-state/use-url-filters",
+      ) as { useUrlFilters: jest.Mock };
+      useUrlFilters.mockReturnValue({ update, isPending: false });
+
+      const view = render(<TrashPage />);
+      fireEvent.change(screen.getByRole("searchbox", { name: "Search deleted pages" }), {
+        target: { value: "unfinished" },
+      });
+      view.unmount();
+      act(() => jest.advanceTimersByTime(350));
+
+      expect(update).not.toHaveBeenCalled();
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it("offers the previous page instead of claiming the whole trash is empty when a later cursor page is empty", () => {
     const goPrevious = jest.fn();
     useCursorPagination.mockReturnValue({

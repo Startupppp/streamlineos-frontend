@@ -2,7 +2,7 @@
 
 import { DatePicker } from "@/components/ui/date-picker";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { addDays, format, isValid, parseISO } from "date-fns";
 import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
@@ -13,6 +13,7 @@ import { DataTable } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import type { DataTableColumn } from "@/components/ui/data-table.types";
 import { useCursorPagination } from "@/hooks/common/use-cursor-pagination";
+import { useSourceOverride } from "@/hooks/common/use-source-override";
 import { useUrlFilters } from "@/lib/url-state/use-url-filters";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -88,8 +89,14 @@ export default function TrashPage() {
   const deletedFrom = dateFilterBoundary(deletedFromRaw, false);
   const deletedBefore = dateFilterBoundary(deletedBeforeRaw, true);
 
-  const [searchDraft, setSearchDraft] = useState(q ?? "");
+  const [searchDraft, setSearchDraft] = useSourceOverride(q ?? "", q ?? "");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [q]);
 
   const cursorState = useCursorPagination();
   const params = {
