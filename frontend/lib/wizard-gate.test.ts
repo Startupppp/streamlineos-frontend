@@ -618,6 +618,25 @@ describe("onboardingGateYieldsToDenial (QA 2026-10-13: denial wins over the onbo
     ).toBe(false);
   });
 
+  // RBAC-B-003: "HR = No access" still holds the member-default self:leaves, which /hr/leaves accepts.
+  it("yields on /hr/leaves for a member whose only HR keys are member defaults", () => {
+    expect(
+      onboardingGateYieldsToDenial("/hr/leaves", {
+        isOrgOwner: false,
+        scopes: { "self:leaves": "own", "hr:leaves:create": "own" },
+      }),
+    ).toBe(true);
+  });
+
+  it("keeps the onboarding gate on /hr/leaves for an HR-managed member", () => {
+    expect(
+      onboardingGateYieldsToDenial("/hr/leaves", {
+        isOrgOwner: false,
+        scopes: { "self:leaves": "own", "hr:leaves:view": "own" },
+      }),
+    ).toBe(false);
+  });
+
   it("keeps the onboarding gate for an owner and for routes with no permission", () => {
     expect(onboardingGateYieldsToDenial("/hr/employees", { isOrgOwner: true, scopes: {} })).toBe(false);
     expect(onboardingGateYieldsToDenial("/dashboard", employee)).toBe(false);
