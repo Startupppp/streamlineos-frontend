@@ -47,7 +47,7 @@ it("keeps a rejected owner decision open on failure and closes after a successfu
   const user = userEvent.setup();
   render(<CalendarResourceApprovalQueue />);
 
-  await user.click(screen.getByRole("button", { name: "Reject", exact: true }));
+  await user.click(screen.getByRole("button", { name: /^Reject$/ }));
   await user.click(screen.getByRole("button", { name: "Reject booking" }));
   expect(await screen.findByRole("alert")).toHaveTextContent("Owner approval unavailable");
   expect(screen.getByRole("alertdialog")).toBeInTheDocument();
