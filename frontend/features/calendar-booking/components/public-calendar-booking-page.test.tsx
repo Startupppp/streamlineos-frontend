@@ -5,6 +5,7 @@ import userEvent from "@testing-library/user-event";
 import { axe } from "jest-axe";
 import { apiClient } from "@/lib/api-client";
 import { ApiError } from "@/lib/api-envelope";
+import { readErrorReachesBoundary } from "@/lib/query-error-policy";
 import { PublicCalendarBookingPage } from "./public-calendar-booking-page";
 import { openCheckout } from "@/features/billing/lib/checkout-script";
 
@@ -122,7 +123,7 @@ function paidSaga(overrides: Record<string, unknown> = {}) {
 
 function renderPage() {
   const client = new QueryClient({
-    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+    defaultOptions: { queries: { retry: false, throwOnError: readErrorReachesBoundary }, mutations: { retry: false } },
   });
   function Wrapper({ children }: { children: ReactNode }) {
     return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
@@ -578,8 +579,8 @@ describe("public calendar booking page", () => {
   });
 
   it("hides offering details when the token cannot be resolved", async () => {
-    mockedGet.mockRejectedValue(new Error("Booking page not found"));
-    mockedPost.mockRejectedValue(new Error("Booking page not found"));
+    mockedGet.mockRejectedValue(new ApiError("Booking page not found", 404));
+    mockedPost.mockRejectedValue(new ApiError("Booking page not found", 404));
     renderPage();
     expect(await screen.findByRole("alert")).toHaveTextContent("This booking link is unavailable");
     expect(screen.getByText("It may have expired or already been used. Ask the organizer for a new booking link.")).toBeInTheDocument();

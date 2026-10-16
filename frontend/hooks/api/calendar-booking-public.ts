@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import {
   publicCalendarBookingCallbackContract,
   publicCalendarBookingHoldContract,
@@ -85,6 +86,7 @@ function basePath(token: string) {
 
 export function usePublicCalendarBookingOffering(token: string, from: string, to: string) {
   return useQuery({
+    ...INLINE_READ_ERROR,
     queryKey: ["public", "calendar", "booking", token, "offering", from, to],
     queryFn: ({ signal }) => apiClient.get<PublicCalendarBookingOffering>(
       basePath(token),
@@ -103,6 +105,7 @@ export function usePublicCalendarBookingSession(
   input: CreateCalendarBookingSessionInput,
 ) {
   return useQuery({
+    ...INLINE_READ_ERROR,
     queryKey: ["public", "calendar", "booking", token, "session", input],
     queryFn: () => apiClient.post<PublicCalendarBookingSession>(
       `${basePath(token)}/sessions`,
@@ -151,6 +154,7 @@ export function usePublicCalendarBookingStatus(
   enabled: boolean,
 ) {
   return useQuery({
+    ...INLINE_READ_ERROR,
     queryKey: ["public", "calendar", "booking", token, "status", input?.idempotencyKey],
     queryFn: ({ signal }) => {
       if (!input) throw new Error("Booking request is unavailable");
