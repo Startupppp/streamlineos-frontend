@@ -27,9 +27,21 @@ jest.mock("@/features/build/shared/use-build-list-filters", () => ({
     value: (param: string) => filterStore[param] ?? "all",
     isActive: (param: string) => (filterStore[param] ?? "all") !== "all",
     setValue: (param: string, value: string) => { filterStore[param] = value; },
-    setValues: (vals: Record<string, string>) => { Object.assign(filterStore, vals); },
+    setValues: (vals: Record<string, string>) => {
+      const next = new URLSearchParams(currentSearchParams.value.toString());
+      for (const [k, v] of Object.entries(vals)) {
+        if (!k.startsWith("opp_")) filterStore[k] = v;
+        else if (v) next.set(k, v);
+        else next.delete(k);
+      }
+      currentSearchParams.value = next;
+    },
     clearAll: () => {
       Object.keys(filterStore).forEach((k) => delete filterStore[k]);
+      const next = new URLSearchParams(currentSearchParams.value.toString());
+      next.delete("opp_cursor");
+      next.delete("opp_prev");
+      currentSearchParams.value = next;
       clearAllCalled = true;
     },
     activeCount: 0,
