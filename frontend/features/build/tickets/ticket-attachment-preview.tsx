@@ -33,6 +33,8 @@ export const ALLOWED_ATTACHMENT_EXTENSIONS = new Set([
   ".xlsx",
 ]);
 
+export const ATTACHMENT_TYPES_LABEL = "JPG, PNG, GIF, WEBP, PDF, DOC, DOCX, XLS, XLSX";
+
 export function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes}B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)}KB`;
