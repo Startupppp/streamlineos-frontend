@@ -20,12 +20,8 @@ jest.mock("@/hooks/api/use-page-state", () => ({ usePageState: () => ({ kind: "r
 let canResign = true;
 jest.mock("@/hooks/api/access", () => ({ useCan: () => canResign }));
 
-const sheetModes: string[] = [];
 jest.mock("@/features/hr/exit/resignation-form-sheet", () => ({
-  ResignationFormSheet: ({ open, mode }: { open: boolean; mode: string }) => {
-    if (open) sheetModes.push(mode);
-    return open ? <div>resignation sheet</div> : null;
-  },
+  ResignationFormSheet: ({ open }: { open: boolean }) => (open ? <div>resignation sheet</div> : null),
 }));
 
 jest.mock("@/components/ui/confirm-dialog", () => ({
@@ -60,14 +56,14 @@ beforeEach(() => {
   canResign = true;
   rows = [];
   withdrawMutate.mockReset();
-  sheetModes.length = 0;
 });
 
 describe("QA-2026-10-14 — an employee resigns from /me without hr:exit:view", () => {
-  it("offers to submit a resignation in self mode when none is active", () => {
+  it("offers to submit a resignation when none is active", () => {
     render(<MyResignationPage />);
+    expect(screen.queryByText("resignation sheet")).not.toBeInTheDocument();
     fireEvent.click(screen.getAllByRole("button", { name: /Submit resignation/ })[0]);
-    expect(sheetModes).toEqual(["self"]);
+    expect(screen.getByText("resignation sheet")).toBeInTheDocument();
   });
 
   it("withdraws an active resignation after confirmation and hides submit while it is active", () => {

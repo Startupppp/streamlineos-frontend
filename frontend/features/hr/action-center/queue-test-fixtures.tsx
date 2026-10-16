@@ -19,6 +19,7 @@ interface MockQueueState {
   toastError: jest.Mock;
   sessionUserId: string;
   leavePending: boolean;
+  myLeaveRoute: { ownerSelfApproval: boolean; approver: { userId: string } | null } | undefined;
 }
 
 export const mockQueueState: MockQueueState = {
@@ -42,6 +43,7 @@ export const mockQueueState: MockQueueState = {
   toastError: jest.fn(),
   sessionUserId: "usr-approver",
   leavePending: false,
+  myLeaveRoute: undefined,
 };
 
 export const ALL_QUEUE_PERMISSIONS = [
@@ -67,6 +69,7 @@ export function resetMockQueueState(): void {
   mockQueueState.granted = new Set(ALL_QUEUE_PERMISSIONS);
   mockQueueState.sessionUserId = "usr-approver";
   mockQueueState.leavePending = false;
+  mockQueueState.myLeaveRoute = undefined;
   mockQueueState.approveLeave.mockImplementation((input) =>
     Promise.resolve({ success: true, leaveId: input.leaveId }),
   );
@@ -301,6 +304,10 @@ export function mockSonnerModule() {
       error: (...args: unknown[]) => mockQueueState.toastError(...args),
     },
   };
+}
+
+export function mockApproversModule() {
+  return { useMyApprover: () => ({ data: mockQueueState.myLeaveRoute }) };
 }
 
 export function mockSessionModule() {

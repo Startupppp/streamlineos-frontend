@@ -88,8 +88,9 @@ export function useCreateExpense() {
     mutationKey: ["hr", "expenses", "create"],
     mutationFn: ({ body, config }: { body: CreateExpenseInput; config?: RequestConfig }) =>
       apiClient.post("/me/expenses", body, config, _expenseRowContract),
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.expenses() }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.expenses() });
+    },
   });
 }
 

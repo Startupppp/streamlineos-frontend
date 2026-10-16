@@ -9,6 +9,7 @@ import {
   mockPageWrapperModule,
   mockQueryClientModule,
   mockQueueState,
+  mockApproversModule,
   mockSessionModule,
   mockRegularizationModule,
   mockRegularizationRow,
@@ -36,6 +37,7 @@ jest.mock("@/hooks/api/payroll/payroll-cutoff", () => mockCutoffModule());
 jest.mock("@/components/ui/page-wrapper", () => mockPageWrapperModule());
 jest.mock("sonner", () => mockSonnerModule());
 jest.mock("next-auth/react", () => mockSessionModule());
+jest.mock("@/hooks/api/hr/approvers", () => mockApproversModule());
 jest.mock("@/features/hr/workflows/instance-detail-sheet", () => ({
   InstanceDetailSheet: () => null,
 }));

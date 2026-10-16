@@ -157,7 +157,7 @@ export function LeaveRequestSheet({
           isHalfDay: data.halfDay,
           halfDayPeriod: data.halfDay ? data.halfDayPeriod : undefined,
         });
-        toast.success("Leave requested successfully!");
+        toast.success("Leave request submitted");
         form.reset();
         setAttachmentUrl(null);
         onOpenChange(false);

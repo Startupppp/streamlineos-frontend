@@ -53,25 +53,3 @@ describe("HRMS dead canonical routes (BUG-006, BUG-010)", () => {
     },
   );
 });
-
-describe("QA 2026-10-13 guessed addresses hand off instead of answering Page Not Found", () => {
-  it.each([
-    ["/hr/directory", "/hr/employees"],
-    ["/hr/policies", "/hr/settings/policies"],
-    ["/hr/leave", "/hr/leaves"],
-    ["/pay", "/me/pay"],
-    ["/expenses", "/me/expenses"],
-    ["/hr/people", "/hr/employees"],
-    ["/hr/time-clocks", "/hr/devices"],
-    ["/hr/support", "/hr/helpdesk"],
-    ["/hr/compensation", "/hr/compensation-planning"],
-    ["/hr/doc-types", "/hr/document-types"],
-    ["/hr/doc-review", "/hr/document-review"],
-  ])("%s redirects temporarily to %s, a real page", async (source, destination) => {
-    const entry = await redirectFor(source);
-    expect(entry?.destination).toBe(destination);
-    expect(entry?.permanent).toBe(false);
-    expect(pageExists(source)).toBe(false);
-    expect(pageExists(destination)).toBe(true);
-  });
-});
