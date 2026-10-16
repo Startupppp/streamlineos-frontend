@@ -1,6 +1,6 @@
 "use client";
 
-import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQueryClient, type InfiniteData, type QueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
@@ -67,6 +67,45 @@ export function useKbPageComments(pageId: number) {
   });
 }
 
+type KbPageCommentsCache = InfiniteData<KbPageCommentsPage>;
+
+// KB-B-022: every comment mutation used to only invalidate, so the thread kept
+// the old text (and a closed editor) until the refetch landed. The responses
+// already carry the new state; write them into the loaded pages (FE-133).
+function patchLoadedComments(
+  qc: QueryClient,
+  pageId: number,
+  patch: (comments: KbPageComment[]) => KbPageComment[],
+) {
+  qc.setQueryData<KbPageCommentsCache>(
+    knowledgeAndSurveysQueryKeys.kb.pageComments(pageId),
+    (cached) => cached && {
+      ...cached,
+      pages: cached.pages.map((page) => ({ ...page, data: patch(page.data) })),
+    },
+  );
+}
+
+function replaceComment(updated: KbPageComment) {
+  return (comments: KbPageComment[]) =>
+    comments.map((comment) => (comment.id === updated.id ? updated : comment));
+}
+
+function appendCreatedComment(qc: QueryClient, created: KbPageComment) {
+  const key = knowledgeAndSurveysQueryKeys.kb.pageComments(created.pageId);
+  const cached = qc.getQueryData<KbPageCommentsCache>(key);
+  const last = cached?.pages.at(-1);
+  if (!cached || !last) return;
+  if (last.pagination.nextCursor !== null) {
+    qc.invalidateQueries({ queryKey: key });
+    return;
+  }
+  qc.setQueryData<KbPageCommentsCache>(key, {
+    ...cached,
+    pages: [...cached.pages.slice(0, -1), { ...last, data: [...last.data, created] }],
+  });
+}
+
 export function useCreateKbPageComment() {
   const qc = useQueryClient();
   const operation = useIdempotentOperation();
@@ -74,9 +113,9 @@ export function useCreateKbPageComment() {
     mutationKey: ["kb", "pageComments", "create"],
     mutationFn: ({ pageId, ...data }: CreateKbPageCommentInput & { pageId: number }) =>
       apiClient.post<KbPageComment>(`/kb/pages/${pageId}/comments`, data, operation.configFor({ pageId, ...data }), kbPageCommentContract),
-    onSuccess: (_, variables) => {
+    onSuccess: (created) => {
       operation.settle();
-      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.pageComments(variables.pageId) });
+      appendCreatedComment(qc, created);
     },
   });
 }
@@ -87,8 +126,8 @@ export function useUpdateKbPageComment() {
     mutationKey: ["kb", "pageComments", "update"],
     mutationFn: ({ commentId, content }: { commentId: number; pageId: number; content: string }) =>
       apiClient.patch<KbPageComment>(`/kb/page-comments/${commentId}`, { content }, undefined, kbPageCommentContract),
-    onSuccess: (_, variables) => {
-      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.pageComments(variables.pageId) });
+    onSuccess: (updated, variables) => {
+      patchLoadedComments(qc, variables.pageId, replaceComment(updated));
     },
   });
 }
@@ -100,7 +139,9 @@ export function useDeleteKbPageComment() {
     mutationFn: ({ commentId }: { commentId: number; pageId: number }) =>
       apiClient.delete<void>(`/kb/page-comments/${commentId}`, undefined, undefined, noContentC),
     onSuccess: (_, variables) => {
-      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.pageComments(variables.pageId) });
+      patchLoadedComments(qc, variables.pageId, (comments) =>
+        comments.filter((comment) => comment.id !== variables.commentId && comment.parentId !== variables.commentId),
+      );
     },
   });
 }
@@ -111,8 +152,8 @@ export function useResolveKbPageComment() {
     mutationKey: ["kb", "pageComments", "resolve"],
     mutationFn: ({ commentId }: { commentId: number; pageId: number }) =>
       apiClient.post<KbPageComment>(`/kb/page-comments/${commentId}/resolve`, undefined, undefined, kbPageCommentContract),
-    onSuccess: (_, variables) => {
-      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.pageComments(variables.pageId) });
+    onSuccess: (updated, variables) => {
+      patchLoadedComments(qc, variables.pageId, replaceComment(updated));
     },
   });
 }

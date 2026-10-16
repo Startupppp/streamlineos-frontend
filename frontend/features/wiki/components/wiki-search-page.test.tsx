@@ -987,3 +987,31 @@ describe("WikiSearchPage — accessibility invariants (Box 3, jsdom-provable sub
     expect(screen.getByRole("button", { name: /Remove type filter: sop/i })).toBeInTheDocument();
   });
 });
+
+describe("WikiSearchPage — 200-character query limit", () => {
+  it("caps the input at the backend's 200-character limit and says so once the limit is reached", () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams(`q=${"a".repeat(200)}`));
+
+    render(<WikiSearchPage />);
+
+    expect(screen.getByTestId("search-input")).toHaveAttribute("maxLength", "200");
+    expect(screen.getByText("Search is limited to 200 characters.")).not.toHaveClass("sr-only");
+  });
+
+  it("never sends a pasted URL query longer than 200 characters, which the backend rejects", () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams(`q=${"b".repeat(250)}`));
+
+    render(<WikiSearchPage />);
+
+    const sentQuery: unknown = useKbPageFullSearch.mock.calls[0]?.[0]?.q;
+    expect(sentQuery).toBe("b".repeat(200));
+  });
+
+  it("keeps the limit hint for screen readers only while the query is short", () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("q=leave"));
+
+    render(<WikiSearchPage />);
+
+    expect(screen.getByText("Search is limited to 200 characters.")).toHaveClass("sr-only");
+  });
+});

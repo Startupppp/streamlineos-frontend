@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
@@ -112,16 +113,23 @@ const kbExportJobListPageContract = lazyContract(() =>
 );
 
 export function useImportKbPages() {
+  const qc = useQueryClient();
   return useAuthorizedMutation("kb:pages:import", {
     mutationKey: ["kb", "pages", "import"],
     mutationFn: (input: ImportKbPagesInput) =>
       apiClient.post<ImportAccepted>("/kb/pages/import", input, undefined, kbImportAcceptedContract),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.importJobs(), exact: true });
+    },
   });
 }
 
+const TERMINAL_IMPORT_STATUSES = new Set(["completed", "failed", "cancelled"]);
+
 export function useKbImportJob(jobId: number | null) {
   const canImport = useCan("kb:pages:import");
-  return useQuery({
+  const qc = useQueryClient();
+  const query = useQuery({
     queryKey: knowledgeAndSurveysQueryKeys.kb.importJob(jobId ?? 0),
     queryFn: ({ signal }) =>
       apiClient.get<KbImportJob>(
@@ -137,6 +145,17 @@ export function useKbImportJob(jobId: number | null) {
       return status === "pending" || status === "processing" ? 1500 : false;
     },
   });
+  // A finished job changed the history list and created pages the wiki lists
+  // do not know about yet; neither is computable client-side.
+  const settled = query.data !== undefined && TERMINAL_IMPORT_STATUSES.has(query.data.status);
+  useEffect(() => {
+    if (!settled) return;
+    qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.importJobs(), exact: true });
+    qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTree() });
+    qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.pagesRecent() });
+    qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.pageCollection() });
+  }, [settled, jobId, qc]);
+  return query;
 }
 
 export function useCancelImportJob() {

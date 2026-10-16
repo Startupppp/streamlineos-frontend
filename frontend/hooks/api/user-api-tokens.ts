@@ -1,9 +1,6 @@
 "use client";
 
-import {
-  useMutation,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { usersAndCommerceQueryKeys } from "@/lib/query-keys/users-and-commerce";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -14,7 +11,7 @@ import {
   userApiTokenPageContract,
 } from "@/hooks/api/user-api-tokens-schema";
 import { noContentContract } from "@/hooks/api/cursor-page-schema";
-import type { CreateUserApiTokenInput } from "@/hooks/api/user-api-tokens-schema";
+import type { CreateUserApiTokenInput, UserApiTokenPage } from "@/hooks/api/user-api-tokens-schema";
 
 export type {
   CreateUserApiTokenInput,
@@ -77,8 +74,12 @@ export function useRevokeUserApiToken() {
     mutationKey: ["revoke", "user", "api", "token"],
     mutationFn: (tokenId: string) =>
       apiClient.delete<void>(`/me/api-tokens/${tokenId}`, undefined, undefined, noContentContract),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.userApiTokens.all });
+    onSuccess: async (_result, tokenId) => {
+      qc.setQueriesData<UserApiTokenPage>(
+        { queryKey: usersAndCommerceQueryKeys.userApiTokens.list() },
+        (page) => page && { ...page, data: page.data.filter((token) => token.id !== tokenId) },
+      );
+      await qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.userApiTokens.list() });
     },
   });
 }

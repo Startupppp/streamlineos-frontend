@@ -70,10 +70,14 @@ describe("component amount (BUG-019)", () => {
     expect(componentFormSchema.safeParse({ ...base, amount: "10.123" }).success).toBe(false);
   });
 
-  it("accepts zero, a positive amount and a blank amount", () => {
-    expect(componentFormSchema.safeParse({ ...base, amount: "0" }).success).toBe(true);
+  it("refuses a zero or blank fixed amount (PAY-B-028) and accepts a positive one", () => {
+    const zero = componentFormSchema.safeParse({ ...base, amount: "0" });
+    expect(zero.success).toBe(false);
+    expect(zero.error?.issues[0]?.message).toBe("Enter an amount greater than 0");
+    expect(componentFormSchema.safeParse({ ...base, amount: "0.00" }).success).toBe(false);
+    expect(componentFormSchema.safeParse({ ...base, amount: "" }).success).toBe(false);
     expect(componentFormSchema.safeParse({ ...base, amount: "5000.50" }).success).toBe(true);
-    expect(componentFormSchema.safeParse({ ...base, amount: "" }).success).toBe(true);
+    expect(componentFormSchema.safeParse({ ...base, calcMethod: "MANUAL", amount: "" }).success).toBe(true);
   });
 });
 

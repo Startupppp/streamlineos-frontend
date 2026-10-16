@@ -23,6 +23,8 @@ import { useAccess } from "@/hooks/api/access";
 import { LazyAppLoadingScreen } from "@/components/ui/app-loading-screen-lazy";
 import { ErrorState } from "@/components/shared/error-state";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { signOutStaleSession } from "@/lib/stale-session-sign-out";
+import { Button } from "@/components/ui/button";
 import { AskOsProvider } from "@/components/assistant/ask-os-provider";
 import { CommandPaletteProvider } from "@/components/command-palette";
 import { DirtyStateProvider } from "@/components/shared/dirty-state-context";
@@ -256,7 +258,11 @@ export function DashboardShell({
             description={getErrorMessage(accessErr)}
             error={accessErr}
             onRetry={handleRetryAccess}
-          />
+          >
+            <Button variant="ghost" onClick={signOutStaleSession}>
+              Sign out
+            </Button>
+          </ErrorState>
         ) : (
           <LazyAppLoadingScreen className="flex-1" />
         )}

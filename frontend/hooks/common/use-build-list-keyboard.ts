@@ -26,6 +26,14 @@ function isInputTarget(target: EventTarget | null): boolean {
   );
 }
 
+// Enter on a focused control (a row with tabIndex, a card button, a link)
+// belongs to that control. Taking it for the j/k selection opened the wrong
+// item or nothing, and its preventDefault cancelled the button's own click.
+function isActivatableTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement) || target === document.body) return false;
+  return target.closest('button, a[href], [role="button"], [tabindex]:not([tabindex="-1"])') !== null;
+}
+
 export interface UseBuildListKeyboardOptions {
   itemCount: number;
   onOpen: (index: number) => void;
@@ -130,7 +138,7 @@ export function useBuildListKeyboard({
           break;
         }
         case "Enter": {
-          if (focusedIndexRef.current !== null) {
+          if (focusedIndexRef.current !== null && !isActivatableTarget(e.target)) {
             e.preventDefault();
             onOpenRef.current(focusedIndexRef.current);
           }

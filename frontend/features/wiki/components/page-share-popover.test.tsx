@@ -31,6 +31,7 @@ const page = {
   visibility: "org",
   publicToken: null,
   contentRevision: 7,
+  status: "published",
 } as KbPageDetail;
 
 function renderPopover(overrides: Partial<KbPageDetail> = {}) {
@@ -47,7 +48,7 @@ describe("PageSharePopover — the privileged share controls live behind the Sha
 
     expect(screen.getByRole("button", { name: "Share page" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /manage access/i })).toBeNull();
-    expect(screen.queryByRole("button", { name: /^private$/i })).toBeNull();
+    expect(screen.queryByRole("radio", { name: /private/i })).toBeNull();
   });
 
   it("exposes Manage access and the three visibility options once the Share trigger is opened, proving the permission controls the toolbar gates on kb:pages:update are exactly these", async () => {
@@ -153,5 +154,50 @@ describe("PageSharePopover — the public link appears only once the page is pub
     await user.click(screen.getByRole("button", { name: "Copy link" }));
 
     expect(writeText).toHaveBeenCalledWith(`${window.location.origin}/wiki/tok-abc`);
+  });
+});
+
+describe("PageSharePopover — the options say which visibility is current", () => {
+  it("marks only the page's visibility as checked and makes it the focus target, so a Public page never reads as Private", async () => {
+    const user = userEvent.setup();
+    renderPopover({ visibility: "public", publicToken: "tok-abc" });
+
+    await user.click(screen.getByRole("button", { name: "Share page" }));
+
+    expect(screen.getByRole("radio", { name: /public/i })).toHaveAttribute("aria-checked", "true");
+    expect(screen.getByRole("radio", { name: /public/i })).toHaveAttribute("tabindex", "0");
+    expect(screen.getByRole("radio", { name: /private/i })).toHaveAttribute("aria-checked", "false");
+    expect(screen.getByRole("radio", { name: /private/i })).toHaveAttribute("tabindex", "-1");
+  });
+
+  it("moves between options with the arrow keys", async () => {
+    const user = userEvent.setup();
+    renderPopover({ visibility: "private" });
+
+    await user.click(screen.getByRole("button", { name: "Share page" }));
+    screen.getByRole("radio", { name: /private/i }).focus();
+    await user.keyboard("{ArrowDown}");
+
+    expect(screen.getByRole("radio", { name: /team/i })).toHaveFocus();
+  });
+});
+
+describe("PageSharePopover — a public draft says its link is not live yet", () => {
+  it("tells the author the public link works only after publishing, because the public route serves published pages only", async () => {
+    const user = userEvent.setup();
+    renderPopover({ visibility: "public", publicToken: "tok-abc", status: "draft" });
+
+    await user.click(screen.getByRole("button", { name: "Share page" }));
+
+    expect(screen.getByText("The public link works once this page is published.")).toBeInTheDocument();
+  });
+
+  it("shows no such hint for a published public page", async () => {
+    const user = userEvent.setup();
+    renderPopover({ visibility: "public", publicToken: "tok-abc", status: "published" });
+
+    await user.click(screen.getByRole("button", { name: "Share page" }));
+
+    expect(screen.queryByText("The public link works once this page is published.")).toBeNull();
   });
 });

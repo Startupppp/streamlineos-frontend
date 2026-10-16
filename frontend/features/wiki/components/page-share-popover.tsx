@@ -83,6 +83,15 @@ export default function PageSharePopover({ page }: PageSharePopoverProps) {
     );
   }
 
+  function handleVisibilityKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
+    if (!["ArrowDown", "ArrowUp", "ArrowLeft", "ArrowRight"].includes(e.key)) return;
+    e.preventDefault();
+    const radios = Array.from(e.currentTarget.querySelectorAll<HTMLButtonElement>('[role="radio"]'));
+    const current = radios.findIndex((radio) => radio === document.activeElement);
+    const step = e.key === "ArrowDown" || e.key === "ArrowRight" ? 1 : -1;
+    radios[(current + step + radios.length) % radios.length]?.focus();
+  }
+
   function handleOpenGrants() {
     setOpen(false);
     setGrantsOpen(true);
@@ -101,6 +110,8 @@ export default function PageSharePopover({ page }: PageSharePopoverProps) {
   const publicUrl = `${origin}/wiki/${page.publicToken ?? ""}`;
   const showPublicLink =
     currentVisibility === "public" && Boolean(page.publicToken);
+  const publicLinkWaitsForPublish =
+    currentVisibility === "public" && page.status !== "published";
 
   return (
     <>
@@ -122,7 +133,12 @@ export default function PageSharePopover({ page }: PageSharePopoverProps) {
         title="Share"
         className="w-56 max-w-[85vw] gap-0 p-1.5"
       >
-        <div className="flex flex-col gap-0.5">
+        <div
+          role="radiogroup"
+          aria-label="Page visibility"
+          className="flex flex-col gap-0.5"
+          onKeyDown={handleVisibilityKeyDown}
+        >
           {VISIBILITY_OPTIONS.map(
             ({ value, icon: Icon, label, description }) => {
               const selected = currentVisibility === value;
@@ -130,6 +146,9 @@ export default function PageSharePopover({ page }: PageSharePopoverProps) {
                 <button
                   key={value}
                   type="button"
+                  role="radio"
+                  aria-checked={selected}
+                  tabIndex={selected ? 0 : -1}
                   data-visibility={value}
                   className={cn(
                     "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors",
@@ -158,6 +177,12 @@ export default function PageSharePopover({ page }: PageSharePopoverProps) {
             },
           )}
         </div>
+
+        {publicLinkWaitsForPublish ? (
+          <p className="mt-1 border-t border-border px-2 pt-1.5 text-micro text-muted-foreground">
+            The public link works once this page is published.
+          </p>
+        ) : null}
 
         {showPublicLink ? (
           <div className="mt-1 flex items-center gap-1 border-t border-border pt-1.5">

@@ -1,5 +1,6 @@
 import { createRef } from "react";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { StepBasics } from "./steps/step-basics";
 import type { BasicsHandle } from "./steps/step-basics";
 import type { WizardDraft } from "./use-project-create";
@@ -78,5 +79,24 @@ describe("New Project wizard step 1 — a shown name error clears as soon as the
       advanced = await ref.current?.validate();
     });
     expect(advanced).toBe(true);
+  });
+
+  it("clears when the corrected name is typed key by key and the field is left with Tab", async () => {
+    const user = userEvent.setup();
+    const { ref, input } = renderStep();
+
+    await user.type(input, "A");
+    await act(async () => {
+      await ref.current?.validate();
+    });
+    expect(await screen.findByText(NAME_TOO_SHORT)).toBeInTheDocument();
+
+    await user.clear(input);
+    await user.type(input, "QA Name OK");
+    await user.tab();
+
+    await waitFor(() => {
+      expect(screen.queryByText(NAME_TOO_SHORT)).not.toBeInTheDocument();
+    });
   });
 });

@@ -1,5 +1,6 @@
 "use client";
 
+import { useGuardedCreateKbPage } from "@/features/wiki/hooks/use-guarded-create-kb-page";
 import { Fragment, useState, useCallback, useMemo, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { LayoutList, LayoutGrid } from "lucide-react";
@@ -7,7 +8,6 @@ import { useKbPageCollection } from "@/hooks/api/kb/page-collection";
 import type { KbPageCollectionItem } from "@/hooks/api/kb/page-collection";
 import {
   useKbSpaces,
-  useCreateKbPage,
   useDeleteKbPage,
   useDuplicateKbPage,
   useToggleFavoriteKbPage,
@@ -416,7 +416,7 @@ export function WikiHomeAllPages({ projectId, onItemCountChange, onRowsChange }:
 
   const { data: spacesPage } = useKbSpaces();
   const spaces = spacesPage?.data;
-  const createPage = useCreateKbPage();
+  const createPage = useGuardedCreateKbPage((page) => router.push(resolveHref(page.id)));
   const canCreate = useCan("kb:pages:create");
   const canImport = useCan("kb:pages:import");
 
@@ -520,13 +520,7 @@ export function WikiHomeAllPages({ projectId, onItemCountChange, onRowsChange }:
   }, [update]);
 
   function handleNewPage() {
-    createPage.mutate(
-      { projectId: isProjectScoped ? projectId : undefined },
-      {
-        onSuccess: (page) => router.push(resolveHref(page.id)),
-        onError: (err) => toast.error(getErrorMessage(err)),
-      },
-    );
+    void createPage.submit({ projectId: isProjectScoped ? projectId : undefined });
   }
 
   const renderMobileCard = useCallback(

@@ -30,6 +30,9 @@ const ACTION_META: Record<string, { label: string; variant: ActionVariant; Icon:
   "role.created": { label: "Role Created", variant: "default", Icon: ShieldCheck },
   "role.updated": { label: "Role Updated", variant: "secondary", Icon: ShieldCheck },
   "role.deleted": { label: "Role Deleted", variant: "destructive", Icon: ShieldX },
+  "role.permission.granted": { label: "Permission Granted", variant: "default", Icon: ShieldCheck },
+  "role.permission.revoked": { label: "Permission Revoked", variant: "destructive", Icon: ShieldX },
+  "org.member_role_changed": { label: "Member Role Changed", variant: "secondary", Icon: UserCheck },
   "permission.granted": { label: "Permission Granted", variant: "default", Icon: ShieldCheck },
   "permission.revoked": { label: "Permission Revoked", variant: "destructive", Icon: ShieldX },
 };

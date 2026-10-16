@@ -15,7 +15,7 @@ export const reimbursementSchema = z
   .superRefine((values, ctx) => {
     if (values.category !== "Other") return;
     if (!values.customCategory) {
-      ctx.addIssue({ code: "custom", path: ["customCategory"], message: "Describe what the other category is" });
+      ctx.addIssue({ code: "custom", path: ["customCategory"], message: "Enter a name for the category" });
       return;
     }
     if (!isValidOtherLabel(values.customCategory))

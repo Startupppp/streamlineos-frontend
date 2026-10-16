@@ -42,6 +42,8 @@ interface CreateTerminationInput {
   severanceAmount?: number;
   noticePeriodWaived?: boolean;
   internalNotes?: string;
+  /** An approver keeps the record as a DRAFT instead of approving it on create. */
+  saveAsDraft?: boolean;
 }
 
 export interface TerminationPagination {
@@ -142,6 +144,26 @@ export function useRehireEmployee() {
     onSuccess: (_, { employeeUserId }) => {
       operation.settle();
       void qc.invalidateQueries({ queryKey: terminationKeys.all });
+      void invalidateHrWorkforceQueries(qc, employeeUserId);
+    },
+  });
+}
+
+/** Archives an employee without a termination: exits the employment and archives the membership. */
+export function useArchiveEmployee() {
+  const qc = useQueryClient();
+  const operation = useIdempotentOperation();
+  return useAuthorizedMutation("hr:exit:manage", {
+    mutationKey: [...terminationKeys.all, "archive"],
+    mutationFn: ({ employeeUserId, reason }: { employeeUserId: string; reason?: string }) =>
+      apiClient.post(
+        `/hr/employees/${employeeUserId}/archive`,
+        { reason },
+        operation.configFor({ employeeUserId, reason }),
+        terminationSuccessContract,
+      ),
+    onSuccess: (_, { employeeUserId }) => {
+      operation.settle();
       void invalidateHrWorkforceQueries(qc, employeeUserId);
     },
   });

@@ -123,6 +123,20 @@ describe("UX-09: mobile card layout at narrow viewport (FE-123 structural test)"
     ).toBeInTheDocument();
   });
 
+  it("names the leave type exactly as the request form does (HR-U-005)", () => {
+    render(
+      <LeavesTabContent
+        balances={[]}
+        myLeaveRequests={[pendingRequest()]}
+        compact
+      />,
+    );
+
+    const mobileList = screen.getByRole("list", { name: "My leave requests" });
+    expect(within(mobileList).getByText("Casual Leave")).toBeInTheDocument();
+    expect(screen.queryByText("Casual")).not.toBeInTheDocument();
+  });
+
   it("the DataTable wrapper carries the hidden-below-md class", () => {
     const { container } = render(
       <LeavesTabContent

@@ -53,7 +53,13 @@ const SEVERITY_CONFIG: Record<
   INFO: { className: "bg-status-info-surface text-status-info-ink border-status-info-rule", label: "Info" },
 };
 
-const PROFILE_FIX_CODES = new Set(["MISSING_SALARY_PROFILE", "NO_EARNING_COMPONENTS"]);
+const PROFILE_FIX_CODES = new Set([
+  "MISSING_SALARY_PROFILE",
+  "NO_EARNING_COMPONENTS",
+  "EMPTY_COMPONENT_LIST",
+  "DUPLICATE_COMPONENT_ROLE",
+  "GROSS_EXCEEDS_CTC",
+]);
 
 const STATUS_CONFIG: Record<PayrollExceptionStatus, { className: string; label: string }> = {
   OPEN: { className: "bg-muted text-muted-foreground border-border", label: "Open" },

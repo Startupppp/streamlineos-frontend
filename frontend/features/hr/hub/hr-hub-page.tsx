@@ -12,6 +12,8 @@ import {
   HrQuickAction,
 } from "@/features/hr/shared/hr-ui";
 import { cn } from "@/lib/utils";
+import { StalledReadNotice } from "@/components/shared/stalled-read-notice";
+import { PANEL_STALLED_AFTER_MS, useStalledAfter } from "@/hooks/common/use-stalled-after";
 import { useHrHubSnapshot } from "@/hooks/api/hr/hub";
 import { EMPTY_HR_HUB_ACCESS } from "@/hooks/api/hr/hub-types";
 import {
@@ -58,6 +60,7 @@ export function HrHubPage() {
   const handleRetry = () => {
     void hub.refetch();
   };
+  const hubStalled = useStalledAfter(hub.isLoading, PANEL_STALLED_AFTER_MS);
 
   const visibleActions = useMemo(
     () => ALL_QUICK_ACTIONS.filter((a) => access[a.permKey]),
@@ -142,6 +145,10 @@ export function HrHubPage() {
                 Retry
               </Button>
             </div>
+          ) : null}
+
+          {hubStalled && !setupEmpty ? (
+            <StalledReadNotice subject="the HR overview" onRetry={handleRetry} />
           ) : null}
 
           {!setupEmpty && !hub.isLoading && !hub.isError && !hasAnyPanel ? (

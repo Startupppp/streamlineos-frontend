@@ -1,6 +1,7 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
 import { EmployeeDetailPage } from "./employee-detail-page";
+import { ApiError } from "@/lib/api-envelope";
 
 jest.mock("next/link", () => ({
   __esModule: true,
@@ -66,5 +67,19 @@ describe("EmployeeDetailPage estimate (PAY-B-033) — the profile summed fixed l
     render(<EmployeeDetailPage employeeUserId={profile.userId} />);
     expect(screen.queryByText("150%")).not.toBeInTheDocument();
     expect(screen.queryByText("150.0000%")).not.toBeInTheDocument();
+  });
+});
+
+describe("EmployeeDetailPage estimate without an active policy (PAY-B-011)", () => {
+  it("explains the policy is not active and links to setup instead of a generic error", () => {
+    mockUseSalaryPreview.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: true,
+      error: new ApiError("needs an active payroll policy", 409, "PAYROLL_POLICY_NOT_ACTIVE"),
+    });
+    render(<EmployeeDetailPage employeeUserId={profile.userId} />);
+    expect(screen.getByRole("link", { name: "Finish payroll setup" })).toHaveAttribute("href", "/payroll/setup");
+    expect(screen.queryByText(/Estimate unavailable/)).not.toBeInTheDocument();
   });
 });

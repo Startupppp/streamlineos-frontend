@@ -73,6 +73,9 @@ interface WikiSidebarNavProps {
   canViewAnalytics: boolean;
   canViewReviews: boolean;
   canManageContent: boolean;
+  canManageTemplates: boolean;
+  canImportPages: boolean;
+  canViewSpaces: boolean;
   showCompanyDocuments?: boolean;
 }
 
@@ -101,17 +104,20 @@ function buildNavGroups({
   canViewAnalytics,
   canViewReviews,
   canManageContent,
+  canManageTemplates,
+  canImportPages,
+  canViewSpaces,
   showCompanyDocuments,
-}: Pick<
-  WikiSidebarNavProps,
-  | "canViewAnalytics"
-  | "canViewReviews"
-  | "canManageContent"
-  | "showCompanyDocuments"
->): WikiNavGroup[] {
-  const manageItems: WikiNavItem[] = [
-    { label: "Templates", href: KB_TEMPLATES, icon: KbLayoutTemplateIcon },
-  ];
+}: Omit<WikiSidebarNavProps, "isCollapsed">): WikiNavGroup[] {
+  const manageItems: WikiNavItem[] = [];
+
+  if (canManageTemplates) {
+    manageItems.push({
+      label: "Templates",
+      href: KB_TEMPLATES,
+      icon: KbLayoutTemplateIcon,
+    });
+  }
 
   if (canViewReviews) {
     manageItems.push({
@@ -121,11 +127,13 @@ function buildNavGroups({
     });
   }
 
-  manageItems.push({
-    label: "Import & Export",
-    href: KB_IMPORT,
-    icon: KbUploadIcon,
-  });
+  if (canImportPages) {
+    manageItems.push({
+      label: "Import & Export",
+      href: KB_IMPORT,
+      icon: KbUploadIcon,
+    });
+  }
 
   if (canViewAnalytics) {
     manageItems.push({
@@ -143,14 +151,16 @@ function buildNavGroups({
     });
   }
 
-  return [
+  const groups: WikiNavGroup[] = [
     {
       id: "library",
       label: "Library",
       items: [
         { label: "My pages", href: KB_PRIVATE, icon: KbLockIcon },
         { label: "Shared with me", href: KB_SHARED, icon: KbUsersIcon },
-        { label: "Spaces", href: KB_SPACES, icon: KbLayoutGridIcon },
+        ...(canViewSpaces
+          ? [{ label: "Spaces", href: KB_SPACES, icon: KbLayoutGridIcon }]
+          : []),
         ...(showCompanyDocuments === true
           ? [
               {
@@ -168,6 +178,7 @@ function buildNavGroups({
       items: manageItems,
     },
   ];
+  return groups.filter((group) => group.items.length > 0);
 }
 
 function isNavItemActive(
@@ -361,6 +372,9 @@ export default function WikiSidebarNav({
   canViewAnalytics,
   canViewReviews,
   canManageContent,
+  canManageTemplates,
+  canImportPages,
+  canViewSpaces,
   showCompanyDocuments = false,
 }: WikiSidebarNavProps) {
   const pathname = usePathname();
@@ -372,9 +386,20 @@ export default function WikiSidebarNav({
         canViewAnalytics,
         canViewReviews,
         canManageContent,
+        canManageTemplates,
+        canImportPages,
+        canViewSpaces,
         showCompanyDocuments,
       }),
-    [canViewAnalytics, canViewReviews, canManageContent, showCompanyDocuments],
+    [
+      canViewAnalytics,
+      canViewReviews,
+      canManageContent,
+      canManageTemplates,
+      canImportPages,
+      canViewSpaces,
+      showCompanyDocuments,
+    ],
   );
   const accordionItems = useMemo(
     () => groups.flatMap((group) => group.items),

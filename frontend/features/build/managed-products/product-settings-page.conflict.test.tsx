@@ -24,6 +24,7 @@ jest.mock("@/hooks/api/build/managed-product-members", () => ({
   useManagedProductMembers: jest.fn(() => ({ data: { data: [], pagination: { hasMore: false, nextCursor: null, limit: 50 } }, isLoading: false })),
   useAddManagedProductMember: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   useRemoveManagedProductMember: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+  useUpdateManagedProductMemberRole: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
 }));
 jest.mock("@/hooks/api/build/build-members", () => ({
   useBuildMembers: jest.fn(() => ({ data: undefined, isLoading: false })),

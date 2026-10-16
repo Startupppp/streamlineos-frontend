@@ -97,6 +97,8 @@ interface TerminationFormSheetProps {
   onSeveranceAmountChange: (inputEvent: React.ChangeEvent<HTMLInputElement>) => void;
   internalNotes: string;
   onInternalNotesChange: (inputEvent: React.ChangeEvent<HTMLTextAreaElement>) => void;
+  saveAsDraft: boolean;
+  onSaveAsDraftChange: (checked: boolean) => void;
 }
 
 export function TerminationFormSheet({
@@ -122,8 +124,11 @@ export function TerminationFormSheet({
   onSeveranceAmountChange,
   internalNotes,
   onInternalNotesChange,
+  saveAsDraft,
+  onSaveAsDraftChange,
 }: TerminationFormSheetProps) {
   const isOtherReason = selectedReason === TERMINATION_REASON_OTHER;
+  const approvesOnCreate = canApproveExit && !saveAsDraft;
 
   const selectedEmployee = useMemo(
     () =>
@@ -189,12 +194,12 @@ export function TerminationFormSheet({
       onOpenChange={onOpenChange}
       title="New Termination"
       description={
-        canApproveExit
+        approvesOnCreate
           ? "Create a termination record. As FINAL, this will be automatically approved."
           : "Create a termination record. It will be saved as a draft for FINAL approval."
       }
       onSubmit={onSubmit}
-      submitLabel={canApproveExit ? "Create & Approve" : "Save as Draft"}
+      submitLabel={approvesOnCreate ? "Create & Approve" : "Save as Draft"}
       isPending={isPending}
       submitDisabled={submitDisabled}
     >
@@ -315,6 +320,22 @@ export function TerminationFormSheet({
             aria-label="Notice period waived"
           />
         </div>
+
+        {canApproveExit ? (
+          <div className="flex items-center justify-between rounded-lg border border-border bg-muted/20 px-3 py-2.5">
+            <div>
+              <p className="text-sm font-medium">Save as draft</p>
+              <p className="text-xs text-muted-foreground">
+                Keep it for review instead of approving it now. Submit it for approval later.
+              </p>
+            </div>
+            <Switch
+              checked={saveAsDraft}
+              onCheckedChange={onSaveAsDraftChange}
+              aria-label="Save as draft"
+            />
+          </div>
+        ) : null}
 
         <div className="space-y-1.5">
           <Label className="text-sm font-medium">

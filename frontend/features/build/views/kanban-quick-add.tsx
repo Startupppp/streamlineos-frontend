@@ -7,6 +7,7 @@ import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { useCreateTicket } from "@/hooks/api/build/tickets";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { toast } from "sonner";
+import { TICKET_TITLE_MAX } from "@/lib/validation/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
@@ -44,8 +45,8 @@ function QuickAddInputContent({ columnId, projectId }: QuickAddInputProps) {
 
   const handleSubmit = useCallback(() => {
     if (!value.trim()) return;
-    if (value.trim().length > 200) {
-      toast.error("Title must be 200 characters or fewer");
+    if (value.trim().length > TICKET_TITLE_MAX) {
+      toast.error(`Title must be ${TICKET_TITLE_MAX} characters or fewer`);
       return;
     }
     createTicket.mutate({

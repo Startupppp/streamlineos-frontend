@@ -406,6 +406,7 @@ export default function SpacesPage() {
       </div>
 
       <SpaceSheet
+        key={editingSpace?.id ?? "new"}
         open={sheetOpen}
         editingSpace={editingSpace}
         onOpenChange={handleSheetOpenChange}

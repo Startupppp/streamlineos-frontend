@@ -169,6 +169,29 @@ describe("RoadmapPublicationPanel — unpublished state (BSN-PUB-UNPUB)", () => 
   });
 });
 
+describe("RoadmapPublicationPanel — link expiry (MP-U-007)", () => {
+  it("publishes with no expiry by default", () => {
+    mockPublication = { published: false, publicationVersion: null, expiresAt: null, issuedAt: null };
+    render(<RoadmapPublicationPanel managedProductId={5} onClose={onClose} />);
+    expect(screen.getByRole("combobox", { name: "Link expiry" })).toHaveTextContent("Never expires");
+    fireEvent.click(screen.getByText("Publish roadmap"));
+    expect(mockPublishMutate).toHaveBeenCalledWith(undefined, expect.any(Object));
+  });
+
+  it("sends the chosen lifetime as expiresAt", () => {
+    mockPublication = { published: false, publicationVersion: null, expiresAt: null, issuedAt: null };
+    render(<RoadmapPublicationPanel managedProductId={5} onClose={onClose} />);
+    fireEvent.click(screen.getByRole("combobox", { name: "Link expiry" }));
+    fireEvent.click(screen.getByRole("option", { name: "Expires in 30 days" }));
+    fireEvent.click(screen.getByText("Publish roadmap"));
+
+    const [input] = mockPublishMutate.mock.calls[0] as [{ expiresAt: string }];
+    const days = (Date.parse(input.expiresAt) - Date.now()) / 86_400_000;
+    expect(days).toBeGreaterThan(29.9);
+    expect(days).toBeLessThanOrEqual(30);
+  });
+});
+
 describe("RoadmapPublicationPanel — published state (BSN-PUB-PUB)", () => {
   beforeEach(() => {
     mockPublication = { published: true, publicationVersion: 1, expiresAt: null, issuedAt: "2026-10-12T00:00:00.000Z" };

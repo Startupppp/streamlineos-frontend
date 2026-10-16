@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import Image from "next/image";
 import { AlertTriangle, RefreshCw, Lock, GitMerge, AlertCircle, ServerCrash } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -73,6 +74,8 @@ interface ErrorStateProps {
   /** The failed call's error. When it carries a request id, a copyable reference line is shown under the message. */
   error?: unknown;
   autoMapStatus?: boolean;
+  /** Extra actions rendered beside "Try again" (e.g. a sign-out escape hatch). */
+  children?: ReactNode;
 }
 
 const STATUS_ICONS = {
@@ -92,6 +95,7 @@ export function ErrorState({
   fullPage = false,
   error,
   autoMapStatus = false,
+  children,
 }: ErrorStateProps) {
   const mapped = autoMapStatus ? getErrorStateForStatus(error) : null;
   const title = titleProp ?? mapped?.title ?? "Something went wrong";
@@ -173,6 +177,7 @@ export function ErrorState({
           Try again
         </Button>
       )}
+      {children ? <div className="mt-2 flex flex-wrap items-center justify-center gap-2">{children}</div> : null}
       {fullPage && <ErrorReference error={error} className="mt-4" />}
     </Container>
   );

@@ -301,7 +301,7 @@ const CASES: readonly PrefetchCase[] = [
     expected: [
       {
         key: accessAndCrmQueryKeys.auditLog.list(RBAC_AUDIT_INITIAL_FILTERS),
-        path: "/audit-log?limit=25&actions=role.changed%2Crole.permissions.set%2Crole.member.added%2Crole.member.removed%2Crole.assigned%2Crole.unassigned%2Crole.created%2Crole.updated%2Crole.deleted%2Cpermission.granted%2Cpermission.revoked",
+        path: "/audit-log?limit=25&actions=role.changed%2Crole.permissions.set%2Crole.member.added%2Crole.member.removed%2Crole.assigned%2Crole.unassigned%2Crole.created%2Crole.updated%2Crole.deleted%2Crole.permission.granted%2Crole.permission.revoked%2Corg.member_role_changed%2Cpermission.granted%2Cpermission.revoked",
       },
     ],
   },  {

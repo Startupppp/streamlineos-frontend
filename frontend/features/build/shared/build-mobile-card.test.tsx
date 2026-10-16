@@ -205,9 +205,10 @@ describe("Build list loading skeleton", () => {
     expect(screen.queryByText("Column 1")).toBeNull();
   });
 
-  it("falls back to numbered placeholders only when a caller passes a count", () => {
-    render(<DataTableSkeleton columns={2} />);
-    expect(screen.getByText("Column 1")).toBeInTheDocument();
+  it("hides a count-only placeholder grid from assistive tech instead of naming it Column N", () => {
+    const { container } = render(<DataTableSkeleton columns={2} />);
+    expect(screen.queryByText("Column 1")).toBeNull();
+    expect(container.querySelector("table")?.closest("[aria-hidden='true']") ?? container.querySelector("table[aria-hidden='true']")).not.toBeNull();
   });
 });
 

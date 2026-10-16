@@ -5,6 +5,7 @@ import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { toast } from "sonner";
 import { Pencil, ArrowRight } from "lucide-react";
 import Link from "next/link";
+import { formatShortDate } from "@/lib/date-utils";
 import { Button } from "@/components/ui/button";
 import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
@@ -108,6 +109,9 @@ const TemplateCard = memo(function TemplateCard({ template, index, onEdit, onDel
       <p className="text-dense text-muted-foreground">
         From {template.effectiveFrom}
         {template.effectiveTo ? ` → ${template.effectiveTo}` : " · No end date"}
+      </p>
+      <p className="text-micro text-muted-foreground">
+        #{template.id} · Created {formatShortDate(template.createdAt)}
       </p>
 
       <div className="flex gap-2 pt-1 border-t border-border/50">

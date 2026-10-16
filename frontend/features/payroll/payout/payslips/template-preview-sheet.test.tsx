@@ -1,8 +1,10 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import type { PayslipTemplate } from "@/types/payroll";
 import { PayslipPreviewSheet } from "./template-preview-sheet";
 
 const mutate = jest.fn();
+const downloadBlob = jest.fn();
+jest.mock("@/lib/download-blob", () => ({ downloadBlob: (...args: unknown[]) => downloadBlob(...args) }));
 
 jest.mock("@/hooks/api/payroll", () => ({
   usePreviewPayslipTemplate: () => ({
@@ -45,4 +47,12 @@ it("sends no preview request while the sheet is closed", () => {
   render(<PayslipPreviewSheet template={template} open={false} onOpenChange={jest.fn()} />);
 
   expect(mutate).not.toHaveBeenCalled();
+});
+
+it("downloads the rendered preview as an HTML file (PAY-B-021)", () => {
+  render(<PayslipPreviewSheet template={template} open onOpenChange={jest.fn()} />);
+
+  fireEvent.click(screen.getByRole("button", { name: /download preview/i }));
+
+  expect(downloadBlob).toHaveBeenCalledWith(expect.any(Blob), "payslip-preview-classic.html");
 });

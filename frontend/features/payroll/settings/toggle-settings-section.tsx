@@ -49,6 +49,14 @@ type ToggleSettingsSectionProps = {
   activeVersion: PolicyVersionRow | null | undefined;
 };
 
+/** "Asha Rao, Ben Das and 10 others" — the server sends up to 10 names plus the full count. */
+export function affectedNamesText(impact: { affectedEmployeeCount: number; affectedEmployeeNames: string[] }): string {
+  const names = impact.affectedEmployeeNames;
+  if (names.length === 0) return "";
+  const rest = impact.affectedEmployeeCount - names.length;
+  return rest > 0 ? `${names.join(", ")} and ${rest} other${rest === 1 ? "" : "s"}` : names.join(", ");
+}
+
 export function ToggleSettingsSection({ policy, activeVersion }: ToggleSettingsSectionProps) {
   const [pending, setPending] = useState<PendingChange | null>(null);
   const [showAlert, setShowAlert] = useState(false);
@@ -213,6 +221,9 @@ export function ToggleSettingsSection({ policy, activeVersion }: ToggleSettingsS
                 <span className="block mt-2 font-medium text-destructive">
                   {impactData.affectedEmployeeCount} employee{impactData.affectedEmployeeCount !== 1 ? "s" : ""} will be affected.
                   {impactData.affectedStatutoryCodes.length > 0 && ` Codes: ${impactData.affectedStatutoryCodes.join(", ")}.`}
+                  {affectedNamesText(impactData) && (
+                    <span className="block mt-1 font-normal text-muted-foreground">{affectedNamesText(impactData)}</span>
+                  )}
                 </span>
               )}
             </AlertDialogDescription>
@@ -245,6 +256,9 @@ export function ToggleSettingsSection({ policy, activeVersion }: ToggleSettingsS
                     <span className="font-medium">{impactData.affectedEmployeeCount}</span>
                     {" "}employee{impactData.affectedEmployeeCount !== 1 ? "s" : ""} affected
                   </p>
+                  {affectedNamesText(impactData) && (
+                    <p className="text-xs text-muted-foreground">{affectedNamesText(impactData)}</p>
+                  )}
                   {impactData.affectedStatutoryCodes.length > 0 && (
                     <p className="text-xs text-muted-foreground">
                       Statutory codes: {impactData.affectedStatutoryCodes.join(", ")}

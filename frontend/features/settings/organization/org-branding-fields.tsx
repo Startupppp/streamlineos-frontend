@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { UploadIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
-import { resolveImageUrl } from "@/lib/utils";
+import { cn, resolveImageUrl } from "@/lib/utils";
 import type { OrgSettings } from "@/types/organization";
 import { HEX_COLOR } from "./org-branding-schema";
 import { SettingsField, SettingsFieldGrid } from "./org-settings-chrome";
@@ -100,20 +100,39 @@ export function ColorField({ label, value, onChange, pickerFallback = "#0b1220",
     onChange(e.target.value);
   }
 
+  function handleTextKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "Enter") e.preventDefault();
+  }
+
+  const isSet = HEX_COLOR.test(value);
+
   return (
     <div className="space-y-1">
       <Label className="text-xs font-medium">{label}</Label>
       <div className="flex items-center gap-2">
-        <input
-          type="color"
-          aria-label={`${label} colour picker`}
-          value={HEX_COLOR.test(value) ? value : pickerFallback}
-          onChange={handleColorInput}
-          className="h-8 w-8 rounded border border-border cursor-pointer p-0.5 bg-card"
-        />
+        <span className="relative h-8 w-8 shrink-0">
+          {!isSet && (
+            <span
+              className="absolute inset-0 rounded border border-dashed border-border bg-card"
+              aria-hidden
+            />
+          )}
+          <input
+            type="color"
+            aria-label={`${label} colour picker`}
+            data-unset={!isSet || undefined}
+            value={isSet ? value : pickerFallback}
+            onChange={handleColorInput}
+            className={cn(
+              "absolute inset-0 h-8 w-8 rounded border border-border cursor-pointer p-0.5 bg-card",
+              !isSet && "opacity-0",
+            )}
+          />
+        </span>
         <Input
           value={value}
           onChange={handleTextInput}
+          onKeyDown={handleTextKeyDown}
           placeholder="#0b1220"
           className="flex-1 font-mono text-sm"
           maxLength={7}

@@ -24,7 +24,10 @@ import { CreateExpenseDialog } from "@/features/hr/expenses/components/create-ex
 import { EXPENSE_CATEGORIES, PAYMENT_METHODS } from "@/lib/expense-constants";
 import type { StatusFilter } from "@/lib/expense-constants";
 import { MemberExpenseList } from "@/features/hr/expenses/expense-list";
-import { useExpensePageData } from "@/hooks/api/hr/expenses";
+import { useExpensePageData, useWithdrawExpense } from "@/hooks/api/hr/expenses";
+import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { toast } from "sonner";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { ExpenseToEdit } from "@/features/hr/expenses/components/create-expense-dialog";
@@ -37,6 +40,7 @@ function toStatusFilter(value: string): StatusFilter {
     case "PENDING":
     case "APPROVED":
     case "REJECTED":
+    case "WITHDRAWN":
       return value;
     default:
       return "ALL";
@@ -49,7 +53,10 @@ export function MyExpensesPage() {
   const [status, setStatus] = useState<StatusFilter>("ALL");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<ExpenseToEdit | null>(null);
+  const [withdrawTarget, setWithdrawTarget] = useState<ExpenseWithRelations | null>(null);
   const debouncedSearch = useDebouncedValue(search, 300);
+  const withdrawMutation = useWithdrawExpense();
+  const withdrawIdempotent = useIdempotentOperation();
 
   const expenses = useExpensePageData(
     {
@@ -85,6 +92,32 @@ export function MyExpensesPage() {
     setEditTarget(expense);
     setDialogOpen(true);
   }, []);
+
+  const handleWithdrawRequest = useCallback((expense: ExpenseWithRelations) => {
+    setWithdrawTarget(expense);
+  }, []);
+
+  const handleWithdrawDialogChange = useCallback((open: boolean) => {
+    if (!open) setWithdrawTarget(null);
+  }, []);
+
+  const handleWithdrawConfirm = useCallback(() => {
+    if (!withdrawTarget) return;
+    const expenseId = withdrawTarget.id;
+    withdrawMutation.mutate(
+      { expenseId, config: withdrawIdempotent.configFor({ expenseId }) },
+      {
+        onSuccess() {
+          withdrawIdempotent.settle();
+          setWithdrawTarget(null);
+          toast.success("Claim withdrawn");
+        },
+        onError(error) {
+          toast.error(getErrorMessage(error));
+        },
+      },
+    );
+  }, [withdrawTarget, withdrawMutation, withdrawIdempotent]);
 
   const handleDialogChange = useCallback((open: boolean) => {
     setDialogOpen(open);
@@ -127,6 +160,7 @@ export function MyExpensesPage() {
           <SelectItem value="PENDING">Pending</SelectItem>
           <SelectItem value="APPROVED">Approved</SelectItem>
           <SelectItem value="REJECTED">Rejected</SelectItem>
+          <SelectItem value="WITHDRAWN">Withdrawn</SelectItem>
         </SelectContent>
       </Select>
     </>
@@ -202,11 +236,24 @@ export function MyExpensesPage() {
           activeFilterCount={activeFilterCount}
           onEdit={handleEdit}
           onResubmit={handleResubmit}
+          onWithdraw={handleWithdrawRequest}
           onShowAll={handleShowAll}
           onCreateNew={handleOpenCreate}
           onPageChange={setPage}
         />
       ) : null}
+
+      <ConfirmDialog
+        open={withdrawTarget !== null}
+        onOpenChange={handleWithdrawDialogChange}
+        title="Withdraw this claim?"
+        description="The claim leaves the approval queue and can no longer be approved or paid. Submit a new claim if you need to claim it again."
+        confirmLabel="Withdraw claim"
+        destructive
+        isPending={withdrawMutation.isPending}
+        keepOpenOnConfirm
+        onConfirm={handleWithdrawConfirm}
+      />
 
       <CreateExpenseDialog
         open={dialogOpen}

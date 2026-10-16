@@ -2,7 +2,7 @@ import "server-only";
 import type { Session } from "next-auth";
 import { gateCookieName, mayDeferOwnOnboarding } from "@/lib/onboarding-gate";
 import { grantsPermission } from "@/lib/rbac/permission-gate";
-import { resolveRouteAccess } from "@/lib/rbac/route-access/route-access";
+import { hasAssignedProductAccess, resolveRouteAccess } from "@/lib/rbac/route-access/route-access";
 import type { AccessResponse } from "@/types/access";
 
 export type WizardGate =
@@ -64,12 +64,16 @@ export function resolveWizardGate(
   return null;
 }
 
+// The onboarding detour is for people HR manages. It yields when the route would deny the caller, or when the
+// caller holds no assigned HR grant at all (only member-default self-service keys, RBAC-B-003): the route's own
+// guard then decides, so a self:leaves holder sees their leave page and everyone else the denial.
 export function onboardingGateYieldsToDenial(
   destination: string,
   access: Pick<AccessResponse, "isOrgOwner" | "scopes">,
 ): boolean {
   const decision = resolveRouteAccess(destination);
   if (decision.kind !== "permission" || decision.permission === null) return false;
+  if (!access.isOrgOwner && !hasAssignedProductAccess("hrms", access.scopes)) return true;
   const keys = Array.isArray(decision.permission) ? decision.permission : [decision.permission];
   return !keys.some((key) => grantsPermission(access, key));
 }

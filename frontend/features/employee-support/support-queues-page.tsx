@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { SettingsIcon } from "@animateicons/react/lucide";
+import { PlusIcon, SettingsIcon } from "@animateicons/react/lucide";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { DataTable } from "@/components/ui/data-table";
@@ -38,6 +38,7 @@ import { QUEUE_REQUEST_COLUMNS, requestRowKey } from "./support-request-columns"
 import { SupportRequestsTableSkeleton } from "./support-requests-table-skeleton";
 import { SupportRequestDetailSheet } from "./support-request-detail-sheet";
 import { SupportQueueSettingsSheet } from "./support-queue-settings-sheet";
+import { CreateRequestDialog } from "./create-request-dialog";
 
 const PAGE_SIZE = 25;
 const STATUSES: readonly TicketStatus[] = ["TODO", "IN_PROGRESS", "IN_REVIEW", "DONE"];
@@ -106,6 +107,8 @@ export function SupportQueuesPage() {
   const [search, setSearch] = useState(searchParams.get("q") ?? "");
   const debouncedSearch = useDebouncedValue(search, 300);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
+  const canRaise = useCan("self:support");
 
   const pager = useCursorPager(`${queue}|${status ?? "all"}|${debouncedSearch}`);
   const query = useSupportQueueTickets({
@@ -183,9 +186,8 @@ export function SupportQueuesPage() {
     void query.refetch();
   }
 
-  function handleOpenSettings() {
-    setSettingsOpen(true);
-  }
+  const handleOpenSettings = () => setSettingsOpen(true);
+  const handleOpenCreate = () => setCreateOpen(true);
 
   function canWork(target: SupportQueue): boolean {
     return membership[target];
@@ -211,10 +213,19 @@ export function SupportQueuesPage() {
       title="Employee support"
       subtitle="Company-wide requests routed to the HR, IT, Finance, Admin and Legal queues."
       actions={
-        canManage ? (
-          <AnimatedIconButton icon={SettingsIcon} iconSize={16} iconClassName="mr-1.5" size="sm" variant="outline" onClick={handleOpenSettings}>
-            Queue settings
-          </AnimatedIconButton>
+        canManage || canRaise ? (
+          <div className="flex flex-wrap items-center gap-2">
+            {canManage && (
+              <AnimatedIconButton icon={SettingsIcon} iconSize={16} iconClassName="mr-1.5" size="sm" variant="outline" onClick={handleOpenSettings}>
+                Queue settings
+              </AnimatedIconButton>
+            )}
+            {canRaise && (
+              <AnimatedIconButton icon={PlusIcon} iconSize={16} iconClassName="mr-1.5" size="sm" onClick={handleOpenCreate}>
+                New request
+              </AnimatedIconButton>
+            )}
+          </div>
         ) : undefined
       }
       filters={
@@ -278,6 +289,7 @@ export function SupportQueuesPage() {
       </PageState>
 
       <SupportRequestDetailSheet ticketId={selectedTicketId} surface="agent" canWork={canWork} onClose={handleCloseDetail} />
+      {canRaise ? <CreateRequestDialog open={createOpen} onOpenChange={setCreateOpen} /> : null}
       {canManage ? (
         <SupportQueueSettingsSheet open={settingsOpen} onOpenChange={setSettingsOpen} queues={queues.data ?? []} />
       ) : null}

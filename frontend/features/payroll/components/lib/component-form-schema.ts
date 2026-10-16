@@ -71,6 +71,11 @@ export const componentFormSchema = z.object({
   includeInCtc: z.boolean(),
   sortOrder: z.string().optional(),
 }).superRefine((form, ctx) => {
+  const amount = form.amount ?? "";
+  // A malformed amount already has its own message; only well-formed or blank amounts get this one.
+  if (form.calcMethod === "FIXED" && (!amount || AMOUNT_VALUE.test(amount)) && !(parseFloat(amount) > 0)) {
+    ctx.addIssue({ code: "custom", path: ["amount"], message: "Enter an amount greater than 0" });
+  }
   if (form.calcMethod !== "PERCENT_OF") return;
   if (!form.percentBase) ctx.addIssue({ code: "custom", path: ["percentBase"], message: "Pick what this is a percent of" });
   const percentStr = form.percent ?? "";

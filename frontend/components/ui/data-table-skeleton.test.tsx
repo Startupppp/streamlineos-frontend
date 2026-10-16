@@ -14,10 +14,12 @@ describe("a table skeleton shows the real column headers before the rows arrive"
     expect(screen.getAllByRole("row")).toHaveLength(4);
   });
 
-  it("falls back to numbered screen-reader labels when only a count is known", () => {
+  it("hides a header-less placeholder grid from screen readers instead of announcing Column N", () => {
     render(<DataTableSkeleton rows={2} columns={2} />);
-    expect(screen.getByRole("columnheader", { name: "Column 1" })).toBeInTheDocument();
-    expect(screen.getByRole("columnheader", { name: "Column 2" })).toBeInTheDocument();
+    expect(screen.queryByText(/Column \d/)).not.toBeInTheDocument();
+    expect(screen.queryByRole("table")).not.toBeInTheDocument();
+    expect(screen.queryByRole("region", { name: "Table" })).not.toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent("Loading results…");
   });
 });
 

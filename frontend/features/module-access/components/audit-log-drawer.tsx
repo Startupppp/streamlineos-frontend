@@ -9,12 +9,14 @@ import { EmptyState } from "@/components/ui/empty-state";
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
 import {
   Drawer,
   DrawerContent,
+  DrawerDescription,
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
@@ -22,6 +24,7 @@ import { useIsMobile } from "@/hooks/common/use-mobile";
 import { useModuleAuditLog, type AuditLogEntry } from "@/hooks/api/module-access";
 
 const PAGE_SIZE = 15;
+const AUDIT_LOG_DESCRIPTION = "Recent access and role changes for this module, newest first.";
 
 function formatRelativeTime(isoDate: string): string {
   const diff = Date.now() - new Date(isoDate).getTime();
@@ -205,6 +208,7 @@ export function AuditLogDrawer({
               <ClipboardList className="h-4 w-4" />
               Audit Log
             </DrawerTitle>
+            <DrawerDescription className="sr-only">{AUDIT_LOG_DESCRIPTION}</DrawerDescription>
             <Button
               variant="ghost"
               size="sm"
@@ -233,6 +237,7 @@ export function AuditLogDrawer({
             <ClipboardList className="h-4 w-4" />
             Audit Log
           </SheetTitle>
+          <SheetDescription className="sr-only">{AUDIT_LOG_DESCRIPTION}</SheetDescription>
           <Button
             variant="ghost"
             size="sm"

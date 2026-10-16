@@ -157,13 +157,21 @@ export default function TemplatesPage() {
   const updatePage = useUpdateKbPage();
 
   const [pendingTemplateKey, setPendingTemplateKey] = useState<string | null>(null);
+  // KB-B-018: pendingTemplateKey only disables after a re-render, so a fast
+  // double-click created two pages. The ref closes synchronously.
+  const createInFlight = useRef(false);
 
   const handleUseTemplate = useCallback(
     (templateId: number) => {
+      if (createInFlight.current) return;
+      createInFlight.current = true;
       setPendingTemplateKey(savedTemplateKey(templateId));
       createPage.mutate(
         { templateId },
         {
+          onSettled: () => {
+            createInFlight.current = false;
+          },
           onSuccess: (page) => {
             router.push(pageHref(page.id));
           },
@@ -179,11 +187,16 @@ export default function TemplatesPage() {
 
   const handleUseStarter = useCallback(
     (template: StarterTemplate) => {
+      if (createInFlight.current) return;
+      createInFlight.current = true;
       setPreviewTemplate(null);
       setPendingTemplateKey(starterTemplateKey(template));
       createPage.mutate(
         { title: template.name },
         {
+          onSettled: () => {
+            createInFlight.current = false;
+          },
           onSuccess: (page) => {
             function saveContent() {
               setPendingTemplateKey(starterTemplateKey(template));

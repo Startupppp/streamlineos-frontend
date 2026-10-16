@@ -156,6 +156,7 @@ jest.mock("@/hooks/api/hr/expenses", () => ({
   useCreateExpense: () => stub(undefined),
   useUpdateExpense: () => stub(undefined),
   useDeleteExpense: () => stub(undefined),
+  useWithdrawExpense: () => stub(undefined),
 }));
 
 /**

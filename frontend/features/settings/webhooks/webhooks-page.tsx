@@ -23,6 +23,8 @@ import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { useMotionVariants } from "@/lib/motion-variants";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { formatDateTimeInOrgTz } from "@/lib/date-utils";
+import { useOrgTimeZone } from "@/hooks/api/org-display";
 import {
   DEFAULT_PAGE_SIZE,
   parsePageSize,
@@ -71,6 +73,7 @@ export function WebhooksPage() {
   const deleteWebhook = useDeleteWebhook();
   const rotateSecret = useRotateWebhookSecret();
   const { data: deleteImpact } = useWebhookImpact(deleteId);
+  const orgTz = useOrgTimeZone();
   const [logsWebhook, setLogsWebhook] = useState<WebhookEndpoint | null>(null);
   const [logsOpen, setLogsOpen] = useState(false);
 
@@ -367,10 +370,7 @@ export function WebhooksPage() {
                       {deleteImpact.lastDeadLetterAt && (
                         <p className="text-destructive">
                           Last dead-letter:{" "}
-                          {new Date(deleteImpact.lastDeadLetterAt).toLocaleString(
-                            "en-IN",
-                            { dateStyle: "short", timeStyle: "short" },
-                          )}
+                          {formatDateTimeInOrgTz(deleteImpact.lastDeadLetterAt, orgTz)}
                         </p>
                       )}
                     </div>

@@ -7,6 +7,16 @@ jest.mock("next/navigation", () => ({
   usePathname: () => "/",
 }));
 
+const mockUseKbSpace = jest.fn();
+jest.mock("@/hooks/api/kb/spaces", () => ({
+  useKbSpace: (spaceId: number) => mockUseKbSpace(spaceId),
+}));
+
+beforeEach(() => {
+  mockUseKbSpace.mockReset();
+  mockUseKbSpace.mockReturnValue({ data: undefined });
+});
+
 function makePage(overrides: Partial<KbPageDetail> = {}): KbPageDetail {
   return {
     id: 42,
@@ -115,5 +125,20 @@ describe("PageDocumentBreadcrumb — project wiki context", () => {
     expect(screen.getByRole("alert")).toHaveTextContent("Save failed");
     fireEvent.click(screen.getByRole("button", { name: "Retry" }));
     expect(retry).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("PageDocumentBreadcrumb — space context (KB-B-003)", () => {
+  it("shows the page's space between Wiki and the page, linking to the space", () => {
+    mockUseKbSpace.mockImplementation((id: number) => ({ data: id === 7 ? { id: 7, name: "Engineering" } : undefined }));
+    render(<PageDocumentBreadcrumb page={makePage({ spaceId: 7 })} saveState="idle" />);
+    expect(mockUseKbSpace).toHaveBeenCalledWith(7);
+    expect(screen.getByRole("link", { name: "Engineering" })).toHaveAttribute("href", "/knowledge/wiki/spaces/7");
+  });
+
+  it("shows no space crumb for a page outside any space", () => {
+    render(<PageDocumentBreadcrumb page={makePage({ spaceId: null })} saveState="idle" />);
+    expect(mockUseKbSpace).toHaveBeenCalledWith(0);
+    expect(screen.queryByRole("link", { name: "Engineering" })).not.toBeInTheDocument();
   });
 });

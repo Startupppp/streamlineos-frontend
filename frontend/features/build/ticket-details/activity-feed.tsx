@@ -130,7 +130,9 @@ export function ActivityFeed({
               </span>
             ) : null}
           </span>
-          <span className="ml-auto flex shrink-0 items-center gap-1">
+          {/* Wraps instead of holding three AI buttons on one line, which
+              pushed the ticket page ~90px past a 375px screen (B-060). */}
+          <span className="ml-auto flex min-w-0 max-w-full flex-wrap items-center justify-end gap-1">
             {activityAiActions}
             {canAi ? (
               <AiActionsMenu

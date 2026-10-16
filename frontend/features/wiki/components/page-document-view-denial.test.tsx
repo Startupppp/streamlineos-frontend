@@ -289,6 +289,23 @@ describe("PageDocument — kb:pages:view denial is not a retryable error", () =>
   });
 });
 
+describe("PageDocument — pages with no editor document", () => {
+  it("renders contentText as plain paragraphs when content is null (pages imported before KB-B-019)", () => {
+    render(<PageDocument pageId={42} projectId={7} />);
+    expect(screen.getByTestId("plate-editor")).toHaveAttribute(
+      "data-content",
+      JSON.stringify([{ type: "p", children: [{ text: "one two three" }] }]),
+    );
+  });
+
+  it("prefers the stored editor document when there is one", () => {
+    const content = [{ type: "h1", children: [{ text: "Real" }] }];
+    mockUseKbPage.mockReturnValue({ data: { ...makePage(), content }, isLoading: false, isError: false, error: undefined, refetch: jest.fn() });
+    render(<PageDocument pageId={42} projectId={7} />);
+    expect(screen.getByTestId("plate-editor")).toHaveAttribute("data-content", JSON.stringify(content));
+  });
+});
+
 describe("PageDocument — the access snapshot loading window", () => {
   it("renders the loading skeleton and neither a denial nor an error while the access snapshot is still in flight, because a disabled query reports isLoading false", () => {
     mockViewAccess = "loading";

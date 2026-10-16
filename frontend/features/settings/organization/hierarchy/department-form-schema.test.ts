@@ -31,6 +31,13 @@ describe("departmentFormSchema messages", () => {
     ]);
   });
 
+  it("rejects a one-character name with the same minimum the API enforces (HRM-B-008)", () => {
+    expect(messagesFor({ name: " A ", code: "ENG" })).toEqual([
+      "name: Name must be at least 2 characters",
+    ]);
+    expect(messagesFor({ name: "QA", code: "ENG" })).toEqual([]);
+  });
+
   it("accepts a valid department", () => {
     expect(messagesFor({ name: "Engineering", code: "ENG" })).toEqual([]);
   });

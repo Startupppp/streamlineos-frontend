@@ -1,5 +1,6 @@
 "use client";
 
+import { useGuardedCreateKbPage } from "@/features/wiki/hooks/use-guarded-create-kb-page";
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -18,7 +19,6 @@ import {
   useGapRelatedPages,
   useCitationReuse,
   useReviewSla,
-  useCreateKbPage,
   useAssignGap,
   useDismissGap,
   useCreateGapFix,
@@ -165,11 +165,11 @@ export default function KnowledgeAnalyticsPage() {
     isFetchingNextPage: isFetchingNextRelated,
   } = useGapRelatedPages(selectedGapQuery);
 
-  const createPage = useCreateKbPage();
   const assignGap = useAssignGap();
   const dismissGap = useDismissGap();
   const createGapFix = useCreateGapFix();
   const router = useRouter();
+  const createPage = useGuardedCreateKbPage((page) => router.push(pageHref(page.id)));
 
   function handleLoadMorePages() {
     void fetchNextPage();
@@ -219,14 +219,7 @@ export default function KnowledgeAnalyticsPage() {
   }
 
   function handleCreatePageFromGap(query: string) {
-    createPage.mutate(
-      { title: query, ...(spaceId !== undefined ? { spaceId } : {}) },
-      {
-        onSuccess(page) {
-          router.push(pageHref(page.id));
-        },
-      },
-    );
+    void createPage.submit({ title: query, ...(spaceId !== undefined ? { spaceId } : {}) });
   }
 
   function handleAssignGap(query: string, assigneeUserId: string) {
@@ -428,7 +421,7 @@ export default function KnowledgeAnalyticsPage() {
           handleLoadMoreGaps={handleLoadMoreGaps}
           selectedGapQuery={selectedGapQuery}
           handleCreatePageFromGap={handleCreatePageFromGap}
-          createPagePending={createPage.isPending}
+          createPagePending={createPage.isSubmitting}
           handleGapRowSelect={handleGapRowSelect}
           handleAssignGap={handleAssignGap}
           assignGapPending={assignGap.isPending}

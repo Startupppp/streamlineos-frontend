@@ -1,13 +1,6 @@
 import { z } from "zod";
 import { isValidPhoneNumber } from "react-phone-number-input";
 
-export const INDUSTRIES = [
-  "Technology", "Finance & Banking", "Healthcare", "Retail & E-commerce",
-  "Manufacturing", "Education", "Real Estate", "Logistics & Supply Chain",
-  "Marketing & Advertising", "Consulting", "Legal", "Media & Entertainment",
-  "Hospitality & Travel", "Non-profit", "Agency", "Other",
-] as const;
-
 const httpUrlOrEmpty = z
   .string()
   .url("Must be a valid URL")

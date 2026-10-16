@@ -13,6 +13,8 @@ import {
   type IncomingTransferRecord,
 } from "@/hooks/api/ownership";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { formatDateTimeInOrgTz } from "@/lib/date-utils";
+import { useOrgTimeZone } from "@/hooks/api/org-display";
 import { MODULE_LABELS } from "@/components/rbac/permission-matrix-types";
 import { OrgSettingsCard } from "./org-settings-chrome";
 
@@ -98,11 +100,8 @@ function TransferItemRow({
   onDecline,
 }: TransferItemRowProps) {
   const copy = getTransferCopy(transfer);
-  const expiresAt = new Date(transfer.expiresAt);
-  const expiresLabel = expiresAt.toLocaleString("en-IN", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  });
+  const orgTz = useOrgTimeZone();
+  const expiresLabel = formatDateTimeInOrgTz(transfer.expiresAt, orgTz);
 
   function handleAccept() {
     onAccept(transfer);

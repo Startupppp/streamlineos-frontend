@@ -87,7 +87,7 @@ describe("HRMS-B2-028 a failed salary-template read is quotable to support", () 
   });
 });
 
-function template(overrides: Partial<{ id: number; name: string; isActive: boolean }>) {
+function template(overrides: Partial<{ id: number; name: string; isActive: boolean; createdAt: string }>) {
   return {
     id: 1,
     name: "Standard",
@@ -178,5 +178,20 @@ describe("BUG-022 salary structures never claim emptiness before access is known
     render(<SalaryStructuresPageContent />);
     expect(screen.queryByText(/no salary structure templates yet/i)).toBeNull();
     expect(screen.queryByRole("button", { name: /add template/i })).toBeNull();
+  });
+});
+
+describe("UX-R2 template cards are told apart by id and created date", () => {
+  it("shows a short id and the created date so same-named templates can be distinguished", () => {
+    templates.mockReturnValue({
+      data: { data: [template({ id: 7, createdAt: "2026-10-15T09:00:00.000Z" })] },
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch,
+    });
+    render(<SalaryStructuresPageContent />);
+
+    expect(screen.getByText(/#7 · Created 15 Oct 2026/)).toBeInTheDocument();
   });
 });

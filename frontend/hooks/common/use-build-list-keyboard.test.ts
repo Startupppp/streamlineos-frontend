@@ -111,6 +111,24 @@ describe("useBuildListKeyboard — Enter opens, Escape clears", () => {
     expect(mockOpen).toHaveBeenCalledWith(1);
   });
 
+  it("leaves Enter on a focused button to that button, even with a j/k selection (MP-B-017)", () => {
+    setup();
+    const button = document.createElement("button");
+    document.body.appendChild(button);
+
+    act(() => {
+      fireEvent.keyDown(document.body, { key: "j" });
+    });
+    let notCancelled = true;
+    act(() => {
+      notCancelled = fireEvent.keyDown(button, { key: "Enter" });
+    });
+
+    expect(mockOpen).not.toHaveBeenCalled();
+    expect(notCancelled).toBe(true);
+    button.remove();
+  });
+
   it("Enter is a no-op when no item is focused so it cannot open the wrong ticket", () => {
     setup();
 

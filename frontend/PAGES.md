@@ -1022,7 +1022,7 @@ PM Workspace is removed from Build entirely (not renamed, not consolidated into 
 - `/signup` · **Auth** · hooks: `SignupForm` — renders a sign-up form, currently redirects to `/signin`; see `frontend/CLAUDE.md`
 - `/contact` · **Marketing** · hooks: none
 - `/waitlist` · **Marketing** [RETIRED path: no page.tsx found on disk]
-- `/waitlist/claim/[claimToken]` · **Marketing** · hooks: none — workspace claim form for waitlist invitees; `ClaimForm` + `PublicShell`; token-gated, not indexed
+- `/waitlist/claim/[claimToken]` · **Marketing** · hooks: none — retired: "Waitlist sign-up has closed" with Sign in / Contact us links (backend `POST /waitlist/claim` answers 410); not indexed
 - `/design-system` · **Dev** · hooks: none — dev-only gallery
 - `/legal/privacy` · **Marketing** · hooks: none
 - `/legal/security` · **Marketing** · hooks: none

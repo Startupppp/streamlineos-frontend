@@ -85,7 +85,14 @@ export const kbSpaceMemberContract = z.object({
   userImage: z.string().nullable(),
 });
 
-export const kbSpaceMemberListContract = z.array(kbSpaceMemberContract);
+export const kbSpaceMemberListContract = z.object({
+  data: z.array(kbSpaceMemberContract),
+  pagination: z.object({
+    limit: z.number().int(),
+    hasMore: z.boolean(),
+    nextCursor: z.string().nullable(),
+  }),
+});
 export type KbSpaceMember = z.infer<typeof kbSpaceMemberContract>;
 
 export const kbSpaceMemberSuccessContract = z.object({ success: z.boolean() });
