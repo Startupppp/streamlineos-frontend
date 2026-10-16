@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { KbSearchIcon, KbFileTextIcon } from "@/features/wiki/lib/kb-icons";
+import { pageHref } from "@/lib/knowledge-routes";
 import type { KbNoResultRow, KbPageAnalyticsRow } from "@/types/kb";
 
 const STATUS_VARIANT: Record<
