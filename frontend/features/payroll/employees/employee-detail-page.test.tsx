@@ -22,7 +22,7 @@ const components = [
   { id: 1, componentId: 11, calcMethodOverride: null, amount: null, percent: "150.0000", formulaOverride: null, sortOrder: 0, code: "QA1015BASIC", name: "QA1015 Basic", type: "EARNING", calcMethod: "FIXED", taxable: true },
 ];
 jest.mock("@/hooks/api/payroll/employees", () => ({
-  useEmployeeProfile: () => ({ data: { active: profile, components, history: [] }, isLoading: false, isError: false, error: null, refetch: jest.fn() }),
+  useEmployeeProfile: () => ({ data: { active: profile, components, history: [], employee: { name: "Asha Rao", email: "asha@example.com" } }, isLoading: false, isError: false, error: null, refetch: jest.fn() }),
   useEmployeeProfileHistory: () => ({ data: [] }),
 }));
 
@@ -59,6 +59,7 @@ describe("EmployeeDetailPage estimate (PAY-B-033) — the profile summed fixed l
     render(<EmployeeDetailPage employeeUserId={profile.userId} />);
     expect(screen.queryByText(profile.userId)).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { level: 1, name: "Salary Profile" })).toBeInTheDocument();
+    expect(screen.getByText("Asha Rao")).toBeInTheDocument();
   });
 
   it("hides a stale percent on a fixed component (PAY-B-030)", () => {

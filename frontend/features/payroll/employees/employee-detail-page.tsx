@@ -116,6 +116,7 @@ export function EmployeeDetailPage({ employeeUserId }: EmployeeDetailPageProps) 
   const { data: historyData } = useEmployeeProfileHistory(employeeUserId);
 
   const activeProfile = profileData?.active ?? null;
+  const employeeName = profileData?.employee.name ?? profileData?.employee.email ?? null;
   const components = useMemo(() => profileData?.components ?? [], [profileData]);
   const history = historyData ?? [];
   const upcomingProfiles = history.filter((p) => p.status === "UPCOMING");
@@ -177,6 +178,7 @@ export function EmployeeDetailPage({ employeeUserId }: EmployeeDetailPageProps) 
       subtitle={
         activeProfile ? (
           <span className="flex items-center gap-2">
+            {employeeName ? <span>{employeeName}</span> : null}
             <span>{formatMoney(activeProfile.annualCtc)} / year</span>
             <span
               className={cn(
@@ -187,6 +189,8 @@ export function EmployeeDetailPage({ employeeUserId }: EmployeeDetailPageProps) 
               {STATUS_CONFIG[activeProfile.status].label}
             </span>
           </span>
+        ) : employeeName ? (
+          <span>{employeeName} — no active salary profile</span>
         ) : "No active salary profile"
       }
       actions={
