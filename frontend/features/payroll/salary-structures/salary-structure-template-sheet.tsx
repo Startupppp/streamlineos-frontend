@@ -69,6 +69,7 @@ interface SalaryStructureTemplateSheetProps {
   template?: SalaryStructureTemplate;
   onSubmit: (data: CreateSalaryTemplateInput) => void;
   isPending: boolean;
+  nameError?: string;
 }
 
 function FieldGroup({
@@ -91,13 +92,27 @@ function FieldGroup({
   );
 }
 
+function missingRequiredFields(values: TemplateFormValues): string[] {
+  const missing: string[] = [];
+  if (values.name.trim() === "") missing.push("a template name");
+  if (values.basicSalary.trim() === "") missing.push("a basic salary");
+  if (values.effectiveFrom.trim() === "") missing.push("an effective-from date");
+  return missing;
+}
+
+function joinFields(fields: string[]): string {
+  if (fields.length <= 1) return fields.join("");
+  return `${fields.slice(0, -1).join(", ")} and ${fields[fields.length - 1]}`;
+}
+
 function TemplateValidity({ values }: { values: TemplateFormValues }) {
   const preview = estimateTemplateNet(values);
-  if (preview.valid) return null;
+  const missing = missingRequiredFields(values);
+  if (missing.length === 0 && preview.valid) return null;
   return (
     <p className="text-xs text-destructive">
-      {values.basicSalary.trim() === ""
-        ? "Enter a basic salary before this template can be saved."
+      {missing.length > 0
+        ? `Enter ${joinFields(missing)} before this template can be saved.`
         : preview.hasNegativeComponent
           ? "A salary component cannot be negative. Enter zero or more in every amount."
           : "Deductions cannot exceed gross. Raise basic salary or lower deductions."}
@@ -111,6 +126,7 @@ export function SalaryStructureTemplateSheet({
   template,
   onSubmit,
   isPending,
+  nameError,
 }: SalaryStructureTemplateSheetProps) {
   const {
     register,
@@ -141,10 +157,7 @@ export function SalaryStructureTemplateSheet({
   const watchedValues = watch();
   const isActiveValue = watch("isActive");
   const preview = estimateTemplateNet(watchedValues);
-  const canSubmit =
-    watchedValues.name.trim() !== "" &&
-    watchedValues.effectiveFrom.trim() !== "" &&
-    preview.valid;
+  const canSubmit = missingRequiredFields(watchedValues).length === 0 && preview.valid;
 
   useEffect(() => {
     if (open) {
@@ -214,7 +227,7 @@ export function SalaryStructureTemplateSheet({
       isPending={isPending}
       submitDisabled={!canSubmit}
     >
-      <FieldGroup label={<>Template Name <span className="text-destructive">*</span></>} error={errors.name?.message}>
+      <FieldGroup label={<>Template Name <span className="text-destructive">*</span></>} error={errors.name?.message ?? nameError}>
         <Input
           {...register("name")}
           placeholder="e.g. Senior Engineer L3"
@@ -228,7 +241,7 @@ export function SalaryStructureTemplateSheet({
             {...register("basicSalary")}
             type="number"
             min="0"
-            placeholder="50000"
+            placeholder="e.g. 50000"
             className=""
           />
         </FieldGroup>
@@ -238,11 +251,15 @@ export function SalaryStructureTemplateSheet({
             type="number"
             min="0"
             max="100"
-            placeholder="40"
+            placeholder="e.g. 40"
             className=""
           />
         </FieldGroup>
       </div>
+
+      <p className="text-xs text-muted-foreground">
+        HRA, PF and Professional Tax start with common defaults (40%, 12%, ₹200). Change them to match this template.
+      </p>
 
       <TemplateValidity values={watchedValues} />
 
@@ -258,7 +275,7 @@ export function SalaryStructureTemplateSheet({
             {...register("specialAllowance")}
             type="number"
             min="0"
-            placeholder="0"
+            placeholder="e.g. 0"
             className=""
           />
         </FieldGroup>
@@ -267,7 +284,7 @@ export function SalaryStructureTemplateSheet({
             {...register("medicalAllowance")}
             type="number"
             min="0"
-            placeholder="0"
+            placeholder="e.g. 0"
             className=""
           />
         </FieldGroup>
@@ -276,7 +293,7 @@ export function SalaryStructureTemplateSheet({
             {...register("travelAllowance")}
             type="number"
             min="0"
-            placeholder="0"
+            placeholder="e.g. 0"
             className=""
           />
         </FieldGroup>
@@ -285,7 +302,7 @@ export function SalaryStructureTemplateSheet({
             {...register("otherAllowances")}
             type="number"
             min="0"
-            placeholder="0"
+            placeholder="e.g. 0"
             className=""
           />
         </FieldGroup>
@@ -304,7 +321,7 @@ export function SalaryStructureTemplateSheet({
             type="number"
             min="0"
             max="100"
-            placeholder="12"
+            placeholder="e.g. 12"
             className=""
           />
         </FieldGroup>
@@ -313,7 +330,7 @@ export function SalaryStructureTemplateSheet({
             {...register("professionalTax")}
             type="number"
             min="0"
-            placeholder="200"
+            placeholder="e.g. 200"
             className=""
           />
         </FieldGroup>
