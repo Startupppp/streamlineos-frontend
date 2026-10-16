@@ -1,7 +1,11 @@
 import React from "react";
 import { render, screen, cleanup, fireEvent, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import PageHistoryPage from "./page-history-page";
 import { ApiError } from "@/lib/api-envelope";
+import { toast } from "sonner";
+
+jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn() } }));
 
 type IntersectionCallback = (entries: IntersectionObserverEntry[]) => void;
 
@@ -168,7 +172,7 @@ beforeEach(() => {
   mockSearchParamsGet.mockReturnValue(null);
 
   useKbPage.mockReturnValue({
-    data: { id: 1, title: "Test Page", content: CURRENT_PAGE_CONTENT },
+    data: { id: 1, title: "Test Page", content: CURRENT_PAGE_CONTENT, contentRevision: 4 },
     isLoading: false,
     isError: false,
   });
@@ -380,13 +384,14 @@ describe("PageHistoryPage — restore gate", () => {
 });
 
 describe("PageHistoryPage — keyboard accessibility", () => {
-  it("selects a version on Enter without requiring a pointer click", () => {
+  it("selects a version on Enter without requiring a pointer click", async () => {
     mockBothVersions();
     useKbPageVersionDetail.mockReturnValue({ data: mockVersion, isLoading: false });
 
     render(<PageHistoryPage pageId={1} />);
     const versionButton = screen.getByRole("button", { name: "Select version 1" });
-    fireEvent.keyDown(versionButton, { key: "Enter" });
+    versionButton.focus();
+    await userEvent.setup().keyboard("{Enter}");
 
     expect(screen.queryByText("Select a version to preview")).not.toBeInTheDocument();
   });
@@ -566,6 +571,28 @@ describe("PageHistoryPage — restore preview", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("selects a restore version once with the Enter key", async () => {
+    mockBothVersions();
+    render(<PageHistoryPage pageId={1} />);
+    const version = screen.getByRole("button", { name: "Select version 1" });
+    version.focus();
+    await userEvent.setup().keyboard("{Enter}");
+
+    expect(mockRouterReplace).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole("button", { name: /^Restore$/ })).toBeEnabled();
+  });
+
+  it("selects a restore version once with the Space key", async () => {
+    mockBothVersions();
+    render(<PageHistoryPage pageId={1} />);
+    const version = screen.getByRole("button", { name: "Select version 1" });
+    version.focus();
+    await userEvent.setup().keyboard(" ");
+
+    expect(mockRouterReplace).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole("button", { name: /^Restore$/ })).toBeEnabled();
+  });
+
   it("carries a diff preview inside the confirmation, not only an are-you-sure prompt", () => {
     const dialog = openRestoreConfirmation();
 
@@ -613,8 +640,19 @@ describe("PageHistoryPage — restore preview", () => {
     fireEvent.click(within(dialog).getByRole("button", { name: "Restore" }));
 
     expect(mutate).toHaveBeenCalledWith(
-      { pageId: 1, versionNumber: 1 },
+      { pageId: 1, versionNumber: 1, expectedContentRevision: 4 },
       expect.anything(),
     );
+  });
+
+  it("reports a stale restore conflict without retrying against a newer page", () => {
+    const mutate = jest.fn();
+    useRestoreKbVersion.mockReturnValue({ mutate, isPending: false });
+    const dialog = openRestoreConfirmation();
+    fireEvent.click(within(dialog).getByRole("button", { name: "Restore" }));
+    mutate.mock.calls[0]?.[1].onError(new ApiError("Stale", 409, "STALE_REVISION"));
+
+    expect(toast.error).toHaveBeenCalledWith("Page changed before this restore. Refresh and review the latest version before trying again.");
+    expect(mutate).toHaveBeenCalledTimes(1);
   });
 });

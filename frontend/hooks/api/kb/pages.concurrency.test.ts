@@ -7,6 +7,7 @@ import { createElement } from "react";
 import { useUpdateKbPage, useSetKbPageVisibility, usePublishKbPage, useArchiveKbPage, useUnarchiveKbPage } from "./pages";
 import { ApiError } from "@/lib/api-envelope";
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
+import { useRestoreKbVersion } from "./page-versions";
 
 jest.mock("@/lib/api-client", () => ({
   apiClient: {
@@ -261,5 +262,31 @@ describe("KB page visibility and status revision requests", () => {
     await act(async () => { await result.current.mutateAsync(input); });
     expect(apiClient.post.mock.calls[0]?.[2].headers["Idempotency-Key"]).toBeTruthy();
     expect(apiClient.post.mock.calls[1]?.[2].headers["Idempotency-Key"]).toBe(apiClient.post.mock.calls[0]?.[2].headers["Idempotency-Key"]);
+  });
+});
+
+describe("KB page version restore request", () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  it("sends the observed revision and reuses its idempotency key across a failed retry", async () => {
+    const { apiClient } = jest.requireMock("@/lib/api-client") as { apiClient: { post: jest.Mock } };
+    apiClient.post.mockRejectedValueOnce(new Error("Network unavailable")).mockResolvedValueOnce({ id: 1 });
+    const { result } = renderHook(() => useRestoreKbVersion(), { wrapper: wrapper(makeClient()) });
+    const input = { pageId: 1, versionNumber: 2, expectedContentRevision: 4 };
+    await act(async () => { await result.current.mutateAsync(input).catch(() => undefined); });
+    await act(async () => { await result.current.mutateAsync(input); });
+
+    expect(apiClient.post).toHaveBeenNthCalledWith(1, "/kb/pages/1/versions/2/restore", { expectedContentRevision: 4 }, expect.anything(), expect.any(Function));
+    expect(apiClient.post.mock.calls[0]?.[2].headers["Idempotency-Key"]).toBeTruthy();
+    expect(apiClient.post.mock.calls[1]?.[2].headers["Idempotency-Key"]).toBe(apiClient.post.mock.calls[0]?.[2].headers["Idempotency-Key"]);
+  });
+
+  it("uses a fresh idempotency key for a new restore intent", async () => {
+    const { apiClient } = jest.requireMock("@/lib/api-client") as { apiClient: { post: jest.Mock } };
+    apiClient.post.mockResolvedValue({ id: 1 });
+    const { result } = renderHook(() => useRestoreKbVersion(), { wrapper: wrapper(makeClient()) });
+    await act(async () => { await result.current.mutateAsync({ pageId: 1, versionNumber: 2, expectedContentRevision: 4 }); });
+    await act(async () => { await result.current.mutateAsync({ pageId: 1, versionNumber: 2, expectedContentRevision: 4 }); });
+    expect(apiClient.post.mock.calls[1]?.[2].headers["Idempotency-Key"]).not.toBe(apiClient.post.mock.calls[0]?.[2].headers["Idempotency-Key"]);
   });
 });
