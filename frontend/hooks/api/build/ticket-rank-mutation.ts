@@ -83,7 +83,10 @@ export function useRankTicket<TContext = unknown>(
         moves.current.set(variables.ticketId, { from, to });
         shiftColumnCount(queryClient, variables.projectId, from, to);
       }
-      return callerOnMutate?.(variables, mutationContext);
+      // No caller onMutate means no caller context; TanStack passes undefined through.
+      return callerOnMutate
+        ? callerOnMutate(variables, mutationContext)
+        : (undefined as TContext);
     },
     onSuccess: (data, variables, context, mutationContext) => {
       const move = moves.current.get(variables.ticketId);
