@@ -7,6 +7,7 @@ import { SettingsSecuritySection } from "@/features/settings/settings-security-s
 import { MfaChallengeSection } from "@/features/settings/mfa-challenge-section";
 import { MyReportingLineSection } from "@/features/settings/reporting-line/my-reporting-line-section";
 import { CompanionPreferencesSection } from "@/features/settings/companion/companion-preferences-section";
+import { MyDataSection } from "@/features/settings/privacy/my-data-section";
 import { prefetchAccountSettings } from "@/lib/prefetch/settings-account";
 
 export default async function SettingsPage() {
@@ -34,6 +35,8 @@ export default async function SettingsPage() {
         <MyReportingLineSection />
 
         <CompanionPreferencesSection />
+
+        <MyDataSection />
 
         <section className="space-y-4 rounded-xl border border-border bg-card p-5 shadow-sm">
           <div>
