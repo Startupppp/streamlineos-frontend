@@ -31,7 +31,7 @@ it.each([
   ["developer credentials", () => useCalendarDeveloperCredentials()],
 ])("keeps a failed Calendar %s read in its own retry state", async (_name, useRead) => {
   get.mockReset().mockRejectedValue(new Error("Calendar read unavailable"));
-  const { result } = renderHook(useRead, { wrapper });
+  const { result } = renderHook(() => useRead(), { wrapper });
 
   await waitFor(() => expect(result.current.isError).toBe(true));
   expect(result.current.error).toEqual(new Error("Calendar read unavailable"));
