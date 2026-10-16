@@ -1,6 +1,7 @@
 import type { PermissionKey } from "@/lib/rbac/permissions";
 import type { RecordLayout } from "./layout";
 import { PARTY_LAYOUT } from "./party-layout";
+import { PARTY_CONTACT_LAYOUT, PARTY_ROLE_LAYOUT } from "./party-contact-layout";
 import { ACTIVITY_LAYOUT } from "./crm/activity-layout";
 import { CALL_LOG_LAYOUT } from "./crm/call-log-layout";
 import { CAMPAIGN_LAYOUT } from "./crm/campaign-layout";
@@ -32,6 +33,7 @@ import { AUDIT_ENTRY_LAYOUT } from "./crm/settings/audit-entry-layout";
 import { AUTOMATION_LAYOUT } from "./crm/settings/automation-layout";
 import { BLUEPRINT_LAYOUT } from "./crm/settings/blueprint-layout";
 import { CUSTOM_FIELD_LAYOUT } from "./crm/settings/custom-field-layout";
+import { DATA_QUALITY_FINDING_LAYOUT } from "./crm/settings/data-quality-finding-layout";
 import { EMAIL_TEMPLATE_LAYOUT } from "./crm/settings/email-template-layout";
 import { MCP_TOKEN_LAYOUT } from "./crm/settings/mcp-token-layout";
 import {
@@ -98,6 +100,8 @@ export interface RegisteredLayout {
 
 export const LAYOUT_REGISTRY: readonly RegisteredLayout[] = [
   { layout: PARTY_LAYOUT, section: "Parties", viewPermission: "party:parties:view" },
+  { layout: PARTY_CONTACT_LAYOUT, section: "Parties", viewPermission: "party:contacts:view" },
+  { layout: PARTY_ROLE_LAYOUT, section: "Parties", viewPermission: "party:parties:view" },
 
   { layout: LEAD_LAYOUT, section: "CRM", viewPermission: "crm:leads:view" },
   { layout: DEAL_LAYOUT, section: "CRM", viewPermission: "crm:deals:read" },
@@ -123,6 +127,12 @@ export const LAYOUT_REGISTRY: readonly RegisteredLayout[] = [
   { layout: LEAD_ACTIVITY_LAYOUT, section: "CRM", viewPermission: "crm:leads:view" },
   { layout: CALL_LOG_LAYOUT, section: "CRM", viewPermission: "crm:activities:view" },
 
+  {
+    layout: DATA_QUALITY_FINDING_LAYOUT,
+    section: "Reports",
+    viewPermission: "crm:data-quality:view",
+    derived: true,
+  },
   {
     layout: DEAL_AGING_LAYOUT,
     section: "Reports",

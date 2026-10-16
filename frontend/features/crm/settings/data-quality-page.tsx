@@ -10,6 +10,7 @@ import type { IconHandle } from "@animateicons/react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyChartIllustration } from "@/components/illustrations";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -172,6 +173,12 @@ const CARD_CONFIGS: CardConfig[] = [
   },
 ];
 
+const FINDINGS_LINK = (
+  <Button asChild variant="outline" size="sm">
+    <Link href="/crm/settings/data-quality/findings">Review findings</Link>
+  </Button>
+);
+
 export function DataQualityPage() {
   const { data, isLoading, error, refetch, access } = useCrmDataQuality();
 
@@ -195,7 +202,7 @@ export function DataQualityPage() {
 
   if (isLoading) {
     return (
-      <PageWrapper title="Data Quality" subtitle="CRM data health overview">
+      <PageWrapper title="Data Quality" actions={FINDINGS_LINK} subtitle="CRM data health overview">
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
           {Array.from({ length: 8 }).map((_, i) => (
             <Skeleton key={i} className="h-20 rounded-xl" />
@@ -207,7 +214,7 @@ export function DataQualityPage() {
 
   if (error || !data) {
     return (
-      <PageWrapper title="Data Quality" subtitle="CRM data health overview">
+      <PageWrapper title="Data Quality" actions={FINDINGS_LINK} subtitle="CRM data health overview">
         <ErrorState
           title="Couldn't load the data quality report"
           description={getErrorMessage(error)}
@@ -222,7 +229,7 @@ export function DataQualityPage() {
 
   if (allClean) {
     return (
-      <PageWrapper title="Data Quality" subtitle="CRM data health overview">
+      <PageWrapper title="Data Quality" actions={FINDINGS_LINK} subtitle="CRM data health overview">
         <EmptyState
           access={access}
           illustration={<EmptyChartIllustration />}
@@ -235,7 +242,7 @@ export function DataQualityPage() {
   }
 
   return (
-    <PageWrapper title="Data Quality" subtitle="Review and fix data health issues in your CRM">
+    <PageWrapper title="Data Quality" actions={FINDINGS_LINK} subtitle="Review and fix data health issues in your CRM">
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         {CARD_CONFIGS.map((cfg) => (
           <AggregateCard

@@ -44,6 +44,7 @@ const leadsBulkUpdateLazy = lazyContract(() => import("@/hooks/api/leads-schema"
 const leadsBulkDeleteLazy = lazyContract(() => import("@/hooks/api/leads-schema").then((m) => m.leadsBulkDeleteContract));
 const leadsDistributeLazy = lazyContract(() => import("@/hooks/api/leads-schema").then((m) => m.leadsDistributeContract));
 const leadScoreExplanationLazy = lazyContract(() => import("@/hooks/api/leads-schema").then((m) => m.leadScoreExplanationContract));
+const leadCustomDataLazy = lazyContract(() => import("@/hooks/api/leads-schema").then((m) => m.leadCustomDataContract));
 const leadsCheckDuplicatesLazy = lazyContract(() => import("@/hooks/api/leads-schema").then((m) => m.leadsCheckDuplicatesContract));
 const leadsSalesLeaderboardLazy = lazyContract(() => import("@/hooks/api/leads-analytics-schema").then((m) => m.leadsSalesLeaderboardContract));
 const leadsSalesTeamCapacityLazy = lazyContract(() => import("@/hooks/api/leads-analytics-schema").then((m) => m.leadsSalesTeamCapacityContract));
@@ -337,5 +338,57 @@ export function useLeadScoreExplanation(leadId: number, enabled: boolean) {
     queryFn: ({ signal }) => apiClient.get<ScoreExplanation>(`/leads/${leadId}/score-explanation`, undefined, signal, leadScoreExplanationLazy),
     enabled: canView && enabled,
     staleTime: 60_000,
+  });
+}
+
+/**
+ * A lead's review outcome. Both answer with the full lead detail, so the detail
+ * cache takes the response; the list and board hold a status the client could
+ * guess but not a server-computed row, so they are only marked stale.
+ */
+function useLeadReviewMutation(kind: "verify" | "reject") {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("crm:leads:update", {
+    mutationKey: ["leads", kind] as const,
+    mutationFn: ({ leadId, reason }: { leadId: number; reason?: string }) =>
+      apiClient.patch<LeadWithActivities>(
+        `/leads/${leadId}/${kind}`,
+        kind === "reject" && reason ? { reason } : {},
+        undefined,
+        leadDetailLazy,
+      ),
+    onSuccess: (lead, vars) => {
+      qc.setQueryData(customerWorkQueryKeys.leads.detail(vars.leadId), lead);
+      void qc.invalidateQueries({ queryKey: customerWorkQueryKeys.leads.list(), refetchType: "none" });
+      void qc.invalidateQueries({ queryKey: customerWorkQueryKeys.leads.board(), exact: true, refetchType: "none" });
+    },
+  });
+}
+
+export function useVerifyLead() {
+  return useLeadReviewMutation("verify");
+}
+
+export function useRejectLead() {
+  return useLeadReviewMutation("reject");
+}
+
+/** Replaces the lead's whole `customData`; the caller merges before sending. */
+export function useUpdateLeadCustomData() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("crm:leads:update", {
+    mutationKey: ["leads", "customData"] as const,
+    mutationFn: ({ leadId, customData }: { leadId: number; customData: Record<string, unknown> }) =>
+      apiClient.patch<{ customData: Record<string, unknown> | null }>(
+        `/leads/${leadId}/custom-data`,
+        { customData },
+        undefined,
+        leadCustomDataLazy,
+      ),
+    onSuccess: (result, vars) => {
+      qc.setQueryData<LeadWithActivities>(customerWorkQueryKeys.leads.detail(vars.leadId), (prev) =>
+        prev ? { ...prev, customData: result.customData } : prev,
+      );
+    },
   });
 }

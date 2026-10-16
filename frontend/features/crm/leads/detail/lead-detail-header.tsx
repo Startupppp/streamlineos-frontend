@@ -19,6 +19,7 @@ import { AIScoreButton } from "../ai-score-button";
 import { AIEmailDialog } from "../ai-email-dialog";
 import { AINextActionButton } from "../ai-next-action-button";
 import { AIEnrichLeadButton } from "../ai-enrich-lead-button";
+import { LeadReviewActions } from "./lead-review-actions";
 import {
   STATUS_PIPELINE,
   STATUS_STYLES,
@@ -41,6 +42,7 @@ interface LeadDetailHeaderProps {
     potentialValue?: string | null;
     email?: string | null;
     city?: string | null;
+    verifiedById?: string | null;
   };
   isEditing: boolean;
   isStatusPending?: boolean;
@@ -267,6 +269,12 @@ export function LeadDetailHeader({
                 email={lead.email}
                 designation={lead.designation}
                 city={lead.city}
+              />
+
+              <LeadReviewActions
+                leadId={lead.id}
+                status={lead.status}
+                verifiedById={lead.verifiedById ?? null}
               />
 
               <Button variant="outline" size="sm" onClick={onToggleEdit}>
