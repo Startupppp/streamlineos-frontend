@@ -133,8 +133,7 @@ export function ImageElementWithCaption({ element, children, ...props }: PlateEl
             unoptimized
             width={800}
             height={600}
-            style={{ width: '100%', height: 'auto' }}
-            className="rounded-md border border-border"
+            className="mx-auto h-auto max-h-[70vh] w-auto max-w-full rounded-md border border-border object-contain"
           />
         ) : (
           <div className="flex h-24 items-center justify-center rounded-md border-2 border-dashed border-border text-sm text-muted-foreground">
