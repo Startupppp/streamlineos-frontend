@@ -13,6 +13,7 @@ jest.mock("next/navigation", () => ({
 
 const useSupportKbArticles = jest.fn();
 const useSupportKbCategories = jest.fn();
+const useAccess = jest.fn();
 
 jest.mock("@/hooks/api/support/kb", () => ({
   useSupportKbArticles: (...args: unknown[]) => useSupportKbArticles(...args),
@@ -27,10 +28,11 @@ jest.mock("@/hooks/api/support/kb-rag", () => ({
 }));
 
 jest.mock("@/hooks/api/access", () => ({
-  useAccess: () => ({
-    data: { isOrgOwner: false, scopes: {}, modules: { support: true } },
-    isLoading: false,
-  }),
+  useAccess: () => useAccess(),
+}));
+
+jest.mock("@/hooks/api/entitlements", () => ({
+  useEntitlements: () => ({ data: undefined }),
 }));
 
 jest.mock("@/components/support/kb-ask-panel", () => ({
@@ -73,6 +75,10 @@ function listQuery(overrides: Record<string, unknown>) {
 beforeEach(() => {
   jest.clearAllMocks();
   searchParams = new URLSearchParams();
+  useAccess.mockReturnValue({
+    data: { isOrgOwner: false, scopes: { "support:kb:view": "all" }, modules: { support: true } },
+    isLoading: false,
+  });
   useSupportKbArticles.mockReturnValue(listQuery({}));
   useSupportKbCategories.mockReturnValue(listQuery({}));
 });
@@ -92,27 +98,46 @@ describe("KbManagerContent — a refused article read is not an empty knowledge 
     expect(screen.getByText("No articles yet")).toBeInTheDocument();
   });
 
+  it("shows filtered empty when an allowed filtered article read returns no rows", () => {
+    searchParams = new URLSearchParams("status=draft");
+
+    render(<KbManagerContent />);
+
+    expect(screen.getByText("No articles match your filters")).toBeInTheDocument();
+    expect(screen.queryByText("No articles yet")).not.toBeInTheDocument();
+  });
+
   it("refuses to claim emptiness when support:kb:view is denied, and states the refusal instead", () => {
+    useAccess.mockReturnValue({
+      data: { isOrgOwner: false, scopes: {}, modules: { support: true } },
+      isLoading: false,
+    });
     useSupportKbArticles.mockReturnValue(listQuery({ access: DENIED }));
 
     render(<KbManagerContent />);
 
     expect(screen.queryByText("No articles yet")).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /access/i })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "New Article" })).not.toBeInTheDocument();
   });
 
-  it("still claims emptiness while the gate is pending rather than flashing a refusal at a permitted user", () => {
+  it("shows loading rather than emptiness while the gate is pending", () => {
+    useAccess.mockReturnValue({ data: undefined, isLoading: true });
     useSupportKbArticles.mockReturnValue(listQuery({ access: PENDING }));
 
     render(<KbManagerContent />);
 
-    expect(
-      screen.queryByRole("heading", { name: /access/i }),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByText("No articles yet")).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: /access/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "New Article" })).not.toBeInTheDocument();
   });
 
   it("does not let a denial masquerade as the filtered-empty state either", () => {
     searchParams = new URLSearchParams("status=draft");
+    useAccess.mockReturnValue({
+      data: { isOrgOwner: false, scopes: {}, modules: { support: true } },
+      isLoading: false,
+    });
     useSupportKbArticles.mockReturnValue(listQuery({ access: DENIED }));
 
     render(<KbManagerContent />);
@@ -148,6 +173,56 @@ describe("KbManagerContent — the article load failure quotes its request id", 
 
     expect(screen.getByRole("alert")).toBeInTheDocument();
     expect(screen.queryByText("Reference")).not.toBeInTheDocument();
+  });
+});
+
+describe("KbManagerContent — category tab states", () => {
+  beforeEach(() => {
+    searchParams = new URLSearchParams("tab=categories");
+  });
+
+  it("shows the first-empty category state when the read succeeds", () => {
+    render(<KbManagerContent />);
+
+    expect(screen.getByText("No categories yet")).toBeInTheDocument();
+  });
+
+  it("shows loading while category permission is pending", () => {
+    useAccess.mockReturnValue({ data: undefined, isLoading: true });
+    useSupportKbCategories.mockReturnValue(listQuery({ access: PENDING }));
+
+    render(<KbManagerContent />);
+
+    expect(screen.queryByText("No categories yet")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "New Category" })).not.toBeInTheDocument();
+  });
+
+  it("shows the category request id and retries the failing read", () => {
+    const refetch = jest.fn();
+    useSupportKbCategories.mockReturnValue(listQuery({
+      error: new ApiError("Category read failed", 500, "INTERNAL", { correlationId: "req_kb_categories_7" }),
+      refetch,
+    }));
+
+    render(<KbManagerContent />);
+
+    expect(screen.getByText("req_kb_categories_7")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+    expect(refetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows denial without the empty state or creation controls", () => {
+    useAccess.mockReturnValue({
+      data: { isOrgOwner: false, scopes: {}, modules: { support: true } },
+      isLoading: false,
+    });
+    useSupportKbCategories.mockReturnValue(listQuery({ access: DENIED }));
+
+    render(<KbManagerContent />);
+
+    expect(screen.getByRole("heading", { name: "Access Restricted" })).toBeInTheDocument();
+    expect(screen.queryByText("No categories yet")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "New Category" })).not.toBeInTheDocument();
   });
 });
 

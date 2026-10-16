@@ -32,6 +32,8 @@ import {
   FILTER_TOOLBAR_ROW,
 } from "@/components/ui/content-fill-panel";
 import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { OVERFLOW_EDGE_FADE_CLASS, useHorizontalOverflow } from "@/hooks/common/use-horizontal-overflow";
 import { LoadingState } from "@/components/shared/loading-state";
 import {
@@ -143,6 +145,14 @@ export function KbManagerContent() {
     }),
     [articles],
   );
+  const activeQuery = tab === "categories" ? categoriesQuery : articlesQuery;
+  const pageState = usePageState({
+    permission: "support:kb:view",
+    module: "support",
+    isLoading: tab !== "analytics" && (activeQuery.access.pending || activeQuery.isLoading),
+    isError: tab !== "analytics" && Boolean(activeQuery.error),
+    error: activeQuery.error,
+  });
 
   function setParam(key: string, value: string) {
     const next = new URLSearchParams(searchParams.toString());
@@ -330,7 +340,7 @@ export function KbManagerContent() {
           ? "Create and publish help articles for customers and your team"
           : "Manage help articles, categories, and AI-indexed content for your team"
       }
-      actions={
+      actions={pageState.kind === "ready" ? (
         <>
           <LoadingButton
             variant="outline"
@@ -349,8 +359,14 @@ export function KbManagerContent() {
             New Article
           </AnimatedIconButton>
         </>
-      }
+      ) : null}
     >
+      <PageState
+        resolution={pageState}
+        loading={<LoadingState variant="list" />}
+        onRetry={tab === "categories" ? handleCategoriesRetry : handleArticlesRetry}
+        className="flex-1"
+      >
       <div className="flex min-h-0 flex-1 flex-col gap-4">
       <StatCardGrid cols={3}>
         <StatCard label="Total articles" value={stats.total} icon={FileText} />
@@ -475,6 +491,7 @@ export function KbManagerContent() {
         </TabsContent>
       </Tabs>
       </div>
+      </PageState>
 
       {categoryDialogOpen && (
         <KbCategoryDialog onClose={handleCloseCategoryDialog} />
