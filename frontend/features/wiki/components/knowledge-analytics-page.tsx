@@ -122,7 +122,7 @@ export default function KnowledgeAnalyticsPage() {
     isFetchingNextPage: isFetchingNextNoResults,
   } = useKbNoResults(spaceId !== undefined ? { ...range, spaceId } : range);
   const noResults = noResultsResponse?.data ?? [];
-  const noResultsAccessLost = noResultsError && isApiError(noResultsQueryError) && [401, 403, 404].includes(noResultsQueryError.status);
+  const noResultsAccessLost = noResultsError && isApiError(noResultsQueryError) && (noResultsQueryError.status === 401 || noResultsQueryError.status === 403 || noResultsQueryError.status === 404);
   const noResultsPageError = noResultsError && (!noResultsNextError || noResultsAccessLost || noResults.length === 0);
   const {
     data: pageAnalytics = [],

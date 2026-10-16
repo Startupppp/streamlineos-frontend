@@ -206,7 +206,7 @@ export default function WikiSearchPage() {
   );
 
   const items = data?.pages.flatMap((page) => page.items) ?? [];
-  const accessLost = isError && isApiError(error) && [401, 403, 404].includes(error.status);
+  const accessLost = isError && isApiError(error) && (error.status === 401 || error.status === 403 || error.status === 404);
   const showPageError = isError && (!isFetchNextPageError || accessLost || items.length === 0);
   const hasFilters = !!status || !!type || verified !== undefined || spaceId !== undefined;
   const queryActive = q.trim().length > 0;

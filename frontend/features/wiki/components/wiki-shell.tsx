@@ -48,7 +48,7 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
   const [quickFindOpen, setQuickFindOpen] = useState(false);
   const createParamConsumedRef = useRef(false);
   const { isCollapsed: collapsed } = useShellSidebarCollapse();
-  const favoritesAccessLost = isApiError(favoritesReadError) && [401, 403, 404].includes(favoritesReadError.status);
+  const favoritesAccessLost = isApiError(favoritesReadError) && (favoritesReadError.status === 401 || favoritesReadError.status === 403 || favoritesReadError.status === 404);
   const visibleFavorites = favoritesAccessLost ? [] : favorites;
 
   function handleRetryFavorites() {
