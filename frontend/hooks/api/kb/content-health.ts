@@ -75,16 +75,18 @@ export function useContentHealthCounts() {
 
 export function useDismissHealthItem() {
   const queryClient = useQueryClient();
+  const operation = useIdempotentOperation();
   return useAuthorizedMutation("kb:pages:manage", {
     mutationKey: ["knowledge", "kb", "contentHealth", "dismiss"],
     mutationFn: (params: DismissHealthItemParams) =>
       apiClient.post(
         "/kb/wiki/content-health/signals/dismiss",
         params,
-        undefined,
+        operation.configFor(params),
         dismissHealthItemContract,
       ),
     onSuccess: () => {
+      operation.settle();
       void queryClient.invalidateQueries({
         queryKey: knowledgeAndSurveysQueryKeys.kb.contentHealthCounts(),
       });
