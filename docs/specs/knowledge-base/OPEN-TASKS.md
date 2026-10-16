@@ -4,7 +4,7 @@
 
 **Re-audited:** 2026-10-09 against the current frontend, backend, focused tests, type checks, and available localhost browser evidence.
 
-**Open items:** 89.
+**Open items:** 88.
 
 ## Re-audit result
 
@@ -36,6 +36,8 @@ Evidence:
 ## Product and release gates
 
 Latest read-only migration check, 2026-10-16: 1,174 applied of 1,182 journal entries, eight pending in order: unrelated Calendar 2043, Knowledge Base 2044 through 2047, unrelated Calendar 2048 and 2049, and unrelated Payroll 2050. No orphan, duplicate, or unreachable entries. Payroll 2050 was uncommitted in another session's working tree when observed. The configured Neon URL has not been proven to be the deployed service's database, the current Railway login lacks project access, and a recoverable backup/isolated rehearsal is unverified. Do not use the standard runner for this KB-only task while Calendar 2043 remains pending.
+
+Current compile gates, 2026-10-16: backend `pnpm typecheck` failed only at concurrently edited Calendar `calendar-scheduling-poll.service.ts:1814` (TS2345); frontend `pnpm type-check` and `pnpm type-check:specs` failed only at concurrently edited Payroll `policy-profile-section.tsx:83` (TS2322). No KB diagnostic was emitted. These are failed whole-repository gates, not passing KB-wide typechecks. The read-only ledger check again reported 1,174 applied of 1,182 entries with eight pending and no orphan, duplicate or unreachable entries. Railway CLI lists only Virabha projects, while local frontend/backend `main` tracking branches are far ahead of and behind `origin/main`; no deployment or migration was attempted.
 
 KB-OPEN-072 source and focused-test update, 2026-10-16: the public page rewrites content media and cover keys through the broker without relying on `NEXT_PUBLIC_R2_PUBLIC_URL`. A pre-page cover upload can have a null attachment page ID. Backend `2cd842b1f` permits that attachment only when its key exactly matches the token-validated page's stored cover key, retaining the tenant, soft-delete, status, share, and malware gates. The public media ownership and attachment suites passed 17/17. Frontend `2dfb95485` extracts the object key from a previously brokered media or cover URL and rebinds it to the current share token; its focused suite passed 22/22 and scoped lint passed. Historical absolute object URLs and real revocation/object replay still need verification.
 
