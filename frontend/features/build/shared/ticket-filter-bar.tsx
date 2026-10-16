@@ -5,6 +5,7 @@ import { SearchIcon } from "@animateicons/react/lucide";
 import { motion } from "framer-motion";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { SearchInput } from "@/components/ui/search-input";
+import { LIST_SEARCH_MAX } from "@/lib/build/normalize-list-search";
 import { cn } from "@/lib/utils";
 import type { StatusOptionSource } from "@/features/build/shared/types";
 import { useTicketFilterParams } from "./use-ticket-filter-params";
@@ -98,6 +99,8 @@ export function TicketFilterBar({
       <SearchInput
         ref={searchInputRef}
         placeholder="Search..."
+        maxLength={LIST_SEARCH_MAX}
+        title={`Search is limited to ${LIST_SEARCH_MAX} characters`}
         value={localSearch}
         onValueChange={handleSearchChange}
         onSubmitSearch={handleFlushSearch}
