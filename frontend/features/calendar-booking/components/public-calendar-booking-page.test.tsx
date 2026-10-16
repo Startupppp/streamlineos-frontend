@@ -198,6 +198,21 @@ describe("public calendar booking page", () => {
     expect(emailError).toHaveAttribute("role", "alert");
   });
 
+  it("associates a missing time error with the time-choice group", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await screen.findByRole("heading", { name: "Meet Northwind" });
+    await user.click(screen.getByRole("checkbox"));
+    await user.click(screen.getByRole("button", { name: "Confirm booking" }));
+
+    const times = screen.getByRole("radiogroup", { name: "Available times" });
+    const error = (await screen.findAllByText("Choose a time")).at(-1);
+    expect(times).toHaveAttribute("aria-invalid", "true");
+    expect(times).toHaveAttribute("aria-describedby", "booking-time-error");
+    expect(error).toHaveAttribute("id", "booking-time-error");
+    expect(error).toHaveAttribute("role", "alert");
+  });
+
   it("keeps owner-authored French copy while rendering unsupported UI chrome in English", async () => {
     mockedPost.mockImplementation(async (path) => {
       if (String(path).endsWith("/sessions")) return {

@@ -388,6 +388,8 @@ export function PublicCalendarBookingForm({
               onValueChange={field.onChange}
               required
               aria-label={copy.availableTimes}
+              aria-invalid={Boolean(form.formState.errors.slotStart)}
+              aria-describedby={form.formState.errors.slotStart ? "booking-time-error" : undefined}
               className="mt-4 grid max-h-72 gap-2 overflow-y-auto sm:grid-cols-2"
             >
               {offering.slots.map((slot, index) => (
@@ -418,7 +420,7 @@ export function PublicCalendarBookingForm({
           </p>
         )}
         {form.formState.errors.slotStart && (
-          <p className="mt-2 text-sm text-destructive" role="alert">
+          <p id="booking-time-error" className="mt-2 text-sm text-destructive" role="alert">
             {form.formState.errors.slotStart.message}
           </p>
         )}
