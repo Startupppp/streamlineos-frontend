@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { AnswerFeedbackBar, CitationEvidenceList, CopyAnswerButton, CreateKnowledgeGapButton, InsufficientEvidenceBanner, VerificationBadge } from "./kb-chat-parts";
 
@@ -30,6 +30,50 @@ describe("CopyAnswerButton", () => {
 
     expect(navigator.clipboard.writeText).toHaveBeenCalledWith("The answer is 20 days.");
     expect(await screen.findByRole("button", { name: /answer copied/i })).toBeInTheDocument();
+  });
+
+  it("keeps confirmation visible for two seconds after the latest copy", async () => {
+    jest.useFakeTimers();
+    try {
+      render(<CopyAnswerButton text="Current answer" />);
+      fireEvent.click(screen.getByRole("button", { name: "Copy answer" }));
+      await act(async () => { await Promise.resolve(); });
+
+      act(() => jest.advanceTimersByTime(1000));
+      fireEvent.click(screen.getByRole("button", { name: "Answer copied" }));
+      await act(async () => { await Promise.resolve(); });
+
+      act(() => jest.advanceTimersByTime(1000));
+      expect(screen.getByRole("button", { name: "Answer copied" })).toBeInTheDocument();
+
+      act(() => jest.advanceTimersByTime(1000));
+      expect(screen.getByRole("button", { name: "Copy answer" })).toBeInTheDocument();
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it("does not start a reset timer when clipboard access resolves after unmount", async () => {
+    jest.useFakeTimers();
+    try {
+      let resolveCopy: (() => void) | undefined;
+      Object.assign(navigator, {
+        clipboard: {
+          writeText: jest.fn(() => new Promise<void>((resolve) => { resolveCopy = resolve; })),
+        },
+      });
+      const view = render(<CopyAnswerButton text="Current answer" />);
+      fireEvent.click(screen.getByRole("button", { name: "Copy answer" }));
+      view.unmount();
+      const timeoutSpy = jest.spyOn(window, "setTimeout");
+
+      await act(async () => { resolveCopy?.(); });
+
+      expect(timeoutSpy.mock.calls.some(([, delay]) => delay === 2000)).toBe(false);
+      timeoutSpy.mockRestore();
+    } finally {
+      jest.useRealTimers();
+    }
   });
 });
 

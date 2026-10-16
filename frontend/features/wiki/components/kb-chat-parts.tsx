@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AlertTriangle, CheckCircle2, Clock, Copy, Flag, HelpCircle, MessageSquareWarning, ThumbsDown, ThumbsUp } from "lucide-react";
 import { toast } from "sonner";
 import { AnimatedLogo } from "@/components/brand/animated-logo";
@@ -302,14 +302,34 @@ export function DisagreementBanner({ summary }: DisagreementBannerProps) {
 
 export function CopyAnswerButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
+  const mounted = useRef(false);
+  const copySequence = useRef(0);
+  const resetTimer = useRef<number | null>(null);
+
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+      if (resetTimer.current !== null) window.clearTimeout(resetTimer.current);
+    };
+  }, []);
 
   function handleCopy() {
+    const sequence = ++copySequence.current;
     navigator.clipboard.writeText(text).then(
       () => {
+        if (!mounted.current || sequence !== copySequence.current) return;
+        if (resetTimer.current !== null) window.clearTimeout(resetTimer.current);
         setCopied(true);
-        window.setTimeout(() => setCopied(false), 2000);
+        resetTimer.current = window.setTimeout(() => {
+          resetTimer.current = null;
+          setCopied(false);
+        }, 2000);
       },
-      () => toast.error("Could not copy the answer"),
+      () => {
+        if (mounted.current && sequence === copySequence.current)
+          toast.error("Could not copy the answer");
+      },
     );
   }
 
