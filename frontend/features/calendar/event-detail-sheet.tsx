@@ -6,15 +6,6 @@ import { format, addDays } from "date-fns";
 import { Tag } from "lucide-react";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { AppSheet } from "@/components/shared/app-sheet";
-import { useIsMobile } from "@/hooks/common/use-mobile";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
-import { TruncatedText } from "@/components/ui/truncated-text";
 import {
   parseCalendarEventId,
   useCancelOccurrence,
@@ -314,23 +305,16 @@ function MeetingWorkspaceSheet({
   open,
   onOpenChange,
 }: MeetingWorkspaceSheetProps) {
-  const isMobile = useIsMobile();
   const eventId = event ? parseCalendarEventId(event.id)?.eventId ?? null : null;
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side={isMobile ? "bottom" : "right"} overlayClassName="z-[110]" className="z-[110] flex h-[92dvh] w-full flex-col gap-0 p-0 md:h-full sm:max-w-2xl">
-        <SheetHeader className="shrink-0 gap-1 border-b px-5 py-4">
-          <p className="text-xs font-medium text-muted-foreground">Meeting workspace</p>
-          <SheetTitle className="text-base font-semibold tracking-tight">
-            <TruncatedText text={event?.title || "Meeting"} lines={2} className="min-w-0 text-balance" />
-          </SheetTitle>
-        </SheetHeader>
-        <ScrollArea className="min-h-0 flex-1">
-          <div className="px-5 py-4">
-            {event && eventId ? <MeetingWorkspacePanel eventId={eventId} eventTitle={event.title ?? ""} /> : null}
-          </div>
-        </ScrollArea>
-      </SheetContent>
-    </Sheet>
+    <AppSheet
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Meeting workspace"
+      description={event?.title || "Meeting"}
+      className="z-[110] sm:max-w-2xl"
+    >
+      {event && eventId ? <MeetingWorkspacePanel eventId={eventId} eventTitle={event.title ?? ""} /> : null}
+    </AppSheet>
   );
 }
