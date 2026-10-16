@@ -158,7 +158,7 @@ describe("LeaveRequestSheet honesty", () => {
     renderSheet();
     fillRequest("2026-10-08", "2026-10-09");
 
-    expect(screen.getByText(/No balance is available for Casual Leave yet/i)).toBeInTheDocument();
+    expect(screen.getByText(/Casual Leave balance could not be loaded/i)).toBeInTheDocument();
     expect(screen.queryByText(/This will consume/i)).not.toBeInTheDocument();
     expect(screen.queryByRole("status")).not.toBeInTheDocument();
   });
@@ -173,14 +173,31 @@ describe("LeaveRequestSheet honesty", () => {
 
     expect(screen.getByText(/This will consume/i)).toBeInTheDocument();
     expect(
-      screen.queryByText(/No balance is available for Casual Leave yet/i),
+      screen.queryByText(/Casual Leave balance could not be loaded/i),
     ).not.toBeInTheDocument();
   });
 
-  it("labels the LOP warning a hint and shows no money figure", () => {
+  it("blocks a paid request past the balance instead of promising it can still be submitted", () => {
     renderSheet({
       balances: [
         { id: 1, leaveTypeId: 1, balance: "1", typeName: "Casual Leave", daysPerYear: 12 },
+      ],
+    });
+    fillRequest("2026-10-08", "2026-10-09");
+
+    expect(screen.getByText(/Requested 2 days exceeds your available 1 day of Casual Leave/)).toBeInTheDocument();
+    expect(screen.queryByText(/may affect LOP/)).not.toBeInTheDocument();
+    const submit = screen.getByRole("button", { name: "Not enough leave balance" });
+    expect(submit).toBeDisabled();
+    fireEvent.click(submit);
+    expect(requestLeaveMutate).not.toHaveBeenCalled();
+  });
+
+  it("labels the LOP warning on an unpaid type a hint and shows no money figure", () => {
+    renderSheet({
+      leaveTypes: [{ id: 1, name: "Casual Leave", daysPerYear: 0 }],
+      balances: [
+        { id: 1, leaveTypeId: 1, balance: "0", typeName: "Casual Leave", daysPerYear: 0 },
       ],
     });
     fillRequest("2026-10-08", "2026-10-09");
@@ -189,5 +206,6 @@ describe("LeaveRequestSheet honesty", () => {
     expect(hint).toHaveTextContent(/^Hint/);
     expect(hint).toHaveTextContent(/may affect LOP/);
     expect(hint.textContent).not.toMatch(/[₹$]|\bINR\b/);
+    expect(screen.getByRole("button", { name: "Submit leave request" })).toBeEnabled();
   });
 });

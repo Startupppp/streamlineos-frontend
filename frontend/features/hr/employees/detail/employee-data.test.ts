@@ -15,6 +15,7 @@ const SAFE_EMPLOYEE = {
   orgDepartmentId: "department-1",
   image: null,
   isActive: true,
+  hasAccepted: true,
   joiningDate: "2026-08-01",
   reportingTo: null,
   bio: null,

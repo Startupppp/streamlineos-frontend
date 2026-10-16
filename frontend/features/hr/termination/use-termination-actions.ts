@@ -19,12 +19,14 @@ interface UseTerminationActionsOptions {
   terminations: Termination[];
   employees: EmployeeListItem[];
   employeeUserIdParam: string | null;
+  prefillMissing: boolean;
 }
 
 export function useTerminationActions({
   terminations,
   employees,
   employeeUserIdParam,
+  prefillMissing,
 }: UseTerminationActionsOptions) {
   const createTermination = useCreateTermination();
   const submitTermination = useSubmitTermination();
@@ -265,7 +267,13 @@ export function useTerminationActions({
     if (!open) setViewRecord(null);
   }, []);
 
-  const handleCreateOpen = useCallback(() => setCreateOpen(true), []);
+  const handleCreateOpen = useCallback(() => {
+    if (prefillMissing) setSelectedEmployeeUserId("");
+    setCreateOpen(true);
+  }, [prefillMissing]);
+
+  const showingMissingPrefill =
+    prefillMissing && selectedEmployeeUserId !== "" && selectedEmployeeUserId === employeeUserIdParam;
 
   const handleCreateSheetOpenChange = useCallback(
     (open: boolean) => {
@@ -327,7 +335,7 @@ export function useTerminationActions({
   }, []);
 
   return {
-    createOpen,
+    createOpen: createOpen && !showingMissingPrefill,
     handleCreateOpen,
     handleCreateSheetOpenChange,
     canSubmitCreate,

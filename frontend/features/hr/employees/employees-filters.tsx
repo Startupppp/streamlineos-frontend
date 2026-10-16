@@ -106,6 +106,7 @@ export function EmployeesFilters({
           <SelectContent align="start">
             <SelectItem value="all">All statuses</SelectItem>
             <SelectItem value="active">Active</SelectItem>
+            <SelectItem value="pending">Pending invite</SelectItem>
             <SelectItem value="inactive">Inactive</SelectItem>
           </SelectContent>
         </Select>

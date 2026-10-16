@@ -18,6 +18,8 @@ import {
   useHrEmployees,
   type TerminationStatus,
 } from "@/hooks/api/hr";
+import { useHrEmployee } from "@/hooks/api/hr/employee-list";
+import { statusToneClasses } from "@/lib/design-tokens";
 import { useTerminationActions } from "./use-termination-actions";
 
 type StatusFilter = "ALL" | TerminationStatus;
@@ -45,10 +47,41 @@ export function TerminationPage() {
   });
   const terminations = useMemo(() => terminationsData?.data ?? [], [terminationsData]);
   const { data: employeesData } = useHrEmployees({ limit: 100 });
+  const paramEmployee = useHrEmployee(employeeUserIdParam);
+  const prefillMissing = employeeUserIdParam !== null && paramEmployee.isError;
 
-  const employees = useMemo(() => employeesData?.data ?? [], [employeesData]);
+  const employees = useMemo(() => {
+    const listed = employeesData?.data ?? [];
+    const linked = paramEmployee.data;
+    if (!linked || listed.some((employee) => employee.id === linked.id)) return listed;
+    return [
+      ...listed,
+      {
+        id: linked.id,
+        name: linked.name,
+        firstName: linked.firstName,
+        lastName: linked.lastName,
+        email: linked.email,
+        role: linked.role ?? "",
+        designation: linked.designation,
+        employeeId: linked.employeeId,
+        image: linked.image,
+        isActive: linked.isActive ?? false,
+        joiningDate: linked.joiningDate,
+        reportingTo: linked.reportingTo,
+        department: null,
+        hasAccepted: linked.hasAccepted,
+      },
+    ];
+  }, [employeesData, paramEmployee.data]);
 
-  const actions = useTerminationActions({ terminations, employees, employeeUserIdParam });
+  const actions = useTerminationActions({
+    terminations,
+    employees,
+    employeeUserIdParam,
+    prefillMissing,
+  });
+  const missingTone = statusToneClasses("warning");
 
   const handleRetry = useCallback(() => {
     void refetch();
@@ -110,6 +143,14 @@ export function TerminationPage() {
         ) : undefined
       }
     >
+      {prefillMissing ? (
+        <div
+          role="alert"
+          className={`mb-3 rounded-lg border px-3 py-2 text-dense ${missingTone.surface} ${missingTone.rule} ${missingTone.ink}`}
+        >
+          Employee not found. The link you followed names an employee who does not exist or whom you cannot access, so no termination was started.
+        </div>
+      ) : null}
       <TerminationList
         terminations={terminations}
         statusCounts={terminationsData?.statusCounts}

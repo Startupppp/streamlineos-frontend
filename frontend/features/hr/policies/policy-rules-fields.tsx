@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/select";
 import type { HrPolicyType } from "@/types/hr/policies";
 import type { UseFormReturn } from "react-hook-form";
-import type { PolicyFormValues } from "./policy-form-types";
+import { POLICY_SWITCHES, type PolicyFormValues } from "./policy-form-types";
 import { numericFieldChangeOr } from "@/lib/numeric-field";
 
 interface Props {
@@ -145,6 +145,16 @@ function SelectField({
   );
 }
 
+function PolicySwitches({ policyType, form, disabled }: Props) {
+  return (
+    <>
+      {(POLICY_SWITCHES[policyType] ?? []).map((sw) => (
+        <BoolField key={sw.name} form={form} name={sw.name} label={sw.label} disabled={disabled} />
+      ))}
+    </>
+  );
+}
+
 export function PolicyRulesFields({ policyType, form, disabled }: Props) {
   if (policyType === "leave") {
     return (
@@ -166,10 +176,7 @@ export function PolicyRulesFields({ policyType, form, disabled }: Props) {
           <NumberField form={form} name="carryForwardLimit" label="Carry Forward Limit" disabled={disabled} />
         </div>
         <div className="grid grid-cols-2 gap-3">
-          <BoolField form={form} name="encashmentEligible" label="Encashment Eligible" disabled={disabled} />
-          <BoolField form={form} name="probationRestricted" label="Probation Restricted" disabled={disabled} />
-          <BoolField form={form} name="sandwichRule" label="Sandwich Rule" disabled={disabled} />
-          <BoolField form={form} name="halfDayAllowed" label="Half Day Allowed" disabled={disabled} />
+          <PolicySwitches policyType={policyType} form={form} disabled={disabled} />
         </div>
       </div>
     );
@@ -202,7 +209,7 @@ export function PolicyRulesFields({ policyType, form, disabled }: Props) {
         <NumberField form={form} name="weeklyThresholdMinutes" label="Weekly Threshold (min)" disabled={disabled} />
         <NumberField form={form} name="minDurationMinutes" label="Min Duration (min)" disabled={disabled} />
         <NumberField form={form} name="overtimeMultiplier" label="Multiplier" disabled={disabled} />
-        <BoolField form={form} name="compOffConversion" label="Convert to Comp-Off" disabled={disabled} />
+        <PolicySwitches policyType={policyType} form={form} disabled={disabled} />
       </div>
     );
   }
@@ -213,7 +220,7 @@ export function PolicyRulesFields({ policyType, form, disabled }: Props) {
         <NumberField form={form} name="durationDays" label="Duration (days)" disabled={disabled} />
         <NumberField form={form} name="maxExtensions" label="Max Extensions" disabled={disabled} />
         <NumberField form={form} name="maxExtensionDays" label="Extension Duration (days)" disabled={disabled} />
-        <BoolField form={form} name="extensionAllowed" label="Extension Allowed" disabled={disabled} />
+        <PolicySwitches policyType={policyType} form={form} disabled={disabled} />
       </div>
     );
   }
@@ -224,7 +231,7 @@ export function PolicyRulesFields({ policyType, form, disabled }: Props) {
         <NumberField form={form} name="permanentDays" label="Permanent Staff (days)" disabled={disabled} />
         <NumberField form={form} name="contractDays" label="Contract Staff (days)" disabled={disabled} />
         <NumberField form={form} name="probationDays" label="Probation (days)" disabled={disabled} />
-        <BoolField form={form} name="buyoutAllowed" label="Buyout Allowed" disabled={disabled} />
+        <PolicySwitches policyType={policyType} form={form} disabled={disabled} />
       </div>
     );
   }
@@ -234,9 +241,7 @@ export function PolicyRulesFields({ policyType, form, disabled }: Props) {
       <div className="grid grid-cols-2 gap-3">
         <NumberField form={form} name="monthlyQuota" label="Monthly Quota (days)" disabled={disabled} />
         <NumberField form={form} name="weeklyMax" label="Weekly Max (days)" disabled={disabled} />
-        <BoolField form={form} name="requireApproval" label="Require Approval" disabled={disabled} />
-        <BoolField form={form} name="probationRestricted" label="Probation Restricted" disabled={disabled} />
-        <BoolField form={form} name="allowConsecutive" label="Allow Consecutive" disabled={disabled} />
+        <PolicySwitches policyType={policyType} form={form} disabled={disabled} />
       </div>
     );
   }
@@ -247,7 +252,7 @@ export function PolicyRulesFields({ policyType, form, disabled }: Props) {
         <NumberField form={form} name="dailyLimit" label="Daily Limit" disabled={disabled} />
         <NumberField form={form} name="monthlyLimit" label="Monthly Limit" disabled={disabled} />
         <NumberField form={form} name="receiptThreshold" label="Receipt Threshold" disabled={disabled} />
-        <BoolField form={form} name="requireReceipt" label="Require Receipt" disabled={disabled} />
+        <PolicySwitches policyType={policyType} form={form} disabled={disabled} />
       </div>
     );
   }

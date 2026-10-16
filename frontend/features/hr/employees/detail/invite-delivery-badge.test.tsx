@@ -34,6 +34,7 @@ describe("the employee detail contract carries invite delivery", () => {
     orgDepartmentId: "department-1",
     image: null,
     isActive: true,
+    hasAccepted: true,
     joiningDate: "2026-08-01",
     reportingTo: null,
     bio: null,

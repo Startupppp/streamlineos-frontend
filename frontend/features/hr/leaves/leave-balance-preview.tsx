@@ -77,8 +77,8 @@ export function LeaveBalanceUnavailable({ typeName }: { typeName: string | null 
     >
       <Info className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
       <p className="text-dense">
-        No balance is available for {typeName ?? "this leave type"} yet. You can
-        still submit; your approver sees the balance your policy records.
+        Your {typeName ?? "leave"} balance could not be loaded. The request is
+        checked against your balance when you submit.
       </p>
     </div>
   );
