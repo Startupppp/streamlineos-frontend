@@ -27,6 +27,7 @@ export const hi: Record<MessageKey, string> = {
   "attendance.takeBreak": "ब्रेक लें",
   "attendance.resumeWork": "काम फिर शुरू करें",
   "attendance.wait": "{time} रुकें",
+  "attendance.cooldownHint": "आपने अभी क्लॉक आउट किया है। गलती से दोहरी पंचिंग रोकने के लिए क्लॉक इन जल्द ही फिर खुलेगा।",
   "attendance.assignShift": "आज के लिए शिफ़्ट तय करें",
   "attendance.locationDisclosure": "क्लॉक इन करते समय आपकी लोकेशन दर्ज की जाती है।",
   "attendance.unavailable": "उपस्थिति की जानकारी उपलब्ध नहीं है",

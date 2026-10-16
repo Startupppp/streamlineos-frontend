@@ -27,6 +27,7 @@ export const te: Record<MessageKey, string> = {
   "attendance.takeBreak": "విరామం తీసుకోండి",
   "attendance.resumeWork": "పని మళ్లీ ప్రారంభించండి",
   "attendance.wait": "{time} ఆగండి",
+  "attendance.cooldownHint": "మీరు ఇప్పుడే క్లాక్ అవుట్ చేశారు. పొరపాటున రెండుసార్లు పంచ్ కాకుండా క్లాక్ ఇన్ త్వరలో మళ్లీ అందుబాటులోకి వస్తుంది.",
   "attendance.assignShift": "ఈరోజుకు షిఫ్ట్ కేటాయించండి",
   "attendance.locationDisclosure": "మీరు క్లాక్ ఇన్ చేసినప్పుడు మీ లొకేషన్ నమోదవుతుంది.",
   "attendance.unavailable": "హాజరు వివరాలు అందుబాటులో లేవు",
