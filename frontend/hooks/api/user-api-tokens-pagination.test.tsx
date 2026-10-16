@@ -3,9 +3,10 @@ import {
   QueryClient,
   QueryClientProvider,
 } from "@tanstack/react-query";
-import { renderHook, waitFor } from "@testing-library/react";
+import { act, renderHook, waitFor } from "@testing-library/react";
+import { usersAndCommerceQueryKeys } from "@/lib/query-keys/users-and-commerce";
 import { apiClient } from "@/lib/api-client";
-import { useUserApiTokens } from "./user-api-tokens";
+import { useRevokeUserApiToken, useUserApiTokens } from "./user-api-tokens";
 import { userApiTokenPageContract } from "./user-api-tokens-schema";
 
 jest.mock("@/lib/api-client", () => ({
@@ -17,6 +18,8 @@ jest.mock("@/lib/api-client", () => ({
 }));
 
 jest.mock("@/hooks/api/access", () => ({
+  useCan: jest.fn(() => true),
+  useAccess: jest.fn(() => ({ data: { scopes: {}, modules: {} }, refetch: jest.fn() })),
   usePermissionGate: jest.fn((permission: string) => ({
     permission,
     allowed: true,
@@ -64,5 +67,24 @@ describe("useUserApiTokens pagination", () => {
       userApiTokenPageContract,
     );
     expect(result.current.data).toEqual(response);
+  });
+
+  it("drops a revoked token from every cached page at once, even if the refetch still returns it", async () => {
+    (apiClient.delete as jest.Mock).mockResolvedValue(undefined);
+    const token = { id: "t1", userId: "u", name: "ci", prefix: "sl_", scopes: [], expiresAt: null, lastUsedAt: null, createdAt: "2026-10-01T00:00:00Z" };
+    const kept = { ...token, id: "t2", name: "kept" };
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const key = usersAndCommerceQueryKeys.userApiTokens.list({ limit: 50 });
+    client.setQueryData(key, { data: [token, kept], pagination: { limit: 50, hasMore: false, nextCursor: null } });
+    function Wrapper({ children }: { children: ReactNode }) {
+      return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
+    }
+    const { result } = renderHook(() => useRevokeUserApiToken(), { wrapper: Wrapper });
+
+    await act(async () => {
+      await result.current.mutateAsync("t1");
+    });
+
+    expect(client.getQueryData<{ data: { id: string }[] }>(key)?.data.map((t) => t.id)).toEqual(["t2"]);
   });
 });
