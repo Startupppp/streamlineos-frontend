@@ -138,6 +138,9 @@ function SearchResultCard({
   );
 }
 
+// Matches the backend's GET /kb/pages/search `q` limit; longer text was a 400.
+const SEARCH_MAX_LENGTH = 200;
+
 export default function WikiSearchPage() {
   const searchInputId = useId();
   const searchParams = useSearchParams();
@@ -146,7 +149,7 @@ export default function WikiSearchPage() {
   const { update } = useUrlFilters();
   const { data: spacesData } = useKbSpaces({ limit: 100 });
   const spacesById = new Map((spacesData?.data ?? []).map((s) => [s.id, s.name]));
-  const q = searchParams.get("q") ?? "";
+  const q = (searchParams.get("q") ?? "").slice(0, SEARCH_MAX_LENGTH);
   const status = searchParams.get("status") ?? undefined;
   const type = searchParams.get("type") ?? undefined;
   const verifiedParam = searchParams.get("verified");
@@ -330,9 +333,17 @@ export default function WikiSearchPage() {
               placeholder="Search pages…"
               value={inputValue}
               onChange={handleInputChange}
+              maxLength={SEARCH_MAX_LENGTH}
+              aria-describedby={`${searchInputId}-limit`}
               autoFocus
               className="h-9"
             />
+            <p
+              id={`${searchInputId}-limit`}
+              className={inputValue.length >= SEARCH_MAX_LENGTH ? "mt-1 text-xs text-muted-foreground" : "sr-only"}
+            >
+              Search is limited to {SEARCH_MAX_LENGTH} characters.
+            </p>
           </div>
           <div className="flex items-center gap-2">
             <Select value={status ?? "all"} onValueChange={handleStatusChange}>
