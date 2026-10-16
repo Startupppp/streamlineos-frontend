@@ -67,7 +67,10 @@ describe("Calendar developer credential idempotency", () => {
   });
 
   it("starts a new create operation after the backend reports an unrecoverable secret", async () => {
-    const replay = Object.assign(new Error("Credential already created"), { status: 409 });
+    const replay = Object.assign(new Error("Credential already created"), {
+      status: 409,
+      code: "CALENDAR_CREDENTIAL_SECRET_UNAVAILABLE",
+    });
     apiClient.post.mockRejectedValueOnce(replay).mockResolvedValue({ token: "new", credential: { id: "next" } });
     const { result } = renderHook(() => useCreateCalendarDeveloperCredential(), { wrapper });
     const input = {
@@ -81,5 +84,22 @@ describe("Calendar developer credential idempotency", () => {
     await act(async () => { await result.current.mutateAsync(input); });
 
     expect(sentKeys()[1]).not.toBe(sentKeys()[0]);
+  });
+
+  it("keeps the create key when the first request is still in flight", async () => {
+    const inflight = Object.assign(new Error("A matching request is already in progress"), { status: 409 });
+    apiClient.post.mockRejectedValueOnce(inflight).mockResolvedValue({ token: "created", credential: { id: "credential" } });
+    const { result } = renderHook(() => useCreateCalendarDeveloperCredential(), { wrapper });
+    const input = {
+      name: "Integration",
+      description: null,
+      scopes: ["calendar:availability:read" as const],
+      expiresAt: "2026-11-01T00:00:00.000Z",
+    };
+
+    await act(async () => { await expect(result.current.mutateAsync(input)).rejects.toBe(inflight); });
+    await act(async () => { await result.current.mutateAsync(input); });
+
+    expect(sentKeys()[1]).toBe(sentKeys()[0]);
   });
 });

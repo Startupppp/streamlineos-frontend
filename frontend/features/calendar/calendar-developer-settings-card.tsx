@@ -14,8 +14,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { Copy, ExternalLink, KeyRound } from "lucide-react";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { isApiError } from "@/lib/api-envelope";
-import { useCalendarDeveloperCredentials, useCreateCalendarDeveloperCredential, useRevokeCalendarDeveloperCredential } from "@/hooks/api/calendar-developer";
+import { isCalendarCredentialReplay, useCalendarDeveloperCredentials, useCreateCalendarDeveloperCredential, useRevokeCalendarDeveloperCredential } from "@/hooks/api/calendar-developer";
 import { calendarApiScopes, type CalendarApiScope } from "@/hooks/api/calendar-developer-schema";
 
 const scopeLabels: Record<CalendarApiScope, string> = {
@@ -67,7 +66,7 @@ export function CalendarDeveloperSettingsCard() {
       setCreateNeedsReview(false);
       toast.success("Calendar API credential created");
     } catch (error) {
-      if (isApiError(error) && error.status === 409) {
+      if (isCalendarCredentialReplay(error)) {
         setCreateNeedsReview(true);
         toast.error("This credential was already created. Its secret cannot be shown again.");
       } else {

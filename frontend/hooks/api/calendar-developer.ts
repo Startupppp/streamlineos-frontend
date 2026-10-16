@@ -17,6 +17,10 @@ const createContract = lazyContract(() => import("./calendar-developer-schema").
 const revokeContract = lazyContract(() => import("./calendar-developer-schema").then((module) => module.revokeCalendarDeveloperCredentialContract));
 const keys = { all: ["calendar", "developer", "credentials"] as const };
 
+export function isCalendarCredentialReplay(error: unknown): boolean {
+  return isApiError(error) && error.status === 409 && error.code === "CALENDAR_CREDENTIAL_SECRET_UNAVAILABLE";
+}
+
 export function useCalendarDeveloperCredentials(cursor?: string) {
   return useGatedQuery("calendar:admin:manage", {
     queryKey: [...keys.all, cursor ?? null],
@@ -36,7 +40,7 @@ export function useCreateCalendarDeveloperCredential() {
       return queryClient.invalidateQueries({ queryKey: keys.all });
     },
     onError: (error: unknown) => {
-      if (isApiError(error) && error.status === 409) {
+      if (isCalendarCredentialReplay(error)) {
         operation.settle();
         return queryClient.invalidateQueries({ queryKey: keys.all });
       }
