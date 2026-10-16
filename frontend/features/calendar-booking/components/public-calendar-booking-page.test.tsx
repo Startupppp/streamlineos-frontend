@@ -280,10 +280,9 @@ describe("public calendar booking page", () => {
       undefined,
       expect.anything(),
     );
-    await user.click(screen.getByRole("button", { name: "Refresh booking status" }));
     const confirmCalls = mockedPost.mock.calls.filter(([path]) => String(path).endsWith("/confirm"));
-    expect(confirmCalls).toHaveLength(2);
-    expect(confirmCalls[1][1]).toEqual(confirmCalls[0][1]);
+    expect(confirmCalls).toHaveLength(1);
+    expect(screen.queryByRole("button", { name: "Refresh booking status" })).not.toBeInTheDocument();
     expect(mockedPost.mock.calls.filter(([path]) => String(path).endsWith("/holds"))).toHaveLength(1);
     postMessage.mockRestore();
   });
@@ -347,17 +346,16 @@ describe("public calendar booking page", () => {
     expect(mockedPost.mock.calls.filter(([path]) => String(path).endsWith("/holds"))).toHaveLength(1);
   });
 
-  it("keeps the confirmed receipt visible while refreshing provider status", async () => {
-    let completeReplay!: (value: typeof receipt) => void;
-    const replay = new Promise<typeof receipt>((resolve) => {
-      completeReplay = resolve;
-    });
+  it("shows a confirmed receipt without a manual status refresh", async () => {
     let confirmations = 0;
     mockedPost.mockImplementation(async (path) => {
       const value = String(path);
       if (value.endsWith("/sessions")) return session;
       if (value.endsWith("/holds")) return hold;
-      if (value.endsWith("/confirm")) return ++confirmations === 1 ? receipt : replay;
+      if (value.endsWith("/confirm")) {
+        confirmations += 1;
+        return receipt;
+      }
       throw new Error("Unexpected request");
     });
     const user = userEvent.setup();
@@ -370,11 +368,37 @@ describe("public calendar booking page", () => {
     await user.click(screen.getByRole("checkbox"));
     await user.click(screen.getByRole("button", { name: "Confirm booking" }));
     expect(await screen.findByRole("heading", { name: "Your booking is confirmed" })).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Refresh booking status" }));
     expect(screen.getByRole("heading", { name: "Your booking is confirmed" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Confirm booking" })).not.toBeInTheDocument();
-    completeReplay({ ...receipt, providerSyncStatus: "synced" });
-    await waitFor(() => expect(screen.queryByText("Calendar synchronization is in progress.")).not.toBeInTheDocument());
+    expect(screen.queryByRole("button", { name: "Refresh booking status" })).not.toBeInTheDocument();
+    expect(confirmations).toBe(1);
+  });
+
+  it("rechecks a pending receipt with the original request and shows its confirmed outcome", async () => {
+    const pendingReceipt = { ...receipt, bookingId: null, outcome: "pending", providerSyncStatus: "not_requested" };
+    let confirmations = 0;
+    mockedPost.mockImplementation(async (path) => {
+      const value = String(path);
+      if (value.endsWith("/sessions")) return session;
+      if (value.endsWith("/holds")) return hold;
+      if (value.endsWith("/confirm")) return ++confirmations === 1 ? pendingReceipt : receipt;
+      throw new Error("Unexpected request");
+    });
+    const user = userEvent.setup();
+    renderPage();
+    await screen.findByRole("heading", { name: "Meet Northwind" });
+    await user.click(screen.getByRole("radio"));
+    await user.type(screen.getByLabelText("Name"), "Ada Lovelace");
+    await user.type(screen.getByLabelText("Email"), "ada@example.com");
+    await user.type(screen.getByLabelText("Organization"), "Analytical Engines");
+    await user.click(screen.getByRole("checkbox"));
+    await user.click(screen.getByRole("button", { name: "Confirm booking" }));
+    expect(await screen.findByRole("heading", { name: "Your booking is confirmed" })).toBeInTheDocument();
+    const confirmCalls = mockedPost.mock.calls.filter(([path]) => String(path).endsWith("/confirm"));
+    expect(confirmCalls).toHaveLength(2);
+    expect(confirmCalls[1][1]).toEqual(confirmCalls[0][1]);
+    expect(mockedPost.mock.calls.filter(([path]) => String(path).endsWith("/holds"))).toHaveLength(1);
+    expect(screen.queryByRole("button", { name: "Refresh booking status" })).not.toBeInTheDocument();
   });
 
   it.each(["rejected", "uncertain"] as const)("uses a new idempotency identity after a %s slot and offers recovery", async (outcome) => {
@@ -557,7 +581,9 @@ describe("public calendar booking page", () => {
     mockedGet.mockRejectedValue(new Error("Booking page not found"));
     mockedPost.mockRejectedValue(new Error("Booking page not found"));
     renderPage();
-    expect(await screen.findByRole("alert")).toHaveTextContent("This booking page is unavailable");
+    expect(await screen.findByRole("alert")).toHaveTextContent("This booking link is unavailable");
+    expect(screen.getByText("It may have expired or already been used. Ask the organizer for a new booking link.")).toBeInTheDocument();
+    expect(screen.queryByText("Booking page not found")).not.toBeInTheDocument();
     expect(screen.queryByText("Discovery call")).not.toBeInTheDocument();
   });
 });

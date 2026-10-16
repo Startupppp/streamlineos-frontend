@@ -145,6 +145,34 @@ export function useConfirmPublicCalendarBooking(token: string) {
   });
 }
 
+export function usePublicCalendarBookingStatus(
+  token: string,
+  input: ConfirmCalendarBookingInput | null,
+  enabled: boolean,
+) {
+  return useQuery({
+    queryKey: ["public", "calendar", "booking", token, "status", input?.idempotencyKey],
+    queryFn: ({ signal }) => {
+      if (!input) throw new Error("Booking request is unavailable");
+      return apiClient.post<PublicCalendarBookingReceipt>(
+        `${basePath(token)}/confirm`,
+        input,
+        { signal },
+        publicCalendarBookingReceiptContract,
+      );
+    },
+    enabled: Boolean(token && input && enabled),
+    retry: false,
+    staleTime: 0,
+    refetchInterval: (query) =>
+      query.state.data?.outcome === "pending"
+        ? query.state.dataUpdateCount < 12 ? 5_000 : 30_000
+        : false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+  });
+}
+
 export function usePreparePublicCalendarBookingPayment(token: string) {
   return useMutation({
     mutationKey: ["public", "calendar", "booking", token, "payment", "prepare"],

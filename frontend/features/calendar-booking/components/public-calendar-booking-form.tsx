@@ -18,6 +18,7 @@ import {
   useConfirmPublicCalendarBooking,
   useCreatePublicCalendarBookingHold,
   usePublicCalendarBookingCallback,
+  usePublicCalendarBookingStatus,
 } from "@/hooks/api/calendar-booking-public";
 import type {
   PublicCalendarBookingHold,
@@ -101,7 +102,14 @@ export function PublicCalendarBookingForm({
   const paidBooking = usePaidCalendarBooking(token, offering, session);
   const paymentResult = paidBooking.result;
   const [lastReceipt, setLastReceipt] = useState<PublicCalendarBookingReceipt | null>(null);
-  const receipt = paymentResult?.receipt ?? confirmBooking.data ?? lastReceipt;
+  const [replayPayload, setReplayPayload] = useState<Parameters<typeof confirmBooking.mutateAsync>[0] | null>(null);
+  const initialReceipt = paymentResult?.receipt ?? confirmBooking.data ?? lastReceipt;
+  const statusQuery = usePublicCalendarBookingStatus(
+    token,
+    replayPayload,
+    initialReceipt?.outcome === "pending",
+  );
+  const receipt = statusQuery.data ?? initialReceipt;
   const callbackQuery = usePublicCalendarBookingCallback(
     token,
     session.sessionToken,
@@ -110,7 +118,6 @@ export function PublicCalendarBookingForm({
   );
   const holdKeys = useRef(new Map<string, string>());
   const commitKeys = useRef(new Map<string, string>());
-  const replayPayload = useRef<Parameters<typeof confirmBooking.mutateAsync>[0] | null>(null);
   const form = useForm<BookingFormValues>({
     resolver: zodResolver(bookingFormSchema),
     defaultValues: {
@@ -201,7 +208,7 @@ export function PublicCalendarBookingForm({
         consentAccepted: values.consentAccepted,
         honeypot: values.website,
       };
-      replayPayload.current = payload;
+      setReplayPayload(payload);
       await confirmBooking.mutateAsync(payload);
     } catch {
       return;
@@ -216,16 +223,12 @@ export function PublicCalendarBookingForm({
     const currentSlot = form.getValues("slotStart");
     if (currentSlot) holdKeys.current.delete(currentSlot);
     if (acquireHold.data?.id) commitKeys.current.delete(acquireHold.data.id);
-    replayPayload.current = null;
+    setReplayPayload(null);
     setLastReceipt(null);
     acquireHold.reset();
     confirmBooking.reset();
     form.setValue("slotStart", offering.slots.some((slot) => slot.start === preferredStart) ? preferredStart ?? "" : "");
     void queryClient.invalidateQueries({ queryKey: ["public", "calendar", "booking", token, "offering"] });
-  }
-
-  function handleRefreshBookingStatus() {
-    if (replayPayload.current) confirmBooking.mutate(replayPayload.current);
   }
 
   function handleChooseAnotherTime() {
@@ -307,17 +310,12 @@ export function PublicCalendarBookingForm({
           </div>
         )}
 
-        {confirmBooking.isError && <p className="text-sm text-destructive" role="alert">{getErrorMessage(confirmBooking.error) || "Booking status could not be refreshed. Try again."}</p>}
-        <div className="flex flex-wrap gap-2">
-          {replayPayload.current && ["confirmed", "pending", "uncertain"].includes(receipt.outcome) && (
-            <Button type="button" variant="outline" disabled={confirmBooking.isPending} onClick={handleRefreshBookingStatus}>
-              {confirmBooking.isPending ? "Checking booking status…" : "Refresh booking status"}
-            </Button>
-          )}
-          {["rejected", "expired", "cancelled", "uncertain"].includes(receipt.outcome) && (
-            <Button type="button" variant="secondary" onClick={handleChooseAnotherTime}>Choose another time</Button>
-          )}
-        </div>
+        {receipt.outcome === "pending" && (
+          <p className="text-sm text-muted-foreground">We’ll keep checking while this page stays open.</p>
+        )}
+        {["rejected", "expired", "cancelled", "uncertain"].includes(receipt.outcome) && (
+          <Button type="button" variant="secondary" onClick={handleChooseAnotherTime}>Choose another time</Button>
+        )}
 
         {receipt.alternatives.length > 0 && (
           <div className="space-y-2 border-t border-border pt-5">
@@ -333,7 +331,7 @@ export function PublicCalendarBookingForm({
     );
   }
 
-  if (replayPayload.current && confirmBooking.isError) {
+  if (replayPayload && confirmBooking.isError) {
     return (
       <div className="space-y-4 py-12 text-center" role="alert">
         <h2 className="text-xl font-semibold text-foreground">Booking status needs confirmation</h2>
@@ -344,7 +342,7 @@ export function PublicCalendarBookingForm({
           variant="link"
           disabled={confirmBooking.isPending}
           onClick={() => {
-            if (replayPayload.current) confirmBooking.mutate(replayPayload.current);
+            if (replayPayload) confirmBooking.mutate(replayPayload);
           }}
         >
           Check booking status

@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarDays } from "lucide-react";
+import { CalendarDays, Link2Off } from "lucide-react";
 import Image from "next/image";
 import { useParams, useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -10,7 +10,6 @@ import {
   usePublicCalendarBookingOffering,
   usePublicCalendarBookingSession,
 } from "@/hooks/api/calendar-booking-public";
-import { getErrorMessage } from "@/lib/get-error-message";
 import { PublicCalendarBookingForm } from "./public-calendar-booking-form";
 
 function queryValue(params: URLSearchParams, key: string): string | null {
@@ -49,7 +48,7 @@ export function PublicCalendarBookingPage() {
   const offering = offeringQuery.data;
   const session = sessionQuery.data;
   const loading = offeringQuery.isPending || sessionQuery.isPending;
-  const unavailable = offeringQuery.error ?? sessionQuery.error;
+  const unavailable = offeringQuery.isError || sessionQuery.isError;
   const title = session?.copy.title ?? offering?.title ?? "Book a time";
   const description = session?.copy.description ?? offering?.description;
 
@@ -104,14 +103,17 @@ export function PublicCalendarBookingPage() {
             </div>
           )}
 
-          {unavailable && (
-            <div className="space-y-2 py-14 text-center" role="alert">
-              <p className="text-lg font-semibold text-foreground">
-                This booking page is unavailable
-              </p>
-              <p className="text-sm text-muted-foreground">
-                {getErrorMessage(unavailable) || "Ask the organizer for a new booking link."}
-              </p>
+          {unavailable && !loading && (
+            <div className="mx-auto flex max-w-md flex-col items-center gap-4 py-10 text-center sm:py-14" role="alert">
+              <span className="flex size-12 items-center justify-center rounded-xl border border-border bg-surface-inset text-muted-foreground dark:border-background">
+                <Link2Off className="size-6" aria-hidden="true" />
+              </span>
+              <div className="space-y-2">
+                <h2 className="text-xl font-semibold tracking-tight text-foreground">This booking link is unavailable</h2>
+                <p className="text-sm leading-relaxed text-muted-foreground">
+                  It may have expired or already been used. Ask the organizer for a new booking link.
+                </p>
+              </div>
             </div>
           )}
 
