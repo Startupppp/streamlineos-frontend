@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { DealLinkedProjectCard } from "./deal-linked-project-card";
 
 const mockCan = jest.fn<boolean, [string]>();
@@ -24,12 +24,22 @@ describe("DealLinkedProjectCard", () => {
     mockLinked.mockReset();
   });
 
-  it("names the linked project and offers no second link", () => {
+  it("names the linked project and offers Change project, which opens the picker", () => {
     mockCan.mockReturnValue(true);
     mockLinked.mockReturnValue({ data: { dealId: 1, projectId: 9 }, isLoading: false, access: allowed });
     render(<DealLinkedProjectCard dealId={1} />);
     expect(screen.getByRole("link", { name: /ACME · Rollout/ })).toHaveAttribute("href", "/build/9");
     expect(screen.queryByTestId("project-picker")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Change project" }));
+    expect(screen.getByTestId("project-picker")).toBeInTheDocument();
+  });
+
+  it("offers no change to someone who may not link", () => {
+    mockCan.mockReturnValue(false);
+    mockLinked.mockReturnValue({ data: { dealId: 1, projectId: 9 }, isLoading: false, access: allowed });
+    render(<DealLinkedProjectCard dealId={1} />);
+    expect(screen.queryByRole("button", { name: "Change project" })).not.toBeInTheDocument();
   });
 
   it("offers the picker to someone who may update deals and see projects", () => {
