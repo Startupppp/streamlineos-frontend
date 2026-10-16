@@ -71,20 +71,20 @@ export function EventSeriesScopeDialog({
         </>
       }
     >
-        <RadioGroup value={scope} onValueChange={handleScopeChange} className="gap-2">
-          <div className="flex items-center gap-2">
-            <RadioGroupItem value="occurrence" id="series-scope-occurrence" />
-            <Label htmlFor="series-scope-occurrence" className="text-xs font-normal">
-              This occurrence only
-            </Label>
-          </div>
-          <div className="flex items-center gap-2">
-            <RadioGroupItem value="series" id="series-scope-series" />
-            <Label htmlFor="series-scope-series" className="text-xs font-normal">
-              All occurrences
-            </Label>
-          </div>
-        </RadioGroup>
+      <RadioGroup value={scope} onValueChange={handleScopeChange} className="gap-2">
+        <div className="flex items-center gap-2">
+          <RadioGroupItem value="occurrence" id="series-scope-occurrence" />
+          <Label htmlFor="series-scope-occurrence" className="text-xs font-normal">
+            This occurrence only
+          </Label>
+        </div>
+        <div className="flex items-center gap-2">
+          <RadioGroupItem value="series" id="series-scope-series" />
+          <Label htmlFor="series-scope-series" className="text-xs font-normal">
+            All occurrences
+          </Label>
+        </div>
+      </RadioGroup>
     </AppDialog>
   );
 }
