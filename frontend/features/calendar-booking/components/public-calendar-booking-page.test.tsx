@@ -159,6 +159,25 @@ describe("public calendar booking page", () => {
     expect(screen.getByText("I agree to scheduling contact")).toBeInTheDocument();
   });
 
+  it("associates guest validation errors with the invalid name and email fields", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await screen.findByRole("heading", { name: "Meet Northwind" });
+    await user.click(screen.getByRole("checkbox"));
+    await user.click(screen.getByRole("button", { name: "Confirm booking" }));
+
+    const name = screen.getByRole("textbox", { name: "Name" });
+    const email = screen.getByRole("textbox", { name: "Email" });
+    const nameError = await screen.findByText("Enter your name");
+    const emailError = screen.getByText("Enter a valid email");
+    expect(name).toHaveAttribute("aria-invalid", "true");
+    expect(name).toHaveAttribute("aria-describedby", nameError.id);
+    expect(nameError).toHaveAttribute("role", "alert");
+    expect(email).toHaveAttribute("aria-invalid", "true");
+    expect(email).toHaveAttribute("aria-describedby", emailError.id);
+    expect(emailError).toHaveAttribute("role", "alert");
+  });
+
   it("keeps owner-authored French copy while rendering unsupported UI chrome in English", async () => {
     mockedPost.mockImplementation(async (path) => {
       if (String(path).endsWith("/sessions")) return {

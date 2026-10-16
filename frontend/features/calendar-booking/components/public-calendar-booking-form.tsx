@@ -417,13 +417,34 @@ export function PublicCalendarBookingForm({
       <section className="grid gap-4 sm:grid-cols-2" aria-label={copy.yourDetails}>
         <div className="space-y-2">
           <Label htmlFor="guest-name">{copy.name}</Label>
-          <Input id="guest-name" autoComplete="name" {...form.register("guestName")} />
-          <p className="text-sm text-destructive">{form.formState.errors.guestName?.message}</p>
+          <Input
+            id="guest-name"
+            autoComplete="name"
+            aria-invalid={Boolean(form.formState.errors.guestName)}
+            aria-describedby={form.formState.errors.guestName ? "guest-name-error" : undefined}
+            {...form.register("guestName")}
+          />
+          {form.formState.errors.guestName && (
+            <p id="guest-name-error" className="text-sm text-destructive" role="alert">
+              {form.formState.errors.guestName.message}
+            </p>
+          )}
         </div>
         <div className="space-y-2">
           <Label htmlFor="guest-email">{copy.email}</Label>
-          <Input id="guest-email" type="email" autoComplete="email" {...form.register("guestEmail")} />
-          <p className="text-sm text-destructive">{form.formState.errors.guestEmail?.message}</p>
+          <Input
+            id="guest-email"
+            type="email"
+            autoComplete="email"
+            aria-invalid={Boolean(form.formState.errors.guestEmail)}
+            aria-describedby={form.formState.errors.guestEmail ? "guest-email-error" : undefined}
+            {...form.register("guestEmail")}
+          />
+          {form.formState.errors.guestEmail && (
+            <p id="guest-email-error" className="text-sm text-destructive" role="alert">
+              {form.formState.errors.guestEmail.message}
+            </p>
+          )}
         </div>
       </section>
 
