@@ -12,6 +12,7 @@ import type { ChannelMember } from "@/types/chat";
 
 jest.mock("@/hooks/api/chat-core-mutations-b", () => ({
   useRemoveChannelMember: () => ({ mutateAsync: jest.fn() }),
+  useUpdateChannelMemberRole: () => ({ mutate: jest.fn(), isPending: false }),
 }));
 
 jest.mock("@/hooks/api/chat-huddles", () => ({

@@ -9,12 +9,13 @@ import {
   SheetTitle,
   SheetDescription,
 } from "@/components/ui/sheet";
-import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { BellIcon } from "@animateicons/react/lucide";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { usePeriod, useCanViewPeriodDetail } from "@/hooks/api/timesheets-core/periods";
+import { useRemindTeamMember } from "@/hooks/api/timesheets-core/team";
+import { useCan } from "@/hooks/api/access";
 import { PERIOD_STATUS_BADGE, PERIOD_STATUS_LABEL } from "@/features/timesheets/types";
 import type { TimesheetPeriod, PeriodEntry } from "@/features/timesheets/types";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -25,6 +26,10 @@ interface MemberDetailSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   memberName: string;
+  /** The member and week the sheet shows; the reminder targets exactly these. */
+  memberUserId: string | null;
+  weekStart: string;
+  weekEnd: string;
 }
 
 function groupByDate(entries: PeriodEntry[]): Map<string, PeriodEntry[]> {
@@ -42,8 +47,17 @@ export function MemberDetailSheet({
   open,
   onOpenChange,
   memberName,
+  memberUserId,
+  weekStart,
+  weekEnd,
 }: MemberDetailSheetProps) {
   const canViewDetail = useCanViewPeriodDetail();
+  const canRemind = useCan("timesheets:team:view");
+  const remind = useRemindTeamMember();
+  const handleRemind = () => {
+    if (!memberUserId) return;
+    remind.mutate({ userId: memberUserId, weekStart, weekEnd, memberName });
+  };
   const { data: detail, isLoading, isError } = usePeriod(period?.id ?? null);
 
   const isMissingOrDraft =
@@ -70,24 +84,19 @@ export function MemberDetailSheet({
         {isMissingOrDraft && (
           <div className="flex items-center justify-between p-3 rounded-lg bg-status-warning-surface border border-status-warning-rule mb-4">
             <p className="text-xs text-status-warning-ink">No timesheet submitted yet</p>
-            {/*
-              There is no per-member remind endpoint: reminders are sent by the
-              org-wide sweep (`TimesheetRemindersSweepService`). The control used
-              to toast "Reminder sent" with no request behind it, which told
-              managers an overdue chase had happened when nothing had.
-            */}
-            <AnimatedIconButton
-              icon={BellIcon}
-              iconSize={14}
-              iconClassName="mr-1.5"
-              size="sm"
-              variant="outline"
-              className="h-7 text-xs border-status-warning-rule"
-              disabled
-              title="Manual reminders are coming soon. Reminders currently go out automatically."
-            >
-              Remind
-            </AnimatedIconButton>
+            {canRemind && memberUserId && (
+              <LoadingButton
+                type="button"
+                size="sm"
+                variant="outline"
+                className="h-7 text-xs border-status-warning-rule"
+                isPending={remind.isPending}
+                loadingText="Sending…"
+                onClick={handleRemind}
+              >
+                Remind
+              </LoadingButton>
+            )}
           </div>
         )}
 

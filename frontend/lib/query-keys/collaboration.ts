@@ -30,6 +30,7 @@ export const collaborationQueryKeys = {
     huddle: (channelId: number) =>
       [...base, "chat", "huddle", channelId] as const,
     savedMessages: () => [...base, "chat", "savedMessages"] as const,
+    orgSettings: () => [...base, "chat", "orgSettings"] as const,
     inviteLink: (channelId: number) =>
       [...base, "chat", "inviteLink", channelId] as const,
     channelFiles: (channelId: number) =>

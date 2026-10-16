@@ -262,6 +262,9 @@ export function TeamView() {
         open={detailOpen}
         onOpenChange={handleDetailOpenChange}
         memberName={selectedRow?.name || selectedRow?.email || ""}
+        memberUserId={selectedRow?.userId ?? null}
+        weekStart={startStr}
+        weekEnd={endStr}
       />
     </PageWrapper>
   );

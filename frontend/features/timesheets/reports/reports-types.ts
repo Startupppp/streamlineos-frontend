@@ -108,3 +108,12 @@ export interface BillingLeakageReport {
   missingRateHours: number;
   voidedHours: number;
 }
+
+export interface ProjectHoursReport {
+  projectId: number;
+  startDate: string;
+  endDate: string;
+  totalHours: number;
+  billableHours: number;
+  nonBillableHours: number;
+}

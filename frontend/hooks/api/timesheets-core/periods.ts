@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { useAuthorizedIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
@@ -135,3 +136,36 @@ export function useRecallPeriod() {
   );
 }
 
+
+type PeriodLifecycleAction = "lock" | "unlock" | "reopen";
+
+const LIFECYCLE_TOAST: Record<PeriodLifecycleAction, string> = {
+  lock: "Timesheet locked",
+  unlock: "Timesheet unlocked",
+  reopen: "Timesheet reopened for editing",
+};
+
+/**
+ * Admin lifecycle on an approved or locked period: lock (APPROVED -> LOCKED),
+ * unlock (LOCKED -> APPROVED) and reopen (APPROVED|LOCKED -> DRAFT). Like an
+ * approval decision, each moves hours between the queue, Team, reports, billing
+ * and payroll at once, so the whole timesheets subtree is invalidated.
+ */
+export function usePeriodLifecycle(action: PeriodLifecycleAction) {
+  const qc = useQueryClient();
+  return useAuthorizedMutation<TimesheetPeriod, Error, number>("timesheets:approvals:manage", {
+    mutationKey: ["timesheets", "periods", action],
+    mutationFn: (periodId) =>
+      apiClient.post<TimesheetPeriod>(
+        `/timesheets/periods/${periodId}/${action}`,
+        undefined,
+        undefined,
+        timesheetPeriodC,
+      ),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.all });
+      toast.success(LIFECYCLE_TOAST[action]);
+    },
+    onError: (error) => toast.error(getErrorMessage(error)),
+  });
+}

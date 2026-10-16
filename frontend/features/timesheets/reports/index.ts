@@ -1,1 +1,2 @@
-export { ReportsView, ReportsPageSkeleton } from "./reports-view";
+export { ReportsView } from "./reports-view";
+export { ReportsPageSkeleton } from "./reports-page-skeleton";

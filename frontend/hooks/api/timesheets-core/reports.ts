@@ -14,6 +14,7 @@ import type {
   BillingLeakageReport,
   ClientProfitabilityReport,
   ComplianceReport,
+  ProjectHoursReport,
   ReportRangeParams,
   UtilizationReport,
 } from "@/features/timesheets/reports/reports-types";
@@ -32,6 +33,9 @@ const complianceC = lazyContract(() =>
 );
 const approvalSlaC = lazyContract(() =>
   import("@/hooks/api/timesheets-core/timesheets-report-schema").then((m) => m.approvalSlaResponseContract),
+);
+const projectHoursC = lazyContract(() =>
+  import("@/hooks/api/timesheets-core/timesheets-report-schema").then((m) => m.projectHoursResponseContract),
 );
 const billingLeakageC = lazyContract(() =>
   import("@/hooks/api/timesheets-core/timesheets-report-schema").then((m) => m.billingLeakageResponseContract),
@@ -113,5 +117,24 @@ export function useBillingLeakageReport(query: ReportRangeParams = {}, enabled =
     staleTime: 60_000,
     placeholderData: (prev) => prev,
     enabled,
+  });
+}
+
+interface ProjectHoursParams {
+  projectId: number | null;
+  startDate: string;
+  endDate: string;
+}
+
+/** Logged, billable and non-billable hours for one Build project in a range. */
+export function useProjectHoursReport({ projectId, startDate, endDate }: ProjectHoursParams, enabled = true) {
+  const params = { projectId: projectId ?? 0, startDate, endDate };
+  return useGatedQuery("timesheets:reports:view", {
+    queryKey: usersAndCommerceQueryKeys.timesheets.report("project-hours", params),
+    queryFn: ({ signal }) =>
+      apiClient.get<ProjectHoursReport>("/timesheets/reports/project-hours", params, signal, projectHoursC),
+    staleTime: 60_000,
+    placeholderData: (prev) => prev,
+    enabled: enabled && projectId !== null,
   });
 }

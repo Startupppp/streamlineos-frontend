@@ -163,6 +163,35 @@ export function useRemoveChannelMember() {
   });
 }
 
+/**
+ * Promote or demote a channel member. The response is a bare `{ ok }`, so the
+ * channel detail cache is patched with the role the caller asked for rather
+ * than refetched (FE-133); the server refuses non-admin callers with 403.
+ */
+export function useUpdateChannelMemberRole() {
+  const queryClient = useQueryClient();
+  return useAuthorizedMutation("chat:channels:write", {
+    mutationKey: ["chat", "channels", "member-role"],
+    mutationFn: ({ channelId, userId, role }: { channelId: number; userId: string; role: "ADMIN" | "MEMBER" }) =>
+      apiClient.patch<{ ok: boolean }>(
+        `/chat/channels/${channelId}/members/${userId}/role`,
+        { role },
+        undefined,
+        chatOkContract,
+      ),
+    onSuccess: (_, { channelId, userId, role }) => {
+      queryClient.setQueryData<ChatChannelDetailWire>(
+        collaborationQueryKeys.chat.channel(channelId),
+        (prev) =>
+          prev && {
+            ...prev,
+            members: prev.members.map((m) => (m.user?.id === userId ? { ...m, role } : m)),
+          },
+      );
+    },
+  });
+}
+
 export function useUpdateChannel() {
   const queryClient = useQueryClient();
   return useAuthorizedMutation("chat:channels:write", {
