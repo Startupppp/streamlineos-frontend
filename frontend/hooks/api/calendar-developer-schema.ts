@@ -16,7 +16,7 @@ export const calendarDeveloperCredentialContract = z.object({
   scopes: z.array(z.enum(calendarApiScopes)),
   isRevoked: z.boolean(),
   lastUsedAt: z.string().nullable(),
-  expiresAt: z.string(),
+  expiresAt: z.string().nullable(),
   createdAt: z.string(),
 });
 
