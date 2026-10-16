@@ -1,7 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useRunConflictHandler } from "@/features/payroll/shared/run-conflict";
 import { LoadingButton } from "@/components/ui/loading-button";
 import {
@@ -15,7 +19,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useCan } from "@/hooks/api/access";
-import { useGenerateRun, useRecalculateRun } from "@/hooks/api/payroll/runs";
+import { useDiscardRun, useGenerateRun, useRecalculateRun } from "@/hooks/api/payroll/runs";
 import {
   SubmitApprovalAction,
   LockActions,
@@ -29,6 +33,9 @@ interface RunActionsSlotProps {
 
 export function RunActionsSlot({ run }: RunActionsSlotProps) {
   const [showRecalcConfirm, setShowRecalcConfirm] = useState(false);
+  const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
+  const router = useRouter();
+  const discardMutation = useDiscardRun();
   const canManage = useCan("payroll:runs:manage");
 
   const generateMutation = useGenerateRun();
@@ -54,6 +61,21 @@ export function RunActionsSlot({ run }: RunActionsSlotProps) {
         handleError(err);
         setShowRecalcConfirm(false);
       },
+    });
+  }
+
+  function handleDiscardRequest() {
+    setShowDiscardConfirm(true);
+  }
+
+  function handleDiscardConfirm() {
+    discardMutation.mutate(run.id, {
+      onSuccess: () => {
+        toast.success("Draft payroll run discarded");
+        setShowDiscardConfirm(false);
+        router.push("/payroll/runs");
+      },
+      onError: (err: unknown) => toast.error(getErrorMessage(err)),
     });
   }
 
@@ -101,6 +123,25 @@ export function RunActionsSlot({ run }: RunActionsSlotProps) {
     </>
   ) : null;
 
+  const discardButton = canManage ? (
+    <>
+      <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={handleDiscardRequest}>
+        Discard
+      </Button>
+      <ConfirmDialog
+        open={showDiscardConfirm}
+        onOpenChange={setShowDiscardConfirm}
+        destructive
+        isPending={discardMutation.isPending}
+        keepOpenOnConfirm
+        title="Discard this payroll run?"
+        description="The run and its calculations are deleted. Inputs, adjustments and exceptions for this run are removed, and you can start a new run for the month."
+        confirmLabel="Discard run"
+        onConfirm={handleDiscardConfirm}
+      />
+    </>
+  ) : null;
+
   switch (run.status) {
     case "PREPARING":
       return canManage ? (
@@ -115,6 +156,13 @@ export function RunActionsSlot({ run }: RunActionsSlotProps) {
       ) : null;
 
     case "DRAFT":
+      return (
+        <>
+          {recalcButton}
+          {discardButton}
+        </>
+      );
+
     case "REOPENED":
       return recalcButton;
 
@@ -123,6 +171,7 @@ export function RunActionsSlot({ run }: RunActionsSlotProps) {
       return (
         <>
           {recalcButton}
+          {discardButton}
           <SubmitApprovalAction runId={run.id} status={run.status} openBlockers={run.exceptionCount ?? 0} />
         </>
       );
