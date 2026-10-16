@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { createRef } from "react";
 import { PageDocumentOutline, extractHeadings } from "./page-document-outline";
 
@@ -88,5 +89,34 @@ describe("PageDocumentOutline", () => {
     screen.getByRole("button", { name: "Details" }).click();
 
     expect(scrollIntoView).toHaveBeenCalledWith({ behavior: "smooth", block: "start" });
+  });
+
+  it("moves keyboard focus to the selected heading without adding a tab stop", async () => {
+    const user = userEvent.setup();
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const heading = document.createElement("h2");
+    heading.textContent = "Details";
+    heading.scrollIntoView = jest.fn();
+    container.appendChild(heading);
+    const containerRef = { current: container };
+
+    try {
+      render(
+        <PageDocumentOutline
+          content={[{ type: "h2", children: [{ text: "Details" }] }]}
+          containerRef={containerRef}
+        />,
+      );
+
+      screen.getByRole("button", { name: "Details" }).focus();
+      await user.keyboard("{Enter}");
+
+      expect(document.activeElement).toBe(heading);
+      expect(heading.tabIndex).toBe(-1);
+      expect(heading.scrollIntoView).toHaveBeenCalledWith({ behavior: "smooth", block: "start" });
+    } finally {
+      container.remove();
+    }
   });
 });

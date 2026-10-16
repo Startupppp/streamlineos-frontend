@@ -65,6 +65,8 @@ export function PageDocumentOutline({ content, containerRef }: PageDocumentOutli
     const nodes = container.querySelectorAll("h1, h2, h3");
     const target = nodes[Number(indexAttr)];
     if (target instanceof HTMLElement) {
+      target.tabIndex = -1;
+      target.focus({ preventScroll: true });
       target.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   }
