@@ -297,6 +297,7 @@ KB-OPEN-074 source update, 2026-10-16: frontend `fb1e2b928` now calls `recordLeg
   - 2026-10-16 authorization fix: backend `e5dffb3f8` requires both analytics view and page-create authority for create-fix, and checks edit access for the selected explicit or fallback space before inserting a draft. Frontend `126ceb0a6` gates Fix/Page controls on page-create access. Focused backend 13/13 and frontend 35/35 passed; the database e2e guard refused to run against the configured Neon URL. Live role/browser and complete gap actions remain open.
   - Previous consolidated ID: `KB-OPEN-288`
 - [ ] **KB-OPEN-060** **BLOCKED:** Minimum-cohort privacy thresholds; aggregates cannot reveal a hidden page via count or label AV-02: requires live data verification.
+  - Backend `6526475a8` fixes `/kb/analytics/review-sla` so decided and overdue aggregates both require the caller's canonical visible-page predicate inside the tenant, live-page and optional-space subquery. A new regression failed before the fix; focused analytics suites passed 48/48 with scoped lint/diff check. The overview endpoint still aggregates tenant pages and page-linked events without caller visibility; minimum-cohort, application-role database and live browser evidence remain open.
   - Previous consolidated ID: `KB-OPEN-289`
 - [ ] **KB-OPEN-061** **BLOCKED:** Remove vanity totals, raw org-wide titles, duplicate trust scores, charts without table alternatives AV-10: requires inspecting the deployed analytics UI.
   - Previous consolidated ID: `KB-OPEN-290`
