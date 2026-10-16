@@ -22,6 +22,11 @@ const ADMIN_TABS: Array<NavTab & { permission: PermissionKey }> = [
     permission: "notifications:templates:view",
   },
   {
+    href: "/settings/notifications/email-templates",
+    label: "Email templates",
+    permission: "settings:email-templates:manage",
+  },
+  {
     href: "/settings/notifications/broadcasts",
     label: "Broadcasts",
     permission: "notifications:broadcasts:view",

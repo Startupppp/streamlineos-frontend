@@ -46,6 +46,20 @@ export const platformCoreQueryKeys = {
     suppressions: () => [...base, "notifications", "suppressions"] as const,
     preferenceRules: () => [...base, "notifications", "preference-rules"] as const,
     preferenceEventCatalog: () => [...base, "notifications", "preference-event-catalog"] as const,
+    consents: () => [...base, "notifications", "consents"] as const,
+    emailTemplatePreviews: () => [...base, "notifications", "email-template-previews"] as const,
+  },
+
+  privacy: {
+    gdprExportJob: (jobId: string) => [...base, "privacy", "gdpr-export-job", jobId] as const,
+    subjectRequests: (params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "privacy", "subject-requests"] as const)
+        : ([...base, "privacy", "subject-requests", params] as const),
+    quarantine: (params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "privacy", "quarantine"] as const)
+        : ([...base, "privacy", "quarantine", params] as const),
   },
 
   invoice: {

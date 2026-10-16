@@ -15,6 +15,8 @@ import type {
 } from "@/types/notifications";
 import { toStringParams } from "./notifications-shared";
 import { useCan } from "@/hooks/api/access";
+import { useGatedQuery } from "@/hooks/api/gated-query";
+import type { EmailTemplatePreview } from "@/hooks/api/notifications-schema";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 const notificationTemplatesListContract = lazyContract(() =>
@@ -31,6 +33,15 @@ const notificationSuccessContract = lazyContract(() =>
   import("@/hooks/api/notifications-schema").then(
     (m) => m.notificationSuccessContract,
   ),
+);
+const templateTestSendContract = lazyContract(() =>
+  import("@/hooks/api/notifications-schema").then((m) => m.templateTestSendContract),
+);
+const emailTemplatePreviewsContract = lazyContract(() =>
+  import("@/hooks/api/notifications-schema").then((m) => m.emailTemplatePreviewsContract),
+);
+const emailTemplateTestContract = lazyContract(() =>
+  import("@/hooks/api/notifications-schema").then((m) => m.emailTemplateTestContract),
 );
 const templatePreviewContract = lazyContract(() =>
   import("@/hooks/api/notifications-schema").then(
@@ -177,3 +188,33 @@ export const usePreviewTemplate = () => {
       ),
   });
 };
+
+/** Renders and delivers one template to one member, through the real channel. */
+export const useTestSendNotificationTemplate = () =>
+  useAuthorizedMutation<
+    { recipientId: string; channel: string; sentAt: string },
+    Error,
+    { templateId: number; recipientId: string; variables: Record<string, string> }
+  >("notifications:templates:manage", {
+    mutationKey: ["notifications", "templates", "test-send"],
+    mutationFn: ({ templateId, ...dto }) =>
+      apiClient.post(`/notification-templates/${templateId}/test`, dto, undefined, templateTestSendContract),
+  });
+
+/** The built-in transactional emails, rendered with sample data. */
+export const useEmailTemplatePreviews = () =>
+  useGatedQuery("settings:email-templates:manage", {
+    queryKey: platformCoreQueryKeys.notifications.emailTemplatePreviews(),
+    queryFn: ({ signal }) =>
+      apiClient.get<EmailTemplatePreview[]>("/settings/email-templates/preview", undefined, signal, emailTemplatePreviewsContract),
+    staleTime: 30 * 60_000,
+  });
+
+export const useSendEmailTemplateTest = () =>
+  useAuthorizedMutation<{ to: string; locale: string }, Error, { templateId: string; testEmail: string; locale: string }>(
+    "settings:email-templates:manage",
+    {
+      mutationKey: ["notifications", "email-templates", "test"],
+      mutationFn: (dto) => apiClient.post("/settings/email-templates/test", dto, undefined, emailTemplateTestContract),
+    },
+  );

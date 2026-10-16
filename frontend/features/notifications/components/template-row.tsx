@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
-import { BadgeCheck } from "lucide-react";
+import { BadgeCheck, Send } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -22,6 +22,7 @@ export function TemplateRow({
   onEdit,
   onDelete,
   onApproval,
+  onTestSend,
   canManage = false,
 }: {
   template: NotificationTemplate;
@@ -30,6 +31,7 @@ export function TemplateRow({
   onEdit: (t: NotificationTemplate) => void;
   onDelete: (t: NotificationTemplate) => void;
   onApproval: (t: NotificationTemplate) => void;
+  onTestSend: (t: NotificationTemplate) => void;
   canManage?: boolean;
 }) {
   const shouldReduceMotion = useReducedMotion();
@@ -56,6 +58,10 @@ export function TemplateRow({
   const handleApprovalClick = useCallback(
     () => onApproval(template),
     [onApproval, template],
+  );
+  const handleTestSendClick = useCallback(
+    () => onTestSend(template),
+    [onTestSend, template],
   );
 
   return (
@@ -147,6 +153,17 @@ export function TemplateRow({
               size={12}
               className="text-muted-foreground"
             />
+          </Button>
+        )}
+        {canManage && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6"
+            aria-label="Send a test"
+            onClick={handleTestSendClick}
+          >
+            <Send size={12} className="text-muted-foreground" />
           </Button>
         )}
         {canManage && requiresApproval(template) && (

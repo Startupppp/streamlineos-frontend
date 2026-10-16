@@ -82,6 +82,7 @@
 - `/settings/notifications/providers` · **Platform** · hooks: `→ features/notifications` — gated `notifications:providers:view`
 - `/settings/notifications/events` · **Platform** · hooks: `→ features/notifications` — gated `notifications:events:view`
 - `/settings/notifications/policy` · **Platform** · hooks: `→ features/notifications` — gated `notifications:policy:view`
+- `/settings/notifications/email-templates` · **Platform** · hooks: `requirePermission("settings:email-templates:manage")` (server), `useEmailTemplatePreviews` → `GET /settings/email-templates/preview`, `useSendEmailTemplateTest` → `POST /settings/email-templates/test`, `usePageState` + `PageState`, `→ features/notifications/admin` — 2026-10-17: the built-in transactional emails with a sandboxed (`sandbox=""`) HTML preview and a rate-limited test send; tab, sidebar and route-access entry on the same key
 - `/notifications` · [RETIRED — redirects to `/inbox` via `next.config.ts`; kept as compatibility redirect]
 - `/notifications/preferences` · [RETIRED — redirects to `/settings/notifications/my-preferences` via `next.config.ts`]
 - `/notifications/providers` · [RETIRED — redirects to `/settings/notifications/providers` via `next.config.ts`]
@@ -947,6 +948,7 @@ PM Workspace is removed from Build entirely (not renamed, not consolidated into 
 
 - `/settings` · **Settings** · hooks: `→ features/settings` — universal route, gate stays `enforceRouteAccess`; server-prefetched via `prefetchAccountSettings`.
 - `/settings` · **Settings** · hooks: `→ features/settings` (2026-09-26, HRM-15: "Reporting line" section — `useMyReportingLine` → `GET /me/reporting-line` (hidden when HR is off or `hasEmployment === false`), "Report an issue" → `POST /me/reporting-manager-requests`, history `GET /me/reporting-manager-requests` with cancel / respond; no reasons of others are shown)
+- `/settings` · **Settings** · hooks: `→ features/settings/privacy` (2026-10-17, GDPR self-service: "Your data" section — `POST /gdpr/export/me` saves JSON, `POST /gdpr/export-async/me` starts an archive whose id is kept per org in localStorage and polled via `GET /gdpr/export-async/:jobId/status` until terminal, then `…/download`; `POST /gdpr/rectification/me` for the string-valued fields. All universal — the subject is the token. The archive needs `GDPR_EXPORT_WORKER_ENABLED` not `false` on the backend)
 - `/settings/users` · **Settings** · hooks: `→ features/settings/users` — C8 (2026-09-10): server-prefetched + `HydrationBoundary` via `prefetchSettingsUsers` (`/v2/users`, `/users/stats`); the initial key is derived from server `searchParams` through `readUsersListState`, shared with the page
 - `/settings/roles` · **Settings** · hooks: `→ features/settings/roles`
 - `/settings/roles/[roleId]` · **Settings** · hooks: `→ features/settings/roles`
@@ -966,6 +968,8 @@ PM Workspace is removed from Build entirely (not renamed, not consolidated into 
 - `/settings/billing/ai-credits` · **Settings** · hooks: `→ features/settings/billing` — platform billing page 2 of 2; C8 (2026-09-10): server-prefetched + `HydrationBoundary` via `prefetchAiCreditsSettings` (wallet, transactions, usage)
 - `/settings/api-tokens` · **Settings** · hooks: `→ features/settings/api-tokens`
 - `/settings/webhooks` · **Settings** · hooks: `→ features/settings/webhooks` — C8 (2026-09-10): server-prefetched + `HydrationBoundary` via `prefetchSettingsWebhooks`; the `?size` param feeds the initial key
+- `/settings/privacy` · **Settings** · hooks: `requirePermission(["hr:retention:manage", "compliance:subject-requests:view"])` (server), `→ features/settings/privacy` — 2026-10-17 (GDPR): Member data panel (`hr:retention:manage`: `POST /gdpr/export/:personId`, `export-async/:personId` + status/download, `erasure/:subjectId` with dry-run preview) and the Subject requests queue (`GET /compliance/subject-requests` on `compliance:subject-requests:view`, run on `compliance:subject-requests:execute`; the service additionally requires a declared operator). Each panel shows only for its own key. Every erasure is a destructive confirm that stays shut until the subject's email is typed
+- `/settings/storage-quarantine` · **Settings** · hooks: `requirePermission("storage:quarantine:view")` (server), `useQuarantine` → `GET /storage/quarantine` (cursor, `?status` in the URL), release/reject/delete on `storage:quarantine:manage`, `usePageState` + `PageState`, `→ features/settings/storage-quarantine` — 2026-10-17: uploads held for malware scanning; release only while `pending_scan`, reject unless released, each behind a confirm; mutations patch every loaded page
 - `/settings/audit-log` · **Settings** · hooks: `→ features/settings/audit-log` — C8 (2026-09-10): server-prefetched + `HydrationBoundary` via `prefetchSettingsAuditLog` (list + actions + target types); the initial key comes from `readAuditLogFilters(searchParams)`, shared with the page
 - `/settings/delegations` · **Settings** · hooks: `→ features/settings/delegations` — C8 (2026-09-10): server-prefetched + `HydrationBoundary` via `prefetchSettingsDelegations` (received, given, discovery members); each list keys off its own `received*`/`granted*` params. S01 (2026-09-02): neither side bounded the delegation window, so a delegation could be granted for a century — a permanent shadow role. Capped at 90 days in `delegation-policy.ts` and mirrored in the form schema.
 - `/settings/incoming-transfer` · **Settings** · hooks: `→ features/settings/incoming-transfer` — C8 (2026-09-10): classified NO PREFETCH NEEDED. `useIncomingOrgTransfers` declares `staleTime: 0` + `refetchOnMount: "always"`, so a hydrated offer is re-read on first mount anyway; a stale accept/decline offer is the one thing this page must not show. Pinned by `lib/prefetch/settings-prefetch-census.test.ts`
@@ -1025,7 +1029,7 @@ PM Workspace is removed from Build entirely (not renamed, not consolidated into 
 - `/waitlist` · **Marketing** [RETIRED path: no page.tsx found on disk]
 - `/waitlist/claim/[claimToken]` · **Marketing** · hooks: none — retired: "Waitlist sign-up has closed" with Sign in / Contact us links (backend `POST /waitlist/claim` answers 410); not indexed
 - `/design-system` · **Dev** · hooks: none — dev-only gallery
-- `/legal/privacy` · **Marketing** · hooks: none
+- `/legal/privacy` · **Marketing** · hooks: `useSubprocessorNotices` → public `POST /compliance/subprocessors/subscribe|unsubscribe` (2026-10-17: email notice of subprocessor changes, in the Subprocessors section)
 - `/legal/security` · **Marketing** · hooks: none
 - `/legal/terms` · **Marketing** · hooks: none
 - `/blogs` · **Marketing** · hooks: `→ features/blog` — disk path: `(public)/blogs/(site)/page.tsx`; `(site)` is a route group, not a URL segment

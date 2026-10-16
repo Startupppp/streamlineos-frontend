@@ -342,3 +342,51 @@ export const preferenceEventCatalogItemContract = z.object({
 export const preferenceEventCatalogContract = z.array(
   preferenceEventCatalogItemContract,
 );
+
+/** `consentRowSchema` — COMP-003, the record of agreement SMS/WhatsApp routing requires. */
+export const consentRowContract = z.object({
+  channel: z.string(),
+  destination: z.string(),
+  state: z.string(),
+  source: z.string(),
+  legalBasis: z.string(),
+  grantedAt: z.string().nullable(),
+  withdrawnAt: z.string().nullable(),
+  updatedAt: z.string(),
+});
+export type NotificationConsent = z.infer<typeof consentRowContract>;
+export const consentsListContract = z.array(consentRowContract);
+
+/** `templateTestSendSchema`. */
+export const templateTestSendContract = z.object({
+  success: z.literal(true),
+  recipientId: z.string(),
+  channel: z.string(),
+  subject: z.string().optional(),
+  body: z.string(),
+  sentAt: z.string(),
+});
+
+/** `emailTemplatePreviewResponseSchema` — every built-in email, rendered with sample data. */
+export const emailTemplatePreviewsContract = z.array(
+  z.object({
+    id: z.string(),
+    category: z.string(),
+    name: z.string(),
+    subject: z.string(),
+    html: z.string(),
+    version: z.number().int().positive(),
+    locale: z.string(),
+    supportedLocales: z.array(z.string()),
+  }),
+);
+export type EmailTemplatePreview = z.infer<typeof emailTemplatePreviewsContract>[number];
+
+/** `emailTemplateTestResponseSchema`. */
+export const emailTemplateTestContract = z.object({
+  sent: z.literal(true),
+  to: z.string(),
+  templateId: z.string(),
+  locale: z.string(),
+  version: z.number().int().positive(),
+});
