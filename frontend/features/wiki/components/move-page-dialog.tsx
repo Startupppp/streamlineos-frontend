@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import {
   Dialog,
   DialogContent,
@@ -58,7 +59,7 @@ export default function MovePageDialog({
           toast.success("Page moved");
           onOpenChange(false);
         },
-        onError: () => toast.error("Failed to move page"),
+        onError: (error) => toast.error(getErrorMessage(error)),
       },
     );
   }
