@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { TablePagination } from "@/components/ui/table-pagination";
-import { useCan } from "@/hooks/api/access";
+import { useCan, useCanState } from "@/hooks/api/access";
 import {
   useManagedProductMembers,
   useRemoveManagedProductMember,
@@ -17,6 +17,7 @@ import { isApiError } from "@/lib/api-envelope";
 import { toast } from "sonner";
 import { AddProductMemberDialog } from "./add-product-member-dialog";
 import { ErrorState } from "@/components/shared/error-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import {
   PRODUCT_MEMBER_CURSORS_PARAM,
   useBuildCursorPager,
@@ -40,6 +41,7 @@ export function ProductSettingsMembersSection({
 }: ProductSettingsMembersSectionProps) {
   const canUpdateByPermission = useCan("build:managed-products:update");
   const canUpdate = canWriteProp !== undefined ? canWriteProp : canUpdateByPermission;
+  const canViewState = useCanState("build:managed-products:view");
   const [addOpen, setAddOpen] = useState(false);
   const [removeTarget, setRemoveTarget] = useState<ManagedProductMember | null>(null);
   const [removeBlockedMsg, setRemoveBlockedMsg] = useState<string | null>(null);
@@ -116,7 +118,9 @@ export function ProductSettingsMembersSection({
         ) : null}
       </div>
 
-      {isLoading ? (
+      {canViewState === "denied" ? (
+        <NoPermissionState compact />
+      ) : isLoading ? (
         <div className="flex flex-col gap-2">
           {[0, 1, 2].map((i) => (
             <Skeleton key={i} className="h-10 w-full" />

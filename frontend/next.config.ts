@@ -221,6 +221,11 @@ const nextConfig: NextConfig = {
       permanent: false,
     },
     {
+      source: "/hrms",
+      destination: "/hr",
+      permanent: false,
+    },
+    {
       source: "/hr/dashboard",
       destination: "/hr",
       permanent: false,
@@ -463,11 +468,6 @@ const nextConfig: NextConfig = {
       permanent: false,
     },
     {
-      source: "/knowledge",
-      destination: "/knowledge/chat",
-      permanent: false,
-    },
-    {
       source: "/ask",
       destination: "/knowledge/chat",
       permanent: false,
@@ -547,7 +547,6 @@ const nextConfig: NextConfig = {
       headers: [
         { key: "Accept-CH", value: "Sec-CH-UA-Mobile" },
         { key: "Vary", value: "Sec-CH-UA-Mobile, User-Agent" },
-        { key: "X-Frame-Options", value: "DENY" },
         { key: "X-Content-Type-Options", value: "nosniff" },
         { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
         {

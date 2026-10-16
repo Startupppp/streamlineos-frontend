@@ -157,3 +157,21 @@ describe("GanttView — the windowed rows keep their semantics", () => {
     expect(onTicketClick).toHaveBeenCalledWith(4);
   });
 });
+
+describe("GanttView — B-069: drag on a bar suppresses click so accidental scrolls do not open tickets", () => {
+  it("does not open the ticket when the pointer moved more than 4 pixels between mousedown and click", () => {
+    renderTimeline();
+    const row = screen.getByLabelText("#2 Work item 2");
+    fireEvent.mouseDown(row, { clientX: 100, clientY: 100 });
+    fireEvent.click(row, { clientX: 115, clientY: 100 });
+    expect(onTicketClick).not.toHaveBeenCalled();
+  });
+
+  it("opens the ticket when the pointer did not move between mousedown and click", () => {
+    renderTimeline();
+    const row = screen.getByLabelText("#2 Work item 2");
+    fireEvent.mouseDown(row, { clientX: 100, clientY: 100 });
+    fireEvent.click(row, { clientX: 100, clientY: 100 });
+    expect(onTicketClick).toHaveBeenCalledWith(2);
+  });
+});

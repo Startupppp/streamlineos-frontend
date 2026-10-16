@@ -1,46 +1,36 @@
 "use client";
 
-import { useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BarChart3, DatabaseZap, ShieldCheck } from "lucide-react";
 import { useCalendarAnalytics } from "@/hooks/api/calendar-admin";
+import { formatDateTimeInOrgTz } from "@/lib/date-utils";
 import { formatNumber, formatPercent } from "@/lib/format-utils";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { analyticsMonthWindow, availableAnalyticsMonths, currentAnalyticsMonth, defaultAnalyticsMonth } from "./calendar-analytics-month";
 
-function dateInput(date: Date): string {
-  return date.toISOString().slice(0, 10);
-}
-
-function initialDates() {
-  const to = new Date();
-  const from = new Date(to.getTime() - 29 * 24 * 60 * 60_000);
-  return { from: dateInput(from), to: dateInput(to) };
-}
-
-function range(from: string, to: string) {
-  const start = new Date(`${from}T00:00:00.000Z`);
-  const end = new Date(`${to}T00:00:00.000Z`);
-  if (!Number.isFinite(start.getTime()) || !Number.isFinite(end.getTime()) || end < start) {
-    const fallback = initialDates();
-    return range(fallback.from, fallback.to);
-  }
-  const exclusiveTo = end;
-  exclusiveTo.setUTCDate(exclusiveTo.getUTCDate() + 1);
-  return { from: dateInput(start), to: dateInput(exclusiveTo) };
-}
-
-export function CalendarAnalyticsCard() {
-  const initial = initialDates();
-  const [from, setFrom] = useState(initial.from);
-  const [to, setTo] = useState(initial.to);
-  const period = range(from, to);
+export function CalendarAnalyticsCard({ timeZone, retentionDays }: { timeZone: string; retentionDays: number }) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const currentMonth = currentAnalyticsMonth(timeZone);
+  const options = availableAnalyticsMonths(currentMonth, retentionDays);
+  const requestedMonth = searchParams.get("analyticsMonth");
+  const month = requestedMonth && options.some((option) => option.value === requestedMonth) ? requestedMonth : defaultAnalyticsMonth(timeZone, retentionDays);
+  const period = analyticsMonthWindow(month);
   const analytics = useCalendarAnalytics(period.from, period.to);
+
+  function handleMonthChange(value: string) {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("analyticsMonth", value);
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  }
 
   return (
     <Card>
@@ -49,18 +39,18 @@ export function CalendarAnalyticsCard() {
         <CardDescription>Lifecycle event metrics with visible denominators, correction handling, privacy suppression, and source coverage.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-5">
-        <div className="grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
-          <div className="space-y-1.5"><Label htmlFor="calendar-analytics-from">From</Label><Input id="calendar-analytics-from" type="date" value={from} max={to} onChange={(event) => setFrom(event.target.value)} /></div>
-          <div className="space-y-1.5"><Label htmlFor="calendar-analytics-to">Through</Label><Input id="calendar-analytics-to" type="date" value={to} min={from} onChange={(event) => setTo(event.target.value)} /></div>
+        <div className="flex flex-wrap items-end gap-3">
+          <div className="w-48 space-y-1.5"><Label htmlFor="calendar-analytics-month">Month</Label><Select value={month} onValueChange={handleMonthChange}><SelectTrigger id="calendar-analytics-month"><SelectValue placeholder="Select month" /></SelectTrigger><SelectContent>{options.map((option) => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}</SelectContent></Select></div>
           <Button variant="outline" disabled={analytics.isFetching} onClick={() => void analytics.refetch()}>Refresh</Button>
         </div>
         {analytics.isLoading ? <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"><Skeleton className="h-32" /><Skeleton className="h-32" /><Skeleton className="h-32" /></div> : null}
         {analytics.isError ? <Alert variant="destructive"><DatabaseZap /><AlertTitle>Analytics unavailable</AlertTitle><AlertDescription><div className="flex flex-wrap items-center justify-between gap-2"><span>{getErrorMessage(analytics.error)}</span><Button variant="outline" size="sm" onClick={() => void analytics.refetch()}>Retry</Button></div></AlertDescription></Alert> : null}
         {analytics.data ? (
           <>
+            {analytics.data.privacy.cohortState === "retention_withheld" || analytics.data.period.retentionApplied ? <Alert><DatabaseZap /><AlertTitle>Month withheld by retention</AlertTitle><AlertDescription>Part of this month falls outside the retained analytics window, so the complete month cannot be reported. Choose a newer month.</AlertDescription></Alert> : analytics.data.privacy.cohortState === "pending" ? <Alert><DatabaseZap /><AlertTitle>Monthly report pending</AlertTitle><AlertDescription>This complete month can be reported after {formatDateTimeInOrgTz(analytics.data.period.availableAt, analytics.data.period.timeZone)} ({analytics.data.period.timeZone}).</AlertDescription></Alert> : (
+              <>
             <div className="flex flex-wrap items-center gap-2 text-sm"><Badge variant="outline">{analytics.data.period.timeZone}</Badge><Badge variant={analytics.data.coverage.state === "complete" ? "default" : "secondary"}>{analytics.data.coverage.state} source coverage</Badge><span className="text-muted-foreground">Cohort threshold {analytics.data.privacy.minimumCohort}</span></div>
-            {analytics.data.privacy.suppressed ? <Alert><ShieldCheck /><AlertTitle>Small cohort protected</AlertTitle><AlertDescription>Numeric values are hidden because this cohort is below the organization privacy threshold.</AlertDescription></Alert> : null}
-            {analytics.data.period.retentionApplied ? <Alert><DatabaseZap /><AlertTitle>Retention window applied</AlertTitle><AlertDescription>The selected start predates retained analytics facts. Results begin at the effective retained boundary.</AlertDescription></Alert> : null}
+            {analytics.data.privacy.cohortState === "below_threshold" ? <Alert><ShieldCheck /><AlertTitle>Small cohort protected</AlertTitle><AlertDescription>Numeric values are hidden because this cohort is below the organization privacy threshold.</AlertDescription></Alert> : null}
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {analytics.data.metrics.map((metric) => (
                 <div key={metric.key} className="rounded-lg border p-4">
@@ -76,6 +66,8 @@ export function CalendarAnalyticsCard() {
               <div className="rounded-lg border p-4"><p className="font-medium">Event freshness</p><p className="mt-1 text-sm text-muted-foreground">Latest event {analytics.data.freshness.latestEventAt ? new Date(analytics.data.freshness.latestEventAt).toLocaleString() : "not available"}</p><p className="mt-2 text-xs text-muted-foreground">Corrections: {analytics.data.freshness.correctionEvents ?? "suppressed"} · Late events: {analytics.data.freshness.lateEvents ?? "suppressed"}</p></div>
             </div>
             <details className="rounded-lg border p-4"><summary className="cursor-pointer font-medium">Metric methodology</summary><div className="mt-3 space-y-2 text-sm text-muted-foreground"><p>{analytics.data.methodology.basis}</p><p>{analytics.data.methodology.denominator}</p><p>{analytics.data.methodology.deduplication}</p><p>{analytics.data.methodology.corrections}</p><p>{analytics.data.methodology.deletedRecords}</p><p>{analytics.data.methodology.lateEventDefinition}</p></div></details>
+              </>
+            )}
           </>
         ) : null}
       </CardContent>

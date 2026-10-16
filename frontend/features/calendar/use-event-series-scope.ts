@@ -49,6 +49,9 @@ export function useEventSeriesScope({
             // Keyed on the NOMINAL start the id carries, not the moved `start`.
             occurrenceStart: parsed.occurrenceStart ?? event.start,
             modifiedTitle: pendingPayload.title,
+            ...(pendingPayload.description !== undefined
+              ? { modifiedDescription: pendingPayload.description }
+              : {}),
             modifiedStart: pendingPayload.startDate,
             modifiedEnd: pendingPayload.endDate,
             expectedVersion,

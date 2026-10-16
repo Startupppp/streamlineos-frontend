@@ -1,18 +1,27 @@
 "use client";
 
-import { render, act } from "@testing-library/react";
+import { render, act, fireEvent, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { CalendarView } from "./calendar-view";
 import { calendarProjectionFields } from "./calendar-projection-fixtures";
+
+let mockCalendarPermission = {
+  allowed: true,
+  denied: false,
+  pending: false,
+  unavailable: false,
+};
+let mockCalendarModuleEnabled = true;
 
 jest.mock("./big-calendar-wrapper", () => ({
   BigCalendarWrapper: () => null,
 }));
 
 const mockReplace = jest.fn();
+let mockSearchParams = new URLSearchParams();
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ replace: mockReplace, push: jest.fn(), refresh: jest.fn() }),
-  useSearchParams: () => new URLSearchParams(),
+  useSearchParams: () => mockSearchParams,
   usePathname: () => "/calendar",
 }));
 
@@ -26,14 +35,9 @@ jest.mock("next-auth/react", () => ({
 jest.mock("@/hooks/api/access", () => ({
   useCan: () => true,
   useScope: () => "all",
-  useModuleEnabled: () => true,
-  usePermissionGate: () => ({
-    permission: "self:attendance",
-    allowed: true,
-    denied: false,
-    pending: false,
-    unavailable: false,
-  }),
+  usePermissionGate: () => mockCalendarPermission,
+  useModuleEnabled: (moduleKey: string) =>
+    moduleKey === "calendar" ? mockCalendarModuleEnabled : true,
   useAccess: () => ({ data: undefined, isLoading: false }),
 }));
 
@@ -43,12 +47,13 @@ jest.mock("@/lib/org-scoped-storage", () => ({
 }));
 
 let mockRenderCount = 0;
+let mockShellVariant = "desktop";
 jest.mock("@/components/layout/shell-variant-context", () => ({
   useShellVariant: () => {
     mockRenderCount += 1;
     if (mockRenderCount > 60)
       throw new Error("CalendarView re-rendered without bound");
-    return "desktop";
+    return mockShellVariant;
   },
 }));
 
@@ -113,7 +118,16 @@ function routeGet(path: unknown): unknown {
 }
 
 beforeEach(() => {
+  mockSearchParams = new URLSearchParams();
+  mockCalendarPermission = {
+    allowed: true,
+    denied: false,
+    pending: false,
+    unavailable: false,
+  };
+  mockCalendarModuleEnabled = true;
   mockRenderCount = 0;
+  mockShellVariant = "desktop";
   mockReplace.mockReset();
   mockApiPut.mockReset();
   mockApiPut.mockResolvedValue(undefined);
@@ -122,6 +136,7 @@ beforeEach(() => {
     Promise.resolve(routeGet(path)),
   );
   window.localStorage.clear();
+  window.history.replaceState(null, "", "/calendar");
 });
 
 async function renderCalendar() {
@@ -137,10 +152,116 @@ async function renderCalendar() {
     await act(async () => {
       await Promise.resolve();
     });
-  return utils;
+  return {
+    ...utils,
+    rerenderCalendar: () =>
+      utils.rerender(
+        <QueryClientProvider client={queryClient}>
+          <CalendarView />
+        </QueryClientProvider>,
+      ),
+  };
 }
 
 describe("/calendar render stability", () => {
+  it("opens an event directly in one detail sheet without a loading overlay", async () => {
+    mockShellVariant = "mobile";
+    mockSearchParams = new URLSearchParams("mode=list&date=2026-09-15");
+    window.history.replaceState(null, "", `/calendar?${mockSearchParams.toString()}`);
+    const { rerenderCalendar } = await renderCalendar();
+
+    fireEvent.click(await screen.findByRole("button", { name: "Standup" }));
+    mockSearchParams = new URLSearchParams(window.location.search);
+    rerenderCalendar();
+
+    expect(await screen.findByRole("dialog", { name: "Standup" })).toHaveAttribute(
+      "data-slot",
+      "sheet-content",
+    );
+    expect(document.querySelectorAll("[data-slot='sheet-content']")).toHaveLength(1);
+    expect(document.querySelector("[data-slot='dialog-content']")).toBeNull();
+    expect(document.querySelector("[data-slot='skeleton']")).toBeNull();
+  });
+
+  it("keeps a non-viewable event disabled in the primary mobile list", async () => {
+    mockShellVariant = "mobile";
+    mockSearchParams = new URLSearchParams("mode=list&date=2026-09-15");
+    mockApiGet.mockImplementation((path: unknown) =>
+      Promise.resolve(
+        typeof path === "string" && path.startsWith("/calendar/events")
+          ? {
+              ...CALENDAR_EVENTS,
+              events: [{
+                ...CALENDAR_EVENTS.events[0],
+                actions: { view: false, edit: false, delete: false, rsvp: false, complete: false },
+              }],
+            }
+          : routeGet(path),
+      ),
+    );
+
+    await renderCalendar();
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Standup" })).toBeDisabled();
+    });
+  });
+
+  it("shows a disabled module separately from denied access and empty events", async () => {
+    mockCalendarModuleEnabled = false;
+    mockCalendarPermission = {
+      allowed: true,
+      denied: false,
+      pending: false,
+      unavailable: false,
+    };
+
+    await renderCalendar();
+
+    expect(
+      screen.getByRole("status", { name: "Module not enabled: Calendar" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Calendar access denied")).not.toBeInTheDocument();
+    expect(screen.queryByText("No events in this period")).not.toBeInTheDocument();
+    const paths = mockApiGet.mock.calls.map((call) => call[0]);
+    expect(paths).not.toContain("/calendar/events");
+    expect(paths).not.toContain("/calendar/sources");
+  });
+
+  it("shows every authorized event in the mobile list after the first fifty", async () => {
+    mockShellVariant = "mobile";
+    mockSearchParams = new URLSearchParams("mode=list");
+    const start = `${new Date().toISOString().slice(0, 10)}T12:00:00.000Z`;
+    const end = `${new Date().toISOString().slice(0, 10)}T13:00:00.000Z`;
+    const events = Array.from({ length: 51 }, (_, index) => {
+      const id = `mobile-event-${index + 1}`;
+      return {
+        ...CALENDAR_EVENTS.events[0],
+        id,
+        title: id,
+        start,
+        end,
+        ...calendarProjectionFields(id, start, end),
+      };
+    });
+    mockApiGet.mockImplementation((path: unknown) =>
+      Promise.resolve(
+        path === "/calendar/events"
+          ? { ...CALENDAR_EVENTS, events }
+          : routeGet(path),
+      ),
+    );
+
+    await renderCalendar();
+
+    await waitFor(() => {
+      const list = screen.getByRole("list", { name: "Calendar list events" });
+      expect(
+        list.querySelector("[aria-setsize]")?.getAttribute("aria-setsize"),
+      ).toBe("52");
+    });
+  });
+
   it("mounts the grid without an unbounded render loop (bounded so a loop fails instead of hanging)", async () => {
     await renderCalendar();
     expect(mockRenderCount).toBeLessThanOrEqual(60);
@@ -153,10 +274,83 @@ describe("/calendar render stability", () => {
     expect(paths).toContain("/me/attendance/monthly");
   });
 
+  it("shows a loading state while the desktop grid event window is pending", async () => {
+    mockApiGet.mockImplementation((path: unknown) =>
+      path === "/calendar/events"
+        ? new Promise(() => undefined)
+        : Promise.resolve(routeGet(path)),
+    );
+
+    const { getByText, queryByText } = await renderCalendar();
+
+    expect(getByText("Loading events")).toBeInTheDocument();
+    expect(queryByText("No events in this period")).not.toBeInTheDocument();
+  });
+
+  it("shows denial instead of an empty grid when Calendar read access is refused", async () => {
+    mockCalendarPermission = {
+      allowed: false,
+      denied: true,
+      pending: false,
+      unavailable: false,
+    };
+
+    const { getByText, queryByText } = await renderCalendar();
+
+    expect(getByText("Calendar access denied")).toBeInTheDocument();
+    expect(queryByText("No events in this period")).not.toBeInTheDocument();
+    expect(mockApiGet.mock.calls.map((call) => call[0])).not.toContain("/calendar/events");
+  });
+
+  it("shows pending access distinctly from an empty calendar", async () => {
+    mockCalendarPermission = {
+      allowed: false,
+      denied: false,
+      pending: true,
+      unavailable: false,
+    };
+
+    const { getByText, queryByText } = await renderCalendar();
+
+    expect(getByText("Checking Calendar access")).toBeInTheDocument();
+    expect(queryByText("No events in this period")).not.toBeInTheDocument();
+  });
+
+  it("shows an access-check failure distinctly from an empty calendar", async () => {
+    mockCalendarPermission = {
+      allowed: false,
+      denied: false,
+      pending: false,
+      unavailable: true,
+    };
+
+    const { getByText, queryByText } = await renderCalendar();
+
+    expect(getByText("Calendar access unavailable")).toBeInTheDocument();
+    expect(queryByText("No events in this period")).not.toBeInTheDocument();
+  });
+
+  it("removes an inaccessible real event ID from the URL without opening detail", async () => {
+    mockSearchParams = new URLSearchParams("event=event-42&eventSource=calendar");
+    window.history.replaceState(null, "", `/calendar?${mockSearchParams.toString()}`);
+    mockApiGet.mockImplementation((path: unknown) => Promise.resolve(
+      typeof path === "string" && path.startsWith("/calendar/events")
+        ? { ...CALENDAR_EVENTS, events: [] }
+        : routeGet(path),
+    ));
+
+    await renderCalendar();
+
+    await waitFor(() =>
+      expect(window.location.pathname + window.location.search).toBe("/calendar"),
+    );
+    expect(mockReplace).not.toHaveBeenCalled();
+  });
+
   it("announces the range at the granularity of the active view, not month-only", async () => {
     const { getByLabelText } = await renderCalendar();
     expect(
-      getByLabelText(/Choose month and year, currently .*Week \d+/),
+      getByLabelText(/Choose month and year, currently .+\d+\s*[–-]\s*.*\d+/),
     ).toBeInTheDocument();
   });
 });

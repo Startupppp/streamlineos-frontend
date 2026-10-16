@@ -7,8 +7,6 @@ import { getUserDisplayName } from "@/lib/person-display";
 
 export const PEOPLE_SEARCH_MIN_LENGTH = 2;
 export const PEOPLE_SEARCH_LIMIT = 10;
-export const PEOPLE_SEARCH_INTEGRITY_MESSAGE =
-  "Search failed integrity check — showing unfiltered. Report ref HRMS-SEARCH-001.";
 
 export interface PalettePerson {
   id: string;

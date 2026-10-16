@@ -28,8 +28,8 @@ function PanelSkeleton({
   children: ReactNode;
 }) {
   return (
-    <section className="min-w-0 rounded-xl border border-border bg-card px-4 py-4">
-      <div className="flex items-center justify-between gap-3">
+    <section className="flex min-w-0 flex-col gap-3 rounded-xl border border-border bg-card p-3.5 sm:p-4">
+      <div className="flex items-center justify-between gap-3 border-b border-border pb-3">
         <Skeleton className={cn("h-4", titleWidth)} />
         <Skeleton className="h-4 w-24" />
       </div>
@@ -38,42 +38,57 @@ function PanelSkeleton({
   );
 }
 
+const IDENTITY_FACT_SLOTS = [0, 1, 2] as const;
+
 export function ManagedProductOverviewSkeleton() {
   return (
-    <div
+      <div
       data-testid="managed-product-overview-skeleton"
-      className="flex w-full min-w-0 flex-col gap-4 pb-8"
+      className="flex min-h-0 w-full min-w-0 flex-1 flex-col gap-4 pb-8"
     >
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)]">
-        <PanelSkeleton titleWidth="w-20">
-          <Skeleton className="mt-3 h-4 w-3/4" />
-          <div className="mt-5 grid grid-cols-5 gap-1.5">
-            {GOAL_CARD_SLOTS.slice(0, 5).map((slot) => (
-              <div key={slot} className="space-y-1.5">
-                <Skeleton className="h-1.5 w-full rounded-full" />
-                <Skeleton className="h-3 w-12" />
-              </div>
-            ))}
+      <StatCardGridSkeleton
+        cols={5}
+        count={5}
+        className="auto-rows-fr gap-2"
+      />
+      <PanelSkeleton titleWidth="w-24">
+        <Skeleton className="h-4 w-2/3" />
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+          {IDENTITY_FACT_SLOTS.map((slot) => (
+            <Skeleton key={slot} className="h-14 w-full rounded-lg" />
+          ))}
+        </div>
+        <div className="grid grid-cols-5 gap-1">
+          {GOAL_CARD_SLOTS.slice(0, 5).map((slot) => (
+            <div key={slot} className="flex flex-col items-center gap-2">
+              <Skeleton className="size-2.5 rounded-full" />
+              <Skeleton className="h-3 w-10" />
+            </div>
+          ))}
+        </div>
+      </PanelSkeleton>
+      <PanelSkeleton titleWidth="w-28">
+        <div className="flex flex-col">
+          <div className="flex flex-col gap-3 rounded-lg border border-border bg-muted p-3 dark:border-background sm:flex-row sm:items-center">
+            <Skeleton className="size-9 shrink-0 rounded-md" />
+            <Skeleton className="h-4 flex-1" />
+            <Skeleton className="h-9 w-full rounded-md sm:w-24" />
           </div>
-        </PanelSkeleton>
-        <PanelSkeleton titleWidth="w-28">
-          <div className="mt-3 space-y-3">
-            {ROADMAP_CARD_SLOTS.map((slot) => (
-              <div key={slot} className="flex items-center gap-3">
-                <Skeleton className="size-7 shrink-0 rounded-md" />
-                <Skeleton className="h-4 flex-1" />
-              </div>
-            ))}
-          </div>
-        </PanelSkeleton>
-      </div>
-      <StatCardGridSkeleton cols={5} count={5} stackOnMobile={2} />
+          {IDENTITY_FACT_SLOTS.slice(0, 2).map((slot) => (
+            <div key={slot} className="flex items-center gap-3 border-b border-border py-3 last:border-b-0">
+              <Skeleton className="size-7 shrink-0 rounded-md" />
+              <Skeleton className="h-4 flex-1" />
+              <Skeleton className="hidden h-8 w-24 rounded-md sm:block" />
+            </div>
+          ))}
+        </div>
+      </PanelSkeleton>
       <PanelSkeleton titleWidth="w-32">
-        <div className="mt-3 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+        <div className="grid grid-cols-1 gap-1.5 min-[420px]:grid-cols-2 sm:grid-cols-3 2xl:grid-cols-6">
           {GOAL_CARD_SLOTS.map((slot) => (
-            <div key={slot} className="space-y-2">
+            <div key={slot} className="flex flex-col gap-2 rounded-lg border border-border p-2.5">
               <Skeleton className="h-3 w-16" />
-              <Skeleton className="h-6 w-10" />
+              <Skeleton className="h-6 w-8" />
               <Skeleton className="h-3 w-20" />
             </div>
           ))}
@@ -81,15 +96,19 @@ export function ManagedProductOverviewSkeleton() {
       </PanelSkeleton>
       <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
         <PanelSkeleton titleWidth="w-32">
-          <Skeleton className="mt-3 h-2 w-full rounded-full" />
-          <Skeleton className="mt-4 h-1.5 w-full rounded-full" />
-          <div className="mt-4 space-y-3">
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-10 w-full" />
+          <div className="grid grid-cols-4 overflow-hidden rounded-lg border border-border dark:border-background">
+            {ROADMAP_COLUMN_SLOTS.map((slot) => (
+              <div key={slot} className="flex flex-col gap-2 border-r border-border px-2 py-2.5 last:border-r-0 dark:border-background">
+                <Skeleton className="h-3 w-10" />
+                <Skeleton className="h-6 w-6" />
+                <Skeleton className="h-1.5 w-full rounded-full" />
+              </div>
+            ))}
           </div>
+          <Skeleton className="h-24 w-full rounded-lg" />
         </PanelSkeleton>
         <PanelSkeleton titleWidth="w-36">
-          <div className="mt-2 space-y-3">
+          <div className="flex flex-col gap-3">
             {ROADMAP_COLUMN_SLOTS.map((slot) => (
               <div key={slot} className="flex items-center justify-between gap-4">
                 <Skeleton className="h-4 w-24" />
@@ -99,16 +118,27 @@ export function ManagedProductOverviewSkeleton() {
           </div>
         </PanelSkeleton>
       </div>
-      <PanelSkeleton titleWidth="w-36">
-        <div className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2">
-          {GOAL_CARD_SLOTS.slice(0, 5).map((slot) => (
-            <div key={slot} className="flex items-center justify-between gap-4">
-              <Skeleton className="h-4 w-28" />
-              <Skeleton className="h-4 w-16" />
+      <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-2">
+        <PanelSkeleton titleWidth="w-36">
+          <div className="flex flex-col gap-3">
+            {GOAL_CARD_SLOTS.slice(0, 5).map((slot) => (
+              <div key={slot} className="flex items-center justify-between gap-4">
+                <Skeleton className="h-4 w-28" />
+                <Skeleton className="h-4 w-16" />
+              </div>
+            ))}
+          </div>
+        </PanelSkeleton>
+        <PanelSkeleton titleWidth="w-28">
+          <div className="flex items-start gap-3 rounded-lg border border-border bg-muted p-3 dark:border-background">
+            <Skeleton className="size-9 shrink-0 rounded-md" />
+            <div className="flex min-w-0 flex-1 flex-col gap-2">
+              <Skeleton className="h-4 w-2/3" />
+              <Skeleton className="h-3 w-full" />
             </div>
-          ))}
-        </div>
-      </PanelSkeleton>
+          </div>
+        </PanelSkeleton>
+      </div>
     </div>
   );
 }

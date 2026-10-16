@@ -1,6 +1,8 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { TemplateCard } from "./template-cards";
+import { TemplatePreviewDialog } from "./template-preview-dialog";
 import type { KbPageTemplate } from "@/hooks/api/kb/page-templates";
+import type { StarterTemplate } from "@/features/wiki/lib/starter-templates";
 
 jest.mock("@/hooks/api/kb", () => ({
   useDeleteKbPageTemplate: () => ({ mutate: jest.fn(), isPending: false }),
@@ -8,6 +10,12 @@ jest.mock("@/hooks/api/kb", () => ({
 
 jest.mock("./edit-template-dialog", () => ({
   EditTemplateDialog: () => null,
+}));
+
+jest.mock("./public-page-content-loader", () => ({
+  PublicPageContentLoader: ({ content }: { content: unknown }) => (
+    <pre data-testid="saved-template-content">{JSON.stringify(content)}</pre>
+  ),
 }));
 
 function makeTemplate(over: Partial<KbPageTemplate> = {}): KbPageTemplate {
@@ -66,5 +74,97 @@ describe("TemplateCard usage metadata", () => {
 
     expect(screen.getByText(/never used/i)).toBeInTheDocument();
     expect(screen.queryByText(/last used/i)).not.toBeInTheDocument();
+  });
+});
+
+describe("TemplateCard preview", () => {
+  it.each([
+    [[{ type: "p", children: [{ text: "Plate checklist" }] }]],
+    [{ type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: "TipTap checklist" }] }] }],
+  ])("opens a read-only preview of saved content without using the template", (content) => {
+    const onUse = jest.fn();
+    render(
+      <TemplateCard
+        template={makeTemplate({ content })}
+        canDelete={false}
+        onUse={onUse}
+        isPending={false}
+        isDisabled={false}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Preview Runbook" }));
+
+    expect(screen.getByRole("dialog", { name: /Runbook/ })).toBeInTheDocument();
+    expect(screen.getByTestId("saved-template-content")).toHaveTextContent(JSON.stringify(content));
+    expect(onUse).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getAllByRole("button", { name: "Close" })[0]);
+    expect(screen.queryByRole("dialog", { name: /Runbook/ })).not.toBeInTheDocument();
+  });
+});
+
+describe("TemplatePreviewDialog", () => {
+  it("labels the expected output and previews the starter content", () => {
+    render(
+      <TemplatePreviewDialog
+        template={{
+          key: "meeting-notes",
+          name: "Meeting Notes",
+          icon: "📝",
+          description: "Capture meeting outcomes",
+          category: "Meetings & Decisions",
+          expectedOutput: "A page with Decisions and Action Items sections.",
+          content: {
+            type: "doc",
+            children: [{ type: "h2", children: [{ text: "Decisions" }] }],
+          },
+        }}
+        onOpenChange={jest.fn()}
+        onUse={jest.fn()}
+        isPending={false}
+        canUse={true}
+      />,
+    );
+
+    expect(screen.getByRole("heading", { name: "Expected output" })).toBeInTheDocument();
+    expect(screen.getByText("A page with Decisions and Action Items sections.")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Preview" })).toBeInTheDocument();
+    expect(screen.getByText("Decisions")).toBeInTheDocument();
+  });
+
+  it("keeps Use disabled without page-create permission and enables it when granted", () => {
+    const onUse = jest.fn();
+    const template: StarterTemplate = {
+      key: "meeting-notes",
+      name: "Meeting Notes",
+      icon: "📝",
+      description: "Capture meeting outcomes",
+      category: "Meetings & Decisions",
+      expectedOutput: "A page with decisions.",
+      content: { type: "doc", children: [] },
+    };
+    const view = render(
+      <TemplatePreviewDialog
+        template={template}
+        onOpenChange={jest.fn()}
+        onUse={onUse}
+        isPending={false}
+        canUse={false}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "Use this template" })).toBeDisabled();
+    view.rerender(
+      <TemplatePreviewDialog
+        template={template}
+        onOpenChange={jest.fn()}
+        onUse={onUse}
+        isPending={false}
+        canUse={true}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Use this template" }));
+    expect(onUse).toHaveBeenCalledWith(template);
   });
 });

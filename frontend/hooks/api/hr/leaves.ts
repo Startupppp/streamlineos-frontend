@@ -62,6 +62,7 @@ export function useLeaveTypesAdmin(options?: { enabled?: boolean }) {
     queryFn: ({ signal }) => apiClient.get<HrLeaveType[]>("/hr/leaves/types", undefined, signal, leaveTypesListC),
     staleTime: 2 * 60_000,
     enabled: hrEnabled && canView && (options?.enabled ?? true),
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -74,6 +75,7 @@ export function useHrLeaveContext() {
     queryFn: ({ signal }) => apiClient.get<LeaveContextResult>("/me/time-off", undefined, signal, leaveContextC),
     staleTime: 2 * 60_000,
     enabled: Boolean(identity.orgId && identity.userId) && hrEnabled && canSelf,
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -116,6 +118,7 @@ export function useHrLeavesThisWeek(options?: { enabled?: boolean }) {
       hrEnabled &&
       canSelf &&
       (options?.enabled ?? true),
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -133,6 +136,7 @@ export function useHrMyLeaveRequests(enabled = true) {
     select: (response) => ({ requests: response.data }),
     staleTime: 2 * 60_000,
     enabled: Boolean(identity.orgId && identity.userId) && hrEnabled && canSelf && enabled,
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -151,6 +155,7 @@ export function useHrMyLeaveRequestsInfinite(enabled = true) {
     getNextPageParam: (lastPage) => lastPage.pageInfo.nextCursor ?? undefined,
     staleTime: 2 * 60_000,
     enabled: Boolean(identity.orgId && identity.userId) && hrEnabled && canSelf && enabled,
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -169,6 +174,7 @@ export function useHrHolidaysForCalendar(params: {
       ),
     staleTime: 2 * 60_000,
     enabled: hrEnabled && canAttendance,
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -195,5 +201,6 @@ export function useLeavePolicy() {
     queryFn: ({ signal }) => apiClient.get<LeavePolicyResponse>("/hr/leave-policy", undefined, signal, leavePolicyC),
     staleTime: 10 * 60 * 1000,
     enabled: canView,
+    ...INLINE_READ_ERROR,
   });
 }

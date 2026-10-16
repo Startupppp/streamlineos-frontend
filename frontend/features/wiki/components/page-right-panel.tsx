@@ -10,6 +10,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { Skeleton } from "@/components/ui/skeleton";
+import { PageState } from "@/components/shared/page-state";
+import { ErrorReference } from "@/components/shared/error-reference";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { isApiError } from "@/lib/api-envelope";
 import {
   Sheet,
   SheetBody,
@@ -82,8 +87,16 @@ function Stat({
 }
 
 function PanelContent({ pageId, page, wordCount, onNavigate }: PanelContentProps) {
-  const { data: backlinks = [] } = useKbPageBacklinks(pageId);
-  const { data: recordLinks = [] } = useKbPageRecordLinks(pageId);
+  const { data: backlinks = [], isLoading: backlinksLoading, isError: backlinksError, error: backlinksReadError, refetch: refetchBacklinks } = useKbPageBacklinks(pageId);
+  const { data: recordLinks = [], hasNextPage: hasMoreRecordLinks } = useKbPageRecordLinks(pageId);
+  const backlinksAccessLost = isApiError(backlinksReadError) && (backlinksReadError.status === 401 || backlinksReadError.status === 403 || backlinksReadError.status === 404);
+  const backlinksState = usePageState({
+    permission: "kb:pages:view",
+    isLoading: backlinksLoading,
+    isError: backlinksError && (backlinks.length === 0 || backlinksAccessLost),
+    error: backlinksReadError,
+    isEmpty: !backlinksLoading && !backlinksError && backlinks.length === 0,
+  });
   const memberIds = [page.lastEditedById, page.ownerUserId].filter(
     (id): id is string => id !== null && id !== undefined,
   );
@@ -94,6 +107,10 @@ function PanelContent({ pageId, page, wordCount, onNavigate }: PanelContentProps
     const id = Number(event.currentTarget.dataset.pageId);
     if (!Number.isFinite(id)) return;
     onNavigate(id);
+  }
+
+  function handleRetryBacklinks() {
+    void refetchBacklinks();
   }
 
   function memberName(userId: string | null | undefined): string | null {
@@ -155,11 +172,17 @@ function PanelContent({ pageId, page, wordCount, onNavigate }: PanelContentProps
       <section className="border-t border-border/70 pt-4">
         <div className="mb-2 flex items-baseline justify-between gap-2">
           <h3 className="text-sm font-medium text-foreground">Backlinks</h3>
-          <span className="text-xs tabular-nums text-muted-foreground">{backlinks.length}</span>
+          {(backlinksState.kind === "ready" || backlinksState.kind === "empty") && (
+            <span className="text-xs tabular-nums text-muted-foreground">{backlinks.length}</span>
+          )}
         </div>
-        {backlinks.length === 0 ? (
-          <p className="text-xs text-muted-foreground">No pages link here.</p>
-        ) : (
+        <PageState
+          resolution={backlinksState}
+          compact
+          onRetry={handleRetryBacklinks}
+          loading={<Skeleton className="h-12 w-full" />}
+          empty={<p className="text-xs text-muted-foreground">No pages link here.</p>}
+        >
           <>
             <ul className="flex flex-col">
               {backlinks.slice(0, BACKLINK_DISPLAY_LIMIT).map((bl) => (
@@ -183,14 +206,21 @@ function PanelContent({ pageId, page, wordCount, onNavigate }: PanelContentProps
                 +{backlinks.length - BACKLINK_DISPLAY_LIMIT} more
               </p>
             ) : null}
+            {backlinksError && (
+              <div role="alert" className="space-y-2 text-xs text-destructive">
+                <p>Could not refresh backlinks.</p>
+                <ErrorReference error={backlinksReadError} />
+                <Button type="button" variant="outline" size="sm" onClick={handleRetryBacklinks}>Retry backlinks</Button>
+              </div>
+            )}
           </>
-        )}
+        </PageState>
       </section>
 
       <section className="border-t border-border/70 pt-4">
         <div className="mb-2 flex items-baseline justify-between gap-2">
           <h3 className="text-sm font-medium text-foreground">Linked records</h3>
-          <span className="text-xs tabular-nums text-muted-foreground">{recordLinks.length}</span>
+          <span className="text-xs tabular-nums text-muted-foreground">{recordLinks.length}{hasMoreRecordLinks ? "+" : ""}</span>
         </div>
         {recordLinks.length === 0 ? (
           <p className="text-xs text-muted-foreground">No linked records.</p>
@@ -205,7 +235,7 @@ function PanelContent({ pageId, page, wordCount, onNavigate }: PanelContentProps
             </ul>
             {recordLinks.length > RECORD_LINK_DISPLAY_LIMIT ? (
               <p className="mt-1 px-1.5 text-xs text-muted-foreground">
-                +{recordLinks.length - RECORD_LINK_DISPLAY_LIMIT} more
+                +{recordLinks.length - RECORD_LINK_DISPLAY_LIMIT}{hasMoreRecordLinks ? "+" : ""} more
               </p>
             ) : null}
           </>

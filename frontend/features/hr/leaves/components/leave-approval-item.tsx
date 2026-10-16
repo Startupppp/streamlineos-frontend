@@ -46,7 +46,7 @@ export function LeaveApprovalItem({
       <div className="flex items-center justify-between p-4">
         <div className="flex items-center gap-3 min-w-0 flex-1">
           <Avatar className="h-9 w-9 shrink-0">
-            <AvatarImage src={resolveImageUrl(req.user?.image)} />
+            <AvatarImage src={resolveImageUrl(req.user?.image)} alt="" />
             <AvatarFallback className="text-xs bg-primary/10 text-primary font-semibold">
               {getUserInitials(req.user)}
             </AvatarFallback>

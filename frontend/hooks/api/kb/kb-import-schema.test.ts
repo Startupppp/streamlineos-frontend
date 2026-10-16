@@ -15,6 +15,7 @@ const importJob = {
   succeededItems: 3,
   failedItems: 0,
   duplicateItems: 0,
+  canRetry: false,
   errorReport: null,
   createdById: "user-1",
   createdAt: "2026-09-25T00:00:00.000Z",
@@ -59,5 +60,65 @@ describe("kb import/export job list contracts", () => {
     });
     expect(parsed.pagination.nextCursor).toBe("cursor-2");
     expect(parsed.pagination.hasMore).toBe(true);
+  });
+
+  it("requires the server-computed retry eligibility on every import job", () => {
+    expect(() => kbImportJobListPageContract.parse({
+      data: [{ ...importJob, canRetry: undefined }],
+      pagination,
+    })).toThrow(ZodError);
+    expect(kbImportJobListPageContract.parse({
+      data: [{ ...importJob, canRetry: true }],
+      pagination,
+    }).data[0]?.canRetry).toBe(true);
+  });
+
+  it("parses indexed safe item reasons and strips unrelated report details", () => {
+    const parsed = kbImportJobListPageContract.parse({
+      data: [{
+        ...importJob,
+        failedItems: 2,
+        errorReport: {
+          failedTitles: ["Policy", "Policy"],
+          itemErrors: [
+            { index: 0, title: "Policy", code: "INVALID_PARENT", reason: "Choose an existing parent and import again." },
+            { index: 2, title: "Policy", code: "WRITE_FAILED", reason: "The page could not be saved." },
+          ],
+          rawError: "database detail must not reach the UI",
+          retryItems: [{ contentText: "private draft" }],
+        },
+      }],
+      pagination,
+    });
+
+    expect(parsed.data[0]?.errorReport).toEqual({
+      failedTitles: ["Policy", "Policy"],
+      itemErrors: [
+        { index: 0, title: "Policy", code: "INVALID_PARENT", reason: "Choose an existing parent and import again." },
+        { index: 2, title: "Policy", code: "WRITE_FAILED", reason: "The page could not be saved." },
+      ],
+    });
+  });
+
+  it("retains the manual reconciliation code and safe reason while stripping retry payloads", () => {
+    const parsed = kbImportJobListPageContract.parse({
+      data: [{
+        ...importJob,
+        status: "failed",
+        canRetry: false,
+        errorReport: {
+          code: "PROGRESS_RECONCILIATION_REQUIRED",
+          reason: "Saved import progress cannot be mapped to individual pages. Contact support before retrying the remaining items.",
+          retryItems: [{ contentText: "private draft" }],
+        },
+      }],
+      pagination,
+    });
+
+    expect(parsed.data[0]?.canRetry).toBe(false);
+    expect(parsed.data[0]?.errorReport).toEqual({
+      code: "PROGRESS_RECONCILIATION_REQUIRED",
+      reason: "Saved import progress cannot be mapped to individual pages. Contact support before retrying the remaining items.",
+    });
   });
 });

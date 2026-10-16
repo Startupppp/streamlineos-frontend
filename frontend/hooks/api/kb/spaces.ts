@@ -8,6 +8,7 @@ import { useCan } from "@/hooks/api/access";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import type { KbSpace, CreateSpaceInput, UpdateSpaceInput } from "@/types/kb";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
 import type {
   KbSpaceListPage,
   KbSpaceArchiveImpact,
@@ -76,6 +77,7 @@ export function useKbSpaces(params?: KbSpacesListParams) {
 export function useKbSpace(spaceId: number) {
   const canView = useCan("kb:spaces:view");
   return useQuery({
+    ...INLINE_READ_ERROR,
     queryKey: knowledgeAndSurveysQueryKeys.kb.space(spaceId),
     queryFn: ({ signal }) =>
       apiClient.get<KbSpace>(`/kb/spaces/${spaceId}`, undefined, signal, kbSpaceFullContract),
@@ -90,6 +92,7 @@ export function useKbSpaceArchiveImpact(
 ) {
   const canManage = useCan("kb:spaces:manage");
   return useQuery({
+    ...INLINE_READ_ERROR,
     queryKey: [...knowledgeAndSurveysQueryKeys.kb.space(spaceId), "archive-impact"],
     queryFn: ({ signal }) =>
       apiClient.get<KbSpaceArchiveImpact>(
@@ -105,11 +108,13 @@ export function useKbSpaceArchiveImpact(
 
 export function useCreateKbSpace() {
   const qc = useQueryClient();
+  const operation = useIdempotentOperation();
   return useAuthorizedMutation("kb:spaces:manage", {
     mutationKey: ["kb", "spaces", "create"],
     mutationFn: (input: CreateSpaceInput) =>
-      apiClient.post<KbSpace>("/kb/spaces", input, undefined, kbSpaceFullContract),
+      apiClient.post<KbSpace>("/kb/spaces", input, operation.configFor(input), kbSpaceFullContract),
     onSuccess: () => {
+      operation.settle();
       qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.spaces() });
     },
   });

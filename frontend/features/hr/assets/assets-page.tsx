@@ -24,6 +24,7 @@ import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { isApiError, getApiErrorCode } from "@/lib/api-envelope";
 import { toast } from "sonner";
 import type { Asset } from "@/types/hr";
 import type { AssetFormValues } from "@/features/hr/assets/asset-schema";
@@ -165,6 +166,7 @@ export function AssetsPage() {
           purchaseCost: values.purchaseCost,
           location: values.location || undefined,
           notes: values.notes || undefined,
+          expectedVersion: editAsset.version,
         },
         {
           onSuccess: () => {
@@ -172,7 +174,13 @@ export function AssetsPage() {
             invalidateAssetList();
             setEditAsset(null);
           },
-          onError: (e) => toast.error(getErrorMessage(e)),
+          onError: (e) => {
+            if (isApiError(e) && getApiErrorCode(e) === "HR_ASSET_CONFLICT") {
+              toast.error("This record changed since you opened it. Please reload and try again.");
+            } else {
+              toast.error(getErrorMessage(e));
+            }
+          },
         },
       );
     },

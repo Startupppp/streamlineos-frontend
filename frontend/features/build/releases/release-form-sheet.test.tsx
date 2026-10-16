@@ -158,8 +158,10 @@ const RELEASED_RELEASE: Release = {
 beforeEach(() => {
   mockUpdateMutate.mockClear();
   mockCreateMutate.mockClear();
-  (useUpdateRelease as jest.Mock).mockReturnValue({ mutate: mockUpdateMutate, isPending: false });
-  (useCreateRelease as jest.Mock).mockReturnValue({ mutate: mockCreateMutate, isPending: false });
+  mockUpdateMutate.mockResolvedValue(undefined);
+  mockCreateMutate.mockResolvedValue(undefined);
+  (useUpdateRelease as jest.Mock).mockReturnValue({ mutate: mockUpdateMutate, mutateAsync: mockUpdateMutate, isPending: false });
+  (useCreateRelease as jest.Mock).mockReturnValue({ mutate: mockCreateMutate, mutateAsync: mockCreateMutate, isPending: false });
 });
 
 function renderWithClient(ui: React.ReactElement) {
@@ -207,7 +209,6 @@ it("calls mutate with previewConfirmed: true after the user confirms the publish
       status: "released",
       previewConfirmed: true,
     }),
-    expect.any(Object),
   );
 });
 
@@ -246,6 +247,5 @@ it("calls mutate directly without a confirm dialog when updating an already-rele
   expect(screen.queryByTestId("publish-confirm-dialog")).not.toBeInTheDocument();
   expect(mockUpdateMutate).toHaveBeenCalledWith(
     expect.not.objectContaining({ previewConfirmed: true }),
-    expect.any(Object),
   );
 });

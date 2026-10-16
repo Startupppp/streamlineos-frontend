@@ -48,7 +48,7 @@ export function ChatBubble({
             "min-w-0 max-w-[85%] rounded-2xl rounded-bl-sm border px-3.5 py-2.5 text-sm shadow-sm",
             message.isError
               ? "border-destructive/30 bg-destructive/5 text-destructive"
-              : "border-border bg-background text-foreground",
+              : "border-border bg-card text-card-foreground",
           )}
         >
           {message.isError ? (
@@ -167,7 +167,7 @@ export function TypingBubble({ reduce }: { reduce: boolean }) {
       animate={{ opacity: 1, y: 0 }}
       className="flex justify-start"
     >
-      <div className="flex items-center gap-1 rounded-2xl rounded-bl-sm border border-border bg-background px-4 py-3 shadow-sm">
+      <div className="flex items-center gap-1 rounded-2xl rounded-bl-sm border border-border bg-card px-4 py-3 shadow-sm">
         {[0, 1, 2].map((i) => (
           <motion.span
             key={i}

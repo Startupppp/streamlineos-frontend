@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { useCallback, useMemo, useState } from "react";
+import { useSubmitGuard } from "@/hooks/common/use-submit-guard";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -46,8 +47,6 @@ export function MilestoneUpsertSheet({
   const isEdit = !!milestone;
   const create = useCreateMilestone(projectId);
   const update = useUpdateMilestone(projectId);
-  const isPending = create.isPending || update.isPending;
-
   const [conflictFields, setConflictFields] = useState<
     TicketConflictFieldDiff[] | null
   >(null);
@@ -126,7 +125,7 @@ export function MilestoneUpsertSheet({
   );
 
   const onSubmit = useCallback(
-    (values: MilestoneFormValues) => {
+    async (values: MilestoneFormValues) => {
       const payload = {
         name: values.name,
         description: values.description?.trim() || undefined,
@@ -136,48 +135,35 @@ export function MilestoneUpsertSheet({
       };
 
       if (isEdit) {
-        update.mutate(
-          { milestoneId: milestone.id, version: milestone.version, ...payload },
-          {
-            onSuccess: () => {
-              toast.success("Milestone updated");
-              onClose();
-            },
-            onError: (err) => {
-              if (
-                isApiError(err) &&
-                getApiErrorCode(err) === "PROJECTS_TICKET_CONFLICT"
-              ) {
-                const diffs = buildMilestoneConflictDiffs(
-                  values,
-                  milestone,
-                  ownerLabel,
-                );
-                if (diffs.length > 0) {
-                  setConflictFields(diffs);
-                } else {
-                  toast.warning(
-                    "This milestone was modified by another user. Your changes were not saved.",
-                  );
-                }
-                return;
-              }
-              toast.error(getErrorMessage(err));
-            },
-          },
-        );
+        try {
+          await update.mutateAsync({ milestoneId: milestone.id, version: milestone.version, ...payload });
+          toast.success("Milestone updated");
+          onClose();
+        } catch (err) {
+          if (isApiError(err) && getApiErrorCode(err) === "PROJECTS_TICKET_CONFLICT") {
+            const diffs = buildMilestoneConflictDiffs(values, milestone, ownerLabel);
+            if (diffs.length > 0) {
+              setConflictFields(diffs);
+            } else {
+              toast.warning("This milestone was modified by another user. Your changes were not saved.");
+            }
+            return;
+          }
+          toast.error(getErrorMessage(err));
+        }
       } else {
-        create.mutate(payload, {
-          onSuccess: () => {
-            toast.success("Milestone created");
-            onClose();
-          },
-          onError: (err) => toast.error(getErrorMessage(err)),
-        });
+        try {
+          await create.mutateAsync(payload);
+          toast.success("Milestone created");
+          onClose();
+        } catch (err) {
+          toast.error(getErrorMessage(err));
+        }
       }
     },
     [isEdit, milestone, create, update, onClose, ownerLabel],
   );
+  const guard = useSubmitGuard(onSubmit);
 
   return (
     <>
@@ -198,7 +184,7 @@ export function MilestoneUpsertSheet({
             <LoadingButton
               type="submit"
               form="milestone-form"
-              isPending={isPending}
+              isPending={guard.isSubmitting}
               loadingText="Saving…"
             >
               {isEdit ? "Save Changes" : "Create Milestone"}
@@ -209,7 +195,7 @@ export function MilestoneUpsertSheet({
         <Form {...form}>
           <form
             id="milestone-form"
-            onSubmit={form.handleSubmit(onSubmit)}
+            onSubmit={form.handleSubmit(guard.submit)}
             className="space-y-4"
             noValidate
           >

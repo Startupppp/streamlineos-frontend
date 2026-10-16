@@ -9,7 +9,7 @@ import { useBugs } from "@/hooks/api/build/bugs";
 import { useBoardSavedViews } from "./use-board-saved-views";
 import { applyDisplayOptionParams, useDisplayOptions, writeDisplayOptionParams } from "./use-display-options";
 import type { DisplayOptions } from "@/features/build/shared/types";
-import { parseViewType, type ViewType } from "./view-switcher";
+import { parseBoardPageView, type ViewType } from "./view-switcher";
 import { INITIAL_FILTERS, type FilterState as WorkloadFilterState } from "./workload-types";
 import type { KanbanTicket } from "@/features/build/shared/types";
 import { mapBoardTicketToKanban } from "@/features/build/my-tickets/map-board-ticket";
@@ -29,6 +29,10 @@ import {
   computeDoneCount,
 } from "./board-filter-model";
 import { useBoardViewApply } from "./use-board-view-apply";
+import { parseBoardOrderBy } from "./board-filter-params";
+import { orderDirectionFor } from "./use-display-options";
+
+const SEARCH_TERM_MAX_LENGTH = 200;
 
 export function useBoardUrlState(
   projectId: number,
@@ -43,11 +47,9 @@ export function useBoardUrlState(
   );
 
   const viewParam = searchParams.get("view");
+  const view: ViewType = parseBoardPageView(viewParam ?? defaultView);
+  const isCalendarDeepLink = viewParam === "calendar";
   const calendarHref = `/calendar?source=build&projectId=${projectId}`;
-  const isCalendarDeepLink =
-    pathname === `/build/${projectId}/issues` && viewParam === "calendar";
-  const view: ViewType =
-    isCalendarDeepLink ? "board" : parseViewType(viewParam ?? defaultView);
   const ticketParam = searchParams.get("ticket");
   const selectedTicketId = ticketParam ? parseInt(ticketParam) : null;
   const commentParam = searchParams.get("comment");
@@ -75,16 +77,6 @@ export function useBoardUrlState(
     hasActiveFilters,
   } = useBoardFilterParams();
 
-  const {
-    data: boardTickets,
-    isLoading: ticketsLoading,
-    isError: ticketsError,
-    error: ticketsErrorValue,
-    refetch: refetchTickets,
-    isTruncated,
-    fetchNextPage: fetchMoreTickets,
-    isFetchingNextPage: isFetchingMoreTickets,
-  } = useProjectBoardTickets(projectId, boardFilters);
   const { data } = useProject(projectId);
   const { data: views } = useViews(projectId);
 
@@ -95,6 +87,33 @@ export function useBoardUrlState(
     () => applyDisplayOptionParams(storedDisplayOptions, searchParams),
     [storedDisplayOptions, searchParams],
   );
+
+  const effectiveBoardFilters = useMemo(
+    () => {
+      const rawQ = boardFilters.q;
+      const safeQ = rawQ && rawQ.length > SEARCH_TERM_MAX_LENGTH
+        ? rawQ.slice(0, SEARCH_TERM_MAX_LENGTH)
+        : rawQ;
+      return {
+        ...boardFilters,
+        q: safeQ,
+        orderBy: boardFilters.orderBy ?? parseBoardOrderBy(displayOptions.orderBy) ?? undefined,
+        orderDir: boardFilters.orderDir ?? orderDirectionFor(displayOptions.orderBy),
+      };
+    },
+    [boardFilters, displayOptions.orderBy],
+  );
+
+  const {
+    data: boardTickets,
+    isLoading: ticketsLoading,
+    isError: ticketsError,
+    error: ticketsErrorValue,
+    refetch: refetchTickets,
+    isTruncated,
+    fetchNextPage: fetchMoreTickets,
+    isFetchingNextPage: isFetchingMoreTickets,
+  } = useProjectBoardTickets(projectId, effectiveBoardFilters);
 
   const setDisplayOptions = useCallback(
     (next: DisplayOptions) => {
@@ -123,11 +142,11 @@ export function useBoardUrlState(
   useBoardViewApply({
     viewId,
     views,
-    isCalendarDeepLink,
-    calendarHref,
     searchParams,
     router,
     setStoredDisplayOptions,
+    isCalendarDeepLink,
+    calendarHref,
   });
 
   const activeView = viewId
@@ -158,6 +177,14 @@ export function useBoardUrlState(
     return new Set(qaMatches.map((bug) => bug.id));
   }, [qaFilterActive, qaMatches]);
 
+  const subIssueIds = useMemo(() => {
+    if (displayOptions.showSubIssues || !boardTickets) return null;
+    const ids = boardTickets
+      .filter((ticket) => ticket.parentTicketId != null)
+      .map((ticket) => ticket.id);
+    return ids.length > 0 ? new Set(ids) : null;
+  }, [boardTickets, displayOptions.showSubIssues]);
+
   const filteredTickets = useMemo(
     () => filterBoardTickets({
       allTickets,
@@ -165,8 +192,9 @@ export function useBoardUrlState(
       completedIssues: displayOptions.completedIssues,
       statuses,
       qaMatchIds,
+      subIssueIds,
     }),
-    [allTickets, hideCompleted, displayOptions.completedIssues, statuses, qaMatchIds],
+    [allTickets, hideCompleted, displayOptions.completedIssues, statuses, qaMatchIds, subIssueIds],
   );
 
   const members = useMemo(() => computeBoardMembers(data?.members), [data?.members]);
@@ -287,7 +315,7 @@ export function useBoardUrlState(
     showEmptyFilterState,
     showFirstRunState,
     hasActiveFilters,
-    boardFilters,
+    boardFilters: effectiveBoardFilters,
     handleViewChange,
     handleClearSearch,
     handleQaFilterChange,

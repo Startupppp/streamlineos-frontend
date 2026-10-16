@@ -137,15 +137,15 @@ export function formatINRCompact(amount: string | number): string {
   const abs = Math.abs(num);
   const sign = num < 0 ? "-" : "";
   if (abs >= 1_00_00_000) {
-    const val = abs / 1_00_00_000;
+    const val = Math.floor((abs / 1_00_00_000) * 10) / 10;
     return `${sign}₹${val % 1 === 0 ? val.toFixed(0) : val.toFixed(1)}Cr`;
   }
   if (abs >= 1_00_000) {
-    const val = abs / 1_00_000;
+    const val = Math.floor((abs / 1_00_000) * 10) / 10;
     return `${sign}₹${val % 1 === 0 ? val.toFixed(0) : val.toFixed(1)}L`;
   }
   if (abs >= 10_000) {
-    const val = abs / 1_000;
+    const val = Math.floor((abs / 1_000) * 10) / 10;
     return `${sign}₹${val % 1 === 0 ? val.toFixed(0) : val.toFixed(1)}K`;
   }
   const hasPaisa = abs % 1 !== 0;
@@ -179,13 +179,15 @@ export function formatMoneyCompact(
   value: number | string | null | undefined,
   display: MoneyDisplay,
 ): string {
-  return new Intl.NumberFormat(display.locale, {
+  const amount = toAmount(value);
+  if (display.currency === "INR") return formatINRCompact(amount);
+  return cachedNumberFormat(display.locale, {
     style: "currency",
     currency: display.currency,
     notation: "compact",
     minimumFractionDigits: 0,
     maximumFractionDigits: 1,
-  }).format(toAmount(value));
+  }).format(amount);
 }
 
 const numberFormats = new Map<string, Intl.NumberFormat>();

@@ -3,13 +3,9 @@
 import { memo, useState, useCallback } from "react";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { Loader2 } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { SearchInput } from "@/components/ui/search-input";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { AppDialog } from "@/components/shared/app-dialog";
 import { useTicketSearch } from "@/hooks/api/build/ticket-search";
 import type { TicketSearchResult } from "@/types/projects";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -55,7 +51,7 @@ function TicketPickerBody({
   }, []);
 
   return (
-    <div className="flex-1 min-h-0 px-4 py-2 flex flex-col gap-2">
+    <div className="flex min-h-0 flex-1 flex-col gap-2">
       <SearchInput
         fill
         autoFocus
@@ -65,7 +61,8 @@ function TicketPickerBody({
         placeholder="Search by ticket key or title…"
         aria-label="Search tickets"
       />
-      <div className="overflow-y-auto space-y-0.5 max-h-[min(40dvh,20rem)]">
+      <ScrollArea className="max-h-[min(40dvh,20rem)]">
+      <div className="space-y-0.5">
         {isLoading ? (
           <div className="flex items-center gap-2 py-2 text-xs text-muted-foreground">
             <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -81,6 +78,7 @@ function TicketPickerBody({
           ))
         )}
       </div>
+      </ScrollArea>
     </div>
   );
 }
@@ -91,15 +89,8 @@ export const TicketPickerDialog = memo(function TicketPickerDialog({
   onSelect,
 }: TicketPickerDialogProps) {
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md gap-0 p-0 pb-0 md:pb-0 flex flex-col overflow-hidden rounded-xl">
-        <DialogHeader className="px-4 py-3 border-b shrink-0">
-          <DialogTitle className="text-base font-semibold">
-            Link a ticket
-          </DialogTitle>
-        </DialogHeader>
-        <TicketPickerBody onSelect={onSelect} />
-      </DialogContent>
-    </Dialog>
+    <AppDialog open={open} onOpenChange={onOpenChange} title="Link a ticket" description="Find a ticket to link to this event.">
+      <TicketPickerBody onSelect={onSelect} />
+    </AppDialog>
   );
 });

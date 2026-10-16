@@ -25,8 +25,11 @@ function ShippedReleaseItem({
   showRail: boolean;
 }) {
   return (
-    <li className="group flex gap-3 rounded-lg px-3 pt-3 transition-colors hover:bg-muted/40 motion-reduce:transition-none">
-      <div className="flex w-24 shrink-0 flex-col pt-0.5">
+    <li
+      data-slot="shipped-release-card"
+      className="group flex gap-2.5 rounded-lg border border-border bg-muted/20 p-3 shadow-xs transition-[background-color,border-color,box-shadow] hover:border-border hover:bg-muted/35 hover:shadow-sm motion-reduce:transition-none dark:border-background dark:bg-muted/40 dark:hover:bg-muted/55"
+    >
+      <div className="flex w-20 shrink-0 flex-col pt-0.5 sm:w-24">
         {release.releaseDate ? (
           <time dateTime={release.releaseDate} className="font-mono text-dense tabular-nums text-muted-foreground">
             {formatCalendarDate(release.releaseDate)}
@@ -39,7 +42,7 @@ function ShippedReleaseItem({
         <span className={cn("size-2.5 shrink-0 rounded-full", SHIPPED_DOT_CLASS)} />
         {showRail ? <span className="mt-1 w-px flex-1 bg-border" /> : null}
       </div>
-      <div className="flex min-w-0 flex-1 flex-col gap-1 pb-5">
+      <div className="flex min-w-0 flex-1 flex-col gap-1.5">
         <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
           <ReleaseIdentity release={release} />
           <ReleaseRowActions release={release} />
@@ -83,7 +86,7 @@ export function ReleaseShippedTimeline({ releases, count, className }: ReleaseSh
           action={canUpdate ? { label: "New release", onClick: onCreate } : undefined}
         />
       ) : (
-        <ol aria-label="Shipped releases" className="flex min-h-full flex-col p-1">
+        <ol aria-label="Shipped releases" className="flex min-h-full flex-col gap-2 p-2">
           {releases.map((release, index) => (
             <ShippedReleaseItem key={release.id} release={release} showRail={index < lastIndex} />
           ))}

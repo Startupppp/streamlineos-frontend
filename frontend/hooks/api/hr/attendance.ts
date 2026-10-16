@@ -71,6 +71,10 @@ export interface AttendanceRegularization {
   rejectionReason: string | null;
   createdAt: string;
   updatedAt: string;
+  requesterName?: string;
+  requesterImage?: string | null;
+  originalCheckIn?: string | null;
+  originalCheckOut?: string | null;
 }
 
 export interface CreateRegularizationInput {

@@ -147,6 +147,7 @@ export function useProjectFileSignedUrl(projectId: number, fileId: number | null
       ),
     enabled: canView && !!projectId && fileId !== null,
     staleTime: 55_000,
+    throwOnError: false,
   });
 }
 

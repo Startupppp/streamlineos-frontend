@@ -4,6 +4,7 @@ import { useState, useCallback, useRef } from "react";
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
   SheetFooter,
@@ -137,6 +138,7 @@ export function ImportWizardSheet({
       <SheetContent className="w-full sm:max-w-lg flex flex-col gap-0 p-0">
         <SheetHeader className="px-6 pt-6 pb-4 border-b border-border shrink-0">
           <SheetTitle>Import {entityLabel}</SheetTitle>
+          <SheetDescription className="sr-only">Upload a CSV, preview the rows, and commit the import.</SheetDescription>
           <ImportWizardStepIndicator step={step} />
         </SheetHeader>
 

@@ -15,7 +15,7 @@ import {
   AXIS_TICK,
 } from "@/features/crm/shared/constants";
 
-const SCORE_COLORS = ["#3b82f6", "#60a5fa", "#93c5fd", "#bfdbfe", "#dbeafe"];
+const SCORE_COLORS = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)"];
 import { AnalyticsChartCard } from "./analytics-chart-card";
 import { ChartEmptyState } from "@/components/charts/chart-empty-state";
 import type { ScoreDistributionEntry } from "./use-analytics-data";

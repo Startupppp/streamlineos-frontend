@@ -5,6 +5,7 @@ import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { selectFlatPages, type Page } from "@/lib/api/select-flat-pages";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
 const noContentC = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
@@ -12,6 +13,7 @@ const noContentC = lazyContract(() =>
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
 
 export type KbPageTemplate = {
   id: number;
@@ -19,7 +21,7 @@ export type KbPageTemplate = {
   name: string;
   icon: string | null;
   description: string | null;
-  content: Record<string, unknown> | null;
+  content: Record<string, unknown> | Record<string, unknown>[] | null;
   createdById: string | null;
   createdByName: string | null;
   useCount: number;
@@ -55,6 +57,7 @@ const kbPageTemplateSingleContract = lazyContract(() =>
 export function useKbPageTemplates(q?: string) {
   const canViewPages = useCan("kb:pages:view");
   return useInfiniteQuery({
+    ...INLINE_READ_ERROR,
     queryKey: knowledgeAndSurveysQueryKeys.kb.pageTemplates(q),
     initialPageParam: NO_CURSOR_YET,
     queryFn: ({ signal, pageParam }) => {
@@ -78,11 +81,13 @@ export function useKbPageTemplates(q?: string) {
 
 export function useCreateKbPageTemplate() {
   const qc = useQueryClient();
+  const operation = useIdempotentOperation();
   return useAuthorizedMutation("kb:templates:manage", {
     mutationKey: ["kb", "pageTemplates", "create"],
     mutationFn: (input: CreateKbPageTemplateInput) =>
-      apiClient.post<KbPageTemplate>("/kb/page-templates", input, undefined, kbPageTemplateSingleContract),
+      apiClient.post<KbPageTemplate>("/kb/page-templates", input, operation.configFor(input), kbPageTemplateSingleContract),
     onSuccess: () => {
+      operation.settle();
       qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.pageTemplates() });
     },
   });

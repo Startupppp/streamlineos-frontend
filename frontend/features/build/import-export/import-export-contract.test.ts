@@ -69,6 +69,14 @@ describe("ticketImportExportPreviewImportResponseSchema", () => {
     ).toThrow(ZodError);
   });
 
+  it("accepts STATUS_DEFAULTED so a row with an unrecognised status renders instead of blanking the dialog", () => {
+    const parsed = ticketImportExportPreviewImportResponseSchema.parse({
+      ...preview,
+      issues: [{ rowNumber: 3, field: "status", kind: "STATUS_DEFAULTED", message: 'Unknown status "ARCHIVED" — imported as "TODO"' }],
+    });
+    expect(parsed.issues[0]?.kind).toBe("STATUS_DEFAULTED");
+  });
+
   it("rejects a ticket priority outside the database enum", () => {
     expect(() =>
       ticketImportExportPreviewImportResponseSchema.parse({

@@ -10,14 +10,15 @@ jest.mock("next/navigation", () => ({
 }));
 
 jest.mock("next/dynamic", () => () => {
-  return function PlateEditorStub() {
-    return <div data-testid="plate-editor" />;
+  return function PlateEditorStub({ editable }: { editable: boolean }) {
+    return <div data-testid="plate-editor" data-editable={editable} />;
   };
 });
 
 let mockViewAccess: AccessState = "granted";
+let mockCanUpdate = true;
 jest.mock("@/hooks/api/access", () => ({
-  useCan: () => true,
+  useCan: (key: string) => key === "kb:pages:update" ? mockCanUpdate : true,
   useCanState: () => mockViewAccess,
 }));
 
@@ -103,6 +104,7 @@ function makePage(): KbPageDetail {
 
 beforeEach(() => {
   mockViewAccess = "granted";
+  mockCanUpdate = true;
   mockUseKbPage.mockReturnValue({
     data: makePage(),
     isLoading: false,
@@ -196,6 +198,32 @@ describe("PageDocument — the title is interactive only when inline rename is a
   });
 });
 
+describe("PageDocument — edit mode requires role and record permission", () => {
+  it("keeps a view-only role in read mode even when the record allows editing", () => {
+    mockCanUpdate = false;
+
+    render(<PageDocument pageId={42} projectId={7} />);
+
+    expect(screen.getByLabelText("Page title")).toHaveAttribute("readonly");
+    expect(screen.getByTestId("plate-editor")).toHaveAttribute("data-editable", "false");
+  });
+
+  it("keeps legacy page responses without canEdit in read mode", () => {
+    const { canEdit: _canEdit, ...pageWithoutEditDecision } = makePage();
+    mockUseKbPage.mockReturnValue({
+      data: pageWithoutEditDecision,
+      isLoading: false,
+      isError: false,
+      error: undefined,
+      refetch: jest.fn(),
+    });
+
+    render(<PageDocument pageId={42} projectId={7} />);
+
+    expect(screen.getByLabelText("Page title")).toHaveAttribute("readonly");
+    expect(screen.getByTestId("plate-editor")).toHaveAttribute("data-editable", "false");
+  });
+});
 describe("PageDocument — record-level misses stay indistinguishable 404s", () => {
   it("renders the not-found state for a 404 when kb:pages:view is granted, so the surface denial branch did not swallow record-level misses", () => {
     mockUseKbPage.mockReturnValue({

@@ -310,13 +310,13 @@ export function EmailTemplatesPageClient() {
         isPending={create.isPending || update.isPending}
       >
         <div className="space-y-1.5">
-          <label className="text-sm font-medium">Template Name</label>
-          <Input placeholder="e.g., Welcome Email" value={name} onChange={handleNameChange} />
+          <label htmlFor="et-name" className="text-sm font-medium">Template Name</label>
+          <Input id="et-name" placeholder="e.g., Welcome Email" value={name} onChange={handleNameChange} />
         </div>
         <div className="space-y-1.5">
-          <label className="text-sm font-medium">Category</label>
+          <label htmlFor="et-category" className="text-sm font-medium">Category</label>
           <Select value={category} onValueChange={setCategory}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectTrigger id="et-category" aria-label="Category"><SelectValue /></SelectTrigger>
             <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
               {CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
             </SelectContent>
@@ -324,8 +324,8 @@ export function EmailTemplatesPageClient() {
         </div>
         <div className="flex items-end justify-between gap-2">
           <div className="flex-1 space-y-1.5">
-            <label className="text-sm font-medium">Subject Line</label>
-            <Input placeholder="Email subject" value={subject} onChange={handleSubjectChange} />
+            <label htmlFor="et-subject" className="text-sm font-medium">Subject Line</label>
+            <Input id="et-subject" placeholder="Email subject" value={subject} onChange={handleSubjectChange} />
           </div>
           <LoadingButton
             type="button"
@@ -341,8 +341,8 @@ export function EmailTemplatesPageClient() {
           </LoadingButton>
         </div>
         <div className="space-y-1.5">
-          <label className="text-sm font-medium">Body</label>
-          <Textarea placeholder="Email body. Use {{name}}, {{date}} as variables..." value={body} onChange={handleBodyChange} rows={6} className="resize-none w-full" />
+          <label htmlFor="et-body" className="text-sm font-medium">Body</label>
+          <Textarea id="et-body" placeholder="Email body. Use {{name}}, {{date}} as variables..." value={body} onChange={handleBodyChange} rows={6} className="resize-none w-full" />
         </div>
       </HrSheet>
 

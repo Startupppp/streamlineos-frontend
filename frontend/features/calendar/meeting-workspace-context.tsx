@@ -78,7 +78,7 @@ export function MeetingWorkspaceContext({ workspace }: { workspace: CalendarMeet
 
   return (
     <div className="space-y-4">
-      {workspace.canManage ? <div className="grid gap-2 rounded-lg border p-3 sm:grid-cols-2">
+      {workspace.canManage ? <div className="grid gap-2 rounded-lg bg-muted p-3 sm:grid-cols-2 dark:border dark:border-background">
         <Select value={contextType} onValueChange={(value) => {
           const next = value as keyof typeof contextLabels;
           setContextType(next);
@@ -86,20 +86,20 @@ export function MeetingWorkspaceContext({ workspace }: { workspace: CalendarMeet
           setSourceRecordId("");
           setScopeId("");
         }}>
-          <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+          <SelectTrigger aria-label="Context type"><SelectValue /></SelectTrigger>
           <SelectContent>{Object.entries(contextLabels).map(([value, label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}</SelectContent>
         </Select>
-        <Input value={sourceKey} onChange={(event) => setSourceKey(event.target.value)} placeholder="Source type" className="h-8 text-xs" />
-        <Input value={sourceRecordId} onChange={(event) => setSourceRecordId(event.target.value)} placeholder="Record or message ID" className="h-8 text-xs" />
+        <Input value={sourceKey} onChange={(event) => setSourceKey(event.target.value)} placeholder="Source type" aria-label="Source type" />
+        <Input value={sourceRecordId} onChange={(event) => setSourceRecordId(event.target.value)} placeholder="Record or message ID" aria-label="Record or message ID" />
         {contextType === "MAIL" || contextType === "CHAT" ? (
-          <Input value={scopeId} onChange={(event) => setScopeId(event.target.value)} placeholder={contextType === "MAIL" ? "Mail account ID" : "Channel ID"} className="h-8 text-xs" />
+          <Input value={scopeId} onChange={(event) => setScopeId(event.target.value)} placeholder={contextType === "MAIL" ? "Mail account ID" : "Channel ID"} aria-label={contextType === "MAIL" ? "Mail account ID" : "Channel ID"} />
         ) : <div />}
-        <Label className="flex items-center gap-2 text-xs font-normal">
+        <Label className="font-normal">
           <Checkbox checked={share} onCheckedChange={(value) => setShare(value === true)} />
           Share availability with guests
         </Label>
-        <Button size="sm" className="h-8" onClick={handleAdd} disabled={add.isPending || !sourceRecordId.trim()}>
-          <Link2 className="mr-1.5 h-3.5 w-3.5" />Link context
+        <Button size="sm" onClick={handleAdd} disabled={add.isPending || !sourceRecordId.trim()}>
+          <Link2 className="size-4" />Link context
         </Button>
       </div> : null}
 

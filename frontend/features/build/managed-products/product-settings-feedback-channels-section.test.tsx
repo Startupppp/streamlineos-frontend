@@ -26,6 +26,7 @@ jest.mock("@/hooks/api/build/managed-products", () => ({
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn(() => true),
+  useModuleEnabled: jest.fn(() => true),
 }));
 
 jest.mock("./feedback/feedbucket-collect-dialog", () => ({
@@ -48,6 +49,7 @@ jest.mock("./feedback/feedbucket-collect-dialog", () => ({
 const { useFeedbucketWidgets } = jest.requireMock(
   "@/hooks/api/feedbucket/use-feedbucket-widgets",
 ) as { useFeedbucketWidgets: jest.Mock };
+const { useModuleEnabled } = jest.requireMock("@/hooks/api/access") as { useModuleEnabled: jest.Mock };
 
 const MANAGED_PRODUCT_ID = 7;
 
@@ -167,6 +169,14 @@ describe("ProductSettingsFeedbackChannelsSection", () => {
 
     expect(screen.getByRole("heading", { name: "Feedback channels" })).toBeInTheDocument();
     expect(screen.queryByText("No Feedbucket widgets")).not.toBeInTheDocument();
+  });
+
+  it("shows an enable path instead of loading when Feedbucket is disabled", () => {
+    useModuleEnabled.mockReturnValueOnce(false);
+    useFeedbucketWidgets.mockReturnValue({ data: undefined, isLoading: true });
+    render(<ProductSettingsFeedbackChannelsSection managedProductId={MANAGED_PRODUCT_ID} />);
+    expect(screen.getByRole("heading", { name: "Enable feedback channels" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Open module settings" })).toHaveAttribute("href", "/settings/modules");
   });
 
   it("shows empty state when no widgets are linked to this product", () => {

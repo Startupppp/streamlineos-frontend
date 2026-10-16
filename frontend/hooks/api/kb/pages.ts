@@ -11,6 +11,7 @@ import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { useCan } from "@/hooks/api/access";
 import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
+import { selectFlatPages, type Page } from "@/lib/api/select-flat-pages";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
 import { useKbSpaces } from "./spaces";
@@ -58,6 +59,13 @@ const kbPageContract = lazyContract(() =>
 );
 const kbPageListContract = lazyContract(() =>
   import("@/hooks/api/kb/kb-pages-schema").then((m) => m.kbPageListContract),
+);
+const kbFavoritePageListContract = lazyContract(() =>
+  import("@/hooks/api/kb/kb-pages-schema").then((m) => m.kbFavoritePageListContract),
+);
+
+const kbTrashDeletersContract = lazyContract(() =>
+  import("@/hooks/api/kb/kb-pages-schema").then((m) => m.kbTrashDeletersContract),
 );
 
 const kbPageBacklinkContract = lazyContract(() =>
@@ -154,17 +162,19 @@ export function useKbPageChildrenLevel(
   nodeId: number,
   enabled: boolean,
   spaceId?: number,
+  projectId?: number,
 ) {
   const canView = useCan("kb:pages:view");
   return useInfiniteQuery({
     ...INLINE_READ_ERROR,
-    queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTreeLevelInfinite({ parentId: nodeId, spaceId }),
+    queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTreeLevelInfinite({ parentId: nodeId, spaceId, projectId }),
     queryFn: ({ pageParam, signal }) =>
       apiClient.get<KbPageTreeLevel>(
         "/kb/pages/tree",
         {
           parentId: nodeId,
           ...(spaceId === undefined ? {} : { spaceId }),
+          ...(projectId === undefined ? {} : { projectId }),
           ...(pageParam === undefined ? {} : { cursor: pageParam }),
         },
         signal,
@@ -197,16 +207,19 @@ export function useKbPagesRecent() {
 
 export function useKbPagesFavorites() {
   const canView = useCan("kb:pages:view");
-  return useQuery({
+  return useInfiniteQuery({
     ...INLINE_READ_ERROR,
     queryKey: knowledgeAndSurveysQueryKeys.kb.pagesFavorites(),
-    queryFn: ({ signal }) =>
-      apiClient.get<KbPageListItem[]>(
+    initialPageParam: NO_CURSOR_YET,
+    queryFn: ({ signal, pageParam }) =>
+      apiClient.get<Page<KbPageListItem>>(
         "/kb/pages/favorites",
-        undefined,
+        pageParam !== undefined ? { cursor: pageParam } : undefined,
         signal,
-        kbPageListContract,
+        kbFavoritePageListContract,
       ),
+    getNextPageParam: (last) => last.pagination.nextCursor ?? undefined,
+    select: selectFlatPages,
     staleTime: 30_000,
     enabled: canView,
   });
@@ -238,6 +251,34 @@ export function useKbPagesTrash(params?: TrashPageParams) {
         signal,
         kbTrashPageListContract,
       ),
+    staleTime: 30_000,
+    enabled: canView,
+  });
+}
+
+export interface KbTrashDeleter {
+  membershipId: number;
+  name: string;
+}
+
+export type KbTrashDeletersPage = Page<KbTrashDeleter> & {
+  selected: KbTrashDeleter | null;
+};
+
+export function useKbTrashDeleters(search: string, selectedMembershipId?: number) {
+  const canView = useCan("kb:pages:view");
+  return useInfiniteQuery({
+    ...INLINE_READ_ERROR,
+    queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTrashDeleters(search, selectedMembershipId),
+    initialPageParam: NO_CURSOR_YET,
+    queryFn: ({ signal, pageParam }) =>
+      apiClient.get<KbTrashDeletersPage>(
+        "/kb/pages/trash/deleters",
+        { limit: 50, search: search || undefined, selectedMembershipId, cursor: pageParam },
+        signal,
+        kbTrashDeletersContract,
+      ),
+    getNextPageParam: (last) => last.pagination.nextCursor ?? undefined,
     staleTime: 30_000,
     enabled: canView,
   });
@@ -283,6 +324,7 @@ export function useKbTrashPurgeImpact(
 ) {
   const canPurge = useCan("kb:pages:purge");
   return useQuery({
+    ...INLINE_READ_ERROR,
     queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTrashPurgeImpact(pageIds),
     queryFn: ({ signal }) =>
       apiClient.post<KbPageTrashPurgeImpact>(

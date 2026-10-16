@@ -36,7 +36,7 @@ import {
  * floor, so a change to either format fails here instead of silently at runtime.
  */
 
-const MEASURED_ID_TEMPLATE_FLOOR = 3;
+const MEASURED_ID_TEMPLATE_FLOOR = 2;
 
 const BACKEND_NATIVE_SOURCE = backendPath(
   "src",

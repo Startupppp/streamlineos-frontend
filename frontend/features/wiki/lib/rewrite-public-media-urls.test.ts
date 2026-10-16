@@ -22,6 +22,12 @@ describe("rewritePublicMediaUrls", () => {
     expect(result.url).toBe(brokered);
   });
 
+  it("rebinds a stored broker image from an old share to the current share", () => {
+    const oldUrl = publicMediaBrokerUrl("old-token-123", objectKey);
+    const result = rewritePublicMediaUrls({ type: "img", url: oldUrl }, shareToken);
+    expect(result).toEqual({ type: "img", url: brokered });
+  });
+
   it("brokers video, audio and file nodes, the other three sources the public renderer emits", () => {
     const content = [
       { type: "video", url: "org-1/kb-media/org-1/clip.mp4" },
@@ -66,6 +72,37 @@ describe("rewritePublicMediaUrls", () => {
     expect(result.attrs.alt).toBe("photo");
   });
 
+  it("brokers legacy media source fields before content reaches the client", () => {
+    const origin = "https://pub.r2.example.com";
+    const content = [
+      {
+        type: "image",
+        src: `${origin}/${objectKey}`,
+        attrs: { thumbnailUrl: `${origin}/${objectKey}`, alt: "photo" },
+      },
+      {
+        type: "video",
+        poster: `${origin}/${objectKey}`,
+        attrs: { src: `${origin}/${objectKey}` },
+      },
+      { type: "file", href: `${origin}/${objectKey}` },
+      { type: "a", href: `${origin}/external/article` },
+    ];
+
+    const result = rewritePublicMediaUrls(content, shareToken);
+
+    expect(result).toEqual([
+      {
+        type: "image",
+        src: brokered,
+        attrs: { thumbnailUrl: brokered, alt: "photo" },
+      },
+      { type: "video", poster: brokered, attrs: { src: brokered } },
+      { type: "file", href: brokered },
+      { type: "a", href: `${origin}/external/article` },
+    ]);
+  });
+
   it("does not let a media node's type leak into a link in its children", () => {
     const content = {
       type: "img",
@@ -107,6 +144,11 @@ describe("publicMediaFileKey", () => {
     ).toBe("org-1/kb-media/org-1/a.png");
   });
 
+  it("extracts the owned object key from an absolute old broker URL", () => {
+    const oldUrl = `https://app.example.com${publicMediaBrokerUrl("old-token-123", "org-1/kb-media/org-1/a b.png")}`;
+    expect(publicMediaFileKey(oldUrl)).toBe("org-1/kb-media/org-1/a b.png");
+  });
+
   it("returns the value itself for the bare key shape the uploader writes", () => {
     expect(publicMediaFileKey("org-1/kb-media/org-1/a.png")).toBe(
       "org-1/kb-media/org-1/a.png",
@@ -144,6 +186,13 @@ describe("rewritePublicCoverImage", () => {
       publicMediaBrokerUrl(shareToken, "org-1/kb-media/org-1/cover.webp"),
     );
     expect(result).not.toContain("pub.r2.example.com");
+  });
+
+  it("rebinds an old share cover to the current token", () => {
+    const oldUrl = publicMediaBrokerUrl("old-token-123", "org-1/kb-media/org-1/cover.webp");
+    expect(rewritePublicCoverImage(oldUrl, shareToken)).toBe(
+      publicMediaBrokerUrl(shareToken, "org-1/kb-media/org-1/cover.webp"),
+    );
   });
 
   it("passes a gradient cover through untouched", () => {

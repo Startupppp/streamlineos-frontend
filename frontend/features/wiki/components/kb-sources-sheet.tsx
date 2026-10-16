@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import {
   UploadIcon,
   PlusIcon,
@@ -33,6 +33,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Combobox } from "@/components/ui/combobox";
+import { ErrorReference } from "@/components/shared/error-reference";
 import { cn } from "@/lib/utils";
 import type { KbSource } from "@/hooks/api/kb/sources";
 import type { KbPageSearchResult } from "@/hooks/api/kb/page-types";
@@ -44,6 +45,11 @@ interface KbSourcesSheetManageProps {
   onOpenChange: (open: boolean) => void;
   sources: KbSource[];
   isLoading: boolean;
+  sourceError: unknown;
+  sourceHasMore: boolean;
+  sourceIsFetchingMore: boolean;
+  onSourceLoadMore: () => void;
+  onSourceRetry: () => void;
   readyCount: number;
   onUploadClick: () => void;
   uploadPending: boolean;
@@ -65,6 +71,11 @@ interface KbSourcesSheetScopeProps {
   onOpenChange: (open: boolean) => void;
   sources: KbSource[];
   isLoading: boolean;
+  sourceError: unknown;
+  sourceHasMore: boolean;
+  sourceIsFetchingMore: boolean;
+  onSourceLoadMore: () => void;
+  onSourceRetry: () => void;
   selectedIds: number[];
   onSelectionChange: (ids: number[]) => void;
   verifiedOnly: boolean;
@@ -81,11 +92,16 @@ interface KbSourcesSheetScopeProps {
   onOwnerMembershipIdChange: (ownerMembershipId: OwnerMembershipFilter) => void;
   owners: ReadonlyArray<{
     membershipId: number;
-    name: string | null;
-    email: string;
+    name: string;
   }>;
+  selectedOwner: { membershipId: number; name: string } | null;
   onOwnerSearchChange: (search: string) => void;
   ownersAreLoading: boolean;
+  ownersHasMore: boolean;
+  ownersAreFetchingMore: boolean;
+  onOwnersLoadMore: () => void;
+  ownersError: unknown;
+  onOwnersRetry: () => void;
   statusScope: StatusScopeFilter;
   onStatusScopeChange: (status: StatusScopeFilter) => void;
   onConfirm: () => void;
@@ -113,6 +129,11 @@ function KbSourcesManageSheet({
   onOpenChange,
   sources,
   isLoading,
+  sourceError,
+  sourceHasMore,
+  sourceIsFetchingMore,
+  onSourceLoadMore,
+  onSourceRetry,
   readyCount,
   onUploadClick,
   uploadPending,
@@ -157,12 +178,23 @@ function KbSourcesManageSheet({
           </Button>
         </div>
 
-        <SourcesList
-          isLoading={isLoading}
-          sources={sources}
-          makeDeleteHandler={makeDeleteHandler}
-          deletingId={deletingId}
-          isDeleting={isDeleting}
+        {sourceError && sources.length === 0 ? (
+          <SourceReadError error={sourceError} onRetry={onSourceRetry} />
+        ) : (
+          <SourcesList
+            isLoading={isLoading}
+            sources={sources}
+            makeDeleteHandler={makeDeleteHandler}
+            deletingId={deletingId}
+            isDeleting={isDeleting}
+          />
+        )}
+        <SourcePagination
+          error={sources.length > 0 ? sourceError : null}
+          hasMore={sourceHasMore}
+          isFetchingMore={sourceIsFetchingMore}
+          onLoadMore={onSourceLoadMore}
+          onRetry={onSourceRetry}
         />
       </div>
     </AppSheet>
@@ -310,23 +342,42 @@ function OwnerMembershipSelect({
   ownerMembershipId,
   onOwnerMembershipIdChange,
   owners,
+  selectedOwner,
   onOwnerSearchChange,
   ownersAreLoading,
+  ownersHasMore,
+  ownersAreFetchingMore,
+  onOwnersLoadMore,
+  ownersError,
+  onOwnersRetry,
 }: Pick<
   KbSourcesSheetScopeProps,
   | "ownerMembershipId"
   | "onOwnerMembershipIdChange"
   | "owners"
+  | "selectedOwner"
   | "onOwnerSearchChange"
   | "ownersAreLoading"
+  | "ownersHasMore"
+  | "ownersAreFetchingMore"
+  | "onOwnersLoadMore"
+  | "ownersError"
+  | "onOwnersRetry"
 >) {
-  const options = owners.map((owner) => ({
+  const [lastSelectedOwner, setLastSelectedOwner] = useState<{ membershipId: number; name: string } | null>(null);
+  const selected = owners.find((owner) => owner.membershipId === ownerMembershipId)
+    ?? (selectedOwner?.membershipId === ownerMembershipId ? selectedOwner : null)
+    ?? (lastSelectedOwner?.membershipId === ownerMembershipId ? lastSelectedOwner : null);
+  const choices = selected && !owners.some((owner) => owner.membershipId === selected.membershipId)
+    ? [selected, ...owners]
+    : owners;
+  const options = choices.map((owner) => ({
     value: String(owner.membershipId),
-    label: owner.name ?? owner.email,
-    sublabel: owner.name === null ? undefined : owner.email,
+    label: owner.name,
   }));
 
-  function handleChange(value: string) {
+  function handleChange(value: string, label?: string) {
+    if (value !== "" && label) setLastSelectedOwner({ membershipId: Number(value), name: label });
     onOwnerMembershipIdChange(value === "" ? null : Number(value));
   }
 
@@ -357,9 +408,22 @@ function OwnerMembershipSelect({
         onChange={handleChange}
         placeholder="Any owner"
         searchPlaceholder="Search members…"
-        emptyText={ownersAreLoading ? "Loading members…" : "No members found."}
+        emptyText={ownersAreLoading ? "Loading members…" : ownersError ? "Use Retry members below." : "No members found."}
         onSearchChange={onOwnerSearchChange}
         aria-label="Restrict answer to pages owned by a member"
+        footer={ownersError ? (
+          <div className="p-2 text-center text-sm" role="alert">
+            <span>Could not load members.</span>
+            <ErrorReference error={ownersError} />
+            <Button type="button" variant="ghost" size="sm" onClick={onOwnersRetry}>Retry members</Button>
+          </div>
+        ) : ownersHasMore ? (
+          <div className="p-2 text-center">
+            <Button type="button" variant="ghost" size="sm" disabled={ownersAreFetchingMore} onClick={onOwnersLoadMore}>
+              {ownersAreFetchingMore ? "Loading members…" : "Load more members"}
+            </Button>
+          </div>
+        ) : null}
       />
     </div>
   );
@@ -370,6 +434,11 @@ function KbSourcesScopeSheet({
   onOpenChange,
   sources,
   isLoading,
+  sourceError,
+  sourceHasMore,
+  sourceIsFetchingMore,
+  onSourceLoadMore,
+  onSourceRetry,
   selectedIds,
   onSelectionChange,
   verifiedOnly,
@@ -385,8 +454,14 @@ function KbSourcesScopeSheet({
   ownerMembershipId,
   onOwnerMembershipIdChange,
   owners,
+  selectedOwner,
   onOwnerSearchChange,
   ownersAreLoading,
+  ownersHasMore,
+  ownersAreFetchingMore,
+  onOwnersLoadMore,
+  ownersError,
+  onOwnersRetry,
   statusScope,
   onStatusScopeChange,
   onConfirm,
@@ -404,15 +479,21 @@ function KbSourcesScopeSheet({
   const totalSelected = selectedIds.length + selectedPageIds.length;
   const noneSelected = totalSelected === 0;
   const hasSourceFilter = kindFilter !== "all" || ownerFilter !== "all";
+  const pageOnlyScope = verifiedOnly || ownerMembershipId !== null || statusScope !== null;
+  const sourceSelectionConflicts = pageOnlyScope && selectedIds.length > 0;
 
   function handleClearSourceFilter() {
     onKindFilterChange("all");
     onOwnerFilterChange("all");
   }
 
-  const description = noneSelected
-    ? "All ready sources and pages will be searched. Select specific items to narrow the answer."
-    : `${totalSelected} item${totalSelected === 1 ? "" : "s"} selected — only these will be searched.`;
+  const description = sourceSelectionConflicts
+    ? "Selected files and notes are excluded by page owner, page status or verification. Deselect them or choose pages to search."
+    : noneSelected
+      ? pageOnlyScope
+        ? "Only eligible pages and articles will be searched. Files and notes are excluded."
+        : "All ready sources and pages will be searched. Select specific items to narrow the answer."
+      : `${totalSelected} item${totalSelected === 1 ? "" : "s"} selected — only these will be searched.`;
 
   function handleToggleAll() {
     if (allSelected) {
@@ -518,22 +599,28 @@ function KbSourcesScopeSheet({
           ownerMembershipId={ownerMembershipId}
           onOwnerMembershipIdChange={onOwnerMembershipIdChange}
           owners={owners}
+          selectedOwner={selectedOwner}
           onOwnerSearchChange={onOwnerSearchChange}
           ownersAreLoading={ownersAreLoading}
+          ownersHasMore={ownersHasMore}
+          ownersAreFetchingMore={ownersAreFetchingMore}
+          onOwnersLoadMore={onOwnersLoadMore}
+          ownersError={ownersError}
+          onOwnersRetry={onOwnersRetry}
         />
 
         <div className="flex items-center justify-between rounded-lg border border-border bg-card px-3 py-2">
           <div className="flex items-center gap-2">
             <ShieldCheck className="h-4 w-4 text-muted-foreground" />
             <Label htmlFor="verified-only-toggle" className="text-sm">
-              Verified sources only
+              Verified pages and articles only
             </Label>
           </div>
           <Switch
             id="verified-only-toggle"
             checked={verifiedOnly}
             onCheckedChange={onVerifiedOnlyChange}
-            aria-label="Restrict answer to verified sources only"
+            aria-label="Restrict answer to verified pages and articles only"
           />
         </div>
 
@@ -555,13 +642,24 @@ function KbSourcesScopeSheet({
           </div>
         )}
 
-        <ScopeSourcesList
-          isLoading={isLoading}
-          sources={sources}
-          selectedIds={selectedIds}
-          onToggle={handleToggleSource}
-          filtersActive={hasSourceFilter}
-          onClearFilters={handleClearSourceFilter}
+        {sourceError && sources.length === 0 ? (
+          <SourceReadError error={sourceError} onRetry={onSourceRetry} />
+        ) : (
+          <ScopeSourcesList
+            isLoading={isLoading}
+            sources={sources}
+            selectedIds={selectedIds}
+            onToggle={handleToggleSource}
+            filtersActive={hasSourceFilter}
+            onClearFilters={handleClearSourceFilter}
+          />
+        )}
+        <SourcePagination
+          error={sources.length > 0 ? sourceError : null}
+          hasMore={sourceHasMore}
+          isFetchingMore={sourceIsFetchingMore}
+          onLoadMore={onSourceLoadMore}
+          onRetry={onSourceRetry}
         />
 
         <div className="space-y-2">
@@ -600,11 +698,14 @@ function KbSourcesScopeSheet({
         <Button
           className="w-full gap-1.5"
           onClick={onConfirm}
+          disabled={sourceSelectionConflicts && selectedPageIds.length === 0}
         >
           <Check className="h-4 w-4" />
-          {noneSelected
-            ? "Search all sources and pages"
-            : `Search ${totalSelected} item${totalSelected === 1 ? "" : "s"}`}
+          {sourceSelectionConflicts
+            ? `Search ${selectedPageIds.length} page${selectedPageIds.length === 1 ? "" : "s"}`
+            : noneSelected
+              ? pageOnlyScope ? "Apply page scope" : "Search all sources and pages"
+              : `Search ${totalSelected} item${totalSelected === 1 ? "" : "s"}`}
         </Button>
       </div>
     </AppSheet>
@@ -617,6 +718,49 @@ interface SourcesListProps {
   makeDeleteHandler: (id: number) => () => void;
   deletingId: number | undefined;
   isDeleting: boolean;
+}
+
+function SourceReadError({ error, onRetry }: { error: unknown; onRetry: () => void }) {
+  return (
+    <div role="alert" className="space-y-2 text-sm text-destructive">
+      <p>Could not load sources.</p>
+      <ErrorReference error={error} />
+      <Button type="button" variant="outline" size="sm" onClick={onRetry}>Retry sources</Button>
+    </div>
+  );
+}
+
+function SourcePagination({
+  error,
+  hasMore,
+  isFetchingMore,
+  onLoadMore,
+  onRetry,
+}: {
+  error: unknown;
+  hasMore: boolean;
+  isFetchingMore: boolean;
+  onLoadMore: () => void;
+  onRetry: () => void;
+}) {
+  if (!hasMore && !error) return null;
+  return (
+    <div className="space-y-2">
+      {Boolean(error) && (
+        <div role="alert" className="text-sm text-destructive">
+          Could not load the full source list. <ErrorReference error={error} />
+        </div>
+      )}
+      {hasMore && (
+        <Button type="button" variant="outline" size="sm" disabled={isFetchingMore} onClick={onLoadMore}>
+          {isFetchingMore ? "Loading sources…" : error ? "Retry loading sources" : "Load more sources"}
+        </Button>
+      )}
+      {Boolean(error) && !hasMore && (
+        <Button type="button" variant="outline" size="sm" onClick={onRetry}>Retry sources</Button>
+      )}
+    </div>
+  );
 }
 
 function SourcesList({

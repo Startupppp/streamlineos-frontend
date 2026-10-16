@@ -13,6 +13,7 @@ import type {
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { NO_ID_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
+import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
 
 const RESEARCH_BRIEFS_PAGE_SIZE = 20;
 
@@ -81,11 +82,15 @@ export function useKbResearchBrief(briefId: number | undefined) {
 
 export function useCreateResearchBrief() {
   const qc = useQueryClient();
+  const operation = useIdempotentOperation();
   return useAuthorizedMutation("kb:pages:view", {
     mutationKey: ["kb", "research-briefs", "create"],
     mutationFn: (input: CreateResearchBriefInput) =>
-      apiClient.post<{ briefId: number; jobId: number }>("/kb/research-briefs", input, undefined, kbResearchBriefEnqueueContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.researchBriefs() }),
+      apiClient.post<{ briefId: number; jobId: number }>("/kb/research-briefs", input, operation.configFor(input), kbResearchBriefEnqueueContract),
+    onSuccess: () => {
+      operation.settle();
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.researchBriefs() });
+    },
   });
 }
 
@@ -104,11 +109,13 @@ export function useRateResearchBrief() {
 
 export function useRetryResearchBrief() {
   const qc = useQueryClient();
+  const operation = useIdempotentOperation();
   return useAuthorizedMutation("kb:pages:view", {
     mutationKey: ["kb", "research-briefs", "retry"],
     mutationFn: (briefId: number) =>
-      apiClient.post<{ briefId: number; jobId: number }>(`/kb/research-briefs/${briefId}/retry`, {}, undefined, kbResearchBriefEnqueueContract),
+      apiClient.post<{ briefId: number; jobId: number }>(`/kb/research-briefs/${briefId}/retry`, {}, operation.configFor({ briefId }), kbResearchBriefEnqueueContract),
     onSuccess: (_, briefId) => {
+      operation.settle();
       qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.researchBrief(briefId) });
       qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.researchBriefs() });
     },

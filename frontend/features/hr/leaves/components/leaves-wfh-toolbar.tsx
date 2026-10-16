@@ -55,7 +55,7 @@ export function LeavesWfhToolbar({
         approvedDays={approvedDays}
       />
 
-      <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide">
+      <div className="flex min-w-0 flex-wrap items-center gap-2">
         <TabsList className="w-full shrink-0 md:w-auto">
           <TabsTrigger value="my-leaves" className="gap-1.5 truncate">
             {t("timeOff.tabMyLeaves")}

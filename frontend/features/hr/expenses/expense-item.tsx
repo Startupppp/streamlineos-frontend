@@ -203,7 +203,7 @@ export function AdminExpenseItem({
         />
         <div className="flex items-center gap-2 flex-wrap">
           <Avatar className="h-5 w-5">
-            <AvatarImage src={resolveImageUrl(expense.user?.image)} />
+            <AvatarImage src={resolveImageUrl(expense.user?.image)} alt="" />
             <AvatarFallback className="text-micro bg-muted">
               {expense.user?.firstName?.[0]}
               {expense.user?.lastName?.[0]}

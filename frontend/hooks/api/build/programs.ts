@@ -97,11 +97,14 @@ export function useCreateProgram() {
     mutationKey: ["projects", "programs", "create"],
     mutationFn: (data: CreateProgramInput) =>
       apiClient.post<Program>("/build/programs", data, undefined, programRowContract),
-    onSuccess: () => {
-      qc.invalidateQueries({
-        queryKey: buildWorkQueryKeys.projects.programs.list(),
-        refetchType: "all",
-      });
+    onSuccess: (newProgram) => {
+      qc.setQueriesData<ProgramsPage>(
+        { queryKey: buildWorkQueryKeys.projects.programs.list() },
+        (prev) => {
+          if (!prev) return prev;
+          return { ...prev, data: [newProgram, ...prev.data] };
+        },
+      );
     },
   });
 }
@@ -112,8 +115,17 @@ export function useUpdateProgram() {
     mutationKey: ["projects", "programs", "update"],
     mutationFn: ({ programId, ...data }: UpdateProgramInput & { programId: number }) =>
       apiClient.patch<Program>(`/build/programs/${programId}`, data, undefined, programRowContract),
-    onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.programs.list() });
+    onSuccess: (updated, vars) => {
+      qc.setQueriesData<ProgramsPage>(
+        { queryKey: buildWorkQueryKeys.projects.programs.list() },
+        (prev) =>
+          prev
+            ? {
+                ...prev,
+                data: prev.data.map((p) => (p.id === vars.programId ? updated : p)),
+              }
+            : prev,
+      );
       qc.invalidateQueries({
         queryKey: buildWorkQueryKeys.projects.programs.detail(vars.programId),
       });
@@ -127,9 +139,15 @@ export function useDeleteProgram() {
     mutationKey: ["projects", "programs", "delete"],
     mutationFn: (programId: number) =>
       apiClient.delete<void>(`/build/programs/${programId}`, undefined, undefined, noContentContract),
-    onSuccess: (_, programId) => Promise.all([
-      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.programs.list() }),
-      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.programs.detail(programId) }),
-    ]),
+    onSuccess: (_, programId) => {
+      qc.setQueriesData<ProgramsPage>(
+        { queryKey: buildWorkQueryKeys.projects.programs.list() },
+        (old) => old ? { ...old, data: old.data.filter((p) => p.id !== programId) } : old,
+      );
+      qc.invalidateQueries({
+        queryKey: buildWorkQueryKeys.projects.programs.detail(programId),
+        refetchType: "none",
+      });
+    },
   });
 }

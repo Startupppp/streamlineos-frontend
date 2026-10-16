@@ -11,6 +11,7 @@ import { DECIDABLE, entityTypeLabel } from "./approvals-constants";
 import { useAccess } from "@/hooks/api/access";
 import type { BuildApprovalsCreateApprovalResponse } from "@/contracts/build-contracts.generated";
 import type { ApprovalStatus } from "@/types/projects";
+import { formatShortDate } from "@/lib/date-utils";
 
 const APPROVAL_STATUS_VALUES: ApprovalStatus[] = [
   "requested",
@@ -56,7 +57,7 @@ function ApprovalsActionsCell({
     APPROVAL_STATUS_VALUES.find((v) => v === row.status) ?? "pending";
   const { data: access } = useAccess();
   const assigned = access?.membershipId != null && access.membershipId === row.approverMembershipId;
-  const canDecideRow = canDecide && DECIDABLE.has(narrowStatus) && (assigned || canManage);
+  const canDecideRow = canDecide && DECIDABLE.has(narrowStatus) && assigned;
 
   const handleDecide = useCallback(
     () => setDecideTarget(row),
@@ -159,7 +160,7 @@ export function useApprovalsColumns({
         cell: (row) =>
           row.dueAt ? (
             <span className="tabular-nums text-muted-foreground">
-              {row.dueAt.slice(0, 10)}
+              {formatShortDate(row.dueAt)}
             </span>
           ) : (
             <span className="text-muted-foreground">—</span>

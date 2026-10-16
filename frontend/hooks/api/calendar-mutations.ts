@@ -18,7 +18,7 @@ const calendarOccurrenceExceptionContract = lazyContract(() =>
   import("@/hooks/api/calendar-schema").then((m) => m.calendarOccurrenceExceptionContract),
 );
 import { invalidateCalendarProjectionWindows } from "@/lib/calendar-projection-cache";
-import type { CalendarOooConflict, CalendarEventConflict } from "./calendar-types";
+import type { CalendarOooConflict, CalendarEventConflict, CalendarEventsResponse } from "./calendar-types";
 
 /**
  * The row `POST /calendar/events` and `PUT /calendar/events/:id` return, mirroring
@@ -103,6 +103,7 @@ interface UpsertOccurrenceExceptionPayload {
   eventId: number;
   occurrenceStart: string;
   modifiedTitle?: string;
+  modifiedDescription?: string;
   modifiedStart?: string;
   modifiedEnd?: string;
   expectedVersion?: number;
@@ -175,7 +176,15 @@ export function useCancelOccurrence() {
         undefined,
         calendarOccurrenceExceptionContract,
       ),
-    onSuccess: () => {
+    onSuccess: (_result, { eventId, occurrenceStart }) => {
+      const occurrenceId = `event-${eventId}-${occurrenceStart}`;
+      qc.setQueriesData<CalendarEventsResponse>(
+        { queryKey: platformHierarchyQueryKeys.calendar.eventsAll },
+        (window) => window && Array.isArray(window.events) ? {
+          ...window,
+          events: window.events.filter((event) => event.id !== occurrenceId),
+        } : window,
+      );
       invalidateCalendarProjectionWindows(qc);
       void qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.calendar.all });
     },

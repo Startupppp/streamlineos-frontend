@@ -23,6 +23,7 @@ export type SelectionState = {
 export function useEntityItems(
   projectId: number,
   entityType: ApprovalEntityType,
+  search?: string,
 ): { items: EntityItem[]; isFetching: boolean } {
   const { data: project } = useProject(projectId);
   const projectKey = project?.key ?? "";
@@ -31,7 +32,7 @@ export function useEntityItems(
 
   const { data: ticketsData, isFetching: ticketsFetching } = useTickets(
     idFor("task"),
-    { limit: 50 },
+    { limit: 50, ...(search ? { search } : { orderBy: "created", orderDir: "desc" }) },
   );
   const { data: milestonesPage, isFetching: milestonesFetching } =
     useProjectMilestones(idFor("milestone"));

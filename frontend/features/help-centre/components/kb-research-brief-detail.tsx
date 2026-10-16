@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { LoadingState } from "@/components/shared/loading-state";
-import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { AiCitationChips, type Citation } from "@/components/ai/ai-citation-chips";
 import { ThumbsUpIcon, ThumbsDownIcon } from "@animateicons/react/lucide";
@@ -20,6 +20,7 @@ import { useKbResearchBrief, useRateResearchBrief, useRetryResearchBrief, useCan
 import { useKbSpace } from "@/hooks/api/kb/spaces";
 import { pageHref } from "@/lib/knowledge-routes";
 import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { useRouter } from "next/navigation";
 import type { KbResearchBriefCitation, KbResearchBriefStatus } from "@/types/kb";
 
@@ -107,7 +108,7 @@ function BriefFeedback({ briefId, currentRating }: { briefId: number; currentRat
 }
 
 export function KbResearchBriefDetail({ briefId, basePath }: KbResearchBriefDetailProps) {
-  const { data: brief, isLoading, error, refetch } = useKbResearchBrief(briefId);
+  const { data: brief, isLoading, isError, error, refetch } = useKbResearchBrief(briefId);
   const { data: scopeSpace } = useKbSpace(brief?.spaceId ?? 0);
   const retryMutation = useRetryResearchBrief();
   const cancelMutation = useCancelResearchBrief();
@@ -117,6 +118,13 @@ export function KbResearchBriefDetail({ briefId, basePath }: KbResearchBriefDeta
   const canManagePages = useCan("kb:pages:manage");
   const router = useRouter();
   const [showFullReport, setShowFullReport] = useState(false);
+  const pageState = usePageState({
+    permission: "kb:pages:view",
+    isLoading,
+    isError: isError && !brief,
+    error,
+    isEmpty: !brief,
+  });
 
   const citations = useMemo(() => {
     if (!brief?.citations) return [];
@@ -174,24 +182,30 @@ export function KbResearchBriefDetail({ briefId, basePath }: KbResearchBriefDeta
     });
   }
 
-  if (isLoading) return <LoadingState variant="form" rows={6} />;
-  if (error) {
-    return <ErrorState description={getErrorMessage(error)} onRetry={handleRefetch} />;
-  }
-
   if (!brief) {
     return (
-      <EmptyState
-        title="Research brief not found"
-        description="This brief may have been deleted, or the link is out of date."
-        action={{ label: "Back to research briefs", href: basePath }}
-      />
+      <PageState
+        resolution={pageState}
+        loading={<LoadingState variant="form" rows={6} />}
+        onRetry={handleRefetch}
+      >
+        <EmptyState
+          title="Research brief not found"
+          description="This brief may have been deleted, or the link is out of date."
+          action={{ label: "Back to research briefs", href: basePath }}
+        />
+      </PageState>
     );
   }
 
   const isInProgress = brief.status === "queued" || brief.status === "running";
 
   return (
+    <PageState
+      resolution={pageState}
+      loading={<LoadingState variant="form" rows={6} />}
+      onRetry={handleRefetch}
+    >
     <div className="space-y-4">
       <Card>
         <CardHeader className="p-4 pb-0">
@@ -338,5 +352,6 @@ export function KbResearchBriefDetail({ briefId, basePath }: KbResearchBriefDeta
         </Card>
       )}
     </div>
+    </PageState>
   );
 }

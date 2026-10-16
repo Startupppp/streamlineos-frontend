@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { isApiError } from "@/lib/api-envelope";
+import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import {
   UNATTRIBUTED_PAGE_EDIT_CONFLICT,
   kbPageEditConflictContract,
@@ -17,7 +18,7 @@ export interface PageAutosavePatch {
   contentText?: string;
 }
 
-type PageSaveState = "idle" | "pending" | "saving" | "saved";
+export type PageSaveState = "idle" | "pending" | "saving" | "saved" | "failed";
 
 type SavePayload = PageAutosavePatch & {
   pageId: number;
@@ -44,7 +45,7 @@ export function usePageAutosave({
   const [saveState, setSaveState] = useState<PageSaveState>("idle");
   const [conflict, setConflict] = useState<KbPageEditConflict | null>(null);
   const [savedAt, setSavedAt] = useState<Date | null>(null);
-  const [isOffline, setIsOffline] = useState(false);
+  const isOffline = !useOnlineStatus();
   const [pendingFields, setPendingFields] = useState<readonly string[]>([]);
 
   const conflictRef = useRef<KbPageEditConflict | null>(null);
@@ -113,6 +114,7 @@ export function usePageAutosave({
       }
       idleElapsedRef.current = false;
       inFlightRef.current = true;
+      setPendingFields([]);
       setStateIfMounted("saving");
       const payload: SavePayload = {
         pageId: targetPageId,
@@ -137,9 +139,10 @@ export function usePageAutosave({
 
       function handleFailed(error: unknown) {
         inFlightRef.current = false;
-        setStateIfMounted("idle");
         pendingPatchRef.current = { ...patch, ...(pendingPatchRef.current ?? {}) };
+        if (mountedRef.current) setPendingFields(Object.keys(pendingPatchRef.current));
         if (isApiError(error) && error.status === 409) {
+          setStateIfMounted("idle");
           const parsed = kbPageEditConflictContract.safeParse(error.details);
           const detail = parsed.success ? parsed.data : UNATTRIBUTED_PAGE_EDIT_CONFLICT;
           conflictRef.current = detail;
@@ -147,6 +150,7 @@ export function usePageAutosave({
           handlersRef.current.onConflict(detail);
           return;
         }
+        setStateIfMounted("failed");
         handlersRef.current.onSaveError(error);
       }
 
@@ -175,7 +179,6 @@ export function usePageAutosave({
         idleElapsedRef.current = true;
         const queued = pendingPatchRef.current;
         pendingPatchRef.current = null;
-        setPendingFields([]);
         if (queued) run(queued);
       }, delayMs);
     },
@@ -217,27 +220,15 @@ export function usePageAutosave({
   }, [flush]);
 
   useEffect(() => {
-    function handleOffline() {
-      offlineRef.current = true;
-      if (mountedRef.current) setIsOffline(true);
-    }
-    function handleOnline() {
-      offlineRef.current = false;
-      if (mountedRef.current) setIsOffline(false);
-      drainQueued();
-    }
-    window.addEventListener("offline", handleOffline);
-    window.addEventListener("online", handleOnline);
-    return () => {
-      window.removeEventListener("offline", handleOffline);
-      window.removeEventListener("online", handleOnline);
-    };
-  }, [drainQueued]);
+    offlineRef.current = isOffline;
+    if (!isOffline) drainQueued();
+  }, [isOffline, drainQueued]);
 
   useEffect(() => {
     conflictRef.current = null;
     setConflict(null);
     pendingPatchRef.current = null;
+    setPendingFields([]);
     idleElapsedRef.current = false;
     flushAfterFlightRef.current = false;
     setSaveState("idle");
@@ -250,20 +241,18 @@ export function usePageAutosave({
     conflictRef.current = null;
     setConflict(null);
     pendingPatchRef.current = null;
+    setPendingFields([]);
     setSaveState("idle");
   }, [clearTimer]);
 
   const keepLocalEdits = useCallback(() => {
     const detail = conflictRef.current;
-    let adopted = false;
-    if (detail !== null && detail.currentContentRevision !== null) {
-      adoptRevision(pageIdRef.current, detail.currentContentRevision);
-      adopted = true;
-    }
+    if (detail === null || detail.currentContentRevision === null) return;
+    adoptRevision(pageIdRef.current, detail.currentContentRevision);
     conflictRef.current = null;
     setConflict(null);
-    if (adopted) flush();
+    flush();
   }, [adoptRevision, flush]);
 
-  return { saveState, conflict, savedAt, isOffline, pendingFields, schedule, discardLocalEdits, keepLocalEdits };
+  return { saveState, conflict, savedAt, isOffline, pendingFields, schedule, retry: flush, discardLocalEdits, keepLocalEdits };
 }

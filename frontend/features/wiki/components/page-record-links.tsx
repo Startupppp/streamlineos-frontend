@@ -14,6 +14,12 @@ import {
 } from "@/components/ui/select";
 import { useCan } from "@/hooks/api/access";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { Skeleton } from "@/components/ui/skeleton";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
+import { PageState } from "@/components/shared/page-state";
+import { ErrorReference } from "@/components/shared/error-reference";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { isApiError } from "@/lib/api-envelope";
 import {
   useKbPageRecordLinks,
   useAddKbPageRecordLink,
@@ -96,9 +102,35 @@ export function PageRecordLinks({ pageId }: PageRecordLinksProps) {
   const [targetId, setTargetId] = useState("");
   const [label, setLabel] = useState("");
 
-  const { data: links = [] } = useKbPageRecordLinks(pageId);
+  const {
+    data: links = [],
+    isLoading,
+    isError,
+    isFetchNextPageError,
+    error,
+    refetch,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+  } = useKbPageRecordLinks(pageId);
   const addLink = useAddKbPageRecordLink();
   const removeLink = useRemoveKbPageRecordLink();
+  const accessLost = isApiError(error) && (error.status === 401 || error.status === 403 || error.status === 404);
+  const listState = usePageState({
+    permission: "kb:pages:view",
+    isLoading,
+    isError: isError && (links.length === 0 || accessLost),
+    error,
+    isEmpty: !isLoading && !isError && links.length === 0,
+  });
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+
+  const handleLoadMore = useCallback(() => {
+    void fetchNextPage();
+  }, [fetchNextPage]);
 
   const handleTargetTypeChange = useCallback((value: string) => {
     setTargetType(value as KbRecordTargetType);
@@ -142,7 +174,13 @@ export function PageRecordLinks({ pageId }: PageRecordLinksProps) {
   return (
     <div className="space-y-2">
       <p className="text-label font-medium text-foreground">Linked records</p>
-      {links.length > 0 && (
+      <PageState
+        resolution={listState}
+        compact
+        onRetry={handleRetry}
+        loading={<Skeleton className="h-8 w-full" />}
+        empty={<p className="text-xs text-muted-foreground">No linked records yet.</p>}
+      >
         <div className="space-y-0.5">
           {links.map((link) => (
             <RecordLinkRow
@@ -154,9 +192,24 @@ export function PageRecordLinks({ pageId }: PageRecordLinksProps) {
               onRemove={handleRemoveLink}
             />
           ))}
+          <InfiniteScrollSentinel
+            hasNextPage={!isFetchNextPageError && (hasNextPage ?? false)}
+            isFetchingNextPage={isFetchingNextPage}
+            onLoadMore={handleLoadMore}
+            label="Load more linked records"
+          />
+          {isFetchNextPageError && (
+            <div role="alert" className="space-y-2 text-sm text-destructive">
+              <p>Could not load more linked records.</p>
+              <ErrorReference error={error} />
+              <Button type="button" variant="outline" size="sm" onClick={handleLoadMore}>
+                Retry loading linked records
+              </Button>
+            </div>
+          )}
         </div>
-      )}
-      {canUpdate && (
+      </PageState>
+      {canUpdate && (listState.kind === "ready" || listState.kind === "empty") && (
         <div className="space-y-2 pt-1">
           <Select value={targetType} onValueChange={handleTargetTypeChange}>
             <SelectTrigger className={FIELD_CLASS}>

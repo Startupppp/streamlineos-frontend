@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 const mockAskMutate = jest.fn();
 const mockFeedbackMutate = jest.fn();
 const mockCreateGapMutate = jest.fn();
+const mockAskResetAttempt = jest.fn();
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
@@ -22,8 +23,9 @@ jest.mock("@/hooks/api/kb/ask", () => ({
     isPending: false,
     isError: false,
     stop: jest.fn(),
-    resetAttempt: jest.fn(),
+    resetAttempt: mockAskResetAttempt,
   }),
+  useKbAskPageOwners: () => ({ data: { pages: [] }, isLoading: false, hasNextPage: false, isFetchingNextPage: false, fetchNextPage: jest.fn(), error: null, refetch: jest.fn() }),
   useKbAiAnswerFeedback: () => ({ mutate: mockFeedbackMutate, isPending: false }),
   useCreateKbKnowledgeGap: () => ({ mutate: mockCreateGapMutate, isPending: false }),
 }));
@@ -81,20 +83,23 @@ jest.mock("@/hooks/api/kb/sources", () => ({
 Object.assign(navigator, { clipboard: { writeText: jest.fn().mockResolvedValue(undefined) } });
 
 import KnowledgeBasePage from "./knowledge-base-page";
+import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 
-function renderPage(): void {
+function renderPage(): QueryClient {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
   render(
     <QueryClientProvider client={qc}>
       <KnowledgeBasePage />
     </QueryClientProvider>,
   );
+  return qc;
 }
 
 beforeEach(() => {
   mockAskMutate.mockReset();
   mockFeedbackMutate.mockReset();
   mockCreateGapMutate.mockReset();
+  mockAskResetAttempt.mockReset();
 });
 
 describe("KnowledgeBasePage — Copy and feedback controls on the real Ask KB chat", () => {
@@ -178,5 +183,71 @@ describe("KnowledgeBasePage — Create knowledge gap on an insufficient-evidence
       { question: "Where is the expense policy?" },
       expect.objectContaining({ onSuccess: expect.any(Function), onError: expect.any(Function) }),
     );
+  });
+});
+
+describe("KnowledgeBasePage — completed answer presentation", () => {
+  it.each([
+    { state: "insufficient evidence", hasContext: false, disagreement: undefined, banner: /no relevant content found/i },
+    { state: "source disagreement", hasContext: true, disagreement: { summary: "Two sources conflict." }, banner: /sources disagree/i },
+  ])("does not retain a second streamed answer after $state is cached", async ({ hasContext, disagreement, banner }) => {
+    mockAskMutate.mockImplementation((input, options) => {
+      input.onToken("The answer needs review.");
+      options.onSuccess({ hasContext, answer: "The answer needs review.", citations: [], conversationId: 9, disagreement });
+    });
+    const qc = renderPage();
+
+    await userEvent.type(screen.getByPlaceholderText(/ask anything/i), "What is the policy?");
+    await userEvent.click(screen.getByRole("button", { name: "Send" }));
+
+    const cached = qc.getQueryData<{ pages: Array<{ messages: Array<{ content: string }> }> }>(
+      knowledgeAndSurveysQueryKeys.kb.chatConversationMessages(9),
+    );
+    expect(cached?.pages[0]?.messages[0]?.content).toBe("The answer needs review.");
+    expect(screen.getByText(banner)).toBeInTheDocument();
+    expect(screen.queryByText("The answer needs review.")).not.toBeInTheDocument();
+  });
+});
+
+describe("KnowledgeBasePage — interrupted answer recovery", () => {
+  it("labels streamed text as partial and withholds answer actions after Stop aborts generation", async () => {
+    mockAskMutate.mockImplementation((input, options) => {
+      input.onToken("Partial policy answer");
+      options.onError(new DOMException("Generation stopped", "AbortError"));
+    });
+    renderPage();
+
+    await userEvent.type(screen.getByPlaceholderText(/ask anything/i), "What is the policy?");
+    await userEvent.click(screen.getByRole("button", { name: "Send" }));
+
+    expect(screen.getByText("Partial policy answer")).toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent("Partial answer — generation did not complete.");
+    expect(screen.getByText("Generation stopped. This answer is incomplete.")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Generate a new answer" })).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: /copy answer/i })).toHaveLength(1);
+    expect(screen.getAllByRole("button", { name: /mark answer as helpful/i })).toHaveLength(1);
+  });
+
+  it("keeps a failed network answer marked partial and starts a fresh generation on retry", async () => {
+    mockAskMutate.mockImplementationOnce((input, options) => {
+      input.onToken("Partial network answer");
+      options.onError(new Error("Connection lost"));
+    });
+    renderPage();
+
+    await userEvent.type(screen.getByPlaceholderText(/ask anything/i), "What is the policy?");
+    await userEvent.click(screen.getByRole("button", { name: "Send" }));
+
+    expect(screen.getByText("Partial network answer")).toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent("Partial answer — generation did not complete.");
+    expect(screen.getByText("Connection lost")).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: /copy answer/i })).toHaveLength(1);
+
+    await userEvent.click(screen.getByRole("button", { name: "Generate a new answer" }));
+
+    expect(mockAskResetAttempt).toHaveBeenCalledTimes(1);
+    expect(mockAskMutate).toHaveBeenCalledTimes(2);
+    expect(mockAskMutate.mock.calls[1]?.[0]).toEqual(expect.objectContaining({ question: "What is the policy?" }));
+    expect(screen.queryByText("Partial network answer")).not.toBeInTheDocument();
   });
 });

@@ -127,6 +127,7 @@ export default function PageTree({
           depth={0}
           onCloseMobile={onCloseMobile}
           spaceId={spaceId}
+          projectId={projectId}
           baseHref={baseHref}
         />
       ))}

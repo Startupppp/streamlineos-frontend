@@ -50,6 +50,7 @@ export function TicketDateFields({
             toYear={startDateBounds.toYear}
             toDate={dueDate ? new Date(`${dueDate}T00:00:00`) : undefined}
             className="min-h-10 min-w-0 flex-1 touch-manipulation text-xs @[18rem]:min-h-9 md:min-h-9"
+            ariaLabel="Start date"
           />
           {startDate && (
             <AnimatedIconButton
@@ -79,6 +80,7 @@ export function TicketDateFields({
             fromYear={dueDateBounds.fromYear}
             toYear={dueDateBounds.toYear}
             className="min-h-10 min-w-0 flex-1 touch-manipulation text-xs @[18rem]:min-h-9 md:min-h-9"
+            ariaLabel="Due date"
           />
           {dueDate && (
             <AnimatedIconButton

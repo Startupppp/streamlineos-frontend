@@ -2,6 +2,7 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
 import { toast } from "sonner";
 import { usePrograms, useCreateProgram, useUpdateProgram, useDeleteProgram } from "@/hooks/api/build/programs";
+import { useSubmitGuard } from "@/hooks/common/use-submit-guard";
 import { usePortfolios } from "@/hooks/api/build/portfolios";
 import { useProjects } from "@/hooks/api/build/projects";
 import { useCan } from "@/hooks/api/access";
@@ -150,18 +151,19 @@ export function useProgramsPage() {
 
   const rows = useMemo(() => data?.data ?? [], [data]);
 
-  const handleCreate = useCallback(
-    (input: CreateProgramInput) => {
-      createProgram.mutate(input, {
-        onSuccess: () => {
-          toast.success("Program created");
-          setCreateOpen(false);
-        },
-        onError: (e) => toast.error(getErrorMessage(e)),
-      });
+  const createProgramHandler = useCallback(
+    async (input: CreateProgramInput) => {
+      try {
+        await createProgram.mutateAsync(input);
+        toast.success("Program created");
+        setCreateOpen(false);
+      } catch (e) {
+        toast.error(getErrorMessage(e));
+      }
     },
     [createProgram, setCreateOpen],
   );
+  const { submit: handleCreate, isSubmitting: isCreating } = useSubmitGuard(createProgramHandler);
 
   const handleEdit = useCallback(
     (input: UpdateProgramInput & { programId: number }) => {
@@ -292,7 +294,7 @@ export function useProgramsPage() {
     pageNumber,
     hasPrevious,
     goPrevious,
-    createProgram,
+    isCreating,
     updateProgram,
     deleteProgram,
   };

@@ -9,8 +9,10 @@ import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import type {
   ContentHealthSignalType,
   DismissHealthItemParams,
+  BulkRepairParams,
 } from "@/hooks/api/kb/content-health-schema";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
 
 const contentHealthSignalsContract = lazyContract(() =>
   import("@/hooks/api/kb/content-health-schema").then(
@@ -73,16 +75,18 @@ export function useContentHealthCounts() {
 
 export function useDismissHealthItem() {
   const queryClient = useQueryClient();
+  const operation = useIdempotentOperation();
   return useAuthorizedMutation("kb:pages:manage", {
     mutationKey: ["knowledge", "kb", "contentHealth", "dismiss"],
     mutationFn: (params: DismissHealthItemParams) =>
       apiClient.post(
         "/kb/wiki/content-health/signals/dismiss",
         params,
-        undefined,
+        operation.configFor(params),
         dismissHealthItemContract,
       ),
     onSuccess: () => {
+      operation.settle();
       void queryClient.invalidateQueries({
         queryKey: knowledgeAndSurveysQueryKeys.kb.contentHealthCounts(),
       });
@@ -125,13 +129,6 @@ export function useAssignHealthItem() {
   });
 }
 
-export interface BulkRepairParams {
-  pageIds: number[];
-  kind: ContentHealthSignalType;
-  repairAction: "assign_owner" | "request_review" | "mark_needs_content";
-  assigneeMembershipId?: number;
-}
-
 const bulkRepairContract = lazyContract(() =>
   import("@/hooks/api/kb/content-health-schema").then(
     (m) => m.bulkRepairHealthItemsContract,
@@ -140,16 +137,18 @@ const bulkRepairContract = lazyContract(() =>
 
 export function useBulkRepairHealthItems() {
   const queryClient = useQueryClient();
+  const operation = useIdempotentOperation();
   return useAuthorizedMutation("kb:pages:manage", {
     mutationKey: ["knowledge", "kb", "contentHealth", "bulkRepair"],
     mutationFn: (params: BulkRepairParams) =>
       apiClient.post(
         "/kb/wiki/content-health/signals/bulk-repair",
         params,
-        undefined,
+        operation.configFor(params),
         bulkRepairContract,
       ),
     onSuccess: () => {
+      operation.settle();
       void queryClient.invalidateQueries({
         queryKey: knowledgeAndSurveysQueryKeys.kb.contentHealthCounts(),
       });

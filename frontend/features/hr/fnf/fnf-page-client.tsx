@@ -331,13 +331,14 @@ export function FnfPageClient() {
         isPending={create.isPending}
       >
         <div className="space-y-1.5">
-          <label className="text-sm font-semibold text-foreground">
-            Employee <span className="text-destructive">*</span>
-          </label>
+          <p className="text-sm font-semibold text-foreground">
+            Employee <span className="text-destructive" aria-hidden="true">*</span>
+          </p>
           <EmployeePicker
             value={userId}
             onChange={handleUserIdChange}
             placeholder="Select employee…"
+            ariaLabel="Employee"
           />
           {userIdError ? (
             <p id="fnf-employee-error" role="alert" className="text-xs text-destructive">
@@ -354,8 +355,9 @@ export function FnfPageClient() {
           </p>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-foreground">Basic Dues</label>
+              <label htmlFor="fnf-basic-dues" className="text-sm font-medium text-foreground">Basic Dues</label>
               <Input
+                id="fnf-basic-dues"
                 type="number"
                 min="0"
                 step="0.01"
@@ -365,8 +367,9 @@ export function FnfPageClient() {
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-foreground">Leave Encashment</label>
+              <label htmlFor="fnf-leave-encashment" className="text-sm font-medium text-foreground">Leave Encashment</label>
               <Input
+                id="fnf-leave-encashment"
                 type="number"
                 min="0"
                 step="0.01"
@@ -388,8 +391,9 @@ export function FnfPageClient() {
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-foreground">Bonus Due</label>
+              <label htmlFor="fnf-bonus-due" className="text-sm font-medium text-foreground">Bonus Due</label>
               <Input
+                id="fnf-bonus-due"
                 type="number"
                 min="0"
                 step="0.01"
@@ -399,8 +403,9 @@ export function FnfPageClient() {
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-foreground">Deductions</label>
+              <label htmlFor="fnf-deductions" className="text-sm font-medium text-foreground">Deductions</label>
               <Input
+                id="fnf-deductions"
                 type="number"
                 min="0"
                 step="0.01"
@@ -410,8 +415,9 @@ export function FnfPageClient() {
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-foreground">Loan Recovery</label>
+              <label htmlFor="fnf-loan-recovery" className="text-sm font-medium text-foreground">Loan Recovery</label>
               <Input
+                id="fnf-loan-recovery"
                 type="number"
                 min="0"
                 step="0.01"
@@ -424,8 +430,9 @@ export function FnfPageClient() {
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-sm font-medium text-foreground">Notes</label>
+          <label htmlFor="fnf-notes" className="text-sm font-medium text-foreground">Notes</label>
           <Textarea
+            id="fnf-notes"
             placeholder="Additional settlement notes…"
             value={notes}
             onChange={handleNotesChange}

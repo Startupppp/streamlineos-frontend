@@ -17,6 +17,7 @@ import { Label } from "@/components/ui/label";
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
@@ -25,6 +26,7 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -199,6 +201,7 @@ export function CompetencyFrameworksTab() {
           <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-[480px]">
             <SheetHeader className="shrink-0 border-b border-border px-6 py-4 text-left gap-1">
               <SheetTitle>Create Competency Framework</SheetTitle>
+              <SheetDescription className="sr-only">Define the name, rating scale, and proficiency levels for the competency framework.</SheetDescription>
             </SheetHeader>
             <SheetBody className="space-y-4 px-6 py-5">
               <div className="space-y-1.5">
@@ -334,6 +337,7 @@ export function CompetencyFrameworksTab() {
                       <DialogContent>
                         <DialogHeader>
                           <DialogTitle>Add Competency to {framework.name}</DialogTitle>
+                          <DialogDescription className="sr-only">Add a competency with a name, category, and weight to this framework.</DialogDescription>
                         </DialogHeader>
                         <div className="space-y-4 pt-2">
                           <div className="space-y-1.5">

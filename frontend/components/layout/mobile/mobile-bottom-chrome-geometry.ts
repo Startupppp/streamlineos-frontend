@@ -1,4 +1,5 @@
-export const NAV_HEIGHT_PX = 64;
+/** Matches the mobile bottom nav row: Tailwind `h-11` (2.75rem). */
+export const NAV_HEIGHT_PX = 44;
 export const FAB_SIZE_PX = 44;
 export const FAB_MARGIN_PX = 8;
 export const LAUNCHER_MARGIN_PX = 4;

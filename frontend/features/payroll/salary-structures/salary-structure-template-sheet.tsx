@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { PAYROLL_AMOUNT_MAX } from "@/lib/validation/payroll-bounds";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -15,12 +16,17 @@ import { estimateTemplateNet } from "./salary-structure-template-preview";
 import { ComponentsUsed, SampleCtcPreview } from "./salary-breakup-preview";
 
 const NON_NEGATIVE_DECIMAL = /^\d+(\.\d{1,2})?$/;
+const AMOUNT_MAX_LABEL = `₹${PAYROLL_AMOUNT_MAX.toLocaleString("en-IN")}`;
 
 function money(requiredMessage: string) {
   return z
     .string()
     .min(1, requiredMessage)
-    .regex(NON_NEGATIVE_DECIMAL, "Enter an amount of zero or more");
+    .regex(NON_NEGATIVE_DECIMAL, "Enter an amount of zero or more")
+    .refine(
+      (v) => parseFloat(v) <= PAYROLL_AMOUNT_MAX,
+      `Cannot exceed ${AMOUNT_MAX_LABEL}`,
+    );
 }
 
 function percent(requiredMessage: string) {
@@ -48,7 +54,7 @@ const templateSchema = z.object({
   medicalAllowance: optionalMoney(),
   travelAllowance: optionalMoney(),
   otherAllowances: optionalMoney(),
-  pfDeductionPercent: percent("PF deduction % is required").nullable(),
+  pfDeductionPercent: percent("PF deduction % is required"),
   professionalTax: optionalMoney(),
   effectiveFrom: z.string().min(1, "Effective from is required"),
   effectiveTo: z.string().nullable(),

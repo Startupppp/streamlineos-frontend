@@ -34,6 +34,7 @@ import {
   useMarkStaleKbPage,
 } from "@/hooks/api/kb/pages";
 import { PageRecordLinks } from "./page-record-links";
+import { RequestReviewDialog } from "./reviews-decision-dialogs";
 import { kbFormatDate } from "@/features/wiki/lib/kb-date-utils";
 import type { KbPageDetail } from "@/hooks/api/kb/page-types";
 
@@ -76,9 +77,13 @@ export default function PageMetadataSheet({
   open,
   onOpenChange,
 }: PageMetadataSheetProps) {
+  const canUpdate = useCan("kb:pages:update");
   const canManage = useCan("kb:pages:manage");
+  const canManageReviews = useCan("kb:reviews:manage");
+  const isEditable = canUpdate && page.canEdit === true && (!page.isLocked || canManage);
   const [intervalDays, setIntervalDays] = useState<string>("");
   const [verifyFormOpen, setVerifyFormOpen] = useState(false);
+  const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
 
   const updatePage = useUpdateKbPage();
   const publishPage = usePublishKbPage();
@@ -91,6 +96,7 @@ export default function PageMetadataSheet({
   const spaces = spacesPage?.data ?? [];
 
   function handleSpaceChange(value: string) {
+    if (!isEditable) return;
     updatePage.mutate(
       { pageId, spaceId: value === "none" ? null : Number(value) },
       { onSuccess: () => toast.success("Space updated"), onError: () => toast.error("Failed to update space") }
@@ -98,20 +104,23 @@ export default function PageMetadataSheet({
   }
 
   function handleStatusChange(value: string) {
+    if (!isEditable) return;
     updatePage.mutate(
-      { pageId, status: value as "draft" | "in_review" | "published" | "archived" },
+      { pageId, status: value as "draft" | "in_review" | "published" | "archived", expectedContentRevision: page.contentRevision },
       { onError: () => toast.error("Failed to update status") }
     );
   }
 
   function handleContentTypeChange(value: string) {
+    if (!isEditable) return;
     updatePage.mutate(
-      { pageId, contentType: value },
+      { pageId, contentType: value, expectedContentRevision: page.contentRevision },
       { onError: () => toast.error("Failed to update content type") }
     );
   }
 
   function handleOwnerChange(value: string) {
+    if (!isEditable) return;
     updatePage.mutate(
       { pageId, ownerUserId: value || null },
       { onError: () => toast.error("Failed to update owner") }
@@ -119,6 +128,7 @@ export default function PageMetadataSheet({
   }
 
   function handlePublish() {
+    if (!isEditable) return;
     publishPage.mutate(pageId, {
       onSuccess: () => toast.success("Page published"),
       onError: () => toast.error("Failed to publish page"),
@@ -126,6 +136,7 @@ export default function PageMetadataSheet({
   }
 
   function handleArchive() {
+    if (!isEditable) return;
     archivePage.mutate(pageId, {
       onSuccess: () => toast.success("Page archived"),
       onError: () => toast.error("Failed to archive page"),
@@ -133,6 +144,7 @@ export default function PageMetadataSheet({
   }
 
   function handleUnarchive() {
+    if (!isEditable) return;
     unarchivePage.mutate(pageId, {
       onSuccess: () => toast.success("Page unarchived"),
       onError: () => toast.error("Failed to unarchive page"),
@@ -149,6 +161,7 @@ export default function PageMetadataSheet({
   }
 
   function handleConfirmVerify() {
+    if (!isEditable) return;
     const days = intervalDays ? Number(intervalDays) : undefined;
     verifyPage.mutate(
       { pageId, intervalDays: days },
@@ -164,6 +177,7 @@ export default function PageMetadataSheet({
   }
 
   function handleMarkStale() {
+    if (!isEditable) return;
     markStalePage.mutate(pageId, {
       onSuccess: () => toast.success("Page marked as stale"),
       onError: () => toast.error("Failed to mark page as stale"),
@@ -179,12 +193,17 @@ export default function PageMetadataSheet({
     onOpenChange(false);
   }
 
+  function handleRequestReview() {
+    setReviewDialogOpen(true);
+  }
+
   const trustState = page.trustState ?? "unverified";
   const status = page.status ?? "draft";
   const showPublish = status !== "published";
   const statusActionCount = showPublish ? 2 : 1;
 
   return (
+    <>
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="gap-0 sm:max-w-md p-0 flex flex-col bg-background">
         <SheetHeader className="px-5 py-4 border-b shrink-0 bg-background">
@@ -201,8 +220,9 @@ export default function PageMetadataSheet({
               <Select
                 value={page.spaceId != null ? String(page.spaceId) : "none"}
                 onValueChange={handleSpaceChange}
+                disabled={!isEditable}
               >
-                <SelectTrigger className={FIELD_CLASS}>
+                <SelectTrigger className={FIELD_CLASS} aria-label="Space">
                   <SelectValue placeholder="No space" />
                 </SelectTrigger>
                 <SelectContent>
@@ -218,8 +238,8 @@ export default function PageMetadataSheet({
 
             <div className="space-y-2">
               <p className="text-label font-medium text-foreground">Status</p>
-              <Select value={status} onValueChange={handleStatusChange}>
-                <SelectTrigger className={FIELD_CLASS}>
+              <Select value={status} onValueChange={handleStatusChange} disabled={!isEditable}>
+                <SelectTrigger className={FIELD_CLASS} aria-label="Status">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -230,7 +250,7 @@ export default function PageMetadataSheet({
                   ))}
                 </SelectContent>
               </Select>
-              {canManage && (
+              {isEditable && (
                 <div
                   className={
                     statusActionCount === 2
@@ -271,8 +291,8 @@ export default function PageMetadataSheet({
 
             <div className="space-y-2">
               <p className="text-label font-medium text-foreground">Content type</p>
-              <Select value={page.contentType ?? ""} onValueChange={handleContentTypeChange}>
-                <SelectTrigger className={FIELD_CLASS}>
+              <Select value={page.contentType ?? ""} onValueChange={handleContentTypeChange} disabled={!isEditable}>
+                <SelectTrigger className={FIELD_CLASS} aria-label="Content type">
                   <SelectValue placeholder="Select type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -286,17 +306,19 @@ export default function PageMetadataSheet({
             </div>
 
             <div className="space-y-2">
-              <p className="text-label font-medium text-foreground">Owner</p>
+              <label htmlFor="kb-page-owner" className="text-label font-medium text-foreground">Owner</label>
               <UserCombobox
+                id="kb-page-owner"
                 value={page.ownerUserId ?? ""}
                 onChange={handleOwnerChange}
                 placeholder="Select owner…"
                 allowUnassigned
+                disabled={!isEditable}
                 className={FIELD_CLASS}
               />
             </div>
 
-            {canManage && (
+            {isEditable && (
               <div className="space-y-3">
                 <p className="text-label font-medium text-foreground">Verification</p>
                 <div className="flex items-center gap-2">
@@ -384,6 +406,15 @@ export default function PageMetadataSheet({
               </p>
             )}
 
+            {canManageReviews && (
+              <div className="space-y-2">
+                <p className="text-label font-medium text-foreground">Reviews</p>
+                <Button type="button" variant="outline" className={ACTION_BTN_NEUTRAL} onClick={handleRequestReview}>
+                  Request review
+                </Button>
+              </div>
+            )}
+
             <PageRecordLinks pageId={pageId} />
           </div>
         </ScrollArea>
@@ -395,5 +426,12 @@ export default function PageMetadataSheet({
         </SheetFooter>
       </SheetContent>
     </Sheet>
+    <RequestReviewDialog
+      pageId={pageId}
+      pageTitle={page.title}
+      open={reviewDialogOpen}
+      onOpenChange={setReviewDialogOpen}
+    />
+    </>
   );
 }

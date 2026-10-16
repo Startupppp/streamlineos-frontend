@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useFormContext } from "react-hook-form";
+import { MemberPicker } from "@/components/members/member-picker";
+import type { MemberOption } from "@/components/members/member-picker-options";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,29 +14,100 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useCan } from "@/hooks/api/access";
 import { useCalendarSources } from "@/hooks/api/calendar";
 import { useInfiniteProjects } from "@/hooks/api/build/projects";
-import { usePeople } from "@/hooks/api/directory/people";
-import { useDebouncedValue } from "@/hooks/common/use-debounce";
+import {
+  useMemberDirectory,
+  type DirectoryMember,
+} from "@/hooks/api/members/use-member-directory";
 import { useCalendarConnections } from "./use-calendar-connections";
 import type { CalendarSavedViewFormValues } from "./calendar-saved-view-form-schema";
 
-export function CalendarSavedViewFilterFields({ actorMembershipId }: { actorMembershipId: number | null }) {
+function toMemberOption(member: DirectoryMember): MemberOption {
+  return {
+    id: member.id,
+    email: member.email,
+    image: member.image,
+    name: member.name,
+    firstName: member.firstName,
+    lastName: member.lastName,
+  };
+}
+
+function CalendarSavedViewOwnerField({ actorMembershipId }: { actorMembershipId: number | null }) {
   const form = useFormContext<CalendarSavedViewFormValues>();
   const [ownerSearch, setOwnerSearch] = useState("");
-  const canSeePeople = useCan("directory:people:view");
-  const search = useDebouncedValue(ownerSearch, 300);
+  const [pickedUserId, setPickedUserId] = useState("");
+  const ownerValue = form.watch("ownerMembershipId");
+  const targetMembership =
+    ownerValue === "all"
+      ? null
+      : ownerValue === "me"
+        ? actorMembershipId
+        : Number(ownerValue);
+  const selectedIds = useMemo(
+    () => (pickedUserId ? [pickedUserId] : []),
+    [pickedUserId],
+  );
+  const { members, selectedMembers } = useMemberDirectory(
+    { kind: "org" },
+    { search: ownerSearch, enabled: true, selectedIds },
+  );
+  const roster = useMemo(() => {
+    const byId = new Map<string, DirectoryMember>();
+    for (const member of [...selectedMembers, ...members]) byId.set(member.id, member);
+    return [...byId.values()];
+  }, [members, selectedMembers]);
+  const resolvedUserId =
+    roster.find((member) => member.membershipId === targetMembership)?.id ?? "";
+  const pickerValue = pickedUserId || resolvedUserId;
+  const candidates = useMemo(() => roster.map(toMemberOption), [roster]);
+
+  function handleOwnerSearch(value: string) {
+    setOwnerSearch(value);
+  }
+
+  function handleOwnerChange(userId: string | null) {
+    setPickedUserId(userId ?? "");
+    if (!userId) {
+      form.setValue("ownerMembershipId", "all", { shouldDirty: true });
+      return;
+    }
+    const member = roster.find((item) => item.id === userId);
+    if (!member?.membershipId) return;
+    const next =
+      actorMembershipId !== null && member.membershipId === actorMembershipId
+        ? "me"
+        : String(member.membershipId);
+    form.setValue("ownerMembershipId", next, { shouldDirty: true });
+  }
+
+  return (
+    <div className="space-y-1.5">
+      <Label htmlFor="saved-view-owner">Owner</Label>
+      <MemberPicker
+        id="saved-view-owner"
+        value={pickerValue}
+        onChange={handleOwnerChange}
+        candidates={candidates}
+        allowUnassigned
+        unassignedLabel="Anyone"
+        placeholder="Anyone"
+        searchLabel="Find saved view owner"
+        onSearchChange={handleOwnerSearch}
+        modal
+      />
+    </div>
+  );
+}
+
+export function CalendarSavedViewFilterFields({ actorMembershipId }: { actorMembershipId: number | null }) {
+  const form = useFormContext<CalendarSavedViewFormValues>();
   const sources = useCalendarSources();
   const connections = useCalendarConnections();
-  const people = usePeople({ limit: 100, search });
   const projects = useInfiniteProjects({ limit: 100 });
-  const peopleRows = (people.data?.data ?? []).filter(
-    (person) => person.organizationMembershipId !== null,
-  );
   const projectRows = projects.data?.pages.flatMap((page) => page.data) ?? [];
   const sourceValue = form.watch("sourceKey");
-  const ownerValue = form.watch("ownerMembershipId");
   const projectValue = form.watch("projectId");
   const actionableValue = form.watch("actionable");
   const sourceOptions = [
@@ -46,7 +119,7 @@ export function CalendarSavedViewFilterFields({ actorMembershipId }: { actorMemb
   ];
 
   return (
-    <div className="space-y-3 border-t pt-3">
+    <div className="space-y-3 rounded-lg bg-muted p-3 dark:border dark:border-background">
       <p className="text-sm font-medium">Filters</p>
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-1.5">
@@ -59,26 +132,7 @@ export function CalendarSavedViewFilterFields({ actorMembershipId }: { actorMemb
             </SelectContent>
           </Select>
         </div>
-        <div className="space-y-1.5">
-          <Label>Owner</Label>
-          {canSeePeople ? <Input value={ownerSearch} onChange={(event) => setOwnerSearch(event.target.value)} placeholder="Search members" aria-label="Find saved view owner" /> : null}
-          <Select value={ownerValue} onValueChange={(value) => form.setValue("ownerMembershipId", value, { shouldDirty: true })}>
-            <SelectTrigger aria-label="Saved view owner"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Anyone</SelectItem>
-              {actorMembershipId ? <SelectItem value="me">Me</SelectItem> : null}
-              {peopleRows.filter((person) => person.organizationMembershipId !== actorMembershipId).map((person) => (
-                <SelectItem key={person.organizationPersonId} value={String(person.organizationMembershipId)}>
-                  {person.displayName ?? `${person.firstName} ${person.lastName}`.trim()}
-                </SelectItem>
-              ))}
-              {ownerValue !== "all" && ownerValue !== "me" && !peopleRows.some((person) => String(person.organizationMembershipId) === ownerValue) ? (
-                <SelectItem value={ownerValue}>Selected member</SelectItem>
-              ) : null}
-            </SelectContent>
-          </Select>
-          {canSeePeople && people.data?.pageInfo.hasMore ? <p className="text-xs text-muted-foreground">Search by name to find more members.</p> : null}
-        </div>
+        <CalendarSavedViewOwnerField actorMembershipId={actorMembershipId} />
         <div className="space-y-1.5">
           <Label>Project</Label>
           <Select value={projectValue} onValueChange={(value) => form.setValue("projectId", value, { shouldDirty: true })}>

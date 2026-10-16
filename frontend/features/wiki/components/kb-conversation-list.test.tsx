@@ -1,4 +1,5 @@
 import { render, screen, cleanup } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { KbConversationList } from "./kb-conversation-list";
 
 type IntersectionCallback = (entries: IntersectionObserverEntry[]) => void;
@@ -87,6 +88,29 @@ describe("KbConversationList search input layout — flex shrink (FE-182)", () =
 
     const input = screen.getByPlaceholderText("Search conversations…");
     expect(input.classList.contains("min-w-0")).toBe(true);
+  });
+});
+
+describe("KbConversationList row actions", () => {
+  it("keeps the menu visible on touch widths and reveals it on desktop keyboard focus", async () => {
+    const user = userEvent.setup();
+    render(<KbConversationList {...baseProps} />);
+
+    const menu = screen.getByRole("button", { name: "More options" });
+    expect(menu).toHaveClass("h-8", "w-8", "lg:opacity-0", "lg:group-focus-within:opacity-100", "lg:focus-visible:opacity-100");
+    expect(menu).not.toHaveClass("opacity-0");
+
+    await user.tab();
+    await user.tab();
+    await user.tab();
+    await user.tab();
+    await user.tab();
+    await user.tab();
+    expect(menu).toHaveFocus();
+
+    await user.keyboard("{Enter}");
+    expect(await screen.findByRole("menuitem", { name: "Rename" })).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: "Delete" })).toBeInTheDocument();
   });
 });
 

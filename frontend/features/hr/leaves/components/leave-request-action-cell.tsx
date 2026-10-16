@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { X } from "lucide-react";
+import { useSession } from "next-auth/react";
 
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -29,10 +30,17 @@ interface RequestActionCellProps {
  */
 export function RequestActionCell({ request, isCancelling = false, onCancel }: RequestActionCellProps) {
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const { data: session } = useSession();
+  const currentUserId = session?.user?.id;
   const isPending = (request.status ?? "PENDING") === "PENDING";
   const { data: route } = useMyApprover("leave", { enabled: isPending });
 
   if (!isPending) return null;
+
+  const isSelfApprover = route?.ownerSelfApproval === true && route.approver?.userId === currentUserId;
+  const approverHint = !isSelfApprover && route
+    ? (route.approver?.name ?? route.queue?.label ?? null)
+    : null;
 
   function handleOpenConfirm() {
     setConfirmOpen(true);
@@ -45,10 +53,13 @@ export function RequestActionCell({ request, isCancelling = false, onCancel }: R
 
   return (
     <>
-      {route?.ownerSelfApproval === true && (
+      {isSelfApprover && (
         <Button asChild variant="link" size="sm">
           <Link href="/hr/approvals">You are the approver — decide in Action Center</Link>
         </Button>
+      )}
+      {approverHint !== null && (
+        <span className="text-xs text-muted-foreground">Awaiting approval from {approverHint}</span>
       )}
       <Button
         type="button"

@@ -67,6 +67,7 @@ const MOVED_OCCURRENCE: CalendarListItem = {
 
 const PAYLOAD: CalendarEventPayload = {
   title: "Weekly standup — moved again",
+  description: "Occurrence-only agenda",
   startDate: "2026-03-19T15:00:00.000Z",
   endDate: "2026-03-19T15:30:00.000Z",
   category: "meeting",
@@ -120,6 +121,7 @@ describe("useEventSeriesScope — instance edits", () => {
       eventId: 42,
       occurrenceStart: NOMINAL_START,
       modifiedTitle: PAYLOAD.title,
+      modifiedDescription: PAYLOAD.description,
       modifiedStart: PAYLOAD.startDate,
       modifiedEnd: PAYLOAD.endDate,
       expectedVersion: 7,
@@ -138,6 +140,20 @@ describe("useEventSeriesScope — instance edits", () => {
     expect(callsFor("series")).toHaveLength(0);
     expect(toastSuccess).toHaveBeenCalledWith("Occurrence updated");
   });
+
+  it("sends an empty note to clear only the selected occurrence", async () => {
+    const { result } = renderScope(MOVED_OCCURRENCE);
+
+    act(() => result.current.openWithPayload({ ...PAYLOAD, description: "" }));
+    await act(async () => {
+      await result.current.handleSeriesScopeConfirm("occurrence");
+    });
+
+    expect(callsFor("occurrence")[0]?.vars).toEqual(expect.objectContaining({
+      modifiedDescription: "",
+    }));
+    expect(callsFor("series")).toHaveLength(0);
+  });
 });
 
 describe("useEventSeriesScope — series edits", () => {
@@ -154,6 +170,7 @@ describe("useEventSeriesScope — series edits", () => {
     expect(seriesCalls[0]?.vars).toEqual({
       calendarEventId: 42,
       title: PAYLOAD.title,
+      description: PAYLOAD.description,
       startDate: PAYLOAD.startDate,
       endDate: PAYLOAD.endDate,
       category: PAYLOAD.category,
@@ -162,6 +179,7 @@ describe("useEventSeriesScope — series edits", () => {
     expect(callsFor("occurrence")).toHaveLength(0);
     expect(toastSuccess).toHaveBeenCalledWith("Event updated");
   });
+
 });
 
 describe("useEventSeriesScope — ids it must refuse", () => {

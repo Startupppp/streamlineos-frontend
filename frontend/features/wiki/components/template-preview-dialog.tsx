@@ -4,12 +4,15 @@ import { AppDialog } from "@/components/shared/app-dialog";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Button } from "@/components/ui/button";
 import type { StarterTemplate } from "@/features/wiki/lib/starter-templates";
+import type { KbPageTemplate } from "@/hooks/api/kb/page-templates";
+import { PublicPageContentLoader } from "./public-page-content-loader";
 
 interface TemplatePreviewDialogProps {
   template: StarterTemplate;
   onOpenChange: (open: boolean) => void;
   onUse: (template: StarterTemplate) => void;
   isPending: boolean;
+  canUse: boolean;
 }
 
 function blockText(children: Array<{ text: string }>): string {
@@ -21,6 +24,7 @@ export function TemplatePreviewDialog({
   onOpenChange,
   onUse,
   isPending,
+  canUse,
 }: TemplatePreviewDialogProps) {
   function handleUse() {
     onUse(template);
@@ -38,14 +42,16 @@ export function TemplatePreviewDialog({
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
             Close
           </Button>
-          <LoadingButton onClick={handleUse} isPending={isPending}>
+          <LoadingButton onClick={handleUse} isPending={isPending} disabled={!canUse}>
             Use this template
           </LoadingButton>
         </>
       }
     >
       <div className="space-y-3">
+        <h2 className="text-sm font-medium text-foreground">Expected output</h2>
         <p className="text-sm text-muted-foreground">{template.expectedOutput}</p>
+        <h2 className="text-sm font-medium text-foreground">Preview</h2>
         <div className="rounded-lg border border-border bg-muted/20 p-3 space-y-1.5">
           {template.content.children.map((block, index) => {
             const text = blockText(block.children);
@@ -74,6 +80,39 @@ export function TemplatePreviewDialog({
             ) : null;
           })}
         </div>
+      </div>
+    </AppDialog>
+  );
+}
+
+interface SavedTemplatePreviewDialogProps {
+  template: KbPageTemplate;
+  onOpenChange: (open: boolean) => void;
+}
+
+export function SavedTemplatePreviewDialog({
+  template,
+  onOpenChange,
+}: SavedTemplatePreviewDialogProps) {
+  function handleClose() {
+    onOpenChange(false);
+  }
+
+  return (
+    <AppDialog
+      open
+      onOpenChange={onOpenChange}
+      title={`${template.icon ?? "📄"} ${template.name}`}
+      description={template.description ?? "Saved template preview"}
+      className="max-w-2xl"
+      footer={
+        <Button type="button" variant="outline" onClick={handleClose}>
+          Close
+        </Button>
+      }
+    >
+      <div className="max-h-[60vh] overflow-y-auto rounded-lg border border-border bg-muted/20 p-4">
+        <PublicPageContentLoader content={template.content} />
       </div>
     </AppDialog>
   );

@@ -9,10 +9,39 @@ import type { KbAiFeedbackInput } from "@/types/kb";
 import { KB_PAGE_STATUSES } from "./kb-analytics-schema";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { useCan } from "@/hooks/api/access";
+import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
+import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
+import type { KbAskPageOwnersPage } from "./ask-result-schema";
 
 const kbAiFeedbackContract = lazyContract(() =>
   import("@/hooks/api/kb/kb-ai-schema").then((m) => m.kbAiFeedbackContract),
 );
+
+const kbAskPageOwnersContract = lazyContract(() =>
+  import("@/hooks/api/kb/ask-result-schema").then((m) => m.kbAskPageOwnersContract),
+);
+
+export function useKbAskPageOwners(search: string, selectedMembershipId?: number, enabled = true) {
+  const canView = useCan("kb:pages:view");
+  return useInfiniteQuery({
+    ...INLINE_READ_ERROR,
+    queryKey: knowledgeAndSurveysQueryKeys.kb.askPageOwners(search, selectedMembershipId),
+    initialPageParam: NO_CURSOR_YET,
+    queryFn: ({ signal, pageParam }) =>
+      apiClient.get<KbAskPageOwnersPage>(
+        "/kb/pages/owners",
+        { search: search || undefined, cursor: pageParam, limit: 50, selectedMembershipId },
+        signal,
+        kbAskPageOwnersContract,
+      ),
+    getNextPageParam: (last) => last.pagination.nextCursor ?? undefined,
+    enabled: enabled && canView,
+    staleTime: 30_000,
+  });
+}
 
 export type KbAskStatusScope = Exclude<
   (typeof KB_PAGE_STATUSES)[number],
@@ -75,7 +104,7 @@ export function useKbAiAnswerFeedback() {
 export function useCreateKbKnowledgeGap() {
   return useAuthorizedMutation("kb:pages:view", {
     mutationKey: ["kb", "ask", "knowledge-gap"],
-    mutationFn: (input: { question: string }) =>
+    mutationFn: (input: { question: string; spaceId?: number }) =>
       apiClient.post<{ success: boolean }>("/kb/ask/knowledge-gap", input, undefined, kbAiFeedbackContract),
   });
 }

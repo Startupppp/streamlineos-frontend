@@ -97,7 +97,10 @@ export const setReportingLineResponseContract = z.object({
   warnings: z.array(z.string()),
 });
 
-export const managerCandidatesContract = z.object({ items: z.array(managerRefContract) });
+export const managerCandidatesContract = z.object({
+  items: z.array(managerRefContract),
+  ineligibleCount: z.number().int().default(0),
+});
 
 export const fallbackOrderContract = z.enum(["CONFIGURED_MANAGER_THEN_UPLOADER", "UPLOADER_THEN_CONFIGURED_MANAGER"]);
 

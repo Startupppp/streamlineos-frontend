@@ -1,5 +1,5 @@
 import { CONFLICT_KEY, LEGACY_PRIMARY_KEY, SOURCE_ROW_KEY } from "./bulk-onboard-columns";
-import { parseFile } from "./bulk-onboard-parse";
+import { parseFile, ParseStructuralError } from "./bulk-onboard-parse";
 
 function csvFile(text: string): File {
   const file = new File([text], "employees.csv", { type: "text/csv" });
@@ -40,6 +40,30 @@ describe("parseFile (CSV)", () => {
       { email: "a@example.com", [SOURCE_ROW_KEY]: "2" },
       { email: "b@example.com", [SOURCE_ROW_KEY]: "4" },
     ]);
+  });
+
+  it("rejects the whole file with a line number when an unclosed quote is present", async () => {
+    const csv = `firstName,lastName,email,designation,department,joiningDate,phone
+Alice,Smith,alice@example.com,Engineer,Engineering,2026-01-15,+911234567890
+"Unclosed,Row,bad@example.com,QA,Engineering,2026-01-15,+911234567890
+Bob,Jones,bob@example.com,Designer,Design,2026-01-15,+911234567890
+`;
+    await expect(parseFile(csvFile(csv))).rejects.toBeInstanceOf(ParseStructuralError);
+    await expect(parseFile(csvFile(csv))).rejects.toMatchObject({ message: expect.stringMatching(/^Line \d+: unclosed quote$/) });
+  });
+
+  it("maps line number accounting for the header when reporting unclosed quote", async () => {
+    const csv = `firstName,lastName,email,designation,department,joiningDate,phone
+"Unclosed,Row,bad@example.com,QA,Engineering,2026-01-15,+911234567890
+`;
+    let err: unknown;
+    try {
+      await parseFile(csvFile(csv));
+    } catch (e) {
+      err = e;
+    }
+    expect(err).toBeInstanceOf(ParseStructuralError);
+    expect((err as ParseStructuralError).message).toBe("Line 2: unclosed quote");
   });
 });
 

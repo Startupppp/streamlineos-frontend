@@ -2,6 +2,7 @@ import { z } from "zod";
 
 const kbPageTreeItemSchema = z.object({
   id: z.number().int(),
+  contentRevision: z.number().int().positive(),
   parentPageId: z.number().int().nullable(),
   spaceId: z.number().int().nullable(),
   projectId: z.number().int().nullable(),

@@ -53,37 +53,43 @@ export function HandbookCreateForm({
   return (
     <div className="space-y-5">
       <div className="space-y-1.5">
-        <label className="text-sm font-medium text-foreground">
-          Title <span className="text-destructive">*</span>
+        <label htmlFor="handbook-title" className="text-sm font-medium text-foreground">
+          Title <span className="text-destructive" aria-hidden="true">*</span>
         </label>
         <Input
+          id="handbook-title"
           placeholder="e.g., 2024 Employee Handbook"
           value={values.title}
           onChange={onTitleChange}
           maxLength={100}
           className=""
+          required
+          aria-describedby="handbook-title-hint"
         />
-        <p className="text-dense text-muted-foreground">
+        <p id="handbook-title-hint" className="text-dense text-muted-foreground">
           1–100 characters. Spaces and common punctuation are allowed.
         </p>
       </div>
 
       <div className="space-y-1.5">
-        <label className="text-sm font-medium text-foreground">
-          Version <span className="text-destructive">*</span>
+        <label htmlFor="handbook-version" className="text-sm font-medium text-foreground">
+          Version <span className="text-destructive" aria-hidden="true">*</span>
         </label>
         <Input
+          id="handbook-version"
           placeholder="e.g., 1.0, v1.0, 2024-01"
           value={values.version}
           onChange={onVersionChange}
           maxLength={20}
           className=""
+          required
+          aria-describedby="handbook-version-hint"
         />
-        <p className="text-dense text-muted-foreground">Format: 1.0, v1.0, 2024-01, 1.0.0-beta</p>
+        <p id="handbook-version-hint" className="text-dense text-muted-foreground">Format: 1.0, v1.0, 2024-01, 1.0.0-beta</p>
       </div>
 
       <div className="space-y-2">
-        <label className="text-sm font-medium text-foreground">Document</label>
+        <p className="text-sm font-medium text-foreground">Document</p>
         <div className="rounded-lg border p-1 flex gap-1">
           <button
             type="button"
@@ -160,16 +166,18 @@ export function HandbookCreateForm({
       </div>
 
       <div className="space-y-1.5">
-        <label className="text-sm font-medium text-foreground">Changelog / Notes</label>
+        <label htmlFor="handbook-changelog" className="text-sm font-medium text-foreground">Changelog / Notes</label>
         <Textarea
+          id="handbook-changelog"
           placeholder="What changed in this version..."
           value={values.changelog}
           onChange={onChangelogChange}
           rows={3}
           maxLength={2000}
           className="resize-none"
+          aria-describedby="handbook-changelog-count"
         />
-        <p className="text-dense text-muted-foreground text-right">{values.changelog.length}/2000</p>
+        <p id="handbook-changelog-count" className="text-dense text-muted-foreground text-right">{values.changelog.length}/2000</p>
       </div>
     </div>
   );

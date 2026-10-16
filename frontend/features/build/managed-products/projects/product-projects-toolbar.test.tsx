@@ -8,8 +8,16 @@ jest.mock("@/hooks/api/build/build-members", () => ({
 }));
 
 jest.mock("@/features/build/shared/build-list-toolbar", () => ({
-  BuildListToolbar: ({ filters }: { filters: { id: string; control: React.ReactNode }[] }) => (
-    <div>{filters.map((f) => <div key={f.id}>{f.control}</div>)}</div>
+  BuildListToolbar: ({
+    filters,
+    row,
+  }: {
+    filters: { id: string; control: React.ReactNode }[];
+    row?: { desktop: number };
+  }) => (
+    <div data-desktop-filters={row?.desktop}>
+      {filters.map((f) => <div key={f.id}>{f.control}</div>)}
+    </div>
   ),
 }));
 
@@ -101,7 +109,8 @@ beforeEach(() => {
 
 it("filters by owner using the member's membership id (BSN-PROJ-OWNER-MULTI)", () => {
   const page = pageModel();
-  render(<ProductProjectsToolbar page={page} />);
+  const { container } = render(<ProductProjectsToolbar page={page} />);
+  expect(container.querySelector("[data-desktop-filters]")?.getAttribute("data-desktop-filters")).toBe("0");
   expect(screen.getByRole("checkbox", { name: "Grace Hopper" })).toBeInTheDocument();
   fireEvent.click(screen.getByRole("checkbox", { name: "Ada Lovelace" }));
   expect(page.handleOwnerChange).toHaveBeenCalledWith(["3"]);

@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 const mockAskMutate = jest.fn();
+const mockCreateGapMutate = jest.fn();
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
@@ -22,26 +23,22 @@ jest.mock("@/hooks/api/kb/ask", () => ({
     stop: jest.fn(),
     resetAttempt: jest.fn(),
   }),
+  useKbAskPageOwners: () => ({
+    data: { pages: [{ data: [{ membershipId: 77, name: "Ada Lovelace" }, { membershipId: 88, name: "Grace Hopper" }], pagination: { limit: 50, hasMore: false, nextCursor: null }, selected: null }] },
+    isLoading: false,
+    hasNextPage: false,
+    isFetchingNextPage: false,
+    fetchNextPage: jest.fn(),
+    error: null,
+    refetch: jest.fn(),
+  }),
   useKbAiAnswerFeedback: () => ({ mutate: jest.fn(), isPending: false }),
-  useCreateKbKnowledgeGap: () => ({ mutate: jest.fn(), isPending: false }),
+  useCreateKbKnowledgeGap: () => ({ mutate: mockCreateGapMutate, isPending: false }),
 }));
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: () => true,
   useAccess: () => ({ data: { permissions: ["kb:ai:generate"] }, refetch: jest.fn() }),
-}));
-
-jest.mock("@/hooks/api/organization", () => ({
-  useOrgMembers: () => ({
-    data: {
-      data: [
-        { membershipId: 77, userId: "user-1", role: "MEMBER", joinedAt: "2026-01-01T00:00:00.000Z", name: "Ada Lovelace", email: "ada@example.com", image: null, totpEnabled: false },
-        { membershipId: 88, userId: "user-2", role: "MEMBER", joinedAt: "2026-01-01T00:00:00.000Z", name: "Grace Hopper", email: "grace@example.com", image: null, totpEnabled: false },
-      ],
-      pagination: { limit: 100, nextCursor: null, hasMore: false },
-    },
-    isLoading: false,
-  }),
 }));
 
 jest.mock("@/hooks/api/kb/chat-history", () => ({
@@ -114,16 +111,25 @@ async function openScopeSheet(user: ReturnType<typeof userEvent.setup>) {
 }
 
 async function confirmAndAsk(user: ReturnType<typeof userEvent.setup>) {
-  await user.click(screen.getByRole("button", { name: /search all sources and pages|^Search \d+ item/i }));
+  await user.click(screen.getByRole("button", { name: /search all sources and pages|apply page scope|^Search \d+ (item|page)/i }));
   await user.type(screen.getByPlaceholderText(/ask anything/i), "What is the policy?");
   await user.click(screen.getByRole("button", { name: "Send" }));
 }
 
 beforeEach(() => {
   mockAskMutate.mockReset();
+  mockCreateGapMutate.mockReset();
 });
 
 describe("KnowledgeBasePage — every scope dimension the sheet edits reaches the ask request body", () => {
+  it("states the broad default search scope beside the composer before the user sends a question", async () => {
+    const user = renderPage();
+
+    expect(screen.getByText("Searching all accessible knowledge.")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Edit" }));
+    expect(screen.getByText(/all ready sources and pages will be searched/i)).toBeInTheDocument();
+  });
+
   it("sends status when the status control is set, because a control that renders without reaching the payload scopes nothing", async () => {
     const user = renderPage();
     await openScopeSheet(user);
@@ -132,6 +138,7 @@ describe("KnowledgeBasePage — every scope dimension the sheet edits reaches th
     await confirmAndAsk(user);
 
     expect(await sentBody()).toHaveProperty("status", "draft");
+    expect(screen.getByRole("button", { name: "Searching Filtered" })).toBeInTheDocument();
   });
 
   it("omits status entirely when the status control is left on Any, rather than sending an undefined that vanishes in JSON", async () => {
@@ -171,6 +178,23 @@ describe("KnowledgeBasePage — every scope dimension the sheet edits reaches th
     expect(await sentBody()).toHaveProperty("spaceId", 10);
   });
 
+  it("reports the selected question space on an insufficient-evidence gap", async () => {
+    mockAskMutate.mockImplementation((_input, options) =>
+      options.onSuccess({ hasContext: false, answer: "", citations: [], conversationId: 9 }),
+    );
+    const user = renderPage();
+    await openScopeSheet(user);
+    await user.click(screen.getByRole("button", { name: "Engineering" }));
+    await confirmAndAsk(user);
+
+    await user.click(await screen.findByRole("button", { name: /create a knowledge gap/i }));
+
+    expect(mockCreateGapMutate).toHaveBeenCalledWith(
+      { question: "What is the policy?", spaceId: 10 },
+      expect.objectContaining({ onSuccess: expect.any(Function), onError: expect.any(Function) }),
+    );
+  });
+
   it("omits spaceId when the space control is left on All", async () => {
     const user = renderPage();
     await openScopeSheet(user);
@@ -183,7 +207,7 @@ describe("KnowledgeBasePage — every scope dimension the sheet edits reaches th
     const user = renderPage();
     await openScopeSheet(user);
 
-    await user.click(screen.getByRole("switch", { name: /verified sources only/i }));
+    await user.click(screen.getByRole("switch", { name: /verified pages and articles only/i }));
     await confirmAndAsk(user);
 
     expect(await sentBody()).toHaveProperty("verifiedOnly", true);
@@ -227,17 +251,33 @@ describe("KnowledgeBasePage — every scope dimension the sheet edits reaches th
     expect(keys).not.toContain("pageIds");
   });
 
+  it("requires a compatible page selection when a page-only filter excludes selected files and notes", async () => {
+    const user = renderPage();
+    await openScopeSheet(user);
+
+    await user.click(screen.getByRole("checkbox", { name: /include engineering spec in search/i }));
+    await user.click(screen.getByRole("button", { name: "Draft" }));
+
+    expect(screen.getByText(/selected files and notes are excluded/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Search 0 pages" })).toBeDisabled();
+
+    await user.click(screen.getByRole("checkbox", { name: /include onboarding guide in search/i }));
+    expect(screen.getByRole("button", { name: "Search 1 page" })).toBeEnabled();
+  });
+
   it("carries all six dimensions together in one request, so no dimension overwrites another on the way to the body", async () => {
     const user = renderPage();
     await openScopeSheet(user);
 
     await user.click(screen.getByRole("button", { name: "Published" }));
     await user.click(screen.getByRole("button", { name: "Engineering" }));
-    await user.click(screen.getByRole("switch", { name: /verified sources only/i }));
+    await user.click(screen.getByRole("switch", { name: /verified pages and articles only/i }));
     await user.click(screen.getByRole("checkbox", { name: /include engineering spec in search/i }));
     await user.click(screen.getByRole("checkbox", { name: /include onboarding guide in search/i }));
     await user.click(screen.getByRole("combobox", { name: /restrict answer to pages owned by a member/i }));
     await user.click(await screen.findByText("Ada Lovelace"));
+    expect(screen.getByText(/selected files and notes are excluded/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Search 1 page" })).toBeEnabled();
     await confirmAndAsk(user);
 
     expect(await sentBody()).toMatchObject({

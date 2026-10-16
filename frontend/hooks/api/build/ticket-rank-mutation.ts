@@ -7,7 +7,7 @@ import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import type { Ticket, RankTicketInput } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { lazyContract } from "@/lib/api-envelope";
-import { patchTicketCollections } from "./ticket-cache";
+import { patchTicketCollections, resolveTicketStatus } from "./ticket-cache";
 import { invalidateTicketUpdateViews } from "./ticket-cache-invalidation";
 
 const rankTicketResultLazy = lazyContract(() =>
@@ -46,6 +46,7 @@ export function useRankTicket<TContext = unknown>(
         rankTicketResultLazy,
       ),
     onSuccess: (data, variables, context, mutationContext) => {
+      const prevStatus = resolveTicketStatus(queryClient, variables.projectId, variables.ticketId);
       const applyServerRank = (ticket: Ticket) =>
         ticket.id === data.id
           ? { ...ticket, rank: data.rank, status: data.status, version: data.version }
@@ -55,6 +56,18 @@ export function useRankTicket<TContext = unknown>(
         buildWorkQueryKeys.projects.ticket(variables.projectId, data.id),
         (current) => (current ? applyServerRank(current) : current),
       );
+      if (prevStatus && prevStatus !== data.status) {
+        for (const [key, counts] of queryClient.getQueriesData<Record<string, number>>({
+          queryKey: buildWorkQueryKeys.projects.columnCounts(variables.projectId),
+        })) {
+          if (!counts) continue;
+          queryClient.setQueryData<Record<string, number>>(key, {
+            ...counts,
+            [prevStatus]: Math.max(0, (counts[prevStatus] ?? 0) - 1),
+            [data.status]: (counts[data.status] ?? 0) + 1,
+          });
+        }
+      }
       options?.onSuccess?.(data, variables, context, mutationContext);
     },
     onSettled: (data, error, variables, context, mutationContext) => {

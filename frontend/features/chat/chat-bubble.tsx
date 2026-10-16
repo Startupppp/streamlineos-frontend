@@ -282,7 +282,7 @@ export function ChatBubble({
               "relative min-w-0 max-w-full px-3.5 py-2 shadow-sm",
               isOwn
                 ? "bg-primary text-primary-foreground rounded-2xl rounded-br-sm"
-                : "bg-background border border-border text-foreground rounded-2xl rounded-bl-sm",
+                : "bg-card border border-border text-card-foreground rounded-2xl rounded-bl-sm",
             )}
           >
             {forwardLabel && (

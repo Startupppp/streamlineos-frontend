@@ -62,9 +62,16 @@ function AssetFormFields({
     [existingAssets, currentAssetId, form, onSubmit],
   );
 
+  const errorCount = Object.keys(form.formState.errors).length;
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-4">
+        {errorCount > 0 && (
+          <p className="text-sm font-medium text-destructive" role="alert">
+            {errorCount} {errorCount === 1 ? "field needs" : "fields need"} attention
+          </p>
+        )}
         <FormField
           control={form.control}
           name="name"
@@ -314,13 +321,13 @@ export function useAssetForm() {
       location: "",
       notes: "",
     },
-    mode: "onBlur",
+    mode: "all",
   });
 }
 
 export function useEditAssetForm() {
   return useForm<AssetFormValues>({
     resolver: zodResolver(assetFormSchema),
-    mode: "onBlur",
+    mode: "all",
   });
 }

@@ -10,6 +10,21 @@ jest.mock("@/hooks/api/org-hierarchy", () => ({
   useOrgLocations: () => ({ data: { data: [] } }),
 }));
 jest.mock("next/navigation", () => ({ useRouter: () => ({ push: jest.fn() }) }));
+
+jest.mock("next-auth/react", () => ({
+  useSession: () => ({
+    data: { user: { id: "u1" }, orgId: "o1" },
+    status: "authenticated",
+  }),
+}));
+
+jest.mock("@/components/hr/_onboarding/wizard-draft", () => ({
+  loadAdminWizardDraft: () => null,
+  saveAdminWizardDraft: jest.fn(),
+  clearAdminWizardDraft: jest.fn(),
+  toAdminWizardDraft: (values: Record<string, unknown>, step: number) => ({ ...values, step }),
+}));
+
 jest.mock("sonner", () => ({
   toast: { success: jest.fn(), warning: jest.fn(), error: jest.fn() },
 }));

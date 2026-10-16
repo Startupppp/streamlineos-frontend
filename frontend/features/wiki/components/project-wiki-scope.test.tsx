@@ -1,9 +1,10 @@
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { PageDocumentToolbar } from "./page-document-toolbar";
 import PageHistorySheet from "./page-history-sheet";
 import PageTree from "./page-tree";
 import type { KbPageDetail, KbPageTreeNode } from "@/hooks/api/kb/page-types";
+import { ApiError } from "@/lib/api-envelope";
 
 const routerPush = jest.fn();
 
@@ -18,9 +19,11 @@ jest.mock("@/hooks/api/access", () => ({
 
 const duplicateMutate = jest.fn();
 const createPageMutate = jest.fn();
+const updatePageMutate = jest.fn();
 
 const ROOT_NODE: KbPageTreeNode = {
   id: 42,
+  contentRevision: 3,
   parentPageId: null,
   spaceId: null,
   projectId: 7,
@@ -40,6 +43,17 @@ const CHILD_NODE: KbPageTreeNode = {
   title: "Rollback steps",
   hasChildren: false,
 };
+
+let rootNode = ROOT_NODE;
+let childLevelOverride: Record<string, unknown> | null = null;
+let historyListOverride: Record<string, unknown> | null = null;
+let historyDetailOverride: Record<string, unknown> | null = null;
+const mockChildLevelRequest = jest.fn();
+
+jest.mock("@/hooks/api/use-page-state", () => ({
+  usePageState: ({ isLoading, isError, isEmpty, error }: { isLoading: boolean; isError: boolean; isEmpty?: boolean; error?: unknown }) =>
+    isLoading ? { kind: "loading" } : isError ? { kind: "error", error } : isEmpty ? { kind: "empty" } : { kind: "ready" },
+}));
 
 function treeLevel(nodes: KbPageTreeNode[]) {
   return {
@@ -65,13 +79,15 @@ jest.mock("@/hooks/api/kb", () => ({
   useKbPageBacklinks: () => ({ data: [] }),
   useCreateKbPage: () => ({ mutate: createPageMutate, isPending: false }),
   useDeleteKbPage: () => ({ mutate: jest.fn(), isPending: false }),
-  useUpdateKbPage: () => ({ mutate: jest.fn(), isPending: false }),
-  useKbPageTreeInfinite: () => treeLevel([ROOT_NODE]),
-  useKbPageChildrenLevel: (_pageId: number, enabled: boolean) =>
-    enabled
-      ? treeLevel([CHILD_NODE])
-      : { ...treeLevel([]), data: undefined },
-  useKbPageVersionsInfinite: () => ({
+  useUpdateKbPage: () => ({ mutate: updatePageMutate, isPending: false }),
+  useKbPageTreeInfinite: () => treeLevel([rootNode]),
+  useKbPageChildrenLevel: (pageId: number, enabled: boolean, spaceId?: number, projectId?: number) => {
+    mockChildLevelRequest(pageId, enabled, spaceId, projectId);
+    return enabled
+      ? childLevelOverride ?? treeLevel([CHILD_NODE])
+      : { ...treeLevel([]), data: undefined };
+  },
+  useKbPageVersionsInfinite: () => historyListOverride ?? ({
     data: {
       pages: [
         {
@@ -84,17 +100,40 @@ jest.mock("@/hooks/api/kb", () => ({
               changeSummary: null,
               createdAt: "2026-09-01T10:00:00.000Z",
             },
+            {
+              id: 2,
+              versionNumber: 2,
+              title: "Earlier runbook",
+              authorName: "Bob",
+              changeSummary: null,
+              createdAt: "2026-08-01T10:00:00.000Z",
+            },
           ],
           pagination: { limit: 50, nextCursor: null, hasMore: false },
         },
       ],
     },
     isLoading: false,
+    isError: false,
+    isFetchNextPageError: false,
+    error: null,
+    refetch: jest.fn(),
     hasNextPage: false,
     fetchNextPage: jest.fn(),
     isFetchingNextPage: false,
   }),
-  useKbPageVersionDetail: () => ({ data: undefined, isLoading: false }),
+  useKbPageVersionDetail: () => historyDetailOverride ?? ({
+    data: {
+      title: "Earlier runbook",
+      content: { type: "doc", content: [] },
+      authorName: "Bob",
+      createdAt: "2026-08-01T10:00:00.000Z",
+    },
+    isLoading: false,
+    isError: false,
+    error: null,
+    refetch: jest.fn(),
+  }),
   useRestoreKbVersion: () => ({ mutate: jest.fn(), isPending: false }),
 }));
 
@@ -148,6 +187,10 @@ async function openDuplicateItem() {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  rootNode = ROOT_NODE;
+  childLevelOverride = null;
+  historyListOverride = null;
+  historyDetailOverride = null;
 });
 
 describe("project wiki read path stays inside the project", () => {
@@ -169,6 +212,56 @@ describe("project wiki read path stays inside the project", () => {
 });
 
 describe("project wiki history path stays inside the project", () => {
+  it("shows a first-read versions failure with retry instead of a false empty state", async () => {
+    const refetch = jest.fn();
+    historyListOverride = { data: undefined, isLoading: false, isError: true, isFetchNextPageError: false, error: new Error("offline"), refetch, hasNextPage: false, fetchNextPage: jest.fn(), isFetchingNextPage: false };
+    const user = userEvent.setup();
+    render(<PageHistorySheet pageId={5} open onOpenChange={jest.fn()} />);
+
+    expect(screen.queryByText("No versions yet")).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Try again" }));
+    expect(refetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps loaded versions and pauses automatic paging after a later-page failure", async () => {
+    const fetchNextPage = jest.fn();
+    historyListOverride = {
+      data: { pages: [{ data: [{ id: 1, versionNumber: 3, title: "Runbook", authorName: "Alice", changeSummary: null, createdAt: "2026-09-01T10:00:00.000Z" }], pagination: { limit: 50, nextCursor: "later", hasMore: true } }] },
+      isLoading: false, isError: true, isFetchNextPageError: true, error: new Error("offline"), refetch: jest.fn(), hasNextPage: true, fetchNextPage, isFetchingNextPage: false,
+    };
+    const user = userEvent.setup();
+    render(<PageHistorySheet pageId={5} open onOpenChange={jest.fn()} />);
+
+    expect(screen.getByRole("button", { name: /Version 3/ })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Load more versions" })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Retry loading versions" }));
+    expect(fetchNextPage).toHaveBeenCalledTimes(1);
+  });
+
+  it("hides cached versions when access is revoked during a refresh", () => {
+    historyListOverride = {
+      data: { pages: [{ data: [{ id: 1, versionNumber: 3, title: "Runbook", authorName: "Alice", changeSummary: null, createdAt: "2026-09-01T10:00:00.000Z" }], pagination: { limit: 50, nextCursor: null, hasMore: false } }] },
+      isLoading: false, isError: true, isFetchNextPageError: false, error: new ApiError("Access denied", 403), refetch: jest.fn(), hasNextPage: false, fetchNextPage: jest.fn(), isFetchingNextPage: false,
+    };
+    render(<PageHistorySheet pageId={5} open onOpenChange={jest.fn()} />);
+
+    expect(screen.queryByRole("button", { name: /Version 3/ })).not.toBeInTheDocument();
+    expect(screen.getByRole("alert")).toBeInTheDocument();
+  });
+
+  it("shows a selected-version read failure with retry instead of Empty version", async () => {
+    const refetch = jest.fn();
+    historyDetailOverride = { data: undefined, isLoading: false, isError: true, error: new Error("offline"), refetch };
+    const user = userEvent.setup();
+    render(<PageHistorySheet pageId={5} open onOpenChange={jest.fn()} />);
+    await user.click(screen.getByRole("button", { name: /Version 2/ }));
+
+    expect(screen.queryByText("Empty version")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "No content to restore" })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Try again" }));
+    expect(refetch).toHaveBeenCalledTimes(1);
+  });
+
   it("offers no link to the global knowledge history when the page is opened inside a project", () => {
     render(
       <PageHistorySheet pageId={5} open onOpenChange={jest.fn()} projectId={7} />,
@@ -184,9 +277,167 @@ describe("project wiki history path stays inside the project", () => {
       screen.getByRole("link", { name: /full history/i }),
     ).toHaveAttribute("href", "/knowledge/wiki/doc/5/history");
   });
+
+  it("takes a selected project version to its project-scoped preview before restore", async () => {
+    const user = userEvent.setup();
+    render(
+      <PageHistorySheet pageId={5} open onOpenChange={jest.fn()} projectId={7} />,
+    );
+
+    await user.click(screen.getByRole("button", { name: /Version 2/ }));
+
+    expect(
+      screen.getByRole("link", { name: "Preview and restore version 2" }),
+    ).toHaveAttribute("href", "/build/7/wiki/5/history?version=2");
+    expect(screen.queryByRole("button", { name: "Restore" })).not.toBeInTheDocument();
+  });
+
+  it("takes a selected global version to its global preview before restore", async () => {
+    const user = userEvent.setup();
+    render(<PageHistorySheet pageId={5} open onOpenChange={jest.fn()} />);
+
+    await user.click(screen.getByRole("button", { name: /Version 2/ }));
+
+    expect(
+      screen.getByRole("link", { name: "Preview and restore version 2" }),
+    ).toHaveAttribute("href", "/knowledge/wiki/doc/5/history?version=2");
+  });
 });
 
 describe("project wiki page tree links stay inside the project", () => {
+  it("loads space children only after expansion and keeps the space scope", async () => {
+    rootNode = { ...ROOT_NODE, spaceId: 5, projectId: null };
+    const user = userEvent.setup();
+    render(<PageTree spaceId={5} />);
+
+    expect(mockChildLevelRequest).toHaveBeenCalledWith(42, false, 5, undefined);
+    expect(screen.queryByRole("link", { name: "Rollback steps" })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Expand" }));
+
+    expect(mockChildLevelRequest).toHaveBeenCalledWith(42, true, 5, undefined);
+    expect(screen.getByRole("link", { name: "Rollback steps" })).toBeInTheDocument();
+  });
+
+  it("shows a loading state while an expanded child level is pending", async () => {
+    rootNode = { ...ROOT_NODE, spaceId: 5, projectId: null };
+    childLevelOverride = { ...treeLevel([]), data: undefined, isLoading: true };
+    const user = userEvent.setup();
+    render(<PageTree spaceId={5} />);
+
+    await user.click(screen.getByRole("button", { name: "Expand" }));
+
+    expect(screen.getByRole("status")).toHaveTextContent("Loading child pages");
+  });
+
+  it("keeps a failed child level visible with its reference and retry", async () => {
+    rootNode = { ...ROOT_NODE, spaceId: 5, projectId: null };
+    const refetch = jest.fn();
+    childLevelOverride = {
+      ...treeLevel([]),
+      data: undefined,
+      isError: true,
+      error: new ApiError("Read failed", 500, "INTERNAL", { correlationId: "tree-request-1" }, "/kb/pages/tree"),
+      refetch,
+    };
+    const user = userEvent.setup();
+    render(<PageTree spaceId={5} />);
+
+    await user.click(screen.getByRole("button", { name: "Expand" }));
+
+    expect(screen.getByRole("alert")).toHaveTextContent("Read failed");
+    expect(screen.getByText("tree-request-1")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Retry child pages" }));
+    expect(refetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps page actions discoverable at touch widths and reachable by keyboard on desktop", async () => {
+    rootNode = { ...ROOT_NODE, spaceId: 5, projectId: null };
+    const user = userEvent.setup();
+    render(<PageTree spaceId={5} />);
+
+    const addChild = screen.getByRole("button", { name: "Add child page" });
+    const pageOptions = screen.getByRole("button", { name: "Page options" });
+    expect(addChild).toHaveClass("h-8", "w-8");
+    expect(pageOptions).toHaveClass("h-8", "w-8");
+    expect(pageOptions.parentElement).toHaveClass("flex", "lg:hidden", "lg:group-focus-within:flex");
+    expect(pageOptions.parentElement).not.toHaveClass("hidden");
+
+    screen.getByRole("link", { name: "Deployment runbook" }).focus();
+    await user.tab();
+    expect(addChild).toHaveFocus();
+    await user.tab();
+    expect(pageOptions).toHaveFocus();
+    await user.keyboard("{Enter}");
+    expect(await screen.findByRole("menuitem", { name: "Rename" })).toBeInTheDocument();
+  });
+
+  it("creates a child with the parent page's project scope", async () => {
+    const user = userEvent.setup();
+    render(<PageTree projectId={7} baseHref="/build/7/wiki" />);
+
+    await user.click(screen.getByRole("button", { name: "Add child page" }));
+
+    expect(createPageMutate).toHaveBeenCalledWith(
+      { parentPageId: 42, projectId: 7 },
+      expect.any(Object),
+    );
+  });
+
+  it("creates a nested child with its parent page's project scope", async () => {
+    const user = userEvent.setup();
+    render(<PageTree projectId={7} baseHref="/build/7/wiki" />);
+
+    await user.click(screen.getByRole("button", { name: "Expand" }));
+    await user.click(screen.getAllByRole("button", { name: "Add child page" })[1]);
+
+    expect(createPageMutate).toHaveBeenCalledWith(
+      { parentPageId: 108, projectId: 7 },
+      expect.any(Object),
+    );
+  });
+
+  it("creates a child with the parent page's space scope", async () => {
+    rootNode = { ...ROOT_NODE, spaceId: 5, projectId: null };
+    const user = userEvent.setup();
+    render(<PageTree spaceId={5} />);
+
+    await user.click(screen.getByRole("button", { name: "Add child page" }));
+
+    expect(createPageMutate).toHaveBeenCalledWith(
+      { parentPageId: 42, spaceId: 5 },
+      expect.any(Object),
+    );
+  });
+
+  it("omits container scope when the parent page has none", async () => {
+    rootNode = { ...ROOT_NODE, projectId: null };
+    const user = userEvent.setup();
+    render(<PageTree />);
+
+    await user.click(screen.getByRole("button", { name: "Add child page" }));
+
+    expect(createPageMutate).toHaveBeenCalledWith(
+      { parentPageId: 42 },
+      expect.any(Object),
+    );
+  });
+
+  it("sends the tree node revision when renaming a page", async () => {
+    const user = userEvent.setup();
+    render(<PageTree projectId={7} baseHref="/build/7/wiki" />);
+
+    await user.click(screen.getByRole("button", { name: "Page options" }));
+    await user.click(screen.getByRole("menuitem", { name: "Rename" }));
+    const input = screen.getByRole("textbox");
+    await user.clear(input);
+    await user.type(input, "Updated runbook{Enter}");
+
+    expect(updatePageMutate).toHaveBeenCalledWith(
+      { pageId: 42, title: "Updated runbook", expectedContentRevision: 3 },
+      expect.any(Object),
+    );
+  });
+
   it("renders a root page link under the project wiki base href rather than the global knowledge base when baseHref is supplied", () => {
     render(<PageTree projectId={7} baseHref="/build/7/wiki" />);
 
@@ -234,7 +485,7 @@ describe("project wiki page tree links stay inside the project", () => {
     const handlers = createPageMutate.mock.calls[0]?.[1] as {
       onSuccess: (created: { id: number }) => void;
     };
-    handlers.onSuccess({ id: 501 });
+    act(() => handlers.onSuccess({ id: 501 }));
 
     expect(routerPush).toHaveBeenCalledWith("/build/7/wiki/501");
   });
@@ -248,7 +499,7 @@ describe("project wiki page tree links stay inside the project", () => {
     const handlers = createPageMutate.mock.calls[0]?.[1] as {
       onSuccess: (created: { id: number }) => void;
     };
-    handlers.onSuccess({ id: 501 });
+    act(() => handlers.onSuccess({ id: 501 }));
 
     expect(routerPush).toHaveBeenCalledWith("/knowledge/wiki/doc/501");
   });

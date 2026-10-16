@@ -9,7 +9,6 @@ import { useNavigationLeave } from "@/components/shared/dirty-state-context";
 import { Button } from "@/components/ui/button";
 import {
   PAGE_CHROME_BOTTOM,
-  PAGE_CHROME_MOBILE_NAV_PAD,
   PAGE_CHROME_X,
 } from "@/components/ui/content-fill-panel";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -17,21 +16,25 @@ import { PageState } from "@/components/shared/page-state";
 import { LoadingState } from "@/components/shared/loading-state";
 import type { PageStateResolution } from "@/lib/page-state/resolve-page-state";
 
-function GuardedBackLink({
-  href,
-  label,
-  children,
-}: {
+interface GuardedBackLinkProps {
   href: string;
-  label?: string;
+  label: string;
   children: React.ReactNode;
-}) {
+}
+
+function GuardedBackLink({ href, label, children }: GuardedBackLinkProps) {
   const router = useRouter();
   const requestLeave = useNavigationLeave();
 
   const handleClick = React.useCallback(
     (event: React.MouseEvent<HTMLAnchorElement>) => {
-      if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return;
+      if (
+        event.metaKey ||
+        event.ctrlKey ||
+        event.shiftKey ||
+        event.button !== 0
+      )
+        return;
       event.preventDefault();
       requestLeave(() => router.push(href));
     },
@@ -49,16 +52,13 @@ interface PageWrapperProps {
   title?: React.ReactNode;
   subtitle?: React.ReactNode;
   badge?: React.ReactNode;
-  /** Labeled Back link on the left of the title. */
   backHref?: string;
-  /** Labeled Back button on the left (click handler). Ignored when `leading` is set. */
   onBack?: () => void;
-  /** Accessible label for `backHref` / `onBack`. Defaults to "Back". */
   backLabel?: string;
-  /** Custom left control; takes precedence over `backHref` / `onBack`. */
   leading?: React.ReactNode;
   actions?: React.ReactNode;
   filters?: React.ReactNode;
+  loadingFilters?: React.ReactNode;
   filtersClassName?: string;
   actionsInline?: boolean;
   children: React.ReactNode;
@@ -69,6 +69,8 @@ interface PageWrapperProps {
   state?: PageStateResolution;
   loading?: React.ReactNode;
   empty?: React.ReactNode;
+  stateViews?: React.ComponentProps<typeof PageState>["views"];
+  onClearFilters?: () => void;
   onRetry?: () => void;
 }
 
@@ -102,6 +104,7 @@ export function PageWrapper({
   leading,
   actions,
   filters,
+  loadingFilters,
   filtersClassName,
   actionsInline = false,
   children,
@@ -112,6 +115,8 @@ export function PageWrapper({
   state,
   loading,
   empty,
+  stateViews,
+  onClearFilters,
   onRetry,
 }: PageWrapperProps) {
   const headingId = React.useId();
@@ -121,9 +126,18 @@ export function PageWrapper({
     if (onBack) requestLeave(onBack);
   }, [onBack, requestLeave]);
 
-  const isInterrupted = state !== undefined && state.kind !== "ready" && state.kind !== "empty";
+  const isInterrupted =
+    state !== undefined &&
+    state.kind !== "ready" &&
+    state.kind !== "empty" &&
+    state.kind !== "filtered-empty";
   const visibleActions = isInterrupted && state?.kind !== "loading" ? undefined : actions;
-  const visibleFilters = isInterrupted ? undefined : filters;
+  const visibleFilters =
+    state?.kind === "loading"
+      ? loadingFilters
+      : isInterrupted
+        ? undefined
+        : filters;
   const titleClass =
     variant === "display"
       ? "font-display text-xl sm:text-2xl lg:text-[1.7rem] font-semibold tracking-[-0.02em] text-foreground leading-tight"
@@ -173,6 +187,8 @@ export function PageWrapper({
         resolution={state}
         loading={loading ?? <LoadingState variant="page" />}
         empty={empty}
+        views={stateViews}
+        onClearFilters={onClearFilters}
         onRetry={onRetry}
         className="flex-1"
       >
@@ -181,7 +197,12 @@ export function PageWrapper({
     );
 
   return (
-    <div className={cn("flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden", className)}>
+    <div
+      className={cn(
+        "flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden",
+        className,
+      )}
+    >
       {showHeader ? (
         <div
           className={cn(
@@ -244,7 +265,6 @@ export function PageWrapper({
       {visibleFilters && (
         <div
           className={cn(
-            // Match FILTER_TOOLBAR_ROW: grow search only, never crush selects into overlaps.
             "shrink-0 w-full min-w-0 flex flex-wrap items-center gap-2 overflow-x-hidden pb-3 sm:gap-2.5",
             "[&>[data-slot=search-input]]:min-w-[12rem] [&>[data-slot=search-input]]:flex-1 [&>[data-slot=search-input]]:basis-[12rem]",
             "[&>[data-slot=select-trigger]]:shrink-0",
@@ -262,7 +282,6 @@ export function PageWrapper({
             "flex h-full min-h-0 flex-1 flex-col overflow-hidden",
             PAGE_CHROME_X,
             PAGE_CHROME_BOTTOM,
-            PAGE_CHROME_MOBILE_NAV_PAD,
             contentClassName,
           )}
         >
@@ -281,7 +300,6 @@ export function PageWrapper({
               "flex min-h-full w-full flex-col overscroll-contain",
               PAGE_CHROME_X,
               PAGE_CHROME_BOTTOM,
-              PAGE_CHROME_MOBILE_NAV_PAD,
               contentClassName,
             )}
           >
@@ -315,7 +333,9 @@ export function PageSection({
               <h2 className="text-sm font-semibold text-foreground">{title}</h2>
             )}
             {description && (
-              <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {description}
+              </p>
             )}
           </div>
           {actions && <div className="flex items-center gap-2">{actions}</div>}

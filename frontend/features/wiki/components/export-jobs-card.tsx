@@ -77,6 +77,7 @@ export function ExportJobsCard() {
           compact
           title="Couldn't load export history"
           description={getErrorMessage(error)}
+          error={error}
           onRetry={handleRetry}
         />
       )}

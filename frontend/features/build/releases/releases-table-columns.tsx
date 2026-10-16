@@ -66,9 +66,23 @@ interface ReleaseRowHandlers {
 
 const MARKUP_TAG = /<[^>]*>/g;
 const COLLAPSIBLE_WHITESPACE = /\s+/g;
+const NUMERIC_ENTITY = /&#(\d+);/g;
+
+function decodeHtmlEntities(str: string): string {
+  return str
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&nbsp;/g, " ")
+    .replace(NUMERIC_ENTITY, (_, n: string) => String.fromCharCode(Number(n)));
+}
 
 function releaseNotesText(description: string) {
-  return description.replace(MARKUP_TAG, " ").replace(COLLAPSIBLE_WHITESPACE, " ").trim();
+  return decodeHtmlEntities(
+    description.replace(MARKUP_TAG, " ").replace(COLLAPSIBLE_WHITESPACE, " ").trim(),
+  );
 }
 
 function ReleaseStatusBadge({ status }: { status: Release["status"] }) {
@@ -215,7 +229,11 @@ export function buildReleasesColumns({
       headerClassName: "sr-only",
       cell: (r) =>
         canManage ? (
-          <div className="flex items-center justify-end gap-0.5">
+          <div
+            className="flex items-center justify-end gap-0.5"
+            onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => e.stopPropagation()}
+          >
             <ReleaseRowActions release={r} onEdit={onEdit} onDelete={onDelete} />
           </div>
         ) : null,

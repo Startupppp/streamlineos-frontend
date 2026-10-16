@@ -11,7 +11,7 @@ import { CompCycleDetail } from "./comp-cycle-detail";
 import { useCreateCompCycle, type CompCycle } from "@/hooks/api/hr/enterprise-comp";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -104,6 +104,7 @@ export function CompensationPlanningPage() {
         <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle>New Compensation Cycle</DialogTitle>
+            <DialogDescription className="sr-only">Enter a name, fiscal year, and budget pool for the new cycle.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-1.5">

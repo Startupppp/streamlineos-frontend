@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
+import { memo, useCallback, useMemo } from "react";
 import dynamic from "next/dynamic";
 import { format, differenceInCalendarDays } from "date-fns";
 import { toast } from "sonner";
@@ -295,13 +295,29 @@ export function LeavesTabContent({
         />
       ) : (
         <div className="flex h-full min-h-0 w-full flex-1 flex-col" aria-live="polite">
-          <DataTable
-            data={myLeaveRequests}
-            columns={columns}
-            getRowKey={(row) => row.id}
-            minWidth="600px"
-            className="min-h-0 w-full flex-1"
-          />
+          <ul
+            className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto md:hidden"
+            aria-label="My leave requests"
+          >
+            {myLeaveRequests.map((row) => (
+              <li key={row.id}>
+                <LeaveRequestMobileItem
+                  row={row}
+                  isCancelling={cancelMutation.isPending && cancelMutation.variables === row.id}
+                  onCancel={handleCancelRequest}
+                />
+              </li>
+            ))}
+          </ul>
+          <div className="hidden min-h-0 w-full flex-1 flex-col md:flex">
+            <DataTable
+              data={myLeaveRequests}
+              columns={columns}
+              getRowKey={(row) => row.id}
+              minWidth="600px"
+              className="min-h-0 w-full flex-1"
+            />
+          </div>
           {onLoadMore ? (
             <InfiniteScrollSentinel
               hasNextPage={hasMore}
@@ -316,12 +332,73 @@ export function LeavesTabContent({
   );
 }
 
-/**
- * V-046. "Approved" / "Rejected" with no name leaves the reader asking the one
- * question the row exists to answer. Names the approver when the relation is
- * hydrated, and falls back to the bare status when it is not — never
- * "Approved by Unassigned".
- */
+interface LeaveRequestMobileItemProps {
+  row: LeaveRequest;
+  isCancelling: boolean;
+  onCancel: (id: number) => void;
+}
+
+const LeaveRequestMobileItem = memo(function LeaveRequestMobileItem({
+  row,
+  isCancelling,
+  onCancel,
+}: LeaveRequestMobileItemProps) {
+  const typeName = row.leaveType?.name ?? "Leave";
+  const config = balanceCardConfig[typeName] ?? DEFAULT_CARD_CONFIG;
+  const Icon = config.icon;
+  const start = new Date(row.startDate);
+  const end = new Date(row.endDate);
+  const days = differenceInCalendarDays(end, start) + 1;
+  const periodStr =
+    days === 1
+      ? format(start, "MMM d")
+      : `${format(start, "MMM d")} – ${format(end, "MMM d")}`;
+  const status = row.status ?? "PENDING";
+  const statusBadgeClass =
+    status === "PENDING"
+      ? "bg-status-warning-surface text-status-warning-ink border-status-warning-rule"
+      : status === "APPROVED"
+        ? "bg-status-success-surface text-status-success-ink border-status-success-rule"
+        : status === "CANCELLED"
+          ? "bg-muted text-muted-foreground border-border"
+          : "bg-status-danger-surface text-status-danger-ink border-status-danger-rule";
+
+  return (
+    <div className="rounded-xl border border-border bg-card p-3">
+      <div className="flex items-start gap-2.5">
+        <div
+          className={cn(
+            "flex h-8 w-7 shrink-0 items-center justify-center rounded-lg",
+            config.iconBg,
+          )}
+        >
+          <Icon className={cn("h-3.5 w-3.5", config.iconColor)} aria-hidden="true" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <TruncatedText
+            text={typeName.replace(" Leave", "")}
+            className="text-sm font-semibold leading-tight text-foreground"
+          />
+          <p className="text-xs text-muted-foreground">
+            {periodStr} · <span className="tabular-nums">{days}d</span>
+          </p>
+        </div>
+        <span
+          className={cn(
+            "inline-flex shrink-0 items-center rounded-full border px-2 py-0.5 text-micro font-semibold",
+            statusBadgeClass,
+          )}
+        >
+          {decidedByLabel(status, row.approver)}
+        </span>
+      </div>
+      <div className="mt-2 flex justify-end">
+        <RequestActionCell request={row} isCancelling={isCancelling} onCancel={onCancel} />
+      </div>
+    </div>
+  );
+});
+
 export function decidedByLabel(
   status: string,
   approver: { name?: string | null; firstName?: string | null; lastName?: string | null } | null | undefined,

@@ -1,32 +1,35 @@
 import { z } from "zod";
-
-/**
- * The organization-profile form contract: the industry vocabulary the picker
- * offers and the Zod schema the general-settings form validates against.
- *
- * §6 puts a feature's schema in its own `*-schema.ts` rather than inline in the
- * component; the industry list is part of the same contract because the schema
- * accepts whatever it offers.
- */
+import { isValidPhoneNumber } from "react-phone-number-input";
 
 export const INDUSTRIES = [
   "Technology", "Finance & Banking", "Healthcare", "Retail & E-commerce",
   "Manufacturing", "Education", "Real Estate", "Logistics & Supply Chain",
   "Marketing & Advertising", "Consulting", "Legal", "Media & Entertainment",
-  "Hospitality & Travel", "Non-profit", "Other",
+  "Hospitality & Travel", "Non-profit", "Agency", "Other",
 ] as const;
 
+const httpUrlOrEmpty = z
+  .string()
+  .url("Must be a valid URL")
+  .refine((v) => /^https?:\/\//i.test(v), "Only http: or https: URLs are accepted")
+  .or(z.literal(""))
+  .optional();
+
 export const orgGeneralSchema = z.object({
-  name: z.string().min(1, "Name is required").max(100),
+  name: z.string().trim().min(1, "Name is required").max(100),
   slug: z.string().min(1, "Slug is required").max(50).regex(/^[a-z0-9-]+$/, "Lowercase letters, numbers, hyphens only"),
-  legalName: z.string().max(200).optional(),
+  legalName: z.string().max(200, "Legal name must be at most 200 characters").optional(),
   orgCode: z.string().max(20).optional(),
   industry: z.string().optional(),
-  website: z.string().url("Must be a valid URL").or(z.literal("")).optional(),
-  registrationNumber: z.string().max(100).optional(),
+  website: httpUrlOrEmpty,
+  registrationNumber: z.string().max(100, "Registration number must be at most 100 characters").optional(),
   taxNumber: z.string().max(100).optional(),
   supportEmail: z.string().email("Must be a valid email").or(z.literal("")).optional(),
-  supportPhone: z.string().max(30).optional(),
+  supportPhone: z
+    .string()
+    .max(30)
+    .refine((val) => !val || isValidPhoneNumber(val), "Enter a valid phone number")
+    .optional(),
 });
 
 export type OrgGeneralValues = z.infer<typeof orgGeneralSchema>;

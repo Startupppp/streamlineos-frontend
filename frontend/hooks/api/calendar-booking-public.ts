@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import {
   publicCalendarBookingCallbackContract,
   publicCalendarBookingHoldContract,
@@ -85,6 +86,7 @@ function basePath(token: string) {
 
 export function usePublicCalendarBookingOffering(token: string, from: string, to: string) {
   return useQuery({
+    ...INLINE_READ_ERROR,
     queryKey: ["public", "calendar", "booking", token, "offering", from, to],
     queryFn: ({ signal }) => apiClient.get<PublicCalendarBookingOffering>(
       basePath(token),
@@ -103,6 +105,7 @@ export function usePublicCalendarBookingSession(
   input: CreateCalendarBookingSessionInput,
 ) {
   return useQuery({
+    ...INLINE_READ_ERROR,
     queryKey: ["public", "calendar", "booking", token, "session", input],
     queryFn: () => apiClient.post<PublicCalendarBookingSession>(
       `${basePath(token)}/sessions`,
@@ -142,6 +145,35 @@ export function useConfirmPublicCalendarBooking(token: string) {
         undefined,
         publicCalendarBookingReceiptContract,
       ),
+  });
+}
+
+export function usePublicCalendarBookingStatus(
+  token: string,
+  input: ConfirmCalendarBookingInput | null,
+  enabled: boolean,
+) {
+  return useQuery({
+    ...INLINE_READ_ERROR,
+    queryKey: ["public", "calendar", "booking", token, "status", input?.idempotencyKey],
+    queryFn: ({ signal }) => {
+      if (!input) throw new Error("Booking request is unavailable");
+      return apiClient.post<PublicCalendarBookingReceipt>(
+        `${basePath(token)}/confirm`,
+        input,
+        { signal },
+        publicCalendarBookingReceiptContract,
+      );
+    },
+    enabled: Boolean(token && input && enabled),
+    retry: false,
+    staleTime: 0,
+    refetchInterval: (query) =>
+      query.state.data?.outcome === "pending"
+        ? query.state.dataUpdateCount < 12 ? 5_000 : 30_000
+        : false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });
 }
 

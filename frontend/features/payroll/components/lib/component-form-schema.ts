@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { ComponentType, CalcMethod } from "@/types/payroll/setup";
+import { PAYROLL_AMOUNT_MAX } from "@/lib/validation/payroll-bounds";
 
 export const COMPONENT_TYPES: { value: ComponentType; label: string }[] = [
   { value: "EARNING", label: "Earning" },
@@ -49,7 +50,13 @@ export const componentFormSchema = z.object({
     "TIMESHEET_BASED",
     "MANUAL",
   ]),
-  amount: z.string().optional(),
+  amount: z
+    .string()
+    .refine(
+      (v) => !v || parseFloat(v) <= PAYROLL_AMOUNT_MAX,
+      `Cannot exceed ₹${PAYROLL_AMOUNT_MAX.toLocaleString("en-IN")}`,
+    )
+    .optional(),
   percent: z.string().optional(),
   percentBase: z.string().optional(),
   formula: z.string().optional(),
@@ -60,7 +67,14 @@ export const componentFormSchema = z.object({
 }).superRefine((form, ctx) => {
   if (form.calcMethod !== "PERCENT_OF") return;
   if (!form.percentBase) ctx.addIssue({ code: "custom", path: ["percentBase"], message: "Pick what this is a percent of" });
-  if (!PERCENT_VALUE.test(form.percent ?? "")) ctx.addIssue({ code: "custom", path: ["percent"], message: "Enter a percentage like 50 or 12.5" });
+  const percentStr = form.percent ?? "";
+  if (!PERCENT_VALUE.test(percentStr)) {
+    ctx.addIssue({ code: "custom", path: ["percent"], message: "Enter a percentage like 50 or 12.5" });
+    return;
+  }
+  const n = parseFloat(percentStr);
+  if (n <= 0) ctx.addIssue({ code: "custom", path: ["percent"], message: "Percentage must be greater than 0" });
+  else if (n > 100) ctx.addIssue({ code: "custom", path: ["percent"], message: "Percentage must be between 0 and 100" });
 });
 
 export type ComponentForm = z.infer<typeof componentFormSchema>;

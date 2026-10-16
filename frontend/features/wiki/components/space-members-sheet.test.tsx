@@ -1,5 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { ApiContractError } from "@/lib/api-envelope";
+import { kbSpaceMemberListContract } from "@/hooks/api/kb/kb-spaces-settings-schema";
 import { SpaceMembersSheet } from "./space-members-sheet";
 
 const mockCan = jest.fn<boolean, [string]>();
@@ -152,6 +154,72 @@ describe("SpaceMembersSheet — denial is not emptiness", () => {
 
     expect(screen.queryByText("No members yet")).not.toBeInTheDocument();
     expect(screen.getByText("Access Restricted")).toBeInTheDocument();
+  });
+
+  it("hides the add form when the read is denied even if the mutation permission was cached", () => {
+    mockAccess.mockReturnValue(accessDenied);
+    mockCan.mockReturnValue(true);
+    mockKbSpaceMembers.mockReturnValue(membersQuery({ data: undefined }));
+
+    renderSheet();
+
+    expect(screen.getByText("Access Restricted")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /add member/i })).not.toBeInTheDocument();
+  });
+});
+
+describe("SpaceMembersSheet — member read failure", () => {
+  it("hides the add form while the first read is loading or failed and retries the read", async () => {
+    mockCan.mockReturnValue(true);
+    const refetch = jest.fn();
+    mockKbSpaceMembers.mockReturnValue(membersQuery({ data: undefined, isLoading: true, refetch }));
+    const view = renderSheet();
+
+    expect(screen.queryByRole("button", { name: /add member/i })).not.toBeInTheDocument();
+
+    mockKbSpaceMembers.mockReturnValue(membersQuery({ data: undefined, isError: true, error: new Error("offline"), refetch }));
+    view.rerender(<SpaceMembersSheet spaceId={10} spaceName="Engineering" open onOpenChange={jest.fn()} />);
+
+    expect(screen.getByRole("button", { name: "Try again" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /add member/i })).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Try again" }));
+    expect(refetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("contains a strict contract error in the sheet with its reference and recovers on retry", async () => {
+    const result = kbSpaceMemberListContract.safeParse({ data: [member()] });
+    expect(result.success).toBe(false);
+    if (result.success) throw new Error("Expected the member list contract to reject an object");
+
+    const contractError = new ApiContractError(
+      "GET /kb/spaces/10/members",
+      200,
+      result.error.issues.map((issue) => ({ path: issue.path.join("."), message: issue.message })),
+      "members-request-123",
+    );
+    let recovered = false;
+    mockKbSpaceMembers.mockImplementation(() => {
+      if (!recovered) throw contractError;
+      return membersQuery();
+    });
+
+    render(
+      <>
+        <div>Spaces route content</div>
+        <SpaceMembersSheet spaceId={10} spaceName="Engineering" open onOpenChange={jest.fn()} />
+      </>,
+    );
+
+    expect(screen.getByText("Spaces route content")).toBeInTheDocument();
+    expect(screen.getByRole("dialog", { name: /members — engineering/i })).toBeInTheDocument();
+    expect(screen.getByText("members-request-123")).toBeInTheDocument();
+    expect(screen.queryByText("No members yet")).not.toBeInTheDocument();
+
+    recovered = true;
+    await userEvent.click(screen.getByRole("button", { name: "Try again" }));
+
+    expect(screen.getByText("Alice Smith")).toBeInTheDocument();
+    expect(screen.getByText("Spaces route content")).toBeInTheDocument();
   });
 });
 

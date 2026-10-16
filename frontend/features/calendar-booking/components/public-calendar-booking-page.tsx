@@ -1,16 +1,17 @@
 "use client";
 
-import { CalendarCheck2, Loader2 } from "lucide-react";
+import { CalendarDays, Link2Off } from "lucide-react";
 import Image from "next/image";
 import { useParams, useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   usePublicCalendarBookingOffering,
   usePublicCalendarBookingSession,
 } from "@/hooks/api/calendar-booking-public";
-import { getErrorMessage } from "@/lib/get-error-message";
 import { PublicCalendarBookingForm } from "./public-calendar-booking-form";
+import { publicBookingCopy, publicBookingUiLocale } from "../lib/public-booking-copy";
 
 function queryValue(params: URLSearchParams, key: string): string | null {
   const value = params.get(key)?.trim();
@@ -45,58 +46,77 @@ export function PublicCalendarBookingPage() {
   }), [attribution, callbackState, locale]);
   const offeringQuery = usePublicCalendarBookingOffering(token, range.from, range.to);
   const sessionQuery = usePublicCalendarBookingSession(token, sessionInput);
-  const offering = offeringQuery.data;
-  const session = sessionQuery.data;
+  const unavailable = offeringQuery.isError || sessionQuery.isError;
+  const offering = unavailable ? undefined : offeringQuery.data;
+  const session = unavailable ? undefined : sessionQuery.data;
+  const uiLocale = publicBookingUiLocale(session?.locale ?? locale);
+  const copy = publicBookingCopy(uiLocale);
   const loading = offeringQuery.isPending || sessionQuery.isPending;
-  const unavailable = offeringQuery.error ?? sessionQuery.error;
-  const title = session?.copy.title ?? offering?.title ?? "Book a time";
+  const title = session?.copy.title ?? offering?.title ?? copy.defaultTitle;
   const description = session?.copy.description ?? offering?.description;
 
   return (
-    <main className="surface-soft flex min-h-dvh items-start justify-center px-4 py-8 sm:py-12">
-      <div className="w-full max-w-3xl">
+    <main lang={uiLocale} className="flex min-h-dvh justify-center bg-background px-4 py-6 text-foreground sm:px-6 sm:py-12">
+      <Card className="h-fit w-full max-w-2xl gap-0 overflow-hidden rounded-xl border-border bg-card py-0 shadow-sm">
         <div
-          className="gradient-brand rounded-t-2xl px-6 py-8 text-center text-white shadow-noir"
-          style={session?.branding.primaryColor
-            ? { background: session.branding.primaryColor }
-            : undefined}
-        >
+          aria-hidden="true"
+          className="h-1 bg-primary"
+          style={session?.branding.primaryColor ? { backgroundColor: session.branding.primaryColor } : undefined}
+        />
+        <header className="flex items-start gap-4 border-b border-border px-5 py-6 sm:px-8 sm:py-7">
           {session?.branding.logoUrl ? (
             <Image
               src={session.branding.logoUrl}
               alt={session.branding.displayName ?? "Booking page logo"}
-              width={64}
-              height={64}
+              width={48}
+              height={48}
               unoptimized
-              className="mx-auto mb-3 size-16 rounded-xl object-contain"
+              className="size-12 shrink-0 rounded-xl border border-border bg-background object-contain p-1"
             />
           ) : (
-            <CalendarCheck2 className="mx-auto h-9 w-9" aria-hidden="true" />
+            <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground">
+              <CalendarDays className="size-6" aria-hidden="true" />
+            </span>
           )}
-          <h1 className="mt-3 text-2xl font-bold tracking-tight">{title}</h1>
-          {description && (
-            <p className="mx-auto mt-2 max-w-xl text-sm text-white/90">{description}</p>
-          )}
-        </div>
+          <div className="min-w-0 space-y-1">
+            <p className="text-xs font-medium text-muted-foreground">
+              {session?.branding.displayName ? <>{copy.brand} <span lang={session.locale}>{session.branding.displayName}</span></> : copy.platform}
+            </p>
+            <h1 lang={session?.copy.title ? session.locale : undefined} className="text-xl font-semibold tracking-tight sm:text-2xl">{title}</h1>
+            {description && <p lang={session?.copy.description ? session.locale : undefined} className="text-sm text-muted-foreground">{description}</p>}
+          </div>
+        </header>
 
-        <Card className="rounded-t-none border-t-0 px-4 py-6 shadow-noir sm:px-7">
+        <div className="px-5 py-6 sm:px-8 sm:py-8">
           {loading && (
             <div
-              className="flex min-h-64 items-center justify-center"
+              className="space-y-5 py-4"
               aria-label="Loading booking page"
             >
-              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" aria-hidden="true" />
+              <Skeleton className="h-6 w-40" />
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Skeleton className="h-12 w-full rounded-xl" />
+                <Skeleton className="h-12 w-full rounded-xl" />
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Skeleton className="h-9 w-full" />
+                <Skeleton className="h-9 w-full" />
+              </div>
+              <Skeleton className="h-9 w-full" />
             </div>
           )}
 
-          {unavailable && (
-            <div className="space-y-2 py-14 text-center" role="alert">
-              <p className="text-lg font-semibold text-foreground">
-                This booking page is unavailable
-              </p>
-              <p className="text-sm text-muted-foreground">
-                {getErrorMessage(unavailable) || "Ask the organizer for a new booking link."}
-              </p>
+          {unavailable && !loading && (
+            <div className="mx-auto flex max-w-md flex-col items-center gap-4 py-10 text-center sm:py-14" role="alert">
+              <span className="flex size-12 items-center justify-center rounded-xl border border-border bg-surface-inset text-muted-foreground dark:border-background">
+                <Link2Off className="size-6" aria-hidden="true" />
+              </span>
+              <div className="space-y-2">
+                <h2 className="text-xl font-semibold tracking-tight text-foreground">{copy.unavailableTitle}</h2>
+                <p className="text-sm leading-relaxed text-muted-foreground">
+                  {copy.unavailableDescription}
+                </p>
+              </div>
             </div>
           )}
 
@@ -109,13 +129,13 @@ export function PublicCalendarBookingPage() {
             />
           )}
 
-          {session?.branding.showPoweredBy && (
-            <p className="mt-8 text-center text-xs text-muted-foreground">
-              Scheduled with StreamlineOS
-            </p>
-          )}
-        </Card>
-      </div>
+        </div>
+        {session?.branding.showPoweredBy && (
+          <footer className="border-t border-border px-5 py-4 text-center text-xs text-muted-foreground sm:px-8">
+            {copy.poweredBy}
+          </footer>
+        )}
+      </Card>
     </main>
   );
 }

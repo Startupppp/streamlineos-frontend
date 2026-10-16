@@ -3,9 +3,9 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 
 import type { ApprovalRoute } from "@/hooks/api/hr/approval-route-schema";
 
-const requestLeaveMutate = jest.fn();
+const requestLeaveMutate = jest.fn(() => Promise.resolve({}));
 jest.mock("@/hooks/api/hr", () => ({
-  useRequestLeave: () => ({ mutate: requestLeaveMutate, isPending: false }),
+  useRequestLeave: () => ({ mutateAsync: requestLeaveMutate, isPending: false }),
   useLeavePolicy: () => ({ data: null }),
 }));
 
@@ -129,7 +129,7 @@ function fillRequest(from: string, to: string) {
 }
 
 beforeEach(() => {
-  requestLeaveMutate.mockReset();
+  requestLeaveMutate.mockClear();
 });
 
 describe("LeaveRequestSheet honesty", () => {

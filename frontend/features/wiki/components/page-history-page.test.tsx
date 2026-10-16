@@ -1,6 +1,7 @@
 import React from "react";
 import { render, screen, cleanup, fireEvent, within } from "@testing-library/react";
 import PageHistoryPage from "./page-history-page";
+import { ApiError } from "@/lib/api-envelope";
 
 type IntersectionCallback = (entries: IntersectionObserverEntry[]) => void;
 
@@ -86,6 +87,9 @@ jest.mock("@/lib/knowledge-routes", () => ({
 jest.mock("lucide-react", () => ({
   GitCompare: ({ className }: { className?: string }) => <span className={className} />,
   Loader2: ({ className }: { className?: string }) => <span className={className} />,
+  AlertTriangle: ({ className }: { className?: string }) => <span className={className} />,
+  RefreshCw: ({ className }: { className?: string }) => <span className={className} />,
+  Copy: ({ className }: { className?: string }) => <span className={className} />,
 }));
 
 const { useKbPage } = jest.requireMock("@/hooks/api/kb/pages") as { useKbPage: jest.Mock };
@@ -214,6 +218,55 @@ describe("PageHistoryPage sentinel", () => {
     render(<PageHistoryPage pageId={1} />);
 
     expect(screen.getByRole("button", { name: "Load more versions" })).toBeInTheDocument();
+  });
+});
+
+describe("PageHistoryPage version read failures", () => {
+  it("shows a first-read error with request reference and retries instead of claiming no versions", () => {
+    const refetch = jest.fn();
+    useKbPageVersionsInfinite.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: true,
+      error: new ApiError("Unavailable", 503, "BACKEND_UNREACHABLE", { correlationId: "versions-req-1" }),
+      isFetchNextPageError: false,
+      refetch,
+      hasNextPage: false,
+      fetchNextPage: jest.fn(),
+      isFetchingNextPage: false,
+    });
+
+    render(<PageHistoryPage pageId={1} />);
+
+    expect(screen.queryByText("No versions yet")).not.toBeInTheDocument();
+    expect(screen.getByRole("alert")).toHaveTextContent("Could not load versions");
+    expect(screen.getByText("versions-req-1")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+    expect(refetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps loaded versions and retries a failed later cursor page without auto-loading", () => {
+    const fetchNextPage = jest.fn();
+    const refetch = jest.fn();
+    useKbPageVersionsInfinite.mockReturnValue({
+      data: { pages: [{ data: [mockVersion] }] },
+      isLoading: false,
+      isError: true,
+      error: new ApiError("Unavailable", 503),
+      isFetchNextPageError: true,
+      refetch,
+      hasNextPage: true,
+      fetchNextPage,
+      isFetchingNextPage: false,
+    });
+
+    render(<PageHistoryPage pageId={1} />);
+
+    expect(screen.getByRole("button", { name: "Select version 1 (current)" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Load more versions" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+    expect(fetchNextPage).toHaveBeenCalledTimes(1);
+    expect(refetch).not.toHaveBeenCalled();
   });
 });
 

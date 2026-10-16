@@ -1,21 +1,17 @@
 import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import PageGrantsSheet from "./page-grants-sheet";
-import type { KbPageGrant } from "@/hooks/api/kb/page-grants";
-import type { OrgMember } from "@/hooks/api/organization";
+import type { KbPageGrant, KbPageGrantCandidate } from "@/hooks/api/kb/page-grants";
 
 jest.mock("@/hooks/api/kb/page-grants", () => ({
   useKbPageGrants: jest.fn(),
+  useKbPageGrantCandidates: jest.fn(),
   useCreateKbPageGrant: jest.fn(),
   useRevokeKbPageGrant: jest.fn(),
 }));
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn(() => true),
-}));
-
-jest.mock("@/hooks/api/organization", () => ({
-  useOrgMembers: jest.fn(),
 }));
 
 jest.mock("@/hooks/api/use-page-state", () => ({
@@ -176,14 +172,15 @@ const {
   useKbPageGrants,
   useCreateKbPageGrant,
   useRevokeKbPageGrant,
+  useKbPageGrantCandidates,
 } = jest.requireMock("@/hooks/api/kb/page-grants") as {
   useKbPageGrants: jest.Mock;
   useCreateKbPageGrant: jest.Mock;
   useRevokeKbPageGrant: jest.Mock;
+  useKbPageGrantCandidates: jest.Mock;
 };
 
 const { useCan } = jest.requireMock("@/hooks/api/access") as { useCan: jest.Mock };
-const { useOrgMembers } = jest.requireMock("@/hooks/api/organization") as { useOrgMembers: jest.Mock };
 const { usePageState } = jest.requireMock("@/hooks/api/use-page-state") as { usePageState: jest.Mock };
 
 function makeGrant(overrides: Partial<KbPageGrant> = {}): KbPageGrant {
@@ -203,16 +200,12 @@ function makeGrant(overrides: Partial<KbPageGrant> = {}): KbPageGrant {
   };
 }
 
-function makeMember(overrides: Partial<OrgMember> = {}): OrgMember {
+function makeMember(overrides: Partial<KbPageGrantCandidate> = {}): KbPageGrantCandidate {
   return {
     membershipId: 10,
     userId: "user-abc",
-    role: "MEMBER",
-    joinedAt: "2026-01-01T00:00:00Z",
     name: "Alice Smith",
     email: "alice@example.com",
-    image: null,
-    totpEnabled: false,
     ...overrides,
   };
 }
@@ -221,11 +214,15 @@ const defaultMutateFn = jest.fn();
 
 function defaultGrantsPage(grants: KbPageGrant[] = []) {
   return {
-    data: { data: grants, pagination: { limit: 100, hasMore: false, nextCursor: null } },
+    data: grants,
     isLoading: false,
     isError: false,
+    isFetchNextPageError: false,
     error: undefined,
     refetch: jest.fn(),
+    hasNextPage: false,
+    isFetchingNextPage: false,
+    fetchNextPage: jest.fn(),
   };
 }
 
@@ -236,7 +233,7 @@ beforeEach(() => {
   useKbPageGrants.mockReturnValue(defaultGrantsPage());
   useCreateKbPageGrant.mockReturnValue({ mutate: defaultMutateFn, isPending: false });
   useRevokeKbPageGrant.mockReturnValue({ mutate: defaultMutateFn, isPending: false });
-  useOrgMembers.mockReturnValue({ data: { data: [], pagination: { limit: 100, hasMore: false, nextCursor: null } } });
+  useKbPageGrantCandidates.mockReturnValue({ data: [], isLoading: false, isError: false, error: null, hasNextPage: false, isFetchingNextPage: false, isFetchNextPageError: false, fetchNextPage: jest.fn(), refetch: jest.fn() });
 });
 
 function renderSheet(props: { pageId?: number; open?: boolean; onOpenChange?: jest.Mock } = {}) {
@@ -251,17 +248,62 @@ function renderSheet(props: { pageId?: number; open?: boolean; onOpenChange?: je
 }
 
 describe("PageGrantsSheet — creating a grant", () => {
+  it("waits for a search term before offering member results", () => {
+    renderSheet();
+    fireEvent.focus(screen.getByTestId("member-search-input"));
+
+    expect(screen.getByText("Type a name or email to search members.")).toBeInTheDocument();
+    expect(useKbPageGrantCandidates).toHaveBeenLastCalledWith(42, "", true);
+  });
+
+  it("shows a member-search failure and retries the KB lookup", () => {
+    const refetch = jest.fn();
+    useKbPageGrantCandidates.mockReturnValue({ data: [], isLoading: false, isError: true, error: new Error("offline"), hasNextPage: false, refetch });
+    renderSheet();
+    fireEvent.focus(screen.getByTestId("member-search-input"));
+    fireEvent.change(screen.getByTestId("member-search-input"), { target: { value: "Ali" } });
+
+    expect(screen.getByRole("alert")).toHaveTextContent("Could not load members.");
+    fireEvent.click(screen.getByRole("button", { name: "Retry members" }));
+    expect(refetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("loads more candidate members without losing the current results", () => {
+    const fetchNextPage = jest.fn();
+    useKbPageGrantCandidates.mockReturnValue({ data: [makeMember()], isLoading: false, isError: false, hasNextPage: true, isFetchingNextPage: false, fetchNextPage });
+    renderSheet();
+    fireEvent.focus(screen.getByTestId("member-search-input"));
+    fireEvent.change(screen.getByTestId("member-search-input"), { target: { value: "Ali" } });
+
+    expect(screen.getByText("Alice Smith")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Load more members" }));
+    expect(fetchNextPage).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps member choices open when keyboard focus moves from search to a choice", () => {
+    useKbPageGrantCandidates.mockReturnValue({ data: [makeMember()], isLoading: false, isError: false, hasNextPage: false });
+    renderSheet();
+    const input = screen.getByTestId("member-search-input");
+    fireEvent.focus(input);
+    fireEvent.change(input, { target: { value: "Ali" } });
+    const option = screen.getByTestId("member-option-user-abc");
+
+    fireEvent.blur(input, { relatedTarget: option });
+    expect(option).toBeInTheDocument();
+    fireEvent.click(option);
+    expect(screen.getByText("Alice Smith")).toBeInTheDocument();
+  });
+
   it("submitting in member mode sends membershipId and no role", () => {
     const createMutate = jest.fn();
     useCreateKbPageGrant.mockReturnValue({ mutate: createMutate, isPending: false });
     const alice = makeMember({ membershipId: 10 });
-    useOrgMembers.mockReturnValue({
-      data: { data: [alice], pagination: { limit: 20, hasMore: false, nextCursor: null } },
-    });
+    useKbPageGrantCandidates.mockReturnValue({ data: [alice], isLoading: false, isError: false, hasNextPage: false });
 
     renderSheet();
 
     fireEvent.focus(screen.getByTestId("member-search-input"));
+    fireEvent.change(screen.getByTestId("member-search-input"), { target: { value: "Ali" } });
 
     fireEvent.click(screen.getByTestId(`member-option-${alice.userId}`));
 
@@ -292,13 +334,12 @@ describe("PageGrantsSheet — creating a grant", () => {
     const createMutate = jest.fn();
     useCreateKbPageGrant.mockReturnValue({ mutate: createMutate, isPending: false });
     const alice = makeMember({ membershipId: 10 });
-    useOrgMembers.mockReturnValue({
-      data: { data: [alice], pagination: { limit: 20, hasMore: false, nextCursor: null } },
-    });
+    useKbPageGrantCandidates.mockReturnValue({ data: [alice], isLoading: false, isError: false, hasNextPage: false });
 
     renderSheet();
 
     fireEvent.focus(screen.getByTestId("member-search-input"));
+    fireEvent.change(screen.getByTestId("member-search-input"), { target: { value: "Ali" } });
     fireEvent.click(screen.getByTestId(`member-option-${alice.userId}`));
 
     fireEvent.click(screen.getByRole("button", { name: /by role/i }));
@@ -314,9 +355,6 @@ describe("PageGrantsSheet — revoking a grant", () => {
     useRevokeKbPageGrant.mockReturnValue({ mutate: revokeMutate, isPending: false });
     const grant = makeGrant({ id: 7, pageId: 42 });
     useKbPageGrants.mockReturnValue(defaultGrantsPage([grant]));
-    useOrgMembers.mockReturnValue({
-      data: { data: [makeMember({ membershipId: grant.membershipId ?? 0 })], pagination: { limit: 100, hasMore: false, nextCursor: null } },
-    });
 
     renderSheet({ pageId: 42 });
 
@@ -339,9 +377,6 @@ describe("PageGrantsSheet — revoking a grant", () => {
     useRevokeKbPageGrant.mockReturnValue({ mutate: revokeMutate, isPending: false });
     const grant = makeGrant({ id: 7 });
     useKbPageGrants.mockReturnValue(defaultGrantsPage([grant]));
-    useOrgMembers.mockReturnValue({
-      data: { data: [makeMember({ membershipId: grant.membershipId ?? 0 })], pagination: { limit: 100, hasMore: false, nextCursor: null } },
-    });
 
     renderSheet();
 
@@ -353,13 +388,25 @@ describe("PageGrantsSheet — revoking a grant", () => {
 });
 
 describe("PageGrantsSheet — permission gating", () => {
+  it("allows a KB page editor without settings directory access to search and grant a member", () => {
+    useCan.mockImplementation((permission: string) => permission !== "settings:view");
+    const createMutate = jest.fn();
+    useCreateKbPageGrant.mockReturnValue({ mutate: createMutate, isPending: false });
+    useKbPageGrantCandidates.mockReturnValue({ data: [makeMember()], isLoading: false, isError: false, hasNextPage: false });
+
+    renderSheet();
+    fireEvent.focus(screen.getByTestId("member-search-input"));
+    fireEvent.change(screen.getByTestId("member-search-input"), { target: { value: "Ali" } });
+    fireEvent.click(screen.getByTestId("member-option-user-abc"));
+    fireEvent.click(screen.getByRole("button", { name: /grant access/i }));
+
+    expect(useKbPageGrantCandidates).toHaveBeenCalledWith(42, "Ali", true);
+    expect(createMutate).toHaveBeenCalledWith(expect.objectContaining({ pageId: 42, membershipId: 10 }), expect.any(Object));
+  });
   it("a user WITH kb:pages:update sees the mode buttons and revoke controls", () => {
     useCan.mockReturnValue(true);
     const grant = makeGrant({ id: 3 });
     useKbPageGrants.mockReturnValue(defaultGrantsPage([grant]));
-    useOrgMembers.mockReturnValue({
-      data: { data: [makeMember({ membershipId: grant.membershipId ?? 0 })], pagination: { limit: 100, hasMore: false, nextCursor: null } },
-    });
 
     renderSheet();
 
@@ -372,9 +419,6 @@ describe("PageGrantsSheet — permission gating", () => {
     useCan.mockImplementation((permission: string) => permission !== "kb:pages:update");
     const grant = makeGrant({ id: 3 });
     useKbPageGrants.mockReturnValue(defaultGrantsPage([grant]));
-    useOrgMembers.mockReturnValue({
-      data: { data: [makeMember({ membershipId: grant.membershipId ?? 0 })], pagination: { limit: 100, hasMore: false, nextCursor: null } },
-    });
 
     renderSheet();
 
@@ -390,9 +434,6 @@ describe("PageGrantsSheet — server-provided grantee names", () => {
   it("renders the server-provided granteeName for a member grant so no org-member fetch is needed to resolve the display name", () => {
     const grant = makeGrant({ id: 1, membershipId: 999, granteeName: "Priya Ramachandran" });
     useKbPageGrants.mockReturnValue(defaultGrantsPage([grant]));
-    useOrgMembers.mockReturnValue({
-      data: { data: [], pagination: { limit: 20, hasMore: false, nextCursor: null } },
-    });
 
     renderSheet();
 
@@ -403,9 +444,6 @@ describe("PageGrantsSheet — server-provided grantee names", () => {
   it("a grantee whose membershipId is outside any 100-member window still shows a name when the server projection provides granteeName", () => {
     const grant = makeGrant({ id: 2, membershipId: 101, granteeName: "Outside Window User" });
     useKbPageGrants.mockReturnValue(defaultGrantsPage([grant]));
-    useOrgMembers.mockReturnValue({
-      data: { data: [], pagination: { limit: 20, hasMore: false, nextCursor: null } },
-    });
 
     renderSheet();
 
@@ -430,6 +468,54 @@ describe("PageGrantsSheet — server-provided grantee names", () => {
     renderSheet();
 
     expect(screen.getByText("Team member")).toBeInTheDocument();
+  });
+});
+
+describe("PageGrantsSheet — cursor pagination", () => {
+  it("loads more grants when the backend has another page", () => {
+    const fetchNextPage = jest.fn();
+    useKbPageGrants.mockReturnValue({
+      ...defaultGrantsPage([makeGrant({ id: 1, granteeName: "First member" })]),
+      hasNextPage: true,
+      fetchNextPage,
+    });
+
+    renderSheet();
+
+    expect(screen.getByText("First member")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Load more access grants" }));
+    expect(fetchNextPage).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps loaded grants visible and offers retry when the next page fails", () => {
+    const fetchNextPage = jest.fn();
+    useKbPageGrants.mockReturnValue({
+      ...defaultGrantsPage([makeGrant({ id: 1, granteeName: "First member" })]),
+      isError: true,
+      isFetchNextPageError: true,
+      error: new Error("Network unavailable"),
+      hasNextPage: true,
+      fetchNextPage,
+    });
+
+    renderSheet();
+
+    expect(screen.getByText("First member")).toBeInTheDocument();
+    expect(screen.getByRole("alert")).toHaveTextContent("Network unavailable");
+    fireEvent.click(screen.getByRole("button", { name: "Retry loading grants" }));
+    expect(fetchNextPage).toHaveBeenCalledTimes(1);
+  });
+
+  it("disables load more while a next-page request is pending", () => {
+    useKbPageGrants.mockReturnValue({
+      ...defaultGrantsPage([makeGrant()]),
+      hasNextPage: true,
+      isFetchingNextPage: true,
+    });
+
+    renderSheet();
+
+    expect(screen.getByRole("button", { name: "Loading access grants…" })).toBeDisabled();
   });
 });
 

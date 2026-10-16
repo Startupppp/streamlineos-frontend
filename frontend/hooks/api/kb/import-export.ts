@@ -7,7 +7,9 @@ import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
 import { selectFlatPages, type Page } from "@/lib/api/select-flat-pages";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
 export type KbImportItem = {
   title: string;
@@ -35,6 +37,20 @@ export type ImportDryRunResult = {
   invalidItems: string[];
 };
 
+export type KbImportItemError = {
+  index: number;
+  title: string;
+  code: "INVALID_PARENT" | "INVALID_SPACE" | "DUPLICATE_REFERENCE" | "WRITE_FAILED";
+  reason: string;
+};
+
+export type KbImportErrorReport = {
+  failedTitles?: string[];
+  itemErrors?: KbImportItemError[];
+  code?: "PROGRESS_RECONCILIATION_REQUIRED";
+  reason?: string;
+};
+
 export type KbImportJob = {
   id: number;
   orgId: string;
@@ -46,7 +62,8 @@ export type KbImportJob = {
   succeededItems: number;
   failedItems: number;
   duplicateItems: number;
-  errorReport: Record<string, unknown> | null;
+  canRetry: boolean;
+  errorReport: KbImportErrorReport | null;
   createdById: string | null;
   createdAt: string;
   updatedAt: string;
@@ -135,6 +152,28 @@ export function useCancelImportJob() {
   });
 }
 
+export function useRetryImportJob() {
+  const qc = useQueryClient();
+  const operation = useIdempotentOperation();
+  return useAuthorizedMutation("kb:pages:import", {
+    mutationKey: ["kb", "import-job", "retry"],
+    mutationFn: (jobId: number) =>
+      apiClient.post<ImportAccepted>(
+        `/kb/import-jobs/${jobId}/retry`,
+        undefined,
+        operation.configFor({ jobId }),
+        kbImportAcceptedContract,
+      ),
+    onSuccess: () => {
+      operation.settle();
+      qc.invalidateQueries({
+        queryKey: knowledgeAndSurveysQueryKeys.kb.importJobs(),
+        exact: true,
+      });
+    },
+  });
+}
+
 export function useDryRunImport() {
   return useAuthorizedMutation("kb:pages:import", {
     mutationKey: ["kb", "pages", "import", "dry-run"],
@@ -146,6 +185,7 @@ export function useDryRunImport() {
 export function useKbImportJobs() {
   const canImport = useCan("kb:pages:import");
   return useInfiniteQuery({
+    ...INLINE_READ_ERROR,
     queryKey: knowledgeAndSurveysQueryKeys.kb.importJobs(),
     initialPageParam: NO_CURSOR_YET,
     queryFn: ({ signal, pageParam }) =>
@@ -165,6 +205,7 @@ export function useKbImportJobs() {
 export function useKbExportJobs() {
   const canExport = useCan("kb:pages:export");
   return useInfiniteQuery({
+    ...INLINE_READ_ERROR,
     queryKey: knowledgeAndSurveysQueryKeys.kb.exportJobs(),
     initialPageParam: NO_CURSOR_YET,
     queryFn: ({ signal, pageParam }) =>

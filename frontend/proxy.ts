@@ -9,7 +9,7 @@ import {
   withExpiredSessionCookies,
 } from "@/lib/auth-session-cookies";
 
-export function buildCsp(nonce: string, apiUrl?: string): string {
+export function buildCsp(nonce: string, apiUrl?: string, frameAncestor?: string): string {
   const isDev = process.env.NODE_ENV === "development";
   const scriptSrc = [
     "'self'",
@@ -86,7 +86,7 @@ export function buildCsp(nonce: string, apiUrl?: string): string {
     `connect-src ${connectSrc}`,
     "worker-src 'self' blob:",
     "frame-src https://www.googletagmanager.com https://checkout.razorpay.com https://api.razorpay.com",
-    "frame-ancestors 'none'",
+    `frame-ancestors ${frameAncestor ?? "'none'"}`,
     "base-uri 'self'",
     "form-action 'self'",
   ].join("; ");
@@ -100,6 +100,40 @@ function isLoopbackHostname(hostname: string): boolean {
     h === "::1" ||
     h.endsWith(".localhost")
   );
+}
+
+function validFrameAncestor(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  try {
+    const url = new URL(value);
+    if (url.origin !== value || url.username || url.password) return null;
+    if (url.protocol !== "https:" && !(process.env.NODE_ENV === "development" && url.protocol === "http:" && isLoopbackHostname(url.hostname)))
+      return null;
+    return url.origin;
+  } catch {
+    return null;
+  }
+}
+
+async function bookingFrameAncestor(token: string): Promise<string | null> {
+  const apiUrl = process.env.API_INTERNAL_URL ?? process.env.NEXT_PUBLIC_API_URL;
+  if (!apiUrl) return null;
+  try {
+    const url = new URL(`/public/calendar/booking/${encodeURIComponent(token)}/embed-origin`, apiUrl);
+    const response = await fetch(url, {
+      cache: "no-store",
+      redirect: "error",
+      signal: AbortSignal.timeout(3000),
+    });
+    if (!response.ok) return null;
+    const payload: unknown = await response.json();
+    if (!payload || typeof payload !== "object" || !("data" in payload)) return null;
+    const data = payload.data;
+    if (!data || typeof data !== "object" || !("allowedOrigin" in data)) return null;
+    return validFrameAncestor(data.allowedOrigin);
+  } catch {
+    return null;
+  }
 }
 
 const PROTECTED_ROUTES = [
@@ -140,6 +174,11 @@ function matchesRoute(pathname: string, route: string): boolean {
 
 function matchesAny(pathname: string, routes: string[]): boolean {
   return routes.some((route) => matchesRoute(pathname, route));
+}
+
+function isPublicCalendarPage(pathname: string): boolean {
+  return /^\/calendar\/(?:book|polls)\/[^/]+\/?$/.test(pathname) ||
+    /^\/calendar\/invitations\/(?:rsvp|join)\/?$/.test(pathname);
 }
 
 function isBlogAdminPath(pathname: string): boolean {
@@ -203,21 +242,24 @@ export async function proxy(req: NextRequest) {
 
   if (pathname.startsWith("/api/")) return NextResponse.next();
 
+  const publicCalendarPage = isPublicCalendarPage(pathname);
   const secret = process.env.NEXTAUTH_SECRET;
   let token: JWT | null = null;
-  for (const cookieName of sessionCookieBases()) {
-    token = await getToken({
-      req,
-      secret,
-      cookieName,
-      salt: cookieName,
-      secureCookie: cookieName.startsWith("__Secure-"),
-    });
-    if (token) break;
+  if (!publicCalendarPage) {
+    for (const cookieName of sessionCookieBases()) {
+      token = await getToken({
+        req,
+        secret,
+        cookieName,
+        salt: cookieName,
+        secureCookie: cookieName.startsWith("__Secure-"),
+      });
+      if (token) break;
+    }
   }
 
   const isProtected =
-    matchesAny(pathname, PROTECTED_ROUTES) || isBlogAdminPath(pathname);
+    (matchesAny(pathname, PROTECTED_ROUTES) && !publicCalendarPage) || isBlogAdminPath(pathname);
 
   if (!token && isProtected) {
     const hasSessionCookie = req.cookies
@@ -270,10 +312,15 @@ export async function proxy(req: NextRequest) {
   const response = NextResponse.next({
     request: { headers: requestHeaders },
   });
+  const bookingMatch = /^\/calendar\/book\/([^/]+)\/?$/.exec(pathname);
+  const frameAncestor = bookingMatch
+    ? await bookingFrameAncestor(bookingMatch[1])
+    : null;
   response.headers.set(
     "Content-Security-Policy",
-    buildCsp(nonce, process.env.NEXT_PUBLIC_API_URL),
+    buildCsp(nonce, process.env.NEXT_PUBLIC_API_URL, frameAncestor ?? undefined),
   );
+  if (!frameAncestor) response.headers.set("X-Frame-Options", "DENY");
   return response;
 }
 

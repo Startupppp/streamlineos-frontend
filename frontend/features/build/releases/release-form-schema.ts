@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 const MEANINGFUL_TEXT_RE = /[a-zA-Z0-9À-ɏЀ-ӿ一-鿿]/;
-const VERSION_RE = /^v?\d+(\.\d+)*(-[\w.]+)?(\+[\w.]+)?$|^\d{4}\.\d{2}(\.\d+)?$/;
+const VERSION_RE = /^v?\d+(\.\d+){1,2}(-[\w.]+)?(\+[\w.]+)?$|^\d{4}\.\d{2}(\.\d+)?$/;
 
 export const releaseFormSchema = z.object({
   name: z
@@ -16,7 +16,7 @@ export const releaseFormSchema = z.object({
     .min(1, "Version is required")
     .trim()
     .max(30, "Version must be 30 characters or fewer")
-    .refine((v) => VERSION_RE.test(v.trim()), "Enter a valid version, e.g. 1.4.0 or v2.0.0-beta"),
+    .refine((v) => VERSION_RE.test(v.trim()), "Enter a valid version, e.g. 1.0, 1.4.0 or v2.0.0-beta"),
   description: z
     .string()
     .nullable()

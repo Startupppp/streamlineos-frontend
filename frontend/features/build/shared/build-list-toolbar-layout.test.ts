@@ -187,4 +187,14 @@ describe("toolbar viewport visibility", () => {
     expect(toolbarDrawerVisibility(4, true, 7, discovery)).toBe("");
     expect(toolbarMoreButtonClass(7, true, discovery)).toBe("inline-flex shrink-0");
   });
+
+  it("parks every select in Filters on a large screen when desktop shows none", () => {
+    const projects = { mobile: 2, tablet: 2, desktop: 0 };
+    expect(toolbarInlineVisibility(0, false, 8, projects)).toBe("lg:hidden");
+    expect(toolbarInlineVisibility(1, false, 8, projects)).toBe("lg:hidden");
+    expect(toolbarInlineVisibility(2, true, 8, projects)).toBe("hidden");
+    expect(toolbarDrawerVisibility(0, false, 8, projects)).toBe("max-lg:hidden");
+    expect(toolbarDrawerVisibility(2, true, 8, projects)).toBe("");
+    expect(toolbarMoreButtonClass(8, true, projects)).toBe("inline-flex shrink-0");
+  });
 });

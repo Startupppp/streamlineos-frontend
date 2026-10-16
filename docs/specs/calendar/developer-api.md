@@ -38,7 +38,7 @@ Query fields are `limit` and optional `cursor`. Records omit guest identity, int
 
 Required scope: `calendar:bookings:write`. `Idempotency-Key` is mandatory.
 
-The body supplies an active `bookingToken`, its secure `sessionToken`, `start`, `expectedRuleVersion`, guest fields, allowed intake values, optional routing context, and consent state. The token must belong to the credential tenant and the rule version is checked before capacity is held. The API acquires a durable hold and confirms it through the same availability, capacity, resource, routing, invitation, payment, and booking commit rules as the public journey. Reusing a key with the same request replays its response. Reusing it with a different request returns `422`; an in-flight duplicate returns `409`.
+The body supplies an active `bookingToken`, its secure `sessionToken`, `start`, `expectedRuleVersion`, guest fields, allowed intake values, optional routing context, and consent state. The token must belong to the credential tenant and the rule version is checked before capacity is held. The API acquires a durable hold and confirms it through the same availability, capacity, resource, routing, invitation, and booking commit rules as the public journey. When the booking rule has an active payment policy, this endpoint rejects confirmation; the client must complete the public payment prepare and confirm flow with a captured payment. Reusing a key with the same request replays its response. Reusing it with a different request returns `422`; an in-flight duplicate returns `409`.
 
 ### Lifecycle and deletion
 

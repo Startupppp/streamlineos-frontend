@@ -1,8 +1,9 @@
-import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { CONTENT_PANEL_SOLID, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { cn } from "@/lib/utils";
+import { MANAGED_PRODUCT_ROUTE_TITLES } from "../managed-product-route-title";
+import { ManagedProductLoadingPageWrapper } from "../managed-product-route-loading";
 import {
   MANAGED_PRODUCT_DETAIL_CONTENT_CLASS,
   ManagedProductDetailShell,
@@ -25,28 +26,32 @@ function PanelHeader() {
 
 export function ProductReleasesSkeleton() {
   return (
-    <div className="flex flex-col gap-4" aria-hidden="true">
+    <div className="flex min-h-0 flex-1 flex-col gap-4" aria-hidden="true" data-testid="product-releases-skeleton">
       <StatCardGridSkeleton cols={4} count={4} />
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-5">
-        <div className={cn(CONTENT_PANEL_SOLID, "overflow-hidden lg:col-span-2")}>
+      <div className="grid min-h-0 flex-1 grid-cols-1 items-stretch gap-4 lg:grid-cols-5">
+        <div className={cn(CONTENT_PANEL_SOLID, "flex h-full min-h-0 flex-col overflow-hidden lg:col-span-2")}>
           <PanelHeader />
-          <div className="flex flex-col divide-y divide-border">
+          <div className="flex min-h-0 flex-1 flex-col divide-y divide-border">
             {UPCOMING_ROWS.map((key) => (
               <div key={key} className="flex items-center justify-between gap-3 px-4 py-3">
                 <div className="flex min-w-0 flex-1 flex-col gap-2">
                   <Skeleton className="h-4 w-3/5" />
                   <Skeleton className="h-3 w-2/5" />
                 </div>
-                <Skeleton className="h-8 w-28 rounded-md" />
+                <Skeleton className="size-8 rounded-md" data-slot="release-action-skeleton" />
               </div>
             ))}
           </div>
         </div>
-        <div className={cn(CONTENT_PANEL_SOLID, "overflow-hidden lg:col-span-3")}>
+        <div className={cn(CONTENT_PANEL_SOLID, "flex h-full min-h-0 flex-col overflow-hidden lg:col-span-3")}>
           <PanelHeader />
-          <div className="flex flex-col gap-5 px-4 py-4">
+          <div className="flex min-h-0 flex-1 flex-col gap-2 p-2">
             {SHIPPED_ROWS.map((key) => (
-              <div key={key} className="flex gap-3">
+              <div
+                key={key}
+                data-slot="shipped-release-card-skeleton"
+                className="flex gap-2.5 rounded-lg border border-border bg-muted/20 p-3 shadow-xs dark:border-background dark:bg-muted/40"
+              >
                 <Skeleton className="h-3 w-20 shrink-0" />
                 <Skeleton className="mt-1 size-2.5 shrink-0 rounded-full" />
                 <div className="flex min-w-0 flex-1 flex-col gap-2">
@@ -64,8 +69,8 @@ export function ProductReleasesSkeleton() {
 
 export function ProductReleasesRouteLoading() {
   return (
-    <PageWrapper
-      title="Releases"
+    <ManagedProductLoadingPageWrapper
+      title={MANAGED_PRODUCT_ROUTE_TITLES.releases}
       subtitle={<Skeleton className="h-4 w-40" />}
       contentClassName={MANAGED_PRODUCT_DETAIL_CONTENT_CLASS}
       actions={<Skeleton className="h-9 w-32 rounded-md" />}
@@ -78,6 +83,6 @@ export function ProductReleasesRouteLoading() {
       <ManagedProductDetailShell>
         <ProductReleasesSkeleton />
       </ManagedProductDetailShell>
-    </PageWrapper>
+    </ManagedProductLoadingPageWrapper>
   );
 }

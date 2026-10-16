@@ -32,13 +32,15 @@ import { PageRecordLinks } from "./page-record-links";
 import { PageDocumentBreadcrumb } from "./page-document-breadcrumb";
 import { PageDocumentToolbar } from "./page-document-toolbar";
 import { KNOWLEDGE_BASE } from "@/lib/knowledge-routes";
+import type { PageSaveState } from "./use-page-autosave";
 
 interface PageDocumentHeaderProps {
   page: KbPageDetail;
   pageId: number;
-  saveState: "idle" | "pending" | "saving" | "saved";
+  saveState: PageSaveState;
   savedAt?: Date | null;
   isOffline?: boolean;
+  onRetrySave?: () => void;
   isEditable: boolean;
   onNavigate: (pageId: number) => void;
   currentContent?: string;
@@ -54,6 +56,7 @@ export default function PageDocumentHeader({
   saveState,
   savedAt,
   isOffline,
+  onRetrySave,
   isEditable,
   onNavigate,
   currentContent,
@@ -161,6 +164,7 @@ export default function PageDocumentHeader({
           saveState={saveState}
           savedAt={savedAt}
           isOffline={isOffline}
+          onRetrySave={onRetrySave}
           projectId={projectId}
         />
         <PageDocumentToolbar

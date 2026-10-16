@@ -1,4 +1,5 @@
 import { allowOfflineCalendarPolicy, clearOfflineCalendarSnapshot, offlineCalendarIdentityIsCurrent, readOfflineCalendarSnapshot, revokeOfflineCalendarPolicy, saveOfflineCalendarSnapshot, subscribeOfflineCalendarClear } from "./calendar-offline-cache";
+import type { CalendarEventsResponse } from "@/hooks/api/calendar-types";
 
 function fakeIndexedDb() {
   const opens: Array<{ result: unknown; onsuccess?: () => void }> = [];
@@ -56,7 +57,7 @@ function save() {
   allowOfflineCalendarPolicy("org-1:user-1", 1);
   return saveOfflineCalendarSnapshot("org-1:user-1", new Date("2026-10-13T09:00:00.000Z"), new Date("2026-10-13T10:00:00.000Z"), {
     events: [], coverageState: "complete", coverage: [],
-  } as never, { version: 1, maxAgeDays: 1 });
+  } as never, { version: 1, maxAgeDays: 1 }, "Asia/Kolkata", Date.now());
 }
 
 describe("Calendar offline cache identity", () => {
@@ -108,7 +109,7 @@ describe("Calendar offline cache identity", () => {
 
   it("notifies an open panel as soon as another tab changes identity", () => {
     const onClear = jest.fn();
-    const unsubscribe = subscribeOfflineCalendarClear(onClear);
+    const unsubscribe = subscribeOfflineCalendarClear(onClear, "org-1:user-1");
     window.dispatchEvent(new StorageEvent("storage", {
       key: "streamline-calendar-offline-identity",
       oldValue: "org-1:user-1",
@@ -120,7 +121,7 @@ describe("Calendar offline cache identity", () => {
 
   it("removes the current tab marker after a matching policy revocation event", () => {
     const onClear = jest.fn();
-    const unsubscribe = subscribeOfflineCalendarClear(onClear);
+    const unsubscribe = subscribeOfflineCalendarClear(onClear, "org-1:user-1");
     sessionStorage.setItem("streamline-calendar-offline-session-identity", "org-1:user-1");
     window.dispatchEvent(new StorageEvent("storage", {
       key: "streamline-calendar-offline-policy-revocation:org-2:user-1",
@@ -134,7 +135,34 @@ describe("Calendar offline cache identity", () => {
       newValue: '{"version":2,"enabled":false}',
     }));
     expect(sessionStorage.getItem("streamline-calendar-offline-session-identity")).toBeNull();
-    expect(onClear).toHaveBeenCalledTimes(2);
+    expect(onClear).toHaveBeenCalledTimes(1);
+    unsubscribe();
+  });
+
+  it("notifies the current tab immediately when its policy is revoked", () => {
+    const current = jest.fn();
+    const other = jest.fn();
+    const unsubscribeCurrent = subscribeOfflineCalendarClear(current, "org-1:user-1");
+    const unsubscribeOther = subscribeOfflineCalendarClear(other, "org-2:user-1");
+    sessionStorage.setItem("streamline-calendar-offline-session-identity", "org-1:user-1");
+    localStorage.setItem("streamline-calendar-offline-identity", "org-1:user-1");
+    allowOfflineCalendarPolicy("org-1:user-1", 1);
+    revokeOfflineCalendarPolicy("org-1:user-1", 2);
+    expect(current).toHaveBeenCalledTimes(1);
+    expect(other).not.toHaveBeenCalled();
+    expect(offlineCalendarIdentityIsCurrent("org-1:user-1")).toBe(false);
+    unsubscribeCurrent();
+    unsubscribeOther();
+  });
+
+  it("notifies the current tab before its IndexedDB snapshot is deleted", async () => {
+    const db = fakeIndexedDb();
+    const onClear = jest.fn();
+    const unsubscribe = subscribeOfflineCalendarClear(onClear, "org-1:user-1");
+    const pending = clearOfflineCalendarSnapshot();
+    expect(onClear).toHaveBeenCalledTimes(1);
+    db.openNext();
+    await pending;
     unsubscribe();
   });
 
@@ -145,7 +173,7 @@ describe("Calendar offline cache identity", () => {
     const pending = save();
     db.openNext();
     await pending;
-    expect(db.puts).toEqual([expect.objectContaining({ identity: "org-1:user-1" })]);
+    expect(db.puts).toEqual([expect.objectContaining({ identity: "org-1:user-1", timeZone: "Asia/Kolkata" })]);
   });
 
   it("marks offline coverage partial when the busy-window cache limit is reached", async () => {
@@ -154,18 +182,65 @@ describe("Calendar offline cache identity", () => {
     localStorage.setItem("streamline-calendar-offline-identity", "org-1:user-1");
     allowOfflineCalendarPolicy("org-1:user-1", 1);
     const pending = saveOfflineCalendarSnapshot("org-1:user-1", new Date("2026-10-13T09:00:00.000Z"), new Date("2026-10-13T10:00:00.000Z"), {
-      events: Array.from({ length: 2001 }, () => ({ start: "2026-10-13T09:00:00.000Z", end: "2026-10-13T09:01:00.000Z", allDay: false, availability: "busy" })),
+      events: Array.from({ length: 2001 }, () => ({ start: "2026-10-13T09:00:00.000Z", end: "2026-10-13T09:01:00.000Z", allDay: false, availability: "busy", sourceKey: "native", freshness: { state: "fresh", asOf: "2026-10-13T08:00:00.000Z" } })),
       coverageState: "complete",
       coverage: [{ sourceKey: "native", state: "complete" }],
-    } as never, { version: 1, maxAgeDays: 1 });
+    } as never, { version: 1, maxAgeDays: 1 }, "Asia/Kolkata", Date.now());
     db.openNext();
     await pending;
     expect(db.puts).toEqual([expect.objectContaining({
       coverage: "partial",
-      sources: [{ sourceKey: "native", state: "partial" }],
+      sources: [{ sourceKey: "native", state: "partial", asOf: "2026-10-13T08:00:00.000Z" }],
       windows: expect.arrayContaining([expect.objectContaining({ availability: "busy" })]),
     })]);
     expect((db.puts[0] as { windows: unknown[] }).windows).toHaveLength(2000);
+  });
+
+  it("does not report complete offline coverage when the server truncated a source", async () => {
+    const db = fakeIndexedDb();
+    sessionStorage.setItem("streamline-calendar-offline-session-identity", "org-1:user-1");
+    localStorage.setItem("streamline-calendar-offline-identity", "org-1:user-1");
+    allowOfflineCalendarPolicy("org-1:user-1", 1);
+    const pending = saveOfflineCalendarSnapshot("org-1:user-1", new Date("2026-10-13T09:00:00.000Z"), new Date("2026-10-13T10:00:00.000Z"), {
+      events: [], failures: [], truncated: true, coverageState: "complete",
+      coverage: [{ sourceKey: "external:outlook:1", state: "complete", nextCursor: null }],
+    }, { version: 1, maxAgeDays: 1 }, "Asia/Kolkata", Date.now());
+    db.openNext();
+    await pending;
+    expect(db.puts).toEqual([expect.objectContaining({
+      coverage: "partial",
+      sources: [{ sourceKey: "external:outlook:1", state: "partial", asOf: expect.any(String) }],
+    })]);
+  });
+
+  it("keeps the successful fetch time and each source's evidence age", async () => {
+    const db = fakeIndexedDb();
+    sessionStorage.setItem("streamline-calendar-offline-session-identity", "org-1:user-1");
+    localStorage.setItem("streamline-calendar-offline-identity", "org-1:user-1");
+    allowOfflineCalendarPolicy("org-1:user-1", 1);
+    const fetchedAt = Date.now() - 2 * 3_600_000;
+    const sourceAsOf = new Date(fetchedAt - 3_600_000).toISOString();
+    const result: CalendarEventsResponse = {
+      events: [{
+        id: "event-1", title: "Busy", start: "2026-10-13T09:00:00.000Z", end: "2026-10-13T10:00:00.000Z",
+        category: "event", source: "event", sourceKey: "native", sourceRecordId: "1", occurrenceId: "event-1", status: "confirmed",
+        timeKind: "timed", time: { kind: "timed", start: "2026-10-13T09:00:00.000Z", end: "2026-10-13T10:00:00.000Z", timezone: "Asia/Kolkata" },
+        availability: "busy", sourceVersion: "1", actions: { view: true, edit: false, delete: false, rsvp: false, complete: false },
+        freshness: { state: "stale", asOf: sourceAsOf },
+      }],
+      failures: [], truncated: false, coverageState: "partial",
+      coverage: [{ sourceKey: "native", state: "partial", nextCursor: null }, { sourceKey: "external:outlook:1", state: "failed", nextCursor: null }],
+    };
+    const pending = saveOfflineCalendarSnapshot("org-1:user-1", new Date("2026-10-13T09:00:00.000Z"), new Date("2026-10-13T10:00:00.000Z"), result, { version: 1, maxAgeDays: 1 }, "Asia/Kolkata", fetchedAt);
+    db.openNext();
+    await pending;
+    expect(db.puts).toEqual([expect.objectContaining({
+      fetchedAt,
+      sources: [
+        { sourceKey: "native", state: "partial", asOf: sourceAsOf },
+        { sourceKey: "external:outlook:1", state: "failed", asOf: null },
+      ],
+    })]);
   });
 
   it("rejects a stale enabled policy after another tab disables caching", async () => {
@@ -199,6 +274,16 @@ describe("Calendar offline cache identity", () => {
     expect(allowOfflineCalendarPolicy("org-1:user-1", 3)).toBe(false);
     expect(allowOfflineCalendarPolicy("org-2:user-1", 3)).toBe(true);
     expect(allowOfflineCalendarPolicy("org-1:user-1", 3)).toBe(false);
+  });
+
+  it("keeps another account's active markers when a policy is revoked", () => {
+    sessionStorage.setItem("streamline-calendar-offline-session-identity", "org-2:user-1");
+    localStorage.setItem("streamline-calendar-offline-identity", "org-2:user-1");
+    allowOfflineCalendarPolicy("org-2:user-1", 3);
+    revokeOfflineCalendarPolicy("org-1:user-1", 4);
+    expect(offlineCalendarIdentityIsCurrent("org-2:user-1")).toBe(true);
+    expect(sessionStorage.getItem("streamline-calendar-offline-session-identity")).toBe("org-2:user-1");
+    expect(localStorage.getItem("streamline-calendar-offline-identity")).toBe("org-2:user-1");
   });
 
   it("requires the active account and its enabled policy before rendering", () => {

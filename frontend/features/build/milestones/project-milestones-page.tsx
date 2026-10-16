@@ -30,7 +30,8 @@ import {
 } from "@/hooks/api/build/milestones";
 import { useCan } from "@/hooks/api/access";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
-import { useMemberDirectory } from "@/hooks/api/members/use-member-directory";
+import { useBuildMembers } from "@/hooks/api/build/build-members";
+import { useOrgMembersByIds } from "@/hooks/api/organization";
 import { getUserDisplayName } from "@/lib/person-display";
 import { MilestoneUpsertSheet } from "@/features/build/milestones/milestone-upsert-sheet";
 import { MilestoneCard } from "@/features/build/milestones/milestone-card";
@@ -85,18 +86,24 @@ export function ProjectMilestonesPage({
   const pager = useBuildCursorPager(listFilters.resetKey);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const isOnline = useOnlineStatus();
-  const { members } = useMemberDirectory({ kind: "build" });
+  const { data: buildMembersPage } = useBuildMembers({ limit: 100 });
+  const buildMembers = useMemo(() => buildMembersPage?.data ?? [], [buildMembersPage]);
+  const { data: orgMembersPage } = useOrgMembersByIds(buildMembers.map((member) => member.id));
+  const membershipByUserId = useMemo(
+    () => new Map((orgMembersPage?.data ?? []).map((member) => [member.userId, member])),
+    [orgMembersPage],
+  );
   const ownerOptions = useMemo(
     () => [
       { value: BUILD_FILTER_ALL, label: "Any owner" },
-      ...members
-        .filter((m) => m.membershipId !== null)
-        .map((m) => ({
-          value: String(m.membershipId),
-          label: getUserDisplayName(m),
+      ...buildMembers
+        .filter((member) => membershipByUserId.has(member.id))
+        .map((member) => ({
+          value: String(member.membershipId),
+          label: getUserDisplayName(member),
         })),
     ],
-    [members],
+    [buildMembers, membershipByUserId],
   );
 
   const statusFilterValue = listFilters.value("status");
@@ -300,7 +307,7 @@ export function ProjectMilestonesPage({
                     <MilestoneCard
                       key={m.id}
                       milestone={m}
-                      onEdit={actions.handleEditTarget}
+                      onEdit={canManage ? actions.handleEditTarget : undefined}
                       onDelete={
                         canManage ? actions.handleDeleteTarget : undefined
                       }

@@ -5,6 +5,8 @@ import { format } from "date-fns";
 import { AlertTriangle, Clock } from "lucide-react";
 import { WidgetCard } from "@/components/ui/widget-card";
 import { useHrAttendanceStatus } from "@/hooks/api/hr";
+import { useOrgTimeZone } from "@/hooks/api/org-display";
+import { todayInOrgTz, hoursInOrgTz } from "@/lib/date-utils";
 import dynamic from "next/dynamic";
 
 const AttendanceRegularizationDialog = dynamic(
@@ -33,22 +35,23 @@ const MISSING_PUNCH_HOUR_CUTOFF = 11;
 
 export function MyAttendanceWidget() {
   const { data, isLoading, error, refetch } = useHrAttendanceStatus();
+  const orgTz = useOrgTimeZone();
   const handleRetry = () => void refetch();
 
   const missingPunchWarning = useMemo(() => {
     if (!data) return null;
-    const today = format(new Date(), "yyyy-MM-dd");
+    const today = todayInOrgTz(orgTz);
     const missedCheckout = data.logs.find(
       (log) => log.date !== today && log.checkIn && !log.checkOut,
     );
     if (missedCheckout) {
       return `Forgot to check out on ${format(new Date(missedCheckout.date), "MMM d")}`;
     }
-    if (data.status === "OFFLINE" && new Date().getHours() >= MISSING_PUNCH_HOUR_CUTOFF) {
+    if (data.status === "OFFLINE" && hoursInOrgTz(new Date(), orgTz) >= MISSING_PUNCH_HOUR_CUTOFF) {
       return "You haven't clocked in today";
     }
     return null;
-  }, [data]);
+  }, [data, orgTz]);
 
   return (
     <WidgetCard

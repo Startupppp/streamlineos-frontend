@@ -13,6 +13,7 @@ export function mapBoardTicketToKanban(t: Ticket): KanbanTicket {
     timeSpent: t.timeSpent ?? undefined,
     ticketNumber: t.ticketNumber,
     rank: t.rank ?? undefined,
+    parentTicketId: t.parentTicketId ?? null,
     epicId: t.epicId ?? undefined,
     assigneeId: t.assigneeId ?? undefined,
     version: t.version,

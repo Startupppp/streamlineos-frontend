@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useEffect, useCallback, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
@@ -18,6 +18,8 @@ import {
 import { expenseFormSchema, type ExpenseFormData } from "./expense-form-schema";
 import { ExpenseFormFields } from "./expense-form-fields";
 import { type PendingReceipt } from "./receipt-manager";
+import { useSubmitGuard } from "@/hooks/common/use-submit-guard";
+import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
 
 type FormData = ExpenseFormData;
 
@@ -63,7 +65,6 @@ export function CreateExpenseDialog({
   editExpense,
   selfService = false,
 }: CreateExpenseDialogProps) {
-  const [isLoading, setIsLoading] = useState(false);
   const [existingReceipts, setExistingReceipts] = useState<ExpenseReceipt[]>([]);
   const [pendingReceipts, setPendingReceipts] = useState<PendingReceipt[]>([]);
   const [uploading, setUploading] = useState(false);
@@ -71,6 +72,7 @@ export function CreateExpenseDialog({
   const createExpenseMutation = useCreateExpense();
   const updateExpenseMutation = useUpdateExpense({ selfService });
   const uploadFileMutation = useUploadFile();
+  const idempotent = useIdempotentOperation();
   const isEditMode = !!editExpense;
 
   const initialCategory = resolveSelectableLabel(editExpense?.category, categories);
@@ -81,7 +83,7 @@ export function CreateExpenseDialog({
     defaultValues: {
       category: initialCategory.selected,
       customCategory: initialCategory.custom,
-      amount: editExpense ? Number(editExpense.amount) : 0,
+      amount: editExpense ? String(editExpense.amount) : "",
       description: editExpense?.description || "",
       merchant: editExpense?.merchant || "",
       paymentMethod: initialPayment.selected,
@@ -113,7 +115,7 @@ export function CreateExpenseDialog({
       form.reset({
         category: cat.selected,
         customCategory: cat.custom,
-        amount: editExpense ? Number(editExpense.amount) : 0,
+        amount: editExpense ? String(editExpense.amount) : "",
         description: editExpense?.description || "",
         merchant: editExpense?.merchant || "",
         paymentMethod: pay.selected,
@@ -163,9 +165,8 @@ export function CreateExpenseDialog({
 
   const onSubmit = useCallback(
     async (data: FormData) => {
-      setIsLoading(true);
+      setUploading(true);
       try {
-        setUploading(true);
         const uploaded: ExpenseReceipt[] = [];
         for (const pending of pendingReceipts) {
           const url = await uploadFile(pending.file);
@@ -193,7 +194,7 @@ export function CreateExpenseDialog({
 
         const expenseData = {
           category: categoryRaw,
-          amount: data.amount,
+          amount: Number(data.amount),
           description: data.description?.trim()
             ? capitalize(data.description.trim())
             : isEditMode
@@ -213,9 +214,13 @@ export function CreateExpenseDialog({
         if (isEditMode && editExpense) {
           await updateExpenseMutation.mutateAsync({ expenseId: editExpense.id, ...expenseData });
         } else {
-          await createExpenseMutation.mutateAsync(expenseData);
+          await createExpenseMutation.mutateAsync({
+            body: expenseData,
+            config: idempotent.configFor(expenseData),
+          });
+          idempotent.settle();
         }
-        toast.success(isEditMode ? "Expense updated successfully" : "Expense submitted successfully");
+        toast.success(isEditMode ? "Expense updated" : "Expense submitted");
         form.reset();
         setExistingReceipts([]);
         clearPendingReceipts();
@@ -224,7 +229,6 @@ export function CreateExpenseDialog({
         toast.error(getErrorMessage(error));
       } finally {
         setUploading(false);
-        setIsLoading(false);
       }
     },
     [
@@ -238,8 +242,11 @@ export function CreateExpenseDialog({
       updateExpenseMutation,
       uploadFile,
       clearPendingReceipts,
+      idempotent,
     ],
   );
+
+  const guard = useSubmitGuard(onSubmit);
 
   return (
     <HrSheet
@@ -247,9 +254,9 @@ export function CreateExpenseDialog({
       onOpenChange={onOpenChange}
       title={isEditMode ? "Edit Expense Claim" : "New Expense Claim"}
       description="Submit an expense for reimbursement"
-      onSubmit={form.handleSubmit(onSubmit)}
+      onSubmit={form.handleSubmit(guard.submit)}
       submitLabel={isEditMode ? "Update Expense" : "Submit Expense"}
-      isPending={isLoading || uploading || createExpenseMutation.isPending || updateExpenseMutation.isPending}
+      isPending={guard.isSubmitting || uploading || createExpenseMutation.isPending || updateExpenseMutation.isPending}
     >
       <ExpenseFormFields
         form={form}

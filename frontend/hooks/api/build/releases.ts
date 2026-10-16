@@ -79,7 +79,12 @@ export function useCreateRelease(projectId: number) {
     mutationKey: ["projects", projectId, "releases", "create"],
     mutationFn: (data: CreateReleaseInput) =>
       apiClient.post(`/build/${projectId}/releases`, data, undefined, projectReleaseRowContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: releaseBaseKey(projectId) }),
+    onSuccess: (created) => {
+      qc.setQueriesData<ReleasePage>(
+        { queryKey: releaseBaseKey(projectId) },
+        (old) => old ? { ...old, data: [{ ...created, createdByUser: null }, ...old.data] } : old,
+      );
+    },
   });
 }
 
@@ -89,7 +94,12 @@ export function useUpdateRelease(projectId: number) {
     mutationKey: ["projects", projectId, "releases", "update"],
     mutationFn: ({ releaseId, ...data }: UpdateReleaseInput) =>
       apiClient.patch(`/build/${projectId}/releases/${releaseId}`, data, undefined, projectReleaseRowContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: releaseBaseKey(projectId) }),
+    onSuccess: (updated) => {
+      qc.setQueriesData<ReleasePage>(
+        { queryKey: releaseBaseKey(projectId) },
+        (old) => old ? { ...old, data: old.data.map((r) => r.id === updated.id ? { ...r, ...updated } : r) } : old,
+      );
+    },
   });
 }
 
@@ -99,6 +109,11 @@ export function useDeleteRelease(projectId: number) {
     mutationKey: ["projects", projectId, "releases", "delete"],
     mutationFn: (releaseId: number) =>
       apiClient.delete<void>(`/build/${projectId}/releases/${releaseId}`, undefined, undefined, noContentContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: releaseBaseKey(projectId) }),
+    onSuccess: (_, releaseId) => {
+      qc.setQueriesData<ReleasePage>(
+        { queryKey: releaseBaseKey(projectId) },
+        (old) => old ? { ...old, data: old.data.filter((r) => r.id !== releaseId) } : old,
+      );
+    },
   });
 }

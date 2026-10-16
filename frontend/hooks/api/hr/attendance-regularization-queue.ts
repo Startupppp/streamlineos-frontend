@@ -72,7 +72,9 @@ export function useHrRegularizationQueue(
 export interface RegularizationApplyResult {
   success: true;
   monthKey: string;
-  payrollInputRebuild: boolean;
+  payrollInputRebuild:
+    | { rebuilt: boolean; periodId: number | null; status: string | null }
+    | boolean;
 }
 
 export function useApplyRegularization() {

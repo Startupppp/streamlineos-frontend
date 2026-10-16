@@ -27,6 +27,9 @@ const ORPHAN_ROLE_SELECTOR =
 
 const SCROLLABLE_REGION_SELECTOR = ".rbc-time-content";
 
+/** Time portion only. Opens day and week grids on the workday instead of midnight. */
+const WORKDAY_SCROLL_TIME = new Date(1970, 0, 1, 8, 0, 0);
+
 function normaliseVendorAccessibility(root: HTMLElement | null): void {
   if (!root) return;
   for (const node of root.querySelectorAll(ORPHAN_ROLE_SELECTOR))
@@ -134,7 +137,7 @@ export function BigCalendarWrapper({
         eventPropGetter={eventPropGetter as EventPropGetter<object>}
         components={components}
         toolbar={false}
-        scrollToTime={scrollToTime}
+        scrollToTime={scrollToTime ?? WORKDAY_SCROLL_TIME}
         enableAutoScroll={enableAutoScroll}
         style={calendarStyle}
       />

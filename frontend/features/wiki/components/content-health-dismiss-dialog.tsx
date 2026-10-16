@@ -68,7 +68,9 @@ export function ContentHealthDismissDialog({
         pageId,
         kind,
         reason: values.reason,
-        dismissalExpiresAt: values.dismissalExpiresAt || undefined,
+        dismissalExpiresAt: values.dismissalExpiresAt
+          ? new Date(values.dismissalExpiresAt).toISOString()
+          : undefined,
       });
       toast.success("Signal dismissed");
       handleOpenChange(false);

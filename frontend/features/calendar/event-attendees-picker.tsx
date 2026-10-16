@@ -2,11 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import {
-  MemberMultiSelect,
-  type SelectableMember,
-} from "@/components/members/member-multi-select";
+import { MemberPicker } from "@/components/members/member-picker";
+import type { MemberOption } from "@/components/members/member-picker-options";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import {
   useCalendarMemberLookup,
@@ -24,6 +21,22 @@ interface EventAttendeesPickerProps {
   onToggle: (id: string) => void;
 }
 
+function toOption(member: PickerMember): MemberOption {
+  return {
+    id: member.id,
+    email: member.email,
+    image: member.image,
+    name: member.name,
+    firstName: member.firstName,
+    lastName: member.lastName,
+  };
+}
+
+function matchesQuery(member: PickerMember, query: string): boolean {
+  const name = `${member.name ?? ""} ${member.firstName ?? ""} ${member.lastName ?? ""}`;
+  return name.toLowerCase().includes(query) || member.email.toLowerCase().includes(query);
+}
+
 export function EventAttendeesPicker({
   members,
   selectedIds,
@@ -31,48 +44,48 @@ export function EventAttendeesPicker({
 }: EventAttendeesPickerProps) {
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebouncedValue(search, 300);
-  const hasSearch = debouncedSearch.trim().length > 0;
+  const query = debouncedSearch.trim().toLowerCase();
+  const typed = search.trim().toLowerCase();
 
-  const { data: searchResults = [], isFetching } = useCalendarMemberLookup({
-    search: debouncedSearch,
-    enabled: hasSearch,
+  const { data: searchResults = [] } = useCalendarMemberLookup({
+    search: debouncedSearch.trim(),
+    enabled: query.length > 0,
   });
 
   const knownById = useMemo(() => {
-    const map = new Map<string, SelectableMember>();
-    for (const m of members) map.set(m.id, m);
-    for (const m of searchResults) map.set(m.id, m);
+    const map = new Map<string, MemberOption>();
+    for (const member of members) map.set(member.id, toOption(member));
+    for (const member of searchResults) map.set(member.id, toOption(member));
     return map;
   }, [members, searchResults]);
 
-  const selectedMembers = useMemo(
-    () =>
-      selectedIds
-        .map((id) => knownById.get(id))
-        .filter((m): m is SelectableMember => m !== undefined),
-    [selectedIds, knownById],
-  );
-
-  const results: SelectableMember[] = hasSearch ? searchResults : members;
+  const candidates = useMemo(() => {
+    const map = new Map<string, MemberOption>();
+    const roster = typed ? members.filter((member) => matchesQuery(member, typed)) : members;
+    for (const member of roster) map.set(member.id, toOption(member));
+    if (typed && query === typed) {
+      for (const member of searchResults) {
+        if (matchesQuery(member, typed)) map.set(member.id, toOption(member));
+      }
+    }
+    for (const id of selectedIds) {
+      const known = knownById.get(id);
+      if (known && !map.has(id)) map.set(id, known);
+    }
+    return [...map.values()];
+  }, [members, typed, query, searchResults, selectedIds, knownById]);
 
   return (
     <div className="space-y-1.5">
-      <div className="flex items-center justify-between">
-        <Label className="text-xs font-medium">Attendees</Label>
-        {selectedIds.length > 0 && (
-          <Badge variant="secondary" className="text-dense">
-            {selectedIds.length} selected
-          </Badge>
-        )}
-      </div>
-      <MemberMultiSelect
-        results={results}
-        selectedMembers={selectedMembers}
-        selectedIds={selectedIds}
+      <Label className="text-xs font-medium">Attendees</Label>
+      <MemberPicker
+        mode="multi"
+        candidates={candidates}
+        values={selectedIds}
         onToggle={onToggle}
-        search={search}
         onSearchChange={setSearch}
-        isLoading={hasSearch && isFetching}
+        placeholder="Add attendees"
+        searchLabel="Search attendees"
       />
     </div>
   );

@@ -31,6 +31,7 @@ import {
   buildPersonColumns,
   personDisplayName,
 } from "./person-table-columns";
+import { PERSON_TABLE_HEADERS } from "./person-table-headers";
 import { PersonPeekDrawer } from "./person-peek-drawer";
 
 const PAGE_SIZE = 20;
@@ -180,7 +181,7 @@ export function PeopleDirectoryPage({
               description="Your access to the people directory was withdrawn. Nothing is missing from the directory itself."
             />
           ) : isLoading || peopleQuery.access.pending ? (
-            <DataTableSkeleton rows={12} columns={6} className="min-h-0 w-full flex-1" />
+            <DataTableSkeleton rows={12} headers={PERSON_TABLE_HEADERS} className="min-h-0 w-full flex-1" />
           ) : isError || peopleQuery.access.unavailable ? (
             <ErrorState className={cn(CONTENT_FILL_PANEL, PAGE_BODY_EMPTY_CLASS)} onRetry={handleRetry} />
           ) : rows.length === 0 ? (

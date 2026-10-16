@@ -54,7 +54,7 @@ interface OrgLocalizationSectionProps {
 function toLocalizationValues(org: OrgSettings): LocalizationValues {
   const extracted = extractLocalizationSettings(org.settings);
   return {
-    timezone: org.timezone ?? "Asia/Kolkata",
+    timezone: (org.timezone === "Asia/Calcutta" ? "Asia/Kolkata" : org.timezone) ?? "Asia/Kolkata",
     currency: toCurrencyCode(org.currency),
     fiscalYearStart: org.fiscalYearStart ?? 4,
     language: extracted.language,

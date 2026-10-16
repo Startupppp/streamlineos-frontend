@@ -15,6 +15,7 @@ import {
 interface TicketDetailActionsProps {
   onDelete: () => void;
   isDeleting: boolean;
+  subtaskCount?: number;
 }
 
 interface TicketDetailDeleteDialogProps {
@@ -22,6 +23,13 @@ interface TicketDetailDeleteDialogProps {
   onOpenChange: (open: boolean) => void;
   onDelete: () => void;
   isDeleting: boolean;
+  subtaskCount?: number;
+}
+
+export function deleteTicketWarning(subtaskCount = 0): string {
+  if (subtaskCount <= 0) return "This cannot be undone.";
+  const noun = subtaskCount === 1 ? "subtask" : "subtasks";
+  return `This ticket has ${subtaskCount} ${noun}. They will be kept without a parent. This cannot be undone.`;
 }
 
 export function TicketDetailDeleteDialog({
@@ -29,6 +37,7 @@ export function TicketDetailDeleteDialog({
   onOpenChange,
   onDelete,
   isDeleting,
+  subtaskCount,
 }: TicketDetailDeleteDialogProps) {
   function handleDeleteConfirm() {
     onDelete();
@@ -40,7 +49,7 @@ export function TicketDetailDeleteDialog({
       open={open}
       onOpenChange={onOpenChange}
       title="Delete Ticket"
-      description="This cannot be undone."
+      description={deleteTicketWarning(subtaskCount)}
       confirmLabel="Delete"
       destructive
       isPending={isDeleting}
@@ -49,7 +58,7 @@ export function TicketDetailDeleteDialog({
   );
 }
 
-export function TicketDetailActions({ onDelete, isDeleting }: TicketDetailActionsProps) {
+export function TicketDetailActions({ onDelete, isDeleting, subtaskCount }: TicketDetailActionsProps) {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const { iconRef, hoverHandlers } = useAnimatedIcon();
 
@@ -77,7 +86,7 @@ export function TicketDetailActions({ onDelete, isDeleting }: TicketDetailAction
       </PopoverTrigger>
       <PopoverContent className="w-64 p-3" align="end">
         <p className="mb-1 text-sm font-medium text-destructive">Delete Ticket</p>
-        <p className="mb-3 text-xs text-muted-foreground">This cannot be undone.</p>
+        <p className="mb-3 text-xs text-muted-foreground">{deleteTicketWarning(subtaskCount)}</p>
         <div className="flex justify-end gap-2">
           <Button variant="outline" size="sm" className="text-xs" onClick={handleCancelDelete}>
             Cancel

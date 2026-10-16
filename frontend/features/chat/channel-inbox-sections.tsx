@@ -219,7 +219,7 @@ export function ChannelInboxSections({
           compact
           illustrationPreset="mail"
           title="No conversations yet"
-          description="Start a direct message or create a channel to begin."
+          description="Start a message or channel."
           filtersActive={filtersActive}
           filteredTitle={inboxEmptyTitle(inboxFilter, Boolean(search))}
           onClearFilters={onClearFilters}

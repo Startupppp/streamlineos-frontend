@@ -14,13 +14,15 @@ describe("AccessDeniedPage", () => {
     expect(screen.getByRole("link", { name: /modules/i })).toBeInTheDocument();
   });
 
-  it("still lists a plain permission key when that is what was missing", async () => {
+  it("shows a human-readable label and puts the raw key behind a details toggle", async () => {
     render(
       await AccessDeniedPage({
         searchParams: Promise.resolve({ required: "hr:employees:view" }),
       }),
     );
-    expect(screen.getByText("hr:employees:view")).toBeInTheDocument();
+    expect(screen.getByText(/Hr › Employees › View/)).toBeInTheDocument();
+    const rawKey = screen.getByText("hr:employees:view");
+    expect(rawKey.closest("details")).not.toBeNull();
   });
 
   it("never echoes a required value the catalogue does not know, so the URL cannot put arbitrary text on the page", async () => {

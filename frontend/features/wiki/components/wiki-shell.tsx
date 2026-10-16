@@ -21,11 +21,17 @@ import {
 } from "@/lib/knowledge-routes";
 import { useHrKbLinkFlags } from "@/hooks/api/kb/hr-link-config";
 import { KbStarIcon } from "@/features/wiki/lib/kb-icons";
+import { Button } from "@/components/ui/button";
 
 export default function WikiShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { data: favorites = [] } = useKbPagesFavorites();
+  const {
+    data: favorites = [],
+    fetchNextPage: fetchNextFavorites,
+    hasNextPage: hasNextFavorites,
+    isFetchingNextPage: isFetchingNextFavorites,
+  } = useKbPagesFavorites();
   const createPage = useCreateKbPage();
   const canViewAnalytics = useCan("kb:analytics:view");
   const canViewReviews = useCan("kb:reviews:view");
@@ -108,6 +114,18 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
                     <TruncatedText text={`${page.icon ? `${page.icon} ` : ""}${page.title || "Untitled"}`} />
                   </Link>
                 ))}
+                {hasNextFavorites ? (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="w-full"
+                    onClick={() => void fetchNextFavorites()}
+                    disabled={isFetchingNextFavorites}
+                  >
+                    {isFetchingNextFavorites ? "Loading favorites..." : "Load more favorites"}
+                  </Button>
+                ) : null}
                 <Separator className="my-2" />
               </div>
             )}

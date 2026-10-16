@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useTicketDetail } from "./use-ticket-detail";
 import { StatusBadge } from "@/components/shared/ticket-status-badge";
 import { PriorityBadge } from "@/features/build/shared/priority-badge";
@@ -22,7 +23,16 @@ const TiptapEditorDynamic = dynamic(
     import("@/components/editor/tiptap-editor").then((m) => ({
       default: m.TiptapEditor,
     })),
-  { ssr: false },
+  {
+    ssr: false,
+    loading: () => (
+      <div className="space-y-2 pt-1">
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-5/6" />
+        <Skeleton className="h-4 w-4/6" />
+      </div>
+    ),
+  },
 );
 
 interface TicketDetailPaneProps {
@@ -81,7 +91,20 @@ export function TicketDetailPane({
         <div className="flex flex-1 flex-col overflow-hidden">
           <PageState
             resolution={pageState}
-            loading={null}
+            loading={
+              <div className="flex flex-col gap-3 p-4">
+                <div className="flex items-center gap-2">
+                  <Skeleton className="h-5 w-16 rounded-full" />
+                  <Skeleton className="h-5 w-12 rounded-full" />
+                </div>
+                <Skeleton className="h-5 w-3/4" />
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-2/3" />
+                </div>
+              </div>
+            }
             onRetry={refetchTicket}
           >
             {ticket ? (

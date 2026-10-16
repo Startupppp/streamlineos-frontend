@@ -47,12 +47,12 @@ const page = {
 
 function noop() {}
 
-function renderToolbar(overrides: Partial<KbPageDetail> = {}, onOpenLinkedRecords: () => void = noop) {
+function renderToolbar(overrides: Partial<KbPageDetail> = {}, onOpenLinkedRecords: () => void = noop, isEditable = true) {
   return render(
     <PageDocumentToolbar
       page={{ ...page, ...overrides }}
       pageId={5}
-      isEditable
+      isEditable={isEditable}
       onOpenMetaSheet={noop}
       onOpenComments={noop}
       onOpenHistory={noop}
@@ -147,6 +147,15 @@ describe("PageDocumentToolbar", () => {
     expect(screen.getByRole("menuitem", { name: /^move$/i })).toBeInTheDocument();
   });
 
+  it("shows only a copy link and hides Move when record editing is denied", async () => {
+    const user = userEvent.setup();
+    renderToolbar({ canEdit: false }, noop, false);
+
+    expect(screen.getByRole("button", { name: /copy link/i })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /share page/i })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "More options" }));
+    expect(screen.queryByRole("menuitem", { name: /^move$/i })).not.toBeInTheDocument();
+  });
   it("shows Linked records in the dropdown regardless of capability", async () => {
     const user = userEvent.setup();
     mockUseCan.mockReturnValue(false);

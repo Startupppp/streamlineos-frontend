@@ -55,7 +55,7 @@ const ITEM_WITH_PROJECT = {
 describe("RoadmapItemCard — canonical link targets", () => {
   it("keeps the item visually distinct from its muted roadmap column", () => {
     const { container } = render(<RoadmapItemCard item={ITEM} onEdit={jest.fn()} onDelete={jest.fn()} />);
-    expect(container.firstElementChild).toHaveClass("bg-card", "border-border/80", "shadow-sm");
+    expect(container.firstElementChild).toHaveClass("bg-card/65", "border-border", "dark:border-background", "shadow-sm");
     expect(screen.getByText("Bulk import")).toHaveClass("font-semibold");
     expect(screen.getByText("Planned")).toBeInTheDocument();
     expect(screen.getByText("Public")).toBeInTheDocument();

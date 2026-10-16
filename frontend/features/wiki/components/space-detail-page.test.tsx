@@ -50,9 +50,19 @@ jest.mock("./wiki-page-collection-table", () => ({
   },
 }));
 
+const mockPageTree = jest.fn();
 jest.mock("./page-tree", () => ({
   __esModule: true,
-  default: () => <div data-testid="page-tree" />,
+  default: (props: { spaceId?: number; onCloseMobile?: () => void }) => {
+    mockPageTree(props);
+    return (
+      <div data-testid="page-tree">
+        {props.onCloseMobile && (
+          <button type="button" onClick={props.onCloseMobile}>Select page</button>
+        )}
+      </div>
+    );
+  },
 }));
 
 const mockMembers = jest.fn();
@@ -139,6 +149,32 @@ describe("SpaceDetailPage", () => {
 
     expect(screen.getByText("Space not found")).toBeInTheDocument();
     expect(screen.queryByText("Something went wrong")).not.toBeInTheDocument();
+    expect(screen.queryByText("Space unavailable")).not.toBeInTheDocument();
+  });
+
+  it("keeps an unexpected empty success distinct from a missing space and offers refresh", async () => {
+    const refetch = jest.fn();
+    mockKbSpace.mockReturnValue(spaceQuery({ data: undefined, refetch }));
+
+    render(<SpaceDetailPage spaceId={5} />);
+
+    expect(screen.getByText("Space unavailable")).toBeInTheDocument();
+    expect(screen.queryByText("Space not found")).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Refresh" }));
+    expect(refetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows a denied state for a 403 response instead of a missing space", () => {
+    mockKbSpace.mockReturnValue(spaceQuery({
+      data: undefined,
+      isError: true,
+      error: new ApiError("Forbidden", 403, "FORBIDDEN", {}, "/kb/spaces/5"),
+    }));
+
+    render(<SpaceDetailPage spaceId={5} />);
+
+    expect(screen.getByText("Access Restricted")).toBeInTheDocument();
+    expect(screen.queryByText("Space not found")).not.toBeInTheDocument();
   });
 
   it("renders the error state for a 500 response, not the not-found state", async () => {
@@ -191,6 +227,18 @@ describe("SpaceDetailPage", () => {
 
     expect(screen.getByTestId("page-tree")).toBeInTheDocument();
     expect(screen.getByTestId("page-collection")).toBeInTheDocument();
+  });
+
+  it("opens a space-scoped hierarchy on mobile and closes it after selecting a page", async () => {
+    render(<SpaceDetailPage spaceId={5} />);
+
+    await userEvent.click(screen.getByRole("button", { name: "Browse hierarchy" }));
+    expect(screen.getByRole("dialog", { name: "Hierarchy" })).toBeInTheDocument();
+    expect(mockPageTree).toHaveBeenCalledWith(
+      expect.objectContaining({ spaceId: 5, onCloseMobile: expect.any(Function) }),
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Select page" }));
+    expect(screen.queryByRole("dialog", { name: "Hierarchy" })).not.toBeInTheDocument();
   });
 
   it("BITE: shows a New page button that creates a page scoped to this space when the actor can create pages", async () => {

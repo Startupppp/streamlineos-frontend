@@ -6,6 +6,7 @@ import { useState, useCallback } from "react";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogBody,
@@ -50,6 +51,7 @@ export function PolicyPreviewDialog({ policyId, open, onOpenChange }: Props) {
       <DialogContent className="flex max-h-[90dvh] max-w-lg flex-col gap-0 p-0">
         <DialogHeader className="shrink-0 border-b border-border px-6 py-4">
           <DialogTitle className="text-base font-semibold">Preview Policy</DialogTitle>
+          <DialogDescription className="sr-only">Select an employee and date to evaluate which policy rules apply.</DialogDescription>
         </DialogHeader>
 
         <DialogBody className="space-y-4 px-6 py-4">

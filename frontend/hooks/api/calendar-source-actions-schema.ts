@@ -46,6 +46,8 @@ export const calendarSourceActionProposalContract = z.object({
   steps: z.array(calendarSourceActionStepContract),
 });
 
+export const calendarSourceActionProposalListContract = z.array(calendarSourceActionProposalContract);
+
 export const calendarSourceActionCapabilitiesContract = z.object({
   sourceKeys: z.array(z.string()),
 });

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AlertTriangle, CheckCircle2, Clock, Copy, Flag, HelpCircle, MessageSquareWarning, ThumbsDown, ThumbsUp } from "lucide-react";
 import { toast } from "sonner";
 import { AnimatedLogo } from "@/components/brand/animated-logo";
@@ -115,13 +115,13 @@ export function EmptyChat({
   );
 }
 
-export function CreateKnowledgeGapButton({ question }: { question: string }) {
+export function CreateKnowledgeGapButton({ question, spaceId }: { question: string; spaceId?: number }) {
   const createGap = useCreateKbKnowledgeGap();
   const [created, setCreated] = useState(false);
 
   function handleCreate() {
     createGap.mutate(
-      { question },
+      { question, ...(spaceId !== undefined ? { spaceId } : {}) },
       {
         onSuccess: () => {
           setCreated(true);
@@ -150,7 +150,7 @@ export function CreateKnowledgeGapButton({ question }: { question: string }) {
   );
 }
 
-export function InsufficientEvidenceBanner({ question }: { question?: string }) {
+export function InsufficientEvidenceBanner({ question, spaceId }: { question?: string; spaceId?: number }) {
   return (
     <div
       role="status"
@@ -165,7 +165,7 @@ export function InsufficientEvidenceBanner({ question }: { question?: string }) 
         </p>
         {question ? (
           <div className="mt-1.5">
-            <CreateKnowledgeGapButton question={question} />
+            <CreateKnowledgeGapButton question={question} spaceId={spaceId} />
           </div>
         ) : null}
       </div>
@@ -235,39 +235,47 @@ export function FreshnessTag({ updatedAt }: FreshnessTagProps) {
 }
 
 interface VerificationBadgeProps {
-  verified: boolean;
+  verified?: boolean;
 }
 
 export function VerificationBadge({ verified }: VerificationBadgeProps) {
-  if (!verified) return null;
+  const label = verified === true ? "Verified" : verified === false ? "Not verified" : "Verification unavailable";
+  const accessibleLabel = verified === true ? "Verified source" : verified === false ? "Not verified source" : label;
   return (
     <span
-      aria-label="Verified source"
-      className={`inline-flex items-center gap-0.5 text-micro ${successTone.ink}`}
+      aria-label={accessibleLabel}
+      className={`inline-flex items-center gap-0.5 text-micro ${verified === true ? successTone.ink : warningTone.ink}`}
     >
-      <CheckCircle2 className="h-2.5 w-2.5 shrink-0" aria-hidden="true" />
-      Verified
+      {verified === true ? <CheckCircle2 className="h-2.5 w-2.5 shrink-0" aria-hidden="true" /> : <HelpCircle className="h-2.5 w-2.5 shrink-0" aria-hidden="true" />}
+      {label}
     </span>
   );
 }
 
 function citationEvidenceKey(citation: KbAskCitationWithParts): string {
-  if (citation.kind === "page") return `page-${citation.pageId}`;
-  if (citation.kind === "source") return `source-${citation.sourceId}`;
-  if (citation.kind === "document") return `document-${citation.linkedDocumentId}`;
-  return `article-${citation.articleId}`;
+  if (citation.kind === "page") return `page-${citation.pageId}-${citation.passage ?? ""}`;
+  if (citation.kind === "source") return `source-${citation.sourceId}-${citation.passage ?? ""}`;
+  if (citation.kind === "document") return `document-${citation.linkedDocumentId}-${citation.passage ?? ""}`;
+  return `article-${citation.articleId}-${citation.passage ?? ""}`;
 }
 
 export function CitationEvidenceList({ citations }: { citations: KbAskCitationWithParts[] }) {
   if (citations.length === 0) return null;
+  const seen = new Set<string>();
+  const evidence = citations.filter((citation) => {
+    const key = citationEvidenceKey(citation);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
   return (
     <ul className="mt-2 space-y-2 border-t border-border/60 pt-2">
-      {citations.map((citation, index) => (
+      {evidence.map((citation, index) => (
         <li key={citationEvidenceKey(citation)}>
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-dense font-medium text-foreground">{citation.title}</span>
             <FreshnessTag updatedAt={citation.updatedAt} />
-            <VerificationBadge verified={citation.verified === true} />
+            <VerificationBadge verified={citation.verified} />
           </div>
           <CitationPassage citation={citation} index={index} />
         </li>
@@ -294,14 +302,34 @@ export function DisagreementBanner({ summary }: DisagreementBannerProps) {
 
 export function CopyAnswerButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
+  const mounted = useRef(false);
+  const copySequence = useRef(0);
+  const resetTimer = useRef<number | null>(null);
+
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+      if (resetTimer.current !== null) window.clearTimeout(resetTimer.current);
+    };
+  }, []);
 
   function handleCopy() {
+    const sequence = ++copySequence.current;
     navigator.clipboard.writeText(text).then(
       () => {
+        if (!mounted.current || sequence !== copySequence.current) return;
+        if (resetTimer.current !== null) window.clearTimeout(resetTimer.current);
         setCopied(true);
-        window.setTimeout(() => setCopied(false), 2000);
+        resetTimer.current = window.setTimeout(() => {
+          resetTimer.current = null;
+          setCopied(false);
+        }, 2000);
       },
-      () => toast.error("Could not copy the answer"),
+      () => {
+        if (mounted.current && sequence === copySequence.current)
+          toast.error("Could not copy the answer");
+      },
     );
   }
 

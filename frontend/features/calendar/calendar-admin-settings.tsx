@@ -6,6 +6,7 @@ import { useCalendarAdminPolicy } from "@/hooks/api/calendar-admin";
 import { CalendarAdminPolicyCard } from "./calendar-admin-policy-card";
 import { CalendarAnalyticsCard } from "./calendar-analytics-card";
 import { CalendarWorkflowSettings } from "./calendar-workflow-settings";
+import { CalendarResourceAdminCard } from "./calendar-resource-admin-card";
 
 export function CalendarAdminSettings() {
   const policy = useCalendarAdminPolicy();
@@ -15,7 +16,8 @@ export function CalendarAdminSettings() {
       {policy.isLoading ? <Skeleton className="h-96 w-full" /> : null}
       {policy.isError ? <ErrorState title="Calendar governance could not be loaded" onRetry={() => void policy.refetch()} /> : null}
       {policy.data ? <CalendarAdminPolicyCard policy={policy.data} /> : null}
-      <CalendarAnalyticsCard />
+      <CalendarResourceAdminCard />
+      {policy.data ? <CalendarAnalyticsCard timeZone={policy.data.analyticsTimeZone} retentionDays={policy.data.analyticsRetentionDays} /> : null}
       <CalendarWorkflowSettings />
     </div>
   );

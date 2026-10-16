@@ -9,7 +9,8 @@ import {
   type StatusEntry,
   buildColumns,
   applyColumnOrder,
-  groupTicketsByStatus,
+  compareByRank,
+  groupTicketsByKey,
   formatStatusName,
 } from "./kanban-board-utils";
 import { filterHiddenCompletedTickets } from "../shared/completed-status";
@@ -49,7 +50,12 @@ export function useKanbanBoard({
     KanbanColumn[] | null
   >(statuses, null, isDragging);
 
+  const columnBy = displayOptions?.columnBy ?? "status";
   const rowBy = displayOptions?.rowBy ?? "none";
+  const ticketComparator =
+    displayOptions?.orderBy == null || displayOptions.orderBy === "manual"
+      ? compareByRank
+      : null;
   const showEmptyColumns = displayOptions?.showEmptyColumns ?? true;
   const showEmptyRows = displayOptions?.showEmptyRows ?? false;
 
@@ -59,14 +65,26 @@ export function useKanbanBoard({
   );
 
   const columns = useMemo<KanbanColumn[]>(() => {
-    const built = buildColumns(
-      optimisticStatuses,
-      displayTickets.map((t) => t.status),
-    );
-    return applyColumnOrder(built);
-  }, [optimisticStatuses, displayTickets]);
+    if (columnBy === "status") {
+      const built = buildColumns(
+        optimisticStatuses,
+        displayTickets.map((t) => t.status),
+      );
+      return applyColumnOrder(built);
+    }
+    const seen = new Set<string>();
+    const keys: string[] = [];
+    for (const t of displayTickets) {
+      const key = getTicketRowKey(t, columnBy);
+      if (!seen.has(key)) {
+        seen.add(key);
+        keys.push(key);
+      }
+    }
+    return keys.map((key, i) => ({ id: key, name: key, color: null, order: i }));
+  }, [columnBy, optimisticStatuses, displayTickets]);
 
-  const orderedColumns = optimisticColumnOrder ?? columns;
+  const orderedColumns = columnBy === "status" ? (optimisticColumnOrder ?? columns) : columns;
 
   const swimlaneRows = useMemo<string[]>(() => {
     if (rowBy === "none") return [];
@@ -78,10 +96,14 @@ export function useKanbanBoard({
       swimlaneRows
         .map((rowKey) => {
           const rowTickets = displayTickets.filter((t) => getTicketRowKey(t, rowBy) === rowKey);
-          return { rowKey, tickets: rowTickets, byStatus: groupTicketsByStatus(rowTickets) };
+          return {
+            rowKey,
+            tickets: rowTickets,
+            byColumn: groupTicketsByKey(rowTickets, (t) => getTicketRowKey(t, columnBy), ticketComparator),
+          };
         })
         .filter((group) => showEmptyRows || group.tickets.length > 0),
-    [swimlaneRows, displayTickets, rowBy, showEmptyRows],
+    [swimlaneRows, displayTickets, rowBy, columnBy, showEmptyRows, ticketComparator],
   );
 
   const visibleSwimlaneRows = useMemo(
@@ -89,26 +111,26 @@ export function useKanbanBoard({
     [swimlaneGroups],
   );
 
-  const ticketsByStatus = useMemo(
-    () => groupTicketsByStatus(displayTickets),
-    [displayTickets],
+  const ticketsByColumn = useMemo(
+    () => groupTicketsByKey(displayTickets, (t) => getTicketRowKey(t, columnBy), ticketComparator),
+    [displayTickets, columnBy, ticketComparator],
   );
 
   const visibleColumns = useMemo<KanbanColumn[]>(() => {
     if (showEmptyColumns) return orderedColumns;
     if (rowBy === "none") {
       return orderedColumns.filter(
-        (col) => (ticketsByStatus.get(col.id)?.length ?? 0) > 0,
+        (col) => (ticketsByColumn.get(col.id)?.length ?? 0) > 0,
       );
     }
     return orderedColumns.filter((col) =>
       swimlaneRows.some((rowKey) =>
         displayTickets.some(
-          (t) => t.status === col.id && getTicketRowKey(t, rowBy) === rowKey,
+          (t) => getTicketRowKey(t, columnBy) === col.id && getTicketRowKey(t, rowBy) === rowKey,
         ),
       ),
     );
-  }, [orderedColumns, showEmptyColumns, rowBy, displayTickets, swimlaneRows, ticketsByStatus]);
+  }, [orderedColumns, showEmptyColumns, rowBy, columnBy, displayTickets, swimlaneRows, ticketsByColumn]);
 
   const existingNames = useMemo(
     () => (optimisticStatuses ?? []).map((s) => s.name),
@@ -118,6 +140,7 @@ export function useKanbanBoard({
   const { onDragStart, onDragEnd } = useKanbanDrag({
     projectId,
     statuses,
+    columnBy,
     rowBy,
     hideCompleted,
     canManage,
@@ -176,10 +199,11 @@ export function useKanbanBoard({
     isMounted,
     optimisticStatuses,
     dragStartRef,
+    columnBy,
     rowBy,
     swimlaneGroups,
     visibleSwimlaneRows,
-    ticketsByStatus,
+    ticketsByColumn,
     visibleColumns,
     existingNames,
     handleSelect,

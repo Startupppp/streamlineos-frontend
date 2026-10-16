@@ -190,6 +190,29 @@ describe("ticket filter bar", () => {
     expect(chips).toHaveClass("max-lg:hidden");
   });
 
+  it("wraps the action row onto a second line instead of scrolling it when the caller asks for it", () => {
+    mockSearchParams = new URLSearchParams();
+    window.history.replaceState({}, "", "/build/tickets");
+    const { container } = render(
+      <TicketFilterBar
+        statuses={[{ name: "OPEN" }, { name: "DONE" }]}
+        mobileSearchFirst
+        mobileSearchFirstBreakpoint="lg"
+        wrapActions
+        showDoneToggle
+        leading={<button type="button">Board</button>}
+      />,
+    );
+
+    const actionsRow = container.querySelector("[class*=flex-wrap][class*=order-2]");
+
+    expect(actionsRow).toContainElement(screen.getByRole("button", { name: /add filter/i }));
+    expect(actionsRow).toContainElement(screen.getByRole("button", { name: "Board" }));
+    expect(actionsRow).toHaveClass("flex-wrap", "lg:contents");
+    expect(actionsRow?.className).not.toContain("overflow-x-auto");
+    expect(actionsRow?.className).not.toContain("flex-nowrap");
+  });
+
   it("gives My Work a compact mobile hierarchy with search and filters together", () => {
     mockSearchParams = new URLSearchParams("status=OPEN");
     window.history.replaceState({}, "", "/build/tickets?status=OPEN");

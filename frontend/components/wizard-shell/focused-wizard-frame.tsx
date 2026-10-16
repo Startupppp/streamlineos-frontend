@@ -1,9 +1,12 @@
+"use client";
+
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { AnimatedLogo } from "@/components/brand/animated-logo";
 import { BRAND_NAME } from "@/lib/branding";
 import { cn } from "@/lib/utils";
 import { WIZARD_COL_PAD_X } from "./constants";
+import { useSignOut } from "@/hooks/common/auth-hooks";
 
 type FocusedWizardFrameProps = {
   children: ReactNode;
@@ -16,6 +19,12 @@ export function FocusedWizardFrame({
   mainLabel,
   mobileHeaderClassName,
 }: FocusedWizardFrameProps) {
+  const signOut = useSignOut();
+
+  function handleSignOut() {
+    signOut.mutate();
+  }
+
   return (
     <div className="relative flex h-[100dvh] max-w-[100vw] overflow-hidden surface-soft text-foreground">
       <a
@@ -28,7 +37,7 @@ export function FocusedWizardFrame({
       <div className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         <header
           className={cn(
-            "flex shrink-0 items-center md:hidden",
+            "flex shrink-0 items-center justify-between md:hidden",
             WIZARD_COL_PAD_X,
             mobileHeaderClassName ?? "py-3",
           )}
@@ -43,7 +52,32 @@ export function FocusedWizardFrame({
               {BRAND_NAME}
             </span>
           </Link>
+          <button
+            type="button"
+            onClick={handleSignOut}
+            disabled={signOut.isPending}
+            className="text-sm font-medium text-muted-foreground hover:text-foreground disabled:opacity-50"
+          >
+            Sign out
+          </button>
         </header>
+
+        <div
+          className={cn(
+            "absolute right-0 top-0 z-10 hidden md:flex",
+            WIZARD_COL_PAD_X,
+            "py-4",
+          )}
+        >
+          <button
+            type="button"
+            onClick={handleSignOut}
+            disabled={signOut.isPending}
+            className="text-sm font-medium text-muted-foreground hover:text-foreground disabled:opacity-50"
+          >
+            Sign out
+          </button>
+        </div>
 
         <main
           id="main-content"

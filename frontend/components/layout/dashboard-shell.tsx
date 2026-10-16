@@ -29,7 +29,10 @@ import { DirtyStateProvider } from "@/components/shared/dirty-state-context";
 import { getChatMobileContentPaddingClassName } from "./mobile/chat-mobile-chrome-layout";
 import { MobileModuleBottomNav } from "./mobile/mobile-module-bottom-nav";
 import { MobileShellFab } from "./mobile/mobile-shell-fab";
-import { shouldShowMobileModuleBottomNav } from "./mobile/mobile-module-nav-items";
+import {
+  MOBILE_MODULE_CONTENT_PADDING_CLASS,
+  shouldShowMobileModuleBottomNav,
+} from "./mobile/mobile-module-nav-items";
 import {
   fabBottomCssPx,
   launcherBottomCssPx,
@@ -262,7 +265,7 @@ export function DashboardShell({
 
   return (
     <div
-      className="flex h-dvh flex-col overflow-hidden overscroll-none md:pb-6"
+      className="flex h-dvh flex-col overflow-hidden overscroll-none lg:pb-6"
       style={{
         "--mb-fab-bottom": `${fabBottomCssPx(showAboveBottomNav)}px`,
         "--mb-launcher-bottom": `${launcherBottomCssPx(showAboveBottomNav)}px`,
@@ -321,6 +324,7 @@ export function DashboardShell({
                       "--mb-scroll-gutter": `${scrollGutterCssPx(showAboveBottomNav)}px`,
                       "--mb-fab-lane": `${scrollGutterCssPx(showAboveBottomNav)}px`,
                     } as React.CSSProperties}
+                    tabIndex={-1}
                     className={cn(
                       "flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden outline-none",
                       showModuleBottomNav && "mobile-nav-active",
@@ -333,7 +337,9 @@ export function DashboardShell({
                           ? getChatMobileContentPaddingClassName(
                               isChatConversationOpen,
                             )
-                          : "max-md:pb-[var(--mb-fab-lane)]",
+                          : showModuleBottomNav
+                            ? MOBILE_MODULE_CONTENT_PADDING_CLASS
+                            : "max-lg:pb-[var(--mb-fab-lane)]",
                       )}
                     >
                       <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden [&>:first-child]:h-full [&>:first-child]:min-h-0 [&>:first-child]:flex-1">

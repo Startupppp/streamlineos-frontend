@@ -20,6 +20,7 @@ export interface UsePageStateOptions {
   readonly isError: boolean;
   readonly error?: unknown;
   readonly isEmpty?: boolean;
+  readonly hasActiveFilters?: boolean;
 }
 
 export function resolveModuleAvailability(
@@ -43,7 +44,9 @@ export function resolveModuleAvailability(
   };
 }
 
-export function usePageState(options: UsePageStateOptions): PageStateResolution {
+export function usePageState(
+  options: UsePageStateOptions,
+): PageStateResolution {
   const {
     data: access,
     isLoading: accessLoading,
@@ -62,31 +65,19 @@ export function usePageState(options: UsePageStateOptions): PageStateResolution 
         )
       : undefined;
 
-  /**
-   * A failed access read is a failed read, not a slow one.
-   *
-   * `accessState` is documented to take the query's own loading flag "rather
-   * than inferring it from the absence of data, because inferring one from the
-   * other is how they were conflated" — and both call sites then passed
-   * `accessLoading || access === undefined`, re-introducing exactly that
-   * inference. When `/me/access` errors, `data` stays undefined for ever, so
-   * every gated page resolved to `loading` for ever and rendered its skeleton
-   * until the tab was closed. That is the infinite skeleton across the HR routes
-   * and why one degraded org sync walled a whole session
-   * (BUG-HRMS-012, BUG-HRMS-014).
-   *
-   * Reported as an error, the surface gets `ErrorState` and a Retry, and a 401
-   * still resolves to session-expired through the usual mapping.
-   */
   if (accessFailed && access === undefined)
-    return pageStateFromError(accessError) ?? { kind: "error", error: accessError };
+    return (
+      pageStateFromError(accessError) ?? { kind: "error", error: accessError }
+    );
 
   const permissionState =
     options.permission === undefined
       ? ("granted" as const)
       : accessState({
           isLoading: accessLoading || access === undefined,
-          granted: access !== undefined && grantsPermission(access, options.permission),
+          granted:
+            access !== undefined &&
+            grantsPermission(access, options.permission),
         });
 
   return resolvePageState({
@@ -97,5 +88,6 @@ export function usePageState(options: UsePageStateOptions): PageStateResolution 
     isError: options.isError,
     error: options.error,
     isEmpty: options.isEmpty,
+    hasActiveFilters: options.hasActiveFilters,
   });
 }

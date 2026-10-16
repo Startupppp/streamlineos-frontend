@@ -1,6 +1,7 @@
 import type { HTMLAttributes, PropsWithChildren } from "react";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { ApiError } from "@/lib/api-envelope";
 
 jest.mock("framer-motion", () => {
   function MotionDiv({
@@ -196,19 +197,66 @@ describe("InvitationPage — an unusable invitation", () => {
     jest.clearAllMocks();
     sessionState.data = null;
     invitation.userExists = false;
-    invitationError.value = new Error("Invalid or expired invitation");
+    invitationError.value = null;
   });
 
   afterEach(() => {
     invitationError.value = null;
   });
 
-  it("explains that the link may have expired and offers a way forward", () => {
+  it("shows a generic unavailable state for non-404 errors", () => {
+    invitationError.value = new Error("Service unavailable");
     render(<InvitationPage />);
 
     expect(screen.getByText(/invitation unavailable/i)).toBeVisible();
-    expect(screen.getByText(/expired or was replaced/i)).toBeVisible();
     expect(screen.getByRole("button", { name: /go to sign in/i })).toBeEnabled();
+  });
+
+  it("shows the link-unavailable copy for a 404 and tells the invitee to check for a newer email", () => {
+    invitationError.value = new ApiError("Invalid or expired invitation", 404);
+    render(<InvitationPage />);
+
+    expect(screen.getByText(/invitation link unavailable/i)).toBeVisible();
+    expect(screen.getByText(/expired.*already used.*replaced/i)).toBeVisible();
+    expect(screen.getByText(/check your inbox/i)).toBeVisible();
+    expect(screen.getByRole("button", { name: /go to sign in/i })).toBeEnabled();
+  });
+
+  it("does not show the 404 error copy for a pending invite that validates successfully", () => {
+    render(<InvitationPage />);
+
+    expect(screen.queryByText(/invitation link unavailable/i)).toBeNull();
+    expect(screen.queryByText(/invitation unavailable/i)).toBeNull();
+  });
+});
+
+describe("InvitationPage — HRMS-005 invariant: link validity and status agreement", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    sessionState.data = null;
+    invitation.userExists = false;
+    invitationError.value = null;
+  });
+
+  afterEach(() => {
+    invitationError.value = null;
+  });
+
+  it("shows the acceptance form for a pending unexpired invite, not an error state", () => {
+    render(<InvitationPage />);
+
+    expect(screen.getByRole("textbox", { name: /first name/i })).toBeInTheDocument();
+    expect(screen.queryByText(/invitation.*unavailable/i)).toBeNull();
+    expect(screen.queryByText(/expired/i)).toBeNull();
+  });
+
+  it("never uses the word 'expired' when a consumed token returns 404", () => {
+    invitationError.value = new ApiError("Invalid or expired invitation", 404);
+    render(<InvitationPage />);
+
+    const heading = screen.getByRole("heading", { level: 1 });
+    expect(heading.textContent).not.toMatch(/expired/i);
+    expect(screen.queryByRole("button", { name: /continue/i })).toBeNull();
   });
 });
 

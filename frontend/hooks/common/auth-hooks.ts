@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import {
   keepPreviousData,
   useMutation,
@@ -15,8 +15,10 @@ import {
   apiClient,
   clearBackendTokenCache,
   clearImpersonation,
+  endSession,
   setAutoSignOutSuppressed,
 } from "@/lib/api-client";
+import { publishLogout, subscribeLogout } from "@/lib/auth-broadcast";
 import { clearGateCookies } from "@/lib/onboarding-gate";
 import type { SkippedGrant } from "@/hooks/common/auth-schema";
 import { clearStreamToken } from "@/features/notifications/use-notification-events";
@@ -281,6 +283,7 @@ export function useSignOut() {
       clearStreamToken();
       queryClient.clear();
       await signOut({ redirect: false });
+      publishLogout();
       return { localSignOutCompleted: true, serverRevocationCompleted };
     },
     onSuccess: (outcome) => {
@@ -395,6 +398,10 @@ export function useClaimInvitation() {
         claimInvitationResponseContract,
       ),
   });
+}
+
+export function useLogoutBroadcastListener(): void {
+  useEffect(() => subscribeLogout(endSession), []);
 }
 
 export function useSwitchOrg() {

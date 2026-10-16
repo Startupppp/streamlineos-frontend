@@ -1,18 +1,11 @@
 import { readFileSync } from "node:fs";
-import { renderHook, act } from "@testing-library/react";
+import { act, renderHook } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
-import { ZodError, type ZodType } from "zod";
 import { backendAvailable, backendPath } from "@/test-utils/backend-repo";
-
-const post = jest.fn<Promise<unknown>, [string, unknown, unknown, unknown]>();
-
-jest.mock("@/lib/api-client", () => ({
-  apiClient: {
-    post: (path: string, body: unknown, config: unknown, contract: unknown) =>
-      post(path, body, config, contract),
-  },
-}));
+import { installAbortSignalPolyfill } from "@/test-utils/abort-signal-polyfill";
+import { clearBackendTokenCache, resetOutageCircuit, seedBackendToken } from "@/lib/api-client";
+import { ApiContractError } from "@/lib/api-envelope";
 
 jest.mock("@/hooks/api/authorized-mutation", () => ({
   useAuthorizedMutation: (
@@ -26,24 +19,10 @@ jest.mock("@/hooks/api/authorized-mutation", () => ({
 
 import { useCreateKbArticleFromTicket } from "./from-ticket";
 
-const BACKEND_SCHEMA_FILE = [
-  "src",
-  "modules",
-  "kb",
-  "help-centre",
-  "dto",
-  "kb-helpcenter-response.schemas.ts",
-];
+installAbortSignalPolyfill();
 
-function backendArticleFields(): string[] {
-  const source = readFileSync(backendPath(...BACKEND_SCHEMA_FILE), "utf8");
-  const start = source.indexOf("export const kbArticleSchema = z.object({");
-  const end = source.indexOf("\n});", start);
-  const block = source.slice(start, end);
-  const fields = [...block.matchAll(/^ {2}(\w+):/gm)].map((match) => match[1]);
-  return [...fields, "tags"];
-}
-
+const fetchMock = jest.fn();
+const originalFetch = globalThis.fetch;
 const ARTICLE = {
   id: 91,
   orgId: "org-1",
@@ -74,64 +53,103 @@ const ARTICLE = {
   tags: ["support", "accounts"],
 };
 
+function response(data: unknown) {
+  return {
+    ok: true,
+    status: 200,
+    statusText: "OK",
+    headers: new Headers({ "content-type": "application/json" }),
+    json: async () => ({ success: true, data }),
+  };
+}
+
+function backendArticleFields(): string[] {
+  const source = readFileSync(
+    backendPath("src", "modules", "kb", "help-centre", "dto", "kb-helpcenter-response.schemas.ts"),
+    "utf8",
+  );
+  const start = source.indexOf("export const kbArticleSchema = z.object({");
+  const end = source.indexOf("\n});", start);
+  const block = source.slice(start, end);
+  return [...block.matchAll(/^ {2}(\w+):/gm)].map((match) => match[1]).concat("tags");
+}
+
 function wrapper({ children }: { children: ReactNode }) {
-  const qc = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
-  return <QueryClientProvider client={qc}>{children}</QueryClientProvider>;
+  const client = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
+  return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
 }
 
-async function contractBoundByTheHook(): Promise<ZodType<unknown>> {
-  post.mockResolvedValue(ARTICLE);
-  const { result } = renderHook(() => useCreateKbArticleFromTicket(), { wrapper });
-  await act(async () => {
-    await result.current.mutateAsync({ ticketId: 7, spaceId: 4 });
-  });
-  const source = post.mock.calls[0]?.[3];
-  if (typeof source !== "function")
-    throw new Error("the hook passed no contract to apiClient.post");
-  return await (source as () => Promise<ZodType<unknown>>)();
-}
+beforeEach(() => {
+  resetOutageCircuit();
+  clearBackendTokenCache();
+  const token = "header." + Buffer.from(JSON.stringify({ exp: Math.floor(Date.now() / 1000) + 600 })).toString("base64url") + ".signature";
+  seedBackendToken(token);
+  fetchMock.mockReset();
+  globalThis.fetch = fetchMock;
+});
 
-describe("POST /kb/articles/from-ticket/:ticketId is bound to the article the backend actually returns", () => {
-  beforeEach(() => {
-    post.mockReset();
-  });
+afterEach(() => {
+  globalThis.fetch = originalFetch;
+  clearBackendTokenCache();
+});
 
-  it("reads the backend repository, so the field oracle below is not vacuous", () => {
+describe("POST /kb/articles/from-ticket/:ticketId through the HTTP parser", () => {
+  it("reads the backend repository for the response field oracle", () => {
     expect(backendAvailable).toBe(true);
+    expect(Object.keys(ARTICLE).sort()).toEqual(backendArticleFields().sort());
   });
 
-  it("the sample article carries exactly the fields kbArticleWithTagsSchema declares", () => {
-    const declared = backendArticleFields();
-    expect(declared.length).toBeGreaterThan(20);
-    expect(Object.keys(ARTICLE).sort()).toEqual([...declared].sort());
-  });
-
-  it("parses that article, so onSuccess fires instead of an error toast and the agent does not retry into a duplicate draft", async () => {
-    const contract = await contractBoundByTheHook();
-    expect(contract.parse(ARTICLE)).toEqual(ARTICLE);
-  });
-
-  it("rejects the {success: boolean} body the route never returns — the shape that made every 200 throw", async () => {
-    const contract = await contractBoundByTheHook();
-    expect(() => contract.parse({ success: true })).toThrow(ZodError);
-  });
-
-  it("types tags as plain strings, not {id,name,slug} objects", async () => {
-    const contract = await contractBoundByTheHook();
-    expect(() =>
-      contract.parse({ ...ARTICLE, tags: [{ id: 1, name: "support", slug: "support" }] }),
-    ).toThrow(ZodError);
-  });
-
-  it("resolves the mutation with the created article, so a caller can open the draft it just made", async () => {
-    post.mockResolvedValue(ARTICLE);
+  it("returns the created article from a successful envelope with all article fields", async () => {
+    fetchMock.mockResolvedValue(response(ARTICLE));
     const { result } = renderHook(() => useCreateKbArticleFromTicket(), { wrapper });
     let resolved: unknown;
     await act(async () => {
       resolved = await result.current.mutateAsync({ ticketId: 7, spaceId: 4 });
     });
     expect(resolved).toEqual(ARTICLE);
-    expect(post.mock.calls[0]?.[0]).toBe("/kb/articles/from-ticket/7");
-    expect(post.mock.calls[0]?.[1]).toEqual({ spaceId: 4 });
+    expect(fetchMock.mock.calls[0]?.[0]).toContain("/kb/articles/from-ticket/7");
+    expect(fetchMock.mock.calls[0]?.[1]?.body).toBe(JSON.stringify({ spaceId: 4 }));
+  });
+
+  it("rejects the obsolete success-only response through the hook", async () => {
+    fetchMock.mockResolvedValue(response({ success: true }));
+    const { result } = renderHook(() => useCreateKbArticleFromTicket(), { wrapper });
+    await act(async () => {
+      await expect(result.current.mutateAsync({ ticketId: 7, spaceId: 4 })).rejects.toBeInstanceOf(ApiContractError);
+    });
+  });
+
+  it("rejects object tags through the hook", async () => {
+    fetchMock.mockResolvedValue(response({ ...ARTICLE, tags: [{ id: 1, name: "support", slug: "support" }] }));
+    const { result } = renderHook(() => useCreateKbArticleFromTicket(), { wrapper });
+    await act(async () => {
+      await expect(result.current.mutateAsync({ ticketId: 7, spaceId: 4 })).rejects.toBeInstanceOf(ApiContractError);
+    });
+  });
+
+  it("reuses the operation key on an interrupted retry and settles after success", async () => {
+    fetchMock.mockRejectedValueOnce(new Error("network interrupted"));
+    fetchMock.mockResolvedValue(response(ARTICLE));
+    const { result } = renderHook(() => useCreateKbArticleFromTicket(), { wrapper });
+    await act(async () => {
+      await expect(result.current.mutateAsync({ ticketId: 7, spaceId: 4 })).rejects.toThrow("Network error");
+    });
+    resetOutageCircuit();
+    await act(async () => {
+      await result.current.mutateAsync({ ticketId: 7, spaceId: 4 });
+      await result.current.mutateAsync({ ticketId: 7, spaceId: 4 });
+    });
+    const keys = fetchMock.mock.calls.map((call) => new Headers(call[1]?.headers).get("Idempotency-Key"));
+    expect(keys[0]).toEqual(keys[1]);
+    expect(keys[2]).not.toEqual(keys[1]);
+  });
+
+  it("accepts an idempotent server replay with the same article identity", async () => {
+    fetchMock.mockResolvedValue(response(ARTICLE));
+    const { result } = renderHook(() => useCreateKbArticleFromTicket(), { wrapper });
+    const first = await result.current.mutateAsync({ ticketId: 7, spaceId: 4 });
+    const replay = await result.current.mutateAsync({ ticketId: 7, spaceId: 4 });
+    expect(replay.id).toBe(first.id);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 });

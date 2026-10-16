@@ -72,6 +72,13 @@ describe("Issue detail sidebar — the core fields the page contract lists are o
     ]);
   });
 
+  it("names Status, Priority and Points controls for assistive technology (B-004)", () => {
+    renderSelects();
+    expect(screen.getByRole("combobox", { name: "Status" })).toBeInTheDocument();
+    expect(screen.getByRole("combobox", { name: "Priority" })).toBeInTheDocument();
+    expect(screen.getByRole("spinbutton", { name: "Points" })).toBeInTheDocument();
+  });
+
   it("disables every core-field control when the viewer cannot update, and enables them when it can", () => {
     const { unmount } = renderSelects(true);
     for (const trigger of screen.getAllByRole("combobox")) {

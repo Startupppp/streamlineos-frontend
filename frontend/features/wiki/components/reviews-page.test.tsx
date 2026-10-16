@@ -2,9 +2,11 @@ import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import type { KbPageReview } from "@/hooks/api/kb/page-reviews";
 import ReviewsPage from "./reviews-page";
-import { RejectDialog } from "./reviews-decision-dialogs";
+import { ApproveDialog, RejectDialog, RequestReviewDialog } from "./reviews-decision-dialogs";
 import { BulkDecideResultsDialog } from "./reviews-bulk-results-dialog";
 import type { BulkFailureWithTitle } from "./reviews-bulk-results-dialog";
+
+let mockMobileCards = false;
 
 jest.mock("next/navigation", () => ({
   useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn() })),
@@ -14,9 +16,16 @@ jest.mock("next/navigation", () => ({
 
 jest.mock("@/hooks/api/kb/page-reviews", () => ({
   useKbPageReviews: jest.fn(),
+  useCreatePageReview: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   useApprovePageReview: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   useRejectPageReview: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   useBulkDecidePageReviews: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+}));
+
+jest.mock("@/components/ui/user-combobox", () => ({
+  UserCombobox: ({ onChange }: { onChange: (value: string) => void }) => (
+    <button type="button" onClick={() => onChange("reviewer-user")}>Pick reviewer</button>
+  ),
 }));
 
 jest.mock("@/hooks/api/access", () => ({
@@ -64,7 +73,15 @@ jest.mock("@/components/ui/data-table", () => ({
         onNext: () => void;
         onPrevious: () => void;
       };
+      mobileCard?: (row: KbPageReview) => React.ReactNode;
     }) => {
+      if (mockMobileCards && props.mobileCard) {
+        return (
+          <div data-testid="mobile-cards">
+            {props.data.map((row) => <div key={row.id}>{props.mobileCard?.(row)}</div>)}
+          </div>
+        );
+      }
       if (!props.data || props.data.length === 0) return <>{props.emptyState ?? null}</>;
       return (
         <div data-testid="data-table">
@@ -125,19 +142,30 @@ jest.mock("@/features/wiki/lib/kb-icons", () => ({
 
 const {
   useKbPageReviews,
+  useCreatePageReview,
+  useApprovePageReview,
   useRejectPageReview,
 } = jest.requireMock("@/hooks/api/kb/page-reviews") as {
   useKbPageReviews: jest.Mock;
+  useCreatePageReview: jest.Mock;
+  useApprovePageReview: jest.Mock;
   useRejectPageReview: jest.Mock;
 };
 
 const { usePageState } = jest.requireMock("@/hooks/api/use-page-state") as {
   usePageState: jest.Mock;
 };
+const { useCan } = jest.requireMock("@/hooks/api/access") as {
+  useCan: jest.Mock;
+};
 
 const { useSearchParams } = jest.requireMock("next/navigation") as {
   useSearchParams: jest.Mock;
 };
+const { useRouter } = jest.requireMock("next/navigation") as {
+  useRouter: jest.Mock;
+};
+const replace = jest.fn();
 
 function makeReview(overrides: Partial<KbPageReview> = {}): KbPageReview {
   return {
@@ -177,6 +205,9 @@ function makePage(
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockMobileCards = false;
+  useCan.mockReturnValue(true);
+  useRouter.mockReturnValue({ push: jest.fn(), replace });
   useSearchParams.mockReturnValue(new URLSearchParams());
   usePageState.mockReturnValue({ kind: "ready" });
   useKbPageReviews.mockReturnValue({
@@ -185,6 +216,40 @@ beforeEach(() => {
     isError: false,
     error: undefined,
     refetch: jest.fn(),
+  });
+});
+
+describe("ReviewsPage mobile cards", () => {
+  it("opens a pending review decision from the mobile card", () => {
+    mockMobileCards = true;
+    useKbPageReviews.mockReturnValue({
+      data: makePage([makeReview({ pageTitle: "Mobile Handbook" })]),
+      isLoading: false,
+      isError: false,
+      error: undefined,
+      refetch: jest.fn(),
+    });
+
+    render(<ReviewsPage />);
+    expect(screen.getByTestId("mobile-cards")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Approve review for Mobile Handbook" }));
+    expect(screen.getByRole("dialog", { name: "Approve review" })).toBeInTheDocument();
+  });
+
+  it("hides mobile decision actions without review management access", () => {
+    mockMobileCards = true;
+    useCan.mockReturnValue(false);
+    useKbPageReviews.mockReturnValue({
+      data: makePage([makeReview({ pageTitle: "Mobile Handbook" })]),
+      isLoading: false,
+      isError: false,
+      error: undefined,
+      refetch: jest.fn(),
+    });
+
+    render(<ReviewsPage />);
+    expect(screen.getByTestId("mobile-cards")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /review for Mobile Handbook/ })).toBeNull();
   });
 });
 
@@ -286,6 +351,41 @@ describe("ReviewsPage — empty states distinguish first-empty from filtered-emp
 });
 
 describe("ReviewsPage — cursor pagination preserves URL filter state", () => {
+  it("offers the previous page when a later cursor page becomes empty", () => {
+    useKbPageReviews.mockReturnValue({
+      data: makePage(
+        [makeReview({ id: 8 })],
+        { limit: 50, hasMore: true, nextCursor: "cursor-next" },
+      ),
+      isLoading: false,
+      isError: false,
+      error: undefined,
+      refetch: jest.fn(),
+    });
+
+    const view = render(<ReviewsPage />);
+    fireEvent.click(screen.getByTestId("next-btn"));
+    useSearchParams.mockReturnValue(
+      new URL(replace.mock.lastCall?.[0], "https://example.test").searchParams,
+    );
+
+    useKbPageReviews.mockReturnValue({
+      data: makePage([]),
+      isLoading: false,
+      isError: false,
+      error: undefined,
+      refetch: jest.fn(),
+    });
+    usePageState.mockReturnValue({ kind: "empty" });
+    view.rerender(<ReviewsPage />);
+
+    expect(screen.getByText("No reviews on this page.")).toBeInTheDocument();
+    expect(screen.queryByText("No pages under review.")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Previous page" }));
+    const previousParams = new URL(replace.mock.lastCall?.[0], "https://example.test").searchParams;
+    expect(previousParams.has("cursor")).toBe(false);
+  });
+
   it("advancing the cursor includes the active status filter in the next hook call", () => {
     useSearchParams.mockReturnValue(new URLSearchParams("status=overdue"));
     useKbPageReviews.mockReturnValue({
@@ -299,7 +399,7 @@ describe("ReviewsPage — cursor pagination preserves URL filter state", () => {
       refetch: jest.fn(),
     });
 
-    render(<ReviewsPage />);
+    const view = render(<ReviewsPage />);
 
     jest.clearAllMocks();
     useKbPageReviews.mockReturnValue({
@@ -311,6 +411,10 @@ describe("ReviewsPage — cursor pagination preserves URL filter state", () => {
     });
 
     fireEvent.click(screen.getByTestId("next-btn"));
+    useSearchParams.mockReturnValue(
+      new URL(replace.mock.lastCall?.[0], "https://example.test").searchParams,
+    );
+    view.rerender(<ReviewsPage />);
 
     expect(useKbPageReviews).toHaveBeenCalledWith(
       expect.objectContaining({ status: "overdue", cursor: "cursor-abc" }),
@@ -330,9 +434,13 @@ describe("ReviewsPage — cursor pagination preserves URL filter state", () => {
       refetch: jest.fn(),
     });
 
-    render(<ReviewsPage />);
+    const view = render(<ReviewsPage />);
 
     fireEvent.click(screen.getByTestId("next-btn"));
+    useSearchParams.mockReturnValue(
+      new URL(replace.mock.lastCall?.[0], "https://example.test").searchParams,
+    );
+    view.rerender(<ReviewsPage />);
 
     jest.clearAllMocks();
     useKbPageReviews.mockReturnValue({
@@ -344,6 +452,10 @@ describe("ReviewsPage — cursor pagination preserves URL filter state", () => {
     });
 
     fireEvent.click(screen.getByTestId("prev-btn"));
+    useSearchParams.mockReturnValue(
+      new URL(replace.mock.lastCall?.[0], "https://example.test").searchParams,
+    );
+    view.rerender(<ReviewsPage />);
 
     expect(useKbPageReviews).toHaveBeenCalledWith(
       expect.objectContaining({ status: "overdue", cursor: undefined }),
@@ -395,17 +507,92 @@ describe("BulkDecideResultsDialog — per-row failure reporting", () => {
   });
 });
 
-describe("RejectDialog — reason is required before submission", () => {
+describe("Review decision dialogs", () => {
+  it("does not submit a review request without review management access", () => {
+    const mutate = jest.fn();
+    useCan.mockReturnValue(false);
+    useCreatePageReview.mockReturnValue({ mutate, isPending: false });
+
+    render(
+      <RequestReviewDialog pageId={10} pageTitle="Runbook" open onOpenChange={jest.fn()} />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Pick reviewer" }));
+    expect(screen.getByRole("button", { name: "Request review" })).toBeDisabled();
+    expect(mutate).not.toHaveBeenCalled();
+  });
+  it("requires a reviewer before requesting a review and sends the selected assignee", () => {
+    const mutate = jest.fn();
+    useCreatePageReview.mockReturnValue({ mutate, isPending: false });
+
+    render(
+      <RequestReviewDialog
+        pageId={10}
+        pageTitle="Runbook"
+        open
+        onOpenChange={jest.fn()}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "Request review" })).toBeDisabled();
+    fireEvent.click(screen.getByRole("button", { name: "Pick reviewer" }));
+    fireEvent.click(screen.getByRole("button", { name: "Request review" }));
+
+    expect(mutate).toHaveBeenCalledWith(
+      { pageId: 10, type: "approval", reviewerId: "reviewer-user", dueAt: undefined, note: undefined },
+      expect.any(Object),
+    );
+  });
+
+  it("shows trust context and submits approval without an optional note", () => {
+    const mutate = jest.fn();
+    useApprovePageReview.mockReturnValue({ mutate, isPending: false });
+
+    render(
+      <ApproveDialog
+        review={makeReview({ pageTrustState: "verification_expired" })}
+        onClose={jest.fn()}
+      />,
+    );
+
+    expect(screen.getByText("Stale")).toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: "Note (optional)" })).toHaveAttribute("maxlength", "2000");
+    fireEvent.click(screen.getByRole("button", { name: "Approve" }));
+    expect(mutate).toHaveBeenCalledWith(
+      { reviewId: 1, note: undefined },
+      expect.any(Object),
+    );
+  });
+
+  it("submits a trimmed optional approval note", () => {
+    const mutate = jest.fn();
+    useApprovePageReview.mockReturnValue({ mutate, isPending: false });
+
+    render(<ApproveDialog review={makeReview()} onClose={jest.fn()} />);
+    fireEvent.change(screen.getByRole("textbox", { name: "Note (optional)" }), {
+      target: { value: "  Reviewed source  " },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Approve" }));
+
+    expect(mutate).toHaveBeenCalledWith(
+      { reviewId: 1, note: "Reviewed source" },
+      expect.any(Object),
+    );
+  });
+
   it("the reject button is disabled while the reason textarea is empty", () => {
     useRejectPageReview.mockReturnValue({ mutate: jest.fn(), isPending: false });
 
     render(
       <RejectDialog
-        review={makeReview({ pageTitle: "Test Page" })}
+        review={makeReview({ pageTitle: "Test Page", pageTrustState: "unverified" })}
         onClose={jest.fn()}
       />,
     );
 
+    expect(screen.getByText("Unverified")).toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: /Reason/ })).toHaveAttribute("required");
+    expect(screen.getByRole("textbox", { name: /Reason/ })).toHaveAttribute("maxlength", "2000");
     expect(screen.getByRole("button", { name: "Reject" })).toBeDisabled();
   });
 

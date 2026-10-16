@@ -57,13 +57,13 @@ export function DeferredOnboardingReminder() {
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-muted/40 px-4 py-3">
       <p className="text-dense text-muted-foreground">
-        Your own employee profile is still incomplete — you skipped it earlier.
+        Add bank details to receive salary — you skipped this earlier.
       </p>
       <Link
         href="/employee-onboarding"
         className="shrink-0 font-medium text-primary underline underline-offset-2"
       >
-        Finish your details
+        Add now
       </Link>
     </div>
   );

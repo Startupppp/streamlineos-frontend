@@ -203,6 +203,7 @@ export function OrgBrandingSection({ org, canEdit }: OrgBrandingSectionProps) {
                         label="Secondary color"
                         value={field.value ?? ""}
                         onChange={handleSecondaryColorChange}
+                        pickerFallback="#ffffff"
                         error={form.formState.errors.secondaryColor?.message}
                       />
                       <FormMessage className="hidden" />

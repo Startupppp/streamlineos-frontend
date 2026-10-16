@@ -5,8 +5,8 @@ import { format } from "date-fns";
 import { useSession } from "next-auth/react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { usePermissionGate } from "@/hooks/api/access";
 import { useHydrated } from "@/hooks/common/use-hydrated";
 import {
@@ -21,6 +21,7 @@ import type {
   CalendarOfflineEditIntent,
   CalendarOfflineIntent,
 } from "./calendar-offline-intent";
+import { CalendarDateTimePicker } from "./calendar-date-time-picker";
 
 const IDENTITY_KEY = "streamline-calendar-offline-identity";
 
@@ -69,6 +70,7 @@ export function CalendarOfflinePanel({
 }) {
   const { data: session, status } = useSession();
   const access = usePermissionGate("calendar:read");
+  const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
   const cachedIdentity = useSyncExternalStore(
     subscribeOfflineCalendarClear,
     cachedOfflineIdentity,
@@ -117,7 +119,7 @@ export function CalendarOfflinePanel({
   const selectedEdit = editable.find(
     (event) => event.occurrenceId === editOccurrenceId,
   );
-  useEffect(() => subscribeOfflineCalendarClear(() => setSnapshot(null)), []);
+  useEffect(() => subscribeOfflineCalendarClear(() => setSnapshot(null), identity), [identity]);
   useEffect(() => {
     let active = true;
     const load = async () => {
@@ -165,6 +167,7 @@ export function CalendarOfflinePanel({
   }, [identity, canRead, access.allowed, status, markerReady]);
   const visibleSnapshot =
     snapshot?.identity === identity &&
+    snapshot.timeZone === timeZone &&
     offlineCalendarIdentityIsCurrent(identity)
       ? snapshot
       : null;
@@ -218,7 +221,9 @@ export function CalendarOfflinePanel({
                   key={source.sourceKey}
                   className="text-xs text-muted-foreground"
                 >
-                  {source.sourceKey}: {source.state}, {age} old
+                  {source.sourceKey}: {source.state}, {source.asOf && Number.isFinite(Date.parse(source.asOf))
+                    ? `source data ${Math.max(1, Math.floor((now - Date.parse(source.asOf)) / 60_000))} minutes old`
+                    : "last successful source refresh unknown"}
                 </p>
               ))}
             </div>
@@ -250,23 +255,23 @@ export function CalendarOfflinePanel({
                 account, current policy, and availability before you can open
                 the event form.
               </p>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
                 <div className="space-y-1">
                   <Label htmlFor="offline-draft-start">Start</Label>
-                  <Input
+                  <CalendarDateTimePicker
                     id="offline-draft-start"
-                    type="datetime-local"
+                    label="Start"
                     value={draftStart}
-                    onChange={(event) => setDraftStart(event.target.value)}
+                    onChange={setDraftStart}
                   />
                 </div>
                 <div className="space-y-1">
                   <Label htmlFor="offline-draft-end">End</Label>
-                  <Input
+                  <CalendarDateTimePicker
                     id="offline-draft-end"
-                    type="datetime-local"
+                    label="End"
                     value={draftEnd}
-                    onChange={(event) => setDraftEnd(event.target.value)}
+                    onChange={setDraftEnd}
                   />
                 </div>
               </div>
@@ -304,52 +309,43 @@ export function CalendarOfflinePanel({
                   and record IDs stay hidden offline. The current occurrence and
                   permission will be checked again after reconnecting.
                 </p>
-                <select
-                  aria-label="Previously loaded event"
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                  value={editOccurrenceId}
-                  onChange={(change) => {
-                    const next = editable.find(
-                      (event) => event.occurrenceId === change.target.value,
-                    );
-                    setEditOccurrenceId(change.target.value);
-                    setEditStart(
-                      next
-                        ? format(new Date(next.start), "yyyy-MM-dd'T'HH:mm")
-                        : "",
-                    );
-                    setEditEnd(
-                      next
-                        ? format(new Date(next.end), "yyyy-MM-dd'T'HH:mm")
-                        : "",
-                    );
+                <Select
+                  value={editOccurrenceId || undefined}
+                  onValueChange={(value) => {
+                    const next = editable.find((event) => event.occurrenceId === value);
+                    setEditOccurrenceId(value);
+                    setEditStart(next ? format(new Date(next.start), "yyyy-MM-dd'T'HH:mm") : "");
+                    setEditEnd(next ? format(new Date(next.end), "yyyy-MM-dd'T'HH:mm") : "");
                   }}
                 >
-                  <option value="">Select a busy window</option>
-                  {editable.map((event, index) => (
-                    <option key={event.occurrenceId} value={event.occurrenceId}>
-                      Calendar event {index + 1} ·{" "}
-                      {new Date(event.start).toLocaleString()}
-                    </option>
-                  ))}
-                </select>
-                <div className="grid grid-cols-2 gap-2">
+                  <SelectTrigger aria-label="Previously loaded event" className="w-full">
+                    <SelectValue placeholder="Select a busy window" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {editable.map((event, index) => (
+                      <SelectItem key={event.occurrenceId} value={event.occurrenceId}>
+                        Calendar event {index + 1} · {new Date(event.start).toLocaleString()}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
                   <div className="space-y-1">
                     <Label htmlFor="offline-edit-start">New start</Label>
-                    <Input
+                    <CalendarDateTimePicker
                       id="offline-edit-start"
-                      type="datetime-local"
+                      label="New start"
                       value={editStart}
-                      onChange={(change) => setEditStart(change.target.value)}
+                      onChange={setEditStart}
                     />
                   </div>
                   <div className="space-y-1">
                     <Label htmlFor="offline-edit-end">New end</Label>
-                    <Input
+                    <CalendarDateTimePicker
                       id="offline-edit-end"
-                      type="datetime-local"
+                      label="New end"
                       value={editEnd}
-                      onChange={(change) => setEditEnd(change.target.value)}
+                      onChange={setEditEnd}
                     />
                   </div>
                 </div>

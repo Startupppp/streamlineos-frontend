@@ -9,7 +9,6 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -159,7 +158,7 @@ function CreateTemplateSheet({ open, onOpenChange }: { open: boolean; onOpenChan
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label>Steps</Label>
+              <p className="text-sm font-medium">Steps</p>
               <AnimatedIconButton
                 icon={PlusIcon}
                 iconSize={12}

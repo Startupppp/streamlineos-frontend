@@ -2,6 +2,8 @@
 
 import { memo, useCallback, useMemo, useState } from "react";
 import { format } from "date-fns";
+import { useOrgTimeZone } from "@/hooks/api/org-display";
+import { formatTimeInOrgTz, todayInOrgTz } from "@/lib/date-utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -52,7 +54,7 @@ function getStatusLabel(statusKey: string, t: Translate): string {
   return statusKey.charAt(0) + statusKey.slice(1).toLowerCase();
 }
 
-const buildColumns = (t: Translate): DataTableColumn<AttendanceLog>[] => [
+const buildColumns = (t: Translate, orgTz: string | null): DataTableColumn<AttendanceLog>[] => [
   {
     key: "date",
     header: t("attendance.colDate"),
@@ -69,7 +71,7 @@ const buildColumns = (t: Translate): DataTableColumn<AttendanceLog>[] => [
     className: "hidden md:table-cell font-mono text-sm tabular-nums text-muted-foreground",
     cell: (log) => (
       <span className="hidden font-mono text-sm tabular-nums text-muted-foreground md:inline">
-        {log.checkIn ? format(new Date(log.checkIn), "hh:mm a") : "--"}
+        {log.checkIn ? formatTimeInOrgTz(log.checkIn, orgTz) : "--"}
       </span>
     ),
   },
@@ -80,7 +82,7 @@ const buildColumns = (t: Translate): DataTableColumn<AttendanceLog>[] => [
     className: "hidden md:table-cell font-mono text-sm tabular-nums text-muted-foreground",
     cell: (log) => (
       <span className="hidden font-mono text-sm tabular-nums text-muted-foreground md:inline">
-        {log.checkOut ? format(new Date(log.checkOut), "hh:mm a") : "--"}
+        {log.checkOut ? formatTimeInOrgTz(log.checkOut, orgTz) : "--"}
       </span>
     ),
   },
@@ -109,7 +111,7 @@ const buildColumns = (t: Translate): DataTableColumn<AttendanceLog>[] => [
         isClassifiedStatus && recordedStatus
           ? recordedStatus
           : !log.checkOut &&
-              log.date < format(new Date(), "yyyy-MM-dd") &&
+              log.date < todayInOrgTz(orgTz) &&
               (log.status === "PRESENT" || !log.status)
             ? "MISSING_CHECKOUT"
             : log.checkOut && log.status !== "ON_BREAK"
@@ -130,13 +132,13 @@ const buildColumns = (t: Translate): DataTableColumn<AttendanceLog>[] => [
   },
 ];
 
-async function handleDownloadReport(logs: AttendanceLog[]) {
+async function handleDownloadReport(logs: AttendanceLog[], orgTz: string | null) {
   try {
     const { downloadXlsx } = await import("@/lib/export/xlsx-utils");
     const rows = logs.map((log) => ({
       date: log.date ? format(new Date(log.date), "yyyy-MM-dd") : "",
-      checkIn: log.checkIn ? format(new Date(log.checkIn), "hh:mm a") : "",
-      checkOut: log.checkOut ? format(new Date(log.checkOut), "hh:mm a") : "",
+      checkIn: log.checkIn ? formatTimeInOrgTz(log.checkIn, orgTz) : "",
+      checkOut: log.checkOut ? formatTimeInOrgTz(log.checkOut, orgTz) : "",
       totalHours: log.workHours || "",
       status: log.status || "PRESENT",
     }));
@@ -181,7 +183,8 @@ export const DailyHistoryTable = memo(function DailyHistoryTable({
   chrome?: boolean;
 }) {
   const t = useT();
-  const columns = useMemo(() => buildColumns(t), [t]);
+  const orgTz = useOrgTimeZone();
+  const columns = useMemo(() => buildColumns(t, orgTz), [t, orgTz]);
   const [pageSize, setPageSize] = useState(20);
   /**
    * The page-overshoot correction this component used to run — snapping
@@ -236,7 +239,7 @@ export const DailyHistoryTable = memo(function DailyHistoryTable({
   }
 
   function handleDownloadClick() {
-    void handleDownloadReport(logs);
+    void handleDownloadReport(logs, orgTz);
   }
 
   const emptyState = (

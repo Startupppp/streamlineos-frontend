@@ -101,8 +101,7 @@ describe("BSN-04-042 — Quick Create never preselects a scope from another orga
         isCollapsed={false}
       />,
     );
-    await user.click(screen.getByRole("button", { name: "Create" }));
-    await user.click(screen.getByText("Project"));
+    await user.click(screen.getByRole("button", { name: "New project" }));
     const dialogScope = lastProjectDialogProps().scope;
     expect(dialogScope).toEqual({ managedProductId: 2 });
     expect(dialogScope).not.toMatchObject({ managedProductId: 1 });
@@ -117,8 +116,7 @@ describe("BSN-04-042 — Quick Create never preselects a scope from another orga
         isCollapsed={false}
       />,
     );
-    await user.click(screen.getByRole("button", { name: "Create" }));
-    await user.click(screen.getByText("Project"));
+    await user.click(screen.getByRole("button", { name: "New project" }));
     const dialogScope = lastProjectDialogProps().scope;
     expect(dialogScope).toEqual({ managedProductId: 1 });
     expect(dialogScope).not.toMatchObject({ managedProductId: 2 });

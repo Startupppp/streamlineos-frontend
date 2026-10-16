@@ -10,8 +10,17 @@ const MEDIA_NODE_TYPES: ReadonlySet<string> = new Set([
 ]);
 
 const ATTRS_KEY = "attrs";
+const MEDIA_URL_KEYS: ReadonlySet<string> = new Set([
+  "url",
+  "src",
+  "href",
+  "poster",
+  "thumbnail",
+  "thumbnailUrl",
+]);
 
 const ABSOLUTE_URL_SCHEME = /^[a-z][a-z0-9+.-]*:/i;
+const PUBLIC_MEDIA_PATH = /^\/public\/wiki\/[A-Za-z0-9-]{8,64}\/media$/;
 
 export const COVER_GRADIENT_PREFIX = "gradient:";
 
@@ -29,6 +38,15 @@ export function publicMediaBrokerUrl(
 export function publicMediaFileKey(value: string): string | null {
   const trimmed = value.trim();
   if (trimmed === "") return null;
+  try {
+    const parsed = new URL(trimmed, "https://public-wiki.invalid");
+    if (PUBLIC_MEDIA_PATH.test(parsed.pathname)) {
+      const key = parsed.searchParams.get("key");
+      return key && key.trim() !== "" ? key : null;
+    }
+  } catch {
+    return null;
+  }
   if (ABSOLUTE_URL_SCHEME.test(trimmed)) {
     let parsed: URL;
     try {
@@ -64,7 +82,7 @@ function rewriteNode(
   const result: KbContentNode = {};
   for (const [k, v] of Object.entries(node)) {
     const childType = k === ATTRS_KEY ? nodeType : "";
-    if (k === "url" && typeof v === "string") {
+    if (MEDIA_URL_KEYS.has(k) && typeof v === "string") {
       result[k] = MEDIA_NODE_TYPES.has(nodeType)
         ? rewriteMediaUrl(v, shareToken)
         : v;

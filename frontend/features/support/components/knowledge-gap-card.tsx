@@ -12,7 +12,6 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { Textarea } from "@/components/ui/textarea";
 import { useCan } from "@/hooks/api/access";
 import type { KnowledgeGap } from "@/features/support/lib/knowledge-gap.types";
-import { pageHref } from "@/lib/knowledge-routes";
 import { KnowledgeGapStatusBadge } from "./knowledge-gap-status-badge";
 
 interface KnowledgeGapCardProps {
@@ -31,6 +30,7 @@ export function KnowledgeGapCard({
   isDismissing,
 }: KnowledgeGapCardProps) {
   const canManage = useCan("support:knowledge-gaps:manage");
+  const canViewArticle = useCan("support:kb:view");
   const [isDismissOpen, setIsDismissOpen] = useState(false);
   const [dismissReason, setDismissReason] = useState("");
 
@@ -141,9 +141,9 @@ export function KnowledgeGapCard({
             Draft KB Article
           </LoadingButton>
         )}
-        {gap.proposedArticleId !== null && (
+        {gap.proposedArticleId !== null && canViewArticle && (
           <Link
-            href={pageHref(gap.proposedArticleId)}
+            href={`/support/kb/${gap.proposedArticleId}`}
             className="inline-flex items-center gap-1 text-xs text-status-info-ink hover:underline"
           >
             <ExternalLink className="h-3 w-3" />

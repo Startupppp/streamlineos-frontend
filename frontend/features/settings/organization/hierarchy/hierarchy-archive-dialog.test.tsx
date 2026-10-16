@@ -144,4 +144,21 @@ describe("HierarchyArchiveDialog", () => {
     expect(onRetryPreflight).toHaveBeenCalledTimes(1);
     expect(onConfirm).not.toHaveBeenCalled();
   });
+
+  it("shows the unit name together with its code in the confirm description", () => {
+    render(
+      <HierarchyArchiveDialog
+        open
+        unitName="QA Dept 1013 (QAD1013B)"
+        unitLabel="department"
+        isPending={false}
+        error={null}
+        onConfirm={noop}
+        onOpenChange={noop}
+      />,
+    );
+
+    expect(screen.getByText(/QA Dept 1013 \(QAD1013B\)/)).toBeInTheDocument();
+    expect(screen.getByText("Archive department?")).toBeInTheDocument();
+  });
 });

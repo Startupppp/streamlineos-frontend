@@ -6,7 +6,7 @@ import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { directoryAndOwnershipQueryKeys } from "@/lib/query-keys/directory-and-ownership";
 import { useCan } from "@/hooks/api/access";
 import type { AuditCursorPage, AuditLogEntry, ModuleMyPermissions, ModulePermission } from "./types";
-import { viewKey } from "./types";
+import { viewKey, manageKey } from "./types";
 import { lazyContract } from "@/lib/api-envelope";
 import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
@@ -30,7 +30,7 @@ export function useModuleAccessCatalog(
   moduleKey: string,
   options?: { enabled?: boolean },
 ) {
-  const canView = useCan(viewKey(moduleKey));
+  const canManage = useCan(manageKey(moduleKey));
   return useQuery<ModulePermission[], Error>({
     ...INLINE_READ_ERROR,
     queryKey: directoryAndOwnershipQueryKeys.moduleAccess.catalog(moduleKey),
@@ -41,7 +41,7 @@ export function useModuleAccessCatalog(
         signal,
         catalogContract,
       ),
-    enabled: canView && (options?.enabled ?? true),
+    enabled: canManage && (options?.enabled ?? true),
     staleTime: 5 * 60_000,
   });
 }
@@ -68,7 +68,7 @@ export function useModuleAuditLog(
   limit: number,
   options?: { enabled?: boolean },
 ) {
-  const canView = useCan(viewKey(moduleKey));
+  const canManage = useCan(manageKey(moduleKey));
   return useInfiniteQuery<AuditCursorPage<AuditLogEntry>, Error>({
     ...INLINE_READ_ERROR,
     queryKey: directoryAndOwnershipQueryKeys.moduleAccess.auditLog(moduleKey, { limit }),
@@ -84,7 +84,7 @@ export function useModuleAuditLog(
     },
     initialPageParam: NO_CURSOR_YET,
     getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
-    enabled: canView && (options?.enabled ?? true),
+    enabled: canManage && (options?.enabled ?? true),
     staleTime: 60_000,
   });
 }

@@ -50,6 +50,13 @@ describe("MilestoneCard — progress is rendered from the linked work counts", (
   });
 });
 
+describe("MilestoneCard — actions trigger is absent for read-only viewers", () => {
+  it("renders no actions trigger when neither onEdit nor onDelete are provided", () => {
+    render(<MilestoneCard milestone={MILESTONE} />);
+    expect(screen.queryByRole("button", { name: `Actions for ${MILESTONE.name}` })).not.toBeInTheDocument();
+  });
+});
+
 describe("MilestoneCard — right click opens the same authorized actions as the row menu", () => {
   it("opens the actions menu on contextmenu with Edit and Delete when delete is authorized", () => {
     render(<MilestoneCard milestone={MILESTONE} onEdit={jest.fn()} onDelete={jest.fn()} />);

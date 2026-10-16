@@ -3,12 +3,15 @@ import { EMPTY_HR_HUB_ACCESS, type HrHubAccess } from "@/hooks/api/hr/hub-types"
 import { HrHubPage } from "./hr-hub-page";
 
 let mockCapabilities: HrHubAccess = EMPTY_HR_HUB_ACCESS;
+let mockIsLoading = false;
 
 jest.mock("@/hooks/api/hr/hub", () => ({
   ...jest.requireActual("@/hooks/api/hr/hub"),
   useHrHubSnapshot: () => ({
-    data: { generatedAt: "", today: "", capabilities: mockCapabilities, sections: {} },
-    isLoading: false,
+    data: mockIsLoading
+      ? undefined
+      : { generatedAt: "", today: "", capabilities: mockCapabilities, sections: {} },
+    isLoading: mockIsLoading,
     isError: false,
     refetch: jest.fn(),
   }),
@@ -27,6 +30,7 @@ jest.mock("@/features/hr/setup", () => ({
 beforeEach(() => {
   mockSetupEmpty = false;
   mockDismissed = false;
+  mockIsLoading = false;
 });
 
 describe("HR hub without recruitment", () => {
@@ -51,6 +55,17 @@ describe("HR hub without recruitment", () => {
 
     expect(screen.queryByText("No HR panels available to you")).not.toBeInTheDocument();
     expect(screen.getByText("Today")).toBeInTheDocument();
+  });
+});
+
+describe("HR hub loading state (BUG-HRMS-016)", () => {
+  it("renders panel skeletons while the snapshot is loading instead of a blank body", () => {
+    mockIsLoading = true;
+    render(<HrHubPage />);
+
+    expect(screen.queryByText("No HR panels available to you")).not.toBeInTheDocument();
+    expect(screen.queryByText("Today")).not.toBeInTheDocument();
+    expect(screen.queryByText("Needs you")).not.toBeInTheDocument();
   });
 });
 

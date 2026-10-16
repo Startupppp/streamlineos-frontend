@@ -6,6 +6,7 @@ import { z } from "zod";
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
   SheetBody,
@@ -83,6 +84,7 @@ export function AccommodationSheet({ open, onOpenChange }: Props) {
       <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">
         <SheetHeader className="shrink-0 border-b border-border px-6 py-4 text-left">
           <SheetTitle>New Accommodation Request</SheetTitle>
+          <SheetDescription className="sr-only">Submit a new workplace accommodation request for an employee.</SheetDescription>
         </SheetHeader>
 
         <Form {...form}>

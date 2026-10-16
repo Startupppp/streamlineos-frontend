@@ -323,7 +323,7 @@ export function WikiPageCollectionTable({
 
   const isEmpty = data !== undefined && data.data.length === 0;
   const accessLost =
-    hadData && isEmpty && !filtersActive && accessLostTitle !== undefined;
+    hadData && isEmpty && !filtersActive && !pager.hasPrevious && accessLostTitle !== undefined;
 
   const pageState = usePageState({
     permission: "kb:pages:view",
@@ -380,7 +380,15 @@ export function WikiPageCollectionTable({
   const columns = [...BASE_COLUMNS, ...additionalColumns];
   const rows = data?.data ?? [];
 
-  const emptyNode = accessLost ? (
+  const emptyNode = pager.hasPrevious ? (
+    <EmptyState
+      illustrationPreset="default"
+      title="No pages on this page"
+      description="The pages on this page may have changed. Go back to continue browsing."
+      action={{ label: "Previous page", onClick: handlePrevious }}
+      className={CONTENT_FILL_PANEL}
+    />
+  ) : accessLost ? (
     <EmptyState
       illustrationPreset="default"
       title={accessLostTitle ?? emptyTitle}

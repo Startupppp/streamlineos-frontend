@@ -4,8 +4,8 @@ import { ApiError } from "@/lib/api-envelope";
 import type { LinkedDocumentItem } from "@/hooks/api/kb/linked-documents";
 import { WikiSearchCompanyDocuments } from "./wiki-search-company-documents";
 
-const mockFlags = jest.fn();
-jest.mock("@/hooks/api/kb/hr-link-config", () => ({ useHrKbLinkFlags: () => mockFlags() }));
+const mockConfig = jest.fn();
+jest.mock("@/hooks/api/kb/hr-link-config", () => ({ useHrKbLinkConfig: () => mockConfig() }));
 
 const mockList = jest.fn();
 jest.mock("@/hooks/api/kb/linked-documents", () => ({ useLinkedDocuments: (...args: unknown[]) => mockList(...args) }));
@@ -42,7 +42,7 @@ const page = (rows: LinkedDocumentItem[], pagination = { limit: 10, hasMore: fal
 
 beforeEach(() => {
   jest.clearAllMocks();
-  mockFlags.mockReturnValue({ link: true, search: true, ai: false });
+  mockConfig.mockReturnValue({ data: { link: true, search: true, ai: false }, isLoading: false, isError: false, error: null, refetch: jest.fn() });
   mockList.mockReturnValue(page([item()]));
 });
 
@@ -57,7 +57,7 @@ describe("WikiSearchCompanyDocuments", () => {
   });
 
   it("renders nothing, and does not ask, while search is switched off", () => {
-    mockFlags.mockReturnValue({ link: true, search: false, ai: false });
+    mockConfig.mockReturnValue({ data: { link: true, search: false, ai: false }, isLoading: false, isError: false, error: null, refetch: jest.fn() });
 
     const { container } = render(<WikiSearchCompanyDocuments query="leave" />);
 
@@ -86,6 +86,28 @@ describe("WikiSearchCompanyDocuments", () => {
     render(<WikiSearchCompanyDocuments query="leave" />);
 
     expect(screen.queryByRole("heading", { name: "Company documents" })).not.toBeInTheDocument();
+  });
+
+  it("shows a loading status while linked-document search settings are pending", () => {
+    mockConfig.mockReturnValue({ data: undefined, isLoading: true, isError: false, error: null, refetch: jest.fn() });
+
+    render(<WikiSearchCompanyDocuments query="leave" />);
+
+    expect(screen.getByRole("status", { name: "Loading company document search" })).toBeInTheDocument();
+    expect(mockList).toHaveBeenCalledWith(expect.anything(), { enabled: false });
+  });
+
+  it("shows the config request id and retries instead of silently omitting company documents", async () => {
+    const refetch = jest.fn();
+    mockConfig.mockReturnValue({ data: undefined, isLoading: false, isError: true, error: new ApiError("Settings unavailable", 500, "INTERNAL", { correlationId: "req-config" }, "/kb/hr-link/config"), refetch });
+
+    render(<WikiSearchCompanyDocuments query="leave" />);
+
+    expect(screen.getByText("Company document search settings could not be loaded")).toBeInTheDocument();
+    expect(screen.getByText("req-config")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Try again" }));
+    expect(refetch).toHaveBeenCalledTimes(1);
+    expect(mockList).toHaveBeenCalledWith(expect.anything(), { enabled: false });
   });
 
   it("pages with its own cursor, and only offers Next when the server says there is more", async () => {

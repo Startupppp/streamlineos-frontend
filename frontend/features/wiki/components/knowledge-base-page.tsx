@@ -13,7 +13,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
-import { useKbAsk } from "@/hooks/api/kb/ask";
+import { useKbAsk, useKbAskPageOwners } from "@/hooks/api/kb/ask";
 import { isAiStreamAbort } from "@/hooks/api/ai-text-stream";
 import { isApiError } from "@/lib/api-envelope";
 import {
@@ -42,7 +42,6 @@ import {
   type StatusScopeFilter,
 } from "@/features/wiki/components/kb-sources-sheet";
 import { useKbSpaces } from "@/hooks/api/kb/spaces";
-import { useOrgMembers } from "@/hooks/api/organization";
 import { KbNoteSheet } from "@/features/wiki/components/kb-note-sheet";
 import { KbConversationList } from "@/features/wiki/components/kb-conversation-list";
 import {
@@ -68,6 +67,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 
 interface Pending {
   question: string;
+  spaceId?: number;
   answer?: string;
   error?: string;
   citations?: KbAskCitation[];
@@ -151,8 +151,21 @@ export default function KnowledgeBasePage() {
   const kbSpaces = spacesQuery.data?.data ?? [];
 
   const debouncedOwnerSearch = useDebouncedValue(ownerSearch.trim(), 300);
-  const ownersQuery = useOrgMembers(1, 100, debouncedOwnerSearch || undefined);
-  const scopeOwners = ownersQuery.data?.data ?? [];
+  const ownersQuery = useKbAskPageOwners(
+    debouncedOwnerSearch,
+    pendingOwnerMembershipId ?? undefined,
+    sourcesSheet.kind === "scope",
+  );
+  const scopeOwners = (ownersQuery.data?.pages ?? []).flatMap((page) => page.data);
+  const selectedScopeOwner = ownersQuery.data?.pages[0]?.selected ?? null;
+
+  function handleOwnersLoadMore() {
+    void ownersQuery.fetchNextPage();
+  }
+
+  function handleOwnersRetry() {
+    void ownersQuery.refetch();
+  }
 
   const debouncedPageSearchQuery = useDebouncedValue(pageSearchQuery.trim(), 300);
   const pageSearchResult = useKbPagesSearch(debouncedPageSearchQuery);
@@ -256,7 +269,7 @@ export default function KnowledgeBasePage() {
     sendingRef.current = true;
     setInput("");
     isNearBottomRef.current = true;
-    setPending({ question: trimmed });
+    setPending({ question: trimmed, ...(scopeSpaceId !== null ? { spaceId: scopeSpaceId } : {}) });
     const generation = ++generationRef.current;
     function handleToken(token: string) {
       if (generationRef.current === generation)
@@ -291,9 +304,9 @@ export default function KnowledgeBasePage() {
           if (activeConversationId === null) setConversation(data.conversationId);
           void qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.chatConversations() });
           if (!data.hasContext) {
-            setPending((prev) => prev ? { ...prev, hasContext: false, citations: data.citations } : prev);
+            setPending((prev) => prev ? { ...prev, answer: undefined, hasContext: false, citations: data.citations } : prev);
           } else if (data.disagreement) {
-            setPending((prev) => prev ? { ...prev, hasContext: true, disagreement: data.disagreement, citations: data.citations } : prev);
+            setPending((prev) => prev ? { ...prev, answer: undefined, hasContext: true, disagreement: data.disagreement, citations: data.citations } : prev);
           } else {
             setPending(null);
           }
@@ -426,6 +439,9 @@ export default function KnowledgeBasePage() {
     scopeOwnerMembershipId !== null ||
     scopeStatus !== null;
   const scopeItemCount = scopeSourceIds.length + scopePageIds.length;
+  const scopeSummary = scopeItemCount > 0
+    ? `${scopeItemCount} item${scopeItemCount === 1 ? "" : "s"}`
+    : "Filtered";
   const clientFilteredSources = sources.filter((source) => {
     if (scopeFilters.kind !== undefined && source.kind !== scopeFilters.kind) return false;
     if (scopeFilters.createdById !== undefined && source.createdById !== scopeFilters.createdById) return false;
@@ -439,6 +455,7 @@ export default function KnowledgeBasePage() {
   const scopeDisplaySources = pendingSpaceId !== null
     ? baseDisplaySources.filter((s) => s.spaceId === pendingSpaceId)
     : baseDisplaySources;
+  const activeScopeSourcesQuery = hasScopeFilters ? scopeSourcesQuery : sourcesQuery;
 
   return (
     <PageWrapper
@@ -457,10 +474,10 @@ export default function KnowledgeBasePage() {
             size="sm"
             className="gap-1.5"
             onClick={handleScopeClick}
-            aria-label={scopeActive ? `Searching ${scopeItemCount} item${scopeItemCount === 1 ? "" : "s"}` : "Choose sources to search"}
+            aria-label={scopeActive ? `Searching ${scopeSummary}` : "Choose sources to search"}
           >
             <SlidersHorizontal className="h-4 w-4" />
-            {scopeActive ? `${scopeItemCount} item${scopeItemCount === 1 ? "" : "s"}` : "Scope"}
+            {scopeActive ? scopeSummary : "Scope"}
           </Button>
           <LoadingButton variant="outline" size="sm" className="gap-1.5" isPending={uploadSource.isPending} onClick={handleManageSourcesClick}>
             {!uploadSource.isPending && <BookOpenTextIcon size={16} />}
@@ -545,7 +562,7 @@ export default function KnowledgeBasePage() {
                         />
                       ),
                     )}
-                    {pending && (
+                    {pending && (ask.isPending || pending.error || pending.isQuotaError) && (
                       <ChatBubble key="pending-user" message={{ id: "pending-user", role: "user", content: pending.question }} onCitation={handleCitationClick} reduce={Boolean(reduce)} />
                     )}
                     {pending?.isQuotaError && (
@@ -555,8 +572,11 @@ export default function KnowledgeBasePage() {
                       <ChatBubble key="pending-error" message={{ id: "pending-error", role: "assistant", content: pending.error, isError: true }} onCitation={handleCitationClick} reduce={Boolean(reduce)} />
                     )}
                     {pending?.error && !pending.isQuotaError && !ask.isPending && <Button variant="outline" onClick={handleRegenerate}>Generate a new answer</Button>}
+                    {pending?.answer && pending.error && (
+                      <p role="status" className="text-xs text-muted-foreground">Partial answer — generation did not complete.</p>
+                    )}
                     {pending?.hasContext === false && (
-                      <InsufficientEvidenceBanner question={pending.question} />
+                      <InsufficientEvidenceBanner question={pending.question} spaceId={pending.spaceId} />
                     )}
                     {pending?.disagreement && (
                       <DisagreementBanner summary={pending.disagreement.summary} />
@@ -570,7 +590,7 @@ export default function KnowledgeBasePage() {
                           pending.citations?.length ? <CitationEvidenceList citations={pending.citations} /> : undefined
                         }
                         actions={
-                          !ask.isPending ? (
+                          !ask.isPending && !pending.error && !pending.isQuotaError ? (
                             <>
                               <CopyAnswerButton text={pending.answer} />
                               <AnswerFeedbackBar question={pending.question} />
@@ -601,14 +621,17 @@ export default function KnowledgeBasePage() {
                     </motion.span>
                   </Button>
                 </div>
-                {scopeActive && (
-                  <p className="mt-1.5 text-micro text-muted-foreground">
-                    Searching {scopeItemCount} selected item{scopeItemCount === 1 ? "" : "s"}.{" "}
-                    <button type="button" onClick={handleScopeClick} className="underline hover:text-foreground">Edit</button>
-                    {" · "}
-                    <button type="button" onClick={handleClearScope} className="underline hover:text-foreground">Clear</button>
-                  </p>
-                )}
+                <p className="mt-1.5 text-micro text-muted-foreground">
+                  {scopeActive
+                    ? scopeItemCount > 0
+                      ? `Searching ${scopeItemCount} selected item${scopeItemCount === 1 ? "" : "s"}.`
+                      : "Searching with selected filters."
+                    : "Searching all accessible knowledge."}{" "}
+                  <button type="button" onClick={handleScopeClick} className="underline hover:text-foreground">Edit</button>
+                  {scopeActive && (
+                    <>{" · "}<button type="button" onClick={handleClearScope} className="underline hover:text-foreground">Clear</button></>
+                  )}
+                </p>
               </div>
             </>
           )}
@@ -622,6 +645,11 @@ export default function KnowledgeBasePage() {
           onOpenChange={handleSourcesSheetOpenChange}
           sources={sources}
           isLoading={sourcesQuery.isLoading}
+          sourceError={sourcesQuery.isError ? sourcesQuery.error : null}
+          sourceHasMore={sourcesQuery.hasNextPage}
+          sourceIsFetchingMore={sourcesQuery.isFetchingNextPage}
+          onSourceLoadMore={() => { void sourcesQuery.fetchNextPage(); }}
+          onSourceRetry={() => { void sourcesQuery.refetch(); }}
           readyCount={readyCount}
           onUploadClick={handleUploadClick}
           uploadPending={uploadSource.isPending}
@@ -639,6 +667,11 @@ export default function KnowledgeBasePage() {
           onOpenChange={handleSourcesSheetOpenChange}
           sources={scopeDisplaySources}
           isLoading={hasScopeFilters ? scopeSourcesQuery.isLoading : sourcesQuery.isLoading}
+          sourceError={activeScopeSourcesQuery.isError ? activeScopeSourcesQuery.error : null}
+          sourceHasMore={activeScopeSourcesQuery.hasNextPage}
+          sourceIsFetchingMore={activeScopeSourcesQuery.isFetchingNextPage}
+          onSourceLoadMore={() => { void activeScopeSourcesQuery.fetchNextPage(); }}
+          onSourceRetry={() => { void activeScopeSourcesQuery.refetch(); }}
           selectedIds={pendingScopeIds}
           onSelectionChange={handleScopeSelectionChange}
           verifiedOnly={pendingVerifiedOnly}
@@ -654,8 +687,14 @@ export default function KnowledgeBasePage() {
           ownerMembershipId={pendingOwnerMembershipId}
           onOwnerMembershipIdChange={setPendingOwnerMembershipId}
           owners={scopeOwners}
+          selectedOwner={selectedScopeOwner}
           onOwnerSearchChange={setOwnerSearch}
           ownersAreLoading={ownersQuery.isLoading}
+          ownersHasMore={ownersQuery.hasNextPage}
+          ownersAreFetchingMore={ownersQuery.isFetchingNextPage}
+          onOwnersLoadMore={handleOwnersLoadMore}
+          ownersError={ownersQuery.error}
+          onOwnersRetry={handleOwnersRetry}
           statusScope={pendingStatus}
           onStatusScopeChange={setPendingStatus}
           onConfirm={handleScopeConfirm}

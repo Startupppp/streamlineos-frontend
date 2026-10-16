@@ -13,6 +13,7 @@ import type { FeedbucketWidgetPage } from "@/hooks/api/feedbucket/feedbucket-wid
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
+import { useModuleEnabled } from "@/hooks/api/access";
 
 const feedbucketWidgetListC = lazyContract(() =>
   import("@/hooks/api/feedbucket/feedbucket-widget-schema").then((m) => m.feedbucketWidgetListContract),
@@ -31,6 +32,7 @@ interface WidgetListParams {
 }
 
 export function useFeedbucketWidgets(params?: WidgetListParams) {
+  const feedbucketEnabled = useModuleEnabled("feedbucket");
   const queryParams = params !== undefined
     ? (Object.fromEntries(
         Object.entries(params).filter(([, v]) => v !== undefined),
@@ -42,6 +44,7 @@ export function useFeedbucketWidgets(params?: WidgetListParams) {
       apiClient.get<FeedbucketWidgetPage>("/feedbucket/widgets", queryParams, signal, feedbucketWidgetListC),
     staleTime: 30_000,
     ...INLINE_READ_ERROR,
+    enabled: feedbucketEnabled,
   });
 }
 

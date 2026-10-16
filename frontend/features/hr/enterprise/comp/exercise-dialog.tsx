@@ -5,7 +5,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -51,6 +51,7 @@ export function ExerciseDialog({ open, onOpenChange, grantId }: Props) {
       <DialogContent className="max-w-sm">
         <DialogHeader>
           <DialogTitle>Record Exercise</DialogTitle>
+          <DialogDescription className="sr-only">Record the exercise date, units, and transaction amount for this equity grant.</DialogDescription>
         </DialogHeader>
 
         <Form {...form}>

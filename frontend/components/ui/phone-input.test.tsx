@@ -25,3 +25,9 @@ it("keeps the visible input synchronized with its controlled value", async () =>
 
   expect(input).toHaveValue("98765 43210");
 });
+
+it("names the country selector for screen readers, dial code included", () => {
+  render(<ControlledPhoneInput />);
+
+  expect(screen.getByRole("button", { name: "Country code, India (+91)" })).toBeInTheDocument();
+});

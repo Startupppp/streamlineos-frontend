@@ -24,6 +24,7 @@ import { ManagedProductOverviewHero } from "./managed-product-overview-hero";
 import { ManagedProductOverviewAttention } from "./managed-product-overview-attention";
 import { ManagedProductOverviewPulse } from "./managed-product-overview-pulse";
 import { ManagedProductOverviewFlow } from "./managed-product-overview-flow";
+import { OverviewEmptyState } from "./overview-metric";
 import { deriveAttentionSignals } from "./overview-attention-signals";
 import { useManagedProductOverview } from "./use-managed-product-overview";
 
@@ -136,7 +137,7 @@ export function ManagedProductOverviewPage({
         onRetry={handleRetry}
       >
         <motion.div
-          className="flex w-full min-w-0 flex-col gap-3 pb-8 sm:gap-4"
+          className="flex min-h-0 w-full min-w-0 flex-1 flex-col gap-4 pb-8"
           variants={staggerContainer}
           initial="hidden"
           animate="visible"
@@ -152,22 +153,18 @@ export function ManagedProductOverviewPage({
 
           {summaryData ? (
             <>
-              <motion.div
-                variants={fadeUp}
-                className="grid grid-cols-1 items-start gap-3 lg:grid-cols-[minmax(0,1.45fr)_minmax(20rem,1fr)] sm:gap-4"
-              >
+              <motion.div variants={fadeUp} className="min-w-0">
                 <ManagedProductOverviewHero
                   product={summaryData.product}
                   now={now}
                 />
-                <div className="min-w-0 lg:col-start-2 lg:row-start-1 lg:h-full">
-                  <ManagedProductOverviewAttention
-                    signals={attentionSignals}
-                    onMarkReviewed={markReviewed}
-                    isMarkingReviewed={isMarkingReviewed}
-                    className="lg:h-full"
-                  />
-                </div>
+              </motion.div>
+              <motion.div variants={fadeUp} className="min-w-0">
+                <ManagedProductOverviewAttention
+                  signals={attentionSignals}
+                  onMarkReviewed={markReviewed}
+                  isMarkingReviewed={isMarkingReviewed}
+                />
               </motion.div>
               <ManagedProductOverviewStrategyCard
                 managedProductId={managedProductId}
@@ -213,29 +210,25 @@ export function ManagedProductOverviewPage({
               </motion.div>
             </>
           ) : isFiltered ? (
-            <div className="flex flex-col items-start gap-3 rounded-xl border border-border bg-card p-6">
-              <p className="text-sm text-muted-foreground">
+            <OverviewEmptyState>
+              <p className="max-w-sm text-pretty text-sm text-muted-foreground">
                 No data matches the current filters.
               </p>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={handleClearFilters}
-              >
+              <Button type="button" variant="outline" onClick={handleClearFilters}>
                 Clear filters
               </Button>
-            </div>
+            </OverviewEmptyState>
           ) : (
-            <p className="text-sm text-muted-foreground">
-              No summary data available.{" "}
-              <Link
-                href={`/build/managed-products/${managedProductId}/insights`}
-                className="inline-flex min-h-11 items-center text-primary underline-offset-2 hover:underline"
-              >
-                Explore insights
-              </Link>
-            </p>
+            <OverviewEmptyState>
+              <p className="max-w-sm text-pretty text-sm text-muted-foreground">
+                No summary is available for this product yet.
+              </p>
+              <Button asChild>
+                <Link href={`/build/managed-products/${managedProductId}/insights`}>
+                  Explore insights
+                </Link>
+              </Button>
+            </OverviewEmptyState>
           )}
         </motion.div>
       </PageState>

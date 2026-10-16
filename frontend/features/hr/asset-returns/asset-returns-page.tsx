@@ -163,7 +163,7 @@ export function AssetReturnsPage() {
     markReturned.mutate(
       { assetReturnId: returnId, condition: "Good" },
       {
-        onSuccess: () => { toast.success("Asset marked as returned"); setReturnId(null); },
+        onSuccess: () => { toast.success("Asset returned and unassigned"); setReturnId(null); },
         onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
@@ -186,7 +186,7 @@ export function AssetReturnsPage() {
         ) : undefined
       }
     >
-      <PageState resolution={pageState} loading={<DataTableSkeleton />} onRetry={handleRetry} className="flex-1">
+      <PageState resolution={pageState} loading={<DataTableSkeleton headers={["Asset", "Employee", "Status", "Condition", "Date"]} />} onRetry={handleRetry} className="flex-1">
       <DataTable<AssetReturn>
         className="flex-1 min-h-0"
         data={items ?? []}

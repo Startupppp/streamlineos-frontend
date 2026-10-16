@@ -29,8 +29,19 @@ jest.mock("@/hooks/api/build/milestones", () => ({
   useUpdateMilestone: () => mutation,
 }));
 
+jest.mock("@/hooks/api/build/build-members", () => ({
+  useBuildMembers: () => ({ data: { data: [] }, isLoading: false }),
+}));
+
+jest.mock("@/hooks/api/access", () => ({
+  useCan: () => true,
+  useCanState: () => "granted",
+  useAccess: () => ({ data: { isOrgOwner: true, scopes: {}, modules: {} }, isLoading: false }),
+}));
+
 jest.mock("@/hooks/api/organization", () => ({
   useOrgMembers: () => ({ data: { data: [] } }),
+  useOrgMembersByIds: () => ({ data: { data: [] } }),
 }));
 
 jest.mock("@/components/ui/user-combobox", () => ({

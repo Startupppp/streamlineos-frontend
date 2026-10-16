@@ -8,20 +8,10 @@ import { CreateEpicDialog } from "./create-epic-dialog";
 
 const mutate = jest.fn();
 const createMutate = jest.fn();
-let capturedOptions: {
-  onError?: (error: unknown) => void;
-  onSuccess?: () => void;
-} = {};
 
 jest.mock("@/hooks/api/build/tickets", () => ({
-  useCreateTicket: () => ({ mutate: createMutate, isPending: false }),
-  useUpdateTicket: (
-    _projectId: number,
-    options: { onError?: (error: unknown) => void },
-  ) => {
-    capturedOptions = options;
-    return { mutate, isPending: false };
-  },
+  useCreateTicket: () => ({ mutateAsync: createMutate, isPending: false }),
+  useUpdateTicket: () => ({ mutateAsync: mutate, isPending: false }),
 }));
 
 jest.mock("sonner", () => ({
@@ -79,19 +69,18 @@ async function openAndSave() {
 
 beforeEach(() => {
   jest.clearAllMocks();
-  capturedOptions = {};
+  mutate.mockResolvedValue({ version: 5, updatedAt: "2026-10-14T00:00:00.000Z" });
+  createMutate.mockResolvedValue({ id: 11, version: 1 });
   mockIsOnline = true;
 });
 
 describe("EditEpicDialog — a 409 shows the server value beside the local one, not a toast", () => {
   it("lists the drifted field with both values when the server rejects a stale version", async () => {
+    mutate.mockRejectedValueOnce(conflict());
     await openAndSave();
     expect(mutate).toHaveBeenCalledWith(
       expect.objectContaining({ ticketId: 9, version: 4, title: "Checkout rewrite v2" }),
     );
-    act(() => {
-      capturedOptions.onError?.(conflict());
-    });
     const dialog = screen.getByRole("dialog", {
       name: /this issue changed while you were editing/i,
     });
@@ -102,10 +91,8 @@ describe("EditEpicDialog — a 409 shows the server value beside the local one, 
   });
 
   it("still toasts a failure that is not a version conflict, so the conflict branch is not always on", async () => {
+    mutate.mockRejectedValueOnce(new ApiError("Server error", 500, "INTERNAL"));
     await openAndSave();
-    act(() => {
-      capturedOptions.onError?.(new ApiError("Server error", 500, "INTERNAL"));
-    });
     expect(toast.error).toHaveBeenCalled();
     expect(
       screen.queryByText("This issue changed while you were editing"),
@@ -113,6 +100,7 @@ describe("EditEpicDialog — a 409 shows the server value beside the local one, 
   });
 
   it("falls back to naming the version itself when the drift is in a field this form does not edit", async () => {
+    mutate.mockRejectedValueOnce(conflict());
     render(
       <Wrapper>
         <EditEpicDialog epic={EPIC} projectId={3} open onOpenChange={jest.fn()} />
@@ -120,9 +108,6 @@ describe("EditEpicDialog — a 409 shows the server value beside the local one, 
     );
     await act(async () => {
       fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
-    });
-    act(() => {
-      capturedOptions.onError?.(conflict());
     });
     const dialog = screen.getByRole("dialog", {
       name: /this issue changed while you were editing/i,

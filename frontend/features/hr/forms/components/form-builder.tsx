@@ -27,7 +27,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { FieldPalette } from "./field-palette";
 import { FieldConfigPanel } from "./field-config-panel";
 import { slugify } from "../lib/field-type-meta";
@@ -467,6 +467,7 @@ export function FormBuilder({ form, onSave, isPending, canSave = true }: FormBui
         <SheetContent side="bottom" className="h-[60dvh] overflow-y-auto">
           <SheetHeader className="pb-3 border-b">
             <SheetTitle className="text-sm">Add Field</SheetTitle>
+            <SheetDescription className="sr-only">Choose a field type to add to the form.</SheetDescription>
           </SheetHeader>
           <div className="pt-3">
             <FieldPalette onAddField={handleAddField} />

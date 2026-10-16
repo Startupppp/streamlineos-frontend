@@ -29,7 +29,7 @@ export function resolveIsDark(
 }
 
 export const APP_THEMES = [
-  { id: "default", label: "Ink", swatch: "#1c1917" },
+  { id: "default", label: "Mist", swatch: "#536367" },
   { id: "red", label: "Red", swatch: "#dc2626" },
   { id: "orange", label: "Orange", swatch: "#ea580c" },
   { id: "amber", label: "Amber", swatch: "#fbbf24" },

@@ -21,3 +21,15 @@ export function namespaceOf(permissionKey: string): string {
 export function administeringModuleOf(permissionKey: string): string {
   return moduleOwningNamespace(namespaceOf(permissionKey));
 }
+
+export function permissionKeyLabel(permissionKey: string): string {
+  return permissionKey
+    .split(":")
+    .map((segment) =>
+      segment
+        .split("-")
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(" "),
+    )
+    .join(" › ");
+}

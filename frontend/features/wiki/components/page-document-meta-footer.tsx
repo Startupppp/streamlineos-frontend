@@ -113,30 +113,35 @@ export function PageDocumentMetaFooter({
       <ToneBadge label={TRUST_LABELS[trustState]} tone={TRUST_TONES[trustState]} />
       <ToneBadge label={VISIBILITY_LABELS[visibility]} tone={VISIBILITY_TONES[visibility]} />
 
-      {nextReviewAt !== null ? (
-        <span>
-          Review due{" "}
+      <span>
+        Next review:{" "}
+        {nextReviewAt ? (
           <time dateTime={nextReviewAt} className="tabular-nums">
             {kbFormatDate(nextReviewAt)}
           </time>
-        </span>
-      ) : null}
-
-      {ownerUserId !== null && ownerUserId !== undefined ? (
-        <span>
-          Owner:{" "}
-          <span className="text-foreground">
-            {owner ? getUserDisplayName(owner) : ownerUserId}
-          </span>
-        </span>
-      ) : null}
+        ) : (
+          "Not scheduled"
+        )}
+      </span>
 
       <span>
-        Updated {kbTimeAgo(updatedAt)}
-        {editor ? (
+        Owner:{" "}
+        <span className="text-foreground">
+          {ownerUserId ? (owner ? getUserDisplayName(owner) : "Member unavailable") : "Unassigned"}
+        </span>
+      </span>
+
+      <span>
+        Updated{" "}
+        <time dateTime={updatedAt} title={updatedAt} className="tabular-nums">
+          {kbTimeAgo(updatedAt)}
+        </time>
+        {lastEditedById ? (
           <>
             {" by "}
-            <span className="text-foreground">{getUserDisplayName(editor)}</span>
+            <span className="text-foreground">
+              {editor ? getUserDisplayName(editor) : "Member unavailable"}
+            </span>
           </>
         ) : null}
       </span>

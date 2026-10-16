@@ -36,9 +36,10 @@ describe("BLD-001 — build route manifest covers all 81 authenticated build pag
     expect(BUILD_ROUTE_MANIFEST).toHaveLength(81);
   });
 
-  it("no longer tracks the twenty-six routes whose next.config.ts redirect now serves the URL, because a manifest entry without a page is a phantom disposition", () => {
+  it("no longer tracks the twenty-seven routes whose next.config.ts redirect now serves the URL, because a manifest entry without a page is a phantom disposition", () => {
     const routes = BUILD_ROUTE_MANIFEST.map((entry) => entry.route);
     for (const removed of [
+      "/build/[projectId]/agile-reports",
       "/build/access",
       "/build/members",
       "/build/client-access",
@@ -116,6 +117,20 @@ describe("BLD-001 — build route manifest covers all 81 authenticated build pag
     );
     expect(diskRoutes.has("/build/budget")).toBe(false);
     expect(diskRoutes.has("/build/reports")).toBe(false);
+  });
+
+  it("B-042 — the legacy per-project agile-reports deep link is served by a config redirect, not by a redirect-only page", () => {
+    expect(BUILD_COMPAT_REDIRECTS).toEqual(
+      expect.arrayContaining([
+        {
+          source: "/build/:projectId(\\d+)/agile-reports",
+          destination: "/build/:projectId/reports",
+          permanent: false,
+        },
+      ]),
+    );
+    expect(diskRoutes.has("/build/[projectId]/agile-reports")).toBe(false);
+    expect(diskRoutes.has("/build/[projectId]/reports")).toBe(true);
   });
 
   it("every manifest route has a page.tsx on disk so no phantom disposition can exist in the manifest", () => {

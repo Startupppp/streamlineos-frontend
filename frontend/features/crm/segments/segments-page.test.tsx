@@ -242,7 +242,9 @@ describe("SegmentsPage", () => {
     mockGranted.delete(VIEW);
     renderPage();
 
-    expect(await screen.findByText(/permission/i)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/required permission for this section|You need the/i),
+    ).toBeInTheDocument();
     expect(listParams()).toBeUndefined();
   });
 

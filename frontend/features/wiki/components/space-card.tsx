@@ -58,18 +58,15 @@ export function SpaceCard({
   onArchiveToggle,
   onViewMembers,
 }: SpaceCardProps) {
-  function handleEdit(e: React.MouseEvent<HTMLButtonElement>) {
-    e.preventDefault();
+  function handleEdit() {
     onEdit(space);
   }
 
-  function handleArchiveToggle(e: React.MouseEvent<HTMLButtonElement>) {
-    e.preventDefault();
+  function handleArchiveToggle() {
     onArchiveToggle(space);
   }
 
-  function handleViewMembers(e: React.MouseEvent<HTMLButtonElement>) {
-    e.preventDefault();
+  function handleViewMembers() {
     onViewMembers(space);
   }
 
@@ -77,45 +74,48 @@ export function SpaceCard({
   const isArchived = space.archivedAt !== null;
 
   return (
-    <Link
-      href={spaceHref(space.id)}
-      className="bg-card border border-border rounded-xl p-4 flex flex-col gap-2 hover:bg-muted/40 transition-colors"
-    >
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex items-center gap-2 min-w-0">
-          <span className="text-lg shrink-0">{space.icon ?? "📚"}</span>
-          <TruncatedText text={space.name} className="text-sm font-semibold text-foreground" />
+    <div className="bg-card border border-border rounded-xl p-4 flex flex-col gap-2 hover:bg-muted/40 transition-colors">
+      <Link
+        href={spaceHref(space.id)}
+        aria-label={`Open ${space.name}`}
+        className="flex flex-col gap-2 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="text-lg shrink-0">{space.icon ?? "📚"}</span>
+            <TruncatedText text={space.name} className="text-sm font-semibold text-foreground" />
+          </div>
+          <Badge
+            variant="outline"
+            className={`text-micro h-4 px-1.5 shrink-0 ${AUDIENCE_BADGE_CLASS[audience]}`}
+          >
+            {AUDIENCE_LABELS[audience]}
+          </Badge>
         </div>
-        <Badge
-          variant="outline"
-          className={`text-micro h-4 px-1.5 shrink-0 ${AUDIENCE_BADGE_CLASS[audience]}`}
-        >
-          {AUDIENCE_LABELS[audience]}
-        </Badge>
-      </div>
-      {space.description && (
-        <TruncatedText text={space.description} className="text-sm text-muted-foreground" />
-      )}
-      <p className="text-xs text-muted-foreground tabular-nums">
-        {pageCount} {pageCount === 1 ? "page" : "pages"} · {space.memberCount}{" "}
-        {space.memberCount === 1 ? "member" : "members"}
-      </p>
-      <p className="text-xs text-muted-foreground" suppressHydrationWarning>
-        {space.ownerName ? `Owned by ${space.ownerName} · ` : ""}
-        Updated {kbTimeAgo(space.updatedAt)}
-      </p>
-      {canManage && space.pagesOverdueForReview > 0 && (
-        <Badge
-          variant="outline"
-          className="w-fit text-micro h-4 px-1.5 bg-status-warning-surface text-status-warning-ink-strong border-status-warning-rule"
-        >
-          <KbTriangleAlertIcon className="h-3 w-3 mr-1" />
-          {space.pagesOverdueForReview}{" "}
-          {space.pagesOverdueForReview === 1 ? "page" : "pages"} overdue for review
-        </Badge>
-      )}
+        {space.description && (
+          <TruncatedText text={space.description} className="text-sm text-muted-foreground" />
+        )}
+        <p className="text-xs text-muted-foreground tabular-nums">
+          {pageCount} {pageCount === 1 ? "page" : "pages"} · {space.memberCount}{" "}
+          {space.memberCount === 1 ? "member" : "members"}
+        </p>
+        <p className="text-xs text-muted-foreground" suppressHydrationWarning>
+          {space.ownerName ? `Owned by ${space.ownerName} · ` : ""}
+          Updated {kbTimeAgo(space.updatedAt)}
+        </p>
+        {canManage && space.pagesOverdueForReview > 0 && (
+          <Badge
+            variant="outline"
+            className="w-fit text-micro h-4 px-1.5 bg-status-warning-surface text-status-warning-ink-strong border-status-warning-rule"
+          >
+            <KbTriangleAlertIcon className="h-3 w-3 mr-1" />
+            {space.pagesOverdueForReview}{" "}
+            {space.pagesOverdueForReview === 1 ? "page" : "pages"} overdue for review
+          </Badge>
+        )}
+      </Link>
       {canManage && (
-        <div className="flex items-center gap-1 pt-1">
+        <div className="flex flex-wrap items-center gap-1 pt-1">
           <Button
             variant="ghost"
             size="sm"
@@ -149,6 +149,6 @@ export function SpaceCard({
           </Button>
         </div>
       )}
-    </Link>
+    </div>
   );
 }

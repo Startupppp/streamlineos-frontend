@@ -2,38 +2,49 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { useBulkOnboardEmployees, useBulkOnboardPreview } from "@/hooks/api/hr/employee-profile";
+import {
+  useBulkOnboardEmployees,
+  useBulkOnboardPreview,
+} from "@/hooks/api/hr/employee-profile";
 import { getErrorMessage } from "@/lib/get-error-message";
-import type { BulkOnboardEmployeeRow, BulkOnboardPreviewRow, BulkOnboardResult, BulkOnboardSeats } from "@/types/hr";
+import type {
+  BulkOnboardEmployeeRow,
+  BulkOnboardPreviewRow,
+  BulkOnboardResult,
+  BulkOnboardSeats,
+} from "@/types/hr";
 import { MAX_ROWS, sourceRowOf } from "./bulk-onboard-columns";
-import { parseFile } from "./bulk-onboard-parse";
+import { parseFile, ParseStructuralError } from "./bulk-onboard-parse";
 import { validateAndMap, type PreviewRow } from "./bulk-onboard-template";
+import {
+  fetchEmployeeAdmissionCheck,
+  employeeAdmissionGuidance,
+} from "@/components/hr/check-employee-email";
 import type { AssignedDefault } from "@/components/hr/reporting-lines/policy-default-primary";
 
 export type BulkOnboardStep = "upload" | "preview" | "done";
 
-/** One row of the uploaded file, as the client and then the server judged it. */
 export interface BulkOnboardFlowRow {
-  /** 1-based data row in the file (the header is not counted). */
   fileRow: number;
   preview: PreviewRow;
   payload: BulkOnboardEmployeeRow | null;
-  /** The server preview's verdict; null when the row failed the client check or the preview did not run. */
   server: BulkOnboardPreviewRow | null;
-  /** The file row that creates this row's manager, when that manager is new in the same file. */
   dependsOnFileRow: number | null;
 }
 
 export interface BulkOnboardCommit {
   result: BulkOnboardResult;
-  /** `result.results[i].row` is 1-based over the submitted rows; this maps it back to the file. */
   fileRows: number[];
 }
 
 const COMMITTABLE = new Set(["READY", "WARNING"]);
 
 export function isCommittable(row: BulkOnboardFlowRow): boolean {
-  return row.payload !== null && row.server !== null && COMMITTABLE.has(row.server.status);
+  return (
+    row.payload !== null &&
+    row.server !== null &&
+    COMMITTABLE.has(row.server.status)
+  );
 }
 
 function checkFile(
@@ -44,7 +55,12 @@ function checkFile(
 ): BulkOnboardFlowRow[] {
   const seenEmails = new Set<string>();
   return parsed.map((raw, i) => {
-    const { payload, preview } = validateAndMap(raw, deptNames, secondaryCap, assignedDefault);
+    const { payload, preview } = validateAndMap(
+      raw,
+      deptNames,
+      secondaryCap,
+      assignedDefault,
+    );
     if (preview.email && seenEmails.has(preview.email)) {
       preview.errors = [...preview.errors, "Duplicate email in this file"];
       preview.valid = false;
@@ -52,14 +68,61 @@ function checkFile(
       seenEmails.add(preview.email);
     }
     const fileRow = sourceRowOf(raw, i + 1);
-    return { fileRow, preview: { ...preview, _idx: fileRow }, payload: preview.valid ? payload : null, server: null, dependsOnFileRow: null };
+    return {
+      fileRow,
+      preview: { ...preview, _idx: fileRow },
+      payload: preview.valid ? payload : null,
+      server: null,
+      dependsOnFileRow: null,
+    };
+  });
+}
+
+async function batchAdmissionCheck(
+  rows: BulkOnboardFlowRow[],
+): Promise<BulkOnboardFlowRow[]> {
+  const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const toCheck = rows.filter(
+    (row) => row.payload === null && EMAIL_RE.test(row.preview.email),
+  );
+  if (toCheck.length === 0) return rows;
+  const checks = await Promise.all(
+    toCheck.map(async (row) => {
+      try {
+        const result = await fetchEmployeeAdmissionCheck(row.preview.email);
+        return { fileRow: row.fileRow, result };
+      } catch {
+        return { fileRow: row.fileRow, result: null };
+      }
+    }),
+  );
+  const admissionByFileRow = new Map(
+    checks.flatMap(({ fileRow, result }) =>
+      result ? [[fileRow, result]] : [],
+    ),
+  );
+  return rows.map((row) => {
+    const admission = admissionByFileRow.get(row.fileRow);
+    if (!admission) return row;
+    const guidance = employeeAdmissionGuidance(admission.status);
+    if (!guidance.blocking || !guidance.message) return row;
+    const updatedPreview = {
+      ...row.preview,
+      errors: [...row.preview.errors, guidance.message],
+      valid: false,
+    };
+    return { ...row, preview: updatedPreview };
   });
 }
 
 /** Server rows are numbered 1..n over the submitted payloads; attach each to its file row. */
-export function mergeServerPreview(rows: BulkOnboardFlowRow[], serverRows: BulkOnboardPreviewRow[]): BulkOnboardFlowRow[] {
+export function mergeServerPreview(
+  rows: BulkOnboardFlowRow[],
+  serverRows: BulkOnboardPreviewRow[],
+): BulkOnboardFlowRow[] {
   const submitted = rows.filter((row) => row.payload !== null);
-  const fileRowOf = (serverRow: number | null) => (serverRow === null ? null : (submitted[serverRow - 1]?.fileRow ?? null));
+  const fileRowOf = (serverRow: number | null) =>
+    serverRow === null ? null : (submitted[serverRow - 1]?.fileRow ?? null);
   const byFileRow = new Map<number, BulkOnboardPreviewRow>();
   for (const serverRow of serverRows) {
     const fileRow = fileRowOf(serverRow.row);
@@ -67,11 +130,19 @@ export function mergeServerPreview(rows: BulkOnboardFlowRow[], serverRows: BulkO
   }
   return rows.map((row) => {
     const server = byFileRow.get(row.fileRow) ?? null;
-    return { ...row, server, dependsOnFileRow: server ? fileRowOf(server.dependsOnRow) : null };
+    return {
+      ...row,
+      server,
+      dependsOnFileRow: server ? fileRowOf(server.dependsOnRow) : null,
+    };
   });
 }
 
-export function useBulkOnboardFlow(deptNames: Set<string>, secondaryCap: number | null, assignedDefault: AssignedDefault | null) {
+export function useBulkOnboardFlow(
+  deptNames: Set<string>,
+  secondaryCap: number | null,
+  assignedDefault: AssignedDefault | null,
+) {
   const preview = useBulkOnboardPreview();
   const bulkOnboard = useBulkOnboardEmployees();
   const [step, setStep] = useState<BulkOnboardStep>("upload");
@@ -80,15 +151,13 @@ export function useBulkOnboardFlow(deptNames: Set<string>, secondaryCap: number 
   const [commit, setCommit] = useState<BulkOnboardCommit | null>(null);
   const [parsing, setParsing] = useState(false);
   const [checkFailed, setCheckFailed] = useState(false);
-  /**
-   * BUG-HRMS-002. An onboarded employee is admitted as a member, so every row
-   * spends a plan seat. Held so the preview can say how many are free before the
-   * confirm, instead of letting the confirm answer 402 for the whole file.
-   */
+
   const [seats, setSeats] = useState<BulkOnboardSeats | null>(null);
 
   async function runServerPreview(checked: BulkOnboardFlowRow[]) {
-    const payloads = checked.flatMap((row) => (row.payload ? [row.payload] : []));
+    const payloads = checked.flatMap((row) =>
+      row.payload ? [row.payload] : [],
+    );
     setCheckFailed(false);
     if (payloads.length === 0) return;
     try {
@@ -106,20 +175,36 @@ export function useBulkOnboardFlow(deptNames: Set<string>, secondaryCap: number 
     try {
       const parsed = await parseFile(file);
       if (parsed.length === 0) {
-        toast.error("No data rows found. Keep the header row and add employees below it.");
+        toast.error(
+          "No data rows found. Keep the header row and add employees below it.",
+        );
         return;
       }
       if (parsed.length > MAX_ROWS) {
-        toast.error(`Too many rows (${parsed.length}). Maximum is ${MAX_ROWS} per upload.`);
+        toast.error(
+          `Too many rows (${parsed.length}). Maximum is ${MAX_ROWS} per upload.`,
+        );
         return;
       }
-      const checked = checkFile(parsed, deptNames, secondaryCap, assignedDefault);
+      const checked = checkFile(
+        parsed,
+        deptNames,
+        secondaryCap,
+        assignedDefault,
+      );
+      const withAdmission = await batchAdmissionCheck(checked);
       setFileName(file.name);
-      setRows(checked);
+      setRows(withAdmission);
       setStep("preview");
-      await runServerPreview(checked);
-    } catch {
-      toast.error("Failed to parse file. Use the template (.xlsx) or a CSV with the same headers.");
+      await runServerPreview(withAdmission);
+    } catch (err) {
+      if (err instanceof ParseStructuralError) {
+        toast.error(getErrorMessage(err));
+      } else {
+        toast.error(
+          "Failed to parse file. Use the template (.xlsx) or a CSV with the same headers.",
+        );
+      }
     } finally {
       setParsing(false);
     }
@@ -132,9 +217,13 @@ export function useBulkOnboardFlow(deptNames: Set<string>, secondaryCap: number 
   const committable = rows.filter(isCommittable);
 
   function commitRows() {
-    const toCommit = committable.flatMap((row) => (row.payload ? [{ fileRow: row.fileRow, payload: row.payload }] : []));
+    const toCommit = committable.flatMap((row) =>
+      row.payload ? [{ fileRow: row.fileRow, payload: row.payload }] : [],
+    );
     if (toCommit.length === 0) {
-      toast.error("No ready rows to create. Fix the errors in the file and re-upload.");
+      toast.error(
+        "No ready rows to create. Fix the errors in the file and re-upload.",
+      );
       return;
     }
     bulkOnboard.mutate(
@@ -144,10 +233,17 @@ export function useBulkOnboardFlow(deptNames: Set<string>, secondaryCap: number 
           setCommit({ result, fileRows: toCommit.map((row) => row.fileRow) });
           setStep("done");
           if (result.created > 0 && result.failed === 0 && result.skipped === 0)
-            toast.success(`Onboarded ${result.created} employee${result.created === 1 ? "" : "s"}`);
+            toast.success(
+              `Onboarded ${result.created} employee${result.created === 1 ? "" : "s"}`,
+            );
           else if (result.created > 0)
-            toast.warning(`Onboarded ${result.created}; ${result.failed} failed, ${result.skipped} skipped`);
-          else toast.error("No employees were created. Download the error report for details.");
+            toast.warning(
+              `Onboarded ${result.created}; ${result.failed} failed, ${result.skipped} skipped`,
+            );
+          else
+            toast.error(
+              "No employees were created. Download the error report for details.",
+            );
         },
         onError: (error) => toast.error(getErrorMessage(error)),
       },

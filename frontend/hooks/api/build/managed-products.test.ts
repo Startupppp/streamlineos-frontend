@@ -256,3 +256,35 @@ describe("useCreateManagedProduct — cache patch after create", () => {
     });
   });
 });
+
+describe("useCreateManagedProduct — a filtered list is the key the page actually uses", () => {
+  it("refetches an active filtered list after create, so the new row appears without a reload", async () => {
+    const client = createAppQueryClient("authenticated:org-1:u-1");
+    const filteredKey = buildWorkQueryKeys.projects.managedProducts.list({ sort: "name" });
+    apiClient.get
+      .mockResolvedValueOnce(makePage())
+      .mockResolvedValue(makePage({ data: [makeProduct({ id: 99, name: "Brand new" }), makeProduct()] }));
+    apiClient.post.mockResolvedValue(makeProduct({ id: 99, name: "Brand new" }));
+
+    const { useManagedProducts, useCreateManagedProduct } = await import("./managed-products");
+    const { result } = renderHook(
+      () => ({
+        list: useManagedProducts({ sort: "name" }),
+        create: useCreateManagedProduct(),
+      }),
+      { wrapper: wrapper(client) },
+    );
+
+    await waitFor(() => {
+      expect(client.getQueryData<ManagedProductsPage>(filteredKey)?.data.map((p) => p.id)).toEqual([1]);
+    });
+
+    await act(async () => {
+      await result.current.create.mutateAsync({ name: "Brand new", key: "NEW" });
+    });
+
+    await waitFor(() => {
+      expect(client.getQueryData<ManagedProductsPage>(filteredKey)?.data.map((p) => p.id)).toEqual([99, 1]);
+    });
+  });
+});

@@ -22,6 +22,7 @@ jest.mock("@/hooks/api/kb/ask", () => ({
     stop: jest.fn(),
     resetAttempt: jest.fn(),
   }),
+  useKbAskPageOwners: () => ({ data: { pages: [] }, isLoading: false, hasNextPage: false, isFetchingNextPage: false, fetchNextPage: jest.fn(), error: null, refetch: jest.fn() }),
   useKbAiAnswerFeedback: () => ({ mutate: jest.fn(), isPending: false }),
   useCreateKbKnowledgeGap: () => ({ mutate: jest.fn(), isPending: false }),
 }));
@@ -29,16 +30,6 @@ jest.mock("@/hooks/api/kb/ask", () => ({
 jest.mock("@/hooks/api/access", () => ({
   useCan: () => true,
   useAccess: () => ({ data: { permissions: ["kb:ai:generate"] }, refetch: jest.fn() }),
-}));
-
-jest.mock("@/hooks/api/organization", () => ({
-  useOrgMembers: () => ({
-    data: {
-      data: [],
-      pagination: { limit: 100, nextCursor: null, hasMore: false },
-    },
-    isLoading: false,
-  }),
 }));
 
 jest.mock("@/hooks/api/kb/chat-history", () => ({
@@ -158,6 +149,32 @@ function renderWithFilesOnly() {
 beforeEach(() => {
   mockAskMutate.mockReset();
   mockUseKbSources.mockReset();
+});
+
+describe("KnowledgeBasePage source pagination wiring", () => {
+  it("requests the next source page from the active scope query", async () => {
+    const fetchNextPage = jest.fn();
+    mockUseKbSources.mockImplementation(() => ({
+      ...notesOnlyPage(),
+      hasNextPage: true,
+      isFetchingNextPage: false,
+      fetchNextPage,
+      refetch: jest.fn(),
+    }));
+    const qc = new QueryClient({
+      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+    });
+    const user = userEvent.setup({ pointerEventsCheck: 0 });
+    render(
+      <QueryClientProvider client={qc}>
+        <KnowledgeBasePage />
+      </QueryClientProvider>,
+    );
+
+    await user.click(screen.getByRole("button", { name: /choose sources to search/i }));
+    await user.click(screen.getByRole("button", { name: "Load more sources" }));
+    expect(fetchNextPage).toHaveBeenCalledTimes(1);
+  });
 });
 
 describe("KnowledgeBasePage — kind filter with empty results does not send an empty sourceIds array (FE-183)", () => {

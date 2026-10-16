@@ -1,10 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Command, CommandList } from "@/components/ui/command";
-import {
-  PEOPLE_SEARCH_INTEGRITY_MESSAGE,
-  type PalettePeopleSearch,
-} from "../hooks/use-people-search";
+import type { PalettePeopleSearch } from "../hooks/use-people-search";
 import { PalettePeopleGroup } from "./palette-people-group";
 
 const PERSON = {
@@ -62,17 +59,18 @@ describe("HRMS-UX-017 — the palette People group", () => {
     expect(onSelect).toHaveBeenCalledWith("/hr/employees/emp-1");
   });
 
-  it("shows the HRMS-SEARCH-001 integrity row instead of a silent empty", () => {
+  it("shows a plain unavailable row, never an integrity message or rows, when the people read fails", () => {
     renderGroup(searchState({ isError: true }));
 
-    expect(screen.getByRole("alert")).toHaveTextContent(
-      PEOPLE_SEARCH_INTEGRITY_MESSAGE,
-    );
+    expect(screen.getByRole("alert")).toHaveTextContent("People search is unavailable");
+    expect(screen.queryByText(/integrity|unfiltered/i)).not.toBeInTheDocument();
+    expect(screen.queryByText("Amitha Rao")).not.toBeInTheDocument();
   });
 
-  it("renders no group when a settled search found nobody", () => {
+  it("renders no group and no alert when a settled search found nobody", () => {
     renderGroup(searchState({}));
 
     expect(screen.queryByText("People")).not.toBeInTheDocument();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 });

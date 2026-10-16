@@ -8,6 +8,11 @@ import {
   EVENT_INK,
 } from "./calendar-event-constants";
 
+const EVENT_TYPE = {
+  fontSize: "0.875rem",
+  fontWeight: 400,
+} as const;
+
 const RSVP_BORDER_COLORS: Record<string, string> = {
   accepted: EVENT_COLORS.green,
   declined: EVENT_COLORS.red,
@@ -24,7 +29,7 @@ export function useEventPropGetter() {
           border: "none",
           borderRadius: "4px",
           color: EVENT_INK,
-          fontSize: "11px",
+          ...EVENT_TYPE,
           padding: "1px 6px",
         },
       };
@@ -36,7 +41,7 @@ export function useEventPropGetter() {
           border: "none",
           borderRadius: "4px",
           color: EVENT_INK,
-          fontSize: "11px",
+          ...EVENT_TYPE,
           padding: "1px 6px",
         },
       };
@@ -48,7 +53,7 @@ export function useEventPropGetter() {
           border: "none",
           borderRadius: "4px",
           color: EVENT_INK,
-          fontSize: "12px",
+          ...EVENT_TYPE,
           padding: "1px 6px",
         },
       };
@@ -60,7 +65,7 @@ export function useEventPropGetter() {
           border: "1px solid var(--border)",
           borderRadius: "4px",
           color: "var(--foreground)",
-          fontSize: "11px",
+          ...EVENT_TYPE,
           padding: "1px 6px",
         },
       };
@@ -80,7 +85,7 @@ export function useEventPropGetter() {
         borderLeft: rsvpBorderColor ? `4px solid ${rsvpBorderColor}` : "none",
         borderRadius: "4px",
         color: EVENT_INK,
-        fontSize: "12px",
+        ...EVENT_TYPE,
         padding: rsvpBorderColor ? "1px 6px 1px 4px" : "1px 6px",
       },
     };

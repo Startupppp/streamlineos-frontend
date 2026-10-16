@@ -32,6 +32,8 @@ import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { cn } from "@/lib/utils";
 import { useOrgStorageScope } from "@/lib/org-scoped-storage";
 import { classifyAiError, type AiFailureState } from "@/components/ai";
+import { useCanState } from "@/hooks/api/access";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { useHydrated } from "@/hooks/common/use-hydrated";
 import { useIsMobile } from "@/hooks/common/use-mobile";
 import {
@@ -470,6 +472,7 @@ export function GlobalAskOs() {
     directives: inFlightDirective,
     persisted,
   });
+  const canAiState = useCanState("ai:chat:use");
   function handleClarify(answer: AskOsClarificationAnswer) {
     speechInput.cancel();
     speechInput.reset();
@@ -657,6 +660,9 @@ export function GlobalAskOs() {
                   onNewChat={handleNewChat}
                   onOpenConversations={handleOpenConversations}
                 />
+                {canAiState === "denied" ? (
+                  <NoPermissionState compact className="flex-1" />
+                ) : (
                 <AnimatePresence initial={false} mode="wait">
                   {isConversations ? (
                     <motion.div
@@ -749,6 +755,7 @@ export function GlobalAskOs() {
                     </motion.div>
                   )}
                 </AnimatePresence>
+                )}
               </div>
             </motion.div>
           )}

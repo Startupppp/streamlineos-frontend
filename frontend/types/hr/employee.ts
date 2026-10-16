@@ -123,6 +123,7 @@ export interface Asset {
   purchaseCost: string | null;
   location: string | null;
   notes: string | null;
+  version: number;
   createdAt: Date | string | null;
   updatedAt: Date | string | null;
 }
@@ -251,6 +252,7 @@ export interface UpdateAssetInput {
   purchaseCost?: number;
   location?: string;
   notes?: string;
+  expectedVersion?: number;
 }
 
 export interface AssignAssetInput {

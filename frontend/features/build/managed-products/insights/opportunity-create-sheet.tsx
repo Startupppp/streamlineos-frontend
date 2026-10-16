@@ -145,7 +145,7 @@ export function OpportunityCreateButton({ managedProductId }: OpportunityCreateB
 function renderTitleField({ field }: { field: ControllerRenderProps<CreateOpportunityFormValues, "title"> }) {
   return (
     <FormItem>
-      <FormLabel>Title</FormLabel>
+      <FormLabel>Title <span aria-hidden="true" className="text-destructive">*</span></FormLabel>
       <FormControl>
         <Input {...field} className={FIELD_CONTROL_CLASS} placeholder="e.g. Mobile onboarding friction" />
       </FormControl>

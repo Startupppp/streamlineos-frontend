@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import Link from "next/link";
+import { PlugZap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -13,6 +15,7 @@ import {
   useBuildCursorPager,
 } from "@/features/build/shared/use-build-cursor-pager";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useModuleEnabled } from "@/hooks/api/access";
 
 interface ProductSettingsFeedbackChannelsSectionProps {
   managedProductId: number;
@@ -22,6 +25,7 @@ export function ProductSettingsFeedbackChannelsSection({
   managedProductId,
 }: ProductSettingsFeedbackChannelsSectionProps) {
   const [collectOpen, setCollectOpen] = useState(false);
+  const feedbucketEnabled = useModuleEnabled("feedbucket");
   const pager = useBuildCursorPager(
     String(managedProductId),
     PRODUCT_WIDGET_CURSORS_PARAM,
@@ -50,6 +54,21 @@ export function ProductSettingsFeedbackChannelsSection({
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
+
+  if (!feedbucketEnabled) {
+    return (
+      <section aria-labelledby="feedback-channels-heading" className="flex flex-col gap-4 rounded-xl border border-border bg-card p-5">
+        <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+          <PlugZap className="size-5" aria-hidden />
+        </div>
+        <div>
+          <h2 id="feedback-channels-heading" className="text-sm font-semibold text-foreground">Enable feedback channels</h2>
+          <p className="mt-1 text-sm text-muted-foreground">Feedbucket is disabled for this organization. Enable it to connect widgets and collect customer feedback.</p>
+        </div>
+        <Button asChild size="sm" className="self-start"><Link href="/settings/modules">Open module settings</Link></Button>
+      </section>
+    );
+  }
 
   if (isLoading) {
     return (

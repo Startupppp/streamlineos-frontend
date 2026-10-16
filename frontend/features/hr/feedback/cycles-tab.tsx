@@ -17,6 +17,7 @@ import { Switch } from "@/components/ui/switch";
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
@@ -224,6 +225,7 @@ export function CyclesTab() {
           <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-[480px]">
             <SheetHeader className="shrink-0 border-b border-border px-6 py-4 text-left gap-1">
               <SheetTitle>Create Feedback Cycle</SheetTitle>
+              <SheetDescription className="sr-only">Set the name, type, dates, and review questions for the feedback cycle.</SheetDescription>
             </SheetHeader>
             <SheetBody className="space-y-4 px-6 py-5">
               <div className="space-y-1.5">

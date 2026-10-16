@@ -138,7 +138,7 @@ describe("InvitationPage — joining without an auto-login token waits for a con
     });
   });
 
-  it("keeps the invitee off the landing resolver when the claims refresh times out, because the session still names the previous org", async () => {
+  it("redirects to sign-in when the claims refresh times out rather than re-validating the now-accepted invitation token", async () => {
     mockRefreshSessionClaims.mockResolvedValue(null);
 
     await acceptAsExistingUser();
@@ -147,9 +147,9 @@ describe("InvitationPage — joining without an auto-login token waits for a con
       expect(mockToastError).toHaveBeenCalled();
     });
     expect(mockPush).not.toHaveBeenCalledWith("/post-invite");
-    expect(
-      screen.getByRole("button", { name: /verify & create account/i }),
-    ).toBeEnabled();
+    await waitFor(() => {
+      expect(mockPush).toHaveBeenCalledWith("/signin");
+    });
   });
 
   it("keeps one acceptance in flight until its claims refresh settles", async () => {

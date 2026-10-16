@@ -43,7 +43,6 @@ export const COLUMN_OPTIONS: { value: ColumnByOption; label: string }[] = [
   { value: "priority", label: "Priority" },
   { value: "label", label: "Label" },
   { value: "cycle", label: "Cycle" },
-  { value: "project", label: "Project" },
 ];
 
 export const GROUP_OPTIONS: { value: GroupByOption; label: string }[] = [

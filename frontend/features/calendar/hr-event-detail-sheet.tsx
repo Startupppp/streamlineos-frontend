@@ -1,7 +1,7 @@
 "use client";
 
 import { formatEventDate } from "@/lib/date-utils";
-import { Sheet, SheetBody, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { AppSheet } from "@/components/shared/app-sheet";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CalendarDays } from "lucide-react";
@@ -19,10 +19,13 @@ export function HrEventDetailSheet({ event, onClose }: HrEventDetailSheetProps) 
   const type = event?.resource?.hrEventType as HrCalendarEventType | undefined;
 
   return (
-    <Sheet open={event !== null} onOpenChange={onClose}>
-      <SheetContent side="right" className="w-full sm:max-w-sm p-0 flex flex-col">
-        <SheetHeader className="px-5 py-4 border-b shrink-0">
-          <SheetTitle className="text-base font-semibold leading-snug truncate">{event?.title ?? ""}</SheetTitle>
+    <AppSheet
+      open={event !== null}
+      onOpenChange={(open) => { if (!open) onClose(); }}
+      title={event?.title ?? "Event details"}
+      footer={event ? <Button variant="outline" size="sm" onClick={onClose}>Close</Button> : null}
+    >
+        <div className="space-y-3">
           {type && (
             <Badge
               variant="outline"
@@ -31,24 +34,18 @@ export function HrEventDetailSheet({ event, onClose }: HrEventDetailSheetProps) 
               {HR_CALENDAR_TYPE_LABELS[type]}
             </Badge>
           )}
-        </SheetHeader>
         {event && (
-          <SheetBody className="px-5 py-4 space-y-3">
+          <>
             <div className="flex items-start gap-2 text-sm text-muted-foreground">
-              <CalendarDays className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+              <CalendarDays className="mt-0.5 h-3.5 w-3.5 shrink-0" />
               <span>{`${formatEventDate(event.start, "UTC")} · All day`}</span>
             </div>
             <p className="text-dense text-muted-foreground">
               Read-only HR event. Manage it from the HR module.
             </p>
-          </SheetBody>
+          </>
         )}
-        <div className="px-5 py-3 border-t shrink-0 flex justify-end">
-          <Button variant="outline" size="sm" onClick={onClose}>
-            Close
-          </Button>
         </div>
-      </SheetContent>
-    </Sheet>
+    </AppSheet>
   );
 }

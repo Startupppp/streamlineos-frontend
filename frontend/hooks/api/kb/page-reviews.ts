@@ -7,6 +7,7 @@ import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-sur
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
 export type KbReviewType = "approval" | "freshness";
 export type KbReviewStatus = "pending" | "approved" | "rejected";
@@ -47,6 +48,14 @@ export type ApproveReviewInput = {
   note?: string;
 };
 
+export type CreatePageReviewInput = {
+  pageId: number;
+  type: KbReviewType;
+  reviewerId: string;
+  dueAt?: string;
+  note?: string;
+};
+
 export type RejectReviewInput = {
   note: string;
 };
@@ -61,6 +70,7 @@ export type BulkDecideResultItem = {
 };
 
 export type KbPageReviewsParams = {
+  q?: string;
   status?: KbReviewStatusFilter;
   type?: KbReviewType;
   reviewer?: string;
@@ -94,6 +104,7 @@ export function useKbPageReviews(params?: KbPageReviewsParams) {
   const canViewReviews = useCan("kb:reviews:view");
   const queryParams: Record<string, unknown> = { ...params };
   return useQuery({
+    ...INLINE_READ_ERROR,
     queryKey: knowledgeAndSurveysQueryKeys.kb.pageReviews(queryParams),
     queryFn: ({ signal }) =>
       apiClient.get<KbPageReviewPage>(
@@ -104,6 +115,25 @@ export function useKbPageReviews(params?: KbPageReviewsParams) {
       ),
     staleTime: 30_000,
     enabled: canViewReviews,
+  });
+}
+
+export function useCreatePageReview() {
+  const qc = useQueryClient();
+  const operation = useIdempotentOperation();
+  return useAuthorizedMutation("kb:reviews:manage", {
+    mutationKey: ["kb", "pageReviews", "create"],
+    mutationFn: ({ pageId, ...body }: CreatePageReviewInput) =>
+      apiClient.post<KbPageReview>(
+        `/kb/pages/${pageId}/reviews`,
+        body,
+        operation.configFor({ pageId, ...body }),
+        kbPageReviewContract,
+      ),
+    onSuccess: () => {
+      operation.settle();
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.pageReviews() });
+    },
   });
 }
 

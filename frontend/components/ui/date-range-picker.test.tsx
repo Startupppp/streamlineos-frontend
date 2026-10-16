@@ -125,6 +125,50 @@ describe("standalone DateRangePicker", () => {
     expect(onChange).not.toHaveBeenCalled();
   });
 
+  it("focuses a day cell on open, not the month navigation control", async () => {
+    const user = userEvent.setup();
+    render(<DateRangePicker onChange={jest.fn()} />);
+    await user.click(screen.getByRole("button", { name: "Pick a date range" }));
+    await screen.findByRole("dialog");
+    await waitFor(() => {
+      expect(document.activeElement?.getAttribute("name")).toBe("day");
+    });
+    expect(document.activeElement?.getAttribute("aria-label")).not.toBe("Previous month");
+    expect(document.activeElement?.getAttribute("aria-label")).not.toBe("Next month");
+  });
+
+  it("moves focus to the next day with ArrowRight", async () => {
+    const user = userEvent.setup();
+    render(<DateRangePicker onChange={jest.fn()} />);
+    await user.click(screen.getByRole("button", { name: "Pick a date range" }));
+    await screen.findByRole("dialog");
+    await waitFor(() => {
+      expect(document.activeElement?.getAttribute("name")).toBe("day");
+    });
+    const initialDay = document.activeElement;
+    await user.keyboard("{ArrowRight}");
+    await waitFor(() => {
+      expect(document.activeElement).not.toBe(initialDay);
+      expect(document.activeElement?.getAttribute("name")).toBe("day");
+    });
+  });
+
+  it("selects the focused day with Enter and calls onChange", async () => {
+    const user = userEvent.setup();
+    const onChange = jest.fn();
+    render(<DateRangePicker onChange={onChange} />);
+    await user.click(screen.getByRole("button", { name: "Pick a date range" }));
+    await screen.findByRole("dialog");
+    await waitFor(() => {
+      expect(document.activeElement?.getAttribute("name")).toBe("day");
+    });
+    await user.keyboard("{Enter}");
+    expect(onChange).toHaveBeenCalledTimes(1);
+    expect(onChange).toHaveBeenCalledWith(
+      expect.objectContaining({ from: "2026-10-06" }),
+    );
+  });
+
   it("keeps a disabled picker closed and preserves placeholder and custom class props", async () => {
     const user = userEvent.setup();
     const onChange = jest.fn();

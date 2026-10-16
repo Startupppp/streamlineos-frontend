@@ -142,8 +142,8 @@ describe("BSN-03-A08 — collapsed Build nav controls have an equivalent accessi
       />,
     );
     const expandedName =
-      screen.getByRole("button", { name: "Create" }).textContent ?? "";
-    expect(expandedName).toBe("Create");
+      screen.getByRole("button", { name: "New project" }).textContent ?? "";
+    expect(expandedName).toBe("New project");
     unmountExpanded();
 
     render(
@@ -153,7 +153,7 @@ describe("BSN-03-A08 — collapsed Build nav controls have an equivalent accessi
         isCollapsed={true}
       />,
     );
-    const collapsed = screen.getByRole("button", { name: "Create" });
+    const collapsed = screen.getByRole("button", { name: "New project" });
     expect(collapsed).toHaveAccessibleName(expandedName);
     expect(collapsed).toBeEmptyDOMElement();
 

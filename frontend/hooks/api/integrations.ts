@@ -32,12 +32,13 @@ export type IntegrationConnectionStatus = "active" | "needs_reauth" | "disabled"
 
 export type IntegrationConnection = z.infer<typeof integrationsFinalizeContractDef>;
 
-export function useIntegrationConnections(options?: { enabled?: boolean }) {
+export function useIntegrationConnections(options?: { enabled?: boolean; inlineErrors?: boolean }) {
   return useGatedQuery("integrations:connections:view", {
     queryKey: platformHierarchyQueryKeys.integrations.connections(),
     queryFn: ({ signal }) => apiClient.get<IntegrationConnection[]>("/integrations/connections", undefined, signal, integrationsListContract),
     staleTime: 60_000,
     enabled: options?.enabled ?? true,
+    throwOnError: options?.inlineErrors ? false : undefined,
   });
 }
 

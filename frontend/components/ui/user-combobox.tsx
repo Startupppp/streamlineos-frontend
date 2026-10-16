@@ -11,6 +11,7 @@ interface UserComboboxProps {
   excludeUserId?: string;
   className?: string;
   projectId?: number;
+  id?: string;
 }
 
 export function UserCombobox({
@@ -22,6 +23,7 @@ export function UserCombobox({
   excludeUserId,
   className,
   projectId,
+  id,
 }: UserComboboxProps) {
   function handleChange(userId: string | null) {
     onChange(userId ?? "");
@@ -37,6 +39,7 @@ export function UserCombobox({
       excludeUserId={excludeUserId}
       className={className}
       projectId={projectId}
+      id={id}
     />
   );
 }

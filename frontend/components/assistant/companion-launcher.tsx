@@ -369,7 +369,7 @@ export function CompanionLauncher({
           : undefined
       }
       className={cn(
-        "fixed bottom-[calc(var(--mb-launcher-bottom,4.5rem)+env(safe-area-inset-bottom,0px))] z-40 flex w-auto md:bottom-2",
+        "fixed bottom-[calc(var(--mb-launcher-bottom,6.25rem)+env(safe-area-inset-bottom,0px))] z-40 flex w-auto md:bottom-2",
         overlayOpen ? "pointer-events-none" : "pointer-events-auto",
         left ? "left-2" : "right-2",
       )}

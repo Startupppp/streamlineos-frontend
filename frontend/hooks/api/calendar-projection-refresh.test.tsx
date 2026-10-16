@@ -6,6 +6,7 @@ import { platformHierarchyQueryKeys } from "@/lib/query-keys/platform-hierarchy"
 import { CALENDAR_PROJECTION_SIGNAL_KEY } from "@/lib/calendar-projection-cache";
 import {
   useCalendarEvents,
+  useCalendarSources,
   useSetCalendarSourcePreference,
 } from "@/hooks/api/calendar";
 
@@ -58,6 +59,20 @@ describe("calendar projection refresh", () => {
     onlineManager.setOnline(true);
   });
 
+  it("refreshes source metadata after a source change in another tab", async () => {
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    mockedGet.mockResolvedValue([{ key: "tasks", label: "Tasks", module: "tasks", enabled: true }]);
+    renderHook(() => useCalendarSources(), { wrapper: wrapperFor(client) });
+    await waitFor(() => expect(mockedGet).toHaveBeenCalledTimes(1));
+
+    act(() => window.dispatchEvent(new StorageEvent("storage", {
+      key: CALENDAR_PROJECTION_SIGNAL_KEY,
+      newValue: "1728777600000:0.5",
+    })));
+
+    await waitFor(() => expect(mockedGet).toHaveBeenCalledTimes(2));
+  });
+
   it("refreshes on focus, reconnect, organization switch, and a second tab signal", async () => {
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     const hook = renderHook(() => useCalendarEvents(START, END), {
@@ -88,6 +103,8 @@ describe("calendar projection refresh", () => {
         "user-1",
         START.toISOString(),
         END.toISOString(),
+        undefined,
+        Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
       ),
     )).toBeDefined();
   });
@@ -101,6 +118,9 @@ describe("calendar projection refresh", () => {
       START.toISOString(),
       END.toISOString(),
     );
+    const historyKey = platformHierarchyQueryKeys.calendar.history("org-1", "user-1", END.toISOString());
+    const historyPage = { pages: [{ events: [{ id: "history-1", sourceKey: "tasks" }], nextCursor: null }], pageParams: [null] };
+    client.setQueryData(historyKey, historyPage);
     client.setQueryData(sourceKey, [
       { key: "tasks", label: "Tasks", module: "tasks", enabled: true },
     ]);
@@ -125,6 +145,7 @@ describe("calendar projection refresh", () => {
     await waitFor(() => {
       expect(client.getQueryData<Array<{ enabled: boolean }>>(sourceKey)?.[0]?.enabled).toBe(false);
       expect(client.getQueryData<{ events: Array<{ id: string }> }>(eventsKey)?.events).toHaveLength(1);
+      expect(client.getQueryData(historyKey)).toEqual(historyPage);
     });
 
     settle?.({ sourceKey: "tasks", enabled: false });

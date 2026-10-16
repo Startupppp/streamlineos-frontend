@@ -49,7 +49,6 @@
   "features/recruitment/requisitions-page.tsx",
   "features/recruitment/talent-pools/talent-pools-page.tsx",
   "features/recruitment/vendors/submission-sheet.tsx",
-  "features/mail/mail-reading-pane.tsx",
   "features/notifications/admin/broadcasts-page.tsx",
   "features/notifications/admin/notification-events-page.tsx",
   "features/notifications/admin/notification-providers-page.tsx",

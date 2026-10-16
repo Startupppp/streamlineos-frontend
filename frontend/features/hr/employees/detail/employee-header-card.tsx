@@ -126,6 +126,7 @@ export function EmployeeHeaderCard({
                   src={resolveImageUrl(
                     typeof employee.image === "string" ? employee.image : null,
                   )}
+                  alt=""
                 />
                 <AvatarFallback className="bg-muted text-lg font-bold text-muted-foreground sm:text-xl">
                   {getInitials(undefined, employee.firstName, employee.lastName)}

@@ -112,3 +112,4 @@ docs/superpowers/
 .vercel
 .env*
 *.log
+/.jest-cache-*/

@@ -125,3 +125,21 @@ describe("KnowledgeGapCard — dismissing", () => {
     ).not.toBeInTheDocument();
   });
 });
+
+describe("KnowledgeGapCard — drafted article", () => {
+  it("opens a drafted support article in the Support editor", () => {
+    renderCard(makeGap({ status: "ROUTED", proposedArticleId: 42 }));
+
+    expect(screen.getByRole("link", { name: "View Draft" })).toHaveAttribute(
+      "href",
+      "/support/kb/42",
+    );
+  });
+
+  it("hides the article link when the viewer lacks the article permission", () => {
+    useCan.mockImplementation((permission: string) => permission !== "support:kb:view");
+    renderCard(makeGap({ status: "ROUTED", proposedArticleId: 42 }));
+
+    expect(screen.queryByRole("link", { name: "View Draft" })).not.toBeInTheDocument();
+  });
+});

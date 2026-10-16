@@ -10,6 +10,7 @@ import {
   mockQueryClientModule,
   mockQueueState,
   mockRegularizationModule,
+  mockSessionModule,
   mockSonnerModule,
   mockWfhRow,
   mockEmployeeListModule,
@@ -33,6 +34,7 @@ jest.mock("@/hooks/api/hr/expenses", () => mockExpensesModule());
 jest.mock("@/hooks/api/payroll/payroll-cutoff", () => mockCutoffModule());
 jest.mock("@/components/ui/page-wrapper", () => mockPageWrapperModule());
 jest.mock("sonner", () => mockSonnerModule());
+jest.mock("next-auth/react", () => mockSessionModule());
 jest.mock("@/features/hr/workflows/instance-detail-sheet", () => ({
   InstanceDetailSheet: () => null,
 }));
@@ -148,6 +150,27 @@ describe("HR Action Center — inline decide", () => {
     expect(
       screen.queryByRole("button", { name: "Approve" }),
     ).not.toBeInTheDocument();
+  });
+});
+
+describe("HRMS-025: own leave request in the queue", () => {
+  it("hides Approve and Reject on a leave row submitted by the current user", () => {
+    const ownLeaveRow = { ...mockLeaveRow, id: 99, user: { id: "usr-admin", name: "Admin User", firstName: "Admin", lastName: "User", image: null } };
+    mockQueueState.leavePages = mockLeavePage([ownLeaveRow]);
+
+    render(<HrActionCenterPage />);
+
+    expect(screen.queryByRole("button", { name: "Approve" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Reject" })).not.toBeInTheDocument();
+  });
+
+  it("shows Approve and Reject for a different employee's leave", () => {
+    mockQueueState.leavePages = mockLeavePage([mockLeaveRow]);
+
+    render(<HrActionCenterPage />);
+
+    expect(screen.getByRole("button", { name: "Approve" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Reject" })).toBeInTheDocument();
   });
 });
 

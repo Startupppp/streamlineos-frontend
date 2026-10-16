@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { BookmarkPlus } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -118,14 +119,14 @@ export function CalendarSavedViewControls({
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-2 border-b border-border px-4 py-2">
+    <div className="flex shrink-0 flex-nowrap items-center gap-2">
       <Select
         value={selectedId ?? "none"}
         onValueChange={(value) => selectView(value === "none" ? null : value)}
       >
         <SelectTrigger
           aria-label="Saved calendar view"
-          className="h-9 min-w-40 max-w-64 text-xs"
+          className="h-9 w-40 text-sm"
         >
           <SelectValue placeholder="Saved views" />
         </SelectTrigger>
@@ -145,7 +146,7 @@ export function CalendarSavedViewControls({
           onChange={(event) => onSearchChange(event.target.value)}
           placeholder="Search this view"
           aria-label="Search saved calendar view"
-          className="h-9 min-w-40 max-w-64 text-xs"
+          className="h-9 min-w-40 max-w-64 text-sm"
           maxLength={200}
         />
       ) : null}
@@ -164,8 +165,9 @@ export function CalendarSavedViewControls({
       ) : null}
       {query.isError ? <div role="alert" className="text-xs text-destructive">Saved views are unavailable. <Button type="button" size="sm" variant="ghost" onClick={() => { void query.refetch(); }}>Retry</Button></div> : null}
       {canWrite ? (
-        <Button type="button" size="sm" variant="outline" disabled={query.isError} onClick={openCreate}>
-          Save view
+        <Button type="button" size="sm" variant="outline" disabled={query.isError} onClick={openCreate} aria-label="Save view" className="px-2.5 sm:px-3">
+          <BookmarkPlus className="size-4 sm:hidden" aria-hidden />
+          <span className="sr-only sm:not-sr-only">Save view</span>
         </Button>
       ) : null}
       {canWrite &&

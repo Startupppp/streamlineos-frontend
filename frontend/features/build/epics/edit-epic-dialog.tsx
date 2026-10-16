@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { ReactNode, useCallback, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -11,6 +11,7 @@ import {
 } from "./epic-schema";
 import { Pencil, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { EntityFormSheet } from "@/components/shared";
 import {
   FormControl,
@@ -30,6 +31,7 @@ import {
 } from "@/components/ui/select";
 import { useUpdateTicket } from "@/hooks/api/build/tickets";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
+import type { EpicPage } from "@/hooks/api/build/epics";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { isApiError, getApiErrorCode } from "@/lib/api-envelope";
@@ -37,6 +39,7 @@ import type { TicketConflictFieldDiff } from "@/features/build/ticket-details/ti
 import { TicketConflictDialog } from "@/features/build/ticket-details/ticket-conflict-dialog";
 import { activationProps } from "@/lib/keyboard-activation";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
+import { useSubmitGuard } from "@/hooks/common/use-submit-guard";
 import {
   toPriority,
   toStatus,
@@ -57,6 +60,7 @@ interface EditEpicDialogProps {
   trigger?: ReactNode;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  openItemCount?: number;
 }
 
 export function EditEpicDialog({
@@ -65,6 +69,7 @@ export function EditEpicDialog({
   trigger,
   open: controlledOpen,
   onOpenChange,
+  openItemCount,
 }: EditEpicDialogProps) {
   const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
   const controlled = controlledOpen !== undefined;
@@ -84,61 +89,104 @@ export function EditEpicDialog({
   const [conflictFields, setConflictFields] = useState<
     TicketConflictFieldDiff[] | null
   >(null);
+  const [confirmPendingData, setConfirmPendingData] =
+    useState<EditEpicInput | null>(null);
   const pendingValuesRef = useRef<EditEpicInput | null>(null);
 
-  const updateTicket = useUpdateTicket(projectId, {
-    onSuccess: () => {
-      toast.success("Epic updated");
-      queryClient.invalidateQueries({
-        queryKey: buildWorkQueryKeys.projects.detail(projectId),
-      });
-      setOpen(false);
-    },
-    onError: (error) => {
-      if (
-        isApiError(error) &&
-        getApiErrorCode(error) === "PROJECTS_TICKET_CONFLICT"
-      ) {
-        void queryClient.invalidateQueries({
-          queryKey: buildWorkQueryKeys.projects.detail(projectId),
-        });
-        const pending = pendingValuesRef.current;
-        const diffs = pending ? buildEpicConflictDiffs(pending, epic) : [];
-        setConflictFields(
-          diffs.length > 0
-            ? diffs
-            : [
-                {
-                  key: "version",
-                  label: "Version",
-                  serverValue: "Updated by another user",
-                  pendingValue: "Your edit",
-                },
-              ],
-        );
-        return;
-      }
-      toast.error(getErrorMessage(error));
-    },
-  });
+  const updateTicket = useUpdateTicket(projectId);
 
-  const handleSubmit = (data: EditEpicInput) => {
+  const submitUpdate = useCallback(
+    async (data: EditEpicInput) => {
+      pendingValuesRef.current = data;
+      try {
+        const response = await updateTicket.mutateAsync({
+          ticketId: epic.id,
+          version: epic.version,
+          title: data.title,
+          description: data.description,
+          priority: data.priority,
+          status: data.status,
+        });
+        const epicKey = buildWorkQueryKeys.projects.epics(projectId);
+        for (const [key, cached] of queryClient.getQueriesData<EpicPage>({ queryKey: epicKey })) {
+          if (!cached) continue;
+          queryClient.setQueryData<EpicPage>(key, {
+            ...cached,
+            data: cached.data.map((e) =>
+              e.id === epic.id
+                ? {
+                    ...e,
+                    title: data.title,
+                    description: data.description ?? null,
+                    priority: data.priority,
+                    status: data.status,
+                    version: response.version,
+                    updatedAt: response.updatedAt,
+                  }
+                : e,
+            ),
+          });
+        }
+        void queryClient.invalidateQueries({
+          queryKey: epicKey,
+          refetchType: "none",
+        });
+        toast.success("Epic updated");
+        setOpen(false);
+      } catch (error) {
+        if (
+          isApiError(error) &&
+          getApiErrorCode(error) === "PROJECTS_TICKET_CONFLICT"
+        ) {
+          void queryClient.invalidateQueries({
+            queryKey: buildWorkQueryKeys.projects.epics(projectId),
+            refetchType: "none",
+          });
+          const pending = pendingValuesRef.current;
+          const diffs = pending ? buildEpicConflictDiffs(pending, epic) : [];
+          setConflictFields(
+            diffs.length > 0
+              ? diffs
+              : [
+                  {
+                    key: "version",
+                    label: "Version",
+                    serverValue: "Updated by another user",
+                    pendingValue: "Your edit",
+                  },
+                ],
+          );
+          return;
+        }
+        toast.error(getErrorMessage(error));
+      }
+    },
+    [updateTicket, epic, projectId, queryClient, setOpen],
+  );
+
+  const guard = useSubmitGuard(async (data: EditEpicInput) => {
     if (!isOnline) {
       toast.warning(
         "You're offline — your draft is kept here and nothing was sent.",
       );
       return;
     }
-    pendingValuesRef.current = data;
-    updateTicket.mutate({
-      ticketId: epic.id,
-      version: epic.version,
-      title: data.title,
-      description: data.description,
-      priority: data.priority,
-      status: data.status,
-    });
-  };
+    if (data.status === "DONE" && (openItemCount ?? 0) > 0) {
+      setConfirmPendingData(data);
+      return;
+    }
+    await submitUpdate(data);
+  });
+
+  const handleConfirmDone = useCallback(() => {
+    const data = confirmPendingData;
+    setConfirmPendingData(null);
+    if (data) void submitUpdate(data);
+  }, [confirmPendingData, submitUpdate]);
+
+  const handleCancelConfirm = useCallback(() => {
+    setConfirmPendingData(null);
+  }, []);
 
   const handleKeepMine = useCallback(() => setConflictFields(null), []);
   const handleDiscardConflict = useCallback(() => {
@@ -169,8 +217,8 @@ export function EditEpicDialog({
         title="Edit epic"
         resolver={zodResolver(editEpicSchema)}
         defaultValues={defaultValues}
-        onSubmit={handleSubmit}
-        isSubmitting={updateTicket.isPending}
+        onSubmit={guard.submit}
+        isSubmitting={guard.isSubmitting}
         resetOnOpen
         submitLabel="Save changes"
       >
@@ -274,6 +322,19 @@ export function EditEpicDialog({
           fields={conflictFields}
           onKeepMine={handleKeepMine}
           onDiscard={handleDiscardConflict}
+        />
+      ) : null}
+      {confirmPendingData !== null ? (
+        <ConfirmDialog
+          open
+          onOpenChange={(nextOpen) => {
+            if (!nextOpen) handleCancelConfirm();
+          }}
+          title="Mark epic as Done?"
+          description={`${openItemCount ?? 0} linked item${(openItemCount ?? 0) !== 1 ? "s are" : " is"} still open. This epic will be marked as Done regardless.`}
+          confirmLabel="Mark as Done"
+          onConfirm={handleConfirmDone}
+          isPending={updateTicket.isPending}
         />
       ) : null}
     </>

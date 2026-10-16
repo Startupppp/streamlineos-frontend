@@ -82,7 +82,7 @@ function DialogContent({
         onOpenAutoFocus={handleOpenAutoFocus}
         onCloseAutoFocus={handleCloseAutoFocus}
         className={cn(
-          "fixed z-[100] flex w-full flex-col gap-4 overflow-hidden bg-background p-6 text-foreground shadow-lg duration-200 outline-none",
+          "fixed z-[100] flex w-full flex-col gap-4 overflow-hidden bg-surface-raised p-6 text-popover-foreground shadow-lg duration-200 outline-none",
           "data-[state=open]:animate-in data-[state=closed]:animate-out motion-reduce:data-[state=open]:animate-none motion-reduce:data-[state=closed]:animate-none",
           "inset-x-0 bottom-0 max-h-[92dvh] rounded-t-2xl border border-border/80 border-b-0 max-md:pb-[max(1.5rem,env(safe-area-inset-bottom))]",
           "data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",

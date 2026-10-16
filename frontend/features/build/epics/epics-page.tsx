@@ -49,6 +49,7 @@ export function EpicsPage({ params }: PageProps) {
     allEpics,
     stories,
     tasks,
+    unlinkedItems,
     hasMoreEpics,
     visitedCursors,
     cycles,
@@ -127,7 +128,6 @@ export function EpicsPage({ params }: PageProps) {
     );
   }
 
-  const unlinkedStories = stories.filter((s) => !s.epicId);
   const completedStatusNames = getCompletedStatusNames(project?.statuses);
 
   return (
@@ -218,7 +218,7 @@ export function EpicsPage({ params }: PageProps) {
             <EpicsListSection
               epics={epics}
               tickets={tickets}
-              unlinkedStories={unlinkedStories}
+              unlinkedItems={unlinkedItems}
               projectId={projectId}
               projectKey={project?.key}
               projectStatuses={project?.statuses}
@@ -243,14 +243,14 @@ export function EpicsPage({ params }: PageProps) {
             />
           </PmSection>
 
-          {unlinkedStories.length > 0 && (
+          {unlinkedItems.length > 0 && (
             <PmSection index={2} className="shrink-0">
               <h2 className="mb-2 flex items-center gap-1.5 text-xs font-medium text-foreground">
                 <AlertCircle className="h-3.5 w-3.5 text-status-warning-ink" />
-                Stories without Epic
+                Items without Epic
               </h2>
               <PmPanel className="space-y-1 p-2">
-                {unlinkedStories.map((story) => (
+                {unlinkedItems.map((story) => (
                   <EpicStoryRow
                     key={story.id}
                     story={story}

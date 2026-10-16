@@ -3,6 +3,7 @@
 import { LogIn } from "lucide-react";
 import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import type { PageStateResolution } from "@/lib/page-state/resolve-page-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
@@ -70,6 +71,10 @@ export interface PageStateProps {
   loading: ReactNode;
   empty?: ReactNode;
   notFound?: ReactNode;
+  /** Override any resolved branch while keeping the shared state decision. */
+  views?: Partial<Record<PageStateResolution["kind"], ReactNode>>;
+  /** Restores the unfiltered collection from the default filtered-empty view. */
+  onClearFilters?: () => void;
   onRetry?: () => void;
   className?: string;
   compact?: boolean;
@@ -81,11 +86,18 @@ export function PageState({
   loading,
   empty,
   notFound,
+  views,
+  onClearFilters,
   onRetry,
   className,
   compact = false,
   children,
 }: PageStateProps) {
+  const customView = views?.[resolution.kind];
+  if (customView !== undefined) {
+    return <div className={cn(PAGE_STATE_CONTAINER, className)}>{customView}</div>;
+  }
+
   switch (resolution.kind) {
     case "loading":
       return (
@@ -152,6 +164,19 @@ export function PageState({
       return (
         <div className={cn(PAGE_STATE_CONTAINER, className)}>
           {empty ?? children}
+        </div>
+      );
+    case "filtered-empty":
+      return (
+        <div className={cn(PAGE_STATE_CONTAINER, className)}>
+          <EmptyState
+            filtersActive
+            title="No results"
+            description="Try changing or clearing the current filters."
+            onClearFilters={onClearFilters}
+            compact={compact}
+            className="flex-1"
+          />
         </div>
       );
     case "ready":

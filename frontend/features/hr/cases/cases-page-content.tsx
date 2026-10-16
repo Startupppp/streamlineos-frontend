@@ -33,6 +33,8 @@ import { CasesFilterBar } from "./cases-filter-bar";
 import { CASE_COLUMNS } from "./case-columns";
 import { DisciplinaryActionsTab } from "./disciplinary-actions-tab";
 
+const CASE_SKELETON_HEADERS = ["Case #", "Category", "Severity", "Status", "Summary", "Age"] as const;
+
 type ActiveTab = "cases" | "disciplinary";
 
 function isActiveTab(value: string): value is ActiveTab {
@@ -190,7 +192,7 @@ export function CasesPageContent() {
 
         <TabsContent value="cases" className={TABS_CONTENT_PAGE_BODY_CLASS}>
           <div className="flex flex-1 min-h-0 flex-col gap-2">
-            <PageState resolution={casesState} loading={<DataTableSkeleton />} onRetry={handleRetryCases} className="flex-1">
+            <PageState resolution={casesState} loading={<DataTableSkeleton headers={CASE_SKELETON_HEADERS} />} onRetry={handleRetryCases} className="flex-1">
               <DataTable
                 className="flex-1 min-h-0"
                 columns={CASE_COLUMNS}

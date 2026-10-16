@@ -295,3 +295,9 @@ export function mockSonnerModule() {
     },
   };
 }
+
+export function mockSessionModule(userId = "usr-admin") {
+  return {
+    useSession: () => ({ data: { user: { id: userId } } }),
+  };
+}

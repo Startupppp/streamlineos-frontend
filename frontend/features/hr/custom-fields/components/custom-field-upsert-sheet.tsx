@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
   SheetFooter,
@@ -197,6 +198,7 @@ export function CustomFieldUpsertSheet({
             <SheetTitle className="text-base">
               {isEdit ? "Edit Custom Field" : "New Custom Field"}
             </SheetTitle>
+            <SheetDescription className="sr-only">Define or update a custom field for employee records.</SheetDescription>
             {isEdit && field.isSensitive && (
               <div className="flex items-center gap-1.5 mt-1">
                 <Lock className="h-3.5 w-3.5 text-status-warning-ink" />

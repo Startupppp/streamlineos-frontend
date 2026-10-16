@@ -9,7 +9,7 @@
 }
 
 @utility h-safe-bottom {
-  height: calc(4rem + env(safe-area-inset-bottom));
+  height: calc(2.75rem + env(safe-area-inset-bottom));
 }
 
 @theme inline {
@@ -56,10 +56,10 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
-  /* Below `sm`, for controls too small for a 6px corner: a checkbox reads as a
-     circle at 6px, and a heatmap cell loses its grid. Added because both were
-     already being written by hand. */
-  --radius-2xs: calc(var(--radius) - 8px);
+  /* Surface roles used by shared controls and nested work items. */
+  --color-surface-inset: var(--muted);
+  --color-surface-raised: var(--popover);
+  --radius-2xs: max(2px, calc(var(--radius) - 8px));
   --radius-xs: calc(var(--radius) - 6px);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -67,9 +67,6 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
-/* The StreamlineOS Journal (public /blogs). Light-only, like every public page; the palette is the
-   editorial brief's: warm paper, forest ink, fine rules and a copper accent used for decoration
-   and large text only (it is below 4.5:1 on paper). `journal-accent-ink` is its text-safe shade. */
 @theme inline {
   --color-journal-paper: var(--journal-paper);
   --color-journal-surface: var(--journal-surface);
@@ -79,7 +76,9 @@
   --color-journal-rule: var(--journal-rule);
   --color-journal-accent: var(--journal-accent);
   --color-journal-accent-ink: var(--journal-accent-ink);
-  --font-journal: var(--font-journal-serif), "Iowan Old Style", Georgia, "Times New Roman", serif;
+  --font-journal:
+    var(--font-journal-serif), "Iowan Old Style", Georgia, "Times New Roman",
+    serif;
 }
 
 :root {
@@ -101,26 +100,34 @@
 
   --radius: 0.625rem;
 
-  /* â”€â”€â”€ Surface â”€â”€â”€ */
-  --background: #f8fafc; /* page canvas â€” slate-50, near pure white with the barest cool hint for card lift */
-  --foreground: #0b1220; /* primary ink */
+  /* Harbor: a cool canvas, crisp work surfaces, and blue action hierarchy. */
+  --background: #f4f7fb;
+  --foreground: #172638;
   --card: #ffffff;
-  --card-foreground: #0b1220;
+  --card-foreground: #172638;
   --popover: #ffffff;
-  --popover-foreground: #0b1220;
-  --muted: #f1f5f9; /* slate-100 â€” muted surfaces */
-  --muted-foreground: #556377; /* slate-500/600 midpoint - 5.58:1 on --muted, 5.84:1 on --background, 6.11:1 on --card (WCAG AA normal text); slate-500 #64748b measured 4.34:1 on --muted */
-  --border: #cbd5e1; /* slate-300: visible but still quiet on white and slate-50 */
-  --input: #cbd5e1;
+  --popover-foreground: #172638;
+  --muted: #edf2f7;
+  --muted-foreground: #526479;
+  --border: #d6e0ea;
+  --input: #c7d4e2;
   /* â”€â”€â”€ CTA & Action (Ink-style â€” Linear/Stripe feel) â”€â”€â”€ */
   --primary: #0b1220; /* slate-900 â€” primary CTAs */
   --primary-foreground: #ffffff;
   --ring: var(--primary, #0b1220);
 
   /* â”€â”€â”€ Accent (neutral hover wash â€” used by shadcn dropdown/menu/command item hover) â”€â”€â”€ */
-  --accent: color-mix(in srgb, var(--primary) 10%, var(--muted)); /* selected and active surfaces follow the chosen palette */
+  --accent: color-mix(
+    in srgb,
+    var(--primary) 10%,
+    var(--muted)
+  ); /* selected and active surfaces follow the chosen palette */
   --accent-foreground: #0f172a; /* slate-900 â€” readable on neutral wash */
-  --secondary: color-mix(in srgb, var(--foreground) 6%, var(--muted)); /* neutral table and calendar headers */
+  --secondary: color-mix(
+    in srgb,
+    var(--foreground) 6%,
+    var(--muted)
+  ); /* neutral table and calendar headers */
   --secondary-foreground: #0b1220;
 
   /* â”€â”€â”€ Status / Semantic â”€â”€â”€ */
@@ -144,11 +151,11 @@
   --border-glass: rgba(30, 64, 175, 0.1);
 
   /* â”€â”€â”€ Charts â”€â”€â”€ */
-  --chart-1: #1d4ed8;
-  --chart-2: #06b6d4;
-  --chart-3: #60a5fa;
-  --chart-4: #8b5cf6;
-  --chart-5: #ec4899;
+  --chart-1: #1856a3;
+  --chart-2: #087e85;
+  --chart-3: #a45b13;
+  --chart-4: #7547a6;
+  --chart-5: #b34065;
 
   /* â”€â”€â”€ Dashboard sidebar (white panel â€” matches landing card surfaces) â”€â”€â”€ */
   --sidebar: #ffffff;
@@ -170,22 +177,17 @@
 }
 
 .dark {
-  /* â”€â”€â”€ Surface (neutral zinc blacks â€” Ink stays monochrome in dark) â”€â”€â”€ */
-  --background: #0a0a0b; /* page canvas */
-  --foreground: #f4f4f5;
-  --card: #131316; /* elevated panel â€” clearly lifted from bg */
-  --card-foreground: #f4f4f5;
-  --popover: #18181b;
-  --popover-foreground: #f4f4f5;
-  --muted: #1c1c1f;
-  --muted-foreground: #a1a1aa;
-  --border: rgba(
-    255,
-    255,
-    255,
-    0.3
-  ); /* clearly visible against dark surfaces */
-  --input: rgba(255, 255, 255, 0.22);
+  /* Blue charcoal keeps data panels distinct without a black void. */
+  --background: #0d1726;
+  --foreground: #eef4fb;
+  --card: #142337;
+  --card-foreground: #eef4fb;
+  --popover: #1a2b42;
+  --popover-foreground: #eef4fb;
+  --muted: #203248;
+  --muted-foreground: #afc0d3;
+  --border: #34475d;
+  --input: #41546b;
 
   /* â”€â”€â”€ CTA & Action â€” invert ink to white for dark â”€â”€â”€ */
   --primary: #f4f4f5;
@@ -197,11 +199,11 @@
   --destructive-foreground: #ffffff;
 
   /* â”€â”€â”€ Charts (slightly punchier in dark for legibility) â”€â”€â”€ */
-  --chart-1: #3b82f6;
-  --chart-2: #06b6d4;
-  --chart-3: #60a5fa;
-  --chart-4: #8b5cf6;
-  --chart-5: #ec4899;
+  --chart-1: #86b9f5;
+  --chart-2: #5fd1d0;
+  --chart-3: #f0bb72;
+  --chart-4: #c1a3ee;
+  --chart-5: #f294ae;
 
   /* â”€â”€â”€ Sidebar (deepest layer â€” same dark-on-dark Linear/Vercel pattern) â”€â”€â”€ */
   --sidebar: #0e0e10;
@@ -218,100 +220,117 @@
 }
 
 /*
- * Authenticated shell only. Warm stone: paper canvas, white cards, warm ink.
- * IBM Plex replaces Geist here. Public pages keep the :root fonts and colors.
- * A selected color theme still overrides the accent block below.
+ * Authenticated shell: Maia / Mist base / Mist theme, adapted for dense work surfaces.
+ * Keep the canvas, card and inset rungs distinct and use accessible focus rings.
  */
 html.app-neutral {
   --app-font-sans: var(--font-plex-sans, "IBM Plex Sans"), "IBM Plex Sans";
   --app-font-mono: var(--font-plex-mono, "IBM Plex Mono"), "IBM Plex Mono";
-  --background: #fafaf9;
-  --foreground: #1c1917;
+  --radius: 0.45rem;
+  --background: #f7f9f9;
+  --foreground: #090b0c;
   --card: #ffffff;
-  --card-foreground: #1c1917;
+  --card-foreground: #090b0c;
   --popover: #ffffff;
-  --popover-foreground: #1c1917;
-  --muted: #f5f5f4;
-  --muted-foreground: #57534e;
-  --border: #e7e5e4;
-  --input: #e7e5e4;
-  --secondary: #f5f5f4;
-  --secondary-foreground: #1c1917;
-  --accent: #f5f5f4;
-  --accent-foreground: #1c1917;
-  --sidebar: #f5f5f4;
-  --sidebar-foreground: #1c1917;
-  --sidebar-accent: #e7e5e4;
-  --sidebar-accent-foreground: #1c1917;
-  --sidebar-border: #e7e5e4;
+  --popover-foreground: #090b0c;
+  --muted: #f1f3f3;
+  --muted-foreground: #536367;
+  --border: #dbe1e3;
+  --input: #cbd4d6;
+  --secondary: #f4f4f5;
+  --secondary-foreground: #18181b;
+  --accent: #f1f3f3;
+  --accent-foreground: #161b1d;
+  --sidebar: #f9fbfb;
+  --sidebar-foreground: #090b0c;
+  --sidebar-accent: #f1f3f3;
+  --sidebar-accent-foreground: #161b1d;
+  --sidebar-border: #dbe1e3;
+  --chart-1: #536367;
+  --chart-2: #394449;
+  --chart-3: #64777d;
+  --chart-4: #22292b;
+  --chart-5: #48545a;
   --bg-glass: rgba(255, 255, 255, 0.78);
   --border-glass: rgba(28, 25, 23, 0.08);
 }
 
 html.app-neutral:not([class*="theme-"]) {
-  --primary: #1c1917;
-  --primary-foreground: #fafaf9;
-  --ring: #1c1917;
-  --sidebar-primary: #1c1917;
-  --sidebar-primary-foreground: #fafaf9;
-  --sidebar-ring: #1c1917;
-  --brand-deep: #1c1917;
-  --brand-core: #44403c;
-  --brand-bright: #78716c;
-  --brand-cyan: #57534e;
+  --primary: #22292b;
+  --primary-foreground: #ffffff;
+  --ring: #536367;
+  --sidebar-primary: #22292b;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-ring: #536367;
+  --brand-deep: #22292b;
+  --brand-core: #48545a;
+  --brand-bright: #77888d;
+  --brand-cyan: #b5c2c5;
   --gradient-signature: linear-gradient(
     135deg,
-    #1c1917 0%,
-    #44403c 55%,
-    #78716c 100%
+    #22292b 0%,
+    #48545a 55%,
+    #b5c2c5 100%
   );
-  --gold: #44403c;
-  --blue: #1c1917;
+  --gold: #48545a;
+  --blue: #394449;
 }
 
 html.app-neutral.dark {
-  --background: #0c0a09;
-  --foreground: #fafaf9;
-  --card: #1c1917;
-  --card-foreground: #fafaf9;
-  --popover: #1c1917;
-  --popover-foreground: #fafaf9;
-  --muted: #292524;
-  --muted-foreground: #a8a29e;
-  --border: #292524;
-  --input: #44403c;
-  --secondary: #292524;
-  --secondary-foreground: #fafaf9;
-  --accent: #292524;
-  --accent-foreground: #fafaf9;
-  --sidebar: #0c0a09;
-  --sidebar-foreground: #fafaf9;
-  --sidebar-accent: #292524;
-  --sidebar-accent-foreground: #fafaf9;
-  --sidebar-border: #292524;
+  --background: #090b0c;
+  --foreground: #f9fbfb;
+  --card: #161b1d;
+  --card-foreground: #f9fbfb;
+  --popover: #1c2326;
+  --popover-foreground: #f9fbfb;
+  --muted: #22292b;
+  --muted-foreground: #9ca8ab;
+  --border: #394449;
+  --input: #48545a;
+  --secondary: #27272a;
+  --secondary-foreground: #fafafa;
+  --accent: #22292b;
+  --accent-foreground: #f9fbfb;
+  --sidebar: #13191b;
+  --sidebar-foreground: #f9fbfb;
+  --sidebar-accent: #22292b;
+  --sidebar-accent-foreground: #f9fbfb;
+  --sidebar-border: #394449;
+  --chart-1: #9ca8ab;
+  --chart-2: #cad3d5;
+  --chart-3: #87999e;
+  --chart-4: #e7ecec;
+  --chart-5: #b5c2c5;
   --bg-glass: rgba(12, 10, 9, 0.78);
   --border-glass: rgba(250, 250, 249, 0.12);
 }
 
 html.app-neutral.dark:not([class*="theme-"]) {
-  --primary: #fafaf9;
-  --primary-foreground: #1c1917;
-  --ring: #d6d3d1;
-  --sidebar-primary: #fafaf9;
-  --sidebar-primary-foreground: #1c1917;
-  --sidebar-ring: #d6d3d1;
-  --brand-deep: #fafaf9;
-  --brand-core: #e7e5e4;
-  --brand-bright: #a8a29e;
-  --brand-cyan: #d6d3d1;
+  --primary: #e7ecec;
+  --primary-foreground: #090b0c;
+  --ring: #b5c2c5;
+  --sidebar-primary: #e7ecec;
+  --sidebar-primary-foreground: #090b0c;
+  --sidebar-ring: #b5c2c5;
+  --brand-deep: #e7ecec;
+  --brand-core: #b5c2c5;
+  --brand-bright: #87999e;
+  --brand-cyan: #87999e;
   --gradient-signature: linear-gradient(
     135deg,
-    #fafaf9 0%,
-    #e7e5e4 55%,
-    #a8a29e 100%
+    #e7ecec 0%,
+    #b5c2c5 55%,
+    #87999e 100%
   );
-  --gold: #e7e5e4;
-  --blue: #fafaf9;
+  --gold: #b5c2c5;
+  --blue: #cad3d5;
+}
+
+/* A metric inside a panel needs its own plane; the same card fill disappears
+   against its parent in dark mode. Featured metrics retain their action color. */
+:where([data-slot="card"], [data-slot="content-fill-panel"])
+  [data-slot="stat-card"]:not([data-featured="true"]) {
+  background: var(--muted);
 }
 
 /* â”€â”€â”€ Shadow override for dark mode â€” light glass-highlight instead of dark drop â”€â”€â”€ */
@@ -399,7 +418,8 @@ html.app-neutral.dark:not([class*="theme-"]) {
 }
 
 .button-motion {
-  transition-property: color, background-color, border-color, box-shadow, transform;
+  transition-property:
+    color, background-color, border-color, box-shadow, transform;
   transition-duration: 150ms;
   transition-timing-function: ease-out;
 }
@@ -1014,7 +1034,7 @@ button.goal-everything-chip[aria-checked="true"]::before {
   box-sizing: border-box;
   min-height: 40px;
   padding: 10px 6px;
-  font-size: 12px;
+  font-size: 0.875rem;
   font-weight: 600;
   line-height: 1.25;
   color: var(--muted-foreground);
@@ -1085,13 +1105,17 @@ button.goal-everything-chip[aria-checked="true"]::before {
   .rbc-time-view
   .rbc-time-header
   .rbc-header.rbc-today
-  .calendar-week-day-header-date,
-.calendar-container
-  .rbc-time-view
-  .rbc-time-header
-  .rbc-header.rbc-today
-  .calendar-week-day-header-weekday {
-  color: inherit;
+  .calendar-week-day-header-date {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  min-width: 1.375rem;
+  height: 1.375rem;
+  padding: 0 0.25rem;
+  border-radius: 9999px;
+  background: var(--primary);
+  color: var(--primary-foreground);
 }
 
 .calendar-container
@@ -1099,7 +1123,8 @@ button.goal-everything-chip[aria-checked="true"]::before {
   .rbc-time-header
   .rbc-header.rbc-today
   .calendar-week-day-header-weekday {
-  opacity: 0.75;
+  color: var(--primary);
+  opacity: 1;
 }
 
 .calendar-container .rbc-month-row {
@@ -1152,14 +1177,15 @@ button.goal-everything-chip[aria-checked="true"]::before {
 }
 
 .calendar-container .rbc-time-view .rbc-header.rbc-today {
-  background: var(--primary);
-  color: var(--primary-foreground);
+  background-color: transparent;
+  color: var(--foreground);
   border-bottom-color: var(--primary);
 }
 
 .calendar-container .rbc-date-cell {
   padding: 4px 6px;
-  font-size: 12px;
+  font-size: 0.875rem;
+  font-weight: 500;
   color: var(--foreground);
 }
 
@@ -1199,9 +1225,27 @@ button.goal-everything-chip[aria-checked="true"]::before {
   cursor: pointer;
 }
 
+.calendar-container .rbc-event,
+.calendar-container .rbc-event-label,
+.calendar-container .rbc-event-content {
+  font-size: 0.875rem;
+  font-weight: 400;
+  line-height: 1.25;
+}
+
+.calendar-virtual-scroll {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.calendar-virtual-scroll::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
 .calendar-container .rbc-event {
   border-radius: 4px;
-  font-size: 12px;
   padding: 1px 6px;
   border: none;
 }
@@ -1211,7 +1255,7 @@ button.goal-everything-chip[aria-checked="true"]::before {
 }
 
 .calendar-container .rbc-show-more {
-  font-size: 11px;
+  font-size: 0.75rem;
   color: var(--primary);
   font-weight: 500;
   background: transparent;
@@ -1219,7 +1263,8 @@ button.goal-everything-chip[aria-checked="true"]::before {
 }
 
 .calendar-container .rbc-time-slot {
-  font-size: 11px;
+  font-size: 0.75rem;
+  font-weight: 500;
   color: var(--muted-foreground);
 }
 
@@ -1289,7 +1334,7 @@ button.goal-everything-chip[aria-checked="true"]::before {
   .calendar-container .rbc-header {
     min-height: 36px;
     padding: 8px 4px;
-    font-size: 10px;
+    font-size: 0.75rem;
   }
 
   .calendar-container
@@ -1303,7 +1348,7 @@ button.goal-everything-chip[aria-checked="true"]::before {
 
   .calendar-container .rbc-time-view .rbc-time-header .rbc-header {
     padding: 6px 4px;
-    font-size: 10px;
+    font-size: 0.75rem;
   }
 
   .calendar-container
@@ -1311,7 +1356,7 @@ button.goal-everything-chip[aria-checked="true"]::before {
     .rbc-time-header
     .rbc-header
     .calendar-week-day-header-date {
-    font-size: 11px;
+    font-size: 0.875rem;
   }
 
   .calendar-container
@@ -1319,7 +1364,7 @@ button.goal-everything-chip[aria-checked="true"]::before {
     .rbc-time-header
     .rbc-header
     .calendar-week-day-header-weekday {
-    font-size: 9px;
+    font-size: 0.75rem;
   }
 
   .calendar-container
@@ -1327,12 +1372,12 @@ button.goal-everything-chip[aria-checked="true"]::before {
     .rbc-time-header
     .rbc-header
     .calendar-day-header {
-    font-size: 11px;
+    font-size: 0.875rem;
   }
 
   .calendar-container .rbc-date-cell {
     padding: 2px 3px;
-    font-size: 10px;
+    font-size: 0.75rem;
   }
 
   .calendar-container .rbc-date-cell.rbc-now a,
@@ -1342,22 +1387,30 @@ button.goal-everything-chip[aria-checked="true"]::before {
   }
 
   .calendar-container .rbc-header.rbc-today {
-    font-size: 10px;
+    font-size: 0.75rem;
+  }
+
+  .calendar-container
+    .rbc-time-view
+    .rbc-header.rbc-today
+    .calendar-week-day-header-date {
+    min-width: 1.125rem;
+    height: 1.125rem;
   }
 
   .calendar-container .rbc-event {
-    font-size: 10px;
+    font-size: 0.75rem;
     padding: 0 3px;
-    line-height: 1.2;
+    line-height: 1.25;
   }
 
   .calendar-container .rbc-show-more {
-    font-size: 9px;
+    font-size: 0.75rem;
     padding: 0 2px;
   }
 
   .calendar-container .rbc-time-slot {
-    font-size: 10px;
+    font-size: 0.75rem;
   }
 }
 
@@ -1365,7 +1418,7 @@ button.goal-everything-chip[aria-checked="true"]::before {
   .calendar-container .rbc-header {
     min-height: 38px;
     padding: 9px 5px;
-    font-size: 11px;
+    font-size: 0.875rem;
   }
 
   .calendar-container
@@ -1386,7 +1439,7 @@ button.goal-everything-chip[aria-checked="true"]::before {
     .rbc-time-header
     .rbc-header
     .calendar-week-day-header-date {
-    font-size: 12px;
+    font-size: 0.875rem;
   }
 
   .calendar-container
@@ -1394,7 +1447,7 @@ button.goal-everything-chip[aria-checked="true"]::before {
     .rbc-time-header
     .rbc-header
     .calendar-week-day-header-weekday {
-    font-size: 9px;
+    font-size: 0.75rem;
   }
 
   .calendar-container
@@ -1402,16 +1455,16 @@ button.goal-everything-chip[aria-checked="true"]::before {
     .rbc-time-header
     .rbc-header
     .calendar-day-header {
-    font-size: 12px;
+    font-size: 0.875rem;
   }
 
   .calendar-container .rbc-date-cell {
     padding: 3px 4px;
-    font-size: 11px;
+    font-size: 0.875rem;
   }
 
   .calendar-container .rbc-event {
-    font-size: 11px;
+    font-size: 0.875rem;
   }
 }
 
@@ -2320,25 +2373,6 @@ button.goal-everything-chip[aria-checked="true"]::before {
   --shadow-raised: var(--elevation-raised);
 }
 
-/*
-  Candidate-facing pages, at the width they are actually used.
-
-  Everything a candidate touches — the careers list, the apply form, the status
-  page, the offer, the interview booking — arrives from a link in an email or a
-  message, which is read on a phone. Measured at 390px on 2026-09-24: every
-  control on the apply form was 36px tall, the consent checkbox was 16px, and
-  every text input was 14px.
-
-  The font size is the one that costs applications. iOS Safari zooms the whole
-  page when a focused control is under 16px and does NOT zoom back out, so a
-  candidate who taps "Full name" on an iPhone spends the rest of the form
-  pinching. It is one line and nobody writing a field notices it is missing.
-
-  44px is the tap-target floor from both Apple's HIG and WCAG 2.5.5. This is a
-  media query rather than a class on each control because a control added next
-  week has to inherit it — a per-component size is a decision every future
-  author has to remember, and they will not.
-*/
 @media (max-width: 639px) {
   .candidate-surface input:not([type="checkbox"]):not([type="radio"]),
   .candidate-surface select,
@@ -2382,30 +2416,133 @@ button.goal-everything-chip[aria-checked="true"]::before {
   max-width: 70ch;
 }
 @media (min-width: 768px) {
-  .journal-article { font-size: 1.25rem; line-height: 1.7; }
+  .journal-article {
+    font-size: 1.25rem;
+    line-height: 1.7;
+  }
 }
-.journal-article > * + * { margin-top: 1.25em; }
-.journal-article h2, .journal-article h3, .journal-article h4 { line-height: 1.25; margin-top: 2em; scroll-margin-top: 2rem; font-weight: 600; }
-.journal-article h2 { font-size: 1.6em; }
-.journal-article h3 { font-size: 1.3em; }
-.journal-article h4 { font-size: 0.85em; font-family: var(--font-sans); text-transform: uppercase; letter-spacing: 0.08em; }
-.journal-article a { color: var(--journal-ink); text-decoration: underline; text-decoration-color: var(--journal-accent); text-decoration-thickness: 2px; text-underline-offset: 3px; }
-.journal-article a:hover { text-decoration-color: var(--journal-ink); }
-.journal-article ul { list-style: disc; padding-left: 1.4em; }
-.journal-article ol { list-style: decimal; padding-left: 1.4em; }
-.journal-article li + li { margin-top: 0.4em; }
-.journal-article li > p { margin: 0; }
-.journal-article blockquote { border-left: 3px solid var(--journal-accent); padding-left: 1.1em; font-style: italic; color: var(--journal-muted); }
-.journal-article pre { font-family: var(--font-mono); font-size: 0.85rem; line-height: 1.6; background: var(--journal-sage); padding: 1em 1.25em; border-radius: 4px; overflow-x: auto; white-space: pre; }
-.journal-article :not(pre) > code { font-family: var(--font-mono); font-size: 0.85em; background: var(--journal-sage); padding: 0.1em 0.35em; border-radius: 3px; overflow-wrap: anywhere; }
-.journal-article hr { border: 0; border-top: 1px solid var(--journal-rule); margin: 2.5em 0; }
-.journal-article figure { margin: 2em 0; }
-.journal-article figure img { width: 100%; height: auto; border-radius: 3px; background: var(--journal-sage); }
-.journal-article figcaption { font-family: var(--font-sans); font-size: 0.875rem; color: var(--journal-muted); margin-top: 0.6em; }
-.journal-article .table-scroll { overflow-x: auto; }
-.journal-article table { border-collapse: collapse; width: 100%; font-family: var(--font-sans); font-size: 0.9375rem; line-height: 1.5; }
-.journal-article th, .journal-article td { border: 1px solid var(--journal-rule); padding: 0.55em 0.8em; text-align: left; vertical-align: top; }
-.journal-article th { background: var(--journal-sage); font-weight: 600; }
-.journal-article aside.callout { background: var(--journal-sage); border-left: 3px solid var(--journal-ink); padding: 1em 1.25em; font-family: var(--font-sans); font-size: 1rem; }
-.journal-article aside.callout[data-tone="warning"] { border-left-color: var(--journal-accent); }
-.journal-article aside.callout > * + * { margin-top: 0.75em; }
+.journal-article > * + * {
+  margin-top: 1.25em;
+}
+.journal-article h2,
+.journal-article h3,
+.journal-article h4 {
+  line-height: 1.25;
+  margin-top: 2em;
+  scroll-margin-top: 2rem;
+  font-weight: 600;
+}
+.journal-article h2 {
+  font-size: 1.6em;
+}
+.journal-article h3 {
+  font-size: 1.3em;
+}
+.journal-article h4 {
+  font-size: 0.85em;
+  font-family: var(--font-sans);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.journal-article a {
+  color: var(--journal-ink);
+  text-decoration: underline;
+  text-decoration-color: var(--journal-accent);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+.journal-article a:hover {
+  text-decoration-color: var(--journal-ink);
+}
+.journal-article ul {
+  list-style: disc;
+  padding-left: 1.4em;
+}
+.journal-article ol {
+  list-style: decimal;
+  padding-left: 1.4em;
+}
+.journal-article li + li {
+  margin-top: 0.4em;
+}
+.journal-article li > p {
+  margin: 0;
+}
+.journal-article blockquote {
+  border-left: 3px solid var(--journal-accent);
+  padding-left: 1.1em;
+  font-style: italic;
+  color: var(--journal-muted);
+}
+.journal-article pre {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  line-height: 1.6;
+  background: var(--journal-sage);
+  padding: 1em 1.25em;
+  border-radius: 4px;
+  overflow-x: auto;
+  white-space: pre;
+}
+.journal-article :not(pre) > code {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  background: var(--journal-sage);
+  padding: 0.1em 0.35em;
+  border-radius: 3px;
+  overflow-wrap: anywhere;
+}
+.journal-article hr {
+  border: 0;
+  border-top: 1px solid var(--journal-rule);
+  margin: 2.5em 0;
+}
+.journal-article figure {
+  margin: 2em 0;
+}
+.journal-article figure img {
+  width: 100%;
+  height: auto;
+  border-radius: 3px;
+  background: var(--journal-sage);
+}
+.journal-article figcaption {
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  color: var(--journal-muted);
+  margin-top: 0.6em;
+}
+.journal-article .table-scroll {
+  overflow-x: auto;
+}
+.journal-article table {
+  border-collapse: collapse;
+  width: 100%;
+  font-family: var(--font-sans);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+.journal-article th,
+.journal-article td {
+  border: 1px solid var(--journal-rule);
+  padding: 0.55em 0.8em;
+  text-align: left;
+  vertical-align: top;
+}
+.journal-article th {
+  background: var(--journal-sage);
+  font-weight: 600;
+}
+.journal-article aside.callout {
+  background: var(--journal-sage);
+  border-left: 3px solid var(--journal-ink);
+  padding: 1em 1.25em;
+  font-family: var(--font-sans);
+  font-size: 1rem;
+}
+.journal-article aside.callout[data-tone="warning"] {
+  border-left-color: var(--journal-accent);
+}
+.journal-article aside.callout > * + * {
+  margin-top: 0.75em;
+}

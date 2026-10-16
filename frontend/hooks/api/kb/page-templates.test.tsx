@@ -1,15 +1,19 @@
-import { renderHook, waitFor } from "@testing-library/react";
+import { act, renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
+import { ApiError, getCorrelationId } from "@/lib/api-envelope";
+import { readErrorReachesBoundary } from "@/lib/query-error-policy";
 
 const mockGet = jest.fn<Promise<unknown>, [string, unknown, unknown, unknown]>();
+const mockPost = jest.fn<Promise<unknown>, [string, unknown, unknown, unknown]>();
 const mockUseCan = jest.fn<boolean, [string]>();
 
 jest.mock("@/lib/api-client", () => ({
   apiClient: {
     get: (path: string, params: unknown, signal: unknown, contract: unknown) =>
       mockGet(path, params, signal, contract),
-    post: jest.fn(),
+    post: (path: string, body: unknown, config: unknown, contract: unknown) =>
+      mockPost(path, body, config, contract),
     patch: jest.fn(),
     delete: jest.fn(),
   },
@@ -30,7 +34,9 @@ jest.mock("@/hooks/api/cursor-page-schema", () => ({
   noContentContract: { parse: jest.fn((v: unknown) => v) },
 }));
 
-import { useKbPageTemplates } from "./page-templates";
+import { useCreateKbPageTemplate, useKbPageTemplates } from "./page-templates";
+import { parseApiResponse } from "@/lib/api-envelope";
+import { kbPageTemplateListPageContract } from "./kb-templates-schema";
 
 const PAGINATION = { limit: 50, hasMore: false, nextCursor: null };
 
@@ -59,11 +65,35 @@ beforeEach(() => {
   jest.clearAllMocks();
   mockUseCan.mockReturnValue(true);
   client = new QueryClient({
-    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+    defaultOptions: { queries: { retry: false, throwOnError: readErrorReachesBoundary }, mutations: { retry: false } },
   });
 });
 
 describe("useKbPageTemplates — wire-shape is visible through selectFlatPages", () => {
+  it("parses an HTTP 200 template list with Plate blocks from the response envelope", async () => {
+    const blocks = [{ type: "p", children: [{ text: "Meeting agenda" }] }];
+    const wire = JSON.stringify({
+      success: true,
+      data: {
+        data: [{ ...TEMPLATE, content: blocks }],
+        pagination: PAGINATION,
+      },
+    });
+
+    const parsed = await parseApiResponse(
+      {
+        ok: true,
+        status: 200,
+        statusText: "OK",
+        json: async () => JSON.parse(wire),
+      },
+      kbPageTemplateListPageContract,
+      "/kb/page-templates",
+    );
+
+    expect(parsed.data[0]?.content).toEqual(blocks);
+  });
+
   it("returns the flat templates array when the wire sends { data: [], pagination }", async () => {
     mockGet.mockResolvedValue({ data: [TEMPLATE], pagination: PAGINATION });
 
@@ -71,6 +101,17 @@ describe("useKbPageTemplates — wire-shape is visible through selectFlatPages",
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.data).toEqual([TEMPLATE]);
+  });
+
+  it("keeps a first-read saved-template error inline with its request ID and recovers on retry", async () => {
+    mockGet.mockRejectedValueOnce(new ApiError("Saved templates failed", 500, "INTERNAL", { correlationId: "templates-read-123" }, "/kb/page-templates"));
+    mockGet.mockResolvedValueOnce({ data: [TEMPLATE], pagination: PAGINATION });
+    const { result } = renderHook(() => useKbPageTemplates(), { wrapper });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(getCorrelationId(result.current.error)).toBe("templates-read-123");
+    await act(async () => { await result.current.refetch(); });
+    await waitFor(() => expect(result.current.data).toEqual([TEMPLATE]));
   });
 
   it("when the wire renames data to items the result is not the templates list — so a wire-shape change breaks the test above", async () => {
@@ -122,5 +163,32 @@ describe("useKbPageTemplates — wire-shape is visible through selectFlatPages",
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.hasNextPage).toBe(true);
     expect(result.current.data).toEqual([TEMPLATE]);
+  });
+});
+
+describe("useCreateKbPageTemplate replay key", () => {
+  it("reuses one key for retries and creates a new key after success", async () => {
+    mockPost.mockRejectedValueOnce(new Error("network timeout"));
+    mockPost.mockResolvedValue(TEMPLATE);
+    const { result } = renderHook(() => useCreateKbPageTemplate(), { wrapper });
+    const input = { fromPageId: 4, name: "Meeting notes" };
+
+    await act(async () => {
+      await expect(result.current.mutateAsync(input)).rejects.toThrow("network timeout");
+    });
+    await act(async () => {
+      await result.current.mutateAsync(input);
+    });
+    const firstKey = (mockPost.mock.calls[0]?.[2] as { headers: Record<string, string> }).headers["Idempotency-Key"];
+    const retryKey = (mockPost.mock.calls[1]?.[2] as { headers: Record<string, string> }).headers["Idempotency-Key"];
+    expect(firstKey).toBeTruthy();
+    expect(retryKey).toBe(firstKey);
+
+    await act(async () => {
+      await result.current.mutateAsync(input);
+    });
+    const nextKey = (mockPost.mock.calls[2]?.[2] as { headers: Record<string, string> }).headers["Idempotency-Key"];
+    expect(nextKey).toBeTruthy();
+    expect(nextKey).not.toBe(firstKey);
   });
 });

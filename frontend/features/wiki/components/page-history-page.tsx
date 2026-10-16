@@ -18,6 +18,7 @@ import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useKbPage } from "@/hooks/api/kb/pages";
 import {
@@ -263,6 +264,10 @@ export default function PageHistoryPage({
   const {
     data: versionsData,
     isLoading: versionsLoading,
+    isError: versionsError,
+    error: versionsReadError,
+    isFetchNextPageError,
+    refetch: refetchVersions,
     hasNextPage,
     fetchNextPage,
     isFetchingNextPage,
@@ -328,6 +333,14 @@ export default function PageHistoryPage({
 
   function handleLoadMore() {
     void fetchNextPage();
+  }
+
+  function handleRetryVersions() {
+    if (isFetchNextPageError) {
+      void fetchNextPage();
+      return;
+    }
+    void refetchVersions();
   }
 
   const handleConfirmRestore = useCallback(() => {
@@ -430,7 +443,7 @@ export default function PageHistoryPage({
                       ))}
                     </div>
                   )}
-                  {!versionsLoading && versions.length === 0 && (
+                  {!versionsLoading && !versionsError && versions.length === 0 && (
                     <EmptyState
                       title="No versions yet"
                       description="Changes will be saved as versions automatically."
@@ -508,8 +521,16 @@ export default function PageHistoryPage({
                       </button>
                     );
                   })}
+                  {versionsError && (
+                    <ErrorState
+                      title="Could not load versions"
+                      error={versionsReadError}
+                      onRetry={handleRetryVersions}
+                      compact
+                    />
+                  )}
                   <InfiniteScrollSentinel
-                    hasNextPage={hasNextPage ?? false}
+                    hasNextPage={!versionsError && (hasNextPage ?? false)}
                     isFetchingNextPage={isFetchingNextPage}
                     onLoadMore={handleLoadMore}
                     label="Load more versions"

@@ -30,13 +30,19 @@ export default function CalendarPollPage() {
   const poll = pollQuery.data;
 
   return (
-    <main className="min-h-dvh surface-soft flex items-start justify-center px-4 py-8 sm:py-12">
-      <div className="w-full max-w-2xl">
-        <div className="gradient-brand rounded-t-2xl px-6 py-8 text-center text-white shadow-noir">
-          <CalendarCheck2 className="mx-auto h-9 w-9" aria-hidden="true" />
-          <h1 className="mt-3 text-2xl font-bold tracking-tight">Scheduling poll</h1>
-        </div>
-        <Card className="rounded-t-none border-t-0 px-4 py-6 shadow-noir sm:px-7">
+    <main className="min-h-dvh bg-background px-4 py-6 text-foreground sm:px-6 sm:py-12">
+      <Card className="mx-auto w-full max-w-2xl gap-0 overflow-hidden rounded-xl border-border bg-card py-0 shadow-sm">
+        <div className="h-1 bg-primary" aria-hidden="true" />
+        <header className="flex items-center gap-4 border-b border-border px-5 py-6 sm:px-8 sm:py-7">
+          <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground">
+            <CalendarCheck2 className="size-6" aria-hidden="true" />
+          </span>
+          <div className="min-w-0 space-y-1">
+            <p className="text-xs font-medium text-muted-foreground">StreamlineOS Calendar</p>
+            <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">Scheduling poll</h1>
+          </div>
+        </header>
+        <div className="px-5 py-6 sm:px-8 sm:py-8">
           {pollQuery.isPending && (
             <div className="flex min-h-56 items-center justify-center" aria-label="Loading poll">
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -79,7 +85,7 @@ export default function CalendarPollPage() {
                   return (
                     <section
                       key={option.id}
-                      className="rounded-xl border bg-background p-4"
+                      className="rounded-xl border border-border bg-surface-inset p-4 dark:border-background"
                       aria-label={format(new Date(option.startAt), "PPpp")}
                     >
                       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -147,8 +153,8 @@ export default function CalendarPollPage() {
               </div>
             </div>
           )}
-        </Card>
-      </div>
+        </div>
+      </Card>
     </main>
   );
 }

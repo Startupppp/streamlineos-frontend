@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useCallback, type FocusEvent } from "react";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { formatRoleLabel } from "@/lib/constants/user-invite-roles";
@@ -16,6 +16,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
+import { ErrorReference } from "@/components/shared/error-reference";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -36,16 +37,14 @@ import {
 import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { useCan } from "@/hooks/api/access";
-import { useOrgMembers } from "@/hooks/api/organization";
-import type { OrgMember } from "@/hooks/api/organization";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
-import { getUserDisplayName } from "@/lib/person-display";
 import {
   useKbPageGrants,
+  useKbPageGrantCandidates,
   useCreateKbPageGrant,
   useRevokeKbPageGrant,
 } from "@/hooks/api/kb/page-grants";
-import type { KbPageGrant } from "@/hooks/api/kb/page-grants";
+import type { KbPageGrant, KbPageGrantCandidate } from "@/hooks/api/kb/page-grants";
 import {
   KbUsersIcon,
   KbTrash2Icon,
@@ -141,13 +140,22 @@ export default function PageGrantsSheet({
 }: PageGrantsSheetProps) {
   const canUpdate = useCan("kb:pages:update");
 
-  const { data, isLoading, isError, error, refetch } = useKbPageGrants(pageId);
-  const grants = useMemo(() => data?.data ?? [], [data]);
+  const {
+    data: grants = [],
+    isLoading,
+    isError,
+    isFetchNextPageError,
+    error,
+    refetch,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  } = useKbPageGrants(pageId);
 
   const pageState = usePageState({
     permission: "kb:pages:view",
     isLoading,
-    isError,
+    isError: isError && grants.length === 0,
     error,
     isEmpty: !isLoading && !isError && grants.length === 0,
   });
@@ -157,18 +165,15 @@ export default function PageGrantsSheet({
 
   const [grantMode, setGrantMode] = useState<GrantMode>("member");
   const [memberSearch, setMemberSearch] = useState("");
-  const [selectedMember, setSelectedMember] = useState<OrgMember | null>(null);
+  const [selectedMember, setSelectedMember] = useState<KbPageGrantCandidate | null>(null);
   const [selectedRole, setSelectedRole] = useState<string>("");
   const [selectedAccess, setSelectedAccess] = useState<"view" | "comment" | "edit">("view");
   const [revokeTarget, setRevokeTarget] = useState<KbPageGrant | null>(null);
   const [memberPickerOpen, setMemberPickerOpen] = useState(false);
 
   const debouncedSearch = useDebouncedValue(memberSearch, 300);
-  const { data: membersData } = useOrgMembers(1, 20, debouncedSearch || undefined, {
-    enabled: canUpdate && memberPickerOpen,
-    staleTime: 30_000,
-  });
-  const memberOptions = membersData?.data ?? [];
+  const memberCandidates = useKbPageGrantCandidates(pageId, debouncedSearch, canUpdate && memberPickerOpen);
+  const memberOptions = memberCandidates.data ?? [];
 
   function resolveGrantLabel(grant: KbPageGrant): string {
     if (grant.role !== null) return formatRoleLabel(grant.role);
@@ -191,7 +196,7 @@ export default function PageGrantsSheet({
     handleModeChange("role");
   }
 
-  function handleMemberSelect(member: OrgMember) {
+  function handleMemberSelect(member: KbPageGrantCandidate) {
     setSelectedMember(member);
     setMemberSearch("");
     setMemberPickerOpen(false);
@@ -216,6 +221,10 @@ export default function PageGrantsSheet({
 
   function handleMemberPickerOpenChange(open: boolean) {
     setMemberPickerOpen(open);
+  }
+
+  function handleMemberPickerBlur(event: FocusEvent<HTMLDivElement>) {
+    if (!event.currentTarget.contains(event.relatedTarget)) setMemberPickerOpen(false);
   }
 
   const canSubmit =
@@ -281,6 +290,10 @@ export default function PageGrantsSheet({
     void refetch();
   }
 
+  function handleLoadMore() {
+    void fetchNextPage();
+  }
+
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
@@ -319,6 +332,22 @@ export default function PageGrantsSheet({
                       onRevokeRequest={handleRevokeRequest}
                     />
                   ))}
+                  {isFetchNextPageError && (
+                    <p role="alert" className="text-sm text-destructive">
+                      Could not load more access grants. {getErrorMessage(error)}
+                    </p>
+                  )}
+                  {hasNextPage && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleLoadMore}
+                      disabled={isFetchingNextPage}
+                    >
+                      {isFetchingNextPage ? "Loading access grants…" : isFetchNextPageError ? "Retry loading grants" : "Load more access grants"}
+                    </Button>
+                  )}
                 </div>
               </PageState>
             </div>
@@ -360,19 +389,29 @@ export default function PageGrantsSheet({
                       <Command
                         className="rounded-md border border-input"
                         shouldFilter={false}
+                        onBlur={handleMemberPickerBlur}
                       >
                         <CommandInput
                           placeholder="Search members…"
                           value={memberSearch}
                           onValueChange={handleMemberSearchChange}
                           onFocus={() => handleMemberPickerOpenChange(true)}
-                          onBlur={() => handleMemberPickerOpenChange(false)}
                         />
                         {memberPickerOpen && (
                           <CommandList className="max-h-40">
-                            <CommandEmpty className="px-3 py-2 text-xs text-muted-foreground">
-                              No members found.
-                            </CommandEmpty>
+                            {memberSearch.trim().length === 0 ? (
+                              <p className="px-3 py-2 text-xs text-muted-foreground">Type a name or email to search members.</p>
+                            ) : memberCandidates.isLoading ? (
+                              <p className="px-3 py-2 text-xs text-muted-foreground">Searching members…</p>
+                            ) : memberCandidates.isError && memberOptions.length === 0 ? (
+                              <div role="alert" className="space-y-2 px-3 py-2 text-xs text-destructive">
+                                <p>Could not load members.</p>
+                                <ErrorReference error={memberCandidates.error} />
+                                <Button type="button" variant="outline" size="sm" onMouseDown={(e) => e.preventDefault()} onClick={() => { void memberCandidates.refetch(); }}>Retry members</Button>
+                              </div>
+                            ) : memberOptions.length === 0 ? (
+                              <CommandEmpty className="px-3 py-2 text-xs text-muted-foreground">No members found.</CommandEmpty>
+                            ) : null}
                             {memberOptions.map((m) => (
                               <CommandItem
                                 key={m.userId}
@@ -381,12 +420,23 @@ export default function PageGrantsSheet({
                                 onSelect={() => handleMemberSelect(m)}
                                 className="cursor-pointer"
                               >
-                                <span className="text-sm">{getUserDisplayName(m)}</span>
+                                <span className="text-sm">{m.name ?? m.email}</span>
                                 <span className="ml-1.5 text-xs text-muted-foreground truncate">
                                   {m.email}
                                 </span>
                               </CommandItem>
                             ))}
+                            {memberCandidates.isError && memberOptions.length > 0 && (
+                              <div role="alert" className="space-y-1 px-3 py-2 text-xs text-destructive">
+                                <p>Could not load more members.</p>
+                                <ErrorReference error={memberCandidates.error} />
+                              </div>
+                            )}
+                            {memberCandidates.hasNextPage && (
+                              <Button type="button" variant="ghost" size="sm" disabled={memberCandidates.isFetchingNextPage} onMouseDown={(e) => e.preventDefault()} onClick={() => { void memberCandidates.fetchNextPage(); }}>
+                                {memberCandidates.isFetchingNextPage ? "Loading members…" : memberCandidates.isFetchNextPageError ? "Retry loading members" : "Load more members"}
+                              </Button>
+                            )}
                           </CommandList>
                         )}
                       </Command>
@@ -394,7 +444,7 @@ export default function PageGrantsSheet({
                   ) : (
                     <div className="flex items-center gap-2 rounded-md border border-border px-3 py-2 bg-muted/40">
                       <span className="min-w-0 flex-1 text-sm truncate">
-                        {getUserDisplayName(selectedMember)}
+                        {selectedMember.name ?? selectedMember.email}
                       </span>
                       <button
                         type="button"

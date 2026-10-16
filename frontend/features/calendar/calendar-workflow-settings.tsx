@@ -4,7 +4,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared/error-state";
 import { ShieldCheck } from "lucide-react";
-import { useCalendarWorkflowEffects, useCalendarWorkflowPolicy, useCalendarWorkflowRules } from "@/hooks/api/calendar-workflows";
+import { useCalendarWorkflowPolicy, useCalendarWorkflowRules } from "@/hooks/api/calendar-workflows";
 import { CalendarWorkflowDryRunCard } from "./calendar-workflow-dry-run-card";
 import { CalendarWorkflowEffectsCard } from "./calendar-workflow-effects-card";
 import { CalendarWorkflowPolicyCard } from "./calendar-workflow-policy-card";
@@ -14,12 +14,11 @@ import { CalendarDeveloperSettingsCard } from "./calendar-developer-settings-car
 export function CalendarWorkflowSettings() {
   const policy = useCalendarWorkflowPolicy();
   const rules = useCalendarWorkflowRules();
-  const effects = useCalendarWorkflowEffects();
-  const loading = policy.isLoading || rules.isLoading || effects.isLoading;
-  const error = policy.isError || rules.isError || effects.isError;
+  const loading = policy.isLoading || rules.isLoading;
+  const error = policy.isError || rules.isError;
 
   if (loading) return <div className="space-y-4"><Skeleton className="h-52 w-full" /><Skeleton className="h-72 w-full" /></div>;
-  if (error || !policy.data || !rules.data || !effects.data) return <ErrorState title="Workflow settings could not be loaded" onRetry={() => void Promise.all([policy.refetch(), rules.refetch(), effects.refetch()])} />;
+  if (error || !policy.data || !rules.data) return <ErrorState title="Workflow settings could not be loaded" onRetry={() => void Promise.all([policy.refetch(), rules.refetch()])} />;
 
   return (
     <div className="space-y-5">
@@ -27,7 +26,7 @@ export function CalendarWorkflowSettings() {
       <CalendarWorkflowPolicyCard policy={policy.data} />
       <CalendarWorkflowRulesCard rules={rules.data} />
       <CalendarWorkflowDryRunCard />
-      <CalendarWorkflowEffectsCard effects={effects.data} />
+      <CalendarWorkflowEffectsCard />
       <CalendarDeveloperSettingsCard />
     </div>
   );
