@@ -27,10 +27,12 @@ const mockUseKbPage = jest.fn();
 const mockDiscardLocalEdits = jest.fn();
 const mockCompared = jest.fn();
 const mockCompareFailed = jest.fn();
+const mockUpdatePage = jest.fn();
+const mockUpdatePageAsync = jest.fn();
 let mockConflict: { currentContentRevision: number; lastEditedByName: string | null; lastEditedAt: string | null } | null = null;
 jest.mock("@/hooks/api/kb", () => ({
   useKbPage: (pageId: number) => mockUseKbPage(pageId),
-  useUpdateKbPage: () => ({ mutate: jest.fn(), mutateAsync: jest.fn(), isPending: false }),
+  useUpdateKbPage: () => ({ mutate: mockUpdatePage, mutateAsync: mockUpdatePageAsync, isPending: false }),
   useRecordKbPageVisit: () => ({ mutate: jest.fn() }),
 }));
 
@@ -60,9 +62,9 @@ jest.mock("@/components/editor/plate/plate-value-convert", () => ({
   prependPlateValue: (a: unknown[], b: unknown[]) => [...a, ...b],
 }));
 
-jest.mock("./page-cover", () => ({ __esModule: true, default: () => null }));
+jest.mock("./page-cover", () => ({ __esModule: true, default: ({ onCoverChange }: { onCoverChange: (cover: string) => void }) => <button onClick={() => onCoverChange("gradient:ocean")}>Change cover</button> }));
 jest.mock("./page-cover-picker", () => ({ PageCoverPickerDialog: () => null }));
-jest.mock("./page-icon-picker", () => ({ __esModule: true, default: () => null }));
+jest.mock("./page-icon-picker", () => ({ __esModule: true, default: ({ onIconChange }: { onIconChange: (icon: string) => void }) => <button onClick={() => onIconChange("⭐")}>Change icon</button> }));
 jest.mock("./page-document-property-actions", () => ({
   PageDocumentPropertyActions: () => null,
 }));
@@ -114,6 +116,8 @@ beforeEach(() => {
   mockDiscardLocalEdits.mockClear();
   mockCompared.mockClear();
   mockCompareFailed.mockClear();
+  mockUpdatePage.mockReset();
+  mockUpdatePageAsync.mockReset();
   mockUseKbPage.mockReturnValue({
     data: makePage(),
     isLoading: false,
@@ -190,6 +194,56 @@ describe("PageDocument — conflict reload", () => {
     await user.click(screen.getByRole("button", { name: "Compare versions" }));
     await waitFor(() => expect(mockCompared).toHaveBeenCalledWith({ title: "Their title", body: "" }));
     expect(mockDiscardLocalEdits).not.toHaveBeenCalled();
+  });
+});
+
+describe("PageDocument — presentation edits use the page revision", () => {
+  it.each([
+    ["cover", "Change cover", { coverImage: "gradient:ocean" }],
+    ["icon", "Change icon", { icon: "⭐" }],
+  ])("sends the current revision with a %s change", async (_field, action, change) => {
+    const page = { ...makePage(), icon: "📄", contentRevision: 7 };
+    mockUseKbPage.mockReturnValue({ data: page, isLoading: false, isError: false, error: undefined, refetch: jest.fn() });
+    render(<PageDocument pageId={42} projectId={7} />);
+
+    await userEvent.setup().click(screen.getByRole("button", { name: action }));
+
+    expect(mockUpdatePage).toHaveBeenCalledWith(
+      { pageId: 42, ...change, expectedContentRevision: 7 },
+      expect.any(Object),
+    );
+  });
+
+  it("keeps an icon change retryable after a stale write and retries against a fresh revision", async () => {
+    const page = { ...makePage(), icon: "📄", contentRevision: 7 };
+    const refetch = jest.fn()
+      .mockResolvedValueOnce({ isSuccess: true, data: page })
+      .mockResolvedValueOnce({ isSuccess: true, data: { ...page, contentRevision: 8 } });
+    mockUseKbPage.mockReturnValue({ data: page, isLoading: false, isError: false, error: undefined, refetch });
+    mockUpdatePage.mockImplementation((_payload, options) => options.onError(new ApiError("Stale", 409, "STALE_REVISION", {
+      currentContentRevision: 8,
+      lastEditedByName: null,
+      lastEditedAt: null,
+    })));
+    mockUpdatePageAsync.mockResolvedValue({ ...page, icon: "⭐", contentRevision: 9 });
+    render(<PageDocument pageId={42} projectId={7} />);
+    const user = userEvent.setup();
+
+    await user.click(screen.getByRole("button", { name: "Change icon" }));
+    expect(screen.getByRole("button", { name: "Retry icon change" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Retry icon change" }));
+    expect(mockUpdatePageAsync).not.toHaveBeenCalled();
+    expect(screen.getByRole("button", { name: "Retry icon change" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Retry icon change" }));
+
+    await waitFor(() => expect(mockUpdatePageAsync).toHaveBeenCalledWith({
+      pageId: 42,
+      icon: "⭐",
+      expectedContentRevision: 8,
+    }));
+    expect(screen.queryByRole("button", { name: "Retry icon change" })).toBeNull();
   });
 });
 
