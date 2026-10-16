@@ -1,5 +1,6 @@
 import React from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
+import { ApiError } from "@/lib/api-envelope";
 import { resolvePageState } from "@/lib/page-state/resolve-page-state";
 import type { UsePageStateOptions } from "@/hooks/api/use-page-state";
 import type {
@@ -153,6 +154,39 @@ describe("KnowledgeGapsPage — paging through the gap list", () => {
 });
 
 describe("KnowledgeGapsPage — page state", () => {
+  it("retains loaded gaps and retries the failed next page", () => {
+    useKnowledgeGaps.mockReturnValue(
+      settled([{ gaps: [makeGap(1, "How do I get a refund?")], nextCursor: 1 }], {
+        isError: true,
+        isFetchNextPageError: true,
+        error: new ApiError("Unavailable", 503, "UNAVAILABLE", { correlationId: "req-gaps-next" }, "/support/knowledge-gaps"),
+      }),
+    );
+
+    render(<KnowledgeGapsPage />);
+
+    expect(screen.getByText("How do I get a refund?")).toBeInTheDocument();
+    expect(screen.getByRole("alert")).toHaveTextContent("Could not load more knowledge gaps");
+    expect(screen.getByText("req-gaps-next")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Retry loading knowledge gaps" }));
+    expect(fetchNextPage).toHaveBeenCalledTimes(1);
+  });
+
+  it("hides the Detect Gaps action and cached rows after a denied read", () => {
+    useKnowledgeGaps.mockReturnValue(
+      settled([{ gaps: [makeGap(1, "Private gap")], nextCursor: null }], {
+        isError: true,
+        error: new ApiError("Forbidden", 403, "FORBIDDEN", {}, "/support/knowledge-gaps"),
+      }),
+    );
+
+    render(<KnowledgeGapsPage />);
+
+    expect(screen.queryByText("Private gap")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Detect Gaps" })).not.toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent("Access Restricted");
+  });
+
   it("passes the read error to usePageState, because omitting it turns a 402 into Something went wrong", () => {
     const error = new Error("upstream failed");
     useKnowledgeGaps.mockReturnValue(
