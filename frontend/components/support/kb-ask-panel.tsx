@@ -320,14 +320,6 @@ function PublicAskPanel({ className, orgId }: { className?: string; orgId: strin
                 </div>
               </div>
             )}
-            {!answer.hasContext && (
-              <EmptyState
-                compact
-                className="pt-1 border-t"
-                title="No knowledge-base sources matched"
-                description="Nothing in the public knowledge base covers this question yet."
-              />
-            )}
           </div>
         )}
       </CardContent>

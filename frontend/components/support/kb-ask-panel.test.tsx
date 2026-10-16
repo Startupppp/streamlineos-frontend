@@ -4,12 +4,11 @@ import type { KbAskResult } from "@/hooks/api/kb/ask-result-schema";
 import { KbAskPanel } from "./kb-ask-panel";
 
 const mockMutate = jest.fn();
-const mockPublicMutate = jest.fn();
 jest.mock("@/hooks/api/kb/ask", () => ({
   useKbAsk: () => ({ mutate: mockMutate, isPending: false, isError: false, stop: jest.fn(), resetAttempt: jest.fn() }),
   useKbAiAnswerFeedback: () => ({ mutate: jest.fn(), isPending: false }),
 }));
-jest.mock("@/hooks/api/support/kb-rag", () => ({ usePublicAskSupportKb: () => ({ mutate: mockPublicMutate, isPending: false }) }));
+jest.mock("@/hooks/api/support/kb-rag", () => ({ usePublicAskSupportKb: () => ({ mutate: jest.fn(), isPending: false }) }));
 jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn() } }));
 
 const answer: KbAskResult = {
@@ -65,13 +64,4 @@ describe("KbAskPanel citations", () => {
     expect(screen.queryByRole("list", { name: "Source evidence" })).not.toBeInTheDocument();
   });
 
-  it("shows insufficient evidence for a public answer without matched sources", async () => {
-    mockPublicMutate.mockImplementation((_input: unknown, options: { onSuccess: (data: { answer: string; sources: []; hasContext: boolean }) => void }) => options.onSuccess({ answer: "No answer found.", sources: [], hasContext: false }));
-    render(<KbAskPanel mode="public" orgId="demo" />);
-    await userEvent.type(screen.getByPlaceholderText(/reset my password/i), "Where is the policy?");
-    await userEvent.click(screen.getByRole("button", { name: /ask/i }));
-
-    expect(screen.getByText("No knowledge-base sources matched")).toBeInTheDocument();
-    expect(screen.getByText("Nothing in the public knowledge base covers this question yet.")).toBeInTheDocument();
-  });
 });
