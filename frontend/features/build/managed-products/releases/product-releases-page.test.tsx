@@ -59,6 +59,16 @@ jest.mock("@/hooks/api/build/managed-product-releases", () => ({
   }),
 }));
 
+jest.mock("@/hooks/api/organization", () => ({
+  useOrgMembersByIds: (ids: string[]) => ({
+    data: {
+      data: ids
+        .filter((id) => id === "user-abc")
+        .map((id) => ({ userId: id, membershipId: 1, name: "Ada Lovelace", email: "ada@example.com", image: null })),
+    },
+  }),
+}));
+
 jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn() } }));
 
 const ROWS: ManagedProductRelease[] = [
@@ -269,13 +279,12 @@ describe("ProductReleasesPage", () => {
     expect(link).toHaveAttribute("rel", "noopener noreferrer");
   });
 
-  it("shows the owner indicator on releases that have an ownerUserId", () => {
+  it("names the release owner, and falls back to a neutral label when the name cannot be resolved", () => {
     setReleases(ROWS_WITH_EVIDENCE);
     render(<ProductReleasesPage managedProductId={7} />);
-    const shipped = screen.getByRole("list", { name: "Shipped releases" });
-    expect(within(shipped).getByText("Owner")).toBeInTheDocument();
-    const upcoming = screen.getByRole("list", { name: "Upcoming releases" });
-    expect(within(upcoming).getByText("Owner")).toBeInTheDocument();
+    expect(screen.getByText("Ada Lovelace")).toBeInTheDocument();
+    expect(screen.getByText("Owner assigned")).toBeInTheDocument();
+    expect(screen.queryByText("Owner")).not.toBeInTheDocument();
   });
 
   it("does not show evidence indicators when fields are null", () => {
@@ -283,6 +292,6 @@ describe("ProductReleasesPage", () => {
     const shipped = screen.getByRole("list", { name: "Shipped releases" });
     expect(within(shipped).queryByText("Approved")).not.toBeInTheDocument();
     expect(within(shipped).queryByRole("link", { name: "Evidence" })).not.toBeInTheDocument();
-    expect(within(shipped).queryByText("Owner")).not.toBeInTheDocument();
+    expect(within(shipped).queryByText("Owner assigned")).not.toBeInTheDocument();
   });
 });
