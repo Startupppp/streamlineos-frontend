@@ -27,9 +27,9 @@ export function HrHubMetrics({
   const data = hubSectionData(section);
   const error = hubSectionError(section);
 
-  if (!access.canAnalytics) return null;
-
   if (isLoading) return <StatCardGridSkeleton cols={6} count={6} />;
+
+  if (!access.canAnalytics) return null;
   if (error) return <ErrorRetry error={error} onRetry={onRetry} />;
   if (!data) return null;
 

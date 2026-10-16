@@ -55,6 +55,15 @@ export const kbPageListItemContract = kbPageBaseContract.omit({
 
 export const kbPageListContract = z.array(kbPageListItemContract);
 
+export const kbFavoritePageListContract = z.object({
+  data: z.array(kbPageListItemContract),
+  pagination: z.object({
+    limit: z.number().int(),
+    hasMore: z.boolean(),
+    nextCursor: z.string().nullable(),
+  }),
+});
+
 export const kbPageWithAncestorsContract = kbPageBaseContract.extend({
   ancestors: z.array(z.object({ id: z.number().int(), title: z.string() })),
   isFavorite: z.boolean(),
@@ -131,6 +140,17 @@ export const kbTrashPageListContract = z.object({
     hasMore: z.boolean(),
     nextCursor: z.string().nullable(),
   }),
+});
+
+const kbTrashDeleterContract = z.object({ membershipId: z.number().int(), name: z.string() });
+export const kbTrashDeletersContract = z.object({
+  data: z.array(kbTrashDeleterContract),
+  pagination: z.object({
+    limit: z.number().int(),
+    hasMore: z.boolean(),
+    nextCursor: z.string().nullable(),
+  }),
+  selected: kbTrashDeleterContract.nullable(),
 });
 
 export const kbBulkPageResultContract = z.object({

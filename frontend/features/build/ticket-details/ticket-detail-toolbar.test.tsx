@@ -62,6 +62,32 @@ it("opens the mobile overflow confirmation before deleting", async () => {
   expect(onDelete).toHaveBeenCalledTimes(1);
 });
 
+it("names the child count and their fate in the desktop delete confirmation", async () => {
+  mockCanDelete = true;
+  const user = userEvent.setup();
+  render(<TicketDetailToolbar isMobile={false} rightPanelCollapsed={false} onExpandRightPanel={jest.fn()} onDelete={jest.fn()} isDeleting={false} subtaskCount={1} />);
+  await user.click(screen.getByRole("button", { name: "Delete ticket" }));
+  expect(screen.getByText("This ticket has 1 subtask. They will be kept without a parent. This cannot be undone.")).toBeInTheDocument();
+});
+
+it("pluralizes the child count in the mobile delete confirmation", async () => {
+  mockCanDelete = true;
+  const user = userEvent.setup();
+  render(<TicketDetailToolbar isMobile rightPanelCollapsed={false} onExpandRightPanel={jest.fn()} onDelete={jest.fn()} isDeleting={false} subtaskCount={3} />);
+  await user.click(screen.getByRole("button", { name: "More actions" }));
+  await user.click(screen.getByRole("menuitem", { name: "Delete" }));
+  expect(screen.getByRole("alertdialog")).toHaveTextContent("This ticket has 3 subtasks. They will be kept without a parent.");
+});
+
+it("warns only that the delete is permanent when the ticket has no children", async () => {
+  mockCanDelete = true;
+  const user = userEvent.setup();
+  render(<TicketDetailToolbar isMobile={false} rightPanelCollapsed={false} onExpandRightPanel={jest.fn()} onDelete={jest.fn()} isDeleting={false} subtaskCount={0} />);
+  await user.click(screen.getByRole("button", { name: "Delete ticket" }));
+  expect(screen.getByText("This cannot be undone.")).toBeInTheDocument();
+  expect(screen.queryByText(/subtask/i)).not.toBeInTheDocument();
+});
+
 it("shows share as a button on mobile when delete is unavailable", () => {
   render(
     <TicketDetailToolbar

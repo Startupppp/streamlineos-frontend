@@ -18,11 +18,12 @@ interface PageCommentThreadProps {
   onReply: (comment: KbPageComment) => void;
   currentUserId: string | null | undefined;
   canUpdate: boolean;
+  canManage?: boolean;
 }
 
-export function PageCommentThread({ comment, replies, pageId, onReply, currentUserId, canUpdate }: PageCommentThreadProps) {
+export function PageCommentThread({ comment, replies, pageId, onReply, currentUserId, canUpdate, canManage = false }: PageCommentThreadProps) {
   const isAuthor = Boolean(comment.authorId && comment.authorId === currentUserId);
-  const canEdit = isAuthor || canUpdate;
+  const canEdit = canUpdate && (isAuthor || canManage);
   const [editing, setEditing] = useState(false);
   const [editText, setEditText] = useState(comment.content);
   const updateComment = useUpdateKbPageComment();
@@ -120,13 +121,13 @@ export function PageCommentThread({ comment, replies, pageId, onReply, currentUs
           )}
           {!editing && (
             <div className="flex items-center gap-2 mt-1">
-              <button
+              {canUpdate && <button
                 type="button"
                 className="text-xs text-muted-foreground hover:text-foreground transition-colors"
                 onClick={handleReplyClick}
               >
                 Reply
-              </button>
+              </button>}
               {!isResolved && canUpdate && (
                 <button
                   type="button"
@@ -172,6 +173,7 @@ export function PageCommentThread({ comment, replies, pageId, onReply, currentUs
                 onReply={onReply}
                 currentUserId={currentUserId}
                 canUpdate={canUpdate}
+                canManage={canManage}
               />
             </li>
           ))}

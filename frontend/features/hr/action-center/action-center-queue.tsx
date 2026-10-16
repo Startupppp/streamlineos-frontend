@@ -12,6 +12,7 @@ import {
   ContentFillPanel,
 } from "@/components/ui/content-fill-panel";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useMyApprover } from "@/hooks/api/hr/approvers";
 import { formatIstDate } from "@/lib/hrms/payroll-cutoff";
 import { ActionCenterFilters } from "@/features/hr/action-center/action-center-filters";
 import { ActionCenterBulkBar } from "@/features/hr/action-center/action-center-bulk-bar";
@@ -45,19 +46,17 @@ export function ActionCenterQueueView({
   queue,
   onOpenRequester,
 }: ActionCenterQueueViewProps) {
+  const { data: session } = useSession();
+  const currentUserId = session?.user?.id;
   const [filters, setFilters] = useState<ActionCenterFilterState>(
     ACTION_CENTER_NO_FILTERS,
   );
   const [selectedIds, setSelectedIds] = useState<readonly string[]>([]);
   const [decidedIds, setDecidedIds] = useState<readonly string[]>([]);
   const decisions = useActionCenterDecisions();
-  const { data: session } = useSession();
-  const myUserId = session?.user?.id;
-  const isOwnLeave = useCallback(
-    (item: ActionCenterItem): boolean =>
-      item.source === "leave" && !!myUserId && item.requester?.userId === myUserId,
-    [myUserId],
-  );
+  const { data: myLeaveRoute } = useMyApprover("leave");
+  const mayDecideOwnLeave =
+    myLeaveRoute?.ownerSelfApproval === true && myLeaveRoute.approver?.userId === currentUserId;
 
   const live = useMemo(
     () => queue.items.filter((item) => !decidedIds.includes(item.id)),
@@ -202,21 +201,26 @@ export function ActionCenterQueueView({
         <ContentFillPanel className="p-0">
           <ul className="divide-border/60">
             <AnimatePresence initial={false}>
-              {visible.map((item, index) => (
-                <ActionCenterRow
-                  key={item.id}
-                  item={item}
-                  index={index}
-                  selected={selectedIds.includes(item.id)}
-                  selectable={decisions.canDecide(item.source) && !isOwnLeave(item)}
-                  decidable={decisions.canDecide(item.source) && !isOwnLeave(item)}
-                  ownRequest={isOwnLeave(item)}
-                  isDeciding={decisions.isDeciding(item.id)}
-                  onToggleSelected={handleToggleSelected}
-                  onOpenRequester={onOpenRequester}
-                  onDecide={handleDecide}
-                />
-              ))}
+              {visible.map((item, index) => {
+                const isOwnItem = !!currentUserId && item.requester?.userId === currentUserId;
+                const ownItemBlocked = isOwnItem && !(item.source === "leave" && mayDecideOwnLeave);
+                const canDecideItem = decisions.canDecide(item.source) && !ownItemBlocked;
+                return (
+                  <ActionCenterRow
+                    key={item.id}
+                    item={item}
+                    index={index}
+                    selected={selectedIds.includes(item.id)}
+                    selectable={canDecideItem}
+                    decidable={canDecideItem}
+                    ownRequest={ownItemBlocked}
+                    isDeciding={decisions.isDeciding(item.id)}
+                    onToggleSelected={handleToggleSelected}
+                    onOpenRequester={onOpenRequester}
+                    onDecide={handleDecide}
+                  />
+                );
+              })}
             </AnimatePresence>
           </ul>
         </ContentFillPanel>

@@ -3,6 +3,7 @@ import type { z } from "zod";
 import type {
   exitChecklistItemContract,
   exitChecklistOwnerContract,
+  offboardingChecklistRowContract,
   resignationContract,
   resignationDetailContract,
   resignationProgressContract,
@@ -18,12 +19,14 @@ import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { useAuthorizedIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
 import { IDEMPOTENCY_HEADER } from "@/lib/idempotency-key";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
 export type Resignation = z.infer<typeof resignationContract>;
 export type ResignationDetail = z.infer<typeof resignationDetailContract>;
 export type ResignationProgress = z.infer<typeof resignationProgressContract>;
 export type ExitChecklistItem = z.infer<typeof exitChecklistItemContract>;
 export type ExitChecklistOwner = z.infer<typeof exitChecklistOwnerContract>;
+export type OffboardingChecklistRow = z.infer<typeof offboardingChecklistRowContract>;
 
 export interface PaginatedResignations {
   data: Resignation[];
@@ -41,6 +44,7 @@ const exitKeys = {
   lists: () => [...exitKeys.all, "list"] as const,
   mine: () => [...exitKeys.all, "mine"] as const,
   list: (params?: ResignationListParams) => [...exitKeys.lists(), params] as const,
+  offboardingChecklists: () => [...exitKeys.all, "offboarding-checklists"] as const,
   detail: (resignationId: number) => [...exitKeys.all, "detail", resignationId] as const,
   progress: (resignationId: number) =>
     [...exitKeys.all, "progress", resignationId] as const,
@@ -63,6 +67,9 @@ const _successContract = lazyContract(() =>
 );
 const _resignationProgressContract = lazyContract(() =>
   import("@/hooks/api/hr/exit-schema").then((m) => m.resignationProgressContract),
+);
+const _offboardingChecklistSummaryListContract = lazyContract(() =>
+  import("@/hooks/api/hr/exit-schema").then((m) => m.offboardingChecklistSummaryListContract),
 );
 
 export function useResignations(params?: ResignationListParams) {
@@ -94,13 +101,21 @@ export interface ResignationSubmission {
   resignationLetterUrl?: string;
 }
 
-export function useRecordResignation() {
-  const qc = useQueryClient();
-  return useAuthorizedMutation("hr:exit:manage", {
-    mutationKey: ["hr", "exit", "record"],
-    mutationFn: (data: ResignationSubmission & { userId: string }) =>
-      apiClient.post("/hr/exit", data, undefined, _resignationContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: exitKeys.all }),
+export function useOffboardingChecklists() {
+  const canExit = useCan("hr:exit:view");
+  const hrEnabled = useModuleEnabled("hr");
+  return useQuery({
+    queryKey: exitKeys.offboardingChecklists(),
+    queryFn: ({ signal }) =>
+      apiClient.get(
+        "/hr/exit/offboarding-checklists",
+        undefined,
+        signal,
+        _offboardingChecklistSummaryListContract,
+      ),
+    staleTime: 2 * 60_000,
+    enabled: hrEnabled && canExit,
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -128,6 +143,24 @@ export function useWithdrawMyResignation() {
     mutationKey: ["me", "resignations", "withdraw"],
     mutationFn: ({ resignationId }: { resignationId: number }) =>
       apiClient.patch(`/me/resignations/${resignationId}/withdraw`, {}, undefined, _successContract),
+    onSuccess: () => qc.invalidateQueries({ queryKey: exitKeys.all }),
+  });
+}
+
+export function useAdminRecordResignation() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("hr:exit:manage", {
+    mutationKey: ["hr", "exit", "admin-record"],
+    mutationFn: (data: {
+      targetUserId: string;
+      reason: string;
+      reasonCategory?: string;
+      lastWorkingDate: string;
+      noticePeriodDays?: number;
+      willingForExitInterview?: boolean;
+      companyFeedback?: string;
+      resignationLetterUrl?: string;
+    }) => apiClient.post("/hr/exit/admin-record", data, undefined, _resignationContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: exitKeys.all }),
   });
 }

@@ -65,6 +65,7 @@ export function ReleaseUpcomingSection({ releases, count, now, className }: Rele
         <EmptyState
           compact
           bare
+          className="h-full min-h-56"
           illustrationSize="xs"
           title="Nothing planned"
           description="Draft the next ship here. New releases start as drafts, soonest date first."

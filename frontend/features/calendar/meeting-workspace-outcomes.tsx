@@ -101,12 +101,12 @@ export function MeetingWorkspaceOutcomes({
 
   return (
     <div className="space-y-4">
-      <div className="rounded-lg border p-3 space-y-2">
+      <div className="space-y-2 rounded-lg bg-muted p-3 dark:border dark:border-background">
         <Select
           value={kind}
           onValueChange={(value) => setKind(value as typeof kind)}
         >
-          <SelectTrigger className="h-8 text-xs">
+          <SelectTrigger aria-label="Outcome kind">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -122,7 +122,7 @@ export function MeetingWorkspaceOutcomes({
           className="min-h-20 text-sm"
         />
         <div className="flex items-center justify-between gap-3">
-          <Label className="flex items-center gap-2 text-xs font-normal">
+          <Label className="font-normal">
             <Checkbox
               checked={share}
               onCheckedChange={(value) => setShare(value === true)}
@@ -131,7 +131,6 @@ export function MeetingWorkspaceOutcomes({
           </Label>
           <Button
             size="sm"
-            className="h-8"
             onClick={handleAdd}
             disabled={add.isPending || !content.trim()}
           >

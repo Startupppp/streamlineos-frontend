@@ -22,6 +22,10 @@ jest.mock("@/hooks/api/use-page-state", () => {
   };
 });
 
+jest.mock("@/hooks/api/org-display", () => ({
+  useOrgTimeZone: () => "Asia/Kolkata",
+}));
+
 jest.mock("@/hooks/api/access", () => ({
   useCan: () => canManage,
   useModuleEnabled: () => true,

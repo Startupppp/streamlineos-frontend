@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Lightbulb, ListTree, MessageSquareText, PenLine } from "lucide-react";
 import {
   AiActionsMenu,
@@ -13,7 +13,14 @@ import {
   type KbDocAiAction,
 } from "@/hooks/api/kb/doc-ai-stream";
 import { useCan } from "@/hooks/api/access";
+import type { Citation } from "@/components/ai/ai-citation-chips";
 import { KbPageImproveDiffDialog } from "./kb-page-improve-diff-dialog";
+
+interface PendingPageChange {
+  kind: "improve" | "summarize";
+  text: string;
+  sources: Citation[];
+}
 
 interface KbPageAiActionsProps {
   pageId: number;
@@ -30,23 +37,28 @@ export function KbPageAiActions({
 }: KbPageAiActionsProps) {
   const canGenerate = useCan("kb:ai:generate");
   const [askOpen, setAskOpen] = useState(false);
-  const [improvePendingText, setImprovePendingText] = useState<string | null>(
-    null,
-  );
+  const [pendingChange, setPendingChange] = useState<PendingPageChange | null>(null);
+  const sourcesRef = useRef<Citation[]>([]);
 
   function handleApplyImprovement(text: string) {
-    setImprovePendingText(text);
+    setPendingChange({ kind: "improve", text, sources: sourcesRef.current });
   }
 
-  function handleConfirmImprovement() {
-    if (improvePendingText !== null) {
-      onApplyImprovement?.(improvePendingText);
+  function handleInsertSummary(text: string) {
+    setPendingChange({ kind: "summarize", text, sources: sourcesRef.current });
+  }
+
+  function handleConfirmChange() {
+    if (pendingChange?.kind === "improve") {
+      onApplyImprovement?.(pendingChange.text);
+    } else if (pendingChange?.kind === "summarize") {
+      onInsertSummary?.(pendingChange.text);
     }
-    setImprovePendingText(null);
+    setPendingChange(null);
   }
 
-  function handleDiscardImprovement() {
-    setImprovePendingText(null);
+  function handleDiscardChange() {
+    setPendingChange(null);
   }
 
   async function runAsk(): Promise<AiActionResult> {
@@ -59,6 +71,7 @@ export function KbPageAiActions({
       signal?: AbortSignal,
       onToken?: (chunk: string) => void,
     ): Promise<AiActionResult> => {
+      sourcesRef.current = [];
       const outcome = await streamKbDocAi({
         scope: "pages",
         docId: pageId,
@@ -66,11 +79,16 @@ export function KbPageAiActions({
         ...(onToken !== undefined ? { onToken } : {}),
         ...(signal !== undefined ? { signal } : {}),
       });
+      if (outcome.status !== "completed") {
+        throw new DOMException("AI generation was cancelled", "AbortError");
+      }
+      if (!outcome.citations?.length) {
+        throw new Error("The source for this AI draft could not be verified. Try again.");
+      }
+      sourcesRef.current = outcome.citations;
       return {
         text: outcome.text,
-        ...(outcome.status === "completed" && outcome.citations !== undefined
-          ? { citations: outcome.citations }
-          : {}),
+        citations: outcome.citations,
       };
     };
   }
@@ -82,8 +100,9 @@ export function KbPageAiActions({
       description: "Key points as concise bullets",
       icon: ListTree,
       run: streamAction("summarize"),
-      onApply: onInsertSummary,
-      applyLabel: "Insert at top",
+      onApply: onInsertSummary ? handleInsertSummary : undefined,
+      applyLabel: "Preview insertion",
+      expectsCitations: true,
     },
     {
       key: "ask",
@@ -99,7 +118,8 @@ export function KbPageAiActions({
       icon: PenLine,
       run: streamAction("improve"),
       onApply: onApplyImprovement ? handleApplyImprovement : undefined,
-      applyLabel: "Replace page draft",
+      applyLabel: "Preview changes",
+      expectsCitations: true,
     },
     {
       key: "suggest-related",
@@ -107,6 +127,7 @@ export function KbPageAiActions({
       description: "Ideas that extend this page",
       icon: Lightbulb,
       run: streamAction("suggest-related"),
+      expectsCitations: true,
     },
   ];
 
@@ -130,11 +151,16 @@ export function KbPageAiActions({
         description="Ask a question — the answer is scoped to this page only."
       />
       <KbPageImproveDiffDialog
-        open={improvePendingText !== null}
-        proposedText={improvePendingText ?? ""}
+        open={pendingChange !== null}
+        proposedText={pendingChange?.kind === "summarize" && currentContent
+          ? `${pendingChange.text}\n${currentContent}`
+          : pendingChange?.text ?? ""}
         currentContent={currentContent}
-        onApply={handleConfirmImprovement}
-        onDiscard={handleDiscardImprovement}
+        title={pendingChange?.kind === "summarize" ? "Review summary insertion" : undefined}
+        applyLabel={pendingChange?.kind === "summarize" ? "Insert summary" : undefined}
+        sources={pendingChange?.sources}
+        onApply={handleConfirmChange}
+        onDiscard={handleDiscardChange}
       />
     </>
   );

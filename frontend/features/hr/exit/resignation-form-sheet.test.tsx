@@ -4,20 +4,6 @@ import { fireEvent, render, screen } from "@testing-library/react";
 const toastError = jest.fn();
 jest.mock("sonner", () => ({ toast: { error: (m: string) => toastError(m), success: jest.fn() } }));
 
-jest.mock("next-auth/react", () => ({ useSession: () => ({ data: { user: { id: "owner-1" } } }) }));
-
-const pickerExclusions: Array<string[] | undefined> = [];
-jest.mock("@/features/hr/shared/employee-picker", () => ({
-  EmployeePicker: ({ onChange, excludeUserIds }: { onChange: (id: string) => void; excludeUserIds?: string[] }) => {
-    pickerExclusions.push(excludeUserIds);
-    return (
-      <button type="button" onClick={() => onChange("emp-7")}>
-        pick employee
-      </button>
-    );
-  },
-}));
-
 jest.mock("@/components/shared/hr-sheet", () => ({
   HrSheet: ({ open, children, onSubmit, title }: { open: boolean; children: ReactNode; onSubmit?: () => void; title: ReactNode }) =>
     open ? (
@@ -46,10 +32,8 @@ jest.mock("@/components/ui/select", () => ({
   SelectItem: ({ children, value }: { children: ReactNode; value: string }) => <option value={value}>{children}</option>,
 }));
 
-const recordMutate = jest.fn();
 const submitMutate = jest.fn();
 jest.mock("@/hooks/api/hr/exit", () => ({
-  useRecordResignation: () => ({ mutate: recordMutate, isPending: false }),
   useSubmitMyResignation: () => ({ mutate: submitMutate, isPending: false }),
 }));
 
@@ -64,41 +48,17 @@ function fillValidForm() {
 
 beforeEach(() => {
   toastError.mockReset();
-  recordMutate.mockReset();
   submitMutate.mockReset();
-  pickerExclusions.length = 0;
-});
-
-describe("QA-2026-10-14 — HR records a resignation for a chosen employee", () => {
-  it("asks whom the resignation is for and refuses to submit until an employee is chosen", () => {
-    render(<ResignationFormSheet open onOpenChange={jest.fn()} mode="record" />);
-    expect(screen.getByRole("heading", { name: "Record Resignation" })).toBeInTheDocument();
-    expect(pickerExclusions.at(-1)).toEqual(["owner-1"]);
-
-    fillValidForm();
-    fireEvent.click(screen.getByRole("button", { name: "submit" }));
-    expect(toastError).toHaveBeenCalledWith("Select the employee who is resigning");
-    expect(recordMutate).not.toHaveBeenCalled();
-
-    fireEvent.click(screen.getByRole("button", { name: "pick employee" }));
-    fireEvent.click(screen.getByRole("button", { name: "submit" }));
-    expect(recordMutate).toHaveBeenCalledWith(
-      expect.objectContaining({ userId: "emp-7", reasonCategory: "Better salary or benefits" }),
-      expect.any(Object),
-    );
-    expect(submitMutate).not.toHaveBeenCalled();
-  });
 });
 
 describe("QA-2026-10-14 — an employee submits their own resignation", () => {
-  it("shows no employee picker and files through the self-service endpoint without a userId", () => {
-    render(<ResignationFormSheet open onOpenChange={jest.fn()} mode="self" />);
-    expect(screen.queryByRole("button", { name: "pick employee" })).not.toBeInTheDocument();
+  it("files through the self-service endpoint without a userId", () => {
+    render(<ResignationFormSheet open onOpenChange={jest.fn()} />);
+    expect(screen.getByRole("heading", { name: "Submit Resignation" })).toBeInTheDocument();
 
     fillValidForm();
     fireEvent.click(screen.getByRole("button", { name: "submit" }));
     expect(submitMutate).toHaveBeenCalledTimes(1);
     expect(submitMutate.mock.calls[0][0]).not.toHaveProperty("userId");
-    expect(recordMutate).not.toHaveBeenCalled();
   });
 });

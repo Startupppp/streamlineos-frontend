@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
+import { formatShortDate } from "@/lib/date-utils";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { BuildListSurface } from "@/features/build/shared/build-list-surface";
@@ -62,7 +63,6 @@ export function ProjectApprovalsPage({
     deleteTarget,
     isBulkPending,
     createApproval,
-    updateApproval,
     columns,
     handleRequestTask,
     handleRequestRelease,
@@ -99,7 +99,7 @@ export function ProjectApprovalsPage({
             { label: "Type", value: entityTypeLabel(row.entityType) },
             {
               label: "Due",
-              value: row.dueAt ? row.dueAt.slice(0, 10) : "—",
+              value: formatShortDate(row.dueAt),
             },
           ]}
         />
@@ -217,7 +217,6 @@ export function ProjectApprovalsPage({
         open={!!delegateTarget}
         onOpenChange={handleDelegateDialogChange}
         onConfirm={handleDelegate}
-        isPending={updateApproval.isPending}
         members={members}
         currentApproverId={
           delegateTarget
@@ -227,6 +226,7 @@ export function ProjectApprovalsPage({
               )?.id
             : undefined
         }
+        requesterId={delegateTarget?.requestedById ?? undefined}
       />
       <ConfirmDialog
         open={!!cancelTarget}

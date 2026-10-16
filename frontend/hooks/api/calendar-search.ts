@@ -4,7 +4,9 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
-import { useCan } from "@/hooks/api/access";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
+import { useAccess } from "@/hooks/api/access";
+import { grantsPermission } from "@/lib/rbac/permission-gate";
 import { platformHierarchyQueryKeys } from "@/lib/query-keys/platform-hierarchy";
 import type { CalendarSearchResponse } from "./calendar-types";
 
@@ -17,6 +19,7 @@ const responseContract = lazyContract(() =>
 export interface CalendarSearchFilters {
   start: string;
   end: string;
+  timeZone?: string;
   query?: string;
   sourceKey?: string;
   status?: string;
@@ -34,14 +37,28 @@ export function useCalendarSearch(
   const { data: session } = useSession();
   const orgId = session?.orgId ?? "";
   const userId = session?.user?.id ?? "";
-  const canView = useCan("calendar:read");
+  const { data: access } = useAccess();
+  const canView = grantsPermission(access, "calendar:read");
+  const requestFilters = {
+    ...filters,
+    timeZone: filters.timeZone ?? Intl.DateTimeFormat().resolvedOptions().timeZone ?? "UTC",
+  };
   return useInfiniteQuery({
-    queryKey: platformHierarchyQueryKeys.calendar.search(filters),
+    ...INLINE_READ_ERROR,
+    queryKey: platformHierarchyQueryKeys.calendar.search(
+      orgId,
+      userId,
+      access?.membershipId ?? null,
+      access?.version ?? 0,
+      access?.scopes["calendar:read"] ?? "none",
+      canView,
+      requestFilters,
+    ),
     initialPageParam: "" as string,
     queryFn: ({ pageParam, signal }) =>
       apiClient.get<CalendarSearchResponse>(
         "/calendar/search",
-        { ...filters, ...(pageParam ? { cursor: pageParam } : {}) },
+        { ...requestFilters, ...(pageParam ? { cursor: pageParam } : {}) },
         signal,
         responseContract,
       ),

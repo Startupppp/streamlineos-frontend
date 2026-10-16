@@ -22,7 +22,7 @@ jest.mock("@/lib/api-client", () => ({
   },
 }));
 
-function response(nextCursor: string) {
+function response(nextCursor: string | null) {
   return {
     events: [],
     failures: [],
@@ -107,5 +107,23 @@ describe("useCalendarHistory", () => {
       "user-2",
       "2026-10-01T00:00:00.000Z",
     ]);
+  });
+
+  it("stops requesting pages when a capped history slice has no safe continuation", async () => {
+    get.mockReset().mockResolvedValue(response(null));
+    const client = new QueryClient({
+      defaultOptions: { queries: { retry: false, gcTime: 0 } },
+    });
+    const { result } = renderHook(
+      () => useCalendarHistory("2026-10-01T00:00:00.000Z"),
+      { wrapper: wrapper(client) },
+    );
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.hasNextPage).toBe(false);
+    await act(async () => {
+      await result.current.fetchNextPage();
+    });
+    expect(get).toHaveBeenCalledTimes(1);
   });
 });

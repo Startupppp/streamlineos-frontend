@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AppSheet } from "@/components/shared/app-sheet";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -84,10 +84,15 @@ export function CalendarWorkflowRuleDialog({ open, onOpenChange }: { open: boole
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="md:sm:max-w-2xl">
-        <DialogHeader><DialogTitle>Create workflow rule</DialogTitle><DialogDescription>Choose a committed lifecycle event, optional condition, recipients, and delivery channels.</DialogDescription></DialogHeader>
-        <DialogBody className="space-y-4 pr-1">
+    <AppSheet
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Create workflow rule"
+      description="Choose a committed lifecycle event, optional condition, recipients, and delivery channels."
+      className="sm:max-w-2xl"
+      footer={<LoadingButton isPending={createRule.isPending} onClick={() => void submit()}>Create rule</LoadingButton>}
+    >
+        <div className="space-y-4 pr-1">
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5"><Label htmlFor="workflow-name">Name</Label><Input id="workflow-name" value={name} onChange={(event) => setName(event.target.value)} /></div>
             <div className="space-y-1.5"><Label htmlFor="workflow-trigger">Trigger</Label><Select value={trigger} onValueChange={changeTrigger}><SelectTrigger id="workflow-trigger"><SelectValue /></SelectTrigger><SelectContent>{calendarWorkflowTriggers.map((value) => <SelectItem key={value} value={value}>{value.replace("calendar.", "")}</SelectItem>)}</SelectContent></Select></div>
@@ -104,9 +109,7 @@ export function CalendarWorkflowRuleDialog({ open, onOpenChange }: { open: boole
           <fieldset className="space-y-2"><legend className="text-sm font-medium">Channels</legend><div className="flex flex-wrap gap-3">{calendarWorkflowChannels.map((channel) => <Label key={channel} className="flex items-center gap-2 font-normal"><Checkbox checked={channels.includes(channel)} onCheckedChange={(value) => toggleChannel(channel, value === true)} />{channel.replace("_", " ")}</Label>)}</div></fieldset>
           <div className="grid gap-4 sm:grid-cols-2"><div className="space-y-1.5"><Label htmlFor="workflow-title">Notification title</Label><Input id="workflow-title" value={title} onChange={(event) => setTitle(event.target.value)} /></div><div className="space-y-1.5"><Label htmlFor="workflow-link">Link</Label><Input id="workflow-link" value={link} onChange={(event) => setLink(event.target.value)} /></div></div>
           <div className="space-y-1.5"><Label htmlFor="workflow-message">Message</Label><Textarea id="workflow-message" value={message} onChange={(event) => setMessage(event.target.value)} placeholder="Use {aggregate_id} when needed" /></div>
-        </DialogBody>
-        <DialogFooter><LoadingButton isPending={createRule.isPending} onClick={() => void submit()}>Create rule</LoadingButton></DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </div>
+    </AppSheet>
   );
 }

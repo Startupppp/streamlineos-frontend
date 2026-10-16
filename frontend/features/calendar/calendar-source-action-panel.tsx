@@ -12,10 +12,7 @@ import {
   useCreateCalendarSourceActionProposal,
   useRepairCalendarSourceActionStep,
 } from "@/hooks/api/calendar-source-actions";
-import type {
-  CalendarSourceActionProposal,
-  CalendarSourceActionRepair,
-} from "@/hooks/api/calendar-source-actions-schema";
+import type { CalendarSourceActionRepair } from "@/hooks/api/calendar-source-actions-schema";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import { useApplyCalendarScenario, usePreviewCalendarScenario } from "@/hooks/api/calendar-scenarios";
@@ -27,6 +24,7 @@ import {
   sourceValue,
 } from "./calendar-source-action-fields";
 import type { CalendarScenarioDraftStep } from "./calendar-scenario-draft";
+import { useSourceActionProposal } from "./hooks/use-source-action-proposal";
 
 const repairLabels: Record<CalendarSourceActionRepair, string> = {
   retry: "Retry with owner",
@@ -58,9 +56,6 @@ export function CalendarSourceActionPanel({
   const [value, setValue] = useState(() =>
     config ? inputValue(event, config) : "",
   );
-  const [proposal, setProposal] = useState<CalendarSourceActionProposal | null>(
-    null,
-  );
   const [scenario, setScenario] = useState<CalendarScenarioPreview | null>(null);
   const previewScenarioMutation = usePreviewCalendarScenario();
   const applyScenarioMutation = useApplyCalendarScenario();
@@ -69,7 +64,6 @@ export function CalendarSourceActionPanel({
   const createProposal = useCreateCalendarSourceActionProposal();
   const confirmProposal = useConfirmCalendarSourceActionProposal();
   const repairStep = useRepairCalendarSourceActionStep();
-
   const supported = Boolean(
     config &&
     event.actions.edit &&
@@ -77,6 +71,7 @@ export function CalendarSourceActionPanel({
     event.entityType &&
     capabilities.data?.sourceKeys.includes(event.sourceKey),
   );
+  const { proposal, setProposal, dismissProposal } = useSourceActionProposal(event, supported);
   if (!supported || !config || !event.sourceVersion || !event.entityType)
     return null;
 
@@ -338,7 +333,7 @@ export function CalendarSourceActionPanel({
               <Button
                 size="sm"
                 variant="ghost"
-                onClick={() => setProposal(null)}
+                onClick={dismissProposal}
               >
                 Preview another change
               </Button>

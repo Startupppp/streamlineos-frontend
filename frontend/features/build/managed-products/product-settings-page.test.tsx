@@ -37,6 +37,7 @@ jest.mock("./use-infinite-selector", () => ({
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn(() => true),
+  useCanState: jest.fn(() => "granted"),
   usePermissionGate: jest.fn(() => ({ allowed: true, isLoading: false })),
 }));
 

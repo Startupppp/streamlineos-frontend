@@ -28,6 +28,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { ErrorReference } from "@/components/shared/error-reference";
 import {
   useCreateKbPage,
   useDeleteKbPage,
@@ -47,6 +49,7 @@ import {
   KbFileTextIcon,
 } from "@/features/wiki/lib/kb-icons";
 import { cn } from "@/lib/utils";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
 interface PageTreeItemProps {
@@ -54,6 +57,7 @@ interface PageTreeItemProps {
   depth: number;
   onCloseMobile?: () => void;
   spaceId?: number;
+  projectId?: number;
   baseHref?: string;
 }
 
@@ -69,6 +73,7 @@ const PageTreeItem = memo(function PageTreeItemInner({
   depth,
   onCloseMobile,
   spaceId,
+  projectId,
   baseHref,
 }: PageTreeItemProps) {
   const router = useRouter();
@@ -95,10 +100,14 @@ const PageTreeItem = memo(function PageTreeItemInner({
 
   const {
     data: childrenData,
+    isLoading: childrenLoading,
+    isError: childrenError,
+    error: childrenReadError,
+    refetch: refetchChildren,
     hasNextPage: childrenHasNextPage,
     isFetchingNextPage: childrenFetchingNext,
     fetchNextPage: fetchChildrenNextPage,
-  } = useKbPageChildrenLevel(node.id, isExpanded, spaceId);
+  } = useKbPageChildrenLevel(node.id, isExpanded, spaceId, projectId);
 
   const children: KbPageTreeNode[] = childrenData?.pages.flatMap((p) => p.data) ?? [];
 
@@ -106,6 +115,10 @@ const PageTreeItem = memo(function PageTreeItemInner({
 
   function handleNavigate() {
     onCloseMobile?.();
+  }
+
+  function handleRetryChildren() {
+    void refetchChildren();
   }
 
   function handleToggleExpand(e: React.MouseEvent) {
@@ -117,7 +130,11 @@ const PageTreeItem = memo(function PageTreeItemInner({
     e.stopPropagation();
     if (!canCreate) return;
     createPage.mutate(
-      { parentPageId: node.id },
+      {
+        parentPageId: node.id,
+        ...(node.spaceId !== null ? { spaceId: node.spaceId } : {}),
+        ...(node.projectId !== null ? { projectId: node.projectId } : {}),
+      },
       {
         onSuccess: (page) => {
           setExpanded(true);
@@ -181,7 +198,7 @@ const PageTreeItem = memo(function PageTreeItemInner({
       return;
     }
     updatePage.mutate(
-      { pageId: node.id, title: trimmed },
+      { pageId: node.id, title: trimmed, expectedContentRevision: node.contentRevision },
       {
         onSuccess: () => setRenaming(false),
         onError: () => {
@@ -236,23 +253,23 @@ const PageTreeItem = memo(function PageTreeItemInner({
                 : "bg-muted-foreground/50 opacity-0 group-hover:opacity-100",
             )}
           />
-          <button
-            type="button"
-            className="shrink-0 h-4 w-4 flex items-center justify-center text-muted-foreground hover:text-foreground"
-            onClick={handleToggleExpand}
-            aria-label={isExpanded ? "Collapse" : "Expand"}
-            tabIndex={-1}
-          >
-            {showChevron ? (
-              isExpanded ? (
+          {showChevron ? (
+            <button
+              type="button"
+              className="shrink-0 h-8 w-8 lg:h-5 lg:w-5 flex items-center justify-center text-muted-foreground hover:text-foreground"
+              onClick={handleToggleExpand}
+              aria-label={isExpanded ? "Collapse" : "Expand"}
+              aria-expanded={isExpanded}
+            >
+              {isExpanded ? (
                 <KbChevronDownIcon className="h-3 w-3" />
               ) : (
                 <KbChevronRightIcon className="h-3 w-3" />
-              )
-            ) : (
-              <span className="h-3 w-3" />
-            )}
-          </button>
+              )}
+            </button>
+          ) : (
+            <span className="shrink-0 h-4 w-4" aria-hidden="true" />
+          )}
 
           {renaming ? (
             <>
@@ -301,14 +318,13 @@ const PageTreeItem = memo(function PageTreeItemInner({
 
           {!renaming && (
             <span
-              className={`${menuOpen ? "flex" : "hidden group-hover:flex"} items-center gap-0.5 shrink-0`}
+              className={`${menuOpen ? "flex" : "flex lg:hidden lg:group-hover:flex lg:group-focus-within:flex"} items-center gap-0.5 shrink-0`}
             >
               {canCreate && (
                 <button
                   type="button"
-                  className="h-5 w-5 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted"
+                  className="h-8 w-8 lg:h-6 lg:w-6 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted"
                   onClick={handleAddChild}
-                  tabIndex={-1}
                   aria-label="Add child page"
                 >
                   <KbPlusIcon className="h-3 w-3" />
@@ -318,9 +334,8 @@ const PageTreeItem = memo(function PageTreeItemInner({
                 <DropdownMenuTrigger asChild>
                   <button
                     type="button"
-                    className="h-5 w-5 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted"
+                    className="h-8 w-8 lg:h-6 lg:w-6 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted"
                     onClick={handleMoreClick}
-                    tabIndex={-1}
                     aria-label="Page options"
                   >
                     <KbMoreHorizontalIcon className="h-3 w-3" />
@@ -349,7 +364,7 @@ const PageTreeItem = memo(function PageTreeItemInner({
         </div>
 
         <AnimatePresence initial={false}>
-          {isExpanded && (children.length > 0 || childrenHasNextPage) && (
+          {isExpanded && (children.length > 0 || childrenHasNextPage || childrenLoading || childrenError) && (
             <motion.div
               className="min-w-0 overflow-hidden"
               initial={{ opacity: 0, y: shouldReduceMotion ? 0 : -4 }}
@@ -357,6 +372,18 @@ const PageTreeItem = memo(function PageTreeItemInner({
               exit={{ opacity: 0, y: shouldReduceMotion ? 0 : -4 }}
               transition={{ duration: shouldReduceMotion ? 0 : 0.15, ease: "easeOut" }}
             >
+              {childrenLoading && children.length === 0 && (
+                <p role="status" className="px-2 py-2 text-xs text-muted-foreground" style={{ paddingLeft: (depth + 1) * 16 }}>
+                  Loading child pages…
+                </p>
+              )}
+              {childrenError && (
+                <div role="alert" className="space-y-2 px-2 py-2 text-xs" style={{ paddingLeft: (depth + 1) * 16 }}>
+                  <p className="text-muted-foreground">{getErrorMessage(childrenReadError)}</p>
+                  <ErrorReference error={childrenReadError} className="justify-start" />
+                  <Button type="button" size="sm" variant="outline" onClick={handleRetryChildren}>Retry child pages</Button>
+                </div>
+              )}
               {children.map((child) => (
                 <PageTreeItem
                   key={child.id}
@@ -364,6 +391,7 @@ const PageTreeItem = memo(function PageTreeItemInner({
                   depth={depth + 1}
                   onCloseMobile={onCloseMobile}
                   spaceId={spaceId}
+                  projectId={projectId}
                   baseHref={baseHref}
                 />
               ))}

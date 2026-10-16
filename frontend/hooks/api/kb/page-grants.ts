@@ -1,18 +1,21 @@
 "use client";
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
+import { selectFlatPages } from "@/lib/api/select-flat-pages";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
 export type KbPageGrant = {
   id: number;
   pageId: number;
   membershipId: number | null;
   role: string | null;
-  access: "view" | "comment" | "edit";
+  access: "view" | "comment" | "edit" | "manage";
   grantedByMembershipId: number | null;
   createdAt: string;
   revokedAt: string | null;
@@ -30,9 +33,21 @@ export type KbPageGrantsPage = {
   };
 };
 
+export type KbPageGrantCandidate = {
+  membershipId: number;
+  userId: string;
+  name: string | null;
+  email: string;
+};
+
+export type KbPageGrantCandidatesPage = {
+  data: KbPageGrantCandidate[];
+  pagination: KbPageGrantsPage["pagination"];
+};
+
 export type CreateKbPageGrantInput =
-  | { membershipId: number; role?: never; access: "view" | "comment" | "edit" }
-  | { role: string; membershipId?: never; access: "view" | "comment" | "edit" };
+  | { membershipId: number; role?: never; access: KbPageGrant["access"] }
+  | { role: string; membershipId?: never; access: KbPageGrant["access"] };
 
 const kbPageGrantListContract = lazyContract(() =>
   import("@/hooks/api/kb/kb-page-grants-schema").then((m) => m.kbPageGrantListContract),
@@ -42,23 +57,52 @@ const kbPageGrantContract = lazyContract(() =>
   import("@/hooks/api/kb/kb-page-grants-schema").then((m) => m.kbPageGrantContract),
 );
 
+const kbPageGrantCandidatesContract = lazyContract(() =>
+  import("@/hooks/api/kb/kb-page-grants-schema").then((m) => m.kbPageGrantCandidatesContract),
+);
+
 const noContentC = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
 );
 
 export function useKbPageGrants(pageId: number) {
   const canView = useCan("kb:pages:view");
-  return useQuery({
+  return useInfiniteQuery({
+    ...INLINE_READ_ERROR,
     queryKey: knowledgeAndSurveysQueryKeys.kb.pageGrants(pageId),
-    queryFn: ({ signal }) =>
+    initialPageParam: NO_CURSOR_YET,
+    queryFn: ({ signal, pageParam }) =>
       apiClient.get<KbPageGrantsPage>(
         `/kb/pages/${pageId}/grants`,
-        { limit: "100" },
+        pageParam !== undefined ? { cursor: pageParam } : undefined,
         signal,
         kbPageGrantListContract,
       ),
+    getNextPageParam: (last) => last.pagination.nextCursor ?? undefined,
+    select: selectFlatPages,
     staleTime: 30_000,
     enabled: canView && pageId > 0,
+  });
+}
+
+export function useKbPageGrantCandidates(pageId: number, search: string, enabled = true) {
+  const canUpdate = useCan("kb:pages:update");
+  const term = search.trim();
+  return useInfiniteQuery({
+    ...INLINE_READ_ERROR,
+    queryKey: knowledgeAndSurveysQueryKeys.kb.pageGrantCandidates(pageId, term),
+    initialPageParam: NO_CURSOR_YET,
+    queryFn: ({ signal, pageParam }) =>
+      apiClient.get<KbPageGrantCandidatesPage>(
+        `/kb/pages/${pageId}/grant-candidates`,
+        { search: term, limit: 20, cursor: pageParam },
+        signal,
+        kbPageGrantCandidatesContract,
+      ),
+    getNextPageParam: (last) => last.pagination.nextCursor ?? undefined,
+    select: selectFlatPages,
+    staleTime: 30_000,
+    enabled: enabled && canUpdate && pageId > 0 && term.length > 0,
   });
 }
 

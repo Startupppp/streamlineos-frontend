@@ -3,18 +3,9 @@
 import { useCallback, useState } from "react";
 import dynamic from "next/dynamic";
 import { format, addDays } from "date-fns";
-import Link from "next/link";
-import { Pencil, Sparkles } from "lucide-react";
-import { DownloadIcon, MicIcon, Trash2Icon } from "@animateicons/react/lucide";
-import { Button } from "@/components/ui/button";
+import { Tag } from "lucide-react";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
-import { TruncatedText } from "@/components/ui/truncated-text";
+import { AppSheet } from "@/components/shared/app-sheet";
 import {
   parseCalendarEventId,
   useCancelOccurrence,
@@ -25,10 +16,11 @@ import {
   type CalendarListItem,
 } from "@/hooks/api/calendar";
 import { useCan } from "@/hooks/api/access";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { formatEventDate, formatEventTimeRange } from "@/lib/date-utils";
 import { downloadCalendarExport } from "./calendar-export";
+import { EventDetailActions } from "./event-detail-actions";
 import { EventCreateDialog } from "./event-create-dialog";
 import {
   EventDetailContent,
@@ -37,6 +29,7 @@ import {
 } from "./event-detail-content";
 import { CalendarListFallback } from "./calendar-lazy-fallbacks";
 import { CalendarSourceActionPanel } from "./calendar-source-action-panel";
+import { CalendarNativeScenarioMove } from "./calendar-native-scenario-move";
 import type { CalendarScenarioDraftStep } from "./calendar-scenario-draft";
 import type { CommitmentReference } from "@/hooks/api/calendar-commitment-schema";
 
@@ -98,12 +91,11 @@ export function EventDetailSheet({ event, onClose, onQueueScenarioStep }: EventD
     : event?.entityType === "deal" && event.entityId && /^\d+$/.test(event.entityId)
       ? { source: "crm", type: "deal", recordId: event.entityId }
       : null;
-  const { iconRef: huddleIconRef, hoverHandlers: huddleHoverHandlers } =
-    useAnimatedIcon();
-  const { iconRef: deleteIconRef, hoverHandlers: deleteHoverHandlers } =
-    useAnimatedIcon();
-  const { iconRef: downloadIconRef, hoverHandlers: downloadHoverHandlers } =
-    useAnimatedIcon();
+  const when = !event
+    ? ""
+    : event.allDay
+      ? formatEventDate(event.start, event.timezone)
+      : formatEventTimeRange(event.start, event.end, event.timezone);
 
   const handleUnlink = useCallback(async () => {
     if (numericEventId === null) return;
@@ -195,23 +187,42 @@ export function EventDetailSheet({ event, onClose, onQueueScenarioStep }: EventD
   const handleRequestUnlink = useCallback(() => setUnlinkConfirmOpen(true), []);
   const handleOpenEdit = useCallback(() => setEditOpen(true), []);
   const handleOpenMeetingWorkspace = useCallback(() => setMeetingWorkspaceOpen(true), []);
+  const handleOpenProtectedWork = useCallback(() => setProtectedWorkOpen(true), []);
+  const handleOpenCommitmentRadar = useCallback(() => setCommitmentRadarOpen(true), []);
 
   return (
     <>
-      <Sheet open={!!event} onOpenChange={handleSheetOpenChange}>
-        <SheetContent className="flex flex-col p-0 w-[360px] sm:max-w-[360px]">
-          <SheetHeader className="px-5 py-4 border-b shrink-0">
-            <SheetTitle className="text-sm font-semibold flex items-center gap-2 min-w-0">
-              <span
-                className="h-3 w-3 rounded-full shrink-0"
-                style={{ backgroundColor: getEventColor(event) }}
-              />
-              <TruncatedText
-                text={event?.title ?? ""}
-                className="min-w-0 flex-1"
-              />
-            </SheetTitle>
-          </SheetHeader>
+      <AppSheet
+        open={!!event}
+        onOpenChange={handleSheetOpenChange}
+        title={event?.title ?? "Event details"}
+        description={when}
+        className="sm:max-w-xl"
+        footer={<EventDetailActions
+          showMeeting={isCalendarEvent && event?.category !== "huddle"}
+          showHuddle={event?.category === "huddle" && Boolean(event.entityId)}
+          huddleHref={event?.entityId ? `/chat?channel=${event.entityId}` : null}
+          canExport={canExport}
+          canMutate={canMutateEvent}
+          showCancelOccurrence={canMutateEvent && detail?.isRecurring === true}
+          showProtect={canMutateEvent && !detail?.isRecurring && !event?.allDay}
+          showRadar={commitmentRoot !== null}
+          onClose={onClose}
+          onDelete={handleRequestDelete}
+          onCancelOccurrence={handleRequestCancelOccurrence}
+          onMeeting={handleOpenMeetingWorkspace}
+          onExport={handleExportDay}
+          onEdit={handleOpenEdit}
+          onProtect={handleOpenProtectedWork}
+          onRadar={handleOpenCommitmentRadar}
+        />}
+      >
+          {event ? (
+            <div className="mb-4 flex items-center gap-2 border-l-4 pl-3" style={{ borderColor: getEventColor(event) }}>
+              <Tag className="size-3.5" style={{ color: getEventColor(event) }} />
+              <span className="text-sm capitalize text-muted-foreground">{event.category}</span>
+            </div>
+          ) : null}
           <EventDetailContent
             event={event}
             numericEventId={numericEventId}
@@ -226,102 +237,9 @@ export function EventDetailSheet({ event, onClose, onQueueScenarioStep }: EventD
             onRsvp={handleRsvp}
           />
           {event ? <CalendarSourceActionPanel key={`${event.id}:${event.sourceVersion}`} event={event} onQueueScenarioStep={onQueueScenarioStep} /> : null}
-          {event?.category === "huddle" && event.entityId ? (
-            <div className="px-5 pt-3 pb-1 shrink-0">
-              <Link href={`/chat?channel=${event.entityId}`} onClick={onClose}>
-                <Button
-                  size="sm"
-                  className="w-full h-8 text-xs gap-1.5 bg-status-warning-fill hover:bg-status-warning-fill-hover text-white"
-                  {...huddleHoverHandlers}
-                >
-                  <MicIcon ref={huddleIconRef} size={14} />
-                  Join Huddle
-                </Button>
-              </Link>
-            </div>
-          ) : null}
-          <div className="px-5 py-3 border-t shrink-0 flex items-center justify-between gap-2">
-            {canMutateEvent ? (
-              <div className="flex items-center gap-1">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                  onClick={handleRequestDelete}
-                  {...deleteHoverHandlers}
-                >
-                  <Trash2Icon
-                    ref={deleteIconRef}
-                    size={14}
-                    className="mr-1.5"
-                  />
-                  Delete
-                </Button>
-                {detail?.isRecurring ? (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-muted-foreground hover:text-foreground"
-                    onClick={handleRequestCancelOccurrence}
-                  >
-                    Cancel occurrence
-                  </Button>
-                ) : null}
-              </div>
-            ) : (
-              <div />
-            )}
-            <div className="flex items-center gap-2">
-              {isCalendarEvent && event?.category !== "huddle" ? (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleOpenMeetingWorkspace}
-                  className="gap-1.5"
-                >
-                  <Sparkles className="h-3.5 w-3.5" />
-                  Meeting workspace
-                </Button>
-              ) : null}
-              {canExport ? (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleExportDay}
-                  aria-label="Export this day's events as CSV"
-                  {...downloadHoverHandlers}
-                >
-                  <DownloadIcon
-                    ref={downloadIconRef}
-                    size={14}
-                    className="mr-1.5"
-                  />
-                  Export day
-                </Button>
-              ) : null}
-              {canMutateEvent ? (
-                <Button variant="outline" size="sm" onClick={handleOpenEdit}>
-                  <Pencil className="h-3.5 w-3.5 mr-1.5" />
-                  Edit
-                </Button>
-              ) : null}
-              {canMutateEvent && !detail?.isRecurring && !event?.allDay ? (
-                <Button variant="outline" size="sm" onClick={() => setProtectedWorkOpen(true)}>
-                  Protect time
-                </Button>
-              ) : null}
-              {commitmentRoot ? (
-                <Button variant="outline" size="sm" onClick={() => setCommitmentRadarOpen(true)}>
-                  Commitment radar
-                </Button>
-              ) : null}
-              <Button variant="outline" size="sm" onClick={onClose}>
-                Close
-              </Button>
-            </div>
-          </div>
-        </SheetContent>
-      </Sheet>
+          {detail && canMutateEvent && !detail.isRecurring && !detail.allDay && commitmentRoot && onQueueScenarioStep ?
+            <CalendarNativeScenarioMove key={`${detail.id}:${detail.localVersion}`} detail={detail} root={commitmentRoot} onQueue={onQueueScenarioStep} /> : null}
+      </AppSheet>
       <ConfirmDialog
         open={confirmOpen}
         onOpenChange={setConfirmOpen}
@@ -389,15 +307,14 @@ function MeetingWorkspaceSheet({
 }: MeetingWorkspaceSheetProps) {
   const eventId = event ? parseCalendarEventId(event.id)?.eventId ?? null : null;
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="flex flex-col p-0 w-full sm:max-w-2xl">
-        <SheetHeader className="px-5 py-4 border-b shrink-0">
-          <SheetTitle className="text-sm font-semibold">Meeting workspace</SheetTitle>
-        </SheetHeader>
-        <div className="flex-1 overflow-y-auto px-5 py-4">
-          {event && eventId ? <MeetingWorkspacePanel eventId={eventId} eventTitle={event.title ?? ""} /> : null}
-        </div>
-      </SheetContent>
-    </Sheet>
+    <AppSheet
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Meeting workspace"
+      description={event?.title || "Meeting"}
+      className="z-[110] sm:max-w-2xl"
+    >
+      {event && eventId ? <MeetingWorkspacePanel eventId={eventId} eventTitle={event.title ?? ""} /> : null}
+    </AppSheet>
   );
 }

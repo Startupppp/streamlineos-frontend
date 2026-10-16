@@ -76,6 +76,7 @@ export function useMarkAssetReturned(
     ...options,
     onSuccess: (data, variables, context, mutFnCtx) => {
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.assetReturnsList() });
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.assets() });
       options?.onSuccess?.(data, variables, context, mutFnCtx);
     },
   });

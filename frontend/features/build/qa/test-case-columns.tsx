@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, type MouseEvent } from "react";
+import { useCallback, type KeyboardEvent, type MouseEvent } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -184,6 +184,9 @@ export function TestCaseMobileCard({
   const handleActionsClick = useCallback((event: MouseEvent) => {
     event.stopPropagation();
   }, []);
+  const handleActionsKeyDown = useCallback((event: KeyboardEvent) => {
+    event.stopPropagation();
+  }, []);
   return (
     <BuildMobileCard
       title={testCase.title}
@@ -211,7 +214,7 @@ export function TestCaseMobileCard({
       ]}
       actions={
         canManage ? (
-          <div onClick={handleActionsClick}>
+          <div onClick={handleActionsClick} onKeyDown={handleActionsKeyDown}>
             <TestCaseRowActions
               testCase={testCase}
               onEdit={onEdit}

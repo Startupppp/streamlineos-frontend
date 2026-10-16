@@ -3,12 +3,14 @@
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
 import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { Skeleton } from "@/components/ui/skeleton";
 import { KbResearchBriefForm } from "@/features/help-centre/components/kb-research-brief-form";
 import { KbResearchBriefCard } from "@/features/help-centre/components/kb-research-brief-card";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useKbResearchBriefs } from "@/hooks/api/kb/research-briefs";
+import { usePageState } from "@/hooks/api/use-page-state";
 
 function BriefListSkeleton() {
   return (
@@ -28,9 +30,16 @@ interface KbResearchBriefsPageContentProps {
 }
 
 export function KbResearchBriefsPageContent({ basePath }: KbResearchBriefsPageContentProps) {
-  const { data, isLoading, isError, error, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } =
+  const { data, isLoading, isError, error, refetch, fetchNextPage, hasNextPage, isFetchingNextPage, isFetchNextPageError } =
     useKbResearchBriefs();
   const allBriefs = data?.pages.flatMap((p) => p.items) ?? [];
+  const pageState = usePageState({
+    permission: "kb:pages:view",
+    isLoading,
+    isError: isError && allBriefs.length === 0,
+    error,
+    isEmpty: allBriefs.length === 0,
+  });
 
   function handleRetry() {
     void refetch();
@@ -41,38 +50,46 @@ export function KbResearchBriefsPageContent({ basePath }: KbResearchBriefsPageCo
       title="Research Briefs"
       subtitle="AI-synthesized reports from your knowledge base"
     >
-      <div className="flex flex-1 min-h-0 flex-col gap-4">
-        <KbResearchBriefForm basePath={basePath} />
-
-        {isLoading ? (
-          <BriefListSkeleton />
-        ) : isError ? (
-          <ErrorState
-            className="flex-1"
-            title="Couldn't load research briefs"
-            description={getErrorMessage(error)}
-            onRetry={handleRetry}
-          />
-        ) : allBriefs.length === 0 ? (
-          <EmptyState
-            compact
-            title="No research briefs yet"
-            description="Enter a topic above to generate your first AI research brief."
-          />
-        ) : (
+      <PageState
+        resolution={pageState}
+        loading={<BriefListSkeleton />}
+        empty={
+          <div className="flex flex-1 min-h-0 flex-col gap-4">
+            <KbResearchBriefForm basePath={basePath} />
+            <EmptyState
+              compact
+              title="No research briefs yet"
+              description="Enter a topic above to generate your first AI research brief."
+            />
+          </div>
+        }
+        onRetry={handleRetry}
+        className="flex-1"
+      >
+        <div className="flex flex-1 min-h-0 flex-col gap-4">
+          <KbResearchBriefForm basePath={basePath} />
           <div className="flex flex-1 min-h-0 flex-col gap-2">
             {allBriefs.map((brief) => (
               <KbResearchBriefCard key={brief.id} brief={brief} basePath={basePath} />
             ))}
-            <InfiniteScrollSentinel
-              hasNextPage={hasNextPage}
-              isFetchingNextPage={isFetchingNextPage}
-              onLoadMore={fetchNextPage}
-              label="Load more research briefs"
-            />
+            {isFetchNextPageError ? (
+              <ErrorState
+                compact
+                title="Couldn't load more research briefs"
+                description={getErrorMessage(error)}
+                onRetry={() => void fetchNextPage()}
+              />
+            ) : (
+              <InfiniteScrollSentinel
+                hasNextPage={hasNextPage}
+                isFetchingNextPage={isFetchingNextPage}
+                onLoadMore={fetchNextPage}
+                label="Load more research briefs"
+              />
+            )}
           </div>
-        )}
-      </div>
+        </div>
+      </PageState>
     </PageWrapper>
   );
 }

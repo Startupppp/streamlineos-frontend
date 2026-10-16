@@ -92,4 +92,5 @@ export function installBoardUrlStateMocks() {
   mockCreateViewMutate.mockClear();
   mockUpdateViewMutate.mockClear();
   localStorage.clear();
+  sessionStorage.clear();
 }

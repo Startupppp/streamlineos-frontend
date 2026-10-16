@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useCan } from "@/hooks/api/access";
+import { useCan, useCanState } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
@@ -83,7 +83,7 @@ export function useProjectMilestones(
   projectId: number,
   query: MilestoneListQuery = {},
 ) {
-  const canView = useCan("build:view");
+  const canViewState = useCanState("build:view");
   return useQuery({
     queryKey: milestoneKey(projectId, query),
     queryFn: ({ signal }) =>
@@ -93,7 +93,7 @@ export function useProjectMilestones(
         signal,
         milestoneListContract,
       ),
-    enabled: canView && !!projectId,
+    enabled: canViewState !== "denied" && !!projectId,
     staleTime: 30_000,
   });
 }
@@ -109,8 +109,12 @@ export function useCreateMilestone(projectId: number) {
         undefined,
         milestoneRowContract,
       ),
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: milestoneKey(projectId) }),
+    onSuccess: (created) => {
+      qc.setQueriesData<MilestonePage>(
+        { queryKey: milestoneBaseKey(projectId) },
+        (old) => old ? { ...old, data: [created, ...old.data] } : old,
+      );
+    },
   });
 }
 
@@ -128,10 +132,12 @@ export function useUpdateMilestone(projectId: number) {
         undefined,
         milestoneRowContract,
       ),
-    onSuccess: () =>
-      qc.invalidateQueries({
-        queryKey: milestoneBaseKey(projectId),
-      }),
+    onSuccess: (updated) => {
+      qc.setQueriesData<MilestonePage>(
+        { queryKey: milestoneBaseKey(projectId) },
+        (old) => old ? { ...old, data: old.data.map((m) => m.id === updated.id ? updated : m) } : old,
+      );
+    },
   });
 }
 
@@ -146,10 +152,12 @@ export function useDeleteMilestone(projectId: number) {
         undefined,
         noContentContract,
       ),
-    onSuccess: () =>
-      qc.invalidateQueries({
-        queryKey: milestoneBaseKey(projectId),
-      }),
+    onSuccess: (_, milestoneId) => {
+      qc.setQueriesData<MilestonePage>(
+        { queryKey: milestoneBaseKey(projectId) },
+        (old) => old ? { ...old, data: old.data.filter((m) => m.id !== milestoneId) } : old,
+      );
+    },
   });
 }
 
@@ -180,9 +188,16 @@ export function useUpdateProjectBudget(projectId: number) {
         undefined,
         projectBudgetUpdateContract,
       ),
-    onSuccess: () =>
-      qc.invalidateQueries({
-        queryKey: buildWorkQueryKeys.projects.budget(projectId),
-      }),
+    onSuccess: (data) => {
+      qc.setQueryData(
+        buildWorkQueryKeys.projects.budget(projectId),
+        (old: ProjectBudget | undefined) => {
+          if (!old) return old;
+          const remaining = data.budget - old.actualCost;
+          const utilizationPct = data.budget > 0 ? Math.round((old.actualCost / data.budget) * 100) : 0;
+          return { ...old, plannedBudget: data.budget, remaining, utilizationPct };
+        },
+      );
+    },
   });
 }

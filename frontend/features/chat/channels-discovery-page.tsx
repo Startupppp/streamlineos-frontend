@@ -138,7 +138,7 @@ export function ChannelsDiscoveryPage() {
       </div>
 
       <ScrollArea fill hideScrollbar className="min-h-0 flex-1">
-        <div className="overscroll-contain px-4 py-4 pb-[calc(4rem+env(safe-area-inset-bottom))] sm:px-6 md:pb-4">
+        <div className="overscroll-contain px-4 py-4 pb-[calc(2.75rem+env(safe-area-inset-bottom))] sm:px-6 md:pb-4">
         {isLoading ? (
           <div className="space-y-2" aria-busy="true">
             <span role="status" className="sr-only">Loading channels…</span>

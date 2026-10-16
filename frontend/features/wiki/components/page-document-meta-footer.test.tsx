@@ -95,9 +95,10 @@ describe("PageDocumentMetaFooter — nextReviewAt fact visible so a future delet
     expect(screen.getByText(/review/i)).toBeInTheDocument();
   });
 
-  it("does not show review due text when nextReviewAt is null", () => {
+  it("shows that no review is scheduled when nextReviewAt is null", () => {
     render(<PageDocumentMetaFooter {...BASE_PROPS} nextReviewAt={null} />);
-    expect(screen.queryByText(/review due/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/Next review:/)).toBeInTheDocument();
+    expect(screen.getByText(/Not scheduled/)).toBeInTheDocument();
   });
 });
 
@@ -124,6 +125,16 @@ describe("PageDocumentMetaFooter — updatedAt fact visible so a future deletion
 
     expect(screen.getByText(/Alice Smith/)).toBeInTheDocument();
   });
+
+  it("keeps exact update time and a safe editor fallback when the member cannot be resolved", () => {
+    const { container } = render(
+      <PageDocumentMetaFooter {...BASE_PROPS} lastEditedById="editor-missing" />,
+    );
+
+    expect(container.querySelector('time[dateTime="2026-09-25T10:00:00.000Z"]')).toBeInTheDocument();
+    expect(screen.getByText("Member unavailable")).toBeInTheDocument();
+    expect(screen.queryByText("editor-missing")).not.toBeInTheDocument();
+  });
 });
 
 describe("PageDocumentMetaFooter — owner fact visible so a future deletion fails instead of going quiet", () => {
@@ -145,8 +156,9 @@ describe("PageDocumentMetaFooter — owner fact visible so a future deletion fai
     expect(screen.getByText(/Bob Jones/)).toBeInTheDocument();
   });
 
-  it("shows no owner section when ownerUserId is null", () => {
+  it("shows an unassigned owner when ownerUserId is null", () => {
     render(<PageDocumentMetaFooter {...BASE_PROPS} ownerUserId={null} />);
-    expect(screen.queryByText(/owner/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/Owner:/)).toBeInTheDocument();
+    expect(screen.getByText("Unassigned")).toBeInTheDocument();
   });
 });

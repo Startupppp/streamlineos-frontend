@@ -111,7 +111,9 @@ describe("ManagedProductOverviewPage — three distinct sections", () => {
     const pulse = screen.getByRole("region", { name: "Product pulse" });
 
     expect(pulse.parentElement?.firstElementChild).toBe(pulse);
-    expect(pulse.querySelector("[data-slot=stat-card-grid]")).toHaveClass("gap-2");
+    const pulseGrid = pulse.querySelector("[data-slot=stat-card-grid]");
+    expect(pulseGrid).toHaveClass("gap-2", "overflow-x-auto");
+    expect(pulseGrid).not.toHaveClass("grid-cols-2");
     expect(within(pulse).getAllByRole("link")).toHaveLength(5);
   });
 
@@ -127,6 +129,16 @@ describe("ManagedProductOverviewPage — three distinct sections", () => {
     expect(
       screen.getByRole("link", { name: /view feedback/i }),
     ).toHaveAttribute("href", "/build/managed-products/42/feedback?ret=%2Fbuild%2Fmanaged-products%2F42");
+  });
+
+  it("renders icons on overview section actions without changing their accessible names", () => {
+    render(<ManagedProductOverviewPage managedProductId={42} />);
+
+    const insightsLink = screen.getByRole("link", { name: "Open insights" });
+    expect(insightsLink.querySelector("[data-slot=overview-section-link-icon]")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "View feedback" })).toHaveAccessibleName("View feedback");
+    expect(screen.getByRole("link", { name: "View roadmap" })).toHaveAccessibleName("View roadmap");
+    expect(screen.getByRole("link", { name: "View goals" })).toHaveAccessibleName("View goals");
   });
 
   it("links delivery section to the roadmap page", () => {
@@ -165,6 +177,53 @@ describe("ManagedProductOverviewPage — owner display in subtitle (FE-85)", () 
   it("shows Unassigned rather than blank when the product has no owner", () => {
     render(<ManagedProductOverviewPage managedProductId={42} />);
     expect(screen.getByText(/Owner Unassigned/)).toBeInTheDocument();
+  });
+});
+
+describe("ManagedProductOverviewPage — product identity", () => {
+  it("keeps product identity content-sized instead of stretching it beside the attention list", () => {
+    render(<ManagedProductOverviewPage managedProductId={42} />);
+    expect(screen.queryByTestId("overview-identity-attention-grid")).not.toBeInTheDocument();
+    const identity = screen.getByRole("region", { name: "Product identity" });
+    expect(identity).not.toHaveClass("h-full");
+    expect(identity).not.toHaveClass("flex-1");
+  });
+
+  it("keeps strategy, ownership, schedule, phase, lifecycle and labels visible in the compact surface", () => {
+    const { useManagedProductSummary } = jest.requireMock(
+      "@/hooks/api/build/managed-product-summary",
+    );
+    (useManagedProductSummary as jest.Mock).mockReturnValue({
+      data: {
+        ...OVERVIEW_SUMMARY,
+        product: {
+          ...OVERVIEW_SUMMARY.product,
+          vision: "Make every payment feel instant",
+          description: "A dependable platform for global checkout.",
+          owner: { id: "u-1", firstName: "Ada", lastName: "Lovelace", email: "ada@example.com", image: null },
+          targetLaunchDate: "2026-11-20",
+          currentPhase: "Private beta",
+          segments: ["Enterprise"],
+          tags: ["payments"],
+        },
+      },
+      isLoading: false,
+      isError: false,
+      error: null,
+      dataUpdatedAt: 0,
+      refetch: jest.fn(),
+    });
+
+    render(<ManagedProductOverviewPage managedProductId={42} />);
+    const identity = screen.getByRole("region", { name: "Product identity" });
+    expect(within(identity).getByText("Make every payment feel instant")).toBeInTheDocument();
+    expect(within(identity).getByText("A dependable platform for global checkout.")).toBeInTheDocument();
+    expect(within(identity).getByText("Ada Lovelace")).toBeInTheDocument();
+    expect(within(identity).getByText("Private beta")).toBeInTheDocument();
+    expect(within(identity).getByRole("list", { name: "Lifecycle stage" })).toBeInTheDocument();
+    expect(within(identity).getByRole("list", { name: "Segments and tags" })).toHaveTextContent(
+      "Enterprise#payments",
+    );
   });
 });
 
@@ -262,6 +321,12 @@ describe("ManagedProductOverviewPage — mark reviewed", () => {
     );
   });
 
+  it("shows the review action with an icon while keeping its accessible name", () => {
+    render(<ManagedProductOverviewPage managedProductId={42} />);
+    const review = screen.getByRole("button", { name: /Mark reviewed/i });
+    expect(review.querySelector("svg")).toBeInTheDocument();
+  });
+
   it("offers no review action to a viewer who cannot update the product", () => {
     const { useCan } = jest.requireMock("@/hooks/api/access");
     (useCan as jest.Mock).mockReturnValue(false);
@@ -336,6 +401,15 @@ describe("ManagedProductOverviewPage — needs attention", () => {
       "href",
       "/build/managed-products/42/settings",
     );
+    expect(within(panel).getByRole("link", { name: /Define strategy/i })).toHaveAttribute(
+      "href",
+      "/build/managed-products/42/settings",
+    );
+    expect(within(panel).getByRole("link", { name: /Theme feedback/i })).toHaveAttribute(
+      "href",
+      "/build/managed-products/42/feedback",
+    );
+    expect(within(panel).getByRole("button", { name: /Mark reviewed/i })).toBeEnabled();
   });
 
   it("walks the signal-to-outcome stages in order with their counts", () => {

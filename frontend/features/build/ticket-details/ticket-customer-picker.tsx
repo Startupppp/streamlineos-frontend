@@ -64,6 +64,7 @@ export function TicketCustomerPicker({
           <ResponsivePopoverTrigger asChild>
             <button
               type="button"
+              aria-label={customerName ? `Customer: ${customerName}` : "Customer: None"}
               className={cn(
                 FIELD_CONTROL_CLASS,
                 "flex min-w-0 flex-1 touch-manipulation items-center gap-1.5 px-3 text-left hover:bg-accent/40",

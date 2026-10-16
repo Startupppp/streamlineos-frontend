@@ -79,7 +79,9 @@ export function ManagerCandidatePicker({
   const debounced = useDebouncedValue(search.trim(), 300);
   const hr = useManagerCandidates(debounced, excludeUserId, { enabled: open && source === "hr" });
   const self = useMyManagerCandidates(debounced, { enabled: open && source === "self" });
-  const items = (source === "hr" ? hr.data?.items : self.data?.items) ?? [];
+  const data = source === "hr" ? hr.data : self.data;
+  const items = data?.items ?? [];
+  const ineligibleCount = data?.ineligibleCount ?? 0;
 
   // The manager last picked here, so the trigger keeps naming them after the search moves on.
   const [picked, setPicked] = useState<ManagerRef | null>(null);
@@ -93,23 +95,32 @@ export function ManagerCandidatePicker({
   }
 
   return (
-    <MemberPicker
-      value={value ?? ""}
-      onChange={handleChange}
-      candidates={items.map(toOption)}
-      knownMembers={known}
-      onSearchChange={setSearch}
-      onOpenChange={setOpen}
-      searchLabel="Search managers"
-      excludeUserId={excludeUserId}
-      excludeUserIds={excludeUserIds}
-      placeholder={placeholder}
-      disabled={disabled}
-      allowUnassigned={allowUnassigned}
-      className={className}
-      id={id}
-      aria-describedby={ariaDescribedBy}
-      aria-invalid={ariaInvalid}
-    />
+    <>
+      <MemberPicker
+        value={value ?? ""}
+        onChange={handleChange}
+        candidates={items.map(toOption)}
+        knownMembers={known}
+        onSearchChange={setSearch}
+        onOpenChange={setOpen}
+        searchLabel="Search managers"
+        excludeUserId={excludeUserId}
+        excludeUserIds={excludeUserIds}
+        placeholder={placeholder}
+        disabled={disabled}
+        allowUnassigned={allowUnassigned}
+        className={className}
+        id={id}
+        aria-describedby={ariaDescribedBy}
+        aria-invalid={ariaInvalid}
+      />
+      {ineligibleCount > 0 && (
+        <p className="text-xs text-muted-foreground">
+          {ineligibleCount === 1
+            ? "1 person cannot be selected — complete their job details first."
+            : `${ineligibleCount} people cannot be selected — complete their job details first.`}
+        </p>
+      )}
+    </>
   );
 }

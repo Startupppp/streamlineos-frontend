@@ -126,4 +126,50 @@ describe("deriveAttentionSignals", () => {
     const signal = deriveAttentionSignals(summary, 42, NOW).find((item) => item.id === "unmeasured");
     expect(signal?.href).toBe("/build/managed-products/42/insights");
   });
+
+  it("routes every actionable signal to its owning product page", () => {
+    const base = healthySummary();
+    const summary: ManagedProductSummary = {
+      ...base,
+      product: {
+        ...base.product,
+        health: "off_track",
+        lifecycle: "build",
+        targetLaunchDate: "2026-09-01T00:00:00Z",
+        owner: null,
+        vision: null,
+        successMetrics: [],
+        lastReviewedAt: null,
+      },
+      evidence: { ...base.evidence, feedbackCount: 0, feedbackLast30d: 0, themedCount: 0 },
+      delivery: {
+        ...base.delivery,
+        linkedProjects: 0,
+        roadmapCompleted: 1,
+        nextRelease: { id: 3, name: "Checkout", version: "2.1", releaseDate: "2026-10-01" },
+      },
+      outcomes: {
+        ...base.outcomes,
+        goalsLinked: 0,
+        outcomeReviews: { scheduled: 0, completed: 0, met: 0, notMet: 0 },
+      },
+      generatedAt: "2026-10-10T00:00:00Z",
+    };
+    const destinations = Object.fromEntries(
+      deriveAttentionSignals(summary, 42, NOW).map((signal) => [signal.id, signal.href]),
+    );
+    expect(destinations).toMatchObject({
+      health: "/build/managed-products/42/roadmap",
+      "launch-overdue": "/build/managed-products/42/settings",
+      "release-overdue": "/build/managed-products/42/releases",
+      "no-owner": "/build/managed-products/42/settings",
+      "no-strategy": "/build/managed-products/42/settings",
+      "never-reviewed": "/build/managed-products/42/settings",
+      "no-feedback": "/build/managed-products/42/feedback",
+      unmeasured: "/build/managed-products/42/insights",
+      "no-projects": "/build/managed-products/42/projects",
+      "no-goals": "/build/managed-products/42/goals",
+      "projection-stale": "/build/managed-products/42/insights",
+    });
+  });
 });

@@ -52,7 +52,7 @@ export function ManagedProductEditFields({
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Name</FormLabel>
+              <FormLabel>Name <span aria-hidden="true" className="text-destructive">*</span></FormLabel>
               <FormControl>
                 <Input {...field} placeholder="Product name" />
               </FormControl>
@@ -65,7 +65,7 @@ export function ManagedProductEditFields({
           name="status"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Status</FormLabel>
+              <FormLabel>Status <span aria-hidden="true" className="text-destructive">*</span></FormLabel>
               <Select value={field.value} onValueChange={(v) => v && field.onChange(v)}>
                 <FormControl>
                   <SelectTrigger>

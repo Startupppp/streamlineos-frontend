@@ -105,6 +105,11 @@ export function BuildQuickCreate({
     [createProduct],
   );
 
+  const handleSingleAction = useCallback(() => {
+    const action = actions[0];
+    if (action) handleAction(action.id);
+  }, [actions, handleAction]);
+
   function renderAction(action: BuildCreateAction) {
     function handleSelect() {
       handleAction(action.id);
@@ -118,8 +123,30 @@ export function BuildQuickCreate({
 
   if (actions.length === 0) return null;
 
+  const singleAction = actions.length === 1 ? actions[0] : null;
+
   return (
     <>
+      {singleAction ? (
+        <Button
+          variant="ghost"
+          {...animatedNavHoverHandlers}
+          onClick={handleSingleAction}
+          aria-label={isCollapsed ? `New ${singleAction.label.toLowerCase()}` : undefined}
+          className={cn(
+            "h-8 w-full justify-start gap-2.5 rounded-md px-2.5 text-label font-medium text-sidebar-foreground/85 hover:bg-sidebar-accent hover:text-sidebar-foreground",
+            isCollapsed &&
+              "mx-auto size-8 justify-center p-0 has-[>svg]:px-0",
+          )}
+        >
+          <SidebarAnimatedNavIcon
+            icon={PlusIcon}
+            iconRef={iconRef}
+            className="h-4 w-4 shrink-0"
+          />
+          {isCollapsed ? null : <span>New {singleAction.label.toLowerCase()}</span>}
+        </Button>
+      ) : (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
@@ -151,6 +178,7 @@ export function BuildQuickCreate({
           {actions.map(renderAction)}
         </DropdownMenuContent>
       </DropdownMenu>
+      )}
 
       {projectMounted ? (
         <NewProjectDialog

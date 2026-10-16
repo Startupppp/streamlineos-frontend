@@ -1,14 +1,16 @@
 "use client";
 
-import { Skeleton } from "@/components/ui/skeleton";
+import Image from "next/image";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import type { CalendarListItem } from "@/hooks/api/calendar";
 import { formatEventDate, formatEventTimeRange } from "@/lib/date-utils";
 import { EVENT_COLORS } from "./calendar-event-constants";
-import { Button } from "@/components/ui/button";
 
 function agendaWhen(event: CalendarListItem): string {
   if (event.allDay)
-    return `${formatEventDate(event.start, event.timezone ?? "UTC")} · All day`;
+    return `${event.time.kind === "date"
+      ? formatEventDate(`${event.time.startDate}T12:00:00.000Z`, "UTC")
+      : formatEventDate(event.start, event.timezone ?? "UTC")} · All day`;
   return formatEventTimeRange(event.start, event.end, event.timezone);
 }
 
@@ -16,40 +18,26 @@ export function CalendarAgendaPreview({
   events,
   maxEvents = 6,
   onSelectEvent,
-  descending = false,
-  hasMore = false,
-  isLoadingMore = false,
-  onLoadMore,
 }: {
   events: CalendarListItem[];
   maxEvents?: number;
   onSelectEvent?: (event: CalendarListItem) => void;
-  descending?: boolean;
-  hasMore?: boolean;
-  isLoadingMore?: boolean;
-  onLoadMore?: () => void;
 }) {
   const upcoming = events
     .slice()
-    .sort((a, b) => descending
-      ? new Date(b.end).getTime() - new Date(a.end).getTime()
-      : new Date(a.start).getTime() - new Date(b.start).getTime())
+    .sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime())
     .slice(0, maxEvents);
 
   if (upcoming.length === 0)
     return (
       <div className="flex min-h-0 flex-1 flex-col items-center justify-center p-6">
         <p className="text-sm text-muted-foreground">No events in this period</p>
-        {hasMore && onLoadMore ? (
-          <Button className="mt-3" variant="outline" size="sm" onClick={onLoadMore} disabled={isLoadingMore}>
-            {isLoadingMore ? "Loading older events…" : "Load older events"}
-          </Button>
-        ) : null}
       </div>
     );
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto p-3">
+    <ScrollArea className="min-h-0 flex-1">
+    <div className="flex flex-col gap-1.5 p-3">
       {upcoming.map((event) => (
         <button
           type="button"
@@ -74,48 +62,25 @@ export function CalendarAgendaPreview({
           </div>
         </button>
       ))}
-      {hasMore && onLoadMore ? (
-        <Button className="mt-2 self-center" variant="outline" size="sm" onClick={onLoadMore} disabled={isLoadingMore}>
-          {isLoadingMore ? "Loading older events…" : "Load older events"}
-        </Button>
-      ) : null}
     </div>
+    </ScrollArea>
   );
 }
 
-export function CalendarOverlayFallback({ label }: { label: string }) {
+export function CalendarLoadingStatus({ label }: { label: string }) {
   return (
-    <div
-      role="status"
-      aria-live="polite"
-      aria-label={label}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-background/60 p-4"
-    >
-      <div className="flex w-full max-w-md flex-col gap-3 rounded-lg border border-border bg-card p-4 shadow-panel">
-        <Skeleton className="h-5 w-2/3" />
-        <Skeleton className="h-9 w-full" />
-        <Skeleton className="h-9 w-full" />
-        <Skeleton className="h-24 w-full" />
-        <Skeleton className="h-9 w-24 self-end" />
-      </div>
-    </div>
-  );
-}
-
-export function CalendarSheetFallback({ label }: { label: string }) {
-  return (
-    <div
-      role="status"
-      aria-live="polite"
-      aria-label={label}
-      className="fixed inset-y-0 right-0 z-50 flex w-full max-w-sm flex-col gap-3 border-l border-border bg-card p-5 shadow-panel"
-    >
-      <Skeleton className="h-6 w-3/5" />
-      <Skeleton className="h-4 w-4/5" />
-      <Skeleton className="h-4 w-2/3" />
-      <Skeleton className="h-4 w-1/2" />
-      <Skeleton className="h-32 w-full" />
-    </div>
+    <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+      <span className="inline-flex size-3.5 shrink-0 animate-spin motion-reduce:animate-none">
+        <Image
+          src="/logo.svg"
+          alt=""
+          width={14}
+          height={14}
+          className="size-3.5 rounded-sm"
+        />
+      </span>
+      {label}
+    </span>
   );
 }
 
@@ -124,14 +89,9 @@ export function CalendarListFallback({ label }: { label: string }) {
     <div
       role="status"
       aria-live="polite"
-      aria-label={label}
-      className="flex min-h-0 flex-1 flex-col gap-2 p-4"
+      className="flex min-h-0 flex-1 items-center justify-center"
     >
-      <Skeleton className="h-10 w-full" />
-      <Skeleton className="h-10 w-full" />
-      <Skeleton className="h-10 w-full" />
-      <Skeleton className="h-10 w-5/6" />
-      <Skeleton className="h-10 w-4/6" />
+      <CalendarLoadingStatus label={label} />
     </div>
   );
 }

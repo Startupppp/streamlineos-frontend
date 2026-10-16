@@ -1,6 +1,6 @@
 "use client";
 
-import { LayoutList, LayoutGrid, Table2 } from "lucide-react";
+import { ChartColumnIcon, LayoutGridIcon, LayoutListIcon } from "@animateicons/react/lucide";
 import dynamic from "next/dynamic";
 import { useCallback, useTransition } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
@@ -13,7 +13,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyTargetIllustration } from "@/components/illustrations";
 import { GoalFormSheet } from "@/features/build/goals/goal-form-sheet";
 import { PageState } from "@/components/shared/page-state";
-import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   PmSection,
   CONTENT_FILL_PANEL,
@@ -36,9 +36,14 @@ import { ProductGoalsViewBody } from "./product-goals-view-body";
 import { buildProductReturnParam } from "@/features/build/shared/product-return-href";
 import { useProductReturn } from "@/features/build/shared/use-product-return";
 import type { GoalListItem } from "@/hooks/api/goals";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 
 const VIEW_PARAM = "pg_view";
 type GoalsViewMode = "list" | "tree" | "table";
+
+function isGoalsViewMode(value: string): value is GoalsViewMode {
+  return value === "tree" || value === "list" || value === "table";
+}
 
 const CheckInDialog = dynamic(
   () => import("@/features/build/goals/check-in-dialog").then((m) => ({ default: m.CheckInDialog })),
@@ -123,40 +128,30 @@ export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
     [router, pathname, searchParams],
   );
 
-  const handleTreeMode = useCallback(() => handleViewModeChange("tree"), [handleViewModeChange]);
-  const handleListMode = useCallback(() => handleViewModeChange("list"), [handleViewModeChange]);
-  const handleTableMode = useCallback(() => handleViewModeChange("table"), [handleViewModeChange]);
+  const handleViewTabChange = useCallback(
+    (value: string) => {
+      if (isGoalsViewMode(value)) handleViewModeChange(value);
+    },
+    [handleViewModeChange],
+  );
+  const { iconRef: groupedIconRef, hoverHandlers: groupedHoverHandlers } = useAnimatedIcon();
+  const { iconRef: listIconRef, hoverHandlers: listHoverHandlers } = useAnimatedIcon();
+  const { iconRef: tableIconRef, hoverHandlers: tableHoverHandlers } = useAnimatedIcon();
 
   const viewToggle = (
-    <div className="flex items-center gap-1" role="group" aria-label="View mode">
-      <Button
-        type="button"
-        size="icon-sm"
-        variant={viewMode === "tree" ? "secondary" : "ghost"}
-        aria-label="Grouped view"
-        onClick={handleTreeMode}
-      >
-        <LayoutGrid className="h-4 w-4" />
-      </Button>
-      <Button
-        type="button"
-        size="icon-sm"
-        variant={viewMode === "list" ? "secondary" : "ghost"}
-        aria-label="List view"
-        onClick={handleListMode}
-      >
-        <LayoutList className="h-4 w-4" />
-      </Button>
-      <Button
-        type="button"
-        size="icon-sm"
-        variant={viewMode === "table" ? "secondary" : "ghost"}
-        aria-label="Table view"
-        onClick={handleTableMode}
-      >
-        <Table2 className="h-4 w-4" />
-      </Button>
-    </div>
+    <Tabs value={viewMode} onValueChange={handleViewTabChange} aria-label="View mode">
+      <TabsList className="h-10 min-h-10 w-auto gap-0.5 border border-input bg-card p-1 [&_[data-slot=tabs-trigger]]:h-8 [&_[data-slot=tabs-trigger]]:min-h-8 [&_[data-slot=tabs-trigger]]:min-w-8 [&_[data-slot=tabs-trigger]]:px-2">
+        <TabsTrigger value="tree" aria-label="Grouped" title="Grouped" {...groupedHoverHandlers}>
+          <LayoutGridIcon ref={groupedIconRef} size={16} aria-hidden />
+        </TabsTrigger>
+        <TabsTrigger value="list" aria-label="List" title="List" {...listHoverHandlers}>
+          <LayoutListIcon ref={listIconRef} size={16} aria-hidden />
+        </TabsTrigger>
+        <TabsTrigger value="table" aria-label="Table" title="Table" {...tableHoverHandlers}>
+          <ChartColumnIcon ref={tableIconRef} size={16} aria-hidden />
+        </TabsTrigger>
+      </TabsList>
+    </Tabs>
   );
 
   return (

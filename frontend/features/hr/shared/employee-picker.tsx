@@ -15,6 +15,7 @@ interface EmployeePickerProps {
   excludeUserIds?: string[];
   className?: string;
   includeInactive?: boolean;
+  ariaLabel?: string;
 }
 
 /**
@@ -47,6 +48,7 @@ export function EmployeePicker({
   excludeUserIds,
   className,
   includeInactive,
+  ariaLabel,
 }: EmployeePickerProps) {
   const { employees, isFetching } = useHrEmployeeOptions(
     includeInactive ? { isActive: "all" } : undefined,
@@ -77,6 +79,7 @@ export function EmployeePicker({
       emptyText="No employees found."
       disabled={disabled ?? isFetching}
       className={cn(className)}
+      ariaLabel={ariaLabel ?? placeholder}
     />
   );
 }

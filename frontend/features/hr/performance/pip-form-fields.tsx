@@ -127,9 +127,9 @@ export function PipFormFields({
   return (
     <>
       <div className="space-y-1.5">
-        <label className="text-sm font-medium">
-          Employee <span className="text-destructive">*</span>
-        </label>
+        <p className="text-sm font-medium">
+          Employee <span className="text-destructive" aria-hidden="true">*</span>
+        </p>
         {isEditing ? (
           <p className="border-input bg-muted/40 text-muted-foreground flex h-9 items-center rounded-md border px-3 text-sm">
             {editingUserName ?? "Unknown employee"}
@@ -138,22 +138,25 @@ export function PipFormFields({
           <EmployeePicker
             value={pipUserId}
             onChange={onSelectPipUser}
+            ariaLabel="Employee"
             className={fieldErrors.userId ? "border-destructive" : undefined}
           />
         )}
         {fieldErrors.userId && (
-          <p className="text-xs text-destructive">{fieldErrors.userId}</p>
+          <p className="text-xs text-destructive" role="alert">{fieldErrors.userId}</p>
         )}
       </div>
 
       <div className="space-y-1.5">
-        <label className="text-sm font-medium">
+        <label htmlFor="pip-hr-rep" className="text-sm font-medium">
           HR Representative{" "}
           <span className="text-muted-foreground font-normal">(optional)</span>
         </label>
         <Popover open={hrRepPickerOpen} onOpenChange={onHrRepPickerOpenChange}>
           <PopoverTrigger asChild>
             <Button
+              id="pip-hr-rep"
+              aria-label="HR Representative"
               variant="outline"
               role="combobox"
               aria-expanded={hrRepPickerOpen}
@@ -222,15 +225,16 @@ export function PipFormFields({
           </PopoverContent>
         </Popover>
         {fieldErrors.hrRepId && (
-          <p className="text-xs text-destructive">{fieldErrors.hrRepId}</p>
+          <p className="text-xs text-destructive" role="alert">{fieldErrors.hrRepId}</p>
         )}
       </div>
 
       <div className="space-y-1.5">
-        <label className="text-sm font-medium">
-          Reason <span className="text-destructive">*</span>
+        <label htmlFor="pip-reason" className="text-sm font-medium">
+          Reason <span className="text-destructive" aria-hidden="true">*</span>
         </label>
         <Textarea
+          id="pip-reason"
           placeholder="Describe the performance concerns..."
           value={reason}
           onChange={onReasonChange}
@@ -238,16 +242,17 @@ export function PipFormFields({
           maxLength={1000}
         />
         {fieldErrors.reason && (
-          <p className="text-xs text-destructive">{fieldErrors.reason}</p>
+          <p className="text-xs text-destructive" role="alert">{fieldErrors.reason}</p>
         )}
       </div>
 
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
-          <label className="text-sm font-medium">
-            Start Date <span className="text-destructive">*</span>
+          <label htmlFor="pip-start-date" className="text-sm font-medium">
+            Start Date <span className="text-destructive" aria-hidden="true">*</span>
           </label>
           <DatePicker
+            id="pip-start-date"
             value={startDate ?? ""}
             onChange={onStartDateChange}
             disabled={isEditing}
@@ -258,14 +263,15 @@ export function PipFormFields({
             toYear={pipStartBounds.toYear}
           />
           {fieldErrors.startDate && (
-            <p className="text-xs text-destructive">{fieldErrors.startDate}</p>
+            <p className="text-xs text-destructive" role="alert">{fieldErrors.startDate}</p>
           )}
         </div>
         <div className="space-y-1.5">
-          <label className="text-sm font-medium">
-            End Date <span className="text-destructive">*</span>
+          <label htmlFor="pip-end-date" className="text-sm font-medium">
+            End Date <span className="text-destructive" aria-hidden="true">*</span>
           </label>
           <DatePicker
+            id="pip-end-date"
             value={endDate ?? ""}
             onChange={onEndDateChange}
             placeholder="Pick a date"
@@ -275,16 +281,16 @@ export function PipFormFields({
             toYear={pipEndBounds.toYear}
           />
           {fieldErrors.endDate && (
-            <p className="text-xs text-destructive">{fieldErrors.endDate}</p>
+            <p className="text-xs text-destructive" role="alert">{fieldErrors.endDate}</p>
           )}
         </div>
       </div>
 
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <label className="text-sm font-medium">
-            Objectives <span className="text-destructive">*</span>
-          </label>
+          <p className="text-sm font-medium">
+            Objectives <span className="text-destructive" aria-hidden="true">*</span>
+          </p>
           <Button
             type="button"
             variant="outline"
@@ -297,7 +303,7 @@ export function PipFormFields({
           </Button>
         </div>
         {fieldErrors.objectives && (
-          <p className="text-xs text-destructive">{fieldErrors.objectives}</p>
+          <p className="text-xs text-destructive" role="alert">{fieldErrors.objectives}</p>
         )}
         <div className="space-y-3">
           {objectives.map((obj, idx) => (
@@ -324,17 +330,19 @@ export function PipFormFields({
               </div>
               <Input
                 placeholder="Goal / objective"
+                aria-label={`Objective ${idx + 1}`}
                 value={obj.objective}
                 onChange={(e) => handleObjectiveChange(idx, e)}
                 className="text-xs"
               />
               {fieldErrors[`objectives.${idx}.objective`] && (
-                <p className="text-xs text-destructive">
+                <p className="text-xs text-destructive" role="alert">
                   {fieldErrors[`objectives.${idx}.objective`]}
                 </p>
               )}
               <Input
                 placeholder="Success metric"
+                aria-label={`Success metric for objective ${idx + 1}`}
                 value={obj.metric}
                 onChange={(e) => handleMetricChange(idx, e)}
                 className="text-xs"
@@ -367,8 +375,9 @@ export function PipFormFields({
       <Separator />
 
       <div className="space-y-1.5">
-        <label className="text-sm font-medium">Notes (optional)</label>
+        <label htmlFor="pip-notes" className="text-sm font-medium">Notes (optional)</label>
         <Textarea
+          id="pip-notes"
           placeholder="Additional context or manager notes..."
           value={notes}
           onChange={onNotesChange}
@@ -376,18 +385,19 @@ export function PipFormFields({
           maxLength={2000}
         />
         {fieldErrors.notes && (
-          <p className="text-xs text-destructive">{fieldErrors.notes}</p>
+          <p className="text-xs text-destructive" role="alert">{fieldErrors.notes}</p>
         )}
       </div>
 
       <div className="space-y-1.5">
-        <label className="text-sm font-medium">
+        <label htmlFor="pip-manager-rating" className="text-sm font-medium">
           Manager Rating{" "}
           <span className="text-muted-foreground font-normal">
             (1–5, optional)
           </span>
         </label>
         <Input
+          id="pip-manager-rating"
           type="number"
           min="1"
           max="5"

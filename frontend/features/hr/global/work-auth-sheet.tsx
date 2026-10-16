@@ -9,6 +9,7 @@ import { z } from "zod";
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
   SheetBody,
@@ -127,6 +128,7 @@ export function WorkAuthSheet({ open, onOpenChange, existing, defaultEmploymentI
       <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-md">
         <SheetHeader className="shrink-0 border-b border-border px-6 py-4 text-left">
           <SheetTitle>{existing ? "Edit Work Authorization" : "Add Work Authorization"}</SheetTitle>
+          <SheetDescription className="sr-only">Record or update a work authorisation document for this employee.</SheetDescription>
         </SheetHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="flex min-h-0 flex-1 flex-col">

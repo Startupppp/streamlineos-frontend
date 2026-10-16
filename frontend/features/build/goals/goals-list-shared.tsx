@@ -24,7 +24,6 @@ import { GoalCardActions } from "./goal-card-actions";
 
 export const GOAL_LEVEL_ORDER: GoalLevel[] = ["company", "team", "individual"];
 
-
 const FRESHNESS_CONFIG = {
   fresh: {
     label: "Fresh",
@@ -47,7 +46,13 @@ interface GoalCardProps {
   onCheckIn?: (goal: GoalListItem) => void;
 }
 
-export function GoalCard({ goal, onEdit, onDelete, onUnlink, onCheckIn }: GoalCardProps) {
+export function GoalCard({
+  goal,
+  onEdit,
+  onDelete,
+  onUnlink,
+  onCheckIn,
+}: GoalCardProps) {
   const cfg = STATUS_CONFIG[goal.status];
   const ownerName = goal.owner?.name ?? goal.owner?.email ?? null;
   const shouldReduceMotion = useReducedMotion();
@@ -73,10 +78,10 @@ export function GoalCard({ goal, onEdit, onDelete, onUnlink, onCheckIn }: GoalCa
       onContextMenu={handleContextMenu}
     >
       <div className="group relative">
-          <div
+        <div
           className={cn(
             PM_PANEL,
-            "flex flex-col gap-3 border-border/80 bg-card p-4 shadow-sm transition-[border-color,box-shadow] duration-200 group-hover:border-primary/40 group-hover:shadow-md",
+            "flex flex-col gap-2.5 overflow-hidden border-border/80 bg-card p-3.5 shadow-xs transition-[border-color,box-shadow,transform] duration-200 group-hover:-translate-y-0.5 group-hover:border-primary/35 group-hover:shadow-sm motion-reduce:transform-none",
           )}
         >
           <div className="flex items-start justify-between gap-3">
@@ -143,10 +148,12 @@ export function GoalCard({ goal, onEdit, onDelete, onUnlink, onCheckIn }: GoalCa
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3 border-t border-border/80 pt-3">
+          <div className="grid grid-cols-2 gap-3 rounded-lg border border-border bg-muted/20 px-3 py-2 dark:border-background">
             <div className="min-w-0">
               <p className="text-xs text-muted-foreground">Owner</p>
-              <p className="mt-0.5 truncate text-sm text-foreground">{ownerName ?? "Unassigned"}</p>
+              <p className="mt-0.5 truncate text-sm text-foreground">
+                {ownerName ?? "Unassigned"}
+              </p>
             </div>
             <div className="min-w-0 text-right">
               <p className="text-xs text-muted-foreground">Key results</p>
@@ -162,18 +169,21 @@ export function GoalCard({ goal, onEdit, onDelete, onUnlink, onCheckIn }: GoalCa
               : `${goal.linkCount} linked (${goal.linkedProjectCount} project${goal.linkedProjectCount === 1 ? "" : "s"}, ${goal.linkedTicketCount} ticket${goal.linkedTicketCount === 1 ? "" : "s"})`}
           </p>
 
-          {(goal.linkedRoadmapItemCount > 0 || goal.linkedOpportunityCount > 0) ? (
+          {goal.linkedRoadmapItemCount > 0 ||
+          goal.linkedOpportunityCount > 0 ? (
             <div className="flex min-w-0 items-center gap-3 text-xs text-muted-foreground">
               {goal.linkedRoadmapItemCount > 0 ? (
                 <span className="flex items-center gap-1">
                   <Map className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                  {goal.linkedRoadmapItemCount} roadmap item{goal.linkedRoadmapItemCount === 1 ? "" : "s"}
+                  {goal.linkedRoadmapItemCount} roadmap item
+                  {goal.linkedRoadmapItemCount === 1 ? "" : "s"}
                 </span>
               ) : null}
               {goal.linkedOpportunityCount > 0 ? (
                 <span className="flex items-center gap-1">
                   <Target className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                  {goal.linkedOpportunityCount} opportunit{goal.linkedOpportunityCount === 1 ? "y" : "ies"}
+                  {goal.linkedOpportunityCount} opportunit
+                  {goal.linkedOpportunityCount === 1 ? "y" : "ies"}
                 </span>
               ) : null}
             </div>
@@ -199,7 +209,10 @@ export function GoalCard({ goal, onEdit, onDelete, onUnlink, onCheckIn }: GoalCa
               onClick={(e) => e.stopPropagation()}
             >
               <span className="flex items-center gap-1">
-                <CheckCircle2 className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                <CheckCircle2
+                  className="h-3.5 w-3.5 shrink-0"
+                  aria-hidden="true"
+                />
                 Outcome reviews
               </span>
               <span className="font-mono tabular-nums">

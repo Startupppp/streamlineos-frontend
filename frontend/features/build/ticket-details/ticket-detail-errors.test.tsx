@@ -37,13 +37,16 @@ jest.mock("@/components/ui/page-wrapper", () => ({
     children,
     actions,
     subtitle,
+    badge,
   }: {
     children: ReactNode;
     actions?: ReactNode;
     subtitle?: ReactNode;
+    badge?: ReactNode;
   }) => (
     <main>
       {actions}
+      <p data-testid="page-badge">{badge}</p>
       <p data-testid="page-subtitle">{subtitle}</p>
       {children}
     </main>
@@ -168,7 +171,7 @@ it("keeps an unresolved pending key read loading until a versioned ticket resolv
   mockByKeyTicket = { id: 1 };
   mockResolvedTicket = { id: 1, ticketNumber: 1, title: "Resolved ticket", version: 3 };
   view.rerender(<TicketDetailPage projectId={9} ticketKey="TEST-1" />);
-  expect(screen.getByTestId("page-subtitle")).toHaveTextContent("TEST-1");
+  expect(screen.getByTestId("page-badge")).toHaveTextContent("TEST-1");
   expect(screen.queryByRole("alert")).not.toBeInTheDocument();
 });
 
@@ -350,7 +353,7 @@ it("omits the freshness line when the record has never resolved, so it cannot cl
 it("renders the issue key in the header, because the key is the core identity field a reader cites", () => {
   mockResolvedTicket = { id: 1, ticketNumber: 7, title: "Versioned ticket", version: 3 };
   render(<TicketDetailPage projectId={9} ticketKey="TEST-7" />);
-  expect(screen.getByTestId("page-subtitle")).toHaveTextContent("TEST-7");
+  expect(screen.getByTestId("page-badge")).toHaveTextContent("TEST-7");
 });
 
 it("counts the edits held back while offline, so a kept draft is visible rather than silently lost", () => {

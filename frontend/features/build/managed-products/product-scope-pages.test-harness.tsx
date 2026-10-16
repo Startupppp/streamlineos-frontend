@@ -16,6 +16,7 @@ jest.mock("next/navigation", () => ({
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn(() => true),
+  useModuleEnabled: jest.fn(() => true),
   usePermissionGate: jest.fn(() => ({
     permission: "build:roadmap:view",
     allowed: true,
@@ -429,6 +430,9 @@ jest.mock("@/hooks/common/use-animated-icon", () => ({
 jest.mock("@animateicons/react/lucide", () => ({
   PlusIcon: () => null,
   EllipsisIcon: () => <span data-testid="ellipsis-icon" />,
+  LayoutGridIcon: () => null,
+  LayoutListIcon: () => null,
+  ChartColumnIcon: () => null,
 }));
 
 jest.mock(

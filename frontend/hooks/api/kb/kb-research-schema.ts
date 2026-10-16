@@ -28,6 +28,7 @@ const kbResearchBriefListItemContract = z.object(kbResearchBriefBaseContract);
 
 export const kbResearchBriefListContract = z.object({
   items: z.array(kbResearchBriefListItemContract),
+  hasMore: z.boolean(),
   nextCursor: z.number().int().nullable(),
 });
 

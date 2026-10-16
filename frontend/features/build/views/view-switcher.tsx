@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/tooltip";
 
 export type { ViewType } from "@/lib/build/view-types";
-export { parseViewType } from "@/lib/build/view-types";
+export { parseViewType, parseBoardPageView } from "@/lib/build/view-types";
 
 interface ViewSwitcherProps {
   activeView: ViewType;

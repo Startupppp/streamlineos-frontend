@@ -34,6 +34,7 @@ import {
   useMarkStaleKbPage,
 } from "@/hooks/api/kb/pages";
 import { PageRecordLinks } from "./page-record-links";
+import { RequestReviewDialog } from "./reviews-decision-dialogs";
 import { kbFormatDate } from "@/features/wiki/lib/kb-date-utils";
 import type { KbPageDetail } from "@/hooks/api/kb/page-types";
 
@@ -77,8 +78,10 @@ export default function PageMetadataSheet({
   onOpenChange,
 }: PageMetadataSheetProps) {
   const canManage = useCan("kb:pages:manage");
+  const canManageReviews = useCan("kb:reviews:manage");
   const [intervalDays, setIntervalDays] = useState<string>("");
   const [verifyFormOpen, setVerifyFormOpen] = useState(false);
+  const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
 
   const updatePage = useUpdateKbPage();
   const publishPage = usePublishKbPage();
@@ -99,14 +102,14 @@ export default function PageMetadataSheet({
 
   function handleStatusChange(value: string) {
     updatePage.mutate(
-      { pageId, status: value as "draft" | "in_review" | "published" | "archived" },
+      { pageId, status: value as "draft" | "in_review" | "published" | "archived", expectedContentRevision: page.contentRevision },
       { onError: () => toast.error("Failed to update status") }
     );
   }
 
   function handleContentTypeChange(value: string) {
     updatePage.mutate(
-      { pageId, contentType: value },
+      { pageId, contentType: value, expectedContentRevision: page.contentRevision },
       { onError: () => toast.error("Failed to update content type") }
     );
   }
@@ -179,12 +182,17 @@ export default function PageMetadataSheet({
     onOpenChange(false);
   }
 
+  function handleRequestReview() {
+    setReviewDialogOpen(true);
+  }
+
   const trustState = page.trustState ?? "unverified";
   const status = page.status ?? "draft";
   const showPublish = status !== "published";
   const statusActionCount = showPublish ? 2 : 1;
 
   return (
+    <>
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="gap-0 sm:max-w-md p-0 flex flex-col bg-background">
         <SheetHeader className="px-5 py-4 border-b shrink-0 bg-background">
@@ -384,6 +392,15 @@ export default function PageMetadataSheet({
               </p>
             )}
 
+            {canManageReviews && (
+              <div className="space-y-2">
+                <p className="text-label font-medium text-foreground">Reviews</p>
+                <Button type="button" variant="outline" className={ACTION_BTN_NEUTRAL} onClick={handleRequestReview}>
+                  Request review
+                </Button>
+              </div>
+            )}
+
             <PageRecordLinks pageId={pageId} />
           </div>
         </ScrollArea>
@@ -395,5 +412,12 @@ export default function PageMetadataSheet({
         </SheetFooter>
       </SheetContent>
     </Sheet>
+    <RequestReviewDialog
+      pageId={pageId}
+      pageTitle={page.title}
+      open={reviewDialogOpen}
+      onOpenChange={setReviewDialogOpen}
+    />
+    </>
   );
 }

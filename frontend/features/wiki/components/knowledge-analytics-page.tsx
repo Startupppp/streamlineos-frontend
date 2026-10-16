@@ -34,6 +34,7 @@ import {
 import { useState } from "react";
 import { useKbSpaces } from "@/hooks/api/kb/spaces";
 import { usePageState } from "@/hooks/api/use-page-state";
+import { useCan } from "@/hooks/api/access";
 import { PageState } from "@/components/shared/page-state";
 import {
   Select,
@@ -160,6 +161,7 @@ const GapTableRow = memo(function GapTableRow({
   isDismissing,
   onCreateFix,
   isCreatingFix,
+  canCreatePage,
 }: {
   row: KbGapRow;
   onCreatePage: (q: string) => void;
@@ -172,6 +174,7 @@ const GapTableRow = memo(function GapTableRow({
   isDismissing: boolean;
   onCreateFix: (query: string) => void;
   isCreatingFix: boolean;
+  canCreatePage: boolean;
 }) {
   const [assignOpen, setAssignOpen] = useState(false);
   const [assignValue, setAssignValue] = useState("");
@@ -219,31 +222,30 @@ const GapTableRow = memo(function GapTableRow({
   }
   return (
     <div>
-      <div
-        className={`flex items-center gap-3 px-3 py-2 transition-colors cursor-pointer ${isSelected ? "bg-muted/60" : "hover:bg-muted/40"}`}
-        onClick={handleSelectClick}
-        role="button"
-        tabIndex={0}
-        aria-expanded={isSelected}
-        aria-label={`Gap: ${row.query ?? "(empty)"}`}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") handleSelectClick();
-        }}
-      >
-        <TruncatedText
-          text={row.query ?? "(empty)"}
-          className="flex-1 text-sm"
-        />
-        <span className="text-xs tabular-nums text-muted-foreground shrink-0">
-          {row.count}
-        </span>
-        <span className="text-xs text-muted-foreground shrink-0 w-28 text-right">
-          {new Date(row.lastOccurredAt).toLocaleDateString("en", {
-            month: "short",
-            day: "numeric",
-            year: "numeric",
-          })}
-        </span>
+      <div className={`flex items-center gap-3 px-3 py-2 transition-colors ${isSelected ? "bg-muted/60" : "hover:bg-muted/40"}`}>
+        <button
+          type="button"
+          className="flex min-w-0 flex-1 items-center gap-3 rounded-sm text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          onClick={handleSelectClick}
+          disabled={!row.query}
+          aria-expanded={isSelected}
+          aria-label={`Gap: ${row.query ?? "(empty)"}`}
+        >
+          <TruncatedText
+            text={row.query ?? "(empty)"}
+            className="min-w-0 flex-1 text-sm"
+          />
+          <span className="text-xs tabular-nums text-muted-foreground shrink-0">
+            {row.count}
+          </span>
+          <span className="text-xs text-muted-foreground shrink-0 w-28 text-right">
+            {new Date(row.lastOccurredAt).toLocaleDateString("en", {
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+            })}
+          </span>
+        </button>
         <Button
           size="sm"
           variant="ghost"
@@ -266,29 +268,33 @@ const GapTableRow = memo(function GapTableRow({
         >
           Dismiss
         </Button>
-        <Button
-          size="sm"
-          variant="ghost"
-          className="px-2 text-xs gap-1 shrink-0"
-          onClick={handleCreateFixClick}
-          disabled={isCreatingFix || !row.query}
-          type="button"
-          aria-label="Create fix page for gap"
-        >
-          <KbPlusIcon className="h-3 w-3" />
-          Fix
-        </Button>
-        <Button
-          size="sm"
-          variant="ghost"
-          className="px-2 text-xs gap-1 shrink-0"
-          onClick={handleCreatePageClick}
-          disabled={isCreating || !row.query}
-          type="button"
-        >
-          <KbPlusIcon className="h-3 w-3" />
-          Page
-        </Button>
+        {canCreatePage ? (
+          <>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="px-2 text-xs gap-1 shrink-0"
+              onClick={handleCreateFixClick}
+              disabled={isCreatingFix || !row.query}
+              type="button"
+              aria-label="Create fix page for gap"
+            >
+              <KbPlusIcon className="h-3 w-3" />
+              Fix
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="px-2 text-xs gap-1 shrink-0"
+              onClick={handleCreatePageClick}
+              disabled={isCreating || !row.query}
+              type="button"
+            >
+              <KbPlusIcon className="h-3 w-3" />
+              Page
+            </Button>
+          </>
+        ) : null}
       </div>
       {assignOpen && (
         <form
@@ -370,6 +376,19 @@ function formatRatioAsPercent(ratio: number): string {
   return `${Math.round(Math.min(Math.max(ratio, 0), 1) * 100)}%`;
 }
 
+function overviewValue(value: number | null, reason?: string, percent = false): string | number {
+  if (reason === "minimum_cohort") return "Suppressed";
+  if (reason === "incomplete_scope") return "Unavailable";
+  if (value === null) return "Unavailable";
+  return percent ? formatRatioAsPercent(value) : value;
+}
+
+function overviewHint(reason?: string): string | undefined {
+  if (reason === "minimum_cohort") return "Fewer than 3 records in this cohort";
+  if (reason === "incomplete_scope") return "Historical space attribution is incomplete";
+  return undefined;
+}
+
 function AnalyticsSkeleton() {
   return (
     <div className="space-y-4">
@@ -406,6 +425,7 @@ export default function KnowledgeAnalyticsPage() {
   const [selectedGapQuery, setSelectedGapQuery] = useState<string | undefined>(
     undefined,
   );
+  const canCreatePage = useCan("kb:pages:create");
 
   const { data: spacesPage } = useKbSpaces();
   const spaces = spacesPage?.data ?? [];
@@ -421,12 +441,16 @@ export default function KnowledgeAnalyticsPage() {
     "wiki",
   );
   const {
-    data: noResults = [],
+    data: noResultsResponse,
     isLoading: noResultsLoading,
     isError: noResultsError,
     error: noResultsQueryError,
     refetch: refetchNoResults,
-  } = useKbNoResults(range);
+    fetchNextPage: fetchNextNoResults,
+    hasNextPage: hasNextNoResults,
+    isFetchingNextPage: isFetchingNextNoResults,
+  } = useKbNoResults(spaceId !== undefined ? { ...range, spaceId } : range);
+  const noResults = noResultsResponse?.data ?? [];
   const {
     data: pageAnalytics = [],
     isLoading: pagesLoading,
@@ -438,7 +462,8 @@ export default function KnowledgeAnalyticsPage() {
     isFetchingNextPage,
   } = usePageAnalytics(staleOnly ? { spaceId, staleOnly: true } : { spaceId });
   const {
-    gaps = [],
+    gaps: loadedGaps,
+    scopeComplete: gapsScopeComplete,
     isLoading: gapsLoading,
     isError: gapsError,
     error: gapsQueryError,
@@ -446,9 +471,15 @@ export default function KnowledgeAnalyticsPage() {
     fetchNextPage: fetchNextGaps,
     hasNextPage: hasNextGaps,
     isFetchingNextPage: isFetchingNextGaps,
-  } = useKnowledgeGaps(range);
-  const { data: citationReuse } = useCitationReuse(range);
-  const { data: reviewSla } = useReviewSla(range);
+  } = useKnowledgeGaps(spaceId !== undefined ? { ...range, spaceId } : range);
+  const gaps = loadedGaps ?? [];
+  const {
+    data: citationReuse,
+    fetchNextPage: fetchNextCitationReuse,
+    hasNextPage: hasNextCitationReuse,
+    isFetchingNextPage: isFetchingNextCitationReuse,
+  } = useCitationReuse(spaceId !== undefined ? { ...range, spaceId } : range);
+  const { data: reviewSla } = useReviewSla(spaceId !== undefined ? { ...range, spaceId } : range);
   const {
     pages: relatedPages = [],
     isLoading: relatedPagesLoading,
@@ -504,7 +535,7 @@ export default function KnowledgeAnalyticsPage() {
 
   function handleCreatePageFromGap(query: string) {
     createPage.mutate(
-      { title: query },
+      { title: query, ...(spaceId !== undefined ? { spaceId } : {}) },
       {
         onSuccess(page) {
           router.push(pageHref(page.id));
@@ -522,7 +553,7 @@ export default function KnowledgeAnalyticsPage() {
   }
 
   function handleCreateGapFix(query: string) {
-    createGapFix.mutate({ query });
+    createGapFix.mutate({ query, ...(spaceId !== undefined ? { spaceId } : {}) });
   }
 
   const pageState = usePageState({
@@ -612,35 +643,46 @@ export default function KnowledgeAnalyticsPage() {
           <StatCardGrid cols={5} className="mb-4">
             <StatCard
               label="Article views"
-              value={overview.totalViews}
+              value={overviewValue(overview.totalViews, overview.suppressionReasons.totalViews)}
+              hint={overviewHint(overview.suppressionReasons.totalViews)}
               icon={KbEyeIcon}
               tone="blue"
             />
             <StatCard
-              label="Searches"
-              value={overview.searches}
+              label={spaceId === undefined ? "Organization searches" : "Space searches"}
+              value={overviewValue(overview.searches, overview.suppressionReasons.searches)}
+              hint={overviewHint(overview.suppressionReasons.searches)}
               icon={KbSearchIcon}
               tone="violet"
             />
             <StatCard
               label="Helpful ratio"
-              value={formatRatioAsPercent(overview.helpfulRatio)}
+              value={overviewValue(overview.helpfulRatio, overview.suppressionReasons.helpfulRatio, true)}
+              hint={overviewHint(overview.suppressionReasons.helpfulRatio)}
               icon={KbThumbsUpIcon}
               tone="emerald"
             />
             <StatCard
-              label="Search success"
-              value={formatRatioAsPercent(overview.searchSuccessRate)}
+              label={spaceId === undefined ? "Organization search success" : "Space search success"}
+              value={overviewValue(overview.searchSuccessRate, overview.suppressionReasons.searchSuccessRate, true)}
+              hint={overviewHint(overview.suppressionReasons.searchSuccessRate)}
               icon={KbBarChart2Icon}
               tone="amber"
             />
             <StatCard
               label="Tickets deflected"
-              value={overview.ticketsDeflected}
+              value={overviewValue(overview.ticketsDeflected, overview.suppressionReasons.ticketsDeflected)}
+              hint={overviewHint(overview.suppressionReasons.ticketsDeflected)}
               icon={KbCheckCircleIcon}
               tone="emerald"
             />
           </StatCardGrid>
+        ) : null}
+
+        {spaceId !== undefined && overview && !overview.searchScopeComplete ? (
+          <p role="status" className="mb-4 text-sm text-muted-foreground">
+            Space-scoped search and Ask history is incomplete for this date range. Choose a newer range or All spaces to see complete activity metrics.
+          </p>
         ) : null}
 
         {(reviewSla || citationReuse) && (
@@ -656,13 +698,24 @@ export default function KnowledgeAnalyticsPage() {
             {citationReuse ? (
               <StatCard
                 label="Reused citations"
-                value={citationReuse.length}
+                value={`${citationReuse.length}${hasNextCitationReuse ? "+" : ""}`}
                 icon={KbLink2Icon}
                 tone="violet"
               />
             ) : null}
           </StatCardGrid>
         )}
+        {hasNextCitationReuse ? (
+          <Button
+            type="button"
+            variant="outline"
+            className="mb-4"
+            onClick={() => void fetchNextCitationReuse()}
+            disabled={isFetchingNextCitationReuse}
+          >
+            {isFetchingNextCitationReuse ? "Loading citations..." : "Load more citation results"}
+          </Button>
+        ) : null}
 
         <div className="space-y-4">
           <section className="space-y-2">
@@ -672,11 +725,15 @@ export default function KnowledgeAnalyticsPage() {
               </h2>
               {noResults.length > 0 && (
                 <span className="text-xs text-muted-foreground">
-                  {noResults.length} queries
+                  {noResults.length}{hasNextNoResults ? "+" : ""} queries
                 </span>
               )}
             </div>
-            {noResults.length === 0 ? (
+            {spaceId !== undefined && noResultsResponse && !noResultsResponse.scopeComplete ? (
+              <p role="status" className="text-sm text-muted-foreground">
+                Zero-result searches for this space are unavailable because older events lack space information.
+              </p>
+            ) : noResults.length === 0 ? (
               <EmptyState
                 illustration={
                   <KbSearchIcon className="h-6 w-6 text-muted-foreground" />
@@ -709,6 +766,16 @@ export default function KnowledgeAnalyticsPage() {
                 {noResults.map((row, i) => (
                   <NoResultsRow key={i} row={row} rank={i + 1} />
                 ))}
+                {hasNextNoResults ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => void fetchNextNoResults()}
+                    disabled={isFetchingNextNoResults}
+                  >
+                    {isFetchingNextNoResults ? "Loading searches..." : "Load more searches"}
+                  </Button>
+                ) : null}
               </div>
             )}
           </section>
@@ -796,7 +863,11 @@ export default function KnowledgeAnalyticsPage() {
                 </span>
               )}
             </div>
-            {gaps.length === 0 ? (
+            {spaceId !== undefined && !gapsScopeComplete && !gapsLoading ? (
+              <p role="status" className="text-sm text-muted-foreground">
+                Knowledge gaps for this space are unavailable because older events lack space information.
+              </p>
+            ) : gaps.length === 0 ? (
               <EmptyState
                 illustration={
                   <KbSearchIcon className="h-6 w-6 text-muted-foreground" />
@@ -843,6 +914,7 @@ export default function KnowledgeAnalyticsPage() {
                       isDismissing={dismissGap.isPending}
                       onCreateFix={handleCreateGapFix}
                       isCreatingFix={createGapFix.isPending}
+                      canCreatePage={canCreatePage}
                     />
                     {selectedGapQuery === row.query && (
                       <div className="px-3 py-2 bg-muted/30 border-t border-border/40">

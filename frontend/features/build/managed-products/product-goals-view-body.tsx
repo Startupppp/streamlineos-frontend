@@ -1,10 +1,8 @@
 "use client";
 
 import { useMemo } from "react";
-import { Badge } from "@/components/ui/badge";
 import { PmStaggerList } from "@/components/pm-chrome";
 import { GoalCard, GOAL_LEVEL_ORDER } from "@/features/build/goals/goals-list-shared";
-import { LEVEL_LABEL } from "@/features/build/goals/constants";
 import { ProductGoalsTableView } from "./product-goals-table-view";
 import type { GoalListItem } from "@/hooks/api/goals";
 
@@ -95,39 +93,22 @@ export function ProductGoalsViewBody({
     );
   }
 
+  const orderedGoals = GOAL_LEVEL_ORDER.flatMap((level) => grouped.get(level) ?? []);
   return (
-    <div className="flex flex-col gap-6">
-      {GOAL_LEVEL_ORDER.map((level) => {
-        const levelGoals = grouped.get(level) ?? [];
-        if (levelGoals.length === 0) return null;
+    <PmStaggerList className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      {orderedGoals.map((goal) => {
+        const actions = resolveGoalActions(goal, canManage, { onEdit, onDelete, onUnlink, onCheckIn });
         return (
-          <div key={level} className="flex flex-col gap-3">
-            <div className="flex items-center gap-2">
-              <h2 className="text-sm font-medium text-foreground">
-                {LEVEL_LABEL[level]}
-              </h2>
-              <Badge variant="secondary" className="text-micro">
-                {levelGoals.length}
-              </Badge>
-            </div>
-            <PmStaggerList className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {levelGoals.map((goal) => {
-                const actions = resolveGoalActions(goal, canManage, { onEdit, onDelete, onUnlink, onCheckIn });
-                return (
-                  <GoalCard
-                    key={goal.id}
-                    goal={goal}
-                    onEdit={actions.onEdit}
-                    onDelete={actions.onDelete}
-                    onUnlink={actions.onUnlink}
-                    onCheckIn={actions.onCheckIn}
-                  />
-                );
-              })}
-            </PmStaggerList>
-          </div>
+          <GoalCard
+            key={goal.id}
+            goal={goal}
+            onEdit={actions.onEdit}
+            onDelete={actions.onDelete}
+            onUnlink={actions.onUnlink}
+            onCheckIn={actions.onCheckIn}
+          />
         );
       })}
-    </div>
+    </PmStaggerList>
   );
 }

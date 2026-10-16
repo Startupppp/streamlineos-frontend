@@ -64,7 +64,7 @@ function ConversationRowActions({ conv, onRename, onDeleteRequest }: Conversatio
         <button
           type="button"
           aria-label="More options"
-          className="shrink-0 rounded p-0.5 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 data-[state=open]:opacity-100"
+          className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded text-muted-foreground transition-opacity lg:h-7 lg:w-7 lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100 lg:focus-visible:opacity-100 data-[state=open]:opacity-100"
           {...moreIcon.animatedNavHoverHandlers}
         >
           <SidebarAnimatedNavIcon

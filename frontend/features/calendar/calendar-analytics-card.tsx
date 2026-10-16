@@ -5,7 +5,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BarChart3, DatabaseZap, ShieldCheck } from "lucide-react";
@@ -50,8 +50,8 @@ export function CalendarAnalyticsCard() {
       </CardHeader>
       <CardContent className="space-y-5">
         <div className="grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
-          <div className="space-y-1.5"><Label htmlFor="calendar-analytics-from">From</Label><Input id="calendar-analytics-from" type="date" value={from} max={to} onChange={(event) => setFrom(event.target.value)} /></div>
-          <div className="space-y-1.5"><Label htmlFor="calendar-analytics-to">Through</Label><Input id="calendar-analytics-to" type="date" value={to} min={from} onChange={(event) => setTo(event.target.value)} /></div>
+          <div className="space-y-1.5"><Label htmlFor="calendar-analytics-from">From</Label><DatePicker id="calendar-analytics-from" value={from} toDate={new Date(`${to}T00:00:00`)} onChange={setFrom} /></div>
+          <div className="space-y-1.5"><Label htmlFor="calendar-analytics-to">Through</Label><DatePicker id="calendar-analytics-to" value={to} fromDate={new Date(`${from}T00:00:00`)} onChange={setTo} /></div>
           <Button variant="outline" disabled={analytics.isFetching} onClick={() => void analytics.refetch()}>Refresh</Button>
         </div>
         {analytics.isLoading ? <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"><Skeleton className="h-32" /><Skeleton className="h-32" /><Skeleton className="h-32" /></div> : null}

@@ -63,6 +63,14 @@ describe("next.config.ts redirects — dead auth routes resolve to /signin", () 
     expect(entry?.permanent).toBe(true);
   });
 
+  test("/hrms redirects to /hr so the legacy URL resolves inside the app shell", async () => {
+    const redirects = await getRedirects();
+    const entry = redirects.find((r) => r.source === "/hrms");
+    expect(entry).toBeDefined();
+    expect(entry?.destination).toBe("/hr");
+    expect(entry?.permanent).toBe(false);
+  });
+
   test("/signup and /login redirect entries remain (no regression)", async () => {
     const redirects = await getRedirects();
     const signup = redirects.find((r) => r.source === "/signup");

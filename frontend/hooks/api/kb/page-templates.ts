@@ -5,6 +5,7 @@ import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { selectFlatPages, type Page } from "@/lib/api/select-flat-pages";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
 const noContentC = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
@@ -19,7 +20,7 @@ export type KbPageTemplate = {
   name: string;
   icon: string | null;
   description: string | null;
-  content: Record<string, unknown> | null;
+  content: Record<string, unknown> | Record<string, unknown>[] | null;
   createdById: string | null;
   createdByName: string | null;
   useCount: number;
@@ -55,6 +56,7 @@ const kbPageTemplateSingleContract = lazyContract(() =>
 export function useKbPageTemplates(q?: string) {
   const canViewPages = useCan("kb:pages:view");
   return useInfiniteQuery({
+    ...INLINE_READ_ERROR,
     queryKey: knowledgeAndSurveysQueryKeys.kb.pageTemplates(q),
     initialPageParam: NO_CURSOR_YET,
     queryFn: ({ signal, pageParam }) => {

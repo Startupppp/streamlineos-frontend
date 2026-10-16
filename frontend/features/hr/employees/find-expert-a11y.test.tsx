@@ -1,4 +1,4 @@
-import { render } from "@testing-library/react";
+import { render, fireEvent, screen } from "@testing-library/react";
 import { expectNoAxeViolations } from "@/test-utils/axe";
 import { FindExpertPage } from "./find-expert-page";
 
@@ -32,6 +32,22 @@ function findExpert(over: Record<string, unknown>) {
  * restoration after an overlay closes, or how a screen reader narrates a
  * pending search. Those still need a browser (FE-123).
  */
+const EXPERT_FIXTURE = [
+  {
+    userId: "u1",
+    name: "Alex Kim",
+    firstName: "Alex",
+    lastName: "Kim",
+    email: "alex@example.com",
+    image: null,
+    designation: "Senior Engineer",
+    role: "ENGINEERING",
+    matchedSkill: "React",
+    matchedLevel: 4,
+    skills: [{ name: "React", level: 4 }],
+  },
+];
+
 describe("Find Expert has no automatically detectable accessibility violations", () => {
   beforeEach(() => jest.clearAllMocks());
 
@@ -42,8 +58,6 @@ describe("Find Expert has no automatically detectable accessibility violations",
   });
 
   it("while a search is in flight, with Search rendered busy", async () => {
-    // The state BUG-016 added: a LoadingButton carrying aria-busy. A busy
-    // control that axe cannot name is the failure this guards against.
     findExpert({ isFetching: true, isLoading: true });
     const { container } = render(<FindExpertPage />);
     await expectNoAxeViolations(container);
@@ -52,6 +66,15 @@ describe("Find Expert has no automatically detectable accessibility violations",
   it("when the search read fails", async () => {
     findExpert({ isError: true, error: new Error("upstream unavailable") });
     const { container } = render(<FindExpertPage />);
+    await expectNoAxeViolations(container);
+  });
+
+  it("with expert results rendered — avatar images and result cards have no violations", async () => {
+    findExpert({ data: EXPERT_FIXTURE });
+    const { container } = render(<FindExpertPage />);
+    const input = screen.getByRole("searchbox");
+    fireEvent.change(input, { target: { value: "React" } });
+    fireEvent.submit(input.closest("form")!);
     await expectNoAxeViolations(container);
   });
 });

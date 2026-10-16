@@ -124,15 +124,15 @@ export function useApprovalsPage(projectId: number) {
     setRequestOpen(false);
   }, [createApproval]);
 
-  const handleDelegate = useCallback((approverId: string) => {
+  const handleDelegate = useCallback(async (approverId: string) => {
     if (!delegateTarget) return;
-    updateApproval.mutate(
-      { approvalId: delegateTarget.id, expectedRevision: delegateTarget.revision, approverId },
-      {
-        onSuccess: () => { toast.success("Approval delegated"); setDelegateTarget(null); },
-        onError: (e) => toast.error(getErrorMessage(e)),
-      },
-    );
+    try {
+      await updateApproval.mutateAsync({ approvalId: delegateTarget.id, expectedRevision: delegateTarget.revision, approverId });
+      toast.success("Approval delegated");
+      setDelegateTarget(null);
+    } catch (e) {
+      toast.error(getErrorMessage(e));
+    }
   }, [delegateTarget, updateApproval]);
 
   const handleEscalate = useCallback((row: BuildApprovalsCreateApprovalResponse) => {

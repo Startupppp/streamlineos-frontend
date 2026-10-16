@@ -90,7 +90,7 @@ export function LeaveCalendarWidget({
                       className="h-5 w-5"
                       title={`${l.user?.firstName} ${l.user?.lastName}`}
                     >
-                      <AvatarImage src={resolveImageUrl(l.user?.image)} />
+                      <AvatarImage src={resolveImageUrl(l.user?.image)} alt="" />
                       <AvatarFallback className="text-micro bg-status-warning-surface text-status-warning-ink">
                         {l.user?.firstName?.[0]}
                         {l.user?.lastName?.[0]}

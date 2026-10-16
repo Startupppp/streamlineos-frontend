@@ -242,6 +242,8 @@ export function ProjectViewsToolbar({
     <TicketFilterBar
       className="w-full"
       mobileSearchFirst
+      mobileSearchFirstBreakpoint="lg"
+      wrapActions
       leading={leading}
       members={members}
       statuses={statuses}

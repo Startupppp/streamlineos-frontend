@@ -13,10 +13,12 @@ import { ErrorState } from "@/components/shared";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   useKbPageComments,
   useCreateKbPageComment,
@@ -45,7 +47,18 @@ export default function PageCommentsSheet({ pageId, open, onOpenChange, content 
   const { data: session } = useSession();
   const currentUserId = session?.user?.id ?? null;
   const canUpdate = useCan("kb:pages:update");
-  const { data: comments = [], isLoading, isError, error, refetch } = useKbPageComments(pageId);
+  const canManage = useCan("kb:pages:manage");
+  const {
+    data: comments = [],
+    isLoading,
+    isError,
+    isFetchNextPageError,
+    error,
+    refetch,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  } = useKbPageComments(pageId);
   const createComment = useCreateKbPageComment();
   const [newContent, setNewContent] = useState("");
   const [replyingTo, setReplyingTo] = useState<KbPageComment | null>(null);
@@ -59,7 +72,7 @@ export default function PageCommentsSheet({ pageId, open, onOpenChange, content 
   const resolved = comments.filter((c) => c.parentId === null && !!c.resolvedAt);
 
   function handlePost() {
-    if (!newContent.trim()) return;
+    if (!canUpdate || !newContent.trim()) return;
     const isReply = replyingTo !== null;
     createComment.mutate(
       {
@@ -95,12 +108,20 @@ export default function PageCommentsSheet({ pageId, open, onOpenChange, content 
     setAnchorBlockIndex(raw === undefined ? null : Number(raw));
   }
 
+  function handleMobileAnchorSelect(value: string) {
+    setAnchorBlockIndex(value === "page" ? null : Number(value));
+  }
+
   function handleNewContentChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
     setNewContent(e.target.value);
   }
 
   function handleRetryComments() {
     void refetch();
+  }
+
+  function handleLoadMoreComments() {
+    void fetchNextPage();
   }
 
   return (
@@ -118,7 +139,7 @@ export default function PageCommentsSheet({ pageId, open, onOpenChange, content 
         </SheetHeader>
         <ScrollArea className="flex-1 min-h-0">
           <div className="px-6 py-4">
-            {isError && (
+            {isError && comments.length === 0 && (
               <ErrorState
                 title="Couldn't load comments"
                 description={getErrorMessage(error)}
@@ -139,7 +160,7 @@ export default function PageCommentsSheet({ pageId, open, onOpenChange, content 
                 ))}
               </div>
             )}
-            {!isLoading && !isError && topLevel.length === 0 && resolved.length === 0 && (
+            {!isLoading && !isError && !hasNextPage && topLevel.length === 0 && resolved.length === 0 && (
               <EmptyState
                 title="No comments yet"
                 description="Be the first to add a comment."
@@ -158,6 +179,7 @@ export default function PageCommentsSheet({ pageId, open, onOpenChange, content 
                       onReply={handleSetReplyingTo}
                       currentUserId={currentUserId}
                       canUpdate={canUpdate}
+                      canManage={canManage}
                     />
                   </li>
                 ))}
@@ -178,16 +200,33 @@ export default function PageCommentsSheet({ pageId, open, onOpenChange, content 
                           onReply={handleSetReplyingTo}
                           currentUserId={currentUserId}
                           canUpdate={canUpdate}
+                          canManage={canManage}
                         />
                       </li>
                     ))}
                   </ul>
                 </>
               )}
+              {isFetchNextPageError && (
+                <p role="alert" className="text-sm text-destructive">
+                  Could not load more comments. {getErrorMessage(error)}
+                </p>
+              )}
+              {hasNextPage && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleLoadMoreComments}
+                  disabled={isFetchingNextPage}
+                >
+                  {isFetchingNextPage ? "Loading comments…" : isFetchNextPageError ? "Retry loading comments" : "Load more comments"}
+                </Button>
+              )}
             </div>
           </div>
         </ScrollArea>
-        <div className="shrink-0 border-t px-6 py-4 space-y-2">
+        {canUpdate && <div className="shrink-0 border-t px-6 py-4 space-y-2">
           {replyingTo && (
             <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
               <span>Replying to comment…</span>
@@ -202,39 +241,57 @@ export default function PageCommentsSheet({ pageId, open, onOpenChange, content 
             </div>
           )}
           {!replyingTo && anchorTargets.length > 0 && (
-            <div
-              role="group"
-              aria-label="Anchor this comment to a block"
-              className="flex flex-wrap gap-1"
-            >
-              <button
-                type="button"
-                aria-pressed={anchorBlockIndex === null}
-                onClick={handleAnchorSelect}
-                className={cn(ANCHOR_CHIP_CLASS, anchorBlockIndex === null && ANCHOR_CHIP_SELECTED_CLASS)}
+            <>
+              <Select
+                value={anchorBlockIndex === null ? "page" : String(anchorBlockIndex)}
+                onValueChange={handleMobileAnchorSelect}
               >
-                Whole page
-              </button>
-              {anchorTargets.map((target) => (
+                <SelectTrigger className="sm:hidden" aria-label="Anchor this comment to a block">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="page">Whole page</SelectItem>
+                  {anchorTargets.map((target) => (
+                    <SelectItem key={target.blockIndex} value={String(target.blockIndex)}>
+                      {target.quote}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <div
+                role="group"
+                aria-label="Anchor this comment to a block"
+                className="hidden flex-wrap gap-1 sm:flex"
+              >
                 <button
-                  key={target.blockIndex}
                   type="button"
-                  data-block-index={String(target.blockIndex)}
-                  aria-pressed={anchorBlockIndex === target.blockIndex}
+                  aria-pressed={anchorBlockIndex === null}
                   onClick={handleAnchorSelect}
-                  className={cn(
-                    ANCHOR_CHIP_CLASS,
-                    "max-w-[12rem] truncate",
-                    anchorBlockIndex === target.blockIndex && ANCHOR_CHIP_SELECTED_CLASS,
-                  )}
+                  className={cn(ANCHOR_CHIP_CLASS, anchorBlockIndex === null && ANCHOR_CHIP_SELECTED_CLASS)}
                 >
-                  {target.quote}
+                  Whole page
                 </button>
-              ))}
-            </div>
+                {anchorTargets.map((target) => (
+                  <button
+                    key={target.blockIndex}
+                    type="button"
+                    data-block-index={String(target.blockIndex)}
+                    aria-pressed={anchorBlockIndex === target.blockIndex}
+                    onClick={handleAnchorSelect}
+                    className={cn(
+                      ANCHOR_CHIP_CLASS,
+                      "max-w-[12rem] truncate",
+                      anchorBlockIndex === target.blockIndex && ANCHOR_CHIP_SELECTED_CLASS,
+                    )}
+                  >
+                    {target.quote}
+                  </button>
+                ))}
+              </div>
+            </>
           )}
           {selectedAnchor && (
-            <blockquote className="border-l-2 border-border pl-2 text-xs italic text-muted-foreground">
+            <blockquote className="line-clamp-2 border-l-2 border-border pl-2 text-xs italic text-muted-foreground">
               {selectedAnchor.quote}
             </blockquote>
           )}
@@ -255,7 +312,7 @@ export default function PageCommentsSheet({ pageId, open, onOpenChange, content 
               Post comment
             </LoadingButton>
           </div>
-        </div>
+        </div>}
       </SheetContent>
     </Sheet>
   );

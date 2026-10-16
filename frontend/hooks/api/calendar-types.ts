@@ -155,7 +155,7 @@ export interface CalendarEventsResponse {
 export interface CalendarHistoryResponse extends CalendarEventsResponse {
   windowStart: string;
   windowEnd: string;
-  nextCursor: string;
+  nextCursor: string | null;
 }
 
 export interface CalendarSearchResponse extends CalendarEventsResponse {
@@ -211,7 +211,7 @@ export interface EventSyncStatusResponse {
   status: "synced" | "pending" | "in_flight" | "failed" | "not_synced";
   attemptCount: number;
   lastError: string | null;
-  operation: "create" | "update" | "delete" | null;
+  operation: "create" | "update" | "delete" | "restore" | null;
   queuedAt: string | null;
   processedAt: string | null;
   retryable: boolean;

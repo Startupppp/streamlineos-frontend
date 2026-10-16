@@ -19,6 +19,7 @@ describe("calendar projection cache", () => {
     const orgTwo = platformHierarchyQueryKeys.calendar.events("org-2", "user-2", START, END);
     const hr = platformHierarchyQueryKeys.calendar.hrSupplemental("org-1", "2026-10-01", "2026-10-31");
     const external = platformHierarchyQueryKeys.calendar.externalEvents("org-1", "user-1", START, END);
+    const search = platformHierarchyQueryKeys.calendar.search("org-1", "user-1", 7, 1, "all", true, { start: START, end: END });
     const detail = platformHierarchyQueryKeys.calendar.eventDetail(7);
     const attendance = humanResourcesQueryKeys.hr.monthlyAttendance({
       orgId: "org-1",
@@ -31,6 +32,7 @@ describe("calendar projection cache", () => {
     client.setQueryData(orgTwo, { events: [] });
     client.setQueryData(hr, []);
     client.setQueryData(external, { events: [] });
+    client.setQueryData(search, { pages: [] });
     client.setQueryData(detail, { id: 7 });
     client.setQueryData(attendance, []);
     client.setQueryData(wfh, []);
@@ -42,6 +44,7 @@ describe("calendar projection cache", () => {
     expect(client.getQueryState(orgTwo)?.isInvalidated).toBe(true);
     expect(client.getQueryState(hr)?.isInvalidated).toBe(true);
     expect(client.getQueryState(external)?.isInvalidated).toBe(true);
+    expect(client.getQueryState(search)?.isInvalidated).toBe(true);
     expect(client.getQueryState(detail)?.isInvalidated).toBe(false);
     expect(client.getQueryState(attendance)?.isInvalidated).toBe(true);
     expect(client.getQueryState(wfh)?.isInvalidated).toBe(true);

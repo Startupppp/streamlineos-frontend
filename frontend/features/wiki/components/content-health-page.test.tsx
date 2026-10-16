@@ -1,6 +1,8 @@
-import { render as rtlRender, screen, fireEvent } from "@testing-library/react";
+import { render as rtlRender, screen, fireEvent, waitFor, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import type { ReactElement } from "react";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { bulkRepairHealthItemsInputSchema } from "@/hooks/api/kb/content-health-schema";
 
 const useAccess = jest.fn();
 const accessLoading = { data: undefined, isLoading: true };
@@ -19,8 +21,11 @@ const accessDenied = {
 
 const useContentHealthCounts = jest.fn();
 const useContentHealthSignals = jest.fn();
+const useContentHealthTrend = jest.fn();
 const mockUseAssignHealthItem = jest.fn();
+const mockUseBulkRepairHealthItems = jest.fn();
 const mockUseOrgMembersByIds = jest.fn();
+const mockDismissMutateAsync = jest.fn();
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
@@ -40,11 +45,11 @@ jest.mock("@/hooks/api/entitlements", () => ({
 jest.mock("@/hooks/api/kb/content-health", () => ({
   useContentHealthCounts: () => useContentHealthCounts(),
   useContentHealthSignals: () => useContentHealthSignals(),
-  useDismissHealthItem: () => ({ mutateAsync: jest.fn(), isPending: false }),
-  useContentHealthTrend: () => ({ data: { beforeCount: 10, afterCount: 8 }, isLoading: false }),
+  useDismissHealthItem: () => ({ mutateAsync: mockDismissMutateAsync, isPending: false }),
+  useContentHealthTrend: () => useContentHealthTrend(),
   useAssignHealthItem: () => mockUseAssignHealthItem(),
   useContentHealthEvidence: () => ({ data: undefined, isLoading: false }),
-  useBulkRepairHealthItems: () => ({ mutate: jest.fn(), isPending: false }),
+  useBulkRepairHealthItems: () => mockUseBulkRepairHealthItems(),
 }));
 
 jest.mock("@/hooks/api/organization", () => ({
@@ -70,6 +75,7 @@ jest.mock("@/components/ui/popover", () => ({
 }));
 
 import ContentHealthPage from "./content-health-page";
+import { ContentHealthDismissDialog } from "./content-health-dismiss-dialog";
 
 function render(ui: ReactElement) {
   return rtlRender(<TooltipProvider>{ui}</TooltipProvider>);
@@ -128,10 +134,13 @@ const IDLE = {
 };
 
 beforeEach(() => {
+  mockDismissMutateAsync.mockResolvedValue({});
   useAccess.mockReturnValue(accessGranted);
   useContentHealthCounts.mockReturnValue({ ...IDLE, data: MIXED_COUNTS });
   useContentHealthSignals.mockReturnValue({ ...IDLE, data: SIGNAL_PAGE_WITH_ROWS });
+  useContentHealthTrend.mockReturnValue({ data: { beforeCount: 6, afterCount: 8 }, isLoading: false });
   mockUseAssignHealthItem.mockReturnValue({ mutate: jest.fn(), isPending: false });
+  mockUseBulkRepairHealthItems.mockReturnValue({ mutate: jest.fn(), isPending: false });
   mockUseOrgMembersByIds.mockReturnValue({
     data: {
       data: [
@@ -153,6 +162,57 @@ beforeEach(() => {
 });
 
 afterEach(() => jest.resetAllMocks());
+
+describe("ContentHealthDismissDialog snooze contract", () => {
+  it("submits a timezone-qualified timestamp for a selected local snooze time", async () => {
+    const user = userEvent.setup();
+    render(
+      <ContentHealthDismissDialog
+        open
+        onOpenChange={jest.fn()}
+        pageId={42}
+        pageTitle="Policy Draft"
+        kind="stale"
+      />,
+    );
+
+    await user.type(screen.getByRole("textbox", { name: "Reason" }), "Reviewed with owner");
+    fireEvent.change(screen.getByLabelText(/Snooze until/), {
+      target: { value: "2026-10-20T14:30" },
+    });
+    await user.click(screen.getByRole("button", { name: "Dismiss" }));
+
+    await waitFor(() => expect(mockDismissMutateAsync).toHaveBeenCalledWith({
+      pageId: 42,
+      kind: "stale",
+      reason: "Reviewed with owner",
+      dismissalExpiresAt: new Date("2026-10-20T14:30").toISOString(),
+    }));
+  });
+
+  it("omits expiry for a permanent dismissal", async () => {
+    const user = userEvent.setup();
+    render(
+      <ContentHealthDismissDialog
+        open
+        onOpenChange={jest.fn()}
+        pageId={42}
+        pageTitle="Policy Draft"
+        kind="stale"
+      />,
+    );
+
+    await user.type(screen.getByRole("textbox", { name: "Reason" }), "Accepted exception");
+    await user.click(screen.getByRole("button", { name: "Dismiss" }));
+
+    await waitFor(() => expect(mockDismissMutateAsync).toHaveBeenCalledWith({
+      pageId: 42,
+      kind: "stale",
+      reason: "Accepted exception",
+      dismissalExpiresAt: undefined,
+    }));
+  });
+});
 
 describe("ContentHealthPage — populated state", () => {
   it("renders count chips for all eight signals including overexposed and duplicate_candidate", () => {
@@ -196,6 +256,93 @@ describe("ContentHealthPage — populated state", () => {
   });
 });
 
+describe("ContentHealthPage — bulk repair dialog", () => {
+  it("names and describes the dialog, then closes on Escape while preserving the selected page", async () => {
+    const user = userEvent.setup();
+    render(<ContentHealthPage />);
+
+    await user.click(screen.getByRole("checkbox", { name: "Select Policy Draft" }));
+    const trigger = screen.getByRole("button", { name: "Bulk repair (1)" });
+    await user.click(trigger);
+
+    const dialog = screen.getByRole("dialog", { name: "Bulk repair — 1 page" });
+    expect(dialog).toHaveAccessibleDescription(
+      "Assign a person to resolve the selected issues.",
+    );
+
+    await user.keyboard("{Escape}");
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(trigger).toBeInTheDocument();
+    expect(trigger).toHaveFocus();
+    expect(screen.getByRole("checkbox", { name: "Select Policy Draft" })).toBeChecked();
+  });
+
+  it("requires a resolved owner and submits its membership ID for bulk assignment", async () => {
+    const user = userEvent.setup();
+    const mutate = jest.fn();
+    mockUseBulkRepairHealthItems.mockReturnValue({ mutate, isPending: false });
+    render(<ContentHealthPage />);
+
+    await user.click(screen.getByRole("checkbox", { name: "Select Policy Draft" }));
+    await user.click(screen.getByRole("button", { name: "Bulk repair (1)" }));
+
+    const dialog = screen.getByRole("dialog", { name: "Bulk repair — 1 page" });
+    const confirm = within(dialog).getByRole("button", { name: "Confirm" });
+    expect(confirm).toBeDisabled();
+    expect(within(dialog).queryByRole("button", { name: "Request review" })).not.toBeInTheDocument();
+
+    await user.click(within(dialog).getByTestId("user-combobox"));
+    expect(confirm).toBeEnabled();
+    await user.click(confirm);
+
+    expect(mutate).toHaveBeenCalledWith(
+      {
+        pageIds: [42],
+        kind: "unowned",
+        repairAction: "assign_owner",
+        assigneeMembershipId: 99,
+      },
+      expect.anything(),
+    );
+  });
+});
+
+describe("Content Health bulk assignment request contract", () => {
+  const request = {
+    pageIds: [42],
+    kind: "unowned",
+    repairAction: "assign_owner",
+    assigneeMembershipId: 99,
+  };
+
+  it("accepts only a bounded assignment with a required membership ID", () => {
+    expect(bulkRepairHealthItemsInputSchema.safeParse(request).success).toBe(true);
+    expect(bulkRepairHealthItemsInputSchema.safeParse({ ...request, assigneeMembershipId: undefined }).success).toBe(false);
+    expect(bulkRepairHealthItemsInputSchema.safeParse({ ...request, repairAction: "request_review" }).success).toBe(false);
+    expect(bulkRepairHealthItemsInputSchema.safeParse({ ...request, repairAction: "mark_needs_content" }).success).toBe(false);
+    expect(bulkRepairHealthItemsInputSchema.safeParse({ ...request, pageIds: [] }).success).toBe(false);
+  });
+});
+
+describe("ContentHealthPage — trend labels", () => {
+  it("describes the global open cohorts without implying a signal-specific before-and-after comparison", () => {
+    render(<ContentHealthPage />);
+
+    expect(screen.getByText("Open 30 days ago (all signals)")).toBeInTheDocument();
+    expect(screen.getByText("Open now (all signals)")).toBeInTheDocument();
+    expect(screen.getByText("+2 net change in visible open issues")).toBeInTheDocument();
+    expect(screen.queryByText("Now (Unowned)")).not.toBeInTheDocument();
+  });
+
+  it("shows a decrease when fewer visible issues remain open than 30 days ago", () => {
+    useContentHealthTrend.mockReturnValue({ data: { beforeCount: 8, afterCount: 6 }, isLoading: false });
+    render(<ContentHealthPage />);
+
+    expect(screen.getByText("-2 net change in visible open issues")).toBeInTheDocument();
+  });
+});
+
 describe("ContentHealthPage — first-empty state", () => {
   it("renders the all-clear message when every signal count is zero", () => {
     useContentHealthCounts.mockReturnValue({ ...IDLE, data: ALL_ZERO_COUNTS });
@@ -235,14 +382,43 @@ describe("ContentHealthPage — denied state", () => {
 
 describe("ContentHealthPage — error state", () => {
   it("renders a retry control when the counts query errors so the user is not stuck", () => {
+    const refetchCounts = jest.fn();
+    const refetchSignals = jest.fn();
     useContentHealthCounts.mockReturnValue({
       ...IDLE,
       isError: true,
       error: new Error("network"),
       data: undefined,
+      refetch: refetchCounts,
     });
+    useContentHealthSignals.mockReturnValue({ ...IDLE, data: SIGNAL_PAGE_WITH_ROWS, refetch: refetchSignals });
     render(<ContentHealthPage />);
-    expect(screen.getByRole("button", { name: /try again/i })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /try again/i }));
+    expect(refetchCounts).toHaveBeenCalledTimes(1);
+    expect(refetchSignals).toHaveBeenCalledTimes(1);
+  });
+
+  it("retries failed access before disabled Content Health reads", () => {
+    const refetchAccess = jest.fn();
+    const refetchCounts = jest.fn();
+    const refetchSignals = jest.fn();
+    useAccess.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: true,
+      error: new Error("Access service unavailable"),
+      refetch: refetchAccess,
+    });
+    useContentHealthCounts.mockReturnValue({ ...IDLE, data: undefined, refetch: refetchCounts });
+    useContentHealthSignals.mockReturnValue({ ...IDLE, data: undefined, refetch: refetchSignals });
+
+    render(<ContentHealthPage />);
+
+    expect(screen.getByText("Access service unavailable")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /try again/i }));
+    expect(refetchAccess).toHaveBeenCalledTimes(1);
+    expect(refetchCounts).not.toHaveBeenCalled();
+    expect(refetchSignals).not.toHaveBeenCalled();
   });
 });
 

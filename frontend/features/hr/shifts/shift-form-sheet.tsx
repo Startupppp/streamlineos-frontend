@@ -35,6 +35,33 @@ import { formatTime } from "@/lib/format-utils";
 
 const SHIFT_TYPES = ["FIXED", "ROTATIONAL", "NIGHT", "FLEXIBLE"] as const;
 
+const END_BEFORE_START_MESSAGE =
+  "End time must be after start time, or turn on Night Shift";
+
+function toMinutes(value: string | undefined): number | null {
+  const match = /^(\d{1,2}):(\d{2})/.exec(value ?? "");
+  return match ? Number(match[1]) * 60 + Number(match[2]) : null;
+}
+
+function describeShift(values: {
+  startTime: string;
+  endTime: string;
+  isNightShift: boolean;
+  breakMinutes: number;
+}): string {
+  const start = toMinutes(values.startTime);
+  const end = toMinutes(values.endTime);
+  if (start === null || end === null) return "";
+  const span = end > start ? end - start : end + 1440 - start;
+  const hours = Math.floor(span / 60);
+  const minutes = span % 60;
+  const duration = `${hours}h${minutes ? ` ${minutes}m` : ""}`;
+  const crossing = values.isNightShift && end <= start ? ", ends the next day" : "";
+  const breakWarning =
+    values.breakMinutes >= span ? " Warning: the break is as long as the whole shift." : "";
+  return ` Duration ${duration}${crossing}.${breakWarning}`;
+}
+
 const schema = z.object({
   name: z
     .string()
@@ -63,7 +90,15 @@ const schema = z.object({
   breakMinutes: z.number().int().min(0).max(480),
   gracePeriodMinutes: z.number().int().min(0).max(120),
   isNightShift: z.boolean(),
-});
+}).refine(
+  (d) => {
+    if (d.isNightShift) return true;
+    const start = toMinutes(d.startTime);
+    const end = toMinutes(d.endTime);
+    return start === null || end === null || end > start;
+  },
+  { message: END_BEFORE_START_MESSAGE, path: ["endTime"] },
+);
 
 type FormValues = z.infer<typeof schema>;
 
@@ -146,6 +181,16 @@ export function ShiftFormSheet({ open, onOpenChange, shift }: Props) {
     onOpenChange,
   ]);
 
+  function handleTypeChange(value: string) {
+    const next = SHIFT_TYPES.find((t) => t === value);
+    if (!next) return;
+    const options = { shouldDirty: true, shouldTouch: true };
+    form.setValue("type", next, options);
+    if (next !== "NIGHT") return;
+    form.setValue("isNightShift", true, options);
+    if (form.getFieldState("endTime").error) void form.trigger("endTime");
+  }
+
   const isPending = createShift.isPending || updateShift.isPending;
 
   return (
@@ -191,7 +236,7 @@ export function ShiftFormSheet({ open, onOpenChange, shift }: Props) {
                   <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
                     Type
                   </FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  <Select onValueChange={handleTypeChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger className="text-sm">
                         <SelectValue />
@@ -320,8 +365,8 @@ export function ShiftFormSheet({ open, onOpenChange, shift }: Props) {
         title={isEdit ? "Save shift changes?" : "Create this shift?"}
         description={
           isEdit
-            ? `Update "${pendingValues?.name ?? shift?.name ?? "this shift"}"? Existing assignments keep using this template.`
-            : `Create shift template "${pendingValues?.name ?? "this shift"}" (${formatTime(pendingValues?.startTime) || "—"} – ${formatTime(pendingValues?.endTime) || "—"})?`
+            ? `Update "${pendingValues?.name ?? shift?.name ?? "this shift"}"?${pendingValues ? describeShift(pendingValues) : ""} Existing assignments keep using this template.`
+            : `Create shift template "${pendingValues?.name ?? "this shift"}" (${formatTime(pendingValues?.startTime) || "—"} – ${formatTime(pendingValues?.endTime) || "—"}).${pendingValues ? describeShift(pendingValues) : ""} Create it?`
         }
         confirmLabel={isEdit ? "Save Changes" : "Create Shift"}
         isPending={isPending}

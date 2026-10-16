@@ -26,6 +26,7 @@ jest.mock("@/hooks/api/kb/ask", () => ({
     stop: jest.fn(),
     resetAttempt: jest.fn(),
   }),
+  useKbAskPageOwners: () => ({ data: { pages: [] }, isLoading: false, hasNextPage: false, isFetchingNextPage: false, fetchNextPage: jest.fn(), error: null, refetch: jest.fn() }),
   useKbAiAnswerFeedback: () => ({ mutate: jest.fn(), isPending: false }),
   useCreateKbKnowledgeGap: () => ({ mutate: jest.fn(), isPending: false }),
 }));
@@ -35,13 +36,6 @@ jest.mock("@/hooks/api/access", () => ({
   useAccess: () => ({
     data: { permissions: ["kb:ai:generate"] },
     refetch: jest.fn(),
-  }),
-}));
-
-jest.mock("@/hooks/api/organization", () => ({
-  useOrgMembers: () => ({
-    data: { data: [], pagination: { limit: 100, nextCursor: null, hasMore: false } },
-    isLoading: false,
   }),
 }));
 

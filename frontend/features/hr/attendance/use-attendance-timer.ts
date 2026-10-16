@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
-import { format, getDay } from "date-fns";
+import { getDay } from "date-fns";
+import { useOrgTimeZone } from "@/hooks/api/org-display";
+import { formatTimeInOrgTz, todayInOrgTz } from "@/lib/date-utils";
 import { toast } from "sonner";
 import {
   useHrAttendanceStatus,
@@ -21,11 +23,12 @@ export interface PunchFailure {
 export function useAttendanceTimer() {
   const [now, setNow] = useState(new Date());
   const [localCooldown, setLocalCooldown] = useState(0);
+  const orgTz = useOrgTimeZone();
 
   const today = useMemo(() => new Date(), []);
   const todayYear = today.getFullYear();
   const todayMonth = today.getMonth();
-  const todayStr = format(today, "yyyy-MM-dd");
+  const todayStr = todayInOrgTz(orgTz);
   const isSundayToday = getDay(today) === 0;
 
   const {
@@ -198,9 +201,9 @@ export function useAttendanceTimer() {
   const checkInTime = statusData?.todayLog?.checkIn;
   const checkOutTime = statusData?.todayLog?.checkOut;
   const lastPunchLabel = checkOutTime
-    ? `Checked out · ${format(new Date(checkOutTime), "h:mm a")}`
+    ? `Checked out · ${formatTimeInOrgTz(checkOutTime, orgTz)}`
     : checkInTime
-      ? `Checked in · ${format(new Date(checkInTime), "h:mm a")}`
+      ? `Checked in · ${formatTimeInOrgTz(checkInTime, orgTz)}`
       : null;
   const cooldownLabel = `${Math.floor(localCooldown / 60)}:${String(localCooldown % 60).padStart(2, "0")}`;
 
@@ -211,7 +214,7 @@ export function useAttendanceTimer() {
     : isOnBreak
       ? "On break"
       : isCheckedIn && checkInTime
-        ? `Checked in · ${format(new Date(checkInTime), "h:mm a")}`
+        ? `Checked in · ${formatTimeInOrgTz(checkInTime, orgTz)}`
         : isInCooldown
           ? `Cooldown · ${cooldownLabel}`
           : "Not clocked in";

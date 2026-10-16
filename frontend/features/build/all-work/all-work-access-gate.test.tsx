@@ -113,6 +113,7 @@ jest.mock("./use-all-work-keyboard", () => ({
 jest.mock("./all-work-view-switcher", () => ({
   AllWorkViewSwitcher: () => null,
   AllWorkSkeleton: () => <div data-testid="all-work-skeleton" />,
+  AllWorkToolbarSkeleton: () => <div data-testid="all-work-toolbar-skeleton" />,
 }));
 jest.mock("./all-work-views-menu", () => ({
   AllWorkViewsMenu: () => null,
@@ -253,6 +254,8 @@ describe("AllWorkPage — access is three-valued, not a boolean", () => {
     render(<AllWorkPage />);
 
     expect(screen.queryByText(/access restricted/i)).toBeNull();
+    expect(screen.getByTestId("all-work-toolbar-skeleton")).toBeInTheDocument();
+    expect(screen.getByTestId("all-work-skeleton")).toBeInTheDocument();
   });
 });
 

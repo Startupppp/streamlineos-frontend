@@ -25,7 +25,7 @@ function flowRow(fileRow: number, overrides: Partial<BulkOnboardFlowRow> = {}): 
   const email = `p${fileRow}@example.com`;
   return {
     fileRow,
-    preview: { _idx: fileRow, firstName: "P", lastName: String(fileRow), email, designation: "Dev", department: "Engineering", phone: "", joiningDate: "", valid: true, errors: [] },
+    preview: { _idx: fileRow, firstName: "P", lastName: String(fileRow), email, designation: "Dev", department: "Engineering", phone: "", joiningDate: "", valid: true, errors: [], warnings: [] },
     payload: { firstName: "P", lastName: String(fileRow), email, designation: "Dev", department: "Engineering" },
     server: null,
     dependsOnFileRow: null,

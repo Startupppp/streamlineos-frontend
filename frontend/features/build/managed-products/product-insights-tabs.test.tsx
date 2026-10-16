@@ -2,6 +2,7 @@ import "./product-scope-pages.test-harness";
 import { within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ProductInsightsPage } from "./product-insights-page";
+import { useModuleEnabled } from "@/hooks/api/access";
 import {
   mockRouterReplace,
   mockUseSearchParams,
@@ -32,6 +33,7 @@ describe("ProductInsightsPage — section tabs", () => {
   };
 
   beforeEach(() => {
+    (useModuleEnabled as jest.Mock).mockReturnValue(true);
     mockRouterReplace.mockClear();
     useManagedProductInsights.mockReturnValue({
       data: insightsData,
@@ -40,6 +42,15 @@ describe("ProductInsightsPage — section tabs", () => {
       error: null,
       refetch: jest.fn(),
     });
+  });
+
+  it("shows module setup instead of feedback errors when Feedbucket is disabled", () => {
+    (useModuleEnabled as jest.Mock).mockReturnValue(false);
+    mockUseSearchParams.mockReturnValue(new URLSearchParams());
+    render(<ProductInsightsPage managedProductId={7} />);
+    expect(screen.getByRole("heading", { name: "Connect customer feedback" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Open module settings" })).toHaveAttribute("href", "/settings/modules");
+    expect(screen.queryByRole("heading", { name: "Customer response" })).not.toBeInTheDocument();
   });
 
   it("opens on Overview with the summary sections and no second tab row", () => {

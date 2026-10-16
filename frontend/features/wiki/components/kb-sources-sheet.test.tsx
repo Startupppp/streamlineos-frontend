@@ -1,9 +1,11 @@
 import { readFileSync } from "node:fs";
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { backendPath } from "@/test-utils/backend-repo";
 import { KB_ASK_STATUS_SCOPES } from "@/hooks/api/kb/ask";
 import { KB_PAGE_STATUSES } from "@/hooks/api/kb/kb-analytics-schema";
 import { KbSourcesSheet } from "./kb-sources-sheet";
+import type { KbSource } from "@/hooks/api/kb/sources";
 
 const BACKEND_ASK_SCHEMA = backendPath(
   "src/modules/kb/retrieval/dto/kb-ai.schemas.ts",
@@ -39,6 +41,11 @@ const SCOPE_PROPS = {
   onOpenChange: jest.fn(),
   sources: [],
   isLoading: false,
+  sourceError: null,
+  sourceHasMore: false,
+  sourceIsFetchingMore: false,
+  onSourceLoadMore: jest.fn(),
+  onSourceRetry: jest.fn(),
   selectedIds: [],
   onSelectionChange: jest.fn(),
   verifiedOnly: false,
@@ -54,10 +61,16 @@ const SCOPE_PROPS = {
   ownerMembershipId: null,
   onOwnerMembershipIdChange: jest.fn(),
   owners: [
-    { membershipId: 77, name: "Ada Lovelace", email: "ada@example.com" },
+    { membershipId: 77, name: "Ada Lovelace" },
   ],
+  selectedOwner: null,
   onOwnerSearchChange: jest.fn(),
   ownersAreLoading: false,
+  ownersHasMore: false,
+  ownersAreFetchingMore: false,
+  onOwnersLoadMore: jest.fn(),
+  ownersError: null,
+  onOwnersRetry: jest.fn(),
   statusScope: null,
   onStatusScopeChange: jest.fn(),
   onConfirm: jest.fn(),
@@ -68,6 +81,50 @@ const SCOPE_PROPS = {
   selectedPageIds: [],
   onPageSelectionChange: jest.fn(),
 };
+
+const SOURCE: KbSource = {
+  id: 1,
+  kind: "note",
+  title: "Release notes",
+  mimeType: null,
+  fileSize: null,
+  fileUrl: null,
+  status: "ready",
+  chunkCount: 1,
+  errorMessage: null,
+  spaceId: null,
+  createdAt: "2026-10-16T00:00:00.000Z",
+};
+
+describe("KbSourcesSheet source pagination and read recovery", () => {
+  it("loads later source pages from the scope sheet", async () => {
+    const loadMore = jest.fn();
+    render(<KbSourcesSheet {...SCOPE_PROPS} sources={[SOURCE]} sourceHasMore onSourceLoadMore={loadMore} />);
+
+    await userEvent.click(screen.getByRole("button", { name: "Load more sources" }));
+    expect(loadMore).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps loaded sources and offers retry after a later page fails", async () => {
+    const loadMore = jest.fn();
+    render(<KbSourcesSheet {...SCOPE_PROPS} sources={[SOURCE]} sourceError={new Error("offline")} sourceHasMore onSourceLoadMore={loadMore} />);
+
+    expect(screen.getByText("Release notes")).toBeInTheDocument();
+    expect(screen.getByRole("alert")).toHaveTextContent("Could not load the full source list.");
+    await userEvent.click(screen.getByRole("button", { name: "Retry loading sources" }));
+    expect(loadMore).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows a first-read error and retry instead of a false empty state", async () => {
+    const retry = jest.fn();
+    render(<KbSourcesSheet {...SCOPE_PROPS} sourceError={new Error("offline")} onSourceRetry={retry} />);
+
+    expect(screen.queryByText("No sources yet")).not.toBeInTheDocument();
+    expect(screen.getByRole("alert")).toHaveTextContent("Could not load sources.");
+    await userEvent.click(screen.getByRole("button", { name: "Retry sources" }));
+    expect(retry).toHaveBeenCalledTimes(1);
+  });
+});
 
 describe("KbSourcesSheet scope mode — kind filter active with no matching sources shows filter-empty state (FE-183)", () => {
   it("shows 'No results match your filters.' instead of 'No sources yet' when the Files kind filter is active and sources is empty, because 'No sources yet' falsely implies the workspace has no sources when the user may have notes that are simply hidden by the filter", () => {
@@ -114,11 +171,39 @@ describe("KbSourcesSheet scope mode — all six scope dimensions are present and
     ).toBeInTheDocument();
   });
 
+  it("retains a selected owner's label when that owner is outside the current search page", () => {
+    render(<KbSourcesSheet {...SCOPE_PROPS} ownerMembershipId={88} selectedOwner={{ membershipId: 88, name: "Grace Hopper" }} owners={[]} />);
+
+    expect(screen.getByRole("combobox", { name: /restrict answer to pages owned by a member/i })).toHaveTextContent("Grace Hopper");
+  });
+
+  it("loads another owner page from the keyboard accessible picker action", async () => {
+    const loadMore = jest.fn();
+    const user = userEvent.setup({ pointerEventsCheck: 0 });
+    render(<KbSourcesSheet {...SCOPE_PROPS} ownersHasMore onOwnersLoadMore={loadMore} />);
+
+    await user.click(screen.getByRole("combobox", { name: /restrict answer to pages owned by a member/i }));
+    await user.click(screen.getByRole("button", { name: "Load more members" }));
+
+    expect(loadMore).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows an owner read failure and retry inside the scope sheet", async () => {
+    const retry = jest.fn();
+    const user = userEvent.setup({ pointerEventsCheck: 0 });
+    render(<KbSourcesSheet {...SCOPE_PROPS} owners={[]} ownersError={new Error("read failed")} onOwnersRetry={retry} />);
+
+    await user.click(screen.getByRole("combobox", { name: /restrict answer to pages owned by a member/i }));
+    expect(screen.getByRole("alert")).toHaveTextContent("Could not load members.");
+    await user.click(screen.getByRole("button", { name: "Retry members" }));
+    expect(retry).toHaveBeenCalledTimes(1);
+  });
+
   it("renders the space, verified-only and kind controls alongside them, which is the positive control proving this surface renders at all", () => {
     render(<KbSourcesSheet {...SCOPE_PROPS} />);
 
     expect(screen.getByRole("button", { name: "Engineering" })).toBeInTheDocument();
-    expect(screen.getByRole("switch", { name: /verified sources only/i })).toBeInTheDocument();
+    expect(screen.getByRole("switch", { name: /verified pages and articles only/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Files" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Notes" })).toBeInTheDocument();
   });

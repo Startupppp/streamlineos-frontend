@@ -41,10 +41,19 @@ const CATEGORY_NONE = "none";
 
 export interface KbNewArticleDialogProps {
   categories: KbCategory[];
+  hasMoreCategories?: boolean;
+  isLoadingMoreCategories?: boolean;
+  onLoadMoreCategories?: () => void;
   onClose: () => void;
 }
 
-export function KbNewArticleDialog({ categories, onClose }: KbNewArticleDialogProps) {
+export function KbNewArticleDialog({
+  categories,
+  hasMoreCategories,
+  isLoadingMoreCategories,
+  onLoadMoreCategories,
+  onClose,
+}: KbNewArticleDialogProps) {
   const router = useRouter();
   const create = useCreateSupportKbArticle();
 
@@ -120,6 +129,17 @@ export function KbNewArticleDialog({ categories, onClose }: KbNewArticleDialogPr
                         ))}
                       </SelectContent>
                     </Select>
+                    {hasMoreCategories && onLoadMoreCategories && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={onLoadMoreCategories}
+                        disabled={isLoadingMoreCategories}
+                      >
+                        {isLoadingMoreCategories ? "Loading categories…" : "Load more categories"}
+                      </Button>
+                    )}
                     <FormMessage />
                   </FormItem>
                 )}

@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { useCallback, useState } from "react";
+import { useSubmitGuard } from "@/hooks/common/use-submit-guard";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm } from "react-hook-form";
@@ -44,17 +45,16 @@ export function ReleaseFormSheet({ projectId, release, onClose }: ReleaseFormShe
   const queryClient = useQueryClient();
   const create = useCreateRelease(projectId);
   const update = useUpdateRelease(projectId);
-  const isPending = create.isPending || update.isPending;
   const [conflictFields, setConflictFields] = useState<TicketConflictFieldDiff[] | null>(null);
   const handleConflictDismiss = useCallback(() => setConflictFields(null), []);
   const [pendingPublishValues, setPendingPublishValues] = useState<ReleaseFormValues | null>(null);
   const handlePublishCancelled = useCallback(() => setPendingPublishValues(null), []);
-  const handlePublishConfirmed = useCallback(() => {
+  const handlePublishConfirmed = useCallback(async () => {
     if (!release || !pendingPublishValues) return;
     const values = pendingPublishValues;
     setPendingPublishValues(null);
-    update.mutate(
-      {
+    try {
+      await update.mutateAsync({
         releaseId: release.id,
         rowVersion: release.rowVersion,
         name: values.name,
@@ -62,22 +62,22 @@ export function ReleaseFormSheet({ projectId, release, onClose }: ReleaseFormShe
         description: values.description || null,
         status: values.status,
         releaseDate: values.releaseDate || null,
+        readiness: values.readiness ?? null,
+        riskLevel: values.riskLevel ?? null,
         previewConfirmed: true,
-      },
-      {
-        onSuccess: () => { toast.success("Release updated"); onClose(); },
-        onError: (err) => {
-          if (isApiError(err) && getApiErrorCode(err) === "PROJECTS_TICKET_CONFLICT") {
-            void queryClient.invalidateQueries({ queryKey: releaseBaseKey(projectId) });
-            const diffs = buildReleaseConflictDiffs(values, release);
-            if (diffs.length > 0) { setConflictFields(diffs); return; }
-            toast.warning("This release was modified by another user. Your changes were not saved — reopen it to see the latest version.");
-            return;
-          }
-          toast.error(getErrorMessage(err));
-        },
-      },
-    );
+      });
+      toast.success("Release updated");
+      onClose();
+    } catch (err) {
+      if (isApiError(err) && getApiErrorCode(err) === "PROJECTS_TICKET_CONFLICT") {
+        void queryClient.invalidateQueries({ queryKey: releaseBaseKey(projectId) });
+        const diffs = buildReleaseConflictDiffs(values, release);
+        if (diffs.length > 0) { setConflictFields(diffs); return; }
+        toast.warning("This release was modified by another user. Your changes were not saved — reopen it to see the latest version.");
+        return;
+      }
+      toast.error(getErrorMessage(err));
+    }
   }, [release, pendingPublishValues, update, onClose, queryClient, projectId]);
 
   const form = useForm<ReleaseFormValues>({
@@ -88,8 +88,8 @@ export function ReleaseFormSheet({ projectId, release, onClose }: ReleaseFormShe
       description: release?.description ?? null,
       status: release?.status ?? "draft",
       releaseDate: release?.releaseDate ?? null,
-      readiness: null,
-      riskLevel: null,
+      readiness: release?.readiness ?? null,
+      riskLevel: release?.riskLevel ?? null,
     },
   });
   useRegisterDirtyState(form.formState.isDirty);
@@ -99,14 +99,14 @@ export function ReleaseFormSheet({ projectId, release, onClose }: ReleaseFormShe
   const descriptionCharCount = (descriptionValue ?? "").replace(/<[^>]*>/g, "").length;
 
   const onSubmit = useCallback(
-    (values: ReleaseFormValues) => {
+    async (values: ReleaseFormValues) => {
       if (isEdit) {
         if (values.status === "released" && release.status !== "released") {
           setPendingPublishValues(values);
           return;
         }
-        update.mutate(
-          {
+        try {
+          await update.mutateAsync({
             releaseId: release.id,
             rowVersion: release.rowVersion,
             name: values.name,
@@ -114,42 +114,50 @@ export function ReleaseFormSheet({ projectId, release, onClose }: ReleaseFormShe
             description: values.description || null,
             status: values.status,
             releaseDate: values.releaseDate || null,
-          },
-          {
-            onSuccess: () => { toast.success("Release updated"); onClose(); },
-            onError: (err) => {
-              if (isApiError(err) && getApiErrorCode(err) === "PROJECTS_TICKET_CONFLICT") {
-                void queryClient.invalidateQueries({ queryKey: releaseBaseKey(projectId) });
-                const diffs = buildReleaseConflictDiffs(values, release);
-                if (diffs.length > 0) {
-                  setConflictFields(diffs);
-                  return;
-                }
-                toast.warning("This release was modified by another user. Your changes were not saved — reopen it to see the latest version.");
-                return;
-              }
-              toast.error(getErrorMessage(err));
-            },
-          },
-        );
+            readiness: values.readiness ?? null,
+            riskLevel: values.riskLevel ?? null,
+          });
+          toast.success("Release updated");
+          onClose();
+        } catch (err) {
+          if (isApiError(err) && getApiErrorCode(err) === "PROJECTS_TICKET_CONFLICT") {
+            void queryClient.invalidateQueries({ queryKey: releaseBaseKey(projectId) });
+            const diffs = buildReleaseConflictDiffs(values, release);
+            if (diffs.length > 0) { setConflictFields(diffs); return; }
+            toast.warning("This release was modified by another user. Your changes were not saved — reopen it to see the latest version.");
+            return;
+          }
+          if (isApiError(err) && err.status === 409) {
+            form.setError("version", { message: "A release with this version already exists in this project" });
+            return;
+          }
+          toast.error(getErrorMessage(err));
+        }
       } else {
-        create.mutate(
-          {
+        try {
+          await create.mutateAsync({
             name: values.name,
             version: values.version,
             description: values.description || null,
             status: values.status,
             releaseDate: values.releaseDate || null,
-          },
-          {
-            onSuccess: () => { toast.success("Release created"); onClose(); },
-            onError: (err) => toast.error(getErrorMessage(err)),
-          },
-        );
+            readiness: values.readiness ?? null,
+            riskLevel: values.riskLevel ?? null,
+          });
+          toast.success("Release created");
+          onClose();
+        } catch (err) {
+          if (isApiError(err) && err.status === 409) {
+            form.setError("version", { message: "A release with this version already exists in this project" });
+            return;
+          }
+          toast.error(getErrorMessage(err));
+        }
       }
     },
-    [isEdit, release, create, update, onClose, projectId, queryClient],
+    [isEdit, release, create, update, onClose, projectId, queryClient, form],
   );
+  const guard = useSubmitGuard(onSubmit);
 
   return (
     <>
@@ -165,7 +173,7 @@ export function ReleaseFormSheet({ projectId, release, onClose }: ReleaseFormShe
         </SheetHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0">
+          <form onSubmit={form.handleSubmit(guard.submit)} className="flex flex-col flex-1 min-h-0">
             <SheetBody className="px-6 py-4 space-y-4">
               <ReleaseFormFields
                 control={form.control}
@@ -178,7 +186,7 @@ export function ReleaseFormSheet({ projectId, release, onClose }: ReleaseFormShe
                 <Button type="button" variant="outline" onClick={onClose}>
                   Cancel
                 </Button>
-                <LoadingButton type="submit" isPending={isPending} loadingText="Saving…">
+                <LoadingButton type="submit" isPending={guard.isSubmitting} loadingText="Saving…">
                   {isEdit ? "Save Changes" : "Create Release"}
                 </LoadingButton>
               </div>

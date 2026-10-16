@@ -76,7 +76,7 @@ function renderTipTapNode(node: TipTapNode, idx: number): React.ReactNode {
       return <Fragment key={idx}>{renderTipTapText(node)}</Fragment>;
     case "paragraph":
       return (
-        <p key={idx} className="mb-4 text-sm leading-relaxed">
+        <p key={idx} className="mb-4 text-base leading-7">
           {children}
         </p>
       );
@@ -110,7 +110,7 @@ function renderTipTapNode(node: TipTapNode, idx: number): React.ReactNode {
       );
     case "listItem":
       return (
-        <li key={idx} className="text-sm">
+        <li key={idx} className="text-base leading-7">
           {children}
         </li>
       );
@@ -167,7 +167,7 @@ function renderListItem(node: Record<string, unknown>, idx: number): React.React
   if (listStyle === LIST_STYLE_TODO) {
     const checked = isListItemChecked(el);
     return (
-      <li key={idx} className="flex items-start gap-2 text-sm" style={style}>
+      <li key={idx} className="flex items-start gap-2 text-base leading-7" style={style}>
         <input
           type="checkbox"
           checked={checked}
@@ -186,7 +186,7 @@ function renderListItem(node: Record<string, unknown>, idx: number): React.React
   const marker = listStyle === LIST_STYLE_DECIMAL ? listOrdinalLabel(el) : "•";
 
   return (
-    <li key={idx} className="flex items-start gap-2 text-sm" style={style}>
+    <li key={idx} className="flex items-start gap-2 text-base leading-7" style={style}>
       <span className="shrink-0 tabular-nums text-foreground">{marker}</span>
       <span className="min-w-0">{children}</span>
     </li>
@@ -253,7 +253,7 @@ function renderSlateNode(node: unknown, idx: number): React.ReactNode {
     case "p":
     case "paragraph":
       return (
-        <p key={idx} className="mb-4 text-sm leading-relaxed" style={style}>
+        <p key={idx} className="mb-4 text-base leading-7" style={style}>
           {children}
         </p>
       );
@@ -292,7 +292,7 @@ function renderSlateNode(node: unknown, idx: number): React.ReactNode {
     case "li":
     case "list-item":
       return (
-        <li key={idx} className="text-sm">
+        <li key={idx} className="text-base leading-7">
           {children}
         </li>
       );

@@ -1,4 +1,6 @@
 import { render, screen, cleanup } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { ApiContractError } from "@/lib/api-envelope";
 import { ImportHistorySection } from "./import-history-section";
 
 type IntersectionCallback = (entries: IntersectionObserverEntry[]) => void;
@@ -33,6 +35,7 @@ function intersect(index = 0) {
 
 jest.mock("@/hooks/api/kb", () => ({
   useKbImportJobs: jest.fn(),
+  useRetryImportJob: jest.fn(),
 }));
 
 jest.mock("@/hooks/api/access", () => ({
@@ -47,9 +50,11 @@ jest.mock("@/lib/knowledge-routes", () => ({
   KNOWLEDGE_BASE: "/wiki",
 }));
 
-const { useKbImportJobs } = jest.requireMock("@/hooks/api/kb") as {
+const { useKbImportJobs, useRetryImportJob } = jest.requireMock("@/hooks/api/kb") as {
   useKbImportJobs: jest.Mock;
+  useRetryImportJob: jest.Mock;
 };
+const mockRetryMutate = jest.fn();
 
 const mockJob = {
   id: 1,
@@ -62,6 +67,7 @@ const mockJob = {
   succeededItems: 3,
   failedItems: 0,
   duplicateItems: 0,
+  canRetry: false,
   errorReport: null,
   createdById: null,
   createdAt: new Date().toISOString(),
@@ -72,6 +78,7 @@ beforeEach(() => {
   observers.length = 0;
   Reflect.set(globalThis, "IntersectionObserver", FakeIntersectionObserver);
   jest.clearAllMocks();
+  useRetryImportJob.mockReturnValue({ mutate: mockRetryMutate, isPending: false, variables: undefined });
 });
 
 afterEach(() => {
@@ -116,5 +123,131 @@ describe("ImportHistorySection sentinel", () => {
     render(<ImportHistorySection />);
 
     expect(screen.getByRole("button", { name: "Load more import jobs" })).toBeInTheDocument();
+  });
+});
+
+describe("ImportHistorySection read error", () => {
+  it("shows the request reference and retries inside the history section", async () => {
+    const refetch = jest.fn();
+    useKbImportJobs.mockReturnValue({
+      data: [],
+      isLoading: false,
+      isError: true,
+      error: new ApiContractError("GET /kb/import-jobs", 200, [], "import-request-123"),
+      refetch,
+      hasNextPage: false,
+      isFetchingNextPage: false,
+      fetchNextPage: jest.fn(),
+    });
+
+    render(<ImportHistorySection />);
+
+    expect(screen.getByRole("alert")).toHaveTextContent("Couldn't load import history");
+    expect(screen.getByText("import-request-123")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Try again" }));
+    expect(refetch).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("ImportHistorySection failed items", () => {
+  it("shows failed page titles from a completed partial import", async () => {
+    useKbImportJobs.mockReturnValue({
+      data: [{
+        ...mockJob,
+        succeededItems: 1,
+        failedItems: 2,
+        errorReport: { failedTitles: ["Policy A", "Policy B"] },
+      }],
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+      hasNextPage: false,
+      isFetchingNextPage: false,
+      fetchNextPage: jest.fn(),
+    });
+
+    render(<ImportHistorySection />);
+
+    await userEvent.click(screen.getByText("2 failed pages"));
+    expect(screen.getByText("Policy A")).toBeInTheDocument();
+    expect(screen.getByText("Policy B")).toBeInTheDocument();
+  });
+
+  it("keeps repeated failed titles distinct by original item index and shows safe reasons", async () => {
+    useKbImportJobs.mockReturnValue({
+      data: [{
+        ...mockJob,
+        succeededItems: 1,
+        failedItems: 2,
+        errorReport: {
+          failedTitles: ["Policy", "Policy"],
+          itemErrors: [
+            { index: 0, title: "Policy", code: "INVALID_PARENT", reason: "Choose an existing parent and import again." },
+            { index: 2, title: "Policy", code: "WRITE_FAILED", reason: "The page could not be saved." },
+          ],
+        },
+      }],
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+      hasNextPage: false,
+      isFetchingNextPage: false,
+      fetchNextPage: jest.fn(),
+    });
+
+    render(<ImportHistorySection />);
+    await userEvent.click(screen.getByText("2 failed pages"));
+
+    expect(screen.getAllByText("Policy")).toHaveLength(2);
+    expect(screen.getByText("Item 1:")).toBeInTheDocument();
+    expect(screen.getByText("Item 3:")).toBeInTheDocument();
+    expect(screen.getByText("Choose an existing parent and import again.")).toBeInTheDocument();
+    expect(screen.getByText("The page could not be saved.")).toBeInTheDocument();
+  });
+
+  it("offers Retry only when the server marks the failed job eligible", async () => {
+    useKbImportJobs.mockReturnValue({
+      data: [
+        { ...mockJob, id: 1, canRetry: true, failedItems: 1, errorReport: { failedTitles: ["Policy A"] } },
+        { ...mockJob, id: 2, canRetry: false, failedItems: 1, errorReport: { failedTitles: ["Policy B"] } },
+      ],
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+      hasNextPage: false,
+      isFetchingNextPage: false,
+      fetchNextPage: jest.fn(),
+    });
+
+    render(<ImportHistorySection />);
+
+    const retryButtons = screen.getAllByRole("button", { name: "Retry failed pages" });
+    expect(retryButtons).toHaveLength(1);
+    await userEvent.click(retryButtons[0]!);
+    expect(mockRetryMutate).toHaveBeenCalledWith(1, expect.any(Object));
+  });
+
+  it("shows manual reconciliation guidance without a retry control", () => {
+    useKbImportJobs.mockReturnValue({
+      data: [{ ...mockJob, status: "failed", canRetry: false, errorReport: {
+        code: "PROGRESS_RECONCILIATION_REQUIRED",
+        reason: "Saved import progress cannot be mapped to individual pages. Contact support before retrying the remaining items.",
+      } }],
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+      hasNextPage: false,
+      isFetchingNextPage: false,
+      fetchNextPage: jest.fn(),
+    });
+
+    render(<ImportHistorySection />);
+
+    expect(screen.getByRole("alert")).toHaveTextContent("Contact support before retrying the remaining items.");
+    expect(screen.queryByRole("button", { name: "Retry failed pages" })).not.toBeInTheDocument();
   });
 });

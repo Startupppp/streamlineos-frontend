@@ -49,7 +49,7 @@ export function PipCard({ pip, onOpenEdit, onUpdateStatus, canManage, isUpdating
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-2 min-w-0">
             <Avatar className="w-7 shrink-0">
-              <AvatarImage src={resolveImageUrl(pip.user?.image ?? null)} />
+              <AvatarImage src={resolveImageUrl(pip.user?.image ?? null)} alt="" />
               <AvatarFallback className="text-micro bg-primary/10 text-primary">
                 {pip.user?.name?.[0] ?? "?"}
               </AvatarFallback>

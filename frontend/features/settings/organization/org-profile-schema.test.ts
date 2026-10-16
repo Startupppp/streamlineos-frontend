@@ -73,4 +73,42 @@ describe("organization profile form", () => {
     expect(INDUSTRIES).toContain("Technology");
     expect(INDUSTRIES).toContain("Other");
   });
+
+  it("INDUSTRIES list contains Agency", () => {
+    expect(INDUSTRIES).toContain("Agency");
+  });
+
+  it("rejects a javascript: URL for website", () => {
+    expect(
+      orgGeneralSchema.safeParse({ ...BASE, website: "javascript:alert(1)" }).success,
+    ).toBe(false);
+  });
+
+  it("rejects a whitespace-only organization name", () => {
+    expect(orgGeneralSchema.safeParse({ ...BASE, name: "   " }).success).toBe(false);
+  });
+
+  it("trims surrounding whitespace from the name", () => {
+    const result = orgGeneralSchema.safeParse({ ...BASE, name: "  Acme Corp  " });
+    expect(result.success).toBe(true);
+    if (result.success) expect(result.data.name).toBe("Acme Corp");
+  });
+
+  it("rejects an invalid support phone number", () => {
+    expect(
+      orgGeneralSchema.safeParse({ ...BASE, supportPhone: "+91 12" }).success,
+    ).toBe(false);
+  });
+
+  it("accepts a valid E.164 support phone number", () => {
+    expect(
+      orgGeneralSchema.safeParse({ ...BASE, supportPhone: "+919876543210" }).success,
+    ).toBe(true);
+  });
+
+  it("accepts an empty support phone (optional)", () => {
+    expect(
+      orgGeneralSchema.safeParse({ ...BASE, supportPhone: "" }).success,
+    ).toBe(true);
+  });
 });

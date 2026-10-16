@@ -85,7 +85,7 @@ describe("InvitationPage — cross-tenant 404 and in-tenant 403", () => {
     jest.mocked(apiClient.get).mockReset();
   });
 
-  it("shows Invitation expired for cross-tenant 404 without raw UUIDs", async () => {
+  it("shows Invitation link unavailable for cross-tenant 404 without raw UUIDs", async () => {
     jest.mocked(apiClient.get).mockRejectedValue(
       new ApiError(
         "Invitation not found 7eca7bad-1234-4abc-9def-0123456789ab",
@@ -95,7 +95,7 @@ describe("InvitationPage — cross-tenant 404 and in-tenant 403", () => {
     );
     const consoleError = jest.spyOn(console, "error").mockImplementation(() => {});
     renderPage();
-    expect(await screen.findByText("Invitation expired")).toBeVisible();
+    expect(await screen.findByText("Invitation link unavailable")).toBeVisible();
     expect(screen.queryByText(/7eca7bad/i)).not.toBeInTheDocument();
     expect(screen.queryByText("route boundary hit")).toBeNull();
     consoleError.mockRestore();

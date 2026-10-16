@@ -32,6 +32,8 @@ import {
   FILTER_TOOLBAR_ROW,
 } from "@/components/ui/content-fill-panel";
 import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { OVERFLOW_EDGE_FADE_CLASS, useHorizontalOverflow } from "@/hooks/common/use-horizontal-overflow";
 import { LoadingState } from "@/components/shared/loading-state";
 import {
@@ -102,6 +104,10 @@ export function KbManagerContent() {
   const categoriesQuery = useSupportKbCategories({ enabled: supportEnabled });
   const categories = useMemo(() => categoriesQuery.data ?? [], [categoriesQuery.data]);
 
+  function handleLoadMoreCategories() {
+    void categoriesQuery.fetchNextPage();
+  }
+
   const articleParams = useMemo(
     () => ({
       status: isStatus(statusParam) ? statusParam : undefined,
@@ -139,6 +145,14 @@ export function KbManagerContent() {
     }),
     [articles],
   );
+  const activeQuery = tab === "categories" ? categoriesQuery : articlesQuery;
+  const pageState = usePageState({
+    permission: "support:kb:view",
+    module: "support",
+    isLoading: tab !== "analytics" && (activeQuery.access.pending || activeQuery.isLoading),
+    isError: tab !== "analytics" && Boolean(activeQuery.error),
+    error: activeQuery.error,
+  });
 
   function setParam(key: string, value: string) {
     const next = new URLSearchParams(searchParams.toString());
@@ -326,7 +340,7 @@ export function KbManagerContent() {
           ? "Create and publish help articles for customers and your team"
           : "Manage help articles, categories, and AI-indexed content for your team"
       }
-      actions={
+      actions={pageState.kind === "ready" ? (
         <>
           <LoadingButton
             variant="outline"
@@ -345,8 +359,14 @@ export function KbManagerContent() {
             New Article
           </AnimatedIconButton>
         </>
-      }
+      ) : null}
     >
+      <PageState
+        resolution={pageState}
+        loading={<LoadingState variant="list" />}
+        onRetry={tab === "categories" ? handleCategoriesRetry : handleArticlesRetry}
+        className="flex-1"
+      >
       <div className="flex min-h-0 flex-1 flex-col gap-4">
       <StatCardGrid cols={3}>
         <StatCard label="Total articles" value={stats.total} icon={FileText} />
@@ -370,6 +390,25 @@ export function KbManagerContent() {
         </TabsList>
 
         {filters}
+
+        {tab !== "analytics" && categoriesQuery.access.allowed && categoriesQuery.hasNextPage && (
+          <div className="space-y-2">
+            {categoriesQuery.isFetchNextPageError && (
+              <p role="alert" className="text-sm text-destructive">
+                Could not load more categories. {getErrorMessage(categoriesQuery.error)}
+              </p>
+            )}
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleLoadMoreCategories}
+              disabled={categoriesQuery.isFetchingNextPage}
+            >
+              {categoriesQuery.isFetchingNextPage ? "Loading categories…" : categoriesQuery.isFetchNextPageError ? "Retry loading categories" : "Load more categories"}
+            </Button>
+          </div>
+        )}
 
         <TabsContent value="articles" className="mt-0">
           {articlesQuery.isLoading ? (
@@ -422,7 +461,7 @@ export function KbManagerContent() {
         <TabsContent value="categories" className="mt-0">
           {categoriesQuery.isLoading ? (
             <LoadingState variant="list" />
-          ) : categoriesQuery.error ? (
+          ) : categoriesQuery.error && categories.length === 0 ? (
             <ErrorState
               description={getErrorMessage(categoriesQuery.error)}
               error={categoriesQuery.error}
@@ -452,6 +491,7 @@ export function KbManagerContent() {
         </TabsContent>
       </Tabs>
       </div>
+      </PageState>
 
       {categoryDialogOpen && (
         <KbCategoryDialog onClose={handleCloseCategoryDialog} />
@@ -460,7 +500,13 @@ export function KbManagerContent() {
         <KbCategoryDialog category={editCategory} onClose={handleCloseEditCategory} />
       )}
       {newArticleOpen && (
-        <KbNewArticleDialog categories={categories} onClose={handleCloseNewArticle} />
+        <KbNewArticleDialog
+          categories={categories}
+          hasMoreCategories={categoriesQuery.hasNextPage}
+          isLoadingMoreCategories={categoriesQuery.isFetchingNextPage}
+          onLoadMoreCategories={handleLoadMoreCategories}
+          onClose={handleCloseNewArticle}
+        />
       )}
 
       <AlertDialog open={!!deleteCategory} onOpenChange={handleDeleteCategoryOpenChange}>

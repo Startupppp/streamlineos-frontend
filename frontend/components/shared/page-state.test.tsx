@@ -9,6 +9,23 @@ jest.mock("./enable-module-button", () => ({
 const loading = <div data-testid="skeleton" />;
 
 describe("PageState", () => {
+  it("offers a clear action for filtered results without showing the create empty state", () => {
+    const onClearFilters = jest.fn();
+    render(
+      <PageState resolution={{ kind: "filtered-empty" }} loading={loading} empty={<div>Create a record</div>} onClearFilters={onClearFilters}>
+        <div>body</div>
+      </PageState>,
+    );
+    expect(screen.queryByText("Create a record")).toBeNull();
+    screen.getByRole("button", { name: /clear filters/i }).click();
+    expect(onClearFilters).toHaveBeenCalledTimes(1);
+  });
+
+  it("accepts custom content for an error while retaining the resolved branch", () => {
+    render(<PageState resolution={{ kind: "error", error: new Error("failure") }} loading={loading} views={{ error: <div>Custom recovery</div> }}><div>body</div></PageState>);
+    expect(screen.getByText("Custom recovery")).toBeInTheDocument();
+    expect(screen.queryByText("body")).toBeNull();
+  });
   it("offers to enable, never to buy, when the organization simply has it switched off", () => {
     render(
       <PageState resolution={{ kind: "module-disabled", moduleKey: "feedbucket" }} loading={loading}>

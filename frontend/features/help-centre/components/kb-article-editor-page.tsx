@@ -16,6 +16,10 @@ export function KbArticleEditorPage({ articleId }: { articleId: number }) {
   const categoriesQuery = useSupportKbCategories();
   const categories = useMemo(() => categoriesQuery.data ?? [], [categoriesQuery.data]);
 
+  function handleLoadMoreCategories() {
+    void categoriesQuery.fetchNextPage();
+  }
+
   function handleRetry() {
     void articleQuery.refetch();
   }
@@ -79,6 +83,9 @@ export function KbArticleEditorPage({ articleId }: { articleId: number }) {
       key={article.id}
       article={article}
       categories={categories}
+      hasMoreCategories={categoriesQuery.hasNextPage}
+      isLoadingMoreCategories={categoriesQuery.isFetchingNextPage}
+      onLoadMoreCategories={handleLoadMoreCategories}
     />
   );
 }

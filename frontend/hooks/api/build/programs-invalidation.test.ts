@@ -2,26 +2,14 @@ import { renderHook, act } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createElement } from "react";
 import type { ReactNode } from "react";
-import { useCreateProgram } from "./programs";
+import { useCreateProgram, useDeleteProgram } from "./programs";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
+import type { ProgramsPage } from "@/types/projects";
 
 jest.mock("@/lib/api-client", () => ({
   apiClient: {
-    post: jest.fn().mockResolvedValue({
-      id: 5,
-      orgId: "org-1",
-      name: "Alpha Program",
-      description: null,
-      portfolioId: null,
-      ownerId: null,
-      status: "active",
-      health: null,
-      createdBy: "user-1",
-      createdAt: "2026-09-19T10:00:00.000Z",
-      updatedAt: "2026-09-19T10:00:00.000Z",
-      deletedAt: null,
-      projectCount: 0,
-    }),
+    post: jest.fn(),
+    delete: jest.fn(),
   },
 }));
 
@@ -37,6 +25,24 @@ jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn().mockReturnValue(true),
 }));
 
+import { apiClient } from "@/lib/api-client";
+
+const CREATED_PROGRAM = {
+  id: 5,
+  orgId: "org-1",
+  name: "Alpha Program",
+  description: null,
+  portfolioId: null,
+  ownerId: null,
+  status: "active",
+  health: null,
+  createdBy: "user-1",
+  createdAt: "2026-09-19T10:00:00.000Z",
+  updatedAt: "2026-09-19T10:00:00.000Z",
+  deletedAt: null,
+  projectCount: 0,
+};
+
 function makeClient(): QueryClient {
   return new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
@@ -49,61 +55,99 @@ function wrap(client: QueryClient) {
   };
 }
 
-describe("useCreateProgram — BUG-055: list is invalidated with refetchType all so the stale cache is discarded even when the observer is temporarily inactive", () => {
+const EXISTING_PAGE: ProgramsPage = {
+  data: [
+    {
+      id: 10,
+      orgId: "org-1",
+      name: "Existing Program",
+      description: null,
+      portfolioId: null,
+      ownerId: null,
+      status: "active",
+      health: null,
+      createdBy: "user-1",
+      createdAt: "2026-09-01T00:00:00.000Z",
+      updatedAt: "2026-09-01T00:00:00.000Z",
+      projectCount: 0,
+    },
+  ],
+  pagination: { limit: 25, hasMore: false, nextCursor: null },
+};
+
+describe("useCreateProgram — B-075: new program appears in the list without reload", () => {
   let client: QueryClient;
-  let invalidateSpy: jest.SpyInstance;
 
   beforeEach(() => {
     jest.clearAllMocks();
+    (apiClient.post as jest.Mock).mockResolvedValue(CREATED_PROGRAM);
     client = makeClient();
-    invalidateSpy = jest.spyOn(client, "invalidateQueries");
   });
 
-  it("calls invalidateQueries with refetchType all after create so a program added while the list was unmounted appears on remount without a manual reload", async () => {
+  it("prepends the new program to every cached programs list so it appears immediately without a refetch", async () => {
+    const listKey = buildWorkQueryKeys.projects.programs.list();
+    client.setQueryData(listKey, EXISTING_PAGE);
+
     const { result } = renderHook(() => useCreateProgram(), { wrapper: wrap(client) });
 
     await act(async () => {
       await result.current.mutateAsync({ name: "Alpha Program" });
     });
 
-    expect(invalidateSpy).toHaveBeenCalledWith(
-      expect.objectContaining({
-        queryKey: buildWorkQueryKeys.projects.programs.list(),
-        refetchType: "all",
-      }),
-    );
+    const cached = client.getQueryData<ProgramsPage>(listKey);
+    expect(cached?.data[0]).toMatchObject({ id: 5, name: "Alpha Program" });
+    expect(cached?.data[1]).toMatchObject({ id: 10, name: "Existing Program" });
   });
 
-  it("invalidates the no-params programs list key so all filtered variants under that prefix are also refetched", async () => {
+  it("patches filtered list variants under the programs prefix so all active list caches update at once", async () => {
+    const filteredKey = buildWorkQueryKeys.projects.programs.list({ limit: "25" });
+    client.setQueryData(filteredKey, EXISTING_PAGE);
+
     const { result } = renderHook(() => useCreateProgram(), { wrapper: wrap(client) });
 
     await act(async () => {
       await result.current.mutateAsync({ name: "Beta Program" });
     });
 
-    const programListKey = JSON.stringify(buildWorkQueryKeys.projects.programs.list());
-    const matchingCalls = invalidateSpy.mock.calls.filter((call) => {
-      const opts = call[0] as { queryKey?: unknown };
-      return JSON.stringify(opts.queryKey) === programListKey;
-    });
-    expect(matchingCalls.length).toBeGreaterThanOrEqual(1);
+    const cached = client.getQueryData<ProgramsPage>(filteredKey);
+    expect(cached?.data[0]).toMatchObject({ id: 5, name: "Alpha Program" });
+  });
+});
+
+describe("useDeleteProgram — B-075: deleted program disappears from the list without reload", () => {
+  let client: QueryClient;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (apiClient.delete as jest.Mock).mockResolvedValue(undefined);
+    client = makeClient();
   });
 
-  it("does not invalidate the programs list with the default refetchType so only inactive observers are covered by the explicit all override", async () => {
-    const { result } = renderHook(() => useCreateProgram(), { wrapper: wrap(client) });
+  it("removes the deleted program from every cached programs list by id", async () => {
+    const listKey = buildWorkQueryKeys.projects.programs.list();
+    client.setQueryData(listKey, EXISTING_PAGE);
+
+    const { result } = renderHook(() => useDeleteProgram(), { wrapper: wrap(client) });
 
     await act(async () => {
-      await result.current.mutateAsync({ name: "Gamma Program" });
+      await result.current.mutateAsync(10);
     });
 
-    const programListKey = JSON.stringify(buildWorkQueryKeys.projects.programs.list());
-    const defaultRefetchCalls = invalidateSpy.mock.calls.filter((call) => {
-      const opts = call[0] as { queryKey?: unknown; refetchType?: string };
-      return (
-        JSON.stringify(opts.queryKey) === programListKey &&
-        (opts.refetchType === undefined || opts.refetchType === "active")
-      );
+    const cached = client.getQueryData<ProgramsPage>(listKey);
+    expect(cached?.data).toHaveLength(0);
+  });
+
+  it("removes the deleted program from filtered list variants as well", async () => {
+    const filteredKey = buildWorkQueryKeys.projects.programs.list({ limit: "25" });
+    client.setQueryData(filteredKey, EXISTING_PAGE);
+
+    const { result } = renderHook(() => useDeleteProgram(), { wrapper: wrap(client) });
+
+    await act(async () => {
+      await result.current.mutateAsync(10);
     });
-    expect(defaultRefetchCalls).toHaveLength(0);
+
+    const cached = client.getQueryData<ProgramsPage>(filteredKey);
+    expect(cached?.data.find((p) => p.id === 10)).toBeUndefined();
   });
 });

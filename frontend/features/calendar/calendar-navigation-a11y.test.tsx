@@ -26,7 +26,6 @@ const toolbarHandlers = {
   onViewChange: jest.fn(),
   onViewModeChange: jest.fn(),
   onOpenCreate: jest.fn(),
-  onOpenCreateTicket: jest.fn(),
   onToggleHrEvents: jest.fn(),
   onToggleCrmEvents: jest.fn(),
   onToggleAttendanceEvents: jest.fn(),
@@ -40,6 +39,9 @@ function renderToolbar(view: "day" | "week" | "month") {
       hrEventsVisible={false}
       crmEventsVisible
       attendanceEventsVisible={false}
+      isHrEnabled
+      isCrmEnabled
+      isAttendanceEnabled
       {...toolbarHandlers}
     />,
   );
@@ -88,15 +90,15 @@ describe("CalendarMonthYearPicker announces the selected period", () => {
   });
 
   it("renders a polite live region carrying the current period", () => {
-    const { container } = render(
+    render(
       <CalendarMonthYearPicker
         currentDate={new Date("2026-09-12T00:00:00Z")}
         title="September 2026"
         onDateChange={jest.fn()}
       />,
     );
-    const live = container.querySelector('[aria-live="polite"]');
-    expect(live).not.toBeNull();
-    expect(live?.textContent).toContain("September 2026");
+    const live = screen.getByRole("status");
+    expect(live).toHaveAttribute("aria-live", "polite");
+    expect(live.textContent).toContain("September 2026");
   });
 });

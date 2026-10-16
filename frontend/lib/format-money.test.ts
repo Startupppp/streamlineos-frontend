@@ -28,6 +28,12 @@ describe("formatMoneyCompact", () => {
       expect(formatMoneyCompact(amount, INR)).toBe(formatINRCompact(amount));
   });
 
+  it("keeps naming the unit at a thousand crore, instead of compacting the unit itself", () => {
+    expect(formatMoneyCompact(1_00_00_00_00_000, INR)).toBe(formatINRCompact(1_00_00_00_00_000));
+    expect(formatMoneyCompact(1_00_00_00_00_000, INR)).toMatch(/Cr$/);
+    expect(formatMoneyCompact(1_00_00_00_00_000, INR)).not.toMatch(/KCr|LCr|MCr/);
+  });
+
   it("accepts the decimal string the API sends for a deal value", () => {
     expect(formatMoneyCompact("450000.00", INR)).toBe("₹4.5L");
   });

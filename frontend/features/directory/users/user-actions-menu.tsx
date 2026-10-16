@@ -289,7 +289,6 @@ export function UserActionsMenu({ user, onView }: UserActionsMenuProps) {
           {user.isOwner && canManage && (
             <>
               <DropdownMenuSeparator />
-              {/* The start-transfer flow lives in Organization settings → Danger Zone. */}
               {viewerIsOwner ? (
                 <DropdownMenuItem asChild>
                   <Link href="/settings/organization">

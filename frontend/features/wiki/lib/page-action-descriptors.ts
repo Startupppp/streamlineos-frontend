@@ -111,7 +111,7 @@ function permitsDuplicate(capabilities: KbPageActionCapabilities): boolean {
 }
 
 function permitsMove(capabilities: KbPageActionCapabilities): boolean {
-  return capabilities.canUpdate;
+  return capabilities.canUpdate && capabilities.isEditable;
 }
 
 function permitsLock(capabilities: KbPageActionCapabilities): boolean {

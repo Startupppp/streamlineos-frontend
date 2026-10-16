@@ -8,7 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { UserCombobox } from "@/components/ui/user-combobox";
 import { Input } from "@/components/ui/input";
@@ -90,6 +90,7 @@ export function DelegationSettings({ open, onOpenChange }: Props) {
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-base font-semibold">My delegations</DialogTitle>
+          <DialogDescription className="sr-only">View and manage your active approval delegations.</DialogDescription>
         </DialogHeader>
 
         <ScrollArea className="max-h-64 pr-2">

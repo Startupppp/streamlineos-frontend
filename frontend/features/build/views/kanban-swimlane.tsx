@@ -79,6 +79,8 @@ export function getTicketRowKey(ticket: KanbanTicket, rowBy: string): string {
     case "priority": return ticket.priority ?? "None";
     case "status": return ticket.status ?? "None";
     case "cycle": return ticket.cycle?.name ?? "No cycle";
+    case "label": return ticket.labels?.[0]?.label?.name ?? "No label";
+    case "project": return ticket.project?.name ?? "No project";
     default: return "All";
   }
 }

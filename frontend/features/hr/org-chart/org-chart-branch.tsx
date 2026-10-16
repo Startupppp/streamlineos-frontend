@@ -75,7 +75,7 @@ function OrgChartNodeSummary({ employee }: { employee: OrgChartNode }) {
   return (
     <>
       <Avatar className="h-9 w-9 shrink-0">
-        <AvatarImage src={resolveImageUrl(employee.image)} />
+        <AvatarImage src={resolveImageUrl(employee.image)} alt="" />
         <AvatarFallback className="bg-primary/10 text-xs text-primary">
           {employee.name?.charAt(0).toUpperCase() || "?"}
         </AvatarFallback>

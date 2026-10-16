@@ -12,19 +12,20 @@ const signedUrlC = lazyContract(() =>
 );
 
 export function useAttachmentSignedUrl(fileUrl: string) {
-  return useQuery<string | undefined>({
+  return useQuery<string | null>({
     queryKey: platformCoreQueryKeys.attachmentSignedUrl(fileUrl),
     queryFn: async ({ signal }) => {
-      if (!fileUrl) return fileUrl;
+      if (!fileUrl) return null;
       const reference = storageKeyFromUrl(fileUrl);
       if (isLocalUrl(reference)) return reference;
       try {
         const data = await apiClient.get<{ url: string }>("/storage/download", storageReferenceParams(reference), signal, signedUrlC);
         return data.url;
       } catch {
-        return undefined;
+        return null;
       }
     },
     staleTime: 4 * 60 * 1000,
+    throwOnError: false,
   });
 }

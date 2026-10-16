@@ -54,11 +54,15 @@ function ContributionCell({ row }: { row: LinkedProjectRow }) {
     <div className="flex w-28 flex-col gap-1">
       <div className="flex items-center justify-between text-xs text-muted-foreground">
         <span className="font-mono tabular-nums">{pct}%</span>
-        <span className="font-mono tabular-nums text-muted-foreground/70">
+        <span className="font-mono tabular-nums text-muted-foreground">
           {row.contribution.doneTickets}/{totalTickets}
         </span>
       </div>
-      <Progress value={pct} className="h-1.5" aria-label={`${row.name} contribution`} />
+      <Progress
+        value={pct}
+        className="h-1.5"
+        aria-label={`${row.name} contribution`}
+      />
     </div>
   );
 }
@@ -69,7 +73,10 @@ function StatusBadge({ status }: { status: string }) {
   return (
     <Badge
       variant="secondary"
-      className={cn("gap-1 rounded-full border-0 px-1.5 py-0 text-micro font-medium", color)}
+      className={cn(
+        "gap-1 rounded-full border-0 px-1.5 py-0 text-micro font-medium",
+        color,
+      )}
     >
       <StatusDot status={status} />
       {display}
@@ -84,10 +91,16 @@ function HealthBadge({ health }: { health: string | null }) {
   return (
     <Badge
       variant="secondary"
-      className={cn("gap-1 rounded-full border-0 px-1.5 py-0 text-micro font-medium", badgeColor)}
+      className={cn(
+        "gap-1 rounded-full border-0 px-1.5 py-0 text-micro font-medium",
+        badgeColor,
+      )}
     >
       <span
-        className={cn("inline-block h-1.5 w-1.5 shrink-0 rounded-full", dotColor)}
+        className={cn(
+          "inline-block h-1.5 w-1.5 shrink-0 rounded-full",
+          dotColor,
+        )}
         aria-hidden="true"
       />
       {projectHealthLabel(health)}
@@ -105,7 +118,12 @@ function NextMilestoneCell({ row }: { row: LinkedProjectRow }) {
     <div className="flex flex-col gap-0.5">
       <span className="max-w-[140px] truncate text-xs font-medium">{name}</span>
       {tone ? (
-        <span className={cn("flex items-center gap-1 text-xs", dateToneClasses[tone.tone])}>
+        <span
+          className={cn(
+            "flex items-center gap-1 text-xs",
+            dateToneClasses[tone.tone],
+          )}
+        >
           <Calendar className="h-3 w-3 shrink-0" aria-hidden="true" />
           {tone.label}
         </span>
@@ -115,7 +133,8 @@ function NextMilestoneCell({ row }: { row: LinkedProjectRow }) {
 }
 
 function NextReleaseCell({ row }: { row: LinkedProjectRow }) {
-  if (!row.nextRelease) return <span className="text-xs text-muted-foreground">—</span>;
+  if (!row.nextRelease)
+    return <span className="text-xs text-muted-foreground">—</span>;
   const { name, version, releaseDate } = row.nextRelease;
   return (
     <div className="flex flex-col gap-0.5">
@@ -129,13 +148,18 @@ function NextReleaseCell({ row }: { row: LinkedProjectRow }) {
 }
 
 function LinkedGoalsCell({ row }: { row: LinkedProjectRow }) {
-  if (!row.linkedGoals.length) return <span className="text-xs text-muted-foreground">—</span>;
+  if (!row.linkedGoals.length)
+    return <span className="text-xs text-muted-foreground">—</span>;
   const first = row.linkedGoals[0];
   return (
     <div className="flex flex-col gap-0.5">
-      <span className="max-w-[160px] truncate text-xs font-medium">{first.title}</span>
+      <span className="max-w-[160px] truncate text-xs font-medium">
+        {first.title}
+      </span>
       {row.linkedGoals.length > 1 ? (
-        <span className="text-xs text-muted-foreground">+{row.linkedGoals.length - 1} more</span>
+        <span className="text-xs text-muted-foreground">
+          +{row.linkedGoals.length - 1} more
+        </span>
       ) : null}
     </div>
   );
@@ -163,13 +187,17 @@ export function ProductProjectMobileCard({
       <div className="flex min-w-0 items-center justify-between gap-2">
         <div className="min-w-0">
           <p className="truncate text-sm font-medium">{row.name}</p>
-          <p className="font-mono tabular-nums text-xs text-muted-foreground">{row.key}</p>
+          <p className="font-mono tabular-nums text-xs text-muted-foreground">
+            {row.key}
+          </p>
         </div>
         <StatusBadge status={row.status} />
       </div>
       <ContributionCell row={row} />
       {row.nextMilestone ? (
-        <p className="text-xs text-muted-foreground truncate">{row.nextMilestone.name}</p>
+        <p className="text-xs text-muted-foreground truncate">
+          {row.nextMilestone.name}
+        </p>
       ) : null}
       {canUnlink ? (
         <Button
@@ -200,8 +228,12 @@ export function buildProductProjectsColumns({
       header: "Project",
       cell: (row) => (
         <div className="flex flex-col gap-0.5">
-          <span className="max-w-[200px] truncate font-medium text-sm">{row.name}</span>
-          <span className="font-mono tabular-nums text-xs text-muted-foreground">{row.key}</span>
+          <span className="max-w-[200px] truncate font-medium text-sm">
+            {row.name}
+          </span>
+          <span className="font-mono tabular-nums text-xs text-muted-foreground">
+            {row.key}
+          </span>
         </div>
       ),
     },
@@ -239,9 +271,14 @@ export function buildProductProjectsColumns({
       key: "dates",
       header: "Dates",
       cell: (row) => {
-        const start = row.startDate ? format(new Date(row.startDate), "MMM d, yyyy") : null;
-        const end = row.endDate ? format(new Date(row.endDate), "MMM d, yyyy") : null;
-        if (!start && !end) return <span className="text-xs text-muted-foreground">—</span>;
+        const start = row.startDate
+          ? format(new Date(row.startDate), "MMM d, yyyy")
+          : null;
+        const end = row.endDate
+          ? format(new Date(row.endDate), "MMM d, yyyy")
+          : null;
+        if (!start && !end)
+          return <span className="text-xs text-muted-foreground">—</span>;
         return (
           <div className="flex flex-col gap-0.5 text-xs text-muted-foreground">
             {start ? <span>From {start}</span> : null}
@@ -257,7 +294,9 @@ export function buildProductProjectsColumns({
         row.linkedRoadmapItemCount > 0 ? (
           <span className="flex items-center gap-1 text-xs text-muted-foreground">
             <Map className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-            <span className="font-mono tabular-nums">{row.linkedRoadmapItemCount}</span>
+            <span className="font-mono tabular-nums">
+              {row.linkedRoadmapItemCount}
+            </span>
           </span>
         ) : (
           <span className="text-xs text-muted-foreground">—</span>
@@ -268,9 +307,14 @@ export function buildProductProjectsColumns({
       header: "Data freshness",
       cell: (row) =>
         row.sourceFreshness ? (
-          <span className="flex items-center gap-1 text-xs text-muted-foreground" title={row.sourceFreshness}>
+          <span
+            className="flex items-center gap-1 text-xs text-muted-foreground"
+            title={row.sourceFreshness}
+          >
             <RefreshCw className="h-3 w-3 shrink-0" aria-hidden="true" />
-            {formatDistanceToNow(new Date(row.sourceFreshness), { addSuffix: true })}
+            {formatDistanceToNow(new Date(row.sourceFreshness), {
+              addSuffix: true,
+            })}
           </span>
         ) : (
           <span className="text-xs text-muted-foreground">—</span>

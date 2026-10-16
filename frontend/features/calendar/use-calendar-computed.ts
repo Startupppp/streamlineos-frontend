@@ -31,39 +31,32 @@ export type CalendarSourceFamily =
 export function calendarSourceFamily(
   event: CalendarListItem,
 ): CalendarSourceFamily {
-  const source = event.source.toLowerCase();
   const sourceKey = event.sourceKey.toLowerCase();
-  const entityType = event.entityType?.toUpperCase() ?? "";
-  if (source === "external" || sourceKey.startsWith("external:"))
-    return "external";
-  if (source === "attendance" || sourceKey === "hr-attendance")
-    return "attendance";
-  if (
-    ["LEAD", "DEAL", "CONTACT"].includes(entityType) ||
-    sourceKey.startsWith("crm")
-  )
-    return "crm";
-  if (
-    source === "hr" ||
-    ["leave", "interview", "holiday"].includes(source) ||
-    sourceKey.startsWith("hr-")
-  )
-    return "hr";
-  if (sourceKey === "build" || entityType === "TICKET") return "build";
-  if (sourceKey === "tasks" || source === "task") return "tasks";
-  if (
-    sourceKey === "calendar" ||
-    sourceKey === "calendar-events" ||
-    source === "calendar"
-  )
-    return "calendar";
+  if (sourceKey === "calendar" || sourceKey === "calendar-events") return "calendar";
+  if (sourceKey === "build") return "build";
+  if (sourceKey === "tasks") return "tasks";
+  if (sourceKey === "hr-attendance") return "attendance";
+  if (sourceKey.startsWith("hr-")) return "hr";
+  if (sourceKey.startsWith("crm")) return "crm";
+  if (sourceKey.startsWith("external:")) return "external";
   return "other";
 }
 
 export function eventOverlapsRange(
-  event: Pick<CalendarListItem, "start" | "end">,
+  event: Pick<CalendarListItem, "start" | "end" | "time">,
   range: { start: Date; end: Date },
 ): boolean {
+  if (
+    !Number.isFinite(range.start.getTime()) ||
+    !Number.isFinite(range.end.getTime()) ||
+    range.start.getTime() >= range.end.getTime()
+  )
+    return false;
+  if (event.time.kind === "date") {
+    const firstDate = format(range.start, "yyyy-MM-dd");
+    const lastDate = format(new Date(range.end.getTime() - 1), "yyyy-MM-dd");
+    return event.time.startDate <= lastDate && event.time.endDate >= firstDate;
+  }
   const eventStart = new Date(event.start).getTime();
   const eventEnd = new Date(event.end).getTime();
   const rangeStart = range.start.getTime();
@@ -71,8 +64,8 @@ export function eventOverlapsRange(
   return (
     Number.isFinite(eventStart) &&
     Number.isFinite(eventEnd) &&
-    eventStart <= rangeEnd &&
-    eventEnd >= rangeStart
+    eventStart < rangeEnd &&
+    eventEnd > rangeStart
   );
 }
 
@@ -108,12 +101,18 @@ export function mergeSelfAttendanceEvents(
   const aggregateAttendanceDates = new Set(
     events
       .filter((event) => calendarSourceFamily(event) === "attendance")
-      .map((event) => format(new Date(event.start), "yyyy-MM-dd")),
+      .map((event) =>
+        event.time.kind === "date"
+          ? event.time.startDate
+          : format(new Date(event.start), "yyyy-MM-dd"),
+      ),
   );
   const additions = selfAttendanceEvents.filter(
     (event) =>
       !aggregateAttendanceDates.has(
-        format(new Date(event.start), "yyyy-MM-dd"),
+        event.time.kind === "date"
+          ? event.time.startDate
+          : format(new Date(event.start), "yyyy-MM-dd"),
       ),
   );
   if (additions.length === 0) return events;
@@ -145,7 +144,11 @@ function normalizeExternalEvents(
           ? {
               kind: "date" as const,
               startDate: event.start.slice(0, 10),
-              endDate: event.end.slice(0, 10),
+              endDate: (new Date(event.end).getTime() >
+              new Date(event.start).getTime()
+                ? new Date(new Date(event.end).getTime() - 1).toISOString()
+                : event.end
+              ).slice(0, 10),
             }
           : {
               kind: "timed" as const,
@@ -180,8 +183,14 @@ export function toBigCalEvent(
   return {
     id: event.id,
     title: event.title,
-    start: new Date(event.start),
-    end: new Date(event.end),
+    start:
+      event.time.kind === "date"
+        ? new Date(`${event.time.startDate}T00:00:00`)
+        : new Date(event.start),
+    end:
+      event.time.kind === "date"
+        ? new Date(`${event.time.endDate}T23:59:59.999`)
+        : new Date(event.end),
     allDay: event.allDay ?? false,
     resource: {
       color:
@@ -261,26 +270,37 @@ export function useCalendarComputed({
     if (view === "week") {
       const start = startOfWeek(currentDate, { weekStartsOn: 1 });
       const end = endOfWeek(currentDate, { weekStartsOn: 1 });
-      const weekNumber = format(currentDate, "I");
-      if (start.getMonth() === end.getMonth()) {
-        return `${format(currentDate, "MMMM yyyy")} Week ${weekNumber}`;
-      }
-      return `${format(start, "MMM")} - ${format(end, "MMM yyyy")} Week ${weekNumber}`;
+      const sameYear = start.getFullYear() === end.getFullYear();
+      if (start.getMonth() === end.getMonth() && sameYear)
+        return `${format(start, "MMM d")}–${format(end, "d, yyyy")}`;
+
+      if (sameYear)
+        return `${format(start, "MMM d")} – ${format(end, "MMM d, yyyy")}`;
+
+      return `${format(start, "MMM d, yyyy")} – ${format(end, "MMM d, yyyy")}`;
     }
     return format(currentDate, "eeee, MMMM d, yyyy");
   }, [currentDate, view]);
 
   const visibleRange = useMemo(() => {
     if (view === "month") {
-      return { start: startOfMonth(currentDate), end: endOfMonth(currentDate) };
+      return {
+        start: startOfMonth(currentDate),
+        end: new Date(endOfMonth(currentDate).getTime() + 1),
+      };
     }
     if (view === "week") {
       return {
         start: startOfWeek(currentDate, { weekStartsOn: 1 }),
-        end: endOfWeek(currentDate, { weekStartsOn: 1 }),
+        end: new Date(
+          endOfWeek(currentDate, { weekStartsOn: 1 }).getTime() + 1,
+        ),
       };
     }
-    return { start: startOfDay(currentDate), end: endOfDay(currentDate) };
+    return {
+      start: startOfDay(currentDate),
+      end: new Date(endOfDay(currentDate).getTime() + 1),
+    };
   }, [currentDate, view]);
 
   const rangeEvents = useMemo(

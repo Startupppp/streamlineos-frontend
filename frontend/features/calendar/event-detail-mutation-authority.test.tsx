@@ -139,6 +139,9 @@ describe("EventDetailSheet — mutation controls follow the backend's creator-on
   it("fails CLOSED while the detail read is still in flight", () => {
     setDetail(null, true);
     render(<EventDetailSheet event={baseEvent} onClose={jest.fn()} />);
+    expect(screen.getByRole("dialog", { name: "Team sync" })).toHaveAttribute("data-slot", "sheet-content");
+    expect(document.querySelector("[data-slot='dialog-content']")).toBeNull();
+    expect(document.querySelector("[data-slot='skeleton']")).toBeNull();
     expect(screen.queryByRole("button", { name: /delete/i })).toBeNull();
     expect(screen.queryByRole("button", { name: /^edit$/i })).toBeNull();
     expect(screen.getByTestId("event-detail-content").dataset["canUpdate"]).toBe("false");

@@ -19,6 +19,7 @@ interface FilterBoardTicketsParams {
   completedIssues: string;
   statuses: ProjectStatus[] | undefined;
   qaMatchIds: Set<number> | null;
+  subIssueIds?: Set<number> | null;
 }
 
 export function filterBoardTickets({
@@ -27,6 +28,7 @@ export function filterBoardTickets({
   completedIssues,
   statuses,
   qaMatchIds,
+  subIssueIds = null,
 }: FilterBoardTicketsParams): KanbanTicket[] {
   let tickets = filterHiddenCompletedTickets(
     allTickets,
@@ -35,6 +37,8 @@ export function filterBoardTickets({
   );
   if (qaMatchIds)
     tickets = tickets.filter((ticket) => qaMatchIds.has(Number(ticket.id)));
+  if (subIssueIds)
+    tickets = tickets.filter((ticket) => !subIssueIds.has(Number(ticket.id)));
 
   if (completedIssues !== "all") {
     if (completedIssues === "none")

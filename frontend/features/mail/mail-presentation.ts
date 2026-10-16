@@ -30,7 +30,7 @@ type MailPresentationAction =
   | { type: "CLOSE_RECENT_DRAWER" };
 
 export const MAIL_COMPOSE_FAB_CLASS =
-  "fixed right-3 bottom-[calc(4rem+0.375rem+env(safe-area-inset-bottom))] z-50 size-12 rounded-full shadow-lg md:hidden";
+  "fixed right-3 bottom-[calc(2.75rem+0.375rem+env(safe-area-inset-bottom))] z-50 size-12 rounded-full shadow-lg md:hidden";
 
 export const MAIL_LIST_BOTTOM_PADDING_CLASS = "max-md:pb-14";
 
@@ -56,9 +56,17 @@ function mailPresentationReducer(
     case "CLOSE_COMPOSE":
       return { ...state, composeOpen: false };
     case "OPEN_ACCOUNTS_SHEET":
-      return { ...state, accountsSheetOpen: true, accountsSheetDismissed: false };
+      return {
+        ...state,
+        accountsSheetOpen: true,
+        accountsSheetDismissed: false,
+      };
     case "CLOSE_ACCOUNTS_SHEET":
-      return { ...state, accountsSheetOpen: false, accountsSheetDismissed: true };
+      return {
+        ...state,
+        accountsSheetOpen: false,
+        accountsSheetDismissed: true,
+      };
     case "OPEN_SUMMARY_SHEET":
       return { ...state, summarySheetOpen: true };
     case "CLOSE_SUMMARY_SHEET":
@@ -95,10 +103,8 @@ export function useMailPresentation(
   startOnDetail: boolean,
   startWithCompose: boolean,
 ) {
-  const [state, dispatch] = useReducer(
-    mailPresentationReducer,
-    null,
-    () => buildInitialState(startOnDetail, startWithCompose),
+  const [state, dispatch] = useReducer(mailPresentationReducer, null, () =>
+    buildInitialState(startOnDetail, startWithCompose),
   );
 
   const listPaneClass = cn(
@@ -114,10 +120,7 @@ export function useMailPresentation(
     () => dispatch({ type: "SELECT_MESSAGE" }),
     [],
   );
-  const backToList = useCallback(
-    () => dispatch({ type: "BACK_TO_LIST" }),
-    [],
-  );
+  const backToList = useCallback(() => dispatch({ type: "BACK_TO_LIST" }), []);
   const openCompose = useCallback(
     (mode: MailComposeMode = DEFAULT_COMPOSE_MODE) =>
       dispatch({ type: "OPEN_COMPOSE", mode }),

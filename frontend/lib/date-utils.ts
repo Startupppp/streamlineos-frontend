@@ -214,6 +214,100 @@ export function formatEventDate(value: string | Date, timezone?: string | null):
   return new Intl.DateTimeFormat("en-IN", { ...EVENT_DATE_PARTS, timeZone: zone }).format(date);
 }
 
+export function formatTimeInOrgTz(
+  value: string | Date | null | undefined,
+  orgTz: string | null,
+): string {
+  if (!value) return "";
+  const d = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(d.getTime())) return "";
+  const tz = resolveTimeZone(orgTz, readerTimeZone());
+  return new Intl.DateTimeFormat("en-IN", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+    timeZone: tz,
+  }).format(d);
+}
+
+export function formatDateTimeInOrgTz(
+  value: string | Date | null | undefined,
+  orgTz: string | null,
+): string {
+  if (!value) return "";
+  const d = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(d.getTime())) return "";
+  const tz = resolveTimeZone(orgTz, readerTimeZone());
+  const datePart = new Intl.DateTimeFormat("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    timeZone: tz,
+  }).format(d);
+  const timePart = new Intl.DateTimeFormat("en-IN", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+    timeZone: tz,
+  }).format(d);
+  return `${datePart}, ${timePart}`;
+}
+
+export function todayInOrgTz(orgTz: string | null): string {
+  const tz = resolveTimeZone(orgTz, readerTimeZone());
+  return new Intl.DateTimeFormat("en-CA", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    timeZone: tz,
+  }).format(new Date());
+}
+
+export function toIsoOnDateInOrgTz(
+  dateStr: string,
+  time: string,
+  orgTz: string | null,
+): string {
+  const [yearStr, monthStr, dayStr] = dateStr.split("-");
+  const [hStr, mStr] = time.split(":");
+  const wallMs = Date.UTC(
+    Number(yearStr),
+    Number(monthStr) - 1,
+    Number(dayStr),
+    Number(hStr),
+    Number(mStr),
+    0,
+  );
+  const tz = resolveTimeZone(orgTz, readerTimeZone());
+  const guess = new Date(wallMs - zoneOffsetMs(new Date(wallMs), tz));
+  return new Date(wallMs - zoneOffsetMs(guess, tz)).toISOString();
+}
+
+export function hoursInOrgTz(instant: Date, orgTz: string | null): number {
+  const tz = resolveTimeZone(orgTz, readerTimeZone());
+  const wall = new Date(instant.getTime() + zoneOffsetMs(instant, tz));
+  return wall.getUTCHours();
+}
+
+export function formatClockInOrgTz(instant: Date, orgTz: string | null): string {
+  if (!orgTz) return "";
+  const tz = resolveTimeZone(orgTz, readerTimeZone());
+  const parts = new Intl.DateTimeFormat("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+    weekday: "short",
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    timeZone: tz,
+  }).formatToParts(instant);
+  const get = (type: Intl.DateTimeFormatPartTypes): string =>
+    parts.find((p) => p.type === type)?.value ?? "";
+  return `${get("hour")}:${get("minute")} ${get("dayPeriod")} - ${get("weekday")} ${get("day")}, ${get("month")} ${get("year")}`.toUpperCase();
+}
+
 /** `YYYY-MM-DDTHH:mm` in the reader's own zone, for a `datetime-local` input default. */
 export function datetimeLocalAfterDays(days: number): string {
   const value = new Date(Date.now() + days * 24 * 60 * 60 * 1000);

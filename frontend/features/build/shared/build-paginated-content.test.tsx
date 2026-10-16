@@ -5,6 +5,12 @@ import { BuildPaginatedContent } from "./build-paginated-content";
 
 const EMBEDDED_PAGINATION_EXCEPTIONS = [
   "features/build/client-portal/grants-pager.tsx",
+  "features/build/managed-products/feedback/link-to-opportunity-dialog.tsx",
+  "features/build/managed-products/feedback/mark-duplicate-dialog.tsx",
+  "features/build/managed-products/feedback/route-to-intake-dialog.tsx",
+  "features/build/managed-products/insights/outcome-reviews-section.tsx",
+  "features/build/managed-products/product-settings-feedback-channels-section.tsx",
+  "features/build/managed-products/product-settings-members-section.tsx",
   "features/build/portfolios/portfolio-linked-programs-section.tsx",
   "features/build/portfolios/portfolio-linked-projects-section.tsx",
   "features/build/programs/program-detail-page.tsx",

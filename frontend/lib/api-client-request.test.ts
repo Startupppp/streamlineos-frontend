@@ -139,4 +139,29 @@ describe("request", () => {
     expect(sessionCalls).toBe(0);
     expect(authorizations).toEqual([null]);
   });
+
+  it("keeps public booking reads and writes independent from session authentication", async () => {
+    let sessionCalls = 0;
+    const authorizations: Array<string | null> = [];
+
+    global.fetch = jest.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      if (String(input).includes("/api/auth/session")) sessionCalls += 1;
+      authorizations.push(new Headers(init?.headers).get("Authorization"));
+      return {
+        ok: true,
+        status: 200,
+        headers: new Headers({ "content-type": "application/json" }),
+        json: async () => ({}),
+      } as Response;
+    }) as typeof fetch;
+
+    const path = "/public/calendar/booking/booking-token-value-long-enough";
+    const read = await request(path, { method: "GET" });
+    const write = await request(`${path}/holds`, { method: "POST" });
+
+    expect(read.ok).toBe(true);
+    expect(write.ok).toBe(true);
+    expect(sessionCalls).toBe(0);
+    expect(authorizations).toEqual([null, null]);
+  });
 });

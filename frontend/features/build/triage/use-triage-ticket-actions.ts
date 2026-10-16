@@ -9,15 +9,22 @@ import { useNavigationLeave } from "@/components/shared/dirty-state-context";
 import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import type { Ticket } from "@/types/projects";
+import type { Ticket, ProjectStatusRecord } from "@/types/projects";
 
 const ACCEPT_STATUS = "IN_PROGRESS";
-const DECLINE_STATUS = "CANCELLED";
+
+function findDeclineStatus(statuses: ProjectStatusRecord[]): string {
+  return (
+    statuses.find((s) => s.type === "cancelled")?.name ??
+    statuses.find((s) => s.type === "completed")?.name ??
+    "CANCELLED"
+  );
+}
 
 interface UseTriageTicketActionsProps {
   projectId: number;
   tickets: Ticket[];
-  project: { key?: string } | null | undefined;
+  project: { key?: string; statuses?: ProjectStatusRecord[] } | null | undefined;
 }
 
 export function useTriageTicketActions({ projectId, tickets, project }: UseTriageTicketActionsProps) {
@@ -27,6 +34,7 @@ export function useTriageTicketActions({ projectId, tickets, project }: UseTriag
   const updateTicket = useUpdateTicket(projectId);
   const [pendingAccept, setPendingAccept] = useState<Set<number>>(new Set());
   const [pendingDecline, setPendingDecline] = useState<Set<number>>(new Set());
+  const declineStatus = findDeclineStatus(project?.statuses ?? []);
 
   const handleAccept = useCallback(
     (ticketId: number) => {
@@ -65,7 +73,7 @@ export function useTriageTicketActions({ projectId, tickets, project }: UseTriag
       if (!target) return;
       setPendingDecline((prev) => new Set(prev).add(ticketId));
       updateTicket.mutate(
-        { ticketId, version: target.version, status: DECLINE_STATUS },
+        { ticketId, version: target.version, status: declineStatus },
         {
           onSuccess: () => {
             setPendingDecline((prev) => {
@@ -87,7 +95,7 @@ export function useTriageTicketActions({ projectId, tickets, project }: UseTriag
         },
       );
     },
-    [updateTicket, queryClient, projectId, tickets],
+    [updateTicket, queryClient, projectId, tickets, declineStatus],
   );
 
   const handleOpen = useCallback(

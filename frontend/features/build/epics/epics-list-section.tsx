@@ -16,7 +16,7 @@ import { EpicCard, type EpicCardProps } from "@/features/build/epics/epic-card";
 interface EpicsListSectionProps {
   epics: Array<EpicCardProps["epic"] & { dependencyCount?: number }>;
   tickets: EpicCardProps["stories"];
-  unlinkedStories: EpicCardProps["unlinkedStories"];
+  unlinkedItems: EpicCardProps["unlinkedItems"];
   projectId: number;
   projectKey?: EpicCardProps["projectKey"];
   projectStatuses?: EpicCardProps["projectStatuses"];
@@ -43,7 +43,7 @@ interface EpicsListSectionProps {
 export function EpicsListSection({
   epics,
   tickets,
-  unlinkedStories,
+  unlinkedItems,
   projectId,
   projectKey,
   projectStatuses,
@@ -137,7 +137,7 @@ export function EpicsListSection({
                 key={epic.id}
                 epic={epic}
                 tickets={tickets}
-                unlinkedStories={unlinkedStories}
+                unlinkedItems={unlinkedItems}
                 projectId={projectId}
                 projectKey={projectKey}
                 projectStatuses={projectStatuses}
@@ -160,7 +160,7 @@ export function EpicsListSection({
 interface EpicRowProps {
   epic: EpicCardProps["epic"] & { dependencyCount?: number };
   tickets: EpicCardProps["stories"];
-  unlinkedStories: EpicCardProps["unlinkedStories"];
+  unlinkedItems: EpicCardProps["unlinkedItems"];
   projectId: number;
   projectKey?: EpicCardProps["projectKey"];
   projectStatuses?: EpicCardProps["projectStatuses"];
@@ -176,7 +176,7 @@ interface EpicRowProps {
 function EpicRow({
   epic,
   tickets,
-  unlinkedStories,
+  unlinkedItems,
   projectId,
   projectKey,
   projectStatuses,
@@ -213,7 +213,7 @@ function EpicRow({
           projectId={projectId}
           projectKey={projectKey}
           projectStatuses={projectStatuses}
-          unlinkedStories={unlinkedStories}
+          unlinkedItems={unlinkedItems}
           onDeleteEpic={onDeleteEpic}
           onLinkStory={onLinkStory}
           onCreateStory={onCreateStory}

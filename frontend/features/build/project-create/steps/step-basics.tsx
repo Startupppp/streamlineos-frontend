@@ -1,6 +1,6 @@
 "use client";
 
-import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AlertTriangle } from "lucide-react";
@@ -59,6 +59,7 @@ export const StepBasics = forwardRef<
     const keyManuallyEditedRef = useRef(
       draft.key.length > 0 && draft.key !== generateProjectKey(draft.name),
     );
+    const [keyRemovedCharsNote, setKeyRemovedCharsNote] = useState<string | null>(null);
     const keyCheckAbortRef = useRef<AbortController | null>(null);
     const checkKeyAvailable = useCheckProjectKeyAvailable();
 
@@ -119,6 +120,9 @@ export const StepBasics = forwardRef<
     ) {
       const capped = name.slice(0, PROJECT_NAME_MAX);
       onChange(capped);
+      if (form.getFieldState("name").error) {
+        void form.trigger("name");
+      }
       if (keyManuallyEditedRef.current) {
         updateDraft({ name: capped });
         return;
@@ -135,11 +139,16 @@ export const StepBasics = forwardRef<
       onChange: (value: string) => void,
     ) {
       keyManuallyEditedRef.current = true;
-      const sanitized = value
-        .toUpperCase()
-        .replace(/[^A-Z0-9]/g, "")
-        .slice(0, PROJECT_KEY_MAX);
+      const upper = value.toUpperCase();
+      const removed = upper.replace(/[A-Z0-9]/g, "");
+      const sanitized = upper.replace(/[^A-Z0-9]/g, "").slice(0, PROJECT_KEY_MAX);
       onChange(sanitized);
+      if (removed.length > 0) {
+        const unique = [...new Set(removed.split(""))].join(" ");
+        setKeyRemovedCharsNote(`Removed characters that keys can't contain: ${unique}`);
+      } else {
+        setKeyRemovedCharsNote(null);
+      }
       if (form.getFieldState("key").error) {
         void form.trigger("key");
       }
@@ -254,6 +263,9 @@ export const StepBasics = forwardRef<
                   />
                 </FormControl>
                 <FormDescription>Letters A–Z and digits only; auto-uppercased.</FormDescription>
+                {keyRemovedCharsNote ? (
+                  <p className="text-xs text-muted-foreground">{keyRemovedCharsNote}</p>
+                ) : null}
                 <FormMessage />
               </FormItem>
             )}

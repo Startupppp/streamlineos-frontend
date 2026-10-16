@@ -15,7 +15,7 @@ export const calendarEventsResponseContract = z.object({
       title: z.string(),
       start: z.string(),
       end: z.string(),
-      allDay: z.boolean().optional(),
+      allDay: z.boolean(),
       color: z.string().nullable().optional(),
       category: z.string(),
       source: z.string().min(1),
@@ -86,7 +86,7 @@ export const calendarHistoryResponseContract =
   calendarEventsResponseContract.extend({
     windowStart: z.string(),
     windowEnd: z.string(),
-    nextCursor: z.string().min(1),
+    nextCursor: z.string().min(1).nullable(),
   });
 
 export const calendarSearchResponseContract =
@@ -286,6 +286,7 @@ export const calendarOccurrenceExceptionContract = z.object({
   occurrenceStart: z.string(),
   isCancelled: z.boolean(),
   modifiedTitle: z.string().nullable(),
+  modifiedDescription: z.string().nullable(),
   modifiedStart: z.string().nullable(),
   modifiedEnd: z.string().nullable(),
   createdAt: z.string(),
@@ -309,7 +310,7 @@ export const calendarSyncStatusContract = z.object({
   status: z.enum(["synced", "pending", "in_flight", "failed", "not_synced"]),
   attemptCount: z.number(),
   lastError: z.string().nullable(),
-  operation: z.enum(["create", "update", "delete"]).nullable(),
+  operation: z.enum(["create", "update", "delete", "restore"]).nullable(),
   queuedAt: z.string().nullable(),
   processedAt: z.string().nullable(),
   retryable: z.boolean(),

@@ -7,6 +7,7 @@ import { RotateCcw } from "lucide-react";
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
@@ -135,6 +136,7 @@ export function WebhookDeliveriesSheet({ open, onOpenChange, subscription }: Pro
           <SheetTitle>
             <TruncatedText text={`Deliveries — ${subscription.name}`} className="min-w-0" />
           </SheetTitle>
+          <SheetDescription className="sr-only">Delivery history and retry options for this webhook subscription.</SheetDescription>
           <TruncatedText
             text={subscription.url}
             className="text-xs text-muted-foreground font-mono min-w-0"

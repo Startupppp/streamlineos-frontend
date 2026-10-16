@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { X } from "lucide-react";
+import { useSession } from "next-auth/react";
 
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -21,13 +23,24 @@ interface RequestActionCellProps {
  * rows — every one of them always 403s ("You cannot approve or reject your own
  * leave request"), since this list is the caller's own — and a "View Details"
  * item with no handler. Approvals live in the Approvals tab.
+ *
+ * BUG-HRMS-017/018: a sole owner's own request is routed back to them, and the
+ * Action Center is where it is decided. Without a pointer this row offered only
+ * "Cancel request", which read as "nobody can approve this".
  */
 export function RequestActionCell({ request, isCancelling = false, onCancel }: RequestActionCellProps) {
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const { data: session } = useSession();
+  const currentUserId = session?.user?.id;
   const isPending = (request.status ?? "PENDING") === "PENDING";
   const { data: route } = useMyApprover("leave", { enabled: isPending });
 
   if (!isPending) return null;
+
+  const isSelfApprover = route?.ownerSelfApproval === true && route.approver?.userId === currentUserId;
+  const approverHint = !isSelfApprover && route
+    ? (route.approver?.name ?? route.queue?.label ?? null)
+    : null;
 
   function handleOpenConfirm() {
     setConfirmOpen(true);
@@ -40,10 +53,13 @@ export function RequestActionCell({ request, isCancelling = false, onCancel }: R
 
   return (
     <>
-      {route?.ownerSelfApproval === true && (
-        <span className="text-xs text-muted-foreground">
-          No other approver is available — add an HR admin or manager
-        </span>
+      {isSelfApprover && (
+        <Button asChild variant="link" size="sm">
+          <Link href="/hr/approvals">You are the approver — decide in Action Center</Link>
+        </Button>
+      )}
+      {approverHint !== null && (
+        <span className="text-xs text-muted-foreground">Awaiting approval from {approverHint}</span>
       )}
       <Button
         type="button"

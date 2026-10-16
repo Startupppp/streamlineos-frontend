@@ -8,7 +8,7 @@ export function CalendarDayHeader({ date }: HeaderProps) {
   const label = format(date, "EEEE, MMMM d", { locale: enIN });
 
   return (
-    <span className="calendar-day-header text-label font-semibold leading-none whitespace-nowrap">
+    <span className="calendar-day-header text-sm font-semibold leading-none whitespace-nowrap">
       {label}
     </span>
   );

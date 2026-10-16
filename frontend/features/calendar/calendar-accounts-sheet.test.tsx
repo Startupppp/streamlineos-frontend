@@ -36,10 +36,12 @@ jest.mock("./use-calendar-account-filters", () => ({
 }));
 
 describe("CalendarAccountsSheet", () => {
-  it("uses a bottom drawer on mobile", () => {
+  it("uses the shared bottom sheet on mobile", () => {
     render(<CalendarAccountsSheet open onClose={jest.fn()} />);
 
-    expect(document.querySelector("[data-slot='drawer-content']")).not.toBeNull();
-    expect(document.querySelector("[data-slot='sheet-content']")).toBeNull();
+    const sheet = document.querySelector("[data-slot='sheet-content']");
+    expect(sheet).not.toBeNull();
+    expect(sheet).toHaveClass("bottom-0");
+    expect(document.querySelector("[data-slot='drawer-content']")).toBeNull();
   });
 });

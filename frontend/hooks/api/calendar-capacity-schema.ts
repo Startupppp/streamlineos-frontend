@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const calendarResourceListContract = z.array(z.object({
+const calendarResourceContract = z.object({
   id: z.number().int().positive(),
   kind: z.enum(["room", "equipment", "resource"]),
   ownership: z.enum(["calendar", "source"]),
@@ -11,7 +11,12 @@ export const calendarResourceListContract = z.array(z.object({
   requiresApproval: z.boolean(),
   status: z.enum(["active", "unavailable", "retired"]),
   version: z.number().int().positive(),
-}));
+});
+
+export const calendarResourceListContract = z.object({
+  items: z.array(calendarResourceContract),
+  nextCursor: z.string().nullable(),
+});
 
 export const calendarCapacityContract = z.object({
   resourceId: z.number().int().positive(),
@@ -29,7 +34,7 @@ export const calendarCapacityContract = z.object({
   })),
 });
 
-export type CalendarResource = z.infer<typeof calendarResourceListContract>[number];
+export type CalendarResourceList = z.infer<typeof calendarResourceListContract>;
 export type CalendarCapacity = z.infer<typeof calendarCapacityContract>;
 
 export const calendarPersonalCapacityContract = z.object({

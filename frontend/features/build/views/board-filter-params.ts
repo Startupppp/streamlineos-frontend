@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useEffectEvent, useMemo, useRef } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { boardCollectionSearchParams } from "@/features/build/ticket-details/build-ticket-detail-url";
 import {
@@ -10,6 +10,12 @@ import {
   parseTicketTypeParam,
 } from "../shared/use-build-list-url-state";
 import type { TicketOrderBy, TicketOrderDir } from "@/hooks/api/build/ticket-queries";
+import { useOrgStorageScope } from "@/lib/org-scoped-storage";
+import {
+  buildIssuesFilterQuery,
+  loadIssuesFilterQuery,
+  saveIssuesFilterQuery,
+} from "./use-issues-query-store";
 
 const VALID_ORDER_BY = new Set<string>(["created", "updated", "priority", "dueDate", "rank"]);
 const VALID_ORDER_DIR = new Set<string>(["asc", "desc"]);
@@ -46,6 +52,7 @@ export function useBoardFilterParams() {
   const router = useRouter();
   const pathname = usePathname();
   const projectId = projectIdFromPath(pathname);
+  const scope = useOrgStorageScope();
   const searchParams = useMemo(
     () => boardCollectionSearchParams(projectId, pathname, rawSearchParams),
     [projectId, pathname, rawSearchParams],
@@ -121,6 +128,35 @@ export function useBoardFilterParams() {
     const query = next.toString();
     router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
   }, [filterPriority, filterType, pathname, rawPriority, rawType, router, searchParams]);
+
+  const issuesPath = `/build/${projectId}/issues`;
+  const isOnIssuesPath = pathname === issuesPath;
+  const currentFilterQuery = buildIssuesFilterQuery(rawSearchParams);
+  const wasOnIssuesRef = useRef(false);
+
+  const restoreIssuesFilters = useEffectEvent((stored: string) => {
+    router.replace(`${issuesPath}?${stored}`, { scroll: false });
+  });
+
+  useEffect(() => {
+    if (!isOnIssuesPath) {
+      wasOnIssuesRef.current = false;
+      return;
+    }
+    if (!wasOnIssuesRef.current) {
+      wasOnIssuesRef.current = true;
+      if (currentFilterQuery) {
+        saveIssuesFilterQuery(projectId, currentFilterQuery, scope);
+        return;
+      }
+      const stored = loadIssuesFilterQuery(projectId, scope);
+      if (stored) {
+        restoreIssuesFilters(stored);
+      }
+      return;
+    }
+    saveIssuesFilterQuery(projectId, currentFilterQuery, scope);
+  }, [currentFilterQuery, isOnIssuesPath, projectId, scope]);
 
   const hasActiveFilters = !!(
     q ||

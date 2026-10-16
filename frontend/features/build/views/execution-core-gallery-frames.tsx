@@ -242,7 +242,7 @@ export function EpicCase() {
           stories={[STUB_FULL_TICKET]}
           projectId={1}
           projectKey="PROJ"
-          unlinkedStories={[]}
+          unlinkedItems={[]}
           onDeleteEpic={NOOP}
           onLinkStory={NOOP}
           onCreateStory={NOOP}

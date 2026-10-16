@@ -24,7 +24,11 @@ import { CURRENCIES, PAY_FREQUENCIES } from "@/features/payroll/setup/lib/consta
 import type { PolicyRow } from "@/types/payroll/setup";
 
 const schema = z.object({
-  legalEntityName: z.string().optional(),
+  legalEntityName: z
+    .string()
+    .trim()
+    .max(200, "Legal entity name must be at most 200 characters")
+    .optional(),
   currency: z.string().min(1),
   payFrequency: z.enum(["MONTHLY", "SEMI_MONTHLY", "BI_WEEKLY", "WEEKLY"]),
   payDay: z.string().min(1),
@@ -76,7 +80,7 @@ export function PolicyProfileSection({ policy }: PolicyProfileSectionProps) {
       {
         policyId: policy.id,
         data: {
-          legalEntityName: data.legalEntityName || undefined,
+          legalEntityName: data.legalEntityName?.trim() || null,
           currency: data.currency,
           payFrequency: data.payFrequency,
           payDay: parseInt(data.payDay, 10),
@@ -136,7 +140,7 @@ export function PolicyProfileSection({ policy }: PolicyProfileSectionProps) {
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1">
             <Label className="text-xs">Legal Entity Name</Label>
-            <Input {...register("legalEntityName")} className="text-sm" />
+            <Input {...register("legalEntityName")} className="text-sm" maxLength={200} />
             {errors.legalEntityName && (
               <p className="text-xs text-destructive">{errors.legalEntityName.message}</p>
             )}

@@ -1,4 +1,6 @@
 import { render, screen, cleanup } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { ApiContractError } from "@/lib/api-envelope";
 import { ExportJobsCard } from "./export-jobs-card";
 
 type IntersectionCallback = (entries: IntersectionObserverEntry[]) => void;
@@ -181,5 +183,28 @@ describe("ExportJobsCard sentinel", () => {
     render(<ExportJobsCard />);
 
     expect(screen.getByRole("button", { name: "Load more export jobs" })).toBeInTheDocument();
+  });
+});
+
+describe("ExportJobsCard read error", () => {
+  it("shows the request reference and retries without hiding the card", async () => {
+    const refetch = jest.fn();
+    useKbExportJobs.mockReturnValue({
+      data: [],
+      isLoading: false,
+      isError: true,
+      error: new ApiContractError("GET /kb/export-jobs", 200, [], "export-request-123"),
+      refetch,
+      hasNextPage: false,
+      isFetchingNextPage: false,
+      fetchNextPage: jest.fn(),
+    });
+
+    render(<ExportJobsCard />);
+
+    expect(screen.getByRole("alert")).toHaveTextContent("Couldn't load export history");
+    expect(screen.getByText("export-request-123")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Try again" }));
+    expect(refetch).toHaveBeenCalledTimes(1);
   });
 });

@@ -5,6 +5,7 @@ import { Sparkles, CalendarDays, AlertCircle, StopCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { AiDraftCard } from "@/components/ai/ai-draft-card";
 import { AiFailureBody } from "@/components/ai/ai-failure-body";
@@ -101,12 +102,12 @@ export function MeetingPrepPanel({ eventId, eventTitle }: MeetingPrepPanelProps)
     setCitations([]);
   }, []);
 
-  const handleToggleCrm = useCallback(() => {
-    setIncludeCrm((prev) => !prev);
+  const handleCrmChecked = useCallback((checked: boolean | "indeterminate") => {
+    setIncludeCrm(checked === true);
   }, []);
 
-  const handleToggleProject = useCallback(() => {
-    setIncludeProject((prev) => !prev);
+  const handleProjectChecked = useCallback((checked: boolean | "indeterminate") => {
+    setIncludeProject(checked === true);
   }, []);
 
   if (!canUse) return <AiPermissionDenied />;
@@ -149,35 +150,35 @@ export function MeetingPrepPanel({ eventId, eventTitle }: MeetingPrepPanelProps)
       )}
 
       {showForm && (
-        <div className="space-y-3">
+        <div className="space-y-3 rounded-lg bg-muted p-3 dark:border dark:border-background">
           <div className="flex items-center gap-2">
-            <CalendarDays className="h-3.5 w-3.5 text-muted-foreground shrink-0" aria-hidden />
-            <span className="text-xs text-muted-foreground truncate min-w-0">{eventTitle}</span>
+            <CalendarDays className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+            <span className="min-w-0 truncate text-sm text-muted-foreground">{eventTitle}</span>
           </div>
 
           <div className="space-y-2">
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-              Include context from
-            </p>
-            <div className="flex flex-col gap-1.5">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
+            <p className="text-sm font-medium">Include context from</p>
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="meeting-prep-crm"
                   checked={includeCrm}
-                  onChange={handleToggleCrm}
-                  className="h-3.5 w-3.5 rounded border-border accent-primary"
+                  onCheckedChange={handleCrmChecked}
                 />
-                <Label className="text-xs cursor-pointer font-normal">CRM (deals, contacts)</Label>
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
+                <Label htmlFor="meeting-prep-crm" className="font-normal">
+                  CRM (deals, contacts)
+                </Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="meeting-prep-project"
                   checked={includeProject}
-                  onChange={handleToggleProject}
-                  className="h-3.5 w-3.5 rounded border-border accent-primary"
+                  onCheckedChange={handleProjectChecked}
                 />
-                <Label className="text-xs cursor-pointer font-normal">Projects & tickets</Label>
-              </label>
+                <Label htmlFor="meeting-prep-project" className="font-normal">
+                  Projects & tickets
+                </Label>
+              </div>
             </div>
           </div>
 
@@ -185,9 +186,9 @@ export function MeetingPrepPanel({ eventId, eventTitle }: MeetingPrepPanelProps)
             type="button"
             size="sm"
             onClick={handleDraftAgenda}
-            className="w-full h-8 text-xs gap-1.5"
+            className="w-full"
           >
-            <Sparkles className="h-3.5 w-3.5" aria-hidden />
+            <Sparkles className="size-4" aria-hidden />
             Draft Agenda
           </Button>
         </div>
@@ -221,9 +222,9 @@ export function MeetingPrepPanel({ eventId, eventTitle }: MeetingPrepPanelProps)
               variant="outline"
               size="sm"
               onClick={stop}
-              className="w-full h-8 text-xs gap-1.5"
+              className="w-full"
             >
-              <StopCircle className="h-3.5 w-3.5" aria-hidden />
+              <StopCircle className="size-4" aria-hidden />
               Stop
             </Button>
           ) : (
@@ -232,9 +233,9 @@ export function MeetingPrepPanel({ eventId, eventTitle }: MeetingPrepPanelProps)
               variant="outline"
               size="sm"
               onClick={handleDraftAgenda}
-              className="w-full h-8 text-xs gap-1.5"
+              className="w-full"
             >
-              <Sparkles className="h-3.5 w-3.5" aria-hidden />
+              <Sparkles className="size-4" aria-hidden />
               Run again
             </Button>
           )}

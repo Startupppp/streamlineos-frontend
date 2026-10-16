@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { WifiOff } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -58,6 +58,8 @@ export function TicketDetailPage({
     },
   );
   const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
+  const [loadingTimedOut, setLoadingTimedOut] = useState(false);
+  const loadingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const parsed = useMemo(() => parseTicketKey(ticketKey), [ticketKey]);
   const { data: projectData } = useProject(projectId);
@@ -121,6 +123,24 @@ export function TicketDetailPage({
     [ticket],
   );
 
+  const stillLoading = byKeyLoading || byKeyPending || isLoading;
+  useEffect(() => {
+    if (!stillLoading || loadingTimedOut) {
+      if (loadingTimerRef.current) {
+        clearTimeout(loadingTimerRef.current);
+        loadingTimerRef.current = null;
+      }
+      return;
+    }
+    loadingTimerRef.current = setTimeout(() => { setLoadingTimedOut(true); }, 10000);
+    return () => {
+      if (loadingTimerRef.current) {
+        clearTimeout(loadingTimerRef.current);
+        loadingTimerRef.current = null;
+      }
+    };
+  }, [stillLoading, loadingTimedOut]);
+
   const handleApplyAiDescription = useCallback(
     (html: string) => { autoSave({ description: html }); toast.success("Description updated"); },
     [autoSave],
@@ -140,20 +160,21 @@ export function TicketDetailPage({
   const pageTitle = localTitle || (versionedTicket?.title ?? "Ticket");
   const panelOpen = isMobile ? mobilePanelOpen : !rightPanelCollapsed;
   const ready = versionedTicket && ticketId != null ? { ticket: versionedTicket, ticketId } : null;
+  const timeoutError = loadingTimedOut && !ready ? new Error("Ticket took too long to load. Please try again.") : null;
 
   return (
     <TicketDetailGuards
       parsed={parsed}
       backHref={backHref}
       displayKey={displayKey}
-      byKeyLoading={byKeyLoading}
+      byKeyLoading={byKeyLoading && !loadingTimedOut}
       canViewAccess={canViewAccess}
       byKeyError={byKeyError ?? null}
-      byKeyPending={byKeyPending}
+      byKeyPending={byKeyPending && !loadingTimedOut}
       byKeyTicketExists={byKeyTicket != null}
       routeKeyMismatch={routeKeyMismatch}
-      isLoading={isLoading}
-      ticketError={ticketError ?? null}
+      isLoading={isLoading && !loadingTimedOut}
+      ticketError={ticketError ?? timeoutError}
       ticketExists={ticket != null}
       versionedTicketExists={versionedTicket != null}
       ticketIdExists={ticketId != null}
@@ -188,6 +209,7 @@ export function TicketDetailPage({
             onExpandRightPanel={handleExpandRightPanel}
             onDelete={handleDelete}
             isDeleting={isDeleting}
+            subtaskCount={subtasks.length}
           />
         }
       >

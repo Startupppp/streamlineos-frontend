@@ -5,6 +5,7 @@ import { formatDistanceToNow } from "date-fns";
 import { MessagesSquare, Send } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { Button } from "@/components/ui/button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Trash2Icon } from "@animateicons/react/lucide";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { LoadingState } from "@/components/shared/loading-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { EmptyTicketIllustration } from "@/components/illustrations";
 import {
   useSupportKbComments,
@@ -120,6 +122,10 @@ export function KbCommentsPanel({ article }: { article: KbArticleDetail }) {
     void commentsQuery.refetch();
   }
 
+  function handleLoadMoreComments() {
+    void commentsQuery.fetchNextPage();
+  }
+
   return (
     <Card>
       <CardHeader className="pb-3">
@@ -149,16 +155,18 @@ export function KbCommentsPanel({ article }: { article: KbArticleDetail }) {
           </div>
         </div>
 
-        {commentsQuery.isLoading ? (
+        {commentsQuery.access.pending || commentsQuery.isLoading ? (
           <LoadingState variant="list" rows={8} />
-        ) : commentsQuery.error ? (
+        ) : commentsQuery.access.denied ? (
+          <NoPermissionState permission={commentsQuery.access.permission} />
+        ) : commentsQuery.error && comments.length === 0 ? (
           <ErrorState
             compact
             title="Couldn't load comments"
             description={getErrorMessage(commentsQuery.error)}
             onRetry={handleCommentsRetry}
           />
-        ) : comments.length === 0 ? (
+        ) : comments.length === 0 && !commentsQuery.hasNextPage ? (
           <EmptyState
             illustration={<EmptyTicketIllustration />}
             title="No comments yet"
@@ -175,6 +183,22 @@ export function KbCommentsPanel({ article }: { article: KbArticleDetail }) {
                 onDelete={handleDelete}
               />
             ))}
+            {commentsQuery.isFetchNextPageError && (
+              <p role="alert" className="text-sm text-destructive">
+                Could not load more comments. {getErrorMessage(commentsQuery.error)}
+              </p>
+            )}
+            {commentsQuery.hasNextPage && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleLoadMoreComments}
+                disabled={commentsQuery.isFetchingNextPage}
+              >
+                {commentsQuery.isFetchingNextPage ? "Loading comments…" : commentsQuery.isFetchNextPageError ? "Retry loading comments" : "Load more comments"}
+              </Button>
+            )}
           </div>
         )}
       </CardContent>

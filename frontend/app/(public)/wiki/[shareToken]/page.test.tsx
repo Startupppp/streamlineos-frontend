@@ -67,6 +67,16 @@ describe("public wiki share page — no raw object reference reaches the viewer"
     expect(getByTestId("public-content")).toBeTruthy();
   });
 
+  it("keeps public branding separate from the article and exposes the update date semantically", async () => {
+    const updatedAt = "2026-10-01T12:00:00.000Z";
+    const { getByRole, container } = await renderRoute("tok-read-1", pageData({ updatedAt }));
+
+    expect(getByRole("banner")).toHaveTextContent("Knowledge Base");
+    expect(getByRole("main")).toContainElement(getByRole("heading", { level: 1 }));
+    expect(container.querySelector("time")).toHaveAttribute("dateTime", updatedAt);
+    expect(container.querySelector("time")).toHaveTextContent("Last updated Oct 1, 2026");
+  });
+
   it("routes the cover image through the share broker instead of emitting its object key", async () => {
     const { container } = await renderRoute(
       "tok-cover-1",
@@ -136,6 +146,30 @@ describe("public wiki share page — no raw object reference reaches the viewer"
 
     expect(capturedContent).toEqual([
       { type: "img", url: publicMediaBrokerUrl("tok-content-2", CONTENT_KEY) },
+    ]);
+  });
+
+  it("does not serialize legacy media source URLs to the client loader", async () => {
+    await renderRoute(
+      "tok-content-3",
+      pageData({
+        content: [
+          { type: "image", attrs: { src: `${BUCKET_ORIGIN}/${CONTENT_KEY}` } },
+          { type: "video", poster: `${BUCKET_ORIGIN}/${CONTENT_KEY}` },
+        ],
+      }),
+    );
+
+    expect(JSON.stringify(capturedContent)).not.toContain(BUCKET_ORIGIN);
+    expect(capturedContent).toEqual([
+      {
+        type: "image",
+        attrs: { src: publicMediaBrokerUrl("tok-content-3", CONTENT_KEY) },
+      },
+      {
+        type: "video",
+        poster: publicMediaBrokerUrl("tok-content-3", CONTENT_KEY),
+      },
     ]);
   });
 });

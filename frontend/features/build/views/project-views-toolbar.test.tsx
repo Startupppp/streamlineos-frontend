@@ -3,6 +3,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 let mockFetchedModules: { id: number; name: string }[] = [];
+let lastFilterBarProps: Record<string, unknown> = {};
 const mockReplace = jest.fn();
 let mockSearchParams = new URLSearchParams();
 
@@ -114,7 +115,10 @@ jest.mock("@/features/build/views/bug-qa-filters", () => ({
 }));
 
 jest.mock("@/features/build/shared/ticket-filter-bar", () => ({
-  TicketFilterBar: ({ leading }: { leading?: React.ReactNode }) => <>{leading}</>,
+  TicketFilterBar: (props: { leading?: React.ReactNode }) => {
+    lastFilterBarProps = props as Record<string, unknown>;
+    return <>{props.leading}</>;
+  },
 }));
 
 jest.mock("@/components/ui/animated-icon-button", () => ({
@@ -202,8 +206,24 @@ function buildBaseToolbarProps() {
 
 beforeEach(() => {
   mockFetchedModules = [];
+  lastFilterBarProps = {};
   mockReplace.mockClear();
   mockSearchParams = new URLSearchParams();
+});
+
+describe("B-029 — the issues toolbar stays reachable at 768 px", () => {
+  it("asks for a wrapping action row and holds the single-row layout back to the large breakpoint, so Add filter, Hide done and search are not pushed off a 768 px viewport", () => {
+    render(<ProjectViewsToolbar {...buildBaseToolbarProps()} />);
+
+    expect(lastFilterBarProps.wrapActions).toBe(true);
+    expect(lastFilterBarProps.mobileSearchFirstBreakpoint).toBe("lg");
+  });
+
+  it("does not ask for a wrapping action row on the workload view, which renders its own filter bar", () => {
+    render(<ProjectViewsToolbar {...buildBaseToolbarProps()} view="workload" />);
+
+    expect(lastFilterBarProps.wrapActions).toBeUndefined();
+  });
 });
 
 describe("ProjectViewsToolbar — the module filter is a real control, not a declared one", () => {

@@ -11,27 +11,19 @@ import type { DataTableColumn, DataTableSortState } from "@/components/ui/data-t
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { useCursorPagination } from "@/hooks/common/use-cursor-pagination";
 import { useUrlFilters, parseEnum } from "@/lib/url-state/use-url-filters";
 import { useCan } from "@/hooks/api/access";
 import { TrustBadge } from "@/features/wiki/components/kb-collection-badges";
 import { useKbPageReviews } from "@/hooks/api/kb/page-reviews";
 import type {
   KbPageReview,
-  KbReviewStatus,
-  KbReviewType,
   BulkDecideResultItem,
 } from "@/hooks/api/kb/page-reviews";
 import { pageHref } from "@/lib/knowledge-routes";
 import { cn } from "@/lib/utils";
-import {
-  KbAlertCircleIcon,
-  KbCheckCircleIcon,
-  KbXCircleIcon,
-} from "@/features/wiki/lib/kb-icons";
 import { kbFormatDate } from "@/features/wiki/lib/kb-date-utils";
 import { ReviewsFilters } from "./reviews-filters";
+import { ReviewMobileCard, StatusBadge, TypeBadge } from "./reviews-mobile-card";
 import { ApproveDialog, RejectDialog } from "./reviews-decision-dialogs";
 import { BulkDecideDialog } from "./reviews-bulk-decide-dialog";
 import {
@@ -66,84 +58,6 @@ function ReviewsSkeleton() {
   );
 }
 
-function StatusBadge({
-  status,
-  isOverdue,
-}: {
-  status: KbReviewStatus;
-  isOverdue: boolean;
-}) {
-  if (isOverdue) {
-    return (
-      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-dense font-medium bg-status-danger-surface text-status-danger-ink border border-status-danger-rule">
-        <KbAlertCircleIcon className="h-3 w-3" />
-        Overdue
-      </span>
-    );
-  }
-  if (status === "pending") {
-    return (
-      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-dense font-medium bg-status-warning-surface text-status-warning-ink border border-status-warning-rule">
-        <KbAlertCircleIcon className="h-3 w-3" />
-        Pending
-      </span>
-    );
-  }
-  if (status === "approved") {
-    return (
-      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-dense font-medium bg-status-success-surface text-status-success-ink border border-status-success-rule">
-        <KbCheckCircleIcon className="h-3 w-3" />
-        Approved
-      </span>
-    );
-  }
-  return (
-    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-dense font-medium bg-status-danger-surface text-status-danger-ink border border-status-danger-rule">
-      <KbXCircleIcon className="h-3 w-3" />
-      Rejected
-    </span>
-  );
-}
-
-function TypeBadge({ type }: { type: KbReviewType }) {
-  if (type === "approval") {
-    return (
-      <Badge className="bg-primary/10 text-foreground border-primary/20 text-dense" variant="outline">
-        Approval
-      </Badge>
-    );
-  }
-  return (
-    <Badge className="bg-status-info-surface text-status-info-ink border-status-info-rule text-dense" variant="outline">
-      Freshness
-    </Badge>
-  );
-}
-
-function ReviewMobileCard(review: KbPageReview) {
-  return (
-    <div className="flex flex-col gap-1.5 px-3 py-2.5">
-      <Link
-        href={pageHref(review.pageId)}
-        className="font-medium text-foreground line-clamp-1 hover:text-accent transition-colors"
-      >
-        {review.pageTitle ?? "Untitled"}
-      </Link>
-      <div className="flex items-center gap-2 flex-wrap">
-        <StatusBadge status={review.status} isOverdue={review.isOverdue} />
-        <TypeBadge type={review.type} />
-        {review.pageTrustState ? (
-          <TrustBadge trustState={review.pageTrustState} />
-        ) : null}
-      </div>
-      <span className="text-sm text-muted-foreground">
-        {review.reviewerName ?? "No reviewer"}
-        {review.dueAt ? ` · Due ${kbFormatDate(review.dueAt)}` : ""}
-      </span>
-    </div>
-  );
-}
-
 export default function ReviewsPage() {
   const searchParams = useSearchParams();
   const { update: updateFilters } = useUrlFilters({ pageParam: "cursor" });
@@ -156,6 +70,15 @@ export default function ReviewsPage() {
   const reviewerFilter = searchParams.get("reviewer") ?? "";
   const dueFromFilter = searchParams.get("dueFrom") ?? "";
   const dueToFilter = searchParams.get("dueTo") ?? "";
+  const cursor = searchParams.get("cursor") || undefined;
+  const cursorTrailValue = searchParams.get("cursorTrail");
+  const cursorTrail = useMemo(() => {
+    if (!cursor || !cursorTrailValue) return [];
+    const entries = cursorTrailValue.split(".");
+    return entries.length <= 100 && entries.every((entry) => entry === "~" || /^[A-Za-z0-9_-]{1,1024}$/.test(entry))
+      ? entries
+      : [];
+  }, [cursor, cursorTrailValue]);
 
   const hasFilters =
     statusFilter !== "all" ||
@@ -167,13 +90,12 @@ export default function ReviewsPage() {
     dueFromFilter !== "" ||
     dueToFilter !== "";
 
-  const cursorState = useCursorPagination();
   const canManage = useCan("kb:reviews:manage");
 
   const parsedSpaceId = Number(spaceFilter);
 
   const params = {
-    cursor: cursorState.cursor,
+    cursor,
     limit: DEFAULT_LIMIT,
     status: statusFilter === "all" ? undefined : statusFilter,
     type: typeFilter === "all" ? undefined : typeFilter,
@@ -200,23 +122,33 @@ export default function ReviewsPage() {
   const [bulkState, setBulkState] = useState<BulkState>({ kind: "idle" });
   const [selected, setSelected] = useState<Set<string | number>>(new Set());
 
+  const renderMobileCard = useCallback(
+    (review: KbPageReview) => (
+      <ReviewMobileCard
+        review={review}
+        canManage={canManage}
+        onApprove={setApproveTarget}
+        onReject={setRejectTarget}
+      />
+    ),
+    [canManage],
+  );
+
   const reviews = useMemo(() => data?.data ?? [], [data]);
   const pagination = data?.pagination;
 
   const handleFilterPatch = useCallback(
     (patch: Record<string, string | null>) => {
-      updateFilters(patch);
-      cursorState.reset();
+      updateFilters({ ...patch, cursorTrail: null });
     },
-    [updateFilters, cursorState],
+    [updateFilters],
   );
 
   const handleSortChange = useCallback(
     (_field: string, direction: "asc" | "desc") => {
-      updateFilters({ sortDir: direction === "asc" ? null : "desc" });
-      cursorState.reset();
+      updateFilters({ sortDir: direction === "asc" ? null : "desc", cursorTrail: null });
     },
-    [updateFilters, cursorState],
+    [updateFilters],
   );
 
   function handleClearFilters() {
@@ -229,8 +161,8 @@ export default function ReviewsPage() {
       reviewer: null,
       dueFrom: null,
       dueTo: null,
+      cursorTrail: null,
     });
-    cursorState.reset();
   }
 
   const handleCloseApprove = useCallback(() => setApproveTarget(null), []);
@@ -272,11 +204,20 @@ export default function ReviewsPage() {
   );
 
   function handleGoNext() {
-    cursorState.goNext(pagination?.nextCursor);
+    if (!pagination?.nextCursor) return;
+    updateFilters({
+      cursor: pagination.nextCursor,
+      cursorTrail: [...cursorTrail, cursor ?? "~"].join("."),
+    });
   }
 
   function handleGoPrevious() {
-    cursorState.goPrevious();
+    if (cursorTrail.length === 0) return;
+    const previousCursor = cursorTrail[cursorTrail.length - 1];
+    updateFilters({
+      cursor: previousCursor === "~" ? null : previousCursor,
+      cursorTrail: cursorTrail.length > 1 ? cursorTrail.slice(0, -1).join(".") : null,
+    });
   }
 
   const sortState: DataTableSortState = {
@@ -392,7 +333,15 @@ export default function ReviewsPage() {
     [canManage],
   );
 
-  const emptyNode = hasFilters ? (
+  const emptyNode = cursorTrail.length > 0 ? (
+    <EmptyState
+      illustrationPreset="default"
+      title="No reviews on this page."
+      description="The reviews on this page may have changed. Go back to continue browsing."
+      action={{ label: "Previous page", onClick: handleGoPrevious }}
+      compact
+    />
+  ) : hasFilters ? (
     <EmptyState
       illustrationPreset="default"
       title="No reviews under these filters."
@@ -474,14 +423,14 @@ export default function ReviewsPage() {
               getRowLabel: (r) => r.pageTitle ?? "Review",
             }}
             sortState={sortState}
-            mobileCard={ReviewMobileCard}
+            mobileCard={renderMobileCard}
             className="flex-1 min-h-0"
             pagination={{
               mode: "cursor",
               pageSize: DEFAULT_LIMIT,
-              pageNumber: cursorState.pageNumber,
+              pageNumber: cursorTrail.length + 1,
               hasMore: pagination?.hasMore ?? false,
-              hasPrevious: cursorState.hasPrevious,
+              hasPrevious: cursorTrail.length > 0,
               onNext: handleGoNext,
               onPrevious: handleGoPrevious,
             }}

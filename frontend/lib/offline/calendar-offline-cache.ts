@@ -5,12 +5,14 @@ export interface OfflineCalendarSnapshot {
   fetchedAt: number;
   windowStart: string;
   windowEnd: string;
+  timeZone: string;
   coverage: "complete" | "partial" | "failed" | "continued";
   policyVersion: number;
   maxAgeDays: number;
   sources: {
     sourceKey: string;
     state: "complete" | "partial" | "failed" | "continued";
+    asOf: string | null;
   }[];
   windows: {
     start: string;
@@ -28,6 +30,12 @@ const DEVICE_IDENTITY_KEY = "streamline-calendar-offline-identity";
 const POLICY_REVOCATION_KEY = "streamline-calendar-offline-policy-revocation";
 let cacheEpoch = 0;
 let crossTabListenerReady = false;
+const clearListeners = new Map<() => void, string | undefined>();
+
+function notifyOfflineCalendarClear(identity?: string): void {
+  for (const [listener, subscribedIdentity] of clearListeners)
+    if (!identity || !subscribedIdentity || subscribedIdentity === identity) listener();
+}
 
 function watchCrossTabIdentity(): void {
   if (crossTabListenerReady || typeof window === "undefined") return;
@@ -140,8 +148,11 @@ export function revokeOfflineCalendarPolicy(
       policyKey(identity),
       JSON.stringify({ version, enabled: false }),
     );
-    localStorage.removeItem(DEVICE_IDENTITY_KEY);
-    sessionStorage.removeItem(SESSION_IDENTITY_KEY);
+    if (localStorage.getItem(DEVICE_IDENTITY_KEY) === identity)
+      localStorage.removeItem(DEVICE_IDENTITY_KEY);
+    if (sessionStorage.getItem(SESSION_IDENTITY_KEY) === identity)
+      sessionStorage.removeItem(SESSION_IDENTITY_KEY);
+    notifyOfflineCalendarClear(identity);
   } catch {}
 }
 
@@ -199,29 +210,45 @@ export async function saveOfflineCalendarSnapshot(
   end: Date,
   result: CalendarEventsResponse,
   policy: { version: number; maxAgeDays: number },
+  timeZone: string,
+  fetchedAt: number,
 ): Promise<void> {
   watchCrossTabIdentity();
   if (
     !identity ||
+    !timeZone ||
     !Number.isFinite(start.getTime()) ||
-    !Number.isFinite(end.getTime())
+    !Number.isFinite(end.getTime()) ||
+    !Number.isFinite(fetchedAt) ||
+    fetchedAt <= 0 ||
+    fetchedAt > Date.now()
   )
     return;
   const writeEpoch = cacheEpoch;
   const busyWindows = result.events.filter((event) => event.availability !== "free");
-  const truncated = busyWindows.length > 2000;
+  const truncated = result.truncated || busyWindows.length > 2000;
   const snapshot: OfflineCalendarSnapshot = {
     identity,
-    fetchedAt: Date.now(),
+    fetchedAt,
     windowStart: start.toISOString(),
     windowEnd: end.toISOString(),
+    timeZone,
     coverage: truncated && result.coverageState === "complete" ? "partial" : result.coverageState,
     policyVersion: policy.version,
     maxAgeDays: policy.maxAgeDays,
-    sources: result.coverage.map((entry) => ({
-      sourceKey: entry.sourceKey,
-      state: truncated && entry.state === "complete" ? "partial" : entry.state,
-    })),
+    sources: result.coverage.map((entry) => {
+      const sourceTimes = result.events
+        .filter((event) => event.sourceKey === entry.sourceKey)
+        .map((event) => event.freshness.asOf)
+        .filter((value): value is string => typeof value === "string" && Number.isFinite(Date.parse(value)));
+      return {
+        sourceKey: entry.sourceKey,
+        state: truncated && entry.state === "complete" ? "partial" : entry.state,
+        asOf: sourceTimes.length
+          ? new Date(Math.min(...sourceTimes.map((value) => Date.parse(value)))).toISOString()
+          : entry.state === "complete" ? new Date(fetchedAt).toISOString() : null,
+      };
+    }),
     windows: busyWindows
       .slice(0, 2000)
       .map((event) => ({
@@ -275,6 +302,8 @@ export async function readOfflineCalendarSnapshot(
     snapshot.maxAgeDays < 1 ||
     snapshot.maxAgeDays > 30 ||
     age > snapshot.maxAgeDays * 86_400_000 ||
+    typeof snapshot.timeZone !== "string" ||
+    !snapshot.timeZone ||
     !Array.isArray(snapshot.windows) ||
     !Array.isArray(snapshot.sources)
   ) {
@@ -286,6 +315,7 @@ export async function readOfflineCalendarSnapshot(
 
 export async function clearOfflineCalendarSnapshot(): Promise<void> {
   cacheEpoch++;
+  notifyOfflineCalendarClear();
   await transact<void>("readwrite", (store, resolve) => {
     const request = store.delete(KEY);
     request.onsuccess = () => resolve();
@@ -297,8 +327,9 @@ export async function clearOfflineCalendarSnapshot(): Promise<void> {
   }
 }
 
-export function subscribeOfflineCalendarClear(onClear: () => void): () => void {
+export function subscribeOfflineCalendarClear(onClear: () => void, identity?: string): () => void {
   watchCrossTabIdentity();
+  clearListeners.set(onClear, identity);
   const channel =
     typeof BroadcastChannel === "undefined"
       ? null
@@ -309,8 +340,10 @@ export function subscribeOfflineCalendarClear(onClear: () => void): () => void {
     };
   const onStorage = (event: StorageEvent) => {
     if (
-      (event.key === DEVICE_IDENTITY_KEY ||
-        event.key?.startsWith(`${POLICY_REVOCATION_KEY}:`)) &&
+      ((!identity && event.key?.startsWith(`${POLICY_REVOCATION_KEY}:`)) ||
+        (identity && event.key === policyKey(identity)) ||
+        (event.key === DEVICE_IDENTITY_KEY &&
+          (!identity || event.oldValue === identity || event.newValue === identity))) &&
       event.oldValue !== event.newValue
     )
       onClear();
@@ -318,6 +351,7 @@ export function subscribeOfflineCalendarClear(onClear: () => void): () => void {
   if (typeof window !== "undefined")
     window.addEventListener("storage", onStorage);
   return () => {
+    clearListeners.delete(onClear);
     channel?.close();
     if (typeof window !== "undefined")
       window.removeEventListener("storage", onStorage);

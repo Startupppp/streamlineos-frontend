@@ -1,8 +1,14 @@
 import { useState } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ManagerRef } from "@/hooks/api/hr/reporting-lines-schema";
+import { managerCandidatesContract } from "@/hooks/api/hr/reporting-lines-schema";
 import { ManagerCandidatePicker } from "./manager-candidate-picker";
+
+function withQuery(ui: React.ReactElement) {
+  return <QueryClientProvider client={new QueryClient()}>{ui}</QueryClientProvider>;
+}
 
 const ASHA: ManagerRef = { userId: "u-asha", name: "Asha Rao", email: "asha@example.com", designation: "Engineering Manager", state: "active" };
 const BEN: ManagerRef = { userId: "u-ben", name: "Ben Ortiz", email: "ben@example.com", designation: null, state: "on-notice" };
@@ -29,15 +35,15 @@ jest.mock("@/hooks/api/build/build-members", () => ({ useBuildMembers: () => ({ 
 jest.mock("@/hooks/api/module-access/members", () => ({ useModuleMemberCandidates: () => ({ data: undefined }) }));
 
 beforeEach(() => {
-  hrCandidates.mockReset().mockReturnValue({ data: { items: [ASHA, BEN, SUBJECT] } });
-  selfCandidates.mockReset().mockReturnValue({ data: { items: [BEN] } });
+  hrCandidates.mockReset().mockReturnValue({ data: { items: [ASHA, BEN, SUBJECT], ineligibleCount: 0 } });
+  selfCandidates.mockReset().mockReturnValue({ data: { items: [BEN], ineligibleCount: 0 } });
 });
 
 describe("ManagerCandidatePicker — accessible manager selection", () => {
   it("is operable by keyboard alone and reports the chosen manager", async () => {
     const user = userEvent.setup();
     const onChange = jest.fn();
-    render(<ManagerCandidatePicker value={null} onChange={onChange} excludeUserId="u-subject" placeholder="Primary reporting manager" />);
+    render(withQuery(<ManagerCandidatePicker value={null} onChange={onChange} excludeUserId="u-subject" placeholder="Primary reporting manager" />));
 
     const trigger = screen.getByRole("combobox", { name: "Primary reporting manager" });
     await user.tab();
@@ -61,7 +67,7 @@ describe("ManagerCandidatePicker — accessible manager selection", () => {
 
   it("searches on the server, debounced, only while open", async () => {
     const user = userEvent.setup();
-    render(<ManagerCandidatePicker value={null} onChange={jest.fn()} excludeUserId="u-subject" />);
+    render(withQuery(<ManagerCandidatePicker value={null} onChange={jest.fn()} excludeUserId="u-subject" />));
 
     expect(hrCandidates).toHaveBeenLastCalledWith("", "u-subject", { enabled: false });
     await user.click(screen.getByRole("combobox"));
@@ -73,14 +79,14 @@ describe("ManagerCandidatePicker — accessible manager selection", () => {
   });
 
   it("keeps naming the selection after the search results no longer contain it", () => {
-    hrCandidates.mockReturnValue({ data: { items: [] } });
-    render(<ManagerCandidatePicker value="u-asha" onChange={jest.fn()} selected={ASHA} />);
+    hrCandidates.mockReturnValue({ data: { items: [], ineligibleCount: 0 } });
+    render(withQuery(<ManagerCandidatePicker value="u-asha" onChange={jest.fn()} selected={ASHA} />));
     expect(screen.getByRole("combobox")).toHaveTextContent("Asha Rao");
   });
 
   it("uses the employee's own candidate list on self-service surfaces", async () => {
     const user = userEvent.setup();
-    render(<ManagerCandidatePicker value={null} onChange={jest.fn()} source="self" />);
+    render(withQuery(<ManagerCandidatePicker value={null} onChange={jest.fn()} source="self" />));
     await user.click(screen.getByRole("combobox"));
     expect(selfCandidates).toHaveBeenLastCalledWith("", { enabled: true });
     expect(hrCandidates).toHaveBeenLastCalledWith("", undefined, { enabled: false });
@@ -89,11 +95,13 @@ describe("ManagerCandidatePicker — accessible manager selection", () => {
 
   it("takes its accessible name from the field label when FormControl gives it an id", () => {
     render(
-      <>
-        <label htmlFor="primary-manager">Primary reporting manager</label>
-        <ManagerCandidatePicker id="primary-manager" value={null} onChange={jest.fn()} placeholder="Search for a manager" aria-describedby="hint" />
-        <p id="hint">Assigned automatically by policy if left blank</p>
-      </>,
+      withQuery(
+        <>
+          <label htmlFor="primary-manager">Primary reporting manager</label>
+          <ManagerCandidatePicker id="primary-manager" value={null} onChange={jest.fn()} placeholder="Search for a manager" aria-describedby="hint" />
+          <p id="hint">Assigned automatically by policy if left blank</p>
+        </>,
+      ),
     );
     const trigger = screen.getByRole("combobox", { name: "Primary reporting manager" });
     expect(trigger).toHaveAccessibleDescription("Assigned automatically by policy if left blank");
@@ -105,10 +113,10 @@ describe("ManagerCandidatePicker — accessible manager selection", () => {
       const [value, setValue] = useState<string | null>(null);
       return <ManagerCandidatePicker value={value} onChange={setValue} placeholder="Primary reporting manager" />;
     }
-    render(<Controlled />);
+    render(withQuery(<Controlled />));
     await user.click(screen.getByRole("combobox"));
     await user.click(await screen.findByRole("option", { name: /Asha Rao/ }));
-    hrCandidates.mockReturnValue({ data: { items: [] } });
+    hrCandidates.mockReturnValue({ data: { items: [], ineligibleCount: 0 } });
     await user.click(screen.getByRole("combobox"));
     await user.keyboard("{Escape}");
     expect(screen.getByRole("combobox")).toHaveTextContent("Asha Rao");
@@ -116,8 +124,35 @@ describe("ManagerCandidatePicker — accessible manager selection", () => {
 
   it("names its search box", async () => {
     const user = userEvent.setup();
-    render(<ManagerCandidatePicker value={null} onChange={jest.fn()} />);
+    render(withQuery(<ManagerCandidatePicker value={null} onChange={jest.fn()} />));
     await user.click(screen.getByRole("combobox"));
     expect(screen.getByRole("combobox", { name: "Search managers" })).toBeInTheDocument();
+  });
+
+  it("shows no ineligible notice when all active members have employment records", () => {
+    hrCandidates.mockReturnValue({ data: { items: [ASHA], ineligibleCount: 0 } });
+    render(withQuery(<ManagerCandidatePicker value={null} onChange={jest.fn()} />));
+    expect(screen.queryByText(/cannot be selected/)).not.toBeInTheDocument();
+  });
+
+  it("shows ineligible notice when active members lack job details (HRMS-007 rule: employment row required)", () => {
+    hrCandidates.mockReturnValue({ data: { items: [], ineligibleCount: 3 } });
+    render(withQuery(<ManagerCandidatePicker value={null} onChange={jest.fn()} />));
+    expect(screen.getByText("3 people cannot be selected — complete their job details first.")).toBeInTheDocument();
+  });
+
+  it("uses singular copy for exactly one ineligible person", () => {
+    hrCandidates.mockReturnValue({ data: { items: [ASHA], ineligibleCount: 1 } });
+    render(withQuery(<ManagerCandidatePicker value={null} onChange={jest.fn()} />));
+    expect(screen.getByText("1 person cannot be selected — complete their job details first.")).toBeInTheDocument();
+  });
+
+  it("still lists candidates when the API has not shipped ineligibleCount yet", () => {
+    const parsed = managerCandidatesContract.parse({ items: [] });
+    expect(parsed.ineligibleCount).toBe(0);
+
+    hrCandidates.mockReturnValue({ data: { items: [ASHA] } });
+    render(withQuery(<ManagerCandidatePicker value={null} onChange={jest.fn()} />));
+    expect(screen.queryByText(/cannot be selected/)).not.toBeInTheDocument();
   });
 });

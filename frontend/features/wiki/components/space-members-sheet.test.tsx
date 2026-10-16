@@ -1,5 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { ApiContractError } from "@/lib/api-envelope";
+import { kbSpaceMemberListContract } from "@/hooks/api/kb/kb-spaces-settings-schema";
 import { SpaceMembersSheet } from "./space-members-sheet";
 
 const mockCan = jest.fn<boolean, [string]>();
@@ -152,6 +154,44 @@ describe("SpaceMembersSheet — denial is not emptiness", () => {
 
     expect(screen.queryByText("No members yet")).not.toBeInTheDocument();
     expect(screen.getByText("Access Restricted")).toBeInTheDocument();
+  });
+});
+
+describe("SpaceMembersSheet — member read failure", () => {
+  it("contains a strict contract error in the sheet with its reference and recovers on retry", async () => {
+    const result = kbSpaceMemberListContract.safeParse({ data: [member()] });
+    expect(result.success).toBe(false);
+    if (result.success) throw new Error("Expected the member list contract to reject an object");
+
+    const contractError = new ApiContractError(
+      "GET /kb/spaces/10/members",
+      200,
+      result.error.issues.map((issue) => ({ path: issue.path.join("."), message: issue.message })),
+      "members-request-123",
+    );
+    let recovered = false;
+    mockKbSpaceMembers.mockImplementation(() => {
+      if (!recovered) throw contractError;
+      return membersQuery();
+    });
+
+    render(
+      <>
+        <div>Spaces route content</div>
+        <SpaceMembersSheet spaceId={10} spaceName="Engineering" open onOpenChange={jest.fn()} />
+      </>,
+    );
+
+    expect(screen.getByText("Spaces route content")).toBeInTheDocument();
+    expect(screen.getByRole("dialog", { name: /members — engineering/i })).toBeInTheDocument();
+    expect(screen.getByText("members-request-123")).toBeInTheDocument();
+    expect(screen.queryByText("No members yet")).not.toBeInTheDocument();
+
+    recovered = true;
+    await userEvent.click(screen.getByRole("button", { name: "Try again" }));
+
+    expect(screen.getByText("Alice Smith")).toBeInTheDocument();
+    expect(screen.getByText("Spaces route content")).toBeInTheDocument();
   });
 });
 

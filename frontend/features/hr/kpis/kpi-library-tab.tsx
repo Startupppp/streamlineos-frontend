@@ -20,6 +20,7 @@ import { Label } from "@/components/ui/label";
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
@@ -173,6 +174,7 @@ export function KpiLibraryTab() {
           <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-[420px]">
             <SheetHeader className="shrink-0 border-b border-border px-6 py-4 text-left gap-1">
               <SheetTitle>Create KPI</SheetTitle>
+            <SheetDescription className="sr-only">Define the name, category, unit, and target for the new KPI.</SheetDescription>
             </SheetHeader>
             <SheetBody className="space-y-4 px-6 py-5">
               <div className="space-y-1.5">

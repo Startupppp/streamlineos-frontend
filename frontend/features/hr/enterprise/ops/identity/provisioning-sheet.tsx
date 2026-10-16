@@ -6,6 +6,7 @@ import { z } from "zod";
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
   SheetBody,
@@ -64,6 +65,7 @@ export function ProvisioningSheet({ open, onOpenChange }: ProvisioningSheetProps
       <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">
         <SheetHeader className="shrink-0 border-b border-border px-6 py-4 text-left">
           <SheetTitle>Add Provisioning Record</SheetTitle>
+          <SheetDescription className="sr-only">Record a system access grant, revocation, or review for an employee.</SheetDescription>
         </SheetHeader>
 
         <Form {...form}>

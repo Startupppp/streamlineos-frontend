@@ -113,7 +113,12 @@ export const calendarWorkflowEffectContract = z.object({
   updatedAt: z.string(),
 });
 
-export const calendarWorkflowEffectsContract = z.array(calendarWorkflowEffectContract);
+export const calendarWorkflowLegacyEffectsContract = z.array(calendarWorkflowEffectContract);
+
+export const calendarWorkflowEffectsContract = z.object({
+  items: z.array(calendarWorkflowEffectContract),
+  nextCursor: z.string().uuid().nullable(),
+});
 export const calendarWorkflowDryRunContract = z.object({
   matchedRuleIds: z.array(z.number().int().positive()),
   effects: z.array(z.object({
@@ -128,6 +133,7 @@ export const calendarWorkflowDryRunContract = z.object({
 export type CalendarWorkflowPolicy = z.infer<typeof calendarWorkflowPolicyContract>;
 export type CalendarWorkflowRule = z.infer<typeof calendarWorkflowRuleContract>;
 export type CalendarWorkflowEffect = z.infer<typeof calendarWorkflowEffectContract>;
+export type CalendarWorkflowEffectPage = z.infer<typeof calendarWorkflowEffectsContract>;
 export type CalendarWorkflowDryRun = z.infer<typeof calendarWorkflowDryRunContract>;
 export type CalendarWorkflowTrigger = (typeof calendarWorkflowTriggers)[number];
 export type CalendarWorkflowChannel = (typeof calendarWorkflowChannels)[number];

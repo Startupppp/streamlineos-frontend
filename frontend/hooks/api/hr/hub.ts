@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import type { HrHubSection, HrHubSnapshot } from "./hub-types";
 
 export function localDateKey(date = new Date()): string {
@@ -40,5 +41,6 @@ export function useHrHubSnapshot() {
     refetchInterval: 60_000,
     refetchOnWindowFocus: "always",
     refetchIntervalInBackground: false,
+    ...INLINE_READ_ERROR,
   });
 }

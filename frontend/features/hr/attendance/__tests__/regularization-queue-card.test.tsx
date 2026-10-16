@@ -56,6 +56,10 @@ jest.mock("next-auth/react", () => ({
   }),
 }));
 
+jest.mock("@/hooks/api/org-display", () => ({
+  useOrgTimeZone: () => "Asia/Kolkata",
+}));
+
 const toastSuccess = jest.fn();
 const toastError = jest.fn();
 jest.mock("sonner", () => ({
@@ -215,5 +219,24 @@ describe("RegularizationQueueCard", () => {
     expect(within(list).getByText("Approved")).toBeInTheDocument();
     expect(within(list).queryByText("Pending")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Approve/ })).not.toBeInTheDocument();
+  });
+
+  it("shows Needs another approver instead of action buttons when the pending row belongs to the logged-in user", () => {
+    queueRows = [{ ...PENDING_ROW, userId: "usr-admin" }];
+    renderCard();
+
+    const list = screen.getByRole("list", { name: "Attendance corrections" });
+    expect(within(list).getByText("Needs another approver")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Approve/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^Reject$/ })).not.toBeInTheDocument();
+  });
+
+  it("shows action buttons when the pending row belongs to a different user", () => {
+    queueRows = [{ ...PENDING_ROW, userId: "usr-member" }];
+    renderCard();
+
+    expect(screen.getByRole("button", { name: /Approve/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^Reject$/ })).toBeInTheDocument();
+    expect(screen.queryByText("Needs another approver")).not.toBeInTheDocument();
   });
 });

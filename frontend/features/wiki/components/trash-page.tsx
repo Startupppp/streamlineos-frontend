@@ -2,7 +2,8 @@
 
 import { DatePicker } from "@/components/ui/date-picker";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import { addDays, format, isValid, parseISO } from "date-fns";
 import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -12,8 +13,10 @@ import { DataTable } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import type { DataTableColumn } from "@/components/ui/data-table.types";
 import { useCursorPagination } from "@/hooks/common/use-cursor-pagination";
+import { useSourceOverride } from "@/hooks/common/use-source-override";
 import { useUrlFilters } from "@/lib/url-state/use-url-filters";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -32,17 +35,30 @@ import {
   useKbTrashPurgeImpact,
 } from "@/hooks/api/kb/pages";
 import { useKbSpaces } from "@/hooks/api/kb/spaces";
-import { useOrgMembers } from "@/hooks/api/organization";
-import { getUserDisplayName } from "@/lib/person-display";
 import { KbRotateCcwIcon, KbTrash2Icon } from "@/features/wiki/lib/kb-icons";
 import type { KbPageListItem } from "@/hooks/api/kb/page-types";
 import { kbTimeAgo } from "@/features/wiki/lib/kb-date-utils";
 import { TrashRetentionSection } from "@/features/wiki/components/trash-retention-section";
+import { TrashMemberFilter } from "@/features/wiki/components/trash-member-filter";
 import { getErrorMessage } from "@/lib/get-error-message";
 
 const DEFAULT_LIMIT = 50;
-const ALL_MEMBERS_VALUE = "all";
 const ALL_SPACES_VALUE = "all";
+
+function dateFilterBoundary(value: string | null, throughDay: boolean): string | undefined {
+  if (!value) return undefined;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+  const date = parseISO(value);
+  if (!isValid(date)) return undefined;
+  return (throughDay ? addDays(date, 1) : date).toISOString();
+}
+
+function dateFilterDisplay(value: string | null): string {
+  if (!value) return "";
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+  const date = parseISO(value);
+  return isValid(date) ? format(date, "yyyy-MM-dd") : "";
+}
 
 function TrashSkeleton() {
   return (
@@ -68,11 +84,19 @@ export default function TrashPage() {
     deletedByRaw && Number.isInteger(Number(deletedByRaw)) && Number(deletedByRaw) > 0
       ? Number(deletedByRaw)
       : undefined;
-  const deletedFrom = searchParams.get("deletedFrom") ?? undefined;
-  const deletedBefore = searchParams.get("deletedBefore") ?? undefined;
+  const deletedFromRaw = searchParams.get("deletedFrom");
+  const deletedBeforeRaw = searchParams.get("deletedBefore");
+  const deletedFrom = dateFilterBoundary(deletedFromRaw, false);
+  const deletedBefore = dateFilterBoundary(deletedBeforeRaw, true);
 
-  const [searchDraft, setSearchDraft] = useState(q ?? "");
+  const [searchDraft, setSearchDraft] = useSourceOverride(q ?? "", q ?? "");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [q]);
 
   const cursorState = useCursorPagination();
   const params = {
@@ -86,8 +110,6 @@ export default function TrashPage() {
   };
 
   const { data, isLoading, isError, error, refetch } = useKbPagesTrash(params);
-  const { data: membersPage } = useOrgMembers(1, 100);
-  const members = membersPage?.data ?? [];
   const { data: spacesPage } = useKbSpaces();
   const spaces = spacesPage?.data ?? [];
 
@@ -133,7 +155,7 @@ export default function TrashPage() {
   function handleMemberChange(value: string) {
     cursorState.reset();
     updateFilters({
-      deletedByMembershipId: value === ALL_MEMBERS_VALUE ? null : value,
+      deletedByMembershipId: value === "all" ? null : value,
     });
   }
 
@@ -144,12 +166,12 @@ export default function TrashPage() {
 
   function handleDeletedFromChange(value: string) {
     cursorState.reset();
-    updateFilters({ deletedFrom: value ? new Date(value).toISOString() : null });
+    updateFilters({ deletedFrom: value || null });
   }
 
   function handleDeletedBeforeChange(value: string) {
     cursorState.reset();
-    updateFilters({ deletedBefore: value ? new Date(value).toISOString() : null });
+    updateFilters({ deletedBefore: value || null });
   }
 
   function handleClearFilters() {
@@ -199,6 +221,18 @@ export default function TrashPage() {
       onError: (e) => toast.error(getErrorMessage(e)),
     });
     setBulkPurgeConfirmOpen(false);
+  }
+
+  function handleMobileSelectionChange(id: number, checked: boolean) {
+    setSelected((previous) => {
+      const next = new Set(previous);
+      if (checked) next.add(String(id));
+      else {
+        next.delete(String(id));
+        next.delete(id);
+      }
+      return next;
+    });
   }
 
   const selectedCount = selected.size;
@@ -302,29 +336,7 @@ export default function TrashPage() {
               className="max-w-sm"
               aria-label="Search deleted pages"
             />
-            <Select
-              value={
-                deletedByMembershipId !== undefined
-                  ? String(deletedByMembershipId)
-                  : ALL_MEMBERS_VALUE
-              }
-              onValueChange={handleMemberChange}
-            >
-              <SelectTrigger className="w-52" aria-label="Deleted by member">
-                <SelectValue placeholder="All members" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={ALL_MEMBERS_VALUE}>All members</SelectItem>
-                {members.map((member) => (
-                  <SelectItem
-                    key={member.membershipId}
-                    value={String(member.membershipId)}
-                  >
-                    {getUserDisplayName(member)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <TrashMemberFilter value={deletedByMembershipId} onChange={handleMemberChange} />
             <Select
               value={spaceId !== undefined ? String(spaceId) : ALL_SPACES_VALUE}
               onValueChange={handleSpaceChange}
@@ -343,7 +355,7 @@ export default function TrashPage() {
             </Select>
             <DatePicker
               ariaLabel="Deleted from"
-              value={deletedFrom ? deletedFrom.slice(0, 10) : ""}
+              value={dateFilterDisplay(deletedFromRaw)}
               onChange={handleDeletedFromChange}
               placeholder="From"
               dateFormat="dd MMM yyyy"
@@ -351,10 +363,10 @@ export default function TrashPage() {
               className="w-40"
             />
             <DatePicker
-              ariaLabel="Deleted before"
-              value={deletedBefore ? deletedBefore.slice(0, 10) : ""}
+              ariaLabel="Deleted through"
+              value={dateFilterDisplay(deletedBeforeRaw)}
               onChange={handleDeletedBeforeChange}
-              placeholder="Before"
+              placeholder="Through"
               dateFormat="dd MMM yyyy"
               clearable
               className="w-40"
@@ -365,20 +377,29 @@ export default function TrashPage() {
             resolution={pageState}
             loading={<TrashSkeleton />}
             empty={
-              <EmptyState
-                illustration={
-                  <KbTrash2Icon className="h-8 w-8 text-muted-foreground" />
-                }
-                title="Trash is empty"
-                description={
-                  filtersActive
-                    ? "Deleted pages are being hidden by the filters above."
-                    : "Deleted pages will appear here and can be restored or permanently removed."
-                }
-                filtersActive={filtersActive}
-                filteredTitle="No deleted pages match your filters."
-                onClearFilters={handleClearFilters}
-              />
+              cursorState.hasPrevious ? (
+                <EmptyState
+                  illustration={<KbTrash2Icon className="h-8 w-8 text-muted-foreground" />}
+                  title="No deleted pages on this page"
+                  description="The deleted pages on this page may have changed. Go back to continue browsing."
+                  action={{ label: "Previous page", onClick: cursorState.goPrevious }}
+                />
+              ) : (
+                <EmptyState
+                  illustration={
+                    <KbTrash2Icon className="h-8 w-8 text-muted-foreground" />
+                  }
+                  title="Trash is empty"
+                  description={
+                    filtersActive
+                      ? "Deleted pages are being hidden by the filters above."
+                      : "Deleted pages will appear here and can be restored or permanently removed."
+                  }
+                  filtersActive={filtersActive}
+                  filteredTitle="No deleted pages match your filters."
+                  onClearFilters={handleClearFilters}
+                />
+              )
             }
             onRetry={refetch}
           >
@@ -402,7 +423,13 @@ export default function TrashPage() {
                 onPrevious: cursorState.goPrevious,
               }}
               mobileCard={(row) => (
-                <div className="flex items-center justify-between gap-2 p-3">
+                <div className="flex items-center gap-3">
+                  <Checkbox
+                    checked={selected.has(String(row.id)) || selected.has(row.id)}
+                    onCheckedChange={(checked) => handleMobileSelectionChange(row.id, checked === true)}
+                    aria-label={`Select ${row.title || "Untitled"}`}
+                    className="shrink-0"
+                  />
                   <div className="flex items-center gap-2 min-w-0">
                     {row.icon && (
                       <span className="shrink-0 text-base">{row.icon}</span>

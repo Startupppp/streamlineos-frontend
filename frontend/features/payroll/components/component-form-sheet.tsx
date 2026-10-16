@@ -79,9 +79,8 @@ export function ComponentFormSheet({ component, open, onOpenChange }: ComponentF
   }
 
   function onSubmit(data: ComponentForm) {
-    const payload = {
+    const sharedFields = {
       name: data.name,
-      code: data.code.toUpperCase(),
       type: data.type,
       ...toCalcPayload(data),
       taxable: data.taxable,
@@ -93,14 +92,14 @@ export function ComponentFormSheet({ component, open, onOpenChange }: ComponentF
 
     if (component) {
       update.mutate(
-        { componentId: component.id, data: payload },
+        { componentId: component.id, data: sharedFields },
         {
           onSuccess: () => { toast.success("Component updated"); handleOpenChange(false); },
           onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     } else {
-      create.mutate(payload, {
+      create.mutate({ code: data.code.toUpperCase(), ...sharedFields }, {
         onSuccess: () => { toast.success("Component created"); handleOpenChange(false); },
         onError: (err) => toast.error(getErrorMessage(err)),
       });

@@ -36,6 +36,7 @@ jest.mock("@/hooks/api/build/build-members", () => ({
 
 jest.mock("@/hooks/api/organization", () => ({
   useOrgMembers: () => ({ data: undefined }),
+  useOrgMembersByIds: () => ({ data: undefined }),
 }));
 
 jest.mock("@tanstack/react-query", () => ({

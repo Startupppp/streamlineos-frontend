@@ -1,15 +1,18 @@
 "use client";
 
-import { useQueryClient } from "@tanstack/react-query";
-import { apiClient } from "@/lib/api-client";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
+import { apiClient, isApiError } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { usePermissionGate } from "@/hooks/api/access";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+import { gated } from "@/lib/rbac/permission-gate";
 import type {
   CalendarWorkflowAction,
   CalendarWorkflowChannel,
   CalendarWorkflowDryRun,
   CalendarWorkflowEffect,
+  CalendarWorkflowEffectPage,
   CalendarWorkflowPolicy,
   CalendarWorkflowRule,
   CalendarWorkflowTrigger,
@@ -20,6 +23,7 @@ const ruleContract = lazyContract(() => import("./calendar-workflows-schema").th
 const rulesContract = lazyContract(() => import("./calendar-workflows-schema").then((module) => module.calendarWorkflowRulesContract));
 const effectContract = lazyContract(() => import("./calendar-workflows-schema").then((module) => module.calendarWorkflowEffectContract));
 const effectsContract = lazyContract(() => import("./calendar-workflows-schema").then((module) => module.calendarWorkflowEffectsContract));
+const legacyEffectsContract = lazyContract(() => import("./calendar-workflows-schema").then((module) => module.calendarWorkflowLegacyEffectsContract));
 const dryRunContract = lazyContract(() => import("./calendar-workflows-schema").then((module) => module.calendarWorkflowDryRunContract));
 
 export interface CalendarWorkflowPolicyInput {
@@ -77,12 +81,35 @@ export function useCalendarWorkflowRules() {
   });
 }
 
-export function useCalendarWorkflowEffects() {
-  return useGatedQuery("calendar:admin:manage", {
-    queryKey: workflowKeys.effects,
-    queryFn: ({ signal }) => apiClient.get<CalendarWorkflowEffect[]>("/calendar/admin/workflows/effects", { limit: 50 }, signal, effectsContract),
+export function useCalendarWorkflowEffects(status?: CalendarWorkflowEffect["status"]) {
+  const access = usePermissionGate("calendar:admin:manage");
+  const query = useInfiniteQuery({
+    queryKey: [...workflowKeys.effects, status ?? "all"],
+    initialPageParam: "",
+    queryFn: async ({ pageParam, signal }) => {
+      try {
+        return await apiClient.get<CalendarWorkflowEffectPage>(
+          "/calendar/admin/workflows/effects/page",
+          { limit: 50, ...(status ? { status } : {}), ...(pageParam ? { cursor: pageParam } : {}) },
+          signal,
+          effectsContract,
+        );
+      } catch (error) {
+        if (pageParam || !isApiError(error) || error.status !== 404) throw error;
+        const items = await apiClient.get<CalendarWorkflowEffect[]>(
+          "/calendar/admin/workflows/effects",
+          status ? { status } : undefined,
+          signal,
+          legacyEffectsContract,
+        );
+        return { items, nextCursor: null };
+      }
+    },
+    getNextPageParam: (page) => page.nextCursor ?? undefined,
     refetchInterval: 30_000,
+    enabled: access.allowed,
   });
+  return gated(query, access);
 }
 
 export function useUpdateCalendarWorkflowPolicy() {

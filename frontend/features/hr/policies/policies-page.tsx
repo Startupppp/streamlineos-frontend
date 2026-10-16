@@ -60,7 +60,6 @@ function PolicyRowActions({ row, canManage, onPreview, onEdit, onActivate, activ
   function handleActivate() { onActivate(row.id); }
   return (
     <div className="flex items-center gap-1 justify-end">
-      {/* QA 2026-10-13: a draft was only activatable from the edit sheet's version history, which read as "no way to publish". */}
       {canManage && row.status === "draft" && (
         <LoadingButton
           variant="outline"

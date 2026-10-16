@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 
 const approveMutate = jest.fn();
 const rejectMutate = jest.fn();
@@ -62,25 +62,30 @@ beforeEach(() => {
 });
 
 describe("leave decide controls", () => {
-  it("refuses a rejection with no reason and never calls the mutation", () => {
+  it("refuses a rejection with no reason and never calls the mutation", async () => {
     render(<Harness />);
 
     fireEvent.click(screen.getByRole("button", { name: /Reject/ }));
     const confirm = screen.getAllByRole("button", { name: /^Reject$/ }).at(-1)!;
 
-    expect(confirm).toBeDisabled();
-    fireEvent.click(confirm);
+    await act(async () => {
+      fireEvent.click(confirm);
+    });
+
     expect(rejectMutate).not.toHaveBeenCalled();
+    expect(await screen.findByText(/reason is required/i)).toBeInTheDocument();
   });
 
-  it("sends the reason once one is typed", () => {
+  it("sends the reason once one is typed", async () => {
     render(<Harness />);
 
     fireEvent.click(screen.getByRole("button", { name: /Reject/ }));
     fireEvent.change(screen.getByRole("textbox"), {
       target: { value: "Conflicting release deadline." },
     });
-    fireEvent.click(screen.getAllByRole("button", { name: /^Reject$/ }).at(-1)!);
+    await act(async () => {
+      fireEvent.click(screen.getAllByRole("button", { name: /^Reject$/ }).at(-1)!);
+    });
 
     expect(rejectMutate.mock.calls[0][0]).toEqual({
       leaveId: 41,

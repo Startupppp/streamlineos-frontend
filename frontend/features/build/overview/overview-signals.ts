@@ -61,8 +61,16 @@ export function hasStrategy(product: SummaryProduct): boolean {
   );
 }
 
+export type ValueStreamStageId =
+  | "feedback"
+  | "themed"
+  | "opportunities"
+  | "roadmap"
+  | "shipped"
+  | "measured";
+
 export interface ValueStreamStage {
-  id: string;
+  id: ValueStreamStageId;
   label: string;
   value: number;
   hint: string;

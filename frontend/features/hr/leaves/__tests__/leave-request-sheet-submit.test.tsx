@@ -9,9 +9,9 @@ import type { ApprovalRoute } from "@/hooks/api/hr/approval-route-schema";
  * closed sheet, and a disabled submit button always says why it is disabled.
  */
 
-const requestLeaveMutate = jest.fn();
+const requestLeaveMutateAsync = jest.fn();
 jest.mock("@/hooks/api/hr", () => ({
-  useRequestLeave: () => ({ mutate: requestLeaveMutate, isPending: false }),
+  useRequestLeave: () => ({ mutateAsync: requestLeaveMutateAsync, isPending: false }),
   useLeavePolicy: () => ({ data: null }),
 }));
 
@@ -156,7 +156,7 @@ function pickOption(name: RegExp) {
 }
 
 beforeEach(() => {
-  requestLeaveMutate.mockReset();
+  requestLeaveMutateAsync.mockReset();
   toastSuccess.mockReset();
   toastError.mockReset();
 });
@@ -202,9 +202,7 @@ describe("LeaveRequestSheet", () => {
   });
 
   it("a successful submit toasts and closes the sheet", async () => {
-    requestLeaveMutate.mockImplementation(
-      (_vars: unknown, opts: { onSuccess: () => void }) => opts.onSuccess(),
-    );
+    requestLeaveMutateAsync.mockResolvedValue({ success: true });
     const { onOpenChange } = renderSheet();
 
     pickOption(/Casual Leave/);
@@ -217,8 +215,8 @@ describe("LeaveRequestSheet", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Submit leave request" }));
 
-    await waitFor(() => expect(requestLeaveMutate).toHaveBeenCalledTimes(1));
-    expect(requestLeaveMutate.mock.calls[0][0]).toMatchObject({
+    await waitFor(() => expect(requestLeaveMutateAsync).toHaveBeenCalledTimes(1));
+    expect(requestLeaveMutateAsync.mock.calls[0][0]).toMatchObject({
       leaveTypeId: 1,
       startDate: "2026-10-05",
       endDate: "2026-10-06",

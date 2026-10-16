@@ -7,20 +7,16 @@ import {
   CheckCircle2,
   AlertCircle,
   StopCircle,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { AppDialog } from "@/components/shared/app-dialog";
+import { Label } from "@/components/ui/label";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { AiDraftCard } from "@/components/ai/ai-draft-card";
 import { AiFailureBody } from "@/components/ai/ai-failure-body";
 import {
@@ -90,21 +86,23 @@ function ActionItemRow({
         className="h-3.5 w-3.5 text-muted-foreground shrink-0"
         aria-hidden
       />
-      <input
+      <Input
         type="text"
         value={value}
         onChange={handleChange}
         placeholder={`Action item ${index + 1}`}
-        className="flex-1 h-7 min-w-0 rounded-md border border-input bg-transparent px-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+        className="min-w-0 flex-1"
       />
-      <button
+      <Button
         type="button"
+        variant="ghost"
+        size="icon-sm"
         onClick={handleRemove}
-        className="text-xs text-muted-foreground hover:text-destructive transition-colors"
+        className="shrink-0 text-muted-foreground hover:text-destructive"
         aria-label={`Remove action item ${index + 1}`}
       >
-        ×
-      </button>
+        <X className="size-4" aria-hidden />
+      </Button>
     </div>
   );
 }
@@ -315,28 +313,23 @@ export function MeetingFollowUpPanel({
         )}
 
         {showForm && (
-          <div className="space-y-3">
+          <div className="space-y-3 rounded-lg bg-muted p-3 dark:border dark:border-background">
             <div className="space-y-1.5">
-              <label
-                className="text-xs font-medium text-muted-foreground uppercase tracking-wide"
-                htmlFor="meeting-notes"
-              >
-                Meeting notes{" "}
-                <span className="font-normal normal-case">(optional)</span>
-              </label>
+              <Label htmlFor="meeting-notes">
+                Meeting notes <span className="font-normal text-muted-foreground">(optional)</span>
+              </Label>
               <Textarea
                 id="meeting-notes"
                 placeholder="What was discussed, decisions made…"
                 value={meetingNotes}
                 onChange={handleNotesChange}
-                className="min-h-[80px] text-xs resize-none"
+                className="min-h-20 resize-none"
               />
             </div>
 
             <div className="space-y-1.5">
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                Action items{" "}
-                <span className="font-normal normal-case">(optional)</span>
+              <p className="text-sm font-medium">
+                Action items <span className="font-normal text-muted-foreground">(optional)</span>
               </p>
               <div className="space-y-1.5">
                 {actionItems.map((item, index) => (
@@ -355,7 +348,7 @@ export function MeetingFollowUpPanel({
                   variant="ghost"
                   size="sm"
                   onClick={handleAddActionItem}
-                  className="h-7 text-xs text-muted-foreground hover:text-foreground px-1"
+                  className="px-1 text-muted-foreground"
                 >
                   + Add item
                 </Button>
@@ -366,7 +359,7 @@ export function MeetingFollowUpPanel({
               type="button"
               size="sm"
               onClick={handleDraftFollowUp}
-              className="w-full h-8 text-xs gap-1.5"
+              className="w-full"
             >
               <Sparkles className="h-3.5 w-3.5" aria-hidden />
               Draft Follow-up
@@ -402,7 +395,7 @@ export function MeetingFollowUpPanel({
                 variant="outline"
                 size="sm"
                 onClick={stop}
-                className="w-full h-8 text-xs gap-1.5"
+                className="w-full"
               >
                 <StopCircle className="h-3.5 w-3.5" aria-hidden />
                 Stop
@@ -416,7 +409,7 @@ export function MeetingFollowUpPanel({
                     loadingText="Saving…"
                     onClick={handleSaveForReview}
                     disabled={!isSendableFollowUp(draft)}
-                    className="flex-1 h-8 text-xs gap-1.5"
+                    className="flex-1"
                   >
                     <CheckCircle2 className="h-3.5 w-3.5" aria-hidden />
                     Save for review
@@ -428,7 +421,7 @@ export function MeetingFollowUpPanel({
                     loadingText="Preparing…"
                     onClick={handleSendViaCalendar}
                     disabled={!isSendableFollowUp(draft)}
-                    className="flex-1 h-8 text-xs gap-1.5"
+                    className="flex-1"
                   >
                     <Send className="h-3.5 w-3.5" aria-hidden />
                     Send via Calendar
@@ -438,7 +431,7 @@ export function MeetingFollowUpPanel({
                   variant="outline"
                   size="sm"
                   onClick={handleDoneNoSend}
-                  className="flex-1 h-8 text-xs"
+                  className="flex-1"
                 >
                   Done (no send)
                 </Button>
@@ -448,21 +441,17 @@ export function MeetingFollowUpPanel({
         )}
       </div>
 
-      <Dialog open={confirmOpen} onOpenChange={handleConfirmOpenChange}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle className="text-sm">Confirm follow-up</DialogTitle>
-            <DialogDescription className="text-xs">
-              This will update the calendar event description with the
-              follow-up. Proceed?
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
+      <AppDialog
+        open={confirmOpen}
+        onOpenChange={handleConfirmOpenChange}
+        title="Confirm follow-up"
+        description="Review this change before confirming."
+        className="md:max-w-sm"
+        footer={<>
             <Button
               variant="outline"
               size="sm"
               onClick={handleCancelConfirm}
-              className="text-xs"
             >
               Cancel
             </Button>
@@ -471,14 +460,14 @@ export function MeetingFollowUpPanel({
               isPending={confirmPending}
               loadingText="Saving…"
               onClick={handleConfirmSend}
-              className="text-xs gap-1.5"
             >
               <CheckCircle2 className="h-3.5 w-3.5" aria-hidden />
               Confirm
             </LoadingButton>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        </>}
+      >
+        <p className="text-sm text-muted-foreground">This will update the calendar event description with the follow-up. Proceed?</p>
+      </AppDialog>
     </>
   );
 }

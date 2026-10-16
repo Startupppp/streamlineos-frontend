@@ -1,10 +1,13 @@
 import { collectManagerColumns, resolveManagerHeader } from "@/components/hr/reporting-lines/manager-columns";
 import { CONFLICT_KEY, LEGACY_PRIMARY_KEY, SOURCE_ROW_KEY, normalizeHeader, type ColumnKey, type ParsedRow } from "./bulk-onboard-columns";
 
+export const EXTRA_COLUMNS_KEY = "__hasExtraColumns";
+
 interface SourceRow {
   values: Record<string, string>;
   /** Data-row number in the file, header not counted. */
   sourceRow: number;
+  hasExtra: boolean;
 }
 
 function isBlankRow(values: Record<string, string | undefined>): boolean {
@@ -53,18 +56,15 @@ function mapRawRows(
     if (mapped) keyMap.set(h, mapped);
   }
 
-  return data.map(({ values: row, sourceRow }) => {
+  return data.map(({ values: row, sourceRow, hasExtra }) => {
     const out: ParsedRow = { [SOURCE_ROW_KEY]: String(sourceRow) };
     const conflicts = new Set<string>();
     for (const [header, value] of Object.entries(row)) {
-      // Manager columns are read by the shared reader below, like the backend's.
       if (resolveManagerHeader(header)) continue;
       const key = keyMap.get(header) ?? normalizeHeader(header);
       if (!key) continue;
       const next = (value ?? "").trim();
       const previous = (out[key] ?? "").trim();
-      // Two headers for one column (canonical + legacy alias): a blank never
-      // erases a value, and two different values are refused, not guessed.
       if (previous && next && previous.toLowerCase() !== next.toLowerCase()) conflicts.add(key);
       if (!previous || next) out[key] = value ?? "";
       if (previous && !next) out[key] = previous;
@@ -74,22 +74,39 @@ function mapRawRows(
     for (const column of managers.conflicts) conflicts.add(column);
     if (managers.legacyPrimaryHeader) out[LEGACY_PRIMARY_KEY] = managers.legacyPrimaryHeader;
     if (conflicts.size > 0) out[CONFLICT_KEY] = [...conflicts].join(",");
+    if (hasExtra) out[EXTRA_COLUMNS_KEY] = "1";
     return out;
   });
+}
+
+export class ParseStructuralError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "ParseStructuralError";
+  }
 }
 
 export async function parseFile(file: File): Promise<ParsedRow[]> {
   if (file.name.endsWith(".csv") || file.type === "text/csv") {
     const Papa = (await import("papaparse")).default;
     const text = await file.text();
-    // Blank lines are kept here and dropped below, so each row keeps its number.
     const result = Papa.parse<Record<string, string>>(text, {
       header: true,
       skipEmptyLines: false,
       transformHeader: (h) => h.trim(),
     });
+    const structuralError = result.errors.find((e) => e.type === "Quotes");
+    if (structuralError) {
+      const fileLineNumber = (structuralError.row ?? 0) + 1;
+      throw new ParseStructuralError(`Line ${fileLineNumber}: unclosed quote`);
+    }
     const rows = result.data
-      .map((values, index) => ({ values, sourceRow: index + 1 }))
+      .map((values, index) => {
+        const hasExtra =
+          Array.isArray((values as Record<string, unknown>).__parsed_extra) &&
+          ((values as Record<string, unknown>).__parsed_extra as unknown[]).length > 0;
+        return { values, sourceRow: index + 1, hasExtra };
+      })
       .filter((row) => !isBlankRow(row.values));
     return mapRawRows(result.meta.fields ?? [], rows);
   }
@@ -118,7 +135,7 @@ export async function parseFile(file: File): Promise<ParsedRow[]> {
       if (val) empty = false;
       entry[header] = val;
     });
-    if (!empty) dataRows.push({ values: entry, sourceRow: rowNumber - 1 });
+    if (!empty) dataRows.push({ values: entry, sourceRow: rowNumber - 1, hasExtra: false });
   });
 
   return mapRawRows(headers.filter(Boolean), dataRows);

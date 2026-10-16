@@ -43,7 +43,13 @@ import { SALARY_PREVIEW_CTC } from "@/hooks/api/payroll/salary-preview";
 
 const profileSchema = z.object({
   effectiveFrom: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Required: YYYY-MM-DD"),
-  annualCtc: z.string().regex(/^\d+(\.\d{1,2})?$/, "Positive decimal required"),
+  annualCtc: z
+    .string()
+    .regex(/^\d+(\.\d{1,2})?$/, "Enter a positive number without letters or symbols (e.g. 1200000)")
+    .refine(
+      (v) => parseFloat(v) <= 9_999_999,
+      "Annual CTC cannot exceed ₹9,999,999",
+    ),
   workerType: z.enum(["EMPLOYEE", "CONTRACTOR", "CONSULTANT", "INTERN", "EOR"]),
   currency: z.string().length(3),
   payoutCurrency: z.string().refine((v) => !v || v.length === 3, "Must be a 3-letter currency code"),
@@ -132,8 +138,7 @@ export function SalaryProfileSheet({
       return;
     }
 
-    const payload = {
-      effectiveFrom: values.effectiveFrom,
+    const sharedFields = {
       annualCtc: values.annualCtc,
       workerType: values.workerType,
       currency: values.currency,
@@ -150,12 +155,12 @@ export function SalaryProfileSheet({
       const onError = () => toast.error("Failed to update profile");
       if (resolvedWorkerId && !resolvedUserId) {
         patchWorkerMutation.mutate(
-          { profileId: existingProfile.id, body: payload },
+          { profileId: existingProfile.id, body: sharedFields },
           { onSuccess, onError },
         );
       } else {
         patchMutation.mutate(
-          { profileId: existingProfile.id, body: payload },
+          { profileId: existingProfile.id, body: sharedFields },
           { onSuccess, onError },
         );
       }
@@ -165,10 +170,11 @@ export function SalaryProfileSheet({
         onClose();
       };
       const onError = () => toast.error("Failed to create profile");
+      const createPayload = { effectiveFrom: values.effectiveFrom, ...sharedFields };
       if (resolvedWorkerId && !resolvedUserId) {
-        createWorkerMutation.mutate(payload, { onSuccess, onError });
+        createWorkerMutation.mutate(createPayload, { onSuccess, onError });
       } else {
-        createMutation.mutate(payload, { onSuccess, onError });
+        createMutation.mutate(createPayload, { onSuccess, onError });
       }
     }
   }

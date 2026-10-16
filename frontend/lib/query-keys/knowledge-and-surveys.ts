@@ -25,6 +25,10 @@ export const knowledgeAndSurveysQueryKeys = {
       params === undefined
         ? ([...base, "kb", "pages", "trash"] as const)
         : ([...base, "kb", "pages", "trash", params] as const),
+    pagesTrashDeleters: (search: string, selectedMembershipId?: number) =>
+      [...base, "kb", "pages", "trash", "deleters", search, selectedMembershipId] as const,
+    askPageOwners: (search: string, selectedMembershipId?: number) =>
+      [...base, "kb", "ask", "pageOwners", search, selectedMembershipId] as const,
     pagesTrashPurgeImpact: (pageIds: number[]) =>
       [...base, "kb", "pages", "trash", "purge-impact", [...pageIds].sort((a, b) => a - b)] as const,
     pagesSearch: (searchQuery: string, aclVersion: string) =>
@@ -69,6 +73,8 @@ export const knowledgeAndSurveysQueryKeys = {
       params === undefined
         ? ([...base, "kb", "pages", pageId, "grants"] as const)
         : ([...base, "kb", "pages", pageId, "grants", params] as const),
+    pageGrantCandidates: (pageId: number, search: string) =>
+      [...base, "kb", "pages", pageId, "grant-candidates", search] as const,
     pageRecordLinks: (pageId: number) =>
       [...base, "kb", "pages", pageId, "record-links"] as const,
     importJobs: () => [...base, "kb", "import-jobs"] as const,

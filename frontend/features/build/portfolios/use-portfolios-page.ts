@@ -8,6 +8,7 @@ import {
   useUpdatePortfolio,
   useDeletePortfolio,
 } from "@/hooks/api/build/portfolios";
+import { useSubmitGuard } from "@/hooks/common/use-submit-guard";
 import { useCan } from "@/hooks/api/access";
 import { useBuildMembers } from "@/hooks/api/build/build-members";
 import { useBuildCursorPager } from "@/features/build/shared/use-build-cursor-pager";
@@ -80,18 +81,19 @@ export function usePortfoliosPage() {
 
   const rows = useMemo(() => data?.data ?? [], [data]);
 
-  const handleCreate = useCallback(
-    (input: CreatePortfolioInput) => {
-      createPortfolio.mutate(input, {
-        onSuccess: () => {
-          toast.success("Portfolio created");
-          setCreateOpen(false);
-        },
-        onError: (e) => toast.error(getErrorMessage(e)),
-      });
+  const createHandler = useCallback(
+    async (input: CreatePortfolioInput) => {
+      try {
+        await createPortfolio.mutateAsync(input);
+        toast.success("Portfolio created");
+        setCreateOpen(false);
+      } catch (e) {
+        toast.error(getErrorMessage(e));
+      }
     },
     [createPortfolio, setCreateOpen],
   );
+  const { submit: handleCreate, isSubmitting: isCreating } = useSubmitGuard(createHandler);
 
   const handleEdit = useCallback(
     (input: UpdatePortfolioInput & { portfolioId: number }) => {
@@ -191,7 +193,7 @@ export function usePortfoliosPage() {
     createOpen,
     editTarget,
     deleteTarget,
-    createPortfolio,
+    isCreating,
     updatePortfolio,
     searchInputRef,
     handleCreate,

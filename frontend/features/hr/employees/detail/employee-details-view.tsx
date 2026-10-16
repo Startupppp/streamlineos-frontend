@@ -25,7 +25,7 @@ import { ArrowLeft, UserX, UserCheck, Download } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { useCan } from "@/hooks/api/access";
+import { useCan, useScope } from "@/hooks/api/access";
 import { canDeleteEmployee } from "@/features/hr/employees/hr-types";
 import { AiActionsMenu } from "@/components/ai";
 import type { AiAction } from "@/components/ai";
@@ -62,7 +62,8 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
   // Gating either on an HR-employees key sends a permitted-looking user to a 403.
   const canManageExits = useCan("hr:exit:manage");
   const canDraftReview = useCan("hr:performance:manage");
-  const canViewSensitive = useCan("hr:sensitive:view");
+  const sensitiveScope = useScope("hr:sensitive:view");
+  const canUpdateEmployee = useCan("hr:employees:update");
   const searchParams = useSearchParams();
   const defaultTab = searchParams.get("tab") ?? "overview";
   const [activeTab, setActiveTab] = useState(defaultTab);
@@ -86,7 +87,8 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
 
   const isSelf = hydrated && session?.user?.id === employee.id;
   const showManageActions = hydrated && canManageEmployees;
-  const showSensitiveTab = hydrated && canViewSensitive;
+  const showSensitiveTab = hydrated && sensitiveScope !== "none" && (isSelf || sensitiveScope !== "own");
+  const showEditTab = hydrated && canUpdateEmployee;
   // V-023/V-025: the same helper the header card uses. Composing first+last
   // here ignored `employee.name`, so a display-name-only person exported a PDF
   // called "Employee".
@@ -335,6 +337,7 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
           <EmployeeTabsList
             ref={tabsListRef}
             showSensitiveTab={showSensitiveTab}
+            showEditTab={showEditTab}
             isSelf={isSelf}
           />
         </ScrollEdgeFade>

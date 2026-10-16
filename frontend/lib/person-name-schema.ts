@@ -20,3 +20,22 @@ export const personNameSchema = z
     (value) => !CONSECUTIVE_SPACES.test(value),
     "Remove the extra spaces from this name",
   );
+
+const HR_NAME_HAS_DIGIT = /\p{N}/u;
+const HR_NAME_SHAPE = /^[\p{L}\p{M}][\p{L}\p{M} .'’-]*$/u;
+
+export function hrPersonNameField(label: string) {
+  return z
+    .string()
+    .trim()
+    .min(1, `${label} is required`)
+    .max(100, `${label} must be at most 100 characters`)
+    .refine(
+      (v) => v.length === 0 || !HR_NAME_HAS_DIGIT.test(v),
+      "Numbers are not allowed in names",
+    )
+    .refine(
+      (v) => v.length === 0 || HR_NAME_SHAPE.test(v),
+      "Names can contain letters, spaces, apostrophes, periods and hyphens",
+    );
+}

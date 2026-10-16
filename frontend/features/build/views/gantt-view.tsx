@@ -92,7 +92,11 @@ export function GanttView({ tickets, projectId, onTicketClick, onCreateTicket }:
     setWeekOffset(diff);
   }, []);
 
-  const displayDate = startOfWeek;
+  const displayDate = useMemo(() => {
+    const mid = new Date(startOfWeek);
+    mid.setDate(mid.getDate() + Math.floor(GANTT_MAX_DAYS / 2));
+    return mid;
+  }, [startOfWeek]);
   const displayMonth = displayDate.getMonth();
   const displayYear = displayDate.getFullYear();
   const currentYear = new Date().getFullYear();

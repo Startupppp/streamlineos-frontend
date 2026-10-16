@@ -12,9 +12,12 @@ export const platformHierarchyQueryKeys = {
       start: string,
       end: string,
       sources?: readonly string[],
+      timeZone?: string,
     ) =>
       sources === undefined
-        ? ([...base, "calendar", "events", orgId, userId, start, end] as const)
+        ? (timeZone === undefined
+            ? ([...base, "calendar", "events", orgId, userId, start, end] as const)
+            : ([...base, "calendar", "events", orgId, userId, start, end, timeZone] as const))
         : ([
             ...base,
             "calendar",
@@ -24,6 +27,7 @@ export const platformHierarchyQueryKeys = {
             start,
             end,
             sources,
+            ...(timeZone === undefined ? [] : [timeZone]),
           ] as const),
     history: (orgId: string, userId: string, before: string) =>
       [
@@ -35,9 +39,12 @@ export const platformHierarchyQueryKeys = {
         userId,
         before,
       ] as const,
-    search: (filters: Readonly<object>) =>
-      [...base, "calendar", "search", filters] as const,
+    searchAll: [...base, "calendar", "search"] as const,
+    search: (orgId: string, userId: string, membershipId: number | null, accessVersion: number, readScope: string, canView: boolean, filters: Readonly<object>) =>
+      [...base, "calendar", "search", orgId, userId, membershipId, accessVersion, readScope, canView, filters] as const,
     savedViews: [...base, "calendar", "saved-views"] as const,
+    savedViewsForAccess: (membershipId: number | null, version: number, readScope: string, peopleScope: string, adminScope: string, isOrgOwner: boolean) =>
+      [...base, "calendar", "saved-views", membershipId, version, readScope, peopleScope, adminScope, isOrgOwner] as const,
     protectedWork: [...base, "calendar", "protected-work"] as const,
     commitments: [...base, "calendar", "commitments"] as const,
     coach: (orgId: string, userId: string) => [...base, "calendar", "coach", orgId, userId] as const,
@@ -81,8 +88,10 @@ export const platformHierarchyQueryKeys = {
       "source-actions",
       "capabilities",
     ] as const,
-    sourceActionProposal: (proposalId: string) =>
-      [...base, "calendar", "source-actions", "proposal", proposalId] as const,
+    sourceActionProposals: (orgId: string, userId: string) =>
+      [...base, "calendar", "source-actions", "proposals", orgId, userId] as const,
+    sourceActionProposal: (orgId: string, userId: string, proposalId: string) =>
+      [...base, "calendar", "source-actions", "proposal", orgId, userId, proposalId] as const,
     meetingWorkspace: (eventId: number) =>
       [...base, "calendar", "meeting-workspace", eventId] as const,
   },

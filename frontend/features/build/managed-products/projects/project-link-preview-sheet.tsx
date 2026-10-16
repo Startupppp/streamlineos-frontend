@@ -3,6 +3,8 @@
 import { Badge } from "@/components/ui/badge";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Button } from "@/components/ui/button";
+import { useCanState } from "@/hooks/api/access";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import {
   Sheet,
   SheetContent,
@@ -37,6 +39,7 @@ export function ProjectLinkPreviewSheet({
   projectName,
   onLinked,
 }: ProjectLinkPreviewSheetProps) {
+  const canViewState = useCanState("build:managed-products:view");
   const { data: productData } = useManagedProduct(managedProductId);
   const managedProductName = productData?.name ?? "this product";
   const { data } = useProjectLinkedProducts(projectId, { enabled: open });
@@ -73,7 +76,9 @@ export function ProjectLinkPreviewSheet({
           </SheetDescription>
         </SheetHeader>
         <SheetBody className="flex flex-col gap-4">
-          {alreadyLinked ? (
+          {canViewState === "denied" ? (
+            <NoPermissionState compact />
+          ) : alreadyLinked ? (
             <p className="text-sm text-muted-foreground">
               This project is already linked to <strong>{managedProductName}</strong>.
             </p>

@@ -8,10 +8,19 @@ import { useSearchParams } from "next/navigation";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
+import { useAccess } from "@/hooks/api/access";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -183,37 +192,29 @@ function EvidencePopover({ pageId, kind }: EvidencePopoverProps) {
   );
 }
 
-interface HealthTrendWidgetProps {
-  activeSignal: ContentHealthSignalType;
-}
-
-function HealthTrendWidget({ activeSignal }: HealthTrendWidgetProps) {
+function HealthTrendWidget() {
   const { data, isLoading } = useContentHealthTrend();
   if (isLoading) return <Skeleton className="h-16 w-full rounded-xl" />;
   if (!data) return null;
 
-  const delta = data.afterCount - data.beforeCount;
-  const improved = delta < 0;
-  const deltaLabel = improved
-    ? `${Math.abs(delta)} fewer issues than 30 days ago`
-    : delta === 0
-      ? "No change in 30 days"
-      : `${delta} more issues than 30 days ago`;
+  const netChange = data.afterCount - data.beforeCount;
 
   return (
     <div className="rounded-xl border border-border bg-card/60 px-4 py-3 flex items-center gap-4">
       <div className="flex flex-col">
-        <span className="text-xs text-muted-foreground">Before (30 days ago)</span>
+        <span className="text-xs text-muted-foreground">Open 30 days ago (all signals)</span>
         <span className="text-lg font-semibold tabular-nums text-foreground">{data.beforeCount}</span>
       </div>
       <span className="text-muted-foreground text-sm">→</span>
       <div className="flex flex-col">
-        <span className="text-xs text-muted-foreground">Now ({SIGNAL_LABELS[activeSignal]})</span>
-        <span className={`text-lg font-semibold tabular-nums ${improved ? "text-status-success-ink" : "text-foreground"}`}>
+        <span className="text-xs text-muted-foreground">Open now (all signals)</span>
+        <span className="text-lg font-semibold tabular-nums text-foreground">
           {data.afterCount}
         </span>
       </div>
-      <p className="text-xs text-muted-foreground ml-auto text-right">{deltaLabel}</p>
+      <p className="text-xs text-muted-foreground ml-auto text-right">
+        {netChange > 0 ? "+" : ""}{netChange} net change in visible open issues
+      </p>
     </div>
   );
 }
@@ -222,33 +223,28 @@ interface BulkRepairDialogProps {
   selectedIds: number[];
   activeSignal: ContentHealthSignalType;
   onClose: () => void;
+  onSuccess: () => void;
 }
 
-const REPAIR_ACTIONS = [
-  { value: "request_review", label: "Request review" },
-  { value: "assign_owner", label: "Assign owner" },
-  { value: "mark_needs_content", label: "Mark needs content" },
-] as const;
-
-type RepairAction = (typeof REPAIR_ACTIONS)[number]["value"];
-
-function BulkRepairDialog({ selectedIds, activeSignal, onClose }: BulkRepairDialogProps) {
+function BulkRepairDialog({ selectedIds, activeSignal, onClose, onSuccess }: BulkRepairDialogProps) {
   const bulkRepair = useBulkRepairHealthItems();
-  const [repairAction, setRepairAction] = useState<RepairAction>("request_review");
-
-  function handleRepairActionChange(value: string) {
-    const next = REPAIR_ACTIONS.find((action) => action.value === value);
-    if (next) setRepairAction(next.value);
-  }
+  const [selectedUserId, setSelectedUserId] = useState("");
+  const { data: selectedMemberData, isLoading: memberLoading } = useOrgMembersByIds(
+    selectedUserId ? [selectedUserId] : [],
+  );
+  const assigneeMembershipId = selectedMemberData?.data.find(
+    (member) => member.userId === selectedUserId,
+  )?.membershipId;
 
   function handleConfirm() {
+    if (!assigneeMembershipId) return;
     bulkRepair.mutate(
-      { pageIds: selectedIds, kind: activeSignal, repairAction },
+      { pageIds: selectedIds, kind: activeSignal, repairAction: "assign_owner", assigneeMembershipId },
       {
         onSuccess: (result) => {
           const count = result.results.filter((r) => r.outcome === "applied").length;
-          toast.success(`Repaired ${count} pages`);
-          onClose();
+          toast.success(`Assigned ${count} issues`);
+          onSuccess();
         },
         onError: (err) => {
           toast.error(getErrorMessage(err));
@@ -257,28 +253,27 @@ function BulkRepairDialog({ selectedIds, activeSignal, onClose }: BulkRepairDial
     );
   }
 
+  function handleOpenChange(open: boolean) {
+    if (!open) onClose();
+  }
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="bg-card border border-border rounded-xl shadow-xl p-6 w-full max-w-sm space-y-4">
-        <h2 className="text-sm font-semibold text-foreground">
-          Bulk repair — {selectedIds.length} pages
-        </h2>
-        <Select
-          value={repairAction}
-          onValueChange={handleRepairActionChange}
-        >
-          <SelectTrigger className="w-full h-8 text-xs" aria-label="Repair action">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {REPAIR_ACTIONS.map((action) => (
-              <SelectItem key={action.value} value={action.value} className="text-xs">
-                {action.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <div className="flex items-center gap-2 justify-end pt-2">
+    <Dialog open onOpenChange={handleOpenChange}>
+      <DialogContent className="md:max-w-sm">
+        <DialogHeader>
+          <DialogTitle>
+            Bulk repair — {selectedIds.length} {selectedIds.length === 1 ? "page" : "pages"}
+          </DialogTitle>
+          <DialogDescription>
+            Assign a person to resolve the selected issues.
+          </DialogDescription>
+        </DialogHeader>
+        <UserCombobox
+          value={selectedUserId}
+          onChange={setSelectedUserId}
+          placeholder="Select member…"
+        />
+        <DialogFooter>
           <Button type="button" variant="outline" size="sm" className="text-xs h-7" onClick={onClose}>
             Cancel
           </Button>
@@ -287,14 +282,15 @@ function BulkRepairDialog({ selectedIds, activeSignal, onClose }: BulkRepairDial
             size="sm"
             className="text-xs h-7"
             onClick={handleConfirm}
+            disabled={!assigneeMembershipId || memberLoading}
             isPending={bulkRepair.isPending}
-            loadingText="Repairing…"
+            loadingText="Assigning…"
           >
             Confirm
           </LoadingButton>
-        </div>
-      </div>
-    </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -387,6 +383,7 @@ function AssignPopover({ pageId, kind }: AssignPopoverProps) {
 
 export default function ContentHealthPage() {
   const searchParams = useSearchParams();
+  const { data: accessData, isError: accessReadError, refetch: refetchAccess } = useAccess();
   const { update: updateFilters } = useUrlFilters({ pageParam: "cursor" });
   const cursorState = useCursorPagination();
   const { state: dismissState, openDismiss, closeDialog } = useDismissDialog();
@@ -428,6 +425,10 @@ export default function ContentHealthPage() {
   }
 
   function handleRetry() {
+    if (accessReadError && !accessData) {
+      void refetchAccess();
+      return;
+    }
     void refetchCounts();
     void refetchSignals();
   }
@@ -466,6 +467,10 @@ export default function ContentHealthPage() {
   }
 
   function handleBulkRepairClose() {
+    setBulkRepairOpen(false);
+  }
+
+  function handleBulkRepairSuccess() {
     setBulkRepairOpen(false);
     setSelectedIds(new Set());
   }
@@ -524,7 +529,7 @@ export default function ContentHealthPage() {
             ))}
           </div>
 
-          <HealthTrendWidget activeSignal={activeSignal} />
+          <HealthTrendWidget />
 
           <div className="rounded-xl border border-border bg-card/60 px-4 py-3 flex items-start gap-2">
             <KbAlertCircleIcon className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
@@ -703,6 +708,7 @@ export default function ContentHealthPage() {
           selectedIds={Array.from(selectedIds)}
           activeSignal={activeSignal}
           onClose={handleBulkRepairClose}
+          onSuccess={handleBulkRepairSuccess}
         />
       )}
     </PageWrapper>

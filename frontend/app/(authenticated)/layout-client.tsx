@@ -6,6 +6,7 @@ import type { ShellVariant } from "@/lib/shell-variant";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { useAccessVersionSync } from "@/hooks/common/use-access-version-sync";
 import { useNotificationEvents } from "@/features/notifications/use-notification-events";
+import { useLogoutBroadcastListener } from "@/hooks/common/auth-hooks";
 import { I18nProvider } from "@/lib/i18n/i18n";
 import { BuildSidebarSkeleton } from "@/components/layout/sidebar/build-sidebar-skeleton";
 import type { BuildSidebarSlotProps } from "@/components/layout/sidebar/build-sidebar-slot";
@@ -56,6 +57,7 @@ const notificationBellSlot = <NotificationBell />;
 function AccessVersionSync() {
   useAccessVersionSync();
   useNotificationEvents();
+  useLogoutBroadcastListener();
   return null;
 }
 

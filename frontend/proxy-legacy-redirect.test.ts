@@ -78,3 +78,93 @@ describe("proxy observes the two code-owned Build compatibility redirects", () =
     );
   });
 });
+
+describe("public Calendar pages", () => {
+  it.each([
+    "/calendar/book/booking-token",
+    "/calendar/polls/poll-token",
+    "/calendar/invitations/rsvp?token=invitation-token",
+    "/calendar/invitations/join?token=invitation-token",
+  ])("allows an anonymous visitor to open %s", async (path) => {
+    const response = await proxy(request(`https://app.test${path}`));
+    expect(response.status).toBe(200);
+    expect(response.headers.get("location")).toBeNull();
+  });
+
+  it.each([
+    "/calendar",
+    "/calendar/book/booking-token/manage",
+    "/calendar/invitations/admin",
+  ])("keeps %s behind sign-in", async (path) => {
+    const response = await proxy(request(`https://app.test${path}`));
+    expect(response.status).toBe(307);
+    expect(new URL(response.headers.get("location") ?? "https://app.test").pathname).toBe("/signin");
+  });
+});
+
+
+const originalApiUrl = process.env.NEXT_PUBLIC_API_URL;
+const originalInternalUrl = process.env.API_INTERNAL_URL;
+const originalFetch = global.fetch;
+
+function calendarRequest(path: string): NextRequest {
+  return request(`https://app.test${path}`);
+}
+
+
+describe("public Calendar embed response headers", () => {
+  beforeEach(() => {
+    process.env.NEXT_PUBLIC_API_URL = "https://api.test";
+    delete process.env.API_INTERNAL_URL;
+  });
+
+  afterEach(() => {
+    global.fetch = originalFetch;
+    if (originalApiUrl === undefined) delete process.env.NEXT_PUBLIC_API_URL;
+    else process.env.NEXT_PUBLIC_API_URL = originalApiUrl;
+    if (originalInternalUrl === undefined) delete process.env.API_INTERNAL_URL;
+    else process.env.API_INTERNAL_URL = originalInternalUrl;
+  });
+
+  it("allows only the configured origin to frame an active embed link", async () => {
+    global.fetch = jest.fn().mockResolvedValue(new Response(JSON.stringify({
+      success: true,
+      data: { allowedOrigin: "https://partner.test" },
+    }), { status: 200 }));
+    const response = await proxy(calendarRequest("/calendar/book/valid-token"));
+    expect(global.fetch).toHaveBeenCalledWith(
+      new URL("https://api.test/public/calendar/booking/valid-token/embed-origin"),
+      expect.objectContaining({ cache: "no-store", redirect: "error" }),
+    );
+    expect(response.headers.get("content-security-policy")).toContain("frame-ancestors https://partner.test");
+    expect(response.headers.get("x-frame-options")).toBeNull();
+  });
+
+  it.each(["https://partner.test/path", "http://partner.test", "https://partner.test; script-src *", null])(
+    "rejects an invalid configured origin %s",
+    async (allowedOrigin) => {
+      global.fetch = jest.fn().mockResolvedValue(new Response(JSON.stringify({
+        success: true,
+        data: { allowedOrigin },
+      }), { status: 200 }));
+      const response = await proxy(calendarRequest("/calendar/book/invalid-token"));
+      expect(response.headers.get("content-security-policy")).toContain("frame-ancestors 'none'");
+      expect(response.headers.get("x-frame-options")).toBe("DENY");
+    },
+  );
+
+  it("fails closed when the policy read is unavailable", async () => {
+    global.fetch = jest.fn().mockRejectedValue(new Error("unavailable"));
+    const response = await proxy(calendarRequest("/calendar/book/unavailable-token"));
+    expect(response.headers.get("content-security-policy")).toContain("frame-ancestors 'none'");
+    expect(response.headers.get("x-frame-options")).toBe("DENY");
+  });
+
+  it("keeps all other public pages non-framable", async () => {
+    global.fetch = jest.fn();
+    const response = await proxy(calendarRequest("/calendar/polls/poll-token"));
+    expect(global.fetch).not.toHaveBeenCalled();
+    expect(response.headers.get("content-security-policy")).toContain("frame-ancestors 'none'");
+    expect(response.headers.get("x-frame-options")).toBe("DENY");
+  });
+});

@@ -11,6 +11,8 @@ import {
 import {
   HR_CALENDAR_MAX_WINDOW_DAYS,
   clampToHrCalendarWindow,
+  parseHrCalendarDay,
+  splitHrCalendarWindow,
   useHrCalendarEventsMapped,
 } from "./use-hr-calendar-events";
 
@@ -48,16 +50,37 @@ jest.mock("@tanstack/react-query", () => {
   const actual = jest.requireActual<object>("@tanstack/react-query");
   return {
     ...actual,
-    useQuery: jest.fn((opts: { queryFn: (ctx: { signal: undefined }) => unknown }) => {
-      void opts.queryFn({ signal: undefined });
-      return {
-        data: undefined,
-        isLoading: false,
-        isError: false,
-        error: null,
-        refetch: jest.fn(),
-      };
-    }),
+    useQuery: jest.fn(
+      (opts: { queryFn: (ctx: { signal: undefined }) => unknown }) => {
+        void opts.queryFn({ signal: undefined });
+        return {
+          data: undefined,
+          isLoading: false,
+          isError: false,
+          error: null,
+          refetch: jest.fn(),
+        };
+      },
+    ),
+    useQueries: jest.fn(
+      (opts: {
+        queries: { queryFn: (ctx: { signal: undefined }) => unknown }[];
+        combine: (results: unknown[]) => unknown;
+      }) => {
+        opts.queries.forEach(
+          (query) => void query.queryFn({ signal: undefined }),
+        );
+        return opts.combine(
+          opts.queries.map(() => ({
+            data: undefined,
+            isLoading: false,
+            isError: false,
+            error: null,
+            refetch: jest.fn(),
+          })),
+        );
+      },
+    ),
   };
 });
 
@@ -89,11 +112,16 @@ function backendDiffDays(from: string, to: string): number {
 function anchors(): Date[] {
   const out: Date[] = [];
   for (let year = 2024; year <= 2030; year += 1)
-    for (let month = 0; month < 12; month += 1) out.push(new Date(year, month, 15));
+    for (let month = 0; month < 12; month += 1)
+      out.push(new Date(year, month, 15));
   return out;
 }
 
 describe("the /hr/calendar window this caller asks for", () => {
+  it("keeps a date-only HR event on the browser's local calendar day", () => {
+    expect(parseHrCalendarDay("2026-10-14")).toEqual(new Date(2026, 9, 14));
+  });
+
   it("the unclamped view window is what 400s today — the regression this guards", () => {
     const over = anchors().filter((anchor) => {
       const { rangeStart, rangeEnd } = viewWindow(anchor);
@@ -115,8 +143,10 @@ describe("the /hr/calendar window this caller asks for", () => {
         format(from, "yyyy-MM-dd"),
         format(to, "yyyy-MM-dd"),
       );
-      expect({ month: format(anchor, "yyyy-MM"), withinCap: days <= HR_CALENDAR_MAX_WINDOW_DAYS })
-        .toEqual({ month: format(anchor, "yyyy-MM"), withinCap: true });
+      expect({
+        month: format(anchor, "yyyy-MM"),
+        withinCap: days <= HR_CALENDAR_MAX_WINDOW_DAYS,
+      }).toEqual({ month: format(anchor, "yyyy-MM"), withinCap: true });
     }
   });
 
@@ -131,7 +161,11 @@ describe("the /hr/calendar window this caller asks for", () => {
           month: format(anchor, "yyyy-MM"),
           weekStartsOn,
           covers: from <= gridStart && to >= gridEnd,
-        }).toEqual({ month: format(anchor, "yyyy-MM"), weekStartsOn, covers: true });
+        }).toEqual({
+          month: format(anchor, "yyyy-MM"),
+          weekStartsOn,
+          covers: true,
+        });
       }
     }
   });
@@ -162,6 +196,48 @@ describe("useHrCalendarEventsMapped — what it actually puts on the wire", () =
     expect(requestedParams).toBeDefined();
     const from = requestedParams?.from ?? "";
     const to = requestedParams?.to ?? "";
-    expect(backendDiffDays(from, to)).toBeLessThanOrEqual(HR_CALENDAR_MAX_WINDOW_DAYS);
+    expect(backendDiffDays(from, to)).toBeLessThanOrEqual(
+      HR_CALENDAR_MAX_WINDOW_DAYS,
+    );
+  });
+
+  it("covers every day of the view range without gaps or oversized requests", () => {
+    for (const anchor of anchors()) {
+      const { rangeStart, rangeEnd } = viewWindow(anchor);
+      const windows = splitHrCalendarWindow(rangeStart, rangeEnd);
+      expect(windows[0]?.from).toBe(format(rangeStart, "yyyy-MM-dd"));
+      expect(windows.at(-1)?.to).toBe(format(rangeEnd, "yyyy-MM-dd"));
+      for (const [index, window] of windows.entries()) {
+        expect(backendDiffDays(window.from, window.to)).toBeLessThanOrEqual(
+          HR_CALENDAR_MAX_WINDOW_DAYS,
+        );
+        if (index > 0) {
+          const priorEnd = windows[index - 1]?.to ?? "";
+          const nextDay = new Date(`${priorEnd}T00:00:00.000Z`);
+          nextDay.setUTCDate(nextDay.getUTCDate() + 1);
+          expect(window.from).toBe(format(nextDay, "yyyy-MM-dd"));
+        }
+      }
+    }
+  });
+
+  it("covers every day of the view range without gaps or oversized requests", () => {
+    for (const anchor of anchors()) {
+      const { rangeStart, rangeEnd } = viewWindow(anchor);
+      const windows = splitHrCalendarWindow(rangeStart, rangeEnd);
+      expect(windows[0]?.from).toBe(format(rangeStart, "yyyy-MM-dd"));
+      expect(windows.at(-1)?.to).toBe(format(rangeEnd, "yyyy-MM-dd"));
+      for (const [index, window] of windows.entries()) {
+        expect(backendDiffDays(window.from, window.to)).toBeLessThanOrEqual(
+          HR_CALENDAR_MAX_WINDOW_DAYS,
+        );
+        if (index > 0) {
+          const priorEnd = windows[index - 1]?.to ?? "";
+          const nextDay = new Date(`${priorEnd}T00:00:00.000Z`);
+          nextDay.setUTCDate(nextDay.getUTCDate() + 1);
+          expect(window.from).toBe(format(nextDay, "yyyy-MM-dd"));
+        }
+      }
+    }
   });
 });

@@ -35,7 +35,7 @@ export function PortfoliosPage() {
     createOpen,
     editTarget,
     deleteTarget,
-    createPortfolio,
+    isCreating,
     updatePortfolio,
     searchInputRef,
     handleCreate,
@@ -157,7 +157,7 @@ export function PortfoliosPage() {
         defaultValues={editTarget ?? undefined}
         onSubmitCreate={handleCreate}
         onSubmitEdit={handleEdit}
-        isPending={createPortfolio.isPending || updatePortfolio.isPending}
+        isPending={isCreating || updatePortfolio.isPending}
       />
 
       <ConfirmDialog

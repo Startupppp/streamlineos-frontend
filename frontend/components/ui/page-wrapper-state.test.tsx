@@ -3,6 +3,26 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { PageWrapper } from "./page-wrapper";
 
 describe("PageWrapper state", () => {
+  it("shows matching filter placeholders while loading and keeps live filters for empty search results", () => {
+    const { rerender } = render(
+      <TooltipProvider>
+        <PageWrapper title="Employees" filters={<input aria-label="Search" />} loadingFilters={<div>Filter skeleton</div>} state={{ kind: "loading" }} loading={<div>Table skeleton</div>}>
+          <div>table</div>
+        </PageWrapper>
+      </TooltipProvider>,
+    );
+    expect(screen.getByText("Filter skeleton")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Search")).toBeNull();
+    rerender(
+      <TooltipProvider>
+        <PageWrapper title="Employees" filters={<input aria-label="Search" />} state={{ kind: "filtered-empty" }} loading={<div>Table skeleton</div>}>
+          <div>table</div>
+        </PageWrapper>
+      </TooltipProvider>,
+    );
+    expect(screen.getByLabelText("Search")).toBeInTheDocument();
+    expect(screen.getByText(/no results match/i)).toBeInTheDocument();
+  });
   it("renders children untouched when no state is supplied, so existing pages cannot change", () => {
     render(
       <TooltipProvider>

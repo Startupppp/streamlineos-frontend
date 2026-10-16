@@ -93,6 +93,11 @@ describe("KB ingestion-state sources sheet — accessibility", () => {
         onOpenChange={jest.fn()}
         sources={sources}
         isLoading={false}
+        sourceError={null}
+        sourceHasMore={false}
+        sourceIsFetchingMore={false}
+        onSourceLoadMore={jest.fn()}
+        onSourceRetry={jest.fn()}
         readyCount={sources.filter((s) => s.status === "ready").length}
         onUploadClick={jest.fn()}
         uploadPending={false}

@@ -124,7 +124,7 @@ it.each(["denied", "loading"] as const)("does not request QA data while access i
   await waitFor(() => expect(mockGet).not.toHaveBeenCalled());
   expect(screen.queryByText("No test runs")).not.toBeInTheDocument();
   expect(screen.queryByText("Quality results")).not.toBeInTheDocument();
-  if (access === "denied") expect(screen.getByText(/permission/i)).toBeInTheDocument();
+  if (access === "denied") expect(screen.getByText(/required permission for this section|You need the/i)).toBeInTheDocument();
 });
 
 it("shows loading until the real read settles", () => {

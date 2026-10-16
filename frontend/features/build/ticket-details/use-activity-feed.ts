@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
+import { useSubmitGuard } from "@/hooks/common/use-submit-guard";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -31,6 +32,7 @@ import {
   useDeleteProjectFile,
   useUploadProjectFile,
 } from "@/hooks/api/build/project-files";
+import { validatePreUpload } from "@/lib/build-upload-validator";
 
 const COMMENT_RENDER_PAGE_SIZE = 20;
 
@@ -130,7 +132,7 @@ export function useActivityFeed({
   const addReaction = useAddReaction(projectId, ticketId);
   const removeReaction = useRemoveReaction(projectId, ticketId);
 
-  const handleSubmit = useCallback(() => {
+  const handleSubmitInner = useCallback(async () => {
     const content = newComment.trim();
     if (!content) return;
     const optimisticAuthor = session?.user?.id
@@ -140,8 +142,14 @@ export function useActivityFeed({
           image: session.user.image ?? null,
         }
       : undefined;
-    addComment.mutate({ ticketId, projectId, content, optimisticAuthor });
+    return addComment.mutateAsync({ ticketId, projectId, content, optimisticAuthor });
   }, [newComment, ticketId, projectId, addComment, session]);
+  const commentSubmitGuard = useSubmitGuard(handleSubmitInner);
+  const isPostingComment = addComment.isPending || commentSubmitGuard.isSubmitting;
+
+  const handleSubmit = useCallback(() => {
+    void commentSubmitGuard.submit().catch(() => {});
+  }, [commentSubmitGuard]);
 
   const handleReplySubmit = useCallback(
     (commentId: number) => {
@@ -292,14 +300,12 @@ export function useActivityFeed({
   }, [retryPersistence]);
   const handleAttachFiles = useCallback(
     async (files: File[]) => {
-      const disallowed = files.find(
-        (file) => !isAllowedProjectFileType(file.type),
-      );
-      if (disallowed) {
-        toast.error(
-          `${disallowed.name} is not an allowed file type.`,
-        );
-        return;
+      for (const file of files) {
+        const error = validatePreUpload(file, (f) => isAllowedProjectFileType(f.type));
+        if (error) {
+          toast.error(error);
+          return;
+        }
       }
       const oversized = files.find(
         (file) => file.size > MAX_PROJECT_FILE_BYTES,
@@ -414,6 +420,7 @@ export function useActivityFeed({
     deletingId,
     commentNotFound,
     addComment,
+    isPostingComment,
     addReply,
     repliesMap,
     sortedTopLevel,

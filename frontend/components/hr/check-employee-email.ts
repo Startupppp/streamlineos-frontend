@@ -18,10 +18,10 @@ export interface EmployeeAdmissionGuidance {
 const GUIDANCE: Record<EmployeeAdmissionStatus, EmployeeAdmissionGuidance> = {
   available: { blocking: false, attachToExistingMember: false, message: null },
   "member-without-employment": {
-    blocking: false,
-    attachToExistingMember: true,
+    blocking: true,
+    attachToExistingMember: false,
     message:
-      "This person is already a member of this organization. Continuing attaches an employment record to their existing account — it does not create a second login or use another seat.",
+      "This email belongs to a member of your organization. Manage their account from the Users panel.",
   },
   employee: {
     blocking: true,

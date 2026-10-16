@@ -49,7 +49,7 @@ export function ProgramsPage() {
     pageNumber,
     hasPrevious,
     goPrevious,
-    createProgram,
+    isCreating,
     updateProgram,
     deleteProgram,
   } = useProgramsPage();
@@ -157,7 +157,7 @@ export function ProgramsPage() {
         defaultValues={editTarget ?? undefined}
         onSubmitCreate={handleCreate}
         onSubmitEdit={handleEdit}
-        isPending={createProgram.isPending || updateProgram.isPending}
+        isPending={isCreating || updateProgram.isPending}
       />
 
       <ConfirmDialog

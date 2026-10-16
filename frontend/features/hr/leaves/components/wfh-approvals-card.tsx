@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Textarea } from "@/components/ui/textarea";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageState } from "@/components/shared/page-state";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -164,9 +164,9 @@ export function WfhApprovalsCard() {
             <SheetTitle className="text-base font-semibold">
               Reject WFH Request
             </SheetTitle>
-            <p className="text-sm text-muted-foreground">
+            <SheetDescription>
               Provide a reason for rejecting this request.
-            </p>
+            </SheetDescription>
           </SheetHeader>
           <div className="flex-1 space-y-4 p-5">
             <div className="space-y-1.5">

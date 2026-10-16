@@ -1,3 +1,5 @@
+import type { ComponentProps } from "react";
+import { PageState } from "@/components/shared/page-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -19,6 +21,12 @@ import {
 import { FEEDBACK_SKELETON_HEADERS } from "./product-feedback-columns";
 import { INSIGHT_VIEWS } from "./product-insights-tabs";
 import { PRODUCT_SETTINGS_TABS } from "./product-settings-tabs";
+import { MANAGED_PRODUCT_ROUTE_TITLES } from "./managed-product-route-title";
+
+export function ManagedProductLoadingPageWrapper(props: ComponentProps<typeof PageWrapper>) {
+  const loading = <PageWrapper {...props} />;
+  return <PageState resolution={{ kind: "loading" }} loading={loading}>{loading}</PageState>;
+}
 
 function RouteToolbar({
   search = false,
@@ -43,8 +51,8 @@ function ActionSkeleton({ className }: { className: string }) {
 
 export function ManagedProductOverviewRouteLoading() {
   return (
-    <PageWrapper
-      title={<Skeleton className="h-7 w-48" />}
+    <ManagedProductLoadingPageWrapper
+      title={MANAGED_PRODUCT_ROUTE_TITLES.overview}
       subtitle={<Skeleton className="h-4 w-64 max-w-full" />}
       badge={<Skeleton className="h-5 w-10 rounded-full" />}
       contentClassName="h-auto"
@@ -52,14 +60,14 @@ export function ManagedProductOverviewRouteLoading() {
       filters={<RouteToolbar controls={["w-28", "w-32", "w-24"]} />}
     >
       <ManagedProductOverviewSkeleton />
-    </PageWrapper>
+    </ManagedProductLoadingPageWrapper>
   );
 }
 
 export function ProductFeedbackRouteLoading() {
   return (
-    <PageWrapper
-      title="Feedback"
+    <ManagedProductLoadingPageWrapper
+      title={MANAGED_PRODUCT_ROUTE_TITLES.feedback}
       subtitle="Submissions collected from widgets linked to this product"
       contentClassName={MANAGED_PRODUCT_DETAIL_CONTENT_CLASS}
       actions={<ActionSkeleton className="w-36" />}
@@ -68,7 +76,7 @@ export function ProductFeedbackRouteLoading() {
       <ManagedProductDetailShell>
         <DataTableSkeleton rows={10} headers={FEEDBACK_SKELETON_HEADERS} mobileCards />
       </ManagedProductDetailShell>
-    </PageWrapper>
+    </ManagedProductLoadingPageWrapper>
   );
 }
 
@@ -102,8 +110,8 @@ function InsightTabStrip() {
 
 export function ProductInsightsRouteLoading() {
   return (
-    <PageWrapper
-      title="Insights"
+    <ManagedProductLoadingPageWrapper
+      title={MANAGED_PRODUCT_ROUTE_TITLES.insights}
       subtitle="Customer signals, planned work, and delivery progress"
       contentClassName={MANAGED_PRODUCT_DETAIL_CONTENT_CLASS}
       actions={<ActionSkeleton className="w-28" />}
@@ -112,14 +120,14 @@ export function ProductInsightsRouteLoading() {
       <ManagedProductDetailShell className="h-auto min-h-full flex-none overflow-visible">
         <ProductInsightsSkeleton />
       </ManagedProductDetailShell>
-    </PageWrapper>
+    </ManagedProductLoadingPageWrapper>
   );
 }
 
 export function ProductRoadmapRouteLoading() {
   return (
-    <PageWrapper
-      title="Roadmap"
+    <ManagedProductLoadingPageWrapper
+      title={MANAGED_PRODUCT_ROUTE_TITLES.roadmap}
       subtitle="Product roadmap items"
       contentClassName={MANAGED_PRODUCT_DETAIL_CONTENT_CLASS}
       actions={
@@ -134,14 +142,14 @@ export function ProductRoadmapRouteLoading() {
       <ManagedProductDetailShell>
         <ProductRoadmapSkeleton />
       </ManagedProductDetailShell>
-    </PageWrapper>
+    </ManagedProductLoadingPageWrapper>
   );
 }
 
 export function ProductGoalsRouteLoading() {
   return (
-    <PageWrapper
-      title="Goals & OKRs"
+    <ManagedProductLoadingPageWrapper
+      title={MANAGED_PRODUCT_ROUTE_TITLES.goals}
       subtitle="Product objectives and key results"
       contentClassName={MANAGED_PRODUCT_DETAIL_CONTENT_CLASS}
       actions={<ActionSkeleton className="w-28" />}
@@ -153,14 +161,14 @@ export function ProductGoalsRouteLoading() {
         </div>
         <ProductGoalsGridSkeleton />
       </ManagedProductDetailShell>
-    </PageWrapper>
+    </ManagedProductLoadingPageWrapper>
   );
 }
 
 export function ProductProjectsRouteLoading() {
   return (
-    <PageWrapper
-      title="Linked Projects"
+    <ManagedProductLoadingPageWrapper
+      title={MANAGED_PRODUCT_ROUTE_TITLES.projects}
       subtitle="Projects contributing to this product"
       contentClassName={MANAGED_PRODUCT_DETAIL_CONTENT_CLASS}
       actions={<ActionSkeleton className="w-32" />}
@@ -173,7 +181,7 @@ export function ProductProjectsRouteLoading() {
           mobileCards
         />
       </ManagedProductDetailShell>
-    </PageWrapper>
+    </ManagedProductLoadingPageWrapper>
   );
 }
 
@@ -197,12 +205,12 @@ function SettingsTabStrip() {
 
 export function ProductSettingsRouteLoading() {
   return (
-    <PageWrapper
-      title="Settings"
+    <ManagedProductLoadingPageWrapper
+      title={MANAGED_PRODUCT_ROUTE_TITLES.settings}
       subtitle="Configure this product"
       filters={<SettingsTabStrip />}
     >
       <ProductSettingsSkeleton />
-    </PageWrapper>
+    </ManagedProductLoadingPageWrapper>
   );
 }

@@ -1,8 +1,10 @@
 import React from "react";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, act } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import TrashPage from "./trash-page";
 import type { KbPageListItem } from "@/hooks/api/kb/page-types";
 import type { DataTableColumn } from "@/components/ui/data-table.types";
+import { DataTable } from "@/components/ui/data-table";
 
 jest.mock("next/navigation", () => ({
   useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn() })),
@@ -19,6 +21,15 @@ jest.mock("@/hooks/api/kb/pages", () => ({
   useKbBulkRestorePages: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   useKbBulkPurgePages: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   useKbTrashPurgeImpact: jest.fn(() => ({ data: undefined })),
+  useKbTrashDeleters: jest.fn(() => ({
+    data: { pages: [{ data: [
+      { membershipId: 7, name: "Alice Chen" },
+      { membershipId: 8, name: "Bob Smith" },
+    ], selected: null }] },
+    hasNextPage: false,
+    fetchNextPage: jest.fn(),
+    isFetchingNextPage: false,
+  })),
 }));
 
 jest.mock("@/hooks/api/access", () => ({
@@ -72,6 +83,21 @@ jest.mock("@/components/ui/confirm-dialog", () => ({
   ConfirmDialog: jest.fn(() => null),
 }));
 
+jest.mock("@/components/ui/date-picker", () => ({
+  DatePicker: jest.fn(({ ariaLabel, value, onChange }: {
+    ariaLabel: string;
+    value: string;
+    onChange: (value: string) => void;
+  }) => (
+    <input
+      type="date"
+      aria-label={ariaLabel}
+      value={value}
+      onChange={(event) => onChange(event.target.value)}
+    />
+  )),
+}));
+
 jest.mock("./trash-retention-section", () => ({
   TrashRetentionSection: jest.fn(() => <div data-testid="trash-retention" />),
 }));
@@ -91,19 +117,6 @@ jest.mock("@/hooks/common/use-cursor-pagination", () => ({
     goNext: jest.fn(),
     goPrevious: jest.fn(),
     reset: jest.fn(),
-  })),
-}));
-
-jest.mock("@/hooks/api/organization", () => ({
-  useOrgMembers: jest.fn(() => ({
-    data: {
-      data: [
-        { membershipId: 7, userId: "user-7", name: "Alice Chen", email: "alice@example.com", image: null, role: "member", joinedAt: "2024-01-01T00:00:00Z", totpEnabled: false },
-        { membershipId: 8, userId: "user-8", name: "Bob Smith", email: "bob@example.com", image: null, role: "member", joinedAt: "2024-01-02T00:00:00Z", totpEnabled: false },
-      ],
-      pagination: { hasMore: false, nextCursor: null, limit: 100 },
-    },
-    isLoading: false,
   })),
 }));
 
@@ -131,6 +144,12 @@ const { useSearchParams } = jest.requireMock("next/navigation") as {
 };
 const { useCan } = jest.requireMock("@/hooks/api/access") as {
   useCan: jest.Mock;
+};
+const { useKbTrashDeleters } = jest.requireMock("@/hooks/api/kb/pages") as {
+  useKbTrashDeleters: jest.Mock;
+};
+const { useCursorPagination } = jest.requireMock("@/hooks/common/use-cursor-pagination") as {
+  useCursorPagination: jest.Mock;
 };
 
 const emptyListResponse = {
@@ -183,6 +202,14 @@ const nonEmptyListResponse = {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  useCursorPagination.mockReturnValue({
+    cursor: undefined,
+    pageNumber: 1,
+    hasPrevious: false,
+    goNext: jest.fn(),
+    goPrevious: jest.fn(),
+    reset: jest.fn(),
+  });
   useSearchParams.mockReturnValue(new URLSearchParams());
   useKbPagesTrash.mockReturnValue({
     data: emptyListResponse,
@@ -227,6 +254,20 @@ describe("trash page deleted-by filter", () => {
       expect.not.objectContaining({ deletedByMembershipId: expect.anything() }),
     );
   });
+
+  it("searches the member directory so choices are not limited to its first page", () => {
+    jest.useFakeTimers();
+    try {
+      render(<TrashPage />);
+      fireEvent.change(screen.getByRole("searchbox", { name: "Find member" }), {
+        target: { value: "Zoe" },
+      });
+      act(() => jest.advanceTimersByTime(300));
+      expect(useKbTrashDeleters).toHaveBeenLastCalledWith("Zoe", undefined);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
 });
 
 describe("trash page space filter", () => {
@@ -267,9 +308,56 @@ describe("trash page date filter", () => {
     expect(screen.getByLabelText(/deleted from/i)).toBeInTheDocument();
   });
 
-  it("renders a deletedBefore date input to close the upper end of the date range", () => {
+  it("renders an inclusive deleted-through date input", () => {
     render(<TrashPage />);
-    expect(screen.getByLabelText(/deleted before/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/deleted through/i)).toBeInTheDocument();
+  });
+
+  it("writes date-only filters to the URL and resets pagination", () => {
+    const update = jest.fn();
+    const reset = jest.fn();
+    const { useUrlFilters } = jest.requireMock("@/lib/url-state/use-url-filters") as {
+      useUrlFilters: jest.Mock;
+    };
+    useUrlFilters.mockReturnValue({ update, isPending: false });
+    useCursorPagination.mockReturnValue({
+      cursor: undefined,
+      pageNumber: 1,
+      hasPrevious: false,
+      goNext: jest.fn(),
+      goPrevious: jest.fn(),
+      reset,
+    });
+
+    render(<TrashPage />);
+    fireEvent.change(screen.getByLabelText(/deleted from/i), {
+      target: { value: "2026-06-01" },
+    });
+    fireEvent.change(screen.getByLabelText(/deleted through/i), {
+      target: { value: "2026-06-30" },
+    });
+
+    expect(update).toHaveBeenNthCalledWith(1, { deletedFrom: "2026-06-01" });
+    expect(update).toHaveBeenNthCalledWith(2, { deletedBefore: "2026-06-30" });
+    expect(reset).toHaveBeenCalledTimes(2);
+  });
+
+  it("sends local-day boundaries with an exclusive next-day upper bound", () => {
+    useSearchParams.mockReturnValue(new URLSearchParams(
+      "deletedFrom=2026-06-01&deletedBefore=2026-06-30",
+    ));
+
+    render(<TrashPage />);
+
+    const from = new Date(2026, 5, 1);
+    const afterThroughDay = new Date(2026, 6, 1);
+    expect(useKbPagesTrash).toHaveBeenCalledWith(expect.objectContaining({
+      deletedFrom: from.toISOString(),
+      deletedBefore: afterThroughDay.toISOString(),
+    }));
+    expect(screen.getByLabelText(/deleted from/i)).toHaveValue("2026-06-01");
+    expect(screen.getByLabelText(/deleted through/i)).toHaveValue("2026-06-30");
+    expect(new Date(afterThroughDay.getTime() - 1).getDate()).toBe(30);
   });
 
   it("passes deletedFrom from the URL to the trash hook when the param is present", () => {
@@ -459,7 +547,111 @@ describe("trash page retention permission split", () => {
   });
 });
 
+describe("trash page mobile card selection", () => {
+  it("exposes a labelled keyboard-operable checkbox that reaches bulk restore", async () => {
+    usePageState.mockReturnValue({ kind: "content" });
+    useKbPagesTrash.mockReturnValue({
+      data: nonEmptyListResponse,
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+
+    render(<TrashPage />);
+
+    const mobileCard = jest.mocked(DataTable).mock.calls.at(-1)?.[0].mobileCard;
+    expect(mobileCard).toBeDefined();
+    render(<>{mobileCard?.(nonEmptyListResponse.data[0], 0)}</>);
+
+    const select = screen.getByRole("checkbox", { name: "Select Some Page" });
+    select.focus();
+    await userEvent.setup().keyboard(" ");
+
+    expect(screen.getByRole("button", { name: "Restore 1" })).toBeInTheDocument();
+  });
+});
+
 describe("trash page first-empty is not the same claim as filtered-empty", () => {
+  it("updates the search input when in-place navigation changes the URL query", () => {
+    useSearchParams.mockReturnValue(new URLSearchParams("q=invoice"));
+    const view = render(<TrashPage />);
+    expect(screen.getByRole("searchbox", { name: "Search deleted pages" })).toHaveValue("invoice");
+
+    useSearchParams.mockReturnValue(new URLSearchParams("q=policy"));
+    view.rerender(<TrashPage />);
+
+    expect(screen.getByRole("searchbox", { name: "Search deleted pages" })).toHaveValue("policy");
+    expect(useKbPagesTrash).toHaveBeenLastCalledWith(expect.objectContaining({ q: "policy" }));
+  });
+
+  it("does not let an old debounced search overwrite a navigated query", () => {
+    jest.useFakeTimers();
+    try {
+      const update = jest.fn();
+      const { useUrlFilters } = jest.requireMock(
+        "@/lib/url-state/use-url-filters",
+      ) as { useUrlFilters: jest.Mock };
+      useUrlFilters.mockReturnValue({ update, isPending: false });
+      useSearchParams.mockReturnValue(new URLSearchParams("q=invoice"));
+
+      const view = render(<TrashPage />);
+      fireEvent.change(screen.getByRole("searchbox", { name: "Search deleted pages" }), {
+        target: { value: "unfinished" },
+      });
+
+      useSearchParams.mockReturnValue(new URLSearchParams("q=policy"));
+      view.rerender(<TrashPage />);
+      act(() => jest.advanceTimersByTime(350));
+
+      expect(screen.getByRole("searchbox", { name: "Search deleted pages" })).toHaveValue("policy");
+      expect(update).not.toHaveBeenCalled();
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it("cancels a pending search update when Trash unmounts", () => {
+    jest.useFakeTimers();
+    try {
+      const update = jest.fn();
+      const { useUrlFilters } = jest.requireMock(
+        "@/lib/url-state/use-url-filters",
+      ) as { useUrlFilters: jest.Mock };
+      useUrlFilters.mockReturnValue({ update, isPending: false });
+
+      const view = render(<TrashPage />);
+      fireEvent.change(screen.getByRole("searchbox", { name: "Search deleted pages" }), {
+        target: { value: "unfinished" },
+      });
+      view.unmount();
+      act(() => jest.advanceTimersByTime(350));
+
+      expect(update).not.toHaveBeenCalled();
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it("offers the previous page instead of claiming the whole trash is empty when a later cursor page is empty", () => {
+    const goPrevious = jest.fn();
+    useCursorPagination.mockReturnValue({
+      cursor: "later-page",
+      pageNumber: 2,
+      hasPrevious: true,
+      goNext: jest.fn(),
+      goPrevious,
+      reset: jest.fn(),
+    });
+
+    render(<TrashPage />);
+
+    expect(screen.getByText("No deleted pages on this page")).toBeInTheDocument();
+    expect(screen.queryByText("Trash is empty")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Previous page" }));
+    expect(goPrevious).toHaveBeenCalledTimes(1);
+  });
+
   it("with no filters in the URL the empty branch claims the trash itself is empty and offers no Clear filters escape", () => {
     useSearchParams.mockReturnValue(new URLSearchParams());
 

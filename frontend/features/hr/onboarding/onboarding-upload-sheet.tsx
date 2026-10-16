@@ -3,7 +3,6 @@
 import { useCallback, useState } from "react";
 import { Upload } from "lucide-react";
 import { toast } from "sonner";
-import { Label } from "@/components/ui/label";
 import { HrSheet } from "@/components/shared/hr-sheet";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
@@ -130,9 +129,9 @@ export function UploadSheet({
       )}
 
       <div className="space-y-1.5">
-        <Label className="text-sm font-medium">
-          Document File <span className="text-destructive">*</span>
-        </Label>
+        <p className="text-sm font-medium">
+          Document File <span className="text-destructive" aria-hidden="true">*</span>
+        </p>
         <div
           className={cn(
             "rounded-lg border border-dashed p-6 transition-colors duration-200",

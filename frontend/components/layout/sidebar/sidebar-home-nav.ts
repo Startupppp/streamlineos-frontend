@@ -45,7 +45,13 @@ export const HOME_NAV_GROUPS: NavGroup[] = [
         label: "Calendar",
         href: "/calendar",
         icon: CalendarDays,
-        inactivePrefixes: ["/calendar/settings"],
+        inactivePrefixes: ["/calendar/settings", "/calendar/resource-approvals"],
+      },
+      {
+        label: "Calendar resource approvals",
+        href: "/calendar/resource-approvals",
+        icon: ListChecks,
+        requiredPermission: ["calendar:admin:manage", "hr:assets:manage", "inventory:warehouses:manage"],
       },
       {
         label: "Chat",

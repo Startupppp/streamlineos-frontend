@@ -1,6 +1,10 @@
 "use client";
 
-import { useState, useMemo, useCallback, type ChangeEvent } from "react";
+import { useState, useMemo, useCallback } from "react";
+import { useForm } from "react-hook-form";
+import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
+import { zodResolver } from "@hookform/resolvers/zod";
+import type { z } from "zod";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -35,7 +39,9 @@ import { cn } from "@/lib/utils";
 import { TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useOrgDisplay } from "@/hooks/api/org-display";
-import { formatMoneyCompact } from "@/lib/format-utils";
+import { formatMoneyCompact, formatINRCompact, formatINR, formatMoney } from "@/lib/format-utils";
+import { useSubmitGuard } from "@/hooks/common/use-submit-guard";
+import { budgetFormSchema } from "@/lib/validation/projects";
 import {
   useMemberCostColumns,
   type MemberBreakdownRow,
@@ -94,36 +100,54 @@ export function ProjectBudgetPage({
   );
 
   const [editMode, setEditMode] = useState(false);
-  const [newBudget, setNewBudget] = useState("");
+
+  const budgetForm = useForm<z.input<typeof budgetFormSchema>, unknown, z.output<typeof budgetFormSchema>>({
+    resolver: zodResolver(budgetFormSchema),
+    defaultValues: { budget: "" },
+  });
+
+  useRegisterDirtyState(editMode && budgetForm.formState.isDirty);
 
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
 
   function handleOpenEdit() {
-    setNewBudget(String(budget?.plannedBudget ?? ""));
+    budgetForm.reset({ budget: budget?.plannedBudget != null ? String(budget.plannedBudget) : "" });
     setEditMode(true);
   }
 
   function handleCancelEdit() {
     setEditMode(false);
+    budgetForm.reset({ budget: "" });
   }
 
-  function handleBudgetInputChange(e: ChangeEvent<HTMLInputElement>) {
-    setNewBudget(e.target.value);
-  }
-
-  function handleSaveBudget() {
-    const val = Number(newBudget);
-    if (!Number.isFinite(val) || val < 0) return;
-    updateBudget.mutate(val, {
-      onSuccess: () => {
+  const handleSaveBudgetInner = useCallback(async () => {
+    await budgetForm.handleSubmit(async (data) => {
+      try {
+        await updateBudget.mutateAsync(data.budget);
         toast.success("Budget updated");
         setEditMode(false);
-      },
-      onError: (error) => toast.error(getErrorMessage(error)),
-    });
-  }
+        budgetForm.reset({ budget: "" });
+      } catch (err) {
+        toast.error(getErrorMessage(err));
+      }
+    })();
+  }, [budgetForm, updateBudget, setEditMode]);
+
+  const budgetSaveGuard = useSubmitGuard(handleSaveBudgetInner);
+
+  const formatBudget = useCallback((value: number | null | undefined): string => {
+    const v = value ?? 0;
+    if (!display || display.currency === "INR") return formatINRCompact(v);
+    return formatMoneyCompact(v, display);
+  }, [display]);
+
+  const formatBudgetFull = useCallback((value: number | null | undefined): string => {
+    const v = value ?? 0;
+    if (!display || display.currency === "INR") return formatINR(v);
+    return formatMoney(v, display);
+  }, [display]);
 
   const memberColumns = useMemberCostColumns({
     resolveMemberUser,
@@ -138,36 +162,40 @@ export function ProjectBudgetPage({
           title={user ? (user.name ?? user.email ?? row.userId) : row.userId}
           meta={[
             { label: "Hours", value: `${row.hours.toFixed(1)} hrs` },
-            { label: "Cost", value: formatMoneyCompact(row.cost, display) },
+            { label: "Cost", value: formatBudget(row.cost) },
           ]}
         />
       );
     },
-    [resolveMemberUser, display],
+    [resolveMemberUser, formatBudget],
   );
 
   const budgetActions = editMode ? (
-    <div className="flex items-center gap-2">
-      <Input
-        type="number"
-        min={0}
-        aria-label="Planned budget in rupees"
-        className="text-sm w-36"
-        value={newBudget}
-        onChange={handleBudgetInputChange}
-        placeholder={String(budget?.plannedBudget ?? "")}
-      />
-      <LoadingButton
-        size="sm"
-        onClick={handleSaveBudget}
-        isPending={updateBudget.isPending}
-        loadingText="Saving…"
-      >
-        Save
-      </LoadingButton>
-      <Button size="sm" variant="outline" onClick={handleCancelEdit}>
-        Cancel
-      </Button>
+    <div className="flex flex-col gap-1">
+      <div className="flex items-center gap-2">
+        <Input
+          type="number"
+          min={0}
+          aria-label="Planned budget"
+          className="text-sm w-36"
+          placeholder={budget?.plannedBudget != null ? String(budget.plannedBudget) : "0"}
+          {...budgetForm.register("budget")}
+        />
+        <LoadingButton
+          size="sm"
+          onClick={() => void budgetSaveGuard.submit()}
+          isPending={budgetSaveGuard.isSubmitting}
+          loadingText="Saving…"
+        >
+          Save
+        </LoadingButton>
+        <Button size="sm" variant="outline" onClick={handleCancelEdit}>
+          Cancel
+        </Button>
+      </div>
+      {budgetForm.formState.errors.budget ? (
+        <p className="text-xs text-destructive">{budgetForm.formState.errors.budget.message}</p>
+      ) : null}
     </div>
   ) : (
     <Button size="sm" variant="outline" onClick={handleOpenEdit}>
@@ -215,16 +243,18 @@ export function ProjectBudgetPage({
         >
           <PmSection index={0}>
             <StatCardGrid cols={3}>
-              <StatCard
-                label="Planned Budget"
-                value={formatMoneyCompact(budget?.plannedBudget ?? 0, display)}
-                icon={IndianRupee}
-                hint={budget?.plannedBudget ? "Project budget" : "Not set"}
-                tone="default"
-              />
+              <div title={formatBudgetFull(budget?.plannedBudget ?? 0)}>
+                <StatCard
+                  label="Planned Budget"
+                  value={formatBudget(budget?.plannedBudget ?? 0)}
+                  icon={IndianRupee}
+                  hint={budget?.plannedBudget ? "Project budget" : "Not set"}
+                  tone="default"
+                />
+              </div>
               <StatCard
                 label="Actual Cost"
-                value={formatMoneyCompact(budget?.actualCost ?? 0, display)}
+                value={formatBudget(budget?.actualCost ?? 0)}
                 icon={TrendingUp}
                 hint={
                   uncostedHours > 0
@@ -233,22 +263,21 @@ export function ProjectBudgetPage({
                 }
                 tone={overBudget ? "red" : "default"}
               />
-              <StatCard
-                label="Remaining"
-                value={formatMoneyCompact(
-                  Math.abs(budget?.remaining ?? 0),
-                  display,
-                )}
-                icon={IndianRupee}
-                hint={
-                  overBudget
-                    ? "Over budget"
-                    : uncostedHours > 0
-                      ? "Before uncosted hours"
-                      : "Available"
-                }
-                tone={overBudget ? "red" : "emerald"}
-              />
+              <div title={formatBudgetFull(Math.abs(budget?.remaining ?? 0))}>
+                <StatCard
+                  label="Remaining"
+                  value={formatBudget(Math.abs(budget?.remaining ?? 0))}
+                  icon={IndianRupee}
+                  hint={
+                    overBudget
+                      ? "Over budget"
+                      : uncostedHours > 0
+                        ? "Before uncosted hours"
+                        : "Available"
+                  }
+                  tone={overBudget ? "red" : "emerald"}
+                />
+              </div>
             </StatCardGrid>
           </PmSection>
 
@@ -261,7 +290,7 @@ export function ProjectBudgetPage({
                 <div className="mb-1 flex items-center justify-between text-xs text-muted-foreground">
                   <span>{budget?.utilizationPct ?? 0}% used</span>
                   <span>
-                    {formatMoneyCompact(budget?.plannedBudget ?? 0, display)}{" "}
+                    {formatBudget(budget?.plannedBudget ?? 0)}{" "}
                     planned
                   </span>
                 </div>

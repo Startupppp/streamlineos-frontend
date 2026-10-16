@@ -9,7 +9,8 @@ import {
   useUpdateFeedbucketWidget,
 } from "@/hooks/api/feedbucket";
 import { useProjects } from "@/hooks/api/build/projects";
-import { useMemberDirectory } from "@/hooks/api/members/use-member-directory";
+import { useBuildMembers } from "@/hooks/api/build/build-members";
+import { useOrgMembersByIds } from "@/hooks/api/organization";
 import type { FeedbucketWidget } from "@/types/feedbucket";
 import type { ComboboxOption } from "@/components/ui/combobox";
 
@@ -21,10 +22,10 @@ export function useWidgetSetup(widget: FeedbucketWidget, open: boolean) {
   const projectsQuery = useProjects(undefined, {
     enabled: open && !widget.projectId,
   });
-  const { members: directoryMembers } = useMemberDirectory(
-    { kind: "build" },
-    { enabled: open },
-  );
+  const { data: buildMembersPage } = useBuildMembers({ limit: 100 }, { enabled: open });
+  const members = useMemo(() => buildMembersPage?.data ?? [], [buildMembersPage]);
+  const buildMemberIds = useMemo(() => new Set(members.map((member) => member.id)), [members]);
+  const { data: orgMembersPage } = useOrgMembersByIds(members.map((member) => member.id), { enabled: open });
 
   const projectOptions = useMemo<ComboboxOption[]>(() => {
     if (!projectsQuery.data) return [];
@@ -36,11 +37,11 @@ export function useWidgetSetup(widget: FeedbucketWidget, open: boolean) {
 
   const membershipIdToUserId = useMemo(() => {
     const map = new Map<number, string>();
-    for (const m of directoryMembers) {
-      if (m.membershipId !== null) map.set(m.membershipId, m.id);
+    for (const m of (orgMembersPage?.data ?? []).filter((member) => buildMemberIds.has(member.userId))) {
+      map.set(m.membershipId, m.userId);
     }
     return map;
-  }, [directoryMembers]);
+  }, [orgMembersPage, buildMemberIds]);
 
   const defaultAssigneeUserId = useMemo(() => {
     if (!widget.defaultAssigneeMembershipId) return "";
@@ -142,7 +143,7 @@ export function useWidgetSetup(widget: FeedbucketWidget, open: boolean) {
     confirmRotate,
     setConfirmRotate,
     projectOptions,
-    members: directoryMembers,
+    members,
     membershipIdToUserId,
     defaultAssigneeUserId,
     snippet,

@@ -157,6 +157,27 @@ describe("ProductReleasesPage", () => {
     expect(within(empty).getByRole("button", { name: "New release" })).toBeInTheDocument();
   });
 
+  it("centers the Upcoming empty state across the full column height", () => {
+    setReleases([ROWS[1]!]);
+    render(<ProductReleasesPage managedProductId={7} />);
+    const upcoming = screen.getByRole("region", { name: "Upcoming" });
+    expect(within(upcoming).getByRole("status")).toHaveClass("h-full", "min-h-56");
+  });
+
+  it("renders shipped releases as distinct nested cards", () => {
+    render(<ProductReleasesPage managedProductId={7} />);
+    const shipped = screen.getByRole("list", { name: "Shipped releases" });
+    expect(within(shipped).getAllByRole("listitem")[0]).toHaveAttribute(
+      "data-slot",
+      "shipped-release-card",
+    );
+    expect(within(shipped).getAllByRole("listitem")[0]).toHaveClass(
+      "border",
+      "bg-muted/20",
+      "dark:border-background",
+    );
+  });
+
   it("renders the denied state instead of release content", () => {
     mockUsePageState.mockReturnValue({ kind: "denied", permission: "build:managed-products:view" });
     render(<ProductReleasesPage managedProductId={7} />);

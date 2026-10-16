@@ -9,6 +9,7 @@ import {
   useUpdateOrgCostCenter,
 } from "@/hooks/api/org-hierarchy";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { getValidationFieldErrors } from "@/lib/api-envelope";
 import { cn } from "@/lib/utils";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -59,7 +60,7 @@ function CostCenterForm({
   isPending: _,
 }: {
   defaultValues?: CostCenterFormValues;
-  onSubmit: (v: CostCenterFormValues) => void;
+  onSubmit: (v: CostCenterFormValues) => Promise<void>;
   isPending: boolean;
 }) {
   const form = useForm<CostCenterFormValues>({
@@ -67,9 +68,27 @@ function CostCenterForm({
     defaultValues: defaultValues ?? { code: "", name: "", description: "" },
   });
 
+  async function handleFormSubmit(values: CostCenterFormValues) {
+    try {
+      await onSubmit(values);
+    } catch (error) {
+      const fieldErrors = getValidationFieldErrors(error).filter(
+        (issue) => issue.path === "code" || issue.path === "name",
+      );
+      if (fieldErrors.length === 0) {
+        toast.error(getErrorMessage(error));
+        return;
+      }
+      for (const issue of fieldErrors) {
+        if (issue.path === "code" || issue.path === "name")
+          form.setError(issue.path, { message: issue.message });
+      }
+    }
+  }
+
   return (
     <Form {...form}>
-      <form id="cc-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form id="cc-form" onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-4">
         <div className="grid grid-cols-2 gap-3">
           <FormField
             control={form.control}
@@ -160,43 +179,29 @@ export function OrgCostCentersPage() {
   const displayed = costCenters?.data ?? [];
 
   const handleCreate = useCallback(
-    (values: CostCenterFormValues) => {
-      create.mutate(
-        {
-          code: values.code.toUpperCase(),
-          name: values.name,
-          description: values.description || undefined,
-        },
-        {
-          onSuccess: () => {
-            toast.success("Cost center created");
-            setShowCreate(false);
-          },
-          onError: (err) => toast.error(getErrorMessage(err)),
-        },
-      );
+    async (values: CostCenterFormValues) => {
+      await create.mutateAsync({
+        code: values.code.toUpperCase(),
+        name: values.name,
+        description: values.description || undefined,
+      });
+      toast.success("Cost center created");
+      setShowCreate(false);
     },
     [create],
   );
 
   const handleUpdate = useCallback(
-    (values: CostCenterFormValues) => {
+    async (values: CostCenterFormValues) => {
       if (!editing) return;
-      update.mutate(
-        {
-          id: editing.id,
-          code: values.code.toUpperCase(),
-          name: values.name,
-          description: values.description || undefined,
-        },
-        {
-          onSuccess: () => {
-            toast.success("Cost center updated");
-            setEditing(null);
-          },
-          onError: (err) => toast.error(getErrorMessage(err)),
-        },
-      );
+      await update.mutateAsync({
+        id: editing.id,
+        code: values.code.toUpperCase(),
+        name: values.name,
+        description: values.description || undefined,
+      });
+      toast.success("Cost center updated");
+      setEditing(null);
     },
     [editing, update],
   );

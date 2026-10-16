@@ -9,6 +9,7 @@ import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import type {
   ContentHealthSignalType,
   DismissHealthItemParams,
+  BulkRepairParams,
 } from "@/hooks/api/kb/content-health-schema";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
@@ -123,13 +124,6 @@ export function useAssignHealthItem() {
       });
     },
   });
-}
-
-export interface BulkRepairParams {
-  pageIds: number[];
-  kind: ContentHealthSignalType;
-  repairAction: "assign_owner" | "request_review" | "mark_needs_content";
-  assigneeMembershipId?: number;
 }
 
 const bulkRepairContract = lazyContract(() =>

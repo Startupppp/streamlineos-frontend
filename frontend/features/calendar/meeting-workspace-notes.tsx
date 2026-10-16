@@ -30,11 +30,11 @@ export function MeetingWorkspaceNotes({ workspace }: { workspace: CalendarMeetin
 
   return (
     <div className="space-y-4">
-      <div className="rounded-lg border p-3 space-y-2">
-        <Textarea value={content} onChange={(event) => setContent(event.target.value)} placeholder="Capture discussion, evidence, or an agreed decision" className="min-h-24 text-sm" />
+      <div className="space-y-2 rounded-lg bg-muted p-3 dark:border dark:border-background">
+        <Textarea value={content} onChange={(event) => setContent(event.target.value)} placeholder="Capture discussion, evidence, or an agreed decision" aria-label="Meeting note" className="min-h-24" />
         <div className="flex items-center justify-between gap-3">
-          <Label className="flex items-center gap-2 text-xs font-normal"><Checkbox checked={share} onCheckedChange={(value) => setShare(value === true)} />Share with guests</Label>
-          <Button size="sm" className="h-8" onClick={handleAdd} disabled={add.isPending || !content.trim()}><FileText className="mr-1.5 h-3.5 w-3.5" />Save note</Button>
+          <Label className="font-normal"><Checkbox checked={share} onCheckedChange={(value) => setShare(value === true)} />Share with guests</Label>
+          <Button size="sm" onClick={handleAdd} disabled={add.isPending || !content.trim()}><FileText className="size-4" />Save note</Button>
         </div>
       </div>
       <div className="space-y-2">

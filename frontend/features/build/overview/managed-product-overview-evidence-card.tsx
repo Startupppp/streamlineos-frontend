@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import Link from "next/link";
+import { MessageCircleIcon } from "@animateicons/react/lucide";
 import type { ManagedProductSummary } from "@/hooks/api/build/managed-product-summary";
 import { statusToneClasses } from "@/lib/design-tokens";
 import { formatRelativeTime } from "@/lib/date-utils";
@@ -68,7 +69,7 @@ export function ManagedProductOverviewEvidenceCard({
     <OverviewPanel
       title="Evidence strength"
       description="Volume, freshness and coverage of customer signal."
-      action={<OverviewSectionLink href={`${base}/feedback${retSuffix}`}>View feedback</OverviewSectionLink>}
+      action={<OverviewSectionLink href={`${base}/feedback${retSuffix}`} icon={MessageCircleIcon}>View feedback</OverviewSectionLink>}
     >
       <dl>
         <OverviewFact label="Total feedback" href={`${base}/feedback${retSuffix}`}>{evidence.feedbackCount}</OverviewFact>
@@ -93,10 +94,10 @@ export function ManagedProductOverviewEvidenceCard({
               <li key={theme.theme}>
                 <Link
                   href={`${base}/feedback?theme=${encodeURIComponent(theme.theme)}${ret ? `&ret=${ret}` : ""}`}
-                  className="group flex min-h-11 flex-col justify-center gap-1.5 py-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="group flex min-h-11 min-w-0 flex-col justify-center gap-1.5 rounded-md py-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
-                  <span className="flex items-baseline justify-between gap-3 text-sm">
-                    <span className="truncate transition-colors group-hover:text-primary">{theme.theme}</span>
+                  <span className="flex min-w-0 items-baseline justify-between gap-3 text-sm">
+                    <span className="min-w-0 truncate transition-colors group-hover:text-primary">{theme.theme}</span>
                     <span className="font-mono text-xs tabular-nums text-muted-foreground">{theme.count}</span>
                   </span>
                   <OverviewMeter
@@ -113,7 +114,7 @@ export function ManagedProductOverviewEvidenceCard({
       ) : null}
 
       {previews.opportunities.length > 0 ? (
-        <div>
+        <div className="flex flex-col gap-1">
           <p className="text-xs font-medium text-muted-foreground">Top opportunities</p>
           {previews.opportunities.map((opportunity) => (
             <OverviewRecordLink

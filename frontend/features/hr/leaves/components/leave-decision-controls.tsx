@@ -1,6 +1,9 @@
 "use client";
 
 import React, { useCallback, useState } from "react";
+import { useForm, useController } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { CheckCircle2, XCircle } from "lucide-react";
 import { toast } from "sonner";
 
@@ -8,18 +11,13 @@ import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Label } from "@/components/ui/label";
 import { LoadingButton } from "@/components/ui/loading-button";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import { useApproveLeaveDedicated, useRejectLeaveDedicated } from "@/hooks/api/hr";
 import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
 
 import { LeaveStatusBadge } from "./leave-status-badge";
+import { useMyApprover } from "@/hooks/api/hr/approvers";
 import type { LeaveRequest } from "./leaves-shared";
 
 /**
@@ -43,10 +41,18 @@ export function useLeaveDecisions(): LeaveDecisionControls {
   const rejectMutation = useRejectLeaveDedicated();
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [rejectingId, setRejectingId] = useState<number | null>(null);
-  const [rejectionReason, setRejectionReason] = useState("");
   const [approveDialogOpen, setApproveDialogOpen] = useState(false);
   const [approvingId, setApprovingId] = useState<number | null>(null);
   const [approvalComment, setApprovalComment] = useState("");
+
+  const rejectForm = useForm<{ reason: string }>({
+    resolver: zodResolver(z.object({ reason: z.string().min(1, "Rejection reason is required.") })),
+    defaultValues: { reason: "" },
+  });
+  const { field: reasonField, fieldState: reasonFieldState } = useController({
+    name: "reason",
+    control: rejectForm.control,
+  });
 
   const rawProcessingId =
     approveMutation.variables?.leaveId ?? rejectMutation.variables?.leaveId ?? null;
@@ -59,22 +65,19 @@ export function useLeaveDecisions(): LeaveDecisionControls {
       setApproveDialogOpen(true);
     } else {
       setRejectingId(requestId);
-      setRejectionReason("");
+      rejectForm.reset();
       setRejectDialogOpen(true);
     }
-  }, []);
+  }, [rejectForm]);
 
   const handleApproveConfirm = useCallback(() => {
     if (approvingId === null) return;
     const comment = approvalComment.trim();
     approveMutation.mutate(
-      // PROVISIONAL (decision #8, HRMS-E2E-033): the comment is optional, so an
-      // empty box sends no `comment` key at all rather than an empty string.
-      // Reject's required reason is untouched by this.
       { leaveId: approvingId, ...(comment ? { comment } : {}) },
       {
         onSuccess: () => {
-          toast.success("Leave request approved");
+          toast.success("Request approved successfully");
           setApproveDialogOpen(false);
           setApprovingId(null);
           setApprovalComment("");
@@ -101,37 +104,29 @@ export function useLeaveDecisions(): LeaveDecisionControls {
 
   const handleRejectConfirm = useCallback(() => {
     if (rejectingId === null) return;
-    const reason = rejectionReason.trim();
-    if (!reason) {
-      toast.error("Rejection reason is required");
-      return;
-    }
-    rejectMutation.mutate(
-      { leaveId: rejectingId, reason },
-      {
-        onSuccess: () => {
-          toast.success("Leave request rejected");
-          setRejectDialogOpen(false);
-          setRejectingId(null);
-          setRejectionReason("");
+    void rejectForm.handleSubmit((values) => {
+      rejectMutation.mutate(
+        { leaveId: rejectingId, reason: values.reason },
+        {
+          onSuccess: () => {
+            toast.success("Request rejected successfully");
+            setRejectDialogOpen(false);
+            setRejectingId(null);
+            rejectForm.reset();
+          },
+          onError: (err) => toast.error(getErrorMessage(err)),
         },
-        onError: (err) => toast.error(getErrorMessage(err)),
-      },
-    );
-  }, [rejectingId, rejectionReason, rejectMutation]);
+      );
+    })();
+  }, [rejectingId, rejectMutation, rejectForm]);
 
-  const handleRejectionReasonChange = useCallback(
-    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      setRejectionReason(e.target.value);
-    },
-    [],
-  );
-
-  const handleRejectCancel = useCallback(() => {
-    setRejectDialogOpen(false);
-    setRejectingId(null);
-    setRejectionReason("");
-  }, []);
+  const handleRejectOpenChange = useCallback((open: boolean) => {
+    setRejectDialogOpen(open);
+    if (!open) {
+      setRejectingId(null);
+      rejectForm.reset();
+    }
+  }, [rejectForm]);
 
   const decisionDialogs = (
     <>
@@ -165,49 +160,37 @@ export function useLeaveDecisions(): LeaveDecisionControls {
           </div>
         }
       />
-      <Sheet open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
-        <SheetContent className="sm:max-w-sm p-0 flex flex-col">
-          <SheetHeader className="p-5 pb-4 border-b">
-            <SheetTitle className="text-base font-semibold">
-              Reject Leave Request
-            </SheetTitle>
-            <p className="text-sm text-muted-foreground">
-              Provide a reason for rejecting this request.
-            </p>
-          </SheetHeader>
-          <div className="flex-1 p-5 space-y-4">
-            <div className="space-y-1.5">
-              <Label className="text-xs font-medium text-foreground">
-                Rejection Reason <span className="text-destructive">*</span>
-              </Label>
-              <Textarea
-                placeholder="E.g. Insufficient notice, conflicting deadlines..."
-                value={rejectionReason}
-                onChange={handleRejectionReasonChange}
-                rows={4}
-                className="resize-none text-sm"
-              />
-            </div>
-          </div>
-          <div className="flex gap-2 p-5 pt-4 border-t">
-            <Button
-              variant="outline"
-              className="flex-1 h-9"
-              onClick={handleRejectCancel}
+      <ConfirmDialog
+        open={rejectDialogOpen}
+        onOpenChange={handleRejectOpenChange}
+        title="Reject Leave Request"
+        description="Provide a reason for rejecting this request. The requester will be notified."
+        confirmLabel="Reject"
+        destructive
+        isPending={rejectMutation.isPending}
+        keepOpenOnConfirm
+        onConfirm={handleRejectConfirm}
+        content={
+          <div className="space-y-1.5">
+            <Label
+              htmlFor="leave-rejection-reason"
+              className="text-xs font-medium text-foreground"
             >
-              Cancel
-            </Button>
-            <LoadingButton
-              className="flex-1 h-9"
-              isPending={rejectMutation.isPending}
-              disabled={!rejectionReason.trim()}
-              onClick={handleRejectConfirm}
-            >
-              Reject
-            </LoadingButton>
+              Rejection Reason <span className="text-destructive" aria-hidden="true">*</span>
+            </Label>
+            <Textarea
+              id="leave-rejection-reason"
+              placeholder="E.g. Insufficient notice, conflicting deadlines..."
+              {...reasonField}
+              rows={4}
+              className="resize-none text-sm"
+            />
+            {reasonFieldState.error ? (
+              <p id="leave-reject-reason-error" role="alert" className="text-sm text-destructive">{reasonFieldState.error.message}</p>
+            ) : null}
           </div>
-        </SheetContent>
-      </Sheet>
+        }
+      />
     </>
   );
 
@@ -234,6 +217,22 @@ export function LeaveDecisionButtons({
 }: LeaveDecisionButtonsProps) {
   const status = request.status ?? "PENDING";
   const isSelfRequest = !!currentUserId && request.user?.id === currentUserId;
+  /**
+   * BUG-HRMS-017. A sole owner decides their own leave, because the router already
+   * routed it to them: no rung and no queue member remains, and refusing here left
+   * the request PENDING for ever with balances frozen and nothing on screen but
+   * "Cannot approve own request" and no alternate approver to reach for.
+   *
+   * Read from the same route `PUT /hr/leaves/:id/approve` consults, so this control
+   * and the endpoint answer the same question from the same source rather than each
+   * deciding for itself — which is how they came to disagree. Only fetched for a
+   * self-request; every other row is refused on the requester's identity alone.
+   */
+  const { data: ownRoute } = useMyApprover("leave", { enabled: isSelfRequest });
+  const mayDecideOwn =
+    isSelfRequest &&
+    ownRoute?.ownerSelfApproval === true &&
+    ownRoute.approver?.userId === currentUserId;
   // PUT /hr/leaves/:id/approve|reject require hr:leaves:approve (FE-44). The
   // approvals surfaces are also open to WFH-only deciders, who must not see
   // controls that can only fail for them.
@@ -250,7 +249,7 @@ export function LeaveDecisionButtons({
 
   if (status !== "PENDING" || !canDecide) return <LeaveStatusBadge status={status} />;
 
-  if (isSelfRequest)
+  if (isSelfRequest && !mayDecideOwn)
     return (
       <span className="text-xs text-muted-foreground italic">
         Needs another approver
@@ -265,7 +264,7 @@ export function LeaveDecisionButtons({
         isPending={processingId === request.id}
         onClick={handleApprove}
       >
-        <CheckCircle2 className="h-3 w-3" />
+        <CheckCircle2 className="h-3 w-3" aria-hidden="true" />
         Approve
       </LoadingButton>
       <Button
@@ -274,7 +273,7 @@ export function LeaveDecisionButtons({
         disabled={processingId === request.id}
         onClick={handleReject}
       >
-        <XCircle className="h-3 w-3" />
+        <XCircle className="h-3 w-3" aria-hidden="true" />
         Reject
       </Button>
     </>

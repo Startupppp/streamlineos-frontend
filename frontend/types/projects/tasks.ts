@@ -331,4 +331,5 @@ export interface TicketSearchResult {
   projectId: number;
   projectKey: string;
   projectName: string;
+  version: number;
 }

@@ -13,12 +13,15 @@ import { EditorImageContextMenu } from "./editor-image-context-menu";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { validatePreUpload } from "@/lib/build-upload-validator";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { cn, resolveImageUrl, storageKeyFromUrl } from "@/lib/utils";
 
 const storageUploadC = lazyContract(() =>
-  import("@/components/storage/storage-schema").then((m) => m.storageUploadContract),
+  import("@/components/storage/storage-schema").then(
+    (m) => m.storageUploadContract,
+  ),
 );
 
 export interface TiptapEditorProps {
@@ -38,10 +41,6 @@ interface UploadResult {
   key: string;
 }
 
-/**
- * The document stores the object key; only the rendered DOM carries the resolved
- * source, so the API origin never reaches a saved page.
- */
 const StorageImage = Image.extend({
   addAttributes() {
     return {
@@ -67,9 +66,12 @@ function keyifyStoredHtml(html: string): string {
   });
 }
 
-function normalizeToHtml(raw: unknown): string | Record<string, unknown> | undefined {
+function normalizeToHtml(
+  raw: unknown,
+): string | Record<string, unknown> | undefined {
   if (raw == null) return undefined;
-  if (typeof raw === "object" && !Array.isArray(raw)) return raw as Record<string, unknown>;
+  if (typeof raw === "object" && !Array.isArray(raw))
+    return raw as Record<string, unknown>;
   if (typeof raw !== "string") return undefined;
   if (raw === "") return raw;
   const trimmed = raw.trimStart();
@@ -92,7 +94,11 @@ async function uploadImageFile(file: File): Promise<string> {
   const formData = new FormData();
   formData.append("file", file);
   formData.append("folder", "editor-images");
-  const data = await apiClient.upload<UploadResult>("/storage/upload", formData, storageUploadC);
+  const data = await apiClient.upload<UploadResult>(
+    "/storage/upload",
+    formData,
+    storageUploadC,
+  );
   return data.key;
 }
 
@@ -130,7 +136,9 @@ export function TiptapEditor({
     }),
     TextAlign.configure({ types: ["heading", "paragraph"] }),
     Underline,
-    StorageImage.configure({ HTMLAttributes: { class: "max-w-full rounded-md" } }),
+    StorageImage.configure({
+      HTMLAttributes: { class: "max-w-full rounded-md" },
+    }),
   ];
 
   const editor = useEditor({
@@ -159,15 +167,17 @@ export function TiptapEditor({
             const file = item.getAsFile();
             if (file) {
               event.preventDefault();
-              void uploadImageFile(file).then((url) => {
-                view.dispatch(
-                  view.state.tr.replaceSelectionWith(
-                    imageNodeType.create({ src: url }),
-                  ),
-                );
-              }).catch((err: unknown) => {
-                toast.error(getErrorMessage(err));
-              });
+              void uploadImageFile(file)
+                .then((url) => {
+                  view.dispatch(
+                    view.state.tr.replaceSelectionWith(
+                      imageNodeType.create({ src: url }),
+                    ),
+                  );
+                })
+                .catch((err: unknown) => {
+                  toast.error(getErrorMessage(err));
+                });
               return true;
             }
           }
@@ -182,19 +192,24 @@ export function TiptapEditor({
         const imageNodeType = view.state.schema.nodes["image"];
         if (!imageNodeType) return false;
         event.preventDefault();
-        const pos = view.posAtCoords({ left: event.clientX, top: event.clientY });
+        const pos = view.posAtCoords({
+          left: event.clientX,
+          top: event.clientY,
+        });
         imageFiles.forEach((file) => {
-          void uploadImageFile(file).then((url) => {
-            const insertPos = pos?.pos ?? view.state.doc.content.size;
-            view.dispatch(
-              view.state.tr.insert(
-                insertPos,
-                imageNodeType.create({ src: url }),
-              ),
-            );
-          }).catch((err: unknown) => {
-            toast.error(getErrorMessage(err));
-          });
+          void uploadImageFile(file)
+            .then((url) => {
+              const insertPos = pos?.pos ?? view.state.doc.content.size;
+              view.dispatch(
+                view.state.tr.insert(
+                  insertPos,
+                  imageNodeType.create({ src: url }),
+                ),
+              );
+            })
+            .catch((err: unknown) => {
+              toast.error(getErrorMessage(err));
+            });
         });
         return true;
       },
@@ -205,7 +220,9 @@ export function TiptapEditor({
     if (!editor || editor.isDestroyed || content == null) return;
     const targetKey = contentKey ?? true;
     if (lastInitKey.current !== targetKey) {
-      editor.commands.setContent(normalizeToHtml(content) ?? "", { emitUpdate: false });
+      editor.commands.setContent(normalizeToHtml(content) ?? "", {
+        emitUpdate: false,
+      });
       lastInitKey.current = targetKey;
     }
   }, [editor, content, contentKey]);
@@ -218,11 +235,18 @@ export function TiptapEditor({
     const file = e.target.files?.[0];
     if (!file || !editor) return;
     e.target.value = "";
-    void uploadImageFile(file).then((url) => {
-      editor.chain().focus().setImage({ src: url }).run();
-    }).catch((err: unknown) => {
-      toast.error(getErrorMessage(err));
-    });
+    const error = validatePreUpload(file, isImageFile);
+    if (error) {
+      toast.error(error);
+      return;
+    }
+    void uploadImageFile(file)
+      .then((url) => {
+        editor.chain().focus().setImage({ src: url }).run();
+      })
+      .catch((err: unknown) => {
+        toast.error(getErrorMessage(err));
+      });
   }
 
   function handleEditorContextMenu(e: React.MouseEvent<HTMLDivElement>) {
@@ -230,7 +254,10 @@ export function TiptapEditor({
     if (target.tagName !== "IMG") return;
     e.preventDefault();
     const src = (target as HTMLImageElement).src;
-    setContextMenu({ position: { x: e.clientX, y: e.clientY }, imageUrl: storageKeyFromUrl(src) });
+    setContextMenu({
+      position: { x: e.clientX, y: e.clientY },
+      imageUrl: storageKeyFromUrl(src),
+    });
   }
 
   function handleContextMenuClose() {
@@ -238,29 +265,36 @@ export function TiptapEditor({
   }
 
   return (
-    <div className={cn("flex min-h-0 flex-col", embedded ? minHeightClassName : "rounded-md border bg-background")}>
+    <div
+      className={cn(
+        "flex min-h-0 flex-col",
+        embedded ? minHeightClassName : "rounded-md border bg-background",
+      )}
+    >
       {editable && menuMode === "static" && editor && (
         <div className="overflow-x-auto border-b scrollbar-hide">
           <TiptapToolbar editor={editor} onImageInsert={handleImageInsert} />
         </div>
       )}
       {editable && menuMode === "bubble" && editor && (
-        <TiptapBubbleMenu
-          editor={editor}
-          onImageInsert={handleImageInsert}
-        />
+        <TiptapBubbleMenu editor={editor} onImageInsert={handleImageInsert} />
       )}
-      <div className="min-h-0 flex-1 overflow-y-auto" onContextMenu={editable ? handleEditorContextMenu : undefined}>
+      <div
+        className="min-h-0 flex-1 overflow-y-auto"
+        onContextMenu={editable ? handleEditorContextMenu : undefined}
+      >
         <EditorContent editor={editor} className="h-full" />
       </div>
-      <input
-        ref={imageInputRef}
-        type="file"
-        accept="image/jpeg,image/png,image/gif,image/webp"
-        className="hidden"
-        onChange={handleImageFileChange}
-        aria-hidden
-      />
+      {editable && (
+        <input
+          ref={imageInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/gif,image/webp"
+          className="hidden"
+          onChange={handleImageFileChange}
+          aria-label="Insert image"
+        />
+      )}
       {contextMenu && editor && (
         <EditorImageContextMenu
           editor={editor}

@@ -96,6 +96,7 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
   const { data: page, isLoading, isError, error, refetch } = useKbPage(pageId);
   const updatePage = useUpdateKbPage();
   const recordVisit = useRecordKbPageVisit();
+  const canUpdate = useCan("kb:pages:update");
   const canManage = useCan("kb:pages:manage");
   const viewAccess = useCanState("kb:pages:view");
 
@@ -127,7 +128,7 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
     toast.error("Failed to save page", { description: getErrorMessage(error) });
   }, []);
 
-  const { saveState, conflict, savedAt, isOffline, pendingFields, schedule, discardLocalEdits, keepLocalEdits } = usePageAutosave({
+  const { saveState, conflict, savedAt, isOffline, pendingFields, schedule, retry, discardLocalEdits, keepLocalEdits } = usePageAutosave({
     pageId,
     contentRevision: page?.contentRevision,
     save: handleSavePage,
@@ -282,7 +283,7 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
     return <KbPageNotFound error={error} onRetry={refetch} />;
   }
 
-  const isEditable = page.canEdit !== false && (!page.isLocked || canManage);
+  const isEditable = canUpdate && page.canEdit === true && (!page.isLocked || canManage);
   const wordCount = (page.contentText ?? "")
     .split(/\s+/)
     .filter(Boolean).length;
@@ -312,6 +313,7 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
                 saveState={saveState}
                 savedAt={savedAt}
                 isOffline={isOffline}
+                onRetrySave={retry}
                 isEditable={isEditable}
                 onNavigate={handleNavigateToPage}
                 currentContent={currentContentText}

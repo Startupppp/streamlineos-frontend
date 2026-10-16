@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/command";
 import { useTicketSearch } from "@/hooks/api/build/ticket-search";
 import { useUpdateTicket } from "@/hooks/api/build/tickets";
+import { useSubtasks } from "@/hooks/api/build/ticket-queries";
 import { useCan } from "@/hooks/api/access";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -59,15 +60,25 @@ export function TicketParentControl({
   const { data: results, isFetching } = useTicketSearch(debounced, {
     enabled: open && debounced.trim().length > 0,
   });
+  const { data: subtasks } = useSubtasks(ticket.id, projectId);
 
   const hasParent = ticket.parentTicketId != null;
+
+  const descendantIds = useMemo(
+    () => new Set((subtasks ?? []).map((s) => s.id)),
+    [subtasks],
+  );
 
   const matches = useMemo(
     () =>
       (results ?? []).filter(
-        (r) => r.projectId === projectId && r.id !== ticket.id && r.id !== ticket.parentTicketId,
+        (r) =>
+          r.projectId === projectId &&
+          r.id !== ticket.id &&
+          r.id !== ticket.parentTicketId &&
+          !descendantIds.has(r.id),
       ),
-    [results, projectId, ticket.id, ticket.parentTicketId],
+    [results, projectId, ticket.id, ticket.parentTicketId, descendantIds],
   );
 
   function setParent(parentTicketId: number | null) {
@@ -79,7 +90,11 @@ export function TicketParentControl({
           setOpen(false);
           setQ("");
         },
-        onError: (e) => toast.error(getErrorMessage(e)),
+        onError: (e) => {
+          setOpen(false);
+          setQ("");
+          toast.error(getErrorMessage(e));
+        },
       },
     );
   }

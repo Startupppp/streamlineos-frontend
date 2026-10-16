@@ -108,7 +108,7 @@ export function ResignationCard({
     <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-card overflow-hidden border-l-4 border-l-status-danger-rule">
       <CardContent className="p-4 flex items-center gap-4">
         <Avatar className="h-9 w-9 shrink-0">
-          <AvatarImage src={resolveImageUrl(r.user?.image ?? null)} />
+          <AvatarImage src={resolveImageUrl(r.user?.image ?? null)} alt="" />
           <AvatarFallback className="text-xs font-semibold bg-status-danger-surface text-status-danger-ink">
             {r.user?.name?.[0] ?? "?"}
           </AvatarFallback>

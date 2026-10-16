@@ -165,4 +165,15 @@ export const exitChecklistItemUpdateContract = z
 
 export type ExitChecklistItemUpdateInput = z.infer<typeof exitChecklistItemUpdateContract>;
 
+export const offboardingChecklistRowContract = z.object({
+  anchorKind: z.enum(["resignation", "termination"]),
+  anchorId: z.number().int(),
+  employeeDisplayName: z.string().nullable(),
+  relevantDate: z.string().nullable(),
+  openItems: z.number().int(),
+  totalItems: z.number().int(),
+});
+
+export const offboardingChecklistSummaryListContract = z.array(offboardingChecklistRowContract);
+
 export const successContract = z.object({ success: z.boolean() });

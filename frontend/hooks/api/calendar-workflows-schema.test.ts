@@ -1,10 +1,19 @@
 import {
   calendarWorkflowEffectContract,
+  calendarWorkflowEffectsContract,
+  calendarWorkflowLegacyEffectsContract,
   calendarWorkflowPolicyContract,
   calendarWorkflowRuleContract,
 } from "./calendar-workflows-schema";
 
 describe("calendar workflow response contracts", () => {
+  it("keeps the legacy list and cursor page response shapes distinct", () => {
+    expect(calendarWorkflowLegacyEffectsContract.safeParse([]).success).toBe(true);
+    expect(calendarWorkflowEffectsContract.safeParse({ items: [], nextCursor: null }).success).toBe(true);
+    expect(calendarWorkflowLegacyEffectsContract.safeParse({ items: [], nextCursor: null }).success).toBe(false);
+    expect(calendarWorkflowEffectsContract.safeParse([]).success).toBe(false);
+  });
+
   it("refuses unknown effect states", () => {
     expect(calendarWorkflowEffectContract.safeParse({ status: "LOST" }).success).toBe(false);
   });

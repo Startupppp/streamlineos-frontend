@@ -76,3 +76,30 @@ describe("component amount (BUG-019)", () => {
     expect(componentFormSchema.safeParse({ ...base, amount: "" }).success).toBe(true);
   });
 });
+
+describe("PAY-B-003 PAY-B-027 componentFormSchema percent-of rejects > 100", () => {
+  const base = {
+    name: "HRA", code: "HRA", type: "EARNING", calcMethod: "PERCENT_OF",
+    taxable: false, showOnPayslip: true, includeInCtc: true,
+  };
+
+  it("accepts a valid percent value of 100", () => {
+    expect(
+      componentFormSchema.safeParse({ ...base, percent: "100", percentBase: "basic" }).success,
+    ).toBe(true);
+  });
+
+  it("PAY-B-003 rejects 150% that QA was able to save", () => {
+    const result = componentFormSchema.safeParse({ ...base, percent: "150", percentBase: "basic" });
+    expect(result.success).toBe(false);
+    const paths = result.error?.issues.map((i) => i.path[0]);
+    expect(paths).toContain("percent");
+  });
+
+  it("PAY-B-028 rejects 0% that produces a ₹0 active line", () => {
+    const result = componentFormSchema.safeParse({ ...base, percent: "0", percentBase: "basic" });
+    expect(result.success).toBe(false);
+    const paths = result.error?.issues.map((i) => i.path[0]);
+    expect(paths).toContain("percent");
+  });
+});

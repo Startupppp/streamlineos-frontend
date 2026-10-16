@@ -5,6 +5,7 @@ import { useInfiniteQuery, useQuery, useMutation, useQueryClient, keepPreviousDa
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
 const calendarEventsResponseContract = lazyContract(() =>
   import("@/hooks/api/calendar-schema").then((m) => m.calendarEventsResponseContract),
@@ -122,6 +123,7 @@ export function useCalendarEvents(start: Date, end: Date, enabled = true) {
   const userId = session?.user?.id ?? "";
   const access = usePermissionGate("calendar:read");
   const canView = access.allowed;
+  const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
   const offlinePolicy = useCalendarOfflinePolicy(enabled);
   useEffect(() => {
     if (sessionStatus === "loading") return;
@@ -157,16 +159,20 @@ export function useCalendarEvents(start: Date, end: Date, enabled = true) {
     [qc],
   );
   const eventsQuery = useQuery({
+    ...INLINE_READ_ERROR,
     queryKey: platformHierarchyQueryKeys.calendar.events(
       orgId,
       userId,
       start.toISOString(),
       end.toISOString(),
+      undefined,
+      timeZone,
     ),
     queryFn: async ({ signal }) => {
       const result = await apiClient.get<CalendarEventsResponse>("/calendar/events", {
         start: start.toISOString(),
         end: end.toISOString(),
+        timeZone,
       }, signal, calendarEventsResponseContract);
       return result;
     },
@@ -176,22 +182,37 @@ export function useCalendarEvents(start: Date, end: Date, enabled = true) {
     refetchOnReconnect: "always",
   });
   useEffect(() => {
-    if (offlinePolicy.data?.enabled === false) {
-      if (orgId && userId) revokeOfflineCalendarPolicy(`${orgId}:${userId}`, offlinePolicy.data.version);
+    if (offlinePolicy.isError && navigator.onLine) {
+      const identity = orgId && userId ? `${orgId}:${userId}` : "";
+      try {
+        if (sessionStorage.getItem("streamline-calendar-offline-session-identity") === identity)
+          sessionStorage.removeItem("streamline-calendar-offline-session-identity");
+        if (localStorage.getItem("streamline-calendar-offline-identity") === identity)
+          localStorage.removeItem("streamline-calendar-offline-identity");
+      } catch {}
       void clearOfflineCalendarSnapshot().catch(() => undefined);
       return;
     }
-    if (offlinePolicy.data?.enabled && eventsQuery.data && orgId && userId && canView && navigator.onLine) {
+    if (offlinePolicy.data?.enabled === false) {
+      const identity = orgId && userId ? `${orgId}:${userId}` : null;
+      let activeIdentity = false;
+      try { activeIdentity = Boolean(identity && localStorage.getItem("streamline-calendar-offline-identity") === identity); }
+      catch {}
+      if (identity) revokeOfflineCalendarPolicy(identity, offlinePolicy.data.version);
+      if (activeIdentity) void clearOfflineCalendarSnapshot().catch(() => undefined);
+      return;
+    }
+    if (offlinePolicy.data?.enabled && offlinePolicy.isFetchedAfterMount && !offlinePolicy.isFetching && !offlinePolicy.isError && eventsQuery.data && eventsQuery.isSuccess && eventsQuery.isFetchedAfterMount && !eventsQuery.isFetching && !eventsQuery.isError && eventsQuery.dataUpdatedAt > 0 && orgId && userId && canView && navigator.onLine) {
       const identity = `${orgId}:${userId}`;
       if (!allowOfflineCalendarPolicy(identity, offlinePolicy.data.version)) return;
       try {
         localStorage.setItem("streamline-calendar-offline-identity", identity);
         sessionStorage.setItem("streamline-calendar-offline-session-identity", identity);
       } catch { return; }
-      void saveOfflineCalendarSnapshot(identity, start, end, eventsQuery.data, offlinePolicy.data).catch(() => undefined);
+      void saveOfflineCalendarSnapshot(identity, start, end, eventsQuery.data, offlinePolicy.data, timeZone, eventsQuery.dataUpdatedAt).catch(() => undefined);
       if ("serviceWorker" in navigator) void navigator.serviceWorker.register("/sw.js").catch(() => undefined);
     }
-  }, [offlinePolicy.data, eventsQuery.data, orgId, userId, canView, start, end]);
+  }, [offlinePolicy.data, offlinePolicy.isError, offlinePolicy.isFetching, offlinePolicy.isFetchedAfterMount, eventsQuery.data, eventsQuery.dataUpdatedAt, eventsQuery.isSuccess, eventsQuery.isFetchedAfterMount, eventsQuery.isFetching, eventsQuery.isError, orgId, userId, canView, start, end, timeZone]);
   return eventsQuery;
 }
 
@@ -208,6 +229,7 @@ export function useCalendarHistory(before: string, enabled = true) {
     [qc],
   );
   return useInfiniteQuery({
+    ...INLINE_READ_ERROR,
     queryKey: platformHierarchyQueryKeys.calendar.history(orgId, userId, before),
     queryFn: ({ pageParam, signal }) =>
       apiClient.get<CalendarHistoryResponse>(
@@ -225,17 +247,25 @@ export function useCalendarHistory(before: string, enabled = true) {
   });
 }
 
-export function useCalendarSources() {
+export function useCalendarSources(enabled = true) {
+  const qc = useQueryClient();
   const { data: session } = useSession();
   const orgId = session?.orgId ?? "";
   const userId = session?.user?.id ?? "";
   const canView = useCan("calendar:read");
+  useEffect(
+    () => subscribeToCalendarProjectionChanges(
+      () => { void qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.calendar.sourcesAll }); },
+    ),
+    [qc],
+  );
   return useQuery({
+    ...INLINE_READ_ERROR,
     queryKey: platformHierarchyQueryKeys.calendar.sources(orgId, userId),
     queryFn: ({ signal }) =>
       apiClient.get<CalendarSource[]>("/calendar/sources", undefined, signal, calendarSourcesContract),
     staleTime: 30_000,
-    enabled: Boolean(orgId && userId) && canView,
+    enabled: Boolean(orgId && userId) && canView && enabled,
   });
 }
 
@@ -270,8 +300,8 @@ export function useSetCalendarSourcePreference() {
       if (!enabled) {
         qc.setQueriesData<CalendarEventsResponse>(
           { queryKey: platformHierarchyQueryKeys.calendar.eventsAll },
-          (current) => current === undefined
-            ? undefined
+          (current) => current === undefined || !Array.isArray(current.events)
+            ? current
             : {
                 ...current,
                 events: current.events.filter((event) => event.sourceKey !== sourceKey),
@@ -301,6 +331,7 @@ export function useExternalCalendarEvents(start: Date, end: Date, enabled: boole
   const userId = session?.user?.id ?? "";
   const canView = useCan("calendar:read");
   return useQuery({
+    ...INLINE_READ_ERROR,
     queryKey: platformHierarchyQueryKeys.calendar.externalEvents(
       orgId,
       userId,

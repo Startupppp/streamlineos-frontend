@@ -1,6 +1,24 @@
 import { z } from "zod";
 import { aiResultUsageSchema } from "@/hooks/api/ai-result-stream-schema";
 
+const kbAskPageOwnerSchema = z.object({
+  membershipId: z.number().int(),
+  name: z.string(),
+}).strict();
+
+export const kbAskPageOwnersContract = z.object({
+  data: z.array(kbAskPageOwnerSchema),
+  pagination: z.object({
+    limit: z.number().int(),
+    hasMore: z.boolean(),
+    nextCursor: z.string().nullable(),
+  }).strict(),
+  selected: kbAskPageOwnerSchema.nullable(),
+}).strict();
+
+export type KbAskPageOwner = z.infer<typeof kbAskPageOwnerSchema>;
+export type KbAskPageOwnersPage = z.infer<typeof kbAskPageOwnersContract>;
+
 const citationFields = {
   title: z.string(),
   spaceId: z.number().nullable(),

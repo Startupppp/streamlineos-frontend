@@ -39,7 +39,7 @@ export function ManagedProductOverviewPulse({
       data-slot="managed-product-pulse"
       className="min-w-0"
     >
-      <StatCardGrid cols={5} stackOnMobile={2} className="gap-2">
+      <StatCardGrid cols={5} className="auto-rows-fr gap-2">
         <StatCard
           label="New feedback"
           value={evidence.feedbackLast30d}
@@ -47,6 +47,7 @@ export function ManagedProductOverviewPulse({
           icon={MessageSquare}
           tone="blue"
           href={`${base}/feedback`}
+          wrapHint
         />
         <StatCard
           label="Opportunities"
@@ -55,6 +56,7 @@ export function ManagedProductOverviewPulse({
           icon={Lightbulb}
           tone="amber"
           href={`${base}/insights`}
+          wrapHint
         />
         <StatCard
           label="In flight"
@@ -62,6 +64,7 @@ export function ManagedProductOverviewPulse({
           hint={`Now + Next · ${delivery.roadmapByHorizon.later} later`}
           icon={Navigation}
           href={`${base}/roadmap`}
+          wrapHint
         />
         <StatCard
           label="Tickets done"
@@ -74,6 +77,7 @@ export function ManagedProductOverviewPulse({
           icon={CheckCircle2}
           tone="emerald"
           href={`${base}/projects`}
+          wrapHint
         />
         <StatCard
           label="Outcomes met"
@@ -85,6 +89,7 @@ export function ManagedProductOverviewPulse({
           }
           icon={Target}
           href={`${base}/insights`}
+          wrapHint
         />
       </StatCardGrid>
     </section>

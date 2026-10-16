@@ -21,6 +21,7 @@ import { kbTimeAgo } from "@/features/wiki/lib/kb-date-utils";
 import type { KbPageTemplate } from "@/hooks/api/kb/page-templates";
 import type { StarterTemplate } from "@/features/wiki/lib/starter-templates";
 import { EditTemplateDialog } from "./edit-template-dialog";
+import { SavedTemplatePreviewDialog } from "./template-preview-dialog";
 
 interface TemplateCardProps {
   template: KbPageTemplate;
@@ -40,6 +41,7 @@ export function TemplateCard({
   const deleteTemplate = useDeleteKbPageTemplate();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   function handleUseClick() {
     onUse(template.id);
@@ -51,6 +53,10 @@ export function TemplateCard({
 
   function handleEditClick() {
     setEditOpen(true);
+  }
+
+  function handlePreviewClick() {
+    setPreviewOpen(true);
   }
 
   function handleConfirmDelete() {
@@ -66,6 +72,10 @@ export function TemplateCard({
 
   function handleEditOpenChange(open: boolean) {
     setEditOpen(open);
+  }
+
+  function handlePreviewOpenChange(open: boolean) {
+    setPreviewOpen(open);
   }
 
   return (
@@ -93,6 +103,16 @@ export function TemplateCard({
           </span>
         </div>
         <div className="flex items-center gap-1 shrink-0">
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={handlePreviewClick}
+            className="text-xs"
+            aria-label={`Preview ${template.name}`}
+          >
+            Preview
+          </Button>
           <LoadingButton
             size="sm"
             onClick={handleUseClick}
@@ -131,6 +151,10 @@ export function TemplateCard({
 
       {editOpen && (
         <EditTemplateDialog template={template} onOpenChange={handleEditOpenChange} />
+      )}
+
+      {previewOpen && (
+        <SavedTemplatePreviewDialog template={template} onOpenChange={handlePreviewOpenChange} />
       )}
 
       <AlertDialog open={confirmOpen} onOpenChange={handleConfirmOpenChange}>

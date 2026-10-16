@@ -2,7 +2,6 @@ import React from "react";
 import { render, screen, act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { EmployeeListItem } from "@/types/hr";
-import { SEARCH_INTEGRITY_MESSAGE } from "./search-integrity";
 import { EmployeesListPage } from "./employees-list-page";
 
 const replace = jest.fn();
@@ -55,23 +54,7 @@ const searchesSeen: Array<string | undefined> = [];
 
 jest.mock("@/hooks/api/hr", () => ({
   useHrDepartments: () => ({ data: [] }),
-  useInfiniteHrEmployees: (
-    params: { search?: string } | undefined,
-    options?: { enabled?: boolean },
-  ) => {
-    if (options?.enabled === false) {
-      return {
-        data: undefined,
-        isLoading: false,
-        isFetching: false,
-        isError: false,
-        error: null,
-        hasNextPage: false,
-        isFetchingNextPage: false,
-        fetchNextPage: jest.fn(),
-        refetch: jest.fn(),
-      };
-    }
+  useInfiniteHrEmployees: (params: { search?: string } | undefined) => {
     searchesSeen.push(params?.search);
     return {
       data: { pages: [{ data: serverRows(params?.search) }] },
@@ -107,7 +90,7 @@ async function type(value: string) {
   });
 }
 
-describe("Flow 12 — a visible employee must be findable, and a broken search must say so", () => {
+describe("Flow 12 — a visible employee must be findable, and an empty search is a valid state", () => {
   it("keeps the matching row on screen for an exact display name, and sends the query to the server", async () => {
     serverRows.mockImplementation((search) =>
       search ? ROSTER.filter((row) => row.name === search) : ROSTER,
@@ -120,17 +103,21 @@ describe("Flow 12 — a visible employee must be findable, and a broken search m
     expect(replace).toHaveBeenCalled();
   });
 
-  it("raises the integrity banner when a search returns zero over a scope that was not empty", async () => {
+  it("shows zero rows and the filtered empty state for a typed no-match right after a match, with no banner and no unfiltered rows", async () => {
     serverRows.mockImplementation((search) => (search ? [] : ROSTER));
     render(<EmployeesListPage />);
 
     expect(screen.getByText("Tarun Chintakunta")).toBeInTheDocument();
 
-    await type("Tarun");
+    await type("zzzz");
 
-    expect(screen.getByText(SEARCH_INTEGRITY_MESSAGE)).toBeInTheDocument();
-    expect(screen.getByText("Ada Lovelace")).toBeInTheDocument();
-    expect(screen.queryByText("No matches")).not.toBeInTheDocument();
+    expect(screen.getByText("No results match your filters.")).toBeInTheDocument();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    expect(screen.queryByText(/integrity/i)).not.toBeInTheDocument();
+    expect(screen.queryByText("Tarun Chintakunta")).not.toBeInTheDocument();
+    expect(screen.queryByText("Ada Lovelace")).not.toBeInTheDocument();
+    expect(searchesSeen.filter((search) => search === undefined).length).toBeGreaterThan(0);
+    expect(searchesSeen).toContain("zzzz");
   });
 
   it("draws a plain empty state, not an integrity error, for an organization with no people", async () => {
@@ -141,7 +128,8 @@ describe("Flow 12 — a visible employee must be findable, and a broken search m
 
     await type("anyone");
 
-    expect(screen.queryByText(SEARCH_INTEGRITY_MESSAGE)).not.toBeInTheDocument();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    expect(screen.getByText("No results match your filters.")).toBeInTheDocument();
   });
 
   it("restores the scoped list when the query is cleared", async () => {

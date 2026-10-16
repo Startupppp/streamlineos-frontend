@@ -2,7 +2,7 @@
 
 export const dynamic = "force-dynamic";
 
-import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -55,7 +55,7 @@ function PendingInvitationsNotice({ items }: { items: PendingInvitationItem[] })
   const claimMutation = useClaimInvitation();
   if (items.length === 0) return null;
 
-  const handleJoin = (invitationId: string) => {
+  function handleJoin(invitationId: string) {
     if (joiningId) return;
     setJoiningId(invitationId);
     claimMutation.mutate(invitationId, {
@@ -74,7 +74,12 @@ function PendingInvitationsNotice({ items }: { items: PendingInvitationItem[] })
         setJoiningId(null);
       },
     });
-  };
+  }
+
+  function handleJoinClick(event: React.MouseEvent<HTMLButtonElement>) {
+    const invitationId = event.currentTarget.dataset.invitationId;
+    if (invitationId) handleJoin(invitationId);
+  }
 
   return (
     <div className="flex flex-col gap-3 rounded-lg border border-border bg-muted/40 p-4">
@@ -90,8 +95,9 @@ function PendingInvitationsNotice({ items }: { items: PendingInvitationItem[] })
           </p>
           <button
             type="button"
+            data-invitation-id={item.id}
             disabled={!!joiningId}
-            onClick={() => handleJoin(item.id)}
+            onClick={handleJoinClick}
             className="shrink-0 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
           >
             {joiningId === item.id ? "Joining…" : "Join"}
@@ -328,6 +334,8 @@ export default function OrgSetupPage() {
     return () => clearTimeout(timeout);
   }, [saveState]);
 
+  const handleCreateOwnOrg = useCallback(() => setCreateOwnOrg(true), []);
+
   if (mounted && !createOwnOrg && !isInvitationsPending && (pendingInvitations?.length ?? 0) > 0) {
     return (
       <div className="mx-auto flex w-full max-w-lg flex-1 flex-col gap-6 px-4 py-12 sm:px-8">
@@ -338,7 +346,7 @@ export default function OrgSetupPage() {
           </p>
         </div>
         <PendingInvitationsNotice items={pendingInvitations ?? []} />
-        <Button variant="ghost" className="self-start" onClick={() => setCreateOwnOrg(true)}>
+        <Button variant="ghost" className="self-start" onClick={handleCreateOwnOrg}>
           Create my own organization instead
         </Button>
       </div>

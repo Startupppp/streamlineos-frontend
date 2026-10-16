@@ -6,6 +6,7 @@ import { z } from "zod";
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
   SheetBody,
@@ -77,6 +78,7 @@ export function EmergencyEventSheet({ open, onOpenChange }: Props) {
       <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">
         <SheetHeader className="shrink-0 border-b border-border px-6 py-4 text-left">
           <SheetTitle>Declare Emergency Event</SheetTitle>
+          <SheetDescription className="sr-only">Declare an emergency event to notify and coordinate the organisation.</SheetDescription>
         </SheetHeader>
 
         <Form {...form}>

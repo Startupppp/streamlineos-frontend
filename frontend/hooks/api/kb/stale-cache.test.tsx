@@ -1,7 +1,9 @@
-import { renderHook, act } from "@testing-library/react";
+import { renderHook, act, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { knowledgeAndSurveysQueryKeys as qk } from "@/lib/query-keys/knowledge-and-surveys";
+import { ApiError } from "@/lib/api-envelope";
+import { readErrorReachesBoundary } from "@/lib/query-error-policy";
 
 const response = jest.fn<Promise<unknown>, [string]>();
 
@@ -36,6 +38,7 @@ import {
 import {
   useArchiveKbSpace,
   useDeleteKbSpace,
+  useKbSpace,
   useRestoreKbSpace,
   useUpdateKbSpace,
 } from "./spaces";
@@ -127,7 +130,7 @@ describe("a page mutation reaches the list the wiki actually renders", () => {
 
   it("useUpdateKbPage invalidates the page collection when the edit touches a listed field", async () => {
     seed();
-    await run(useUpdateKbPage, { pageId: PAGE_ID, title: "renamed" });
+    await run(useUpdateKbPage, { pageId: PAGE_ID, title: "renamed", expectedContentRevision: 1 });
     expect(invalidated(COLLECTION_KEY)).toBe(true);
   });
 
@@ -181,6 +184,22 @@ describe("a space lifecycle mutation reaches the space detail header", () => {
     seed();
     await run(useUpdateKbSpace, { spaceId: SPACE_ID, name: "renamed" });
     expect(invalidated(SPACE_KEY)).toBe(true);
+  });
+});
+
+describe("the space detail read stays inline for recovery", () => {
+  beforeEach(() => {
+    client = new QueryClient({ defaultOptions: { queries: { retry: false, throwOnError: readErrorReachesBoundary } } });
+  });
+
+  it.each([404, 500])("reports a %i response to Space detail rather than throwing to the route boundary", async (status) => {
+    response.mockRejectedValue(new ApiError("Space read failed", status, "READ_FAILED", {}, `/kb/spaces/${SPACE_ID}`));
+
+    const { result } = renderHook(() => useKbSpace(SPACE_ID), { wrapper });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(result.current.error).toBeInstanceOf(ApiError);
+    expect(response).toHaveBeenCalledWith(`/kb/spaces/${SPACE_ID}`);
   });
 });
 

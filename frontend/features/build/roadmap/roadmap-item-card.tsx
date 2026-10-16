@@ -3,9 +3,8 @@
 import { memo, useCallback, useState, type MouseEvent } from "react";
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
-import { ArrowBigUp, Pencil, ArrowRight, Globe, ArrowUp, ArrowDown, EyeOff } from "lucide-react";
-import { Trash2Icon } from "@animateicons/react/lucide";
-import { Button } from "@/components/ui/button";
+import { ArrowBigUp, ArrowRight, Globe, ArrowUp, ArrowDown, EyeOff } from "lucide-react";
+import { Trash2Icon, UserPenIcon } from "@animateicons/react/lucide";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -128,11 +127,11 @@ export const RoadmapItemCard = memo(function RoadmapItemCard({
       variants={shouldReduceMotion ? listItemReduced : listItem}
       transition={pmSnappy}
       className={cn(
-        "group rounded-xl border border-border/80 bg-card p-3 shadow-sm transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-primary/35 hover:shadow-md focus-within:border-primary/50",
+        "group rounded-xl border border-border border-l-2 border-l-primary/45 bg-card/65 p-3 shadow-sm transition-[border-color,background-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-primary/45 hover:bg-card/85 hover:shadow-md focus-within:border-primary/60 dark:border-background dark:border-l-primary/45",
       )}
       onContextMenu={handleContextMenu}
     >
-      <div className="flex min-w-0 flex-col gap-2.5">
+      <div className="flex min-w-0 flex-col gap-2">
         <div className="flex min-w-0 flex-wrap items-center gap-1.5">
           <Badge
             variant={ROADMAP_STATUS_BADGE_VARIANT[String(item.status)] ?? "outline"}
@@ -161,7 +160,7 @@ export const RoadmapItemCard = memo(function RoadmapItemCard({
           </span>
         </div>
 
-        <div className="flex min-w-0 items-start justify-between gap-2">
+        <div className="flex min-w-0 items-center justify-between gap-2">
           {onView ? (
             <button type="button" onClick={handleView} className="min-w-0 flex-1 text-left">
               <TruncatedText text={item.title} lines={2} className="text-sm font-semibold leading-snug text-foreground hover:text-primary" />
@@ -172,9 +171,7 @@ export const RoadmapItemCard = memo(function RoadmapItemCard({
           {hasActions ? (
             <div className="flex shrink-0 items-center gap-0.5 opacity-70 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
               {canEdit ? (
-                <Button size="icon-sm" variant="ghost" aria-label="Edit roadmap item" onClick={handleEdit}>
-                  <Pencil className="size-3.5" aria-hidden />
-                </Button>
+                <AnimatedIconButton size="icon-sm" variant="ghost" aria-label="Edit roadmap item" onClick={handleEdit} icon={UserPenIcon} iconSize={14} />
               ) : null}
               {canDelete ? (
                 <AnimatedIconButton size="icon-sm" variant="ghost" className="text-destructive hover:text-destructive" aria-label="Delete roadmap item" onClick={handleDelete} icon={Trash2Icon} iconSize={14} />
@@ -210,13 +207,13 @@ export const RoadmapItemCard = memo(function RoadmapItemCard({
         </div>
 
         {item.description ? (
-          <p className={cn(TEXT_TWO_LINES, "text-dense leading-relaxed text-muted-foreground")} title={item.description}>
+          <p className={cn(TEXT_TWO_LINES, "text-dense leading-snug text-muted-foreground")} title={item.description}>
             {item.description}
           </p>
         ) : null}
         {item.outcome ? (
           <div
-            className="rounded-md bg-muted/60 px-2 py-1.5"
+            className="border-l-2 border-primary/40 bg-background/35 py-1 pl-2.5 pr-2"
             data-testid="roadmap-item-outcome"
             title={item.outcome}
           >
@@ -238,7 +235,7 @@ export const RoadmapItemCard = memo(function RoadmapItemCard({
           </div>
         ) : null}
 
-        <div className="flex min-w-0 flex-wrap items-center gap-1.5 border-t border-border/60 pt-2">
+        <div className="flex min-w-0 flex-wrap items-center gap-1.5 border-t border-border/50 pt-2">
           <RoadmapPriorityScore
             prioritization={item.prioritization}
             tierWeighting={item.tierWeighting}
@@ -253,7 +250,7 @@ export const RoadmapItemCard = memo(function RoadmapItemCard({
               {item.targetQuarter}
             </Badge>
           ) : null}
-          {item.category ? (
+          {item.category && item.category !== item.team?.name && item.category !== item.release?.name ? (
             <Badge variant="secondary" className={cn(TEXT_ONE_LINE, "max-w-[8rem] text-micro")}>
               {item.category}
             </Badge>
@@ -264,7 +261,7 @@ export const RoadmapItemCard = memo(function RoadmapItemCard({
           {item.epicTicketId != null && item.projectId != null ? (
             <Link href={`/build/${item.projectId}/issues?ticket=${item.epicTicketId}`} aria-label="View epic ticket" className="text-dense text-primary underline-offset-2 hover:underline">Epic</Link>
           ) : null}
-          {item.projectId !== null ? (
+          {item.projectId != null ? (
             <Link
               href={`/build/${item.projectId}`}
               aria-label="View project"

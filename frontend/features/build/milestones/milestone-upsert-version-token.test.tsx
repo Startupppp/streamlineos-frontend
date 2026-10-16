@@ -7,8 +7,8 @@ const updateMutate = jest.fn();
 const createMutate = jest.fn();
 
 jest.mock("@/hooks/api/build/milestones", () => ({
-  useCreateMilestone: () => ({ mutate: createMutate, isPending: false }),
-  useUpdateMilestone: () => ({ mutate: updateMutate, isPending: false }),
+  useCreateMilestone: () => ({ mutate: createMutate, mutateAsync: createMutate, isPending: false }),
+  useUpdateMilestone: () => ({ mutate: updateMutate, mutateAsync: updateMutate, isPending: false }),
 }));
 
 jest.mock("@/hooks/api/organization", () => ({
@@ -53,7 +53,9 @@ const MILESTONE: ProjectMilestone = {
 
 beforeEach(() => {
   updateMutate.mockClear();
+  updateMutate.mockResolvedValue(undefined);
   createMutate.mockClear();
+  createMutate.mockResolvedValue(undefined);
 });
 
 async function submitEdit() {

@@ -1,7 +1,12 @@
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useGatedQuery } from "@/hooks/api/gated-query";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
+import { usePermissionGate } from "@/hooks/api/access";
+import { gated } from "@/lib/rbac/permission-gate";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
+import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
+import { selectFlatPages, type Page } from "@/lib/api/select-flat-pages";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
@@ -29,18 +34,31 @@ interface KbArticleComment {
 }
 
 export function useSupportKbComments(articleId: number) {
-  return useGatedQuery("support:kb:view", {
+  const access = usePermissionGate("support:kb:view");
+  const qc = useQueryClient();
+  const query = useInfiniteQuery({
     queryKey: accountingAndSupportQueryKeys.kbComments.list(articleId),
-    queryFn: ({ signal }) =>
-      apiClient.get<KbArticleComment[]>(
+    initialPageParam: NO_CURSOR_YET,
+    queryFn: ({ signal, pageParam }) =>
+      apiClient.get<Page<KbArticleComment>>(
         `/support/kb/articles/${articleId}/comments`,
-        undefined,
+        pageParam !== undefined ? { cursor: pageParam } : undefined,
         signal,
         kbCommentListC,
       ),
-    enabled: Number.isFinite(articleId) && articleId > 0,
+    getNextPageParam: (last) => last.pagination.nextCursor ?? undefined,
+    select: selectFlatPages,
+    enabled: access.allowed && Number.isFinite(articleId) && articleId > 0,
     staleTime: 30_000,
+    ...INLINE_READ_ERROR,
   });
+  const refetch: typeof query.refetch = async (refetchOptions) => {
+    if (access.unavailable) {
+      await qc.refetchQueries({ queryKey: platformCoreQueryKeys.access.me() });
+    }
+    return query.refetch(refetchOptions);
+  };
+  return gated({ ...query, refetch }, access);
 }
 
 export function useAddSupportKbComment(articleId: number) {

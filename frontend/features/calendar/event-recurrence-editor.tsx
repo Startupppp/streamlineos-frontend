@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, type ReactNode } from "react";
+import { useCallback } from "react";
 import { Repeat } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -12,10 +12,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/date-picker";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { cn } from "@/lib/utils";
 import {
   type RecurrenceState,
-  type RruleEndType,
   type WeekDay,
   WEEKDAYS,
   WEEKDAY_LABELS,
@@ -66,31 +66,7 @@ function WeekDayToggle({ day, label, isSelected, onToggle }: WeekDayToggleProps)
   );
 }
 
-interface EndTypeOptionProps {
-  type: RruleEndType;
-  isSelected: boolean;
-  onSelect: (type: RruleEndType) => void;
-  children: ReactNode;
-}
-
-function EndTypeOption({ type, isSelected, onSelect, children }: EndTypeOptionProps) {
-  const handleChange = useCallback(() => onSelect(type), [type, onSelect]);
-  return (
-    <label className="flex items-center gap-2 text-xs cursor-pointer">
-      <input
-        type="radio"
-        name="rrule-end"
-        value={type}
-        checked={isSelected}
-        onChange={handleChange}
-        className="accent-primary"
-      />
-      {children}
-    </label>
-  );
-}
-
-export function RecurrenceEditor({ state, onChange, startDate }: RecurrenceEditorProps) {
+export function RecurrenceEditor({ state, onChange, startDate: _startDate }: RecurrenceEditorProps) {
   const set = useCallback(
     <K extends keyof RecurrenceState>(key: K, value: RecurrenceState[K]) => {
       onChange({ ...state, [key]: value });
@@ -164,7 +140,10 @@ export function RecurrenceEditor({ state, onChange, startDate }: RecurrenceEdito
   );
 
   const handleEndTypeChange = useCallback(
-    (endType: RruleEndType) => set("endType", endType),
+    (value: string) => {
+      const endType = RRULE_END_TYPES.find((candidate) => candidate === value);
+      if (endType) set("endType", endType);
+    },
     [set],
   );
 
@@ -272,47 +251,49 @@ export function RecurrenceEditor({ state, onChange, startDate }: RecurrenceEdito
 
           <div className="space-y-1.5">
             <Label className="text-xs text-muted-foreground">Ends</Label>
-            <div className="space-y-1">
+            <RadioGroup
+              value={state.endType}
+              onValueChange={handleEndTypeChange}
+              className="gap-1.5"
+            >
               {RRULE_END_TYPES.map((type) => (
-                <EndTypeOption
-                  key={type}
-                  type={type}
-                  isSelected={state.endType === type}
-                  onSelect={handleEndTypeChange}
-                >
-                  {type === "never" && <span>Never</span>}
-                  {type === "count" && (
-                    <span className="flex items-center gap-1.5">
-                      After
-                      {state.endType === "count" && (
-                        <Input
-                          type="number"
-                          min={1}
-                          max={999}
-                          value={state.count}
-                          onChange={handleCountChange}
-                          className="w-14 text-xs px-1.5"
-                        />
-                      )}
-                      occurrences
-                    </span>
-                  )}
-                  {type === "until" && (
-                    <span className="flex items-center gap-1.5">
-                      On
-                      {state.endType === "until" && (
-                        <DatePicker
-                          value={state.until}
-                          onChange={handleUntilChange}
-                          placeholder="Pick date"
-                          className="text-xs"
-                        />
-                      )}
-                    </span>
-                  )}
-                </EndTypeOption>
+                <div key={type} className="flex items-center gap-2">
+                  <RadioGroupItem value={type} id={`rrule-end-${type}`} />
+                  <Label htmlFor={`rrule-end-${type}`} className="text-xs font-normal">
+                    {type === "never" && <span>Never</span>}
+                    {type === "count" && (
+                      <span className="flex items-center gap-1.5">
+                        After
+                        {state.endType === "count" && (
+                          <Input
+                            type="number"
+                            min={1}
+                            max={999}
+                            value={state.count}
+                            onChange={handleCountChange}
+                            className="w-14 px-1.5"
+                          />
+                        )}
+                        occurrences
+                      </span>
+                    )}
+                    {type === "until" && (
+                      <span className="flex items-center gap-1.5">
+                        On
+                        {state.endType === "until" && (
+                          <DatePicker
+                            value={state.until}
+                            onChange={handleUntilChange}
+                            placeholder="Pick date"
+                            className="text-xs"
+                          />
+                        )}
+                      </span>
+                    )}
+                  </Label>
+                </div>
               ))}
-            </div>
+            </RadioGroup>
           </div>
         </div>
       )}

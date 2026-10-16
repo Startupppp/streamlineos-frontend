@@ -92,7 +92,7 @@ it("shows the expired card for a revoked link instead of throwing to the route b
     </QueryClientProvider>,
   );
 
-  expect(await screen.findByText("Invitation expired")).toBeVisible();
+  expect(await screen.findByText("Invitation link unavailable")).toBeVisible();
   expect(screen.queryByText("route boundary hit")).toBeNull();
   expect(apiClient.get).toHaveBeenCalledWith(
     "/organization/invitations/validate",

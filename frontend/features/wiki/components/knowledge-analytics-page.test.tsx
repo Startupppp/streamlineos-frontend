@@ -1,4 +1,5 @@
 import { render as rtlRender, screen, fireEvent } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import type { ReactElement } from "react";
 
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -6,6 +7,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 const mockAssignGapMutate = jest.fn();
 
 const useAccess = jest.fn();
+const useCan = jest.fn((_permission: string) => true);
 const accessLoading = { data: undefined, isLoading: true };
 const accessGranted = {
   data: { isOrgOwner: false, scopes: { "kb:analytics:view": "all" }, modules: {} },
@@ -39,7 +41,7 @@ jest.mock("@/hooks/api/kb/spaces", () => ({
 }));
 
 jest.mock("@/hooks/api/access", () => ({
-  useCan: () => true,
+  useCan: (permission: string) => useCan(permission),
   useAccess: () => useAccess(),
 }));
 
@@ -90,12 +92,14 @@ const OVERVIEW = {
   searches: 100,
   noResults: 15,
   searchSuccessRate: 0.85,
+  searchScopeComplete: true,
   aiAnswers: 4,
   aiNoContext: 1,
   views: 340,
   ticketsDeflected: 3,
   verifiedPublished: 5,
   trustScore: 0.55,
+  suppressionReasons: {},
 };
 
 function settled<T>(data: T) {
@@ -114,6 +118,7 @@ function settledPages<T>(data: T) {
 function settledGaps(rows: { query: string | null; count: number; lastOccurredAt: string }[]) {
   return {
     gaps: rows,
+    scopeComplete: true,
     data: { pages: [{ data: rows, pagination: { limit: 50, hasMore: false, nextCursor: null } }], pageParams: [undefined] },
     isLoading: false,
     isError: false,
@@ -138,8 +143,9 @@ beforeEach(() => {
     isLoading: false,
   });
   useAccess.mockReturnValue(accessGranted);
+  useCan.mockReturnValue(true);
   useKbAnalyticsOverview.mockReturnValue(settled(OVERVIEW));
-  useKbNoResults.mockReturnValue(settled([]));
+  useKbNoResults.mockReturnValue(settled({ data: [], scopeComplete: true }));
   usePageAnalytics.mockReturnValue(settledPages([]));
   useKnowledgeGaps.mockReturnValue(settledGaps([]));
   useGapRelatedPages.mockReturnValue({ pages: [], isLoading: false, fetchNextPage: jest.fn(), hasNextPage: false, isFetchingNextPage: false });
@@ -148,6 +154,46 @@ beforeEach(() => {
 });
 
 describe("KnowledgeAnalyticsPage — access is three-valued, not a boolean", () => {
+  it("shows no-result search count as a lower bound and can continue the list", () => {
+    const fetchNextPage = jest.fn();
+    useKbNoResults.mockReturnValue({
+      ...settled({
+        data: [
+          { query: "billing", count: 4 },
+          { query: "shipping", count: 3 },
+        ],
+        scopeComplete: true,
+      }),
+      fetchNextPage,
+      hasNextPage: true,
+      isFetchingNextPage: false,
+    });
+
+    render(<KnowledgeAnalyticsPage />);
+
+    expect(screen.getByText("2+ queries")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Load more searches" }));
+    expect(fetchNextPage).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows citation reuse as a lower bound and offers continuation", () => {
+    const fetchNextPage = jest.fn();
+    useCitationReuse.mockReturnValue({
+      ...settledPages([
+        { kind: "page", refId: 1, title: "A", reuseCount: 3 },
+        { kind: "page", refId: 2, title: "B", reuseCount: 2 },
+      ]),
+      fetchNextPage,
+      hasNextPage: true,
+    });
+
+    render(<KnowledgeAnalyticsPage />);
+
+    expect(screen.getByText("2+")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Load more citation results" }));
+    expect(fetchNextPage).toHaveBeenCalledTimes(1);
+  });
+
   it("shows the skeleton while the access snapshot is still in flight, never an access denial", () => {
     useAccess.mockReturnValue(accessLoading);
 
@@ -162,7 +208,7 @@ describe("KnowledgeAnalyticsPage — access is three-valued, not a boolean", () 
 
     render(<KnowledgeAnalyticsPage />);
 
-    expect(screen.getByText(/permission/i)).toBeInTheDocument();
+    expect(screen.getByText(/You need the Kb.*Analytics.*View permission/i)).toBeInTheDocument();
   });
 });
 
@@ -229,8 +275,27 @@ describe("KnowledgeAnalyticsPage — activity counts are not success metrics", (
   it("still shows the decision-useful rates it is meant to drive action from", () => {
     render(<KnowledgeAnalyticsPage />);
 
-    expect(screen.getByText("Search success")).toBeInTheDocument();
+    expect(screen.getByText("Organization search success")).toBeInTheDocument();
     expect(screen.getByText("Tickets deflected")).toBeInTheDocument();
+  });
+
+  it("shows suppressed metrics separately from zero and names the tenant search scope", () => {
+    useKbAnalyticsOverview.mockReturnValue(settled({
+      ...OVERVIEW,
+      totalViews: null,
+      searches: 0,
+      searchSuccessRate: null,
+      ticketsDeflected: 0,
+      suppressionReasons: { totalViews: "minimum_cohort", searchSuccessRate: "incomplete_scope" },
+    }));
+
+    render(<KnowledgeAnalyticsPage />);
+
+    expect(screen.getByText("Organization searches")).toBeInTheDocument();
+    expect(screen.getByText("Suppressed")).toBeInTheDocument();
+    expect(screen.getByText("Unavailable")).toBeInTheDocument();
+    expect(screen.getByText("Fewer than 3 records in this cohort")).toBeInTheDocument();
+    expect(screen.getAllByText("0").length).toBeGreaterThan(0);
   });
 });
 
@@ -302,6 +367,9 @@ describe("KnowledgeAnalyticsPage — the reader can narrow the figures to one sp
       expect.objectContaining({ spaceId: 42 }),
       "wiki",
     );
+    expect(useReviewSla).toHaveBeenCalledWith(
+      expect.objectContaining({ spaceId: 42 }),
+    );
   });
 
   it("scopes nothing to a space when the reader has not chosen one", () => {
@@ -314,6 +382,33 @@ describe("KnowledgeAnalyticsPage — the reader can narrow the figures to one sp
       expect.not.objectContaining({ spaceId: expect.anything() }),
       "wiki",
     );
+    expect(useReviewSla).toHaveBeenCalledWith(
+      expect.not.objectContaining({ spaceId: expect.anything() }),
+    );
+  });
+
+  it("does not show a false zero for space search and gap history with unknown provenance", () => {
+    searchParams = new URLSearchParams({ space: "42" });
+    useKbAnalyticsOverview.mockReturnValue(settled({
+      ...OVERVIEW,
+      searches: null,
+      noResults: null,
+      searchSuccessRate: null,
+      aiAnswers: null,
+      aiNoContext: null,
+      searchScopeComplete: false,
+    }));
+    useKbNoResults.mockReturnValue(settled({ data: [], scopeComplete: false }));
+    useKnowledgeGaps.mockReturnValue({ ...settledGaps([]), scopeComplete: false });
+
+    render(<KnowledgeAnalyticsPage />);
+
+    expect(screen.getByText(/Space-scoped search and Ask history is incomplete/i)).toBeInTheDocument();
+    expect(screen.getByText(/Zero-result searches for this space are unavailable/i)).toBeInTheDocument();
+    expect(screen.getByText(/Knowledge gaps for this space are unavailable/i)).toBeInTheDocument();
+    expect(screen.queryByText("No zero-result searches")).not.toBeInTheDocument();
+    expect(useKbNoResults).toHaveBeenCalledWith(expect.objectContaining({ spaceId: 42 }));
+    expect(useKnowledgeGaps).toHaveBeenCalledWith(expect.objectContaining({ spaceId: 42 }));
   });
 });
 
@@ -413,6 +508,19 @@ describe("KnowledgeAnalyticsPage — gap rows render without crashing and suppor
     expect(screen.getByRole("button", { name: /create fix page/i })).toBeInTheDocument();
   });
 
+  it("keeps page-creation actions hidden from analytics viewers without page-create permission", () => {
+    useKnowledgeGaps.mockReturnValue(
+      settledGaps([{ query: "export report", count: 3, lastOccurredAt: "2024-03-01T00:00:00Z" }]),
+    );
+    useCan.mockImplementation((permission: string) => permission !== "kb:pages:create");
+
+    render(<KnowledgeAnalyticsPage />);
+
+    expect(screen.getByText("export report")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /create fix page/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Page" })).not.toBeInTheDocument();
+  });
+
   it("shows the related-pages section when a gap row is clicked", () => {
     useKnowledgeGaps.mockReturnValue(
       settledGaps([{ query: "reset password", count: 5, lastOccurredAt: "2024-03-01T00:00:00Z" }]),
@@ -432,6 +540,36 @@ describe("KnowledgeAnalyticsPage — gap rows render without crashing and suppor
 
     expect(screen.getByText("Password Reset Guide")).toBeInTheDocument();
     expect(useGapRelatedPages).toHaveBeenCalledWith("reset password");
+  });
+
+  it("keeps keyboard action activation separate from gap selection", async () => {
+    useKnowledgeGaps.mockReturnValue(
+      settledGaps([{ query: "reset password", count: 5, lastOccurredAt: "2024-03-01T00:00:00Z" }]),
+    );
+    const user = userEvent.setup();
+    render(<KnowledgeAnalyticsPage />);
+
+    const gap = screen.getByRole("button", { name: "Gap: reset password" });
+    const assign = screen.getByRole("button", { name: "Assign gap owner" });
+    const dismiss = screen.getByRole("button", { name: "Dismiss gap" });
+    expect(gap.contains(assign)).toBe(false);
+    expect(gap.contains(dismiss)).toBe(false);
+
+    assign.focus();
+    await user.keyboard("{Enter}");
+    expect(screen.getByTestId("user-combobox")).toBeInTheDocument();
+    expect(gap).toHaveAttribute("aria-expanded", "false");
+
+    dismiss.focus();
+    await user.keyboard(" ");
+    expect(screen.getByPlaceholderText("Reason for dismissal")).toBeInTheDocument();
+    expect(gap).toHaveAttribute("aria-expanded", "false");
+
+    gap.focus();
+    await user.keyboard("{Enter}");
+    expect(gap).toHaveAttribute("aria-expanded", "true");
+    await user.keyboard(" ");
+    expect(gap).toHaveAttribute("aria-expanded", "false");
   });
 });
 

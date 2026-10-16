@@ -434,3 +434,96 @@ describe("useBuildListKeyboard — c creates and e edits, so no page needs its o
     expect(mockCreate).not.toHaveBeenCalled();
   });
 });
+
+describe("useBuildListKeyboard — an open modal overlay suppresses every list shortcut", () => {
+  const mockCreate = jest.fn();
+  const mockEdit = jest.fn();
+
+  function openOverlay(role: string) {
+    const overlay = document.createElement("div");
+    overlay.setAttribute("role", role);
+    overlay.setAttribute("data-state", "open");
+    document.body.appendChild(overlay);
+    return overlay;
+  }
+
+  function setupWithActions() {
+    return renderHook(() =>
+      useBuildListKeyboard({
+        itemCount: 5,
+        onOpen: mockOpen,
+        onEdit: mockEdit,
+        onCreate: mockCreate,
+        onClearSelection: mockClear,
+      }),
+    );
+  }
+
+  beforeEach(() => {
+    mockCreate.mockClear();
+    mockEdit.mockClear();
+  });
+
+  it("Enter while a Delete confirmation is open does not open the edit form", () => {
+    const { result } = setupWithActions();
+    act(() => {
+      fireEvent.keyDown(document.body, { key: "j" });
+    });
+    expect(result.current.focusedIndex).toBe(0);
+
+    const overlay = openOverlay("alertdialog");
+    act(() => {
+      fireEvent.keyDown(document.body, { key: "Enter" });
+    });
+    expect(mockOpen).not.toHaveBeenCalled();
+
+    overlay.remove();
+    act(() => {
+      fireEvent.keyDown(document.body, { key: "Enter" });
+    });
+    expect(mockOpen).toHaveBeenCalledWith(0);
+  });
+
+  it("e and c while a dialog is open do not open the edit or create form", () => {
+    const { result } = setupWithActions();
+    act(() => {
+      fireEvent.keyDown(document.body, { key: "j" });
+    });
+    expect(result.current.focusedIndex).toBe(0);
+
+    const overlay = openOverlay("dialog");
+    act(() => {
+      fireEvent.keyDown(document.body, { key: "e" });
+      fireEvent.keyDown(document.body, { key: "c" });
+    });
+    expect(mockEdit).not.toHaveBeenCalled();
+    expect(mockCreate).not.toHaveBeenCalled();
+
+    overlay.remove();
+    act(() => {
+      fireEvent.keyDown(document.body, { key: "e" });
+      fireEvent.keyDown(document.body, { key: "c" });
+    });
+    expect(mockEdit).toHaveBeenCalledWith(0);
+    expect(mockCreate).toHaveBeenCalledTimes(1);
+  });
+
+  it("j and k do not move list focus while a dialog overlay is open", () => {
+    const { result } = setupWithActions();
+    const overlay = document.createElement("div");
+    overlay.setAttribute("data-slot", "alert-dialog-overlay");
+    overlay.setAttribute("data-state", "open");
+    document.body.appendChild(overlay);
+
+    act(() => {
+      fireEvent.keyDown(document.body, { key: "j" });
+    });
+    expect(result.current.focusedIndex).toBeNull();
+
+    overlay.remove();
+    act(() => {
+      fireEvent.keyDown(document.body, { key: "j" });
+    });
+    expect(result.current.focusedIndex).toBe(0);
+  });
+});

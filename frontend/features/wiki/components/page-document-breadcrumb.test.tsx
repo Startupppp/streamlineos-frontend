@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { PageDocumentBreadcrumb } from "./page-document-breadcrumb";
 import type { KbPageDetail } from "@/hooks/api/kb/page-types";
 
@@ -100,5 +100,20 @@ describe("PageDocumentBreadcrumb — project wiki context", () => {
     );
 
     expect(screen.getByText("Saving…")).toBeInTheDocument();
+  });
+
+  it("shows a retry action after a failed save", () => {
+    const retry = jest.fn();
+    render(
+      <PageDocumentBreadcrumb
+        page={makePage()}
+        saveState="failed"
+        onRetrySave={retry}
+      />,
+    );
+
+    expect(screen.getByRole("alert")).toHaveTextContent("Save failed");
+    fireEvent.click(screen.getByRole("button", { name: "Retry" }));
+    expect(retry).toHaveBeenCalledTimes(1);
   });
 });

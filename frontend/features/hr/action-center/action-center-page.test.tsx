@@ -12,6 +12,7 @@ import {
   mockSessionModule,
   mockRegularizationModule,
   mockRegularizationRow,
+  mockSessionModule,
   mockSonnerModule,
   mockWfhRow,
   mockEmployeeListModule,

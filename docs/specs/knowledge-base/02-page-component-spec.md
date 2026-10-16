@@ -218,6 +218,78 @@ Every collection uses cursor pagination unless it is explicitly bounded: recents
 
 **Acceptance:** token rotation/revocation purges CDN/cache; page and attachment access are bound to the same public grant.
 
+## 18. Company Documents — `/knowledge/wiki/company-documents`
+
+**Customer job:** find HR documents that are currently available through the Knowledge Base link.
+
+**Components:** link-enabled state, status filter, source and status badges, document category, effective date, version, published date, and cursor-paginated table.
+
+**Rules:** ordinary readers see active documents only; the withdrawn, source-removed, and all-status filters require `hr:documents:publish`. The backend must recheck the linked source and current actor before returning a title or preview. The status filter is URL-backed; cursor and status must travel together.
+
+**Acceptance:** disabled linking, denied access, first empty, filtered empty, loading, and failed reads remain distinct. No withdrawn or source-removed document appears to an ordinary reader through this list, search, Ask, or a retained citation.
+
+## 19. Company Document Detail — `/knowledge/wiki/company-documents/[linkedDocumentId]`
+
+**Customer job:** inspect one linked HR document without losing its source and access context.
+
+**Components:** source identity, current status, document metadata, safe preview or download, and recovery for a removed source.
+
+**Rules:** reject a malformed id before data access. Resolve the current link, source status, tenant, and actor on each request; an inaccessible source resolves as not found. A cached passage or old citation never grants access to the file.
+
+**Acceptance:** active, withdrawn, source-removed, denied, and not-found paths are exercised through the detail request and the file retrieval path. Source removal or permission revocation removes the content from the page, search, Ask, and citation replay.
+
+## 20. Support Knowledge Gaps — `/support/knowledge-gaps`
+
+**Customer job:** turn repeated unresolved support questions into reviewed Knowledge Base work.
+
+**Components:** cursor-fed gap list, evidence from tickets and searches, detect action, draft action, proposed-page link, dismissal reason, and loading, empty, error, and denied states.
+
+**Rules:** Support owns detection and triage; Knowledge Base owns the resulting draft, its publication, and its access policy. Reads require `support:knowledge-gaps:view`; detect, draft, and dismiss require `support:knowledge-gaps:manage`. A draft is never published by detection alone.
+
+**Acceptance:** duplicate detection or retry creates no duplicate gap or draft; a dismissed gap stays out of active work until a documented resurfacing event; the proposed-page link is shown only to an actor who may open it. The collection stays bounded as new gaps arrive.
+
+## 21. Research Briefs — `/knowledge/research-briefs` and `/knowledge/research-briefs/[briefId]`
+
+**Customer job:** start a bounded research job, return later, and inspect its cited result.
+
+**Components:** question and scope form, cursor-fed brief list, status and owner, detail with source snapshot and citations, retry or cancel, approval, and convert-to-page.
+
+**Rules:** these are the shipped Knowledge routes; no parallel `/knowledge/wiki/research-briefs` route is implied. The job and result survive browser closure. Every citation is rechecked for the viewer on detail open and a lost source is redacted.
+
+**Acceptance:** queued, running, completed, failed, denied, and source-revoked states have an explicit recovery path. Reopening a queued or running brief resumes status polling; repeated retry or conversion does not duplicate work or pages.
+
+## 22. Knowledge Entry and Redirect Aliases — `/knowledge`, `/ask`, `/docs`, `/kb`, and `/knowledge/wiki/pages/[pageId]`
+
+**Customer job:** reach the Knowledge product from one stable entry route.
+
+**Rules:** `/knowledge` and `/ask` redirect to `/knowledge/chat`; `/docs` and `/kb` redirect to `/knowledge/wiki`; the legacy `/knowledge/wiki/pages/[pageId]` and `/history` paths redirect to the canonical document and history routes. The destination enforces the current session, entitlement, and object access. Record redirect use without disclosing the tenant or access state in the redirect response.
+
+**Acceptance:** permitted and unentitled actors land in their correct destination state, and the redirect is visible in live telemetry.
+
+## 23. Project Wiki Adapters — `/build/[projectId]/wiki`, `/build/[projectId]/wiki/[pageId]`, and `/build/[projectId]/wiki/[pageId]/history`
+
+**Customer job:** browse, edit, and inspect the history of project knowledge without leaving the project context.
+
+**Rules:** reuse the canonical wiki list, document, version, editor, and search interfaces. Bind every read, create, move, restore, citation, and attachment to the current project and actor. The project back path remains available; there is no second project page store.
+
+**Acceptance:** a member of another project cannot learn a page title, history, count, or attachment URL through an adapter. The three routes retain the shared loading, denied, error, empty, and edit-conflict behavior.
+
+## 24. Support Knowledge Management — `/support/kb` and `/support/kb/[articleId]`
+
+**Customer job:** maintain help content during the documented page cutover.
+
+**Rules:** keep the retained Support contract and its current callers until the migration reconciliation is signed. Any article-to-page identity mapping is explicit; an article id must not be interpreted as a page id. Publication remains a human action subject to the current audience policy.
+
+**Acceptance:** list and detail routes preserve authorized creation, editing, and publication during cutover. Remove a route only after caller, redirect, data, and rollback evidence in `06-code-removal-and-reuse.md` is complete.
+
+## 25. Public Help — `/help/[orgId]` and `/help/[orgId]/[articleSlug]`
+
+**Customer job:** find and read deliberately published help content without an authenticated session.
+
+**Rules:** project only public, published content for the requested organization. Public cache policy and rate limits are separate from authenticated Knowledge reads. A private title, count, snippet, attachment, or citation cannot be inferred through public search or an old slug.
+
+**Acceptance:** valid content, unknown slug, withdrawn content, and revoked public access have distinct safe outcomes; retained redirects resolve without exposing another tenant's content.
+
 ## Shared module inventory
 
 Reuse or deepen these modules before creating page-specific versions:

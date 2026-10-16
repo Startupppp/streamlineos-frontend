@@ -55,6 +55,18 @@ function renderPanel(overrides: Partial<KbPageDetail> = {}) {
 }
 
 describe("PageRightPanel — mobile path for linked records", () => {
+  it("marks the loaded linked-record count as partial when another cursor page exists", async () => {
+    mockUseKbPageRecordLinks.mockReturnValue({
+      data: [{ id: 1, targetType: "project", targetId: "9", label: "Project 9" }],
+      hasNextPage: true,
+    });
+    const user = userEvent.setup();
+    renderPanel();
+    await user.click(screen.getByRole("button", { name: "Open details panel" }));
+
+    expect(within(screen.getByRole("dialog")).getByText("1+")).toBeInTheDocument();
+  });
+
   it("renders a mobile FAB button so linked records are reachable below 1280px", () => {
     renderPanel();
 

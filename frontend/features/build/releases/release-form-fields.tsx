@@ -172,7 +172,7 @@ export function ReleaseFormFields({ control, descriptionCharCount }: ReleaseForm
               </span>
             </div>
             <FormControl>
-              <div className="rounded-md border border-input min-h-[140px]">
+              <div className="rounded-md border border-input min-h-[140px] min-w-0 overflow-hidden">
                 <TiptapEditor
                   content={field.value ?? ""}
                   onChangeHtml={(html) => field.onChange(html || null)}

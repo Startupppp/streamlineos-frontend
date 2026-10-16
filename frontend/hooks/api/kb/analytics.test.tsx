@@ -1,4 +1,4 @@
-import { renderHook, waitFor } from "@testing-library/react";
+import { act, renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 
@@ -21,10 +21,14 @@ import {
   usePageAnalytics,
   useKnowledgeGaps,
   useGapRelatedPages,
+  useKbContentGaps,
+  useKbNoResults,
 } from "./analytics";
 import {
   kbAnalyticsGapRelatedPagesContract,
   kbAnalyticsGapsContract,
+  kbAnalyticsContentGapsContract,
+  kbAnalyticsNoResultsContract,
 } from "./kb-analytics-schema";
 
 const PAGINATION = { limit: 50, hasMore: false, nextCursor: null };
@@ -48,6 +52,7 @@ describe("kbAnalyticsGapsContract", () => {
         },
       ],
       pagination: { limit: 1, hasMore: false, nextCursor: null },
+      scopeComplete: false,
     });
   });
 
@@ -55,6 +60,7 @@ describe("kbAnalyticsGapsContract", () => {
     const result = kbAnalyticsGapsContract.safeParse({
       data: [GAP_ROW],
       pagination: PAGINATION,
+      scopeComplete: true,
     });
     expect(result.success).toBe(true);
   });
@@ -84,6 +90,13 @@ const GAP_RELATED_PAGE_ROW = {
   updatedAt: "2026-09-25T00:00:00.000Z",
 };
 
+const CONTENT_GAP_ROW = {
+  query: "billing",
+  count: 4,
+  lastOccurredAt: "2026-09-25T00:00:00.000Z",
+  gapKind: "search",
+};
+
 let client: QueryClient;
 
 function wrapper({ children }: { children: ReactNode }) {
@@ -95,6 +108,65 @@ beforeEach(() => {
   mockUseCan.mockReturnValue(true);
   client = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  });
+});
+
+describe("useKbContentGaps", () => {
+  it("keeps the paged wire contract, server kind filter, and continuation cursor", async () => {
+    expect(kbAnalyticsContentGapsContract.safeParse({
+      data: [CONTENT_GAP_ROW],
+      pagination: { limit: 1, hasMore: true, nextCursor: "next" },
+    }).success).toBe(true);
+    mockGet
+      .mockResolvedValueOnce({
+        data: [CONTENT_GAP_ROW],
+        pagination: { limit: 1, hasMore: true, nextCursor: "next" },
+      })
+      .mockResolvedValueOnce({
+        data: [{ ...CONTENT_GAP_ROW, query: "shipping" }],
+        pagination: { limit: 1, hasMore: false, nextCursor: null },
+      });
+
+    const { result } = renderHook(() => useKbContentGaps(undefined, "search"), { wrapper });
+
+    await waitFor(() => expect(result.current.hasNextPage).toBe(true));
+    expect(result.current.data).toEqual([CONTENT_GAP_ROW]);
+    expect(mockGet.mock.calls[0]?.[1]).toMatchObject({ kind: "search" });
+    await act(async () => { await result.current.fetchNextPage(); });
+    expect(mockGet.mock.calls[1]?.[1]).toMatchObject({ kind: "search", cursor: "next" });
+    await waitFor(() => expect(result.current.data).toHaveLength(2));
+    expect(result.current.hasNextPage).toBe(false);
+  });
+});
+
+describe("useKbNoResults", () => {
+  it("flattens pages while preserving scope coverage and the next cursor", async () => {
+    const row = { query: "billing", count: 4 };
+    expect(kbAnalyticsNoResultsContract.safeParse({
+      data: [row],
+      pagination: { limit: 1, hasMore: true, nextCursor: "next" },
+      scopeComplete: true,
+    }).success).toBe(true);
+    mockGet
+      .mockResolvedValueOnce({
+        data: [row],
+        pagination: { limit: 1, hasMore: true, nextCursor: "next" },
+        scopeComplete: true,
+      })
+      .mockResolvedValueOnce({
+        data: [{ query: "shipping", count: 3 }],
+        pagination: { limit: 1, hasMore: false, nextCursor: null },
+        scopeComplete: true,
+      });
+
+    const { result } = renderHook(() => useKbNoResults({ spaceId: 7 }), { wrapper });
+
+    await waitFor(() => expect(result.current.hasNextPage).toBe(true));
+    expect(result.current.data?.scopeComplete).toBe(true);
+    expect(mockGet.mock.calls[0]?.[1]).toMatchObject({ spaceId: 7 });
+    await act(async () => { await result.current.fetchNextPage(); });
+    expect(mockGet.mock.calls[1]?.[1]).toMatchObject({ spaceId: 7, cursor: "next" });
+    await waitFor(() => expect(result.current.data?.data).toHaveLength(2));
   });
 });
 

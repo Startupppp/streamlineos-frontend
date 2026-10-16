@@ -79,7 +79,7 @@ it("renders permission denial instead of an empty queue", () => {
   mockAccess.mockReturnValue({ data: { isOrgOwner: false, scopes: {}, modules: {} }, isLoading: false });
   mockRequests.mockReturnValue(query());
   render(<IntakePage projectId={1} />);
-  expect(screen.getByText(/permission/i)).toBeInTheDocument();
+  expect(screen.getByText(/required permission for this section|You need the/i)).toBeInTheDocument();
   expect(screen.queryByText("No pending items")).not.toBeInTheDocument();
 });
 it("does not flash denial while access is loading", () => {

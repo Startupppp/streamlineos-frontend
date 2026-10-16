@@ -4,8 +4,8 @@ import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { PageWrapper, PageSection } from "@/components/ui/page-wrapper";
-import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -16,8 +16,9 @@ import {
   TabsTrigger,
   TABS_CONTENT_PAGE_BODY_CLASS,
 } from "@/components/ui/tabs";
-import { useCan, useCanState } from "@/hooks/api/access";
+import { useCanState } from "@/hooks/api/access";
 import { NoPermissionState } from "@/components/shared/no-permission-state";
+import { LoadingState } from "@/components/shared/loading-state";
 import {
   useImportKbPages,
   useKbImportJob,
@@ -29,7 +30,7 @@ import { useKbPageTreeInfinite } from "@/hooks/api/kb/pages";
 import { useKbSpaces } from "@/hooks/api/kb/spaces";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { KB_IMPORT, KNOWLEDGE_BASE } from "@/lib/knowledge-routes";
-import { KbUploadIcon, KbClipboardIcon } from "@/features/wiki/lib/kb-icons";
+import { KbClipboardIcon } from "@/features/wiki/lib/kb-icons";
 import { ExportJobsCard } from "./export-jobs-card";
 import { ImportHistorySection } from "./import-history-section";
 import {
@@ -37,21 +38,25 @@ import {
   type ImportPendingItem,
 } from "./import-pending-list";
 import { ImportDryRunCard } from "./import-dry-run-card";
-import { ImportFailedTitlesAlert } from "./import-failed-titles-alert";
+import {
+  ImportFailedTitlesAlert,
+  failedItemsFromReport,
+  type ImportFailedItem,
+} from "./import-failed-titles-alert";
 import { ImportFormControls } from "./import-form-controls";
 
 const VALID_TABS = ["import", "export"] as const;
 type ImportExportTab = (typeof VALID_TABS)[number];
 
 const MAX_FILE_BYTES = 5 * 1024 * 1024;
+const MAX_CONTENT_LENGTH = 50000;
+const SUPPORTED_FILE_NAME = /\.(md|markdown|txt)$/i;
 
 function resolveTab(tabParam: string | null): ImportExportTab {
   return VALID_TABS.find((t) => t === tabParam) ?? "import";
 }
 
 export default function ImportPage() {
-  const canImport = useCan("kb:pages:import");
-  const canExport = useCan("kb:pages:export");
   const importAccess = useCanState("kb:pages:import");
   const exportAccess = useCanState("kb:pages:export");
   const importMutation = useImportKbPages();
@@ -61,9 +66,9 @@ export default function ImportPage() {
   const searchParams = useSearchParams();
   const requestedTab = resolveTab(searchParams.get("tab"));
   const activeTab =
-    requestedTab === "import" && !canImport
+    requestedTab === "import" && importAccess === "denied"
       ? "export"
-      : requestedTab === "export" && !canExport
+      : requestedTab === "export" && exportAccess === "denied"
         ? "import"
         : requestedTab;
 
@@ -83,9 +88,10 @@ export default function ImportPage() {
   const [dryRunResult, setDryRunResult] = useState<ImportDryRunResult | null>(
     null,
   );
-  const [completedFailedTitles, setCompletedFailedTitles] = useState<string[]>(
+  const [completedFailedItems, setCompletedFailedItems] = useState<ImportFailedItem[]>(
     [],
   );
+  const [reconciliationReason, setReconciliationReason] = useState<string | null>(null);
 
   const { data: activeJob } = useKbImportJob(activeJobId);
   const { data: spacesPage } = useKbSpaces();
@@ -97,6 +103,16 @@ export default function ImportPage() {
   const parentPages = parentPagesQuery.data?.pages.flatMap((p) => p.data) ?? [];
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const pendingReadersRef = useRef(new Set<FileReader>());
+  const readGenerationRef = useRef(0);
+
+  const cancelPendingReads = useCallback(() => {
+    readGenerationRef.current += 1;
+    for (const reader of pendingReadersRef.current) reader.abort();
+    pendingReadersRef.current.clear();
+  }, []);
+
+  useEffect(() => cancelPendingReads, [cancelPendingReads]);
 
   useEffect(() => {
     setDryRunResult(null);
@@ -105,20 +121,14 @@ export default function ImportPage() {
   useEffect(() => {
     if (!activeJob) return;
     if (activeJob.status === "completed") {
-      const report = activeJob.errorReport;
-      const titles: string[] = [];
-      if (
-        report &&
-        typeof report === "object" &&
-        "failedTitles" in report &&
-        Array.isArray(report.failedTitles)
-      ) {
-        for (const t of report.failedTitles)
-          if (typeof t === "string") titles.push(t);
-      }
-      if (titles.length > 0) setCompletedFailedTitles(titles);
+      const failedItems = failedItemsFromReport(activeJob.errorReport);
+      if (failedItems.length > 0) setCompletedFailedItems(failedItems);
+      const partialCounts = [
+        activeJob.duplicateItems > 0 ? `${activeJob.duplicateItems} skipped` : null,
+        activeJob.failedItems > 0 ? `${activeJob.failedItems} failed` : null,
+      ].filter((count): count is string => count !== null);
       toast.success(
-        `Imported ${activeJob.succeededItems} page${activeJob.succeededItems === 1 ? "" : "s"}${activeJob.failedItems > 0 ? ` (${activeJob.failedItems} failed)` : ""}`,
+        `Imported ${activeJob.succeededItems} page${activeJob.succeededItems === 1 ? "" : "s"}${partialCounts.length > 0 ? ` (${partialCounts.join(", ")})` : ""}`,
         {
           action: {
             label: "View wiki",
@@ -126,20 +136,19 @@ export default function ImportPage() {
           },
         },
       );
+      cancelPendingReads();
       setItems([]);
       setActiveJobId(null);
     } else if (activeJob.status === "failed") {
-      const report = activeJob.errorReport;
-      const failedTitles =
-        report !== null &&
-        typeof report === "object" &&
-        "failedTitles" in report &&
-        Array.isArray(report.failedTitles)
-          ? (report.failedTitles as string[])
-          : [];
+      const failedItems = failedItemsFromReport(activeJob.errorReport);
+      if (failedItems.length > 0) setCompletedFailedItems(failedItems);
+      const needsReconciliation = activeJob.errorReport?.code === "PROGRESS_RECONCILIATION_REQUIRED";
+      if (needsReconciliation) setReconciliationReason(activeJob.errorReport?.reason ?? "Import progress needs manual reconciliation. Contact support before retrying.");
       toast.error(
-        failedTitles.length > 0
-          ? `Import failed — ${failedTitles.length} page${failedTitles.length === 1 ? "" : "s"} could not be imported`
+        needsReconciliation
+          ? activeJob.errorReport?.reason ?? "Import progress needs manual reconciliation."
+          : failedItems.length > 0
+          ? `Import failed — ${failedItems.length} page${failedItems.length === 1 ? "" : "s"} could not be imported`
           : "Import failed",
       );
       setActiveJobId(null);
@@ -151,8 +160,10 @@ export default function ImportPage() {
     activeJob?.status,
     activeJob?.succeededItems,
     activeJob?.failedItems,
+    activeJob?.duplicateItems,
     activeJob?.errorReport,
     activeJob?.id,
+    cancelPendingReads,
   ]);
 
   const titleCounts = useMemo(() => {
@@ -173,14 +184,23 @@ export default function ImportPage() {
       const files = Array.from(e.target.files ?? []);
       if (files.length === 0) return;
 
-      const oversized = files.filter((f) => f.size > MAX_FILE_BYTES);
+      const unsupported = files.filter((file) => !SUPPORTED_FILE_NAME.test(file.name));
+      if (unsupported.length > 0) {
+        toast.error(
+          `${unsupported.length} unsupported file${unsupported.length === 1 ? " was" : "s were"} skipped: ${unsupported.map((file) => file.name).join(", ")}. Choose .md, .markdown or .txt files.`,
+        );
+      }
+
+      const supported = files.filter((file) => SUPPORTED_FILE_NAME.test(file.name));
+
+      const oversized = supported.filter((file) => file.size > MAX_FILE_BYTES);
       if (oversized.length > 0) {
         toast.error(
           `${oversized.length} file${oversized.length === 1 ? "" : "s"} exceed the 5 MB limit and were skipped: ${oversized.map((f) => f.name).join(", ")}`,
         );
       }
 
-      const validFiles = files.filter((f) => f.size <= MAX_FILE_BYTES);
+      const validFiles = supported.filter((file) => file.size <= MAX_FILE_BYTES);
       const remaining = 100 - items.length;
       const toProcess = validFiles.slice(0, remaining);
 
@@ -196,19 +216,39 @@ export default function ImportPage() {
       }
 
       let completed = 0;
-      const newItems: ImportPendingItem[] = [];
+      const newItems: Array<ImportPendingItem | null> = Array(toProcess.length).fill(null);
+      const readGeneration = readGenerationRef.current;
 
-      toProcess.forEach((file) => {
+      function finishRead() {
+        completed++;
+        if (completed === toProcess.length) {
+          setItems((prev) => [...prev, ...newItems.filter((item): item is ImportPendingItem => item !== null)].slice(0, 100));
+        }
+      }
+
+      toProcess.forEach((file, index) => {
         const reader = new FileReader();
+        pendingReadersRef.current.add(reader);
         reader.onload = (ev) => {
+          pendingReadersRef.current.delete(reader);
+          if (readGeneration !== readGenerationRef.current) return;
           const result = ev.target?.result;
           const text = typeof result === "string" ? result : "";
           const title = file.name.replace(/\.(md|markdown|txt)$/i, "");
-          newItems.push({ title, contentText: text, sizeBytes: file.size });
-          completed++;
-          if (completed === toProcess.length) {
-            setItems((prev) => [...prev, ...newItems].slice(0, 100));
+          if (text.length > MAX_CONTENT_LENGTH) {
+            toast.error(`${file.name} exceeds the 50,000-character page limit and was skipped`);
+          } else if (text.includes("\0")) {
+            toast.error(`${file.name} contains binary content and was skipped`);
+          } else {
+            newItems[index] = { title, contentText: text, sizeBytes: file.size };
           }
+          finishRead();
+        };
+        reader.onerror = () => {
+          pendingReadersRef.current.delete(reader);
+          if (readGeneration !== readGenerationRef.current) return;
+          toast.error(`${file.name} could not be read and was skipped`);
+          finishRead();
         };
         reader.readAsText(file);
       });
@@ -242,6 +282,14 @@ export default function ImportPage() {
       toast.error("Maximum 100 items reached");
       return;
     }
+    if (pasteText.length > MAX_CONTENT_LENGTH) {
+      toast.error("Content exceeds the 50,000-character page limit");
+      return;
+    }
+    if (pasteText.includes("\0")) {
+      toast.error("Content contains binary data");
+      return;
+    }
     setItems((prev) => [
       ...prev,
       {
@@ -259,8 +307,9 @@ export default function ImportPage() {
     setItems((prev) => prev.filter((_, i) => i !== index));
   }
   function handleClearAll() {
+    cancelPendingReads();
     setItems([]);
-    setCompletedFailedTitles([]);
+    setCompletedFailedItems([]);
   }
   function handleTargetSpaceChange(value: string) {
     setTargetSpaceId(value);
@@ -280,7 +329,7 @@ export default function ImportPage() {
     setDryRunResult(null);
   }
   function handleDismissFailedTitles() {
-    setCompletedFailedTitles([]);
+    setCompletedFailedItems([]);
   }
 
   function handleDryRun() {
@@ -304,7 +353,8 @@ export default function ImportPage() {
 
   function handleImport() {
     if (items.length === 0) return;
-    setCompletedFailedTitles([]);
+    setCompletedFailedItems([]);
+    setReconciliationReason(null);
     const parentId =
       targetParentPageId !== "none" ? Number(targetParentPageId) : undefined;
     importMutation.mutate(
@@ -350,6 +400,14 @@ export default function ImportPage() {
     router.replace(qs ? `${KB_IMPORT}?${qs}` : KB_IMPORT, { scroll: false });
   }
 
+  if (importAccess === "loading" || exportAccess === "loading") {
+    return (
+      <PageWrapper title="Import & Export">
+        <LoadingState variant="form" rows={3} />
+      </PageWrapper>
+    );
+  }
+
   if (importAccess === "denied" && exportAccess === "denied") {
     return (
       <PageWrapper title="Import & Export">
@@ -365,6 +423,12 @@ export default function ImportPage() {
   const isProcessing =
     activeJobId !== null &&
     (activeJob?.status === "pending" || activeJob?.status === "processing");
+  const processedItems = activeJob
+    ? Math.min(activeJob.processedItems, activeJob.totalItems)
+    : 0;
+  const progressPercent = activeJob && activeJob.totalItems > 0
+    ? Math.round((processedItems / activeJob.totalItems) * 100)
+    : 0;
 
   return (
     <PageWrapper
@@ -438,37 +502,56 @@ export default function ImportPage() {
           <div className="space-y-4">
             <p className="text-xs text-muted-foreground">
               Accepts .md, .markdown and .txt files · 5 MB per file · max 100
-              pages per import. Pasted text has a 50,000 character limit. Set a
+              pages per import. Each page has a 50,000 character limit. Set a
               duplicate policy to control what happens when a page title already
               exists.
             </p>
 
-            {completedFailedTitles.length > 0 ? (
+            {reconciliationReason ? (
+              <p role="alert" className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive">
+                {reconciliationReason}
+              </p>
+            ) : null}
+
+            {completedFailedItems.length > 0 ? (
               <ImportFailedTitlesAlert
-                titles={completedFailedTitles}
+                items={completedFailedItems}
                 onDismiss={handleDismissFailedTitles}
               />
             ) : null}
 
             {isProcessing ? (
               <div className="rounded-lg border border-border bg-muted/40 px-3 py-2 text-sm flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-primary" />
-                  <span className="text-sm text-muted-foreground">
-                    {activeJob?.status === "processing"
-                      ? "Processing import…"
-                      : "Import queued…"}
-                  </span>
+                <div className="flex min-w-0 flex-1 flex-col gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-primary" />
+                    <span className="text-sm text-muted-foreground">
+                      {activeJob?.status === "processing"
+                        ? "Processing import…"
+                        : "Import queued…"}{" "}
+                      {processedItems}/{activeJob?.totalItems ?? 0} pages
+                    </span>
+                  </div>
+                  {activeJob && activeJob.totalItems > 0 ? (
+                    <Progress
+                      value={progressPercent}
+                      aria-label="Import progress"
+                      valueLabel={`${processedItems} of ${activeJob.totalItems} pages processed`}
+                      className="h-1.5"
+                    />
+                  ) : null}
                 </div>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="ghost"
-                  onClick={handleCancelImport}
-                  disabled={cancelMutation.isPending}
-                >
-                  Cancel
-                </Button>
+                {activeJob?.status === "pending" ? (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    onClick={handleCancelImport}
+                    disabled={cancelMutation.isPending}
+                  >
+                    Cancel
+                  </Button>
+                ) : null}
               </div>
             ) : null}
 

@@ -71,6 +71,12 @@ jest.mock("@/hooks/api/access", () => ({
       ? "granted"
       : "denied";
   },
+  useScope: (key: string) => {
+    const snapshot = mockUseAccess();
+    if (!snapshot.data) return "none";
+    if (snapshot.data.isOrgOwner) return "all";
+    return (snapshot.data.scopes as Record<string, string>)[key] ?? "none";
+  },
 }));
 
 jest.mock("@/hooks/api/entitlements", () => ({
@@ -264,5 +270,33 @@ describe("EmployeeSensitiveTab — what the screen promises the viewer", () => {
     expect(
       screen.getByRole("link", { name: /review statutory requirements/i }),
     ).toHaveAttribute("href", "/hr/compliance");
+  });
+});
+
+import { EmployeeTabsList } from "./employee-tabs-list";
+import { Tabs } from "@/components/ui/tabs";
+
+function renderTabsList(props: { showSensitiveTab: boolean; showEditTab: boolean; isSelf: boolean }) {
+  render(
+    <Tabs value="overview">
+      <EmployeeTabsList {...props} />
+    </Tabs>,
+  );
+}
+
+describe("EmployeeTabsList — Sensitive tab scope gate (HRMS-001 FE)", () => {
+  it("hides the Sensitive tab when scope is none (access snapshot not loaded)", () => {
+    renderTabsList({ showSensitiveTab: false, showEditTab: true, isSelf: false });
+    expect(screen.queryByRole("tab", { name: /sensitive/i })).toBeNull();
+  });
+
+  it("shows the Sensitive tab when scope is all and this is another employee", () => {
+    renderTabsList({ showSensitiveTab: true, showEditTab: true, isSelf: false });
+    expect(screen.getByRole("tab", { name: /sensitive/i })).toBeInTheDocument();
+  });
+
+  it("shows the Sensitive tab when the actor is viewing their own profile", () => {
+    renderTabsList({ showSensitiveTab: true, showEditTab: true, isSelf: true });
+    expect(screen.getByRole("tab", { name: /sensitive/i })).toBeInTheDocument();
   });
 });

@@ -1,6 +1,7 @@
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
+import { PERSON_TABLE_HEADERS } from "@/features/directory/people/person-table-headers";
 import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 
 export default function DirectoryLoading() {
@@ -15,7 +16,7 @@ export default function DirectoryLoading() {
       }
       actions={<Skeleton className="h-9 w-28 rounded-md" />}
     >
-      <DataTableSkeleton rows={12} columns={5} />
+      <DataTableSkeleton rows={12} headers={PERSON_TABLE_HEADERS} />
     </PageWrapper>
   );
 }

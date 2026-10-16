@@ -5,6 +5,7 @@ import { Check, Copy, EyeOff, ExternalLink, Globe, RefreshCw } from "lucide-reac
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { formatDateTime } from "@/lib/date-utils";
+import { statusToneClasses } from "@/lib/design-tokens";
 
 interface RoadmapPublicationActiveProps {
   publicItemCount: number | null;
@@ -38,16 +39,20 @@ export function RoadmapPublicationActive({
   onRetryPublicItemCount,
 }: RoadmapPublicationActiveProps) {
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex items-center gap-2">
-        <Globe className="size-4 shrink-0 text-green-600" aria-hidden />
-        <p className="text-sm font-medium text-foreground">Published</p>
+    <div className="flex flex-col gap-4 rounded-xl border border-border bg-card/70 p-4 sm:p-5 dark:border-background">
+      <div className="flex flex-wrap items-start gap-3">
+        <div className={`flex size-9 shrink-0 items-center justify-center rounded-lg ${statusToneClasses("success").surface} ${statusToneClasses("success").ink}`}>
+          <Globe className="size-4" aria-hidden />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-semibold text-foreground">Published</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">This public board is not a snapshot. It reflects your roadmap as you change it.</p>
+        </div>
+        {publicItemCount !== null && publicItemCount > 0 ? <span className="rounded-full border border-border px-2.5 py-1 text-xs font-medium text-foreground">{publicItemCount} item{publicItemCount === 1 ? "" : "s"} visible to the public.</span> : null}
       </div>
-      {publicItemCount !== null ? (
+      {publicItemCount === 0 ? (
         <p className="text-sm text-muted-foreground">
-          {publicItemCount === 0
-            ? "No items are marked as public. Mark roadmap items public for them to appear."
-            : `${String(publicItemCount)} item${publicItemCount === 1 ? "" : "s"} visible to the public.`}
+          No items are marked as public. Mark roadmap items public for them to appear.
         </p>
       ) : publicItemCountError ? (
         <div className="flex flex-wrap items-center gap-2">
@@ -66,12 +71,8 @@ export function RoadmapPublicationActive({
           ) : null}
         </div>
       ) : null}
-      <p className="text-sm text-muted-foreground">
-        The public board is not a snapshot. It reflects your roadmap as you
-        change it, so edits appear on the shared link.
-      </p>
       {shareUrl ? (
-        <div className="flex items-center gap-2 rounded-md border bg-muted/40 px-3 py-2">
+        <div className="flex items-center gap-2 rounded-lg border border-border bg-background/50 px-3 py-2 dark:border-background">
           <p className="min-w-0 flex-1 truncate font-mono text-xs text-foreground">
             {shareUrl}
           </p>
@@ -82,7 +83,7 @@ export function RoadmapPublicationActive({
             className="shrink-0 rounded p-1 text-muted-foreground transition-colors hover:text-foreground"
           >
             {copied ? (
-              <Check className="size-3.5 text-green-600" aria-hidden />
+              <Check className={`size-3.5 ${statusToneClasses("success").ink}`} aria-hidden />
             ) : (
               <Copy className="size-3.5" aria-hidden />
             )}
@@ -98,7 +99,7 @@ export function RoadmapPublicationActive({
           </Link>
         </div>
       ) : (
-        <div className="flex flex-col gap-2 rounded-md border bg-muted/40 px-3 py-2">
+        <div className="flex flex-col gap-2 rounded-lg border border-border bg-background/50 px-3 py-3 dark:border-background">
           <p className="text-xs text-muted-foreground">
             A public link is active. For safety the link itself is stored only as
             a hash, so it cannot be shown again.
@@ -122,7 +123,7 @@ export function RoadmapPublicationActive({
               type="button"
               variant="outline"
               size="sm"
-              className="w-full justify-start gap-2"
+              className="self-start gap-2"
               isPending={isRotating}
               loadingText="Rotating…"
               onClick={onRotateAndCopy}
@@ -139,12 +140,12 @@ export function RoadmapPublicationActive({
         </p>
       ) : null}
       {canManage ? (
-        <div className="flex flex-col gap-2 pt-2">
+        <div className="flex flex-wrap items-center gap-2 border-t border-border/60 pt-3">
           <Button
             type="button"
             variant="outline"
             size="sm"
-            className="w-full justify-start gap-2"
+            className="gap-2"
             onClick={onOpenRotate}
           >
             <RefreshCw className="size-3.5" aria-hidden />
@@ -154,10 +155,10 @@ export function RoadmapPublicationActive({
             type="button"
             variant="outline"
             size="sm"
-            className="w-full justify-start gap-2 text-destructive hover:text-destructive"
+            className="gap-2 text-destructive hover:text-destructive"
             onClick={onOpenUnpublish}
           >
-            <EyeOff className="size-3.5" aria-hidden />
+            <EyeOff className="size-3.5 text-destructive" aria-hidden />
             Unpublish
           </Button>
         </div>

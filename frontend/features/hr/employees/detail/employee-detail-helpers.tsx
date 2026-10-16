@@ -168,7 +168,7 @@ export function DirectReportsSection({ employeeId }: { employeeId: string }) {
               className="flex items-center gap-2.5 hover:bg-muted/60 rounded-lg p-2 transition-colors duration-200"
             >
               <Avatar className="w-7 shrink-0">
-                <AvatarImage src={resolveImageUrl(r.image)} />
+                <AvatarImage src={resolveImageUrl(r.image)} alt="" />
                 <AvatarFallback className="text-xs bg-muted text-muted-foreground font-bold">
                   {(r.name ?? "?")[0]?.toUpperCase() ?? "?"}
                 </AvatarFallback>

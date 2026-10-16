@@ -47,7 +47,7 @@ export function HrHubActivity({
     ],
   );
 
-  if (!hasAny) return null;
+  if (!hasAny && !isLoading) return null;
 
   const firstError: Error | null =
     (access.canCases ? hubSectionError(sections?.opsInbox) : null) ??

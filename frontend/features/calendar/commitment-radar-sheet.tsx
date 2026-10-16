@@ -4,10 +4,11 @@ import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { AppSheet } from "@/components/shared/app-sheet";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCalendarCommitmentChain, useCreateCalendarCommitmentEdge, useRemoveCalendarCommitmentEdge } from "@/hooks/api/calendar-commitments";
 import { useCan } from "@/hooks/api/access";
@@ -91,10 +92,8 @@ export function CommitmentRadarSheet({ root, open, onClose }: {
     }
   };
   return (
-    <Sheet open={open} onOpenChange={(next) => { if (!next) onClose(); }}>
-      <SheetContent className="flex w-full flex-col p-0 sm:max-w-xl">
-        <SheetHeader className="border-b px-5 py-4"><SheetTitle>Commitment radar</SheetTitle></SheetHeader>
-        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-4">
+    <AppSheet open={open} onOpenChange={(next) => { if (!next) onClose(); }} title="Commitment radar" description="View linked commitments and their status." className="z-[110] md:max-w-xl">
+        <div className="space-y-4">
           {chain.isLoading ? <p className="text-sm text-muted-foreground">Loading commitment chain</p> : null}
           {chain.isError ? <div className="space-y-2"><p className="text-sm text-destructive">{getErrorMessage(chain.error)}</p><Button variant="outline" onClick={() => { void chain.refetch(); }}>Retry</Button></div> : null}
           {chain.data ? <>
@@ -107,12 +106,41 @@ export function CommitmentRadarSheet({ root, open, onClose }: {
             {canWrite && chain.data.root ? <div className="space-y-3 border-t border-border pt-4">
               <Button variant="outline" onClick={() => setEditing((value) => !value)}>{editing ? "Cancel link" : "Link dependency"}</Button>
               {editing ? <form onSubmit={(event) => { void submit(event); }} className="space-y-3">
-                <div className="space-y-1"><Label htmlFor="commitment-target-source">Business area</Label><select id="commitment-target-source" className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={targetSource} onChange={(event) => setSource(event.target.value as CommitmentReference["source"])}>
-                  <option value="crm">CRM deal</option><option value="build">Build ticket</option><option value="inventory">Inventory purchase order</option><option value="finance">Finance invoice</option><option value="hr">HR requisition</option><option value="tasks">Task</option>
-                </select></div>
-                {targetSource === "build" ? <div className="space-y-1"><Label htmlFor="commitment-target-type">Record type</Label><select id="commitment-target-type" className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={targetType} onChange={(event) => setTargetType(event.target.value)}><option value="ticket">Ticket</option><option value="task">Task</option></select></div> : null}
+                <div className="space-y-1"><Label htmlFor="commitment-target-source">Business area</Label>
+                  <Select value={targetSource} onValueChange={(value) => setSource(value as CommitmentReference["source"])}>
+                    <SelectTrigger id="commitment-target-source" className="w-full"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="crm">CRM deal</SelectItem>
+                      <SelectItem value="build">Build ticket</SelectItem>
+                      <SelectItem value="inventory">Inventory purchase order</SelectItem>
+                      <SelectItem value="finance">Finance invoice</SelectItem>
+                      <SelectItem value="hr">HR requisition</SelectItem>
+                      <SelectItem value="tasks">Task</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                {targetSource === "build" ? <div className="space-y-1"><Label htmlFor="commitment-target-type">Record type</Label>
+                  <Select value={targetType} onValueChange={setTargetType}>
+                    <SelectTrigger id="commitment-target-type" className="w-full"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ticket">Ticket</SelectItem>
+                      <SelectItem value="task">Task</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div> : null}
                 <div className="space-y-1"><Label htmlFor="commitment-target-id">Record ID</Label><Input id="commitment-target-id" value={targetId} onChange={(event) => setTargetId(event.target.value.trim())} inputMode="numeric" required /></div>
-                <div className="space-y-1"><Label htmlFor="commitment-kind">Relationship</Label><select id="commitment-kind" className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={kind} onChange={(event) => setKind(event.target.value as typeof kind)}><option value="requires">Requires</option><option value="blocks">Blocks</option><option value="funds">Funds</option><option value="fulfills">Fulfills</option><option value="staffs">Staffs</option></select></div>
+                <div className="space-y-1"><Label htmlFor="commitment-kind">Relationship</Label>
+                  <Select value={kind} onValueChange={(value) => setKind(value as typeof kind)}>
+                    <SelectTrigger id="commitment-kind" className="w-full"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="requires">Requires</SelectItem>
+                      <SelectItem value="blocks">Blocks</SelectItem>
+                      <SelectItem value="funds">Funds</SelectItem>
+                      <SelectItem value="fulfills">Fulfills</SelectItem>
+                      <SelectItem value="staffs">Staffs</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
                 <div className="space-y-1"><Label htmlFor="commitment-evidence">Evidence</Label><Input id="commitment-evidence" value={evidence} maxLength={1000} onChange={(event) => setEvidence(event.target.value)} required /></div>
                 {targetChain.isLoading ? <p className="text-xs text-muted-foreground">Checking target access and version</p> : null}
                 {targetChain.data?.root ? <p className="text-xs text-muted-foreground">Target: {targetChain.data.root.title}</p> : target && !targetChain.isLoading ? <p className="text-xs text-muted-foreground">Target is unavailable to your current access.</p> : null}
@@ -121,7 +149,6 @@ export function CommitmentRadarSheet({ root, open, onClose }: {
             </div> : null}
           </> : null}
         </div>
-      </SheetContent>
-    </Sheet>
+    </AppSheet>
   );
 }

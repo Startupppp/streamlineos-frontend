@@ -80,9 +80,20 @@ export function useKbNoResults(range?: KbAnalyticsRange) {
     to: range?.to,
     ...(range?.spaceId !== undefined ? { spaceId: range.spaceId } : {}),
   };
-  return useQuery({
+  return useInfiniteQuery({
     queryKey: knowledgeAndSurveysQueryKeys.kb.noResults(queryParams),
-    queryFn: ({ signal }) => apiClient.get<KbNoResultRow[]>("/kb/analytics/no-results", queryParams, signal, kbAnalyticsNoResultsContract),
+    initialPageParam: NO_CURSOR_YET,
+    queryFn: ({ signal, pageParam }) => apiClient.get<Page<KbNoResultRow> & { scopeComplete: boolean }>(
+      "/kb/analytics/no-results",
+      { ...queryParams, ...(pageParam !== undefined ? { cursor: pageParam } : {}) },
+      signal,
+      kbAnalyticsNoResultsContract,
+    ),
+    getNextPageParam: (last) => last.pagination.nextCursor ?? undefined,
+    select: (result) => ({
+      data: result.pages.flatMap((page) => page.data),
+      scopeComplete: result.pages.every((page) => page.scopeComplete),
+    }),
     staleTime: 5 * 60_000,
     enabled: canViewAnalytics,
   });
@@ -134,10 +145,18 @@ export function useCitationReuse(range?: KbAnalyticsRange) {
     to: range?.to,
     ...(range?.spaceId !== undefined ? { spaceId: range.spaceId } : {}),
   };
-  return useQuery({
+  return useInfiniteQuery({
     queryKey: knowledgeAndSurveysQueryKeys.kb.citationReuse(queryParams),
-    queryFn: ({ signal }) =>
-      apiClient.get<KbCitationReuseRow[]>("/kb/analytics/citation-reuse", queryParams, signal, kbAnalyticsCitationReuseContract),
+    initialPageParam: NO_CURSOR_YET,
+    queryFn: ({ signal, pageParam }) =>
+      apiClient.get<Page<KbCitationReuseRow>>(
+        "/kb/analytics/citation-reuse",
+        { ...queryParams, ...(pageParam !== undefined ? { cursor: pageParam } : {}) },
+        signal,
+        kbAnalyticsCitationReuseContract,
+      ),
+    getNextPageParam: (last) => last.pagination.nextCursor ?? undefined,
+    select: selectFlatPages,
     staleTime: 5 * 60_000,
     enabled: canViewAnalytics,
     ...INLINE_READ_ERROR,
@@ -160,14 +179,15 @@ export function useReviewSla(range?: KbAnalyticsRange) {
   });
 }
 
-export type GapsPage = Page<KbGapRow>;
+export type GapsPage = Page<KbGapRow> & { scopeComplete: boolean };
 
 export function useKnowledgeGaps(range?: KbAnalyticsRange) {
   const canViewAnalytics = useCan("kb:analytics:view");
-  const { from, to } = range ?? {};
+  const { from, to, spaceId } = range ?? {};
   const keyParams: Record<string, unknown> = {
     ...(from !== undefined ? { from } : {}),
     ...(to !== undefined ? { to } : {}),
+    ...(spaceId !== undefined ? { spaceId } : {}),
   };
   const query = useInfiniteQuery({
     queryKey: knowledgeAndSurveysQueryKeys.kb.knowledgeGaps(
@@ -179,6 +199,7 @@ export function useKnowledgeGaps(range?: KbAnalyticsRange) {
         ...(pageParam !== undefined ? { cursor: pageParam } : {}),
         ...(from !== undefined ? { from } : {}),
         ...(to !== undefined ? { to } : {}),
+        ...(spaceId !== undefined ? { spaceId } : {}),
       };
       return apiClient.get<GapsPage>(
         "/kb/analytics/gaps",
@@ -188,14 +209,14 @@ export function useKnowledgeGaps(range?: KbAnalyticsRange) {
       );
     },
     getNextPageParam: (last) => last.pagination.nextCursor ?? undefined,
-    select: selectFlatPages,
     staleTime: 60_000,
     enabled: canViewAnalytics,
   });
 
   return {
     ...query,
-    gaps: query.data,
+    gaps: query.data?.pages.flatMap((page) => page.data),
+    scopeComplete: query.data?.pages.every((page) => page.scopeComplete) ?? false,
   };
 }
 
@@ -264,7 +285,7 @@ export function useDismissGap() {
 
 export function useCreateGapFix() {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation("kb:analytics:view", {
+  return useAuthorizedMutation("kb:pages:create", {
     mutationKey: ["knowledge", "kb", "gaps", "create-fix"],
     mutationFn: (body: { query: string; spaceId?: number }) =>
       apiClient.post("/kb/analytics/gaps/create-fix", body, undefined, kbAnalyticsGapActionContract),
@@ -276,12 +297,24 @@ export function useCreateGapFix() {
   });
 }
 
-export function useKbContentGaps(range?: KbAnalyticsRange) {
+export function useKbContentGaps(range?: KbAnalyticsRange, kind?: "search" | "ai_no_context") {
   const canViewAnalytics = useCan("kb:analytics:view");
-  const queryParams: Record<string, unknown> = { from: range?.from, to: range?.to };
-  return useQuery({
+  const queryParams: Record<string, unknown> = {
+    from: range?.from,
+    to: range?.to,
+    ...(kind !== undefined ? { kind } : {}),
+  };
+  return useInfiniteQuery({
     queryKey: knowledgeAndSurveysQueryKeys.kb.contentGaps(queryParams),
-    queryFn: ({ signal }) => apiClient.get<KbContentGapRow[]>("/kb/analytics/content-gaps", queryParams, signal, kbAnalyticsContentGapsContract),
+    initialPageParam: NO_CURSOR_YET,
+    queryFn: ({ signal, pageParam }) => apiClient.get<Page<KbContentGapRow>>(
+      "/kb/analytics/content-gaps",
+      { ...queryParams, ...(pageParam !== undefined ? { cursor: pageParam } : {}) },
+      signal,
+      kbAnalyticsContentGapsContract,
+    ),
+    getNextPageParam: (last) => last.pagination.nextCursor ?? undefined,
+    select: selectFlatPages,
     staleTime: 60_000,
     enabled: canViewAnalytics,
   });

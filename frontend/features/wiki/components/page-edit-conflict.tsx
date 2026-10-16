@@ -76,9 +76,14 @@ export default function PageEditConflict({
               Your local changes: {localSummary}
             </p>
           )}
+          {conflict.currentContentRevision === null && (
+            <p className="text-xs text-status-danger-ink opacity-80">
+              The latest revision could not be confirmed, so your version cannot be saved yet.
+            </p>
+          )}
         </div>
         <div className="ml-auto flex shrink-0 items-center gap-2">
-          <Button size="sm" className="h-7" onClick={onKeepMine}>
+          <Button size="sm" className="h-7" onClick={onKeepMine} disabled={conflict.currentContentRevision === null}>
             Keep my version
           </Button>
           <Button size="sm" variant="outline" className="h-7" onClick={handleOpenConfirm}>

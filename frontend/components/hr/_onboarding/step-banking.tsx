@@ -63,7 +63,7 @@ export function StepBanking({ form }: StepBankingProps) {
             <FormItem>
               <FormLabel>Bank Name</FormLabel>
               <FormControl>
-                <Input placeholder="e.g. Chase, HDFC" {...field} onChange={personNameFieldChange(field.onChange)} />
+                <Input placeholder="e.g. Chase, HDFC" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -76,7 +76,7 @@ export function StepBanking({ form }: StepBankingProps) {
             <FormItem>
               <FormLabel>Branch Name</FormLabel>
               <FormControl>
-                <Input placeholder="e.g. Down Town Branch" {...field} onChange={personNameFieldChange(field.onChange)} />
+                <Input placeholder="e.g. Down Town Branch" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

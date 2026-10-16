@@ -78,6 +78,7 @@ export function StepReview({ draft, keyConflictMessage, onGoToBasics }: StepRevi
 
   return (
     <div className="space-y-4">
+      <p className="text-sm text-muted-foreground">Review the details before creating the project.</p>
       {keyConflictMessage ? (
         <div className="flex items-start gap-3 rounded-xl border border-status-warning-rule bg-status-warning-surface p-3">
           <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-status-warning-fill text-foreground">

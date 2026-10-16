@@ -112,7 +112,7 @@ function ModuleQuestionField({
     <div className="min-w-0 space-y-1.5">
       <p className="text-xs text-muted-foreground">
         {question.label}{" "}
-        <span className="text-xs text-muted-foreground/60">(Optional)</span>
+              <span className="text-xs text-muted-foreground">(Optional)</span>
       </p>
       {question.type === "select" ? (
         <ChipRadioGroup question={question} value={value} onChange={onChange} />

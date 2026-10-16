@@ -326,6 +326,38 @@ describe("formatAmountInCurrency — a stored row renders in the currency it sto
   });
 });
 
+describe("formatINRCompact — truncation prevents rounding overflow (B-052)", () => {
+  it("does not round 9.9Cr up to 10Cr when the raw value is 999,99,999", () => {
+    const result = formatINRCompact(9_99_99_999);
+    expect(result).toBe("₹9.9Cr");
+    expect(result).not.toContain("10");
+  });
+
+  it("does not round 9.9L up to 10L at the lakh boundary", () => {
+    const result = formatINRCompact(9_99_999);
+    expect(result).toBe("₹9.9L");
+    expect(result).not.toContain("10");
+  });
+
+  it("does not round 99.9K up to 100K when the raw value is 99,999", () => {
+    const result = formatINRCompact(99_999);
+    expect(result).toBe("₹99.9K");
+    expect(result).not.toBe("₹100K");
+  });
+
+  it("shows a round number without a decimal point", () => {
+    expect(formatINRCompact(1_00_00_000)).toBe("₹1Cr");
+    expect(formatINRCompact(5_00_000)).toBe("₹5L");
+    expect(formatINRCompact(10_000)).toBe("₹10K");
+  });
+
+  it("matches the parity test values that formatMoneyCompact emits for INR", () => {
+    expect(formatINRCompact(12_300_000)).toBe("₹1.2Cr");
+    expect(formatINRCompact(340_000)).toBe("₹3.4L");
+    expect(formatINRCompact(12_000)).toBe("₹12K");
+  });
+});
+
 describe("formatDayCount — display leave days without floating-point noise", () => {
   it("formats a whole number without decimal places", () => {
     expect(formatDayCount(10)).toBe("10");

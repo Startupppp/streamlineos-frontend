@@ -128,7 +128,7 @@ export function MyResignationPage() {
         )}
       </PageState>
 
-      <ResignationFormSheet open={sheetOpen} onOpenChange={setSheetOpen} mode="self" />
+      <ResignationFormSheet open={sheetOpen} onOpenChange={setSheetOpen} />
       <ConfirmDialog
         open={withdrawId !== null}
         onOpenChange={handleWithdrawOpenChange}

@@ -48,7 +48,7 @@ export function ManagedProductCreateFields({ form, formId, onSubmit }: ManagedPr
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Name</FormLabel>
+              <FormLabel>Name <span aria-hidden="true" className="text-destructive">*</span></FormLabel>
               <FormControl>
                 <Input {...field} placeholder="Product name" />
               </FormControl>
@@ -61,7 +61,7 @@ export function ManagedProductCreateFields({ form, formId, onSubmit }: ManagedPr
           name="key"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Key</FormLabel>
+              <FormLabel>Key <span aria-hidden="true" className="text-destructive">*</span></FormLabel>
               <FormControl>
                 <Input
                   {...field}

@@ -50,7 +50,7 @@ function ImpactRow({
       </td>
       <td className="py-2 pl-2 pr-4 text-right text-xs font-mono tabular-nums text-muted-foreground">
         {row.summedAccountValue ?? (
-          <span className="text-muted-foreground/50">Restricted</span>
+            <span className="text-muted-foreground">Restricted</span>
         )}
       </td>
     </tr>

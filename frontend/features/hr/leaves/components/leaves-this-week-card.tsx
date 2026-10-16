@@ -34,7 +34,7 @@ export function LeavesThisWeekCard({ leaves }: LeavesThisWeekCardProps) {
               className="flex items-center gap-2 rounded-lg border border-status-warning-rule bg-card px-3 py-2"
             >
               <Avatar className="w-7">
-                <AvatarImage src={resolveImageUrl(leave.user?.image)} />
+                <AvatarImage src={resolveImageUrl(leave.user?.image)} alt="" />
                 <AvatarFallback className="bg-status-warning-surface text-micro text-status-warning-ink">
                   {leave.user?.firstName?.[0]}
                   {leave.user?.lastName?.[0]}

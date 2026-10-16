@@ -126,12 +126,6 @@ export function StepPersonal({
   }, [form, onDraftChange]);
 
   useEffect(() => {
-    if (!form.getValues("addressCountry")?.trim()) {
-      form.setValue("addressCountry", INDIA_COUNTRY_NAME);
-    }
-  }, [form]);
-
-  useEffect(() => {
     if (effectiveCountry !== INDIA_COUNTRY_NAME) {
       form.setValue("addressState", "");
       form.setValue("addressCity", "");
@@ -207,7 +201,6 @@ export function StepPersonal({
               name="phone"
               render={({ field }) => (
                 <PhoneInput
-                  key={phoneCountry}
                   id="phone"
                   defaultCountry={phoneCountry}
                   placeholder="Enter phone number"
@@ -449,7 +442,6 @@ export function StepPersonal({
               name="emergencyPhone"
               render={({ field }) => (
                 <PhoneInput
-                  key={phoneCountry}
                   id="emergencyPhone"
                   defaultCountry={phoneCountry}
                   placeholder="Enter phone number"

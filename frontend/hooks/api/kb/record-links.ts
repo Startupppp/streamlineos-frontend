@@ -1,11 +1,13 @@
 "use client";
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
+import { selectFlatPages, type Page } from "@/lib/api/select-flat-pages";
 
 export type KbPageRecordLink = {
   id: number;
@@ -13,6 +15,8 @@ export type KbPageRecordLink = {
   targetId: string | null;
   label: string | null;
 };
+
+export type KbPageRecordLinkPage = Page<KbPageRecordLink>;
 
 export type CreateKbPageRecordLinkInput = {
   targetType: string;
@@ -34,9 +38,17 @@ const kbRecordLinkSuccessContract = lazyContract(() =>
 
 export function useKbPageRecordLinks(pageId: number) {
   const canViewPages = useCan("kb:pages:view");
-  return useQuery({
+  return useInfiniteQuery({
     queryKey: knowledgeAndSurveysQueryKeys.kb.pageRecordLinks(pageId),
-    queryFn: ({ signal }) => apiClient.get<KbPageRecordLink[]>(`/kb/pages/${pageId}/record-links`, undefined, signal, kbRecordLinkListContract),
+    initialPageParam: NO_CURSOR_YET,
+    queryFn: ({ signal, pageParam }) => apiClient.get<KbPageRecordLinkPage>(
+      `/kb/pages/${pageId}/record-links`,
+      pageParam !== undefined ? { cursor: pageParam } : undefined,
+      signal,
+      kbRecordLinkListContract,
+    ),
+    getNextPageParam: (last) => last.pagination.nextCursor ?? undefined,
+    select: selectFlatPages,
     enabled: canViewPages,
     staleTime: 30_000,
   });

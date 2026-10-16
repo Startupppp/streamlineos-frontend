@@ -138,6 +138,16 @@ function AttendanceProbe({
   return null;
 }
 
+function AttendanceNarrowProbe({ recorder }: { recorder: Recorder<CalendarListItem[]> }) {
+  const result = useAttendanceCalendarEvents(
+    new Date("2026-09-15T00:00:00.000Z"),
+    new Date("2026-09-18T00:00:00.000Z"),
+    true,
+  );
+  recorder.renders.push(result.events);
+  return null;
+}
+
 function AttendanceStateProbe({
   recorder,
   visible = true,
@@ -225,6 +235,21 @@ describe("useAttendanceCalendarEvents — referential identity", () => {
 });
 
 describe("useAttendanceCalendarEvents — fetch timing is unchanged", () => {
+  it("keeps monthly rows outside the visible range out of the Calendar", async () => {
+    mockApiGet.mockImplementation((path: unknown) =>
+      path === "/me/attendance/monthly"
+        ? Promise.resolve([
+            ATTENDANCE_LOGS[0],
+            { ...ATTENDANCE_LOGS[0], id: 2, date: "2026-09-30" },
+          ])
+        : Promise.resolve(routeGet(path)),
+    );
+    const recorder = createRecorder<CalendarListItem[]>();
+    mount(() => <AttendanceNarrowProbe recorder={recorder} />);
+    await waitFor(() => expect(latest(recorder)).toHaveLength(1));
+    expect(latest(recorder)[0]?.id).toBe("attendance-self-1");
+  });
+
   it("fetches monthly attendance when the grid shows attendance and the permission is held", async () => {
     const recorder = createRecorder<CalendarListItem[]>();
     mount((tick) => (
@@ -259,6 +284,50 @@ describe("useAttendanceCalendarEvents — fetch timing is unchanged", () => {
 });
 
 describe("attendance calendar coverage state", () => {
+  it("replaces a prior organization's attendance after an organization switch", async () => {
+    mockApiGet.mockImplementation((path: unknown) =>
+      path === "/me/attendance/monthly"
+        ? Promise.resolve([{ ...ATTENDANCE_LOGS[0], id: mockOrgId === "org-1" ? 1 : 2 }])
+        : Promise.resolve(routeGet(path)),
+    );
+    const recorder = createRecorder<AttendanceCalendarEventsResult>();
+    const { rerenderWithNoChangedInput } = mount((tick) => (
+      <AttendanceStateProbe recorder={recorder} tick={tick} />
+    ));
+    await waitFor(() => expect(latest(recorder).events[0]?.id).toBe("attendance-self-1"));
+
+    mockOrgId = "org-2";
+    await act(async () => rerenderWithNoChangedInput());
+    await waitFor(() => expect(latest(recorder).events[0]?.id).toBe("attendance-self-2"));
+  });
+
+  it("retries a prior 403 after attendance permission is restored", async () => {
+    let monthlyCalls = 0;
+    mockApiGet.mockImplementation((path: unknown) => {
+      if (path === "/me/attendance/monthly") {
+        monthlyCalls += 1;
+        return monthlyCalls === 1
+          ? Promise.reject({ status: 403, message: "Attendance denied" })
+          : Promise.resolve(ATTENDANCE_LOGS);
+      }
+      return Promise.resolve(routeGet(path));
+    });
+    const recorder = createRecorder<AttendanceCalendarEventsResult>();
+    const { rerenderWithNoChangedInput } = mount((tick) => (
+      <AttendanceStateProbe recorder={recorder} tick={tick} />
+    ));
+    await waitFor(() => expect(latest(recorder).isError).toBe(true));
+
+    mockUseCan.mockReturnValue(false);
+    await act(async () => rerenderWithNoChangedInput());
+    mockUseCan.mockReturnValue(true);
+    await act(async () => rerenderWithNoChangedInput());
+
+    await waitFor(() => expect(latest(recorder).events[0]?.id).toBe("attendance-self-1"));
+    expect(latest(recorder).isError).toBe(false);
+    expect(monthlyCalls).toBe(2);
+  });
+
   it("surfaces a failed monthly request and retries it", async () => {
     let monthlyCalls = 0;
     mockApiGet.mockImplementation((path: unknown) => {

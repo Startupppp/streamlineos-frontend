@@ -1,16 +1,18 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type KeyboardEvent, type UIEvent } from "react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { AppSheet } from "@/components/shared/app-sheet";
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useCalendarCapacity,
@@ -22,6 +24,7 @@ import {
 import { useCan, useScope } from "@/hooks/api/access";
 import { usePeople } from "@/hooks/api/directory/people";
 import { useWarehouses } from "@/hooks/api/inventory/warehouses";
+import { CapacityWindowFields } from "./calendar-capacity-window";
 
 export function CalendarCapacitySheet({ onClose }: { onClose: () => void }) {
   const [mode, setMode] = useState<
@@ -44,7 +47,8 @@ export function CalendarCapacitySheet({ onClose }: { onClose: () => void }) {
   const selectedWarehouseId = warehouseId || warehouses.data?.items[0]?.id || 0;
   const peopleScope = useScope("directory:people:view");
   const people = usePeople({ limit: 50, search: memberSearch });
-  const selectedId = resourceId || resources.data?.[0]?.id || 0;
+  const resourceItems = resources.data?.pages.flatMap((page) => page.items) ?? [];
+  const selectedId = resourceId || resourceItems[0]?.id || 0;
   const input = useMemo(() => {
     const begin = new Date(start);
     const finish = new Date(end);
@@ -86,18 +90,28 @@ export function CalendarCapacitySheet({ onClose }: { onClose: () => void }) {
     selectedWarehouseId,
     mode === "warehouse",
   );
+  const handleResourceListKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === "End" && resources.hasNextPage && !resources.isFetchingNextPage) {
+      void resources.fetchNextPage();
+    }
+  };
+  const handleResourceListScroll = (event: UIEvent<HTMLDivElement>) => {
+    const viewport = event.target;
+    if (!(viewport instanceof HTMLElement) || !resources.hasNextPage || resources.isFetchingNextPage) return;
+    if (viewport.scrollTop + viewport.clientHeight >= viewport.scrollHeight - 80) {
+      void resources.fetchNextPage();
+    }
+  };
   return (
-    <Sheet
+    <AppSheet
       open
       onOpenChange={(open) => {
         if (!open) onClose();
       }}
+      title="Capacity"
+      className="sm:max-w-xl"
     >
-      <SheetContent className="flex w-full flex-col p-0 sm:max-w-xl">
-        <SheetHeader className="border-b px-5 py-4">
-          <SheetTitle>Capacity</SheetTitle>
-        </SheetHeader>
-        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-4">
+        <div className="space-y-4">
           <p className="text-sm text-muted-foreground">
             Inspect confirmed allocations, tentative holds, and maintenance
             before choosing a time. Capacity is read only here.
@@ -140,19 +154,25 @@ export function CalendarCapacitySheet({ onClose }: { onClose: () => void }) {
           {mode === "resources" ? (
             <div className="space-y-1">
               <Label htmlFor="capacity-resource">Resource</Label>
-              <select
-                id="capacity-resource"
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                value={selectedId}
-                onChange={(event) => setResourceId(Number(event.target.value))}
+              <Select
+                value={selectedId ? String(selectedId) : undefined}
+                onValueChange={(value) => setResourceId(Number(value))}
               >
-                {resources.data?.map((resource) => (
-                  <option key={resource.id} value={resource.id}>
-                    {resource.name} · {resource.kind} ·{" "}
-                    {resource.location ?? "No location"}
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger id="capacity-resource" className="w-full">
+                  <SelectValue placeholder="Select a resource" />
+                </SelectTrigger>
+                <SelectContent
+                  onKeyDownCapture={handleResourceListKeyDown}
+                  onScrollCapture={handleResourceListScroll}
+                >
+                  {resourceItems.map((resource) => (
+                    <SelectItem key={resource.id} value={String(resource.id)}>
+                      {resource.name} · {resource.kind} · {resource.location ?? "No location"}
+                    </SelectItem>
+                  ))}
+                  {resources.isFetchingNextPage ? <p className="px-2 py-1 text-xs text-muted-foreground">Loading more resources</p> : null}
+                </SelectContent>
+              </Select>
             </div>
           ) : null}
           {mode === "team" ? (
@@ -164,27 +184,27 @@ export function CalendarCapacitySheet({ onClose }: { onClose: () => void }) {
                 onChange={(event) => setMemberSearch(event.target.value)}
                 placeholder="Search people"
               />
-              <select
-                aria-label="Select person"
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                value={membershipId}
-                onChange={(event) =>
-                  setMembershipId(Number(event.target.value))
-                }
+              <Select
+                value={membershipId ? String(membershipId) : undefined}
+                onValueChange={(value) => setMembershipId(Number(value))}
               >
-                <option value={0}>Select a person</option>
-                {(people.data?.data ?? [])
-                  .filter((person) => person.organizationMembershipId !== null)
-                  .map((person) => (
-                    <option
-                      key={person.organizationPersonId}
-                      value={person.organizationMembershipId!}
-                    >
-                      {person.displayName ??
-                        `${person.firstName} ${person.lastName}`.trim()}
-                    </option>
-                  ))}
-              </select>
+                <SelectTrigger aria-label="Select person" className="w-full">
+                  <SelectValue placeholder="Select a person" />
+                </SelectTrigger>
+                <SelectContent>
+                  {(people.data?.data ?? [])
+                    .filter((person) => person.organizationMembershipId !== null)
+                    .map((person) => (
+                      <SelectItem
+                        key={person.organizationPersonId}
+                        value={String(person.organizationMembershipId)}
+                      >
+                        {person.displayName ??
+                          `${person.firstName} ${person.lastName}`.trim()}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
               {people.data?.pageInfo.hasMore ? (
                 <p className="text-xs text-muted-foreground">
                   Search by name to find more people.
@@ -195,18 +215,21 @@ export function CalendarCapacitySheet({ onClose }: { onClose: () => void }) {
           {mode === "warehouse" ? (
             <div className="space-y-2">
               <Label htmlFor="capacity-warehouse">Warehouse</Label>
-              <select
-                id="capacity-warehouse"
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                value={selectedWarehouseId}
-                onChange={(event) => setWarehouseId(Number(event.target.value))}
+              <Select
+                value={selectedWarehouseId ? String(selectedWarehouseId) : undefined}
+                onValueChange={(value) => setWarehouseId(Number(value))}
               >
-                {warehouses.data?.items.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.name} · {item.code}
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger id="capacity-warehouse" className="w-full">
+                  <SelectValue placeholder="Select a warehouse" />
+                </SelectTrigger>
+                <SelectContent>
+                  {warehouses.data?.items.map((item) => (
+                    <SelectItem key={item.id} value={String(item.id)}>
+                      {item.name} · {item.code}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               {warehouses.isError ? (
                 <p className="text-sm text-destructive">
                   {getErrorMessage(warehouses.error)}
@@ -221,26 +244,12 @@ export function CalendarCapacitySheet({ onClose }: { onClose: () => void }) {
             </div>
           ) : null}
           {mode !== "warehouse" ? (
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <Label htmlFor="capacity-start">Start</Label>
-                <Input
-                  id="capacity-start"
-                  type="datetime-local"
-                  value={start}
-                  onChange={(event) => setStart(event.target.value)}
-                />
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="capacity-end">End</Label>
-                <Input
-                  id="capacity-end"
-                  type="datetime-local"
-                  value={end}
-                  onChange={(event) => setEnd(event.target.value)}
-                />
-              </div>
-            </div>
+              <CapacityWindowFields
+                start={start}
+                end={end}
+                onStartChange={setStart}
+                onEndChange={setEnd}
+              />
           ) : null}
           {mode === "resources" ? (
             <div className="space-y-1">
@@ -457,7 +466,6 @@ export function CalendarCapacitySheet({ onClose }: { onClose: () => void }) {
             </>
           ) : null}
         </div>
-      </SheetContent>
-    </Sheet>
+    </AppSheet>
   );
 }

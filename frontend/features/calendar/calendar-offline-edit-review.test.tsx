@@ -1,25 +1,23 @@
-import React from "react";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { CalendarOfflineEditReview } from "./calendar-offline-edit-review";
+
+let mockIsMobile = false;
 
 jest.mock("@tanstack/react-query", () => ({ useQuery: jest.fn() }));
 jest.mock("next-auth/react", () => ({ useSession: jest.fn() }));
 jest.mock("@/hooks/api/access", () => ({ useCan: jest.fn() }));
 jest.mock("@/hooks/api/calendar-offline-policy", () => ({ useCalendarOfflinePolicy: jest.fn() }));
-jest.mock("@/components/ui/dialog", () => ({
-  Dialog: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  DialogContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  DialogDescription: ({ children }: { children: React.ReactNode }) => <p>{children}</p>,
-  DialogHeader: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  DialogTitle: ({ children }: { children: React.ReactNode }) => <h2>{children}</h2>,
-}));
+jest.mock("@/hooks/common/use-online-status", () => ({ useOnlineStatus: jest.fn() }));
+jest.mock("@/hooks/common/use-mobile", () => ({ useIsMobile: () => mockIsMobile }));
 
 const query = jest.requireMock<{ useQuery: jest.Mock }>("@tanstack/react-query").useQuery;
 const session = jest.requireMock<{ useSession: jest.Mock }>("next-auth/react").useSession;
 const can = jest.requireMock<{ useCan: jest.Mock }>("@/hooks/api/access").useCan;
 const policy = jest.requireMock<{ useCalendarOfflinePolicy: jest.Mock }>("@/hooks/api/calendar-offline-policy").useCalendarOfflinePolicy;
+const online = jest.requireMock<{ useOnlineStatus: jest.Mock }>("@/hooks/common/use-online-status").useOnlineStatus;
+const refetch = jest.fn();
 
-function setup(options: { moved?: boolean; isError?: boolean } = {}) {
+function setup(options: { moved?: boolean; isError?: boolean; stale?: boolean; online?: boolean } = {}) {
   const now = Date.now();
   const originalStart = new Date(now + 86_400_000);
   const originalEnd = new Date(originalStart.getTime() + 3_600_000);
@@ -27,6 +25,7 @@ function setup(options: { moved?: boolean; isError?: boolean } = {}) {
   const nextEnd = new Date(nextStart.getTime() + 3_600_000);
   session.mockReturnValue({ status: "authenticated", data: { orgId: "org-1", user: { id: "user-1" } } });
   can.mockReturnValue(true);
+  online.mockReturnValue(options.online ?? true);
   policy.mockReturnValue({ isFetchedAfterMount: true, isFetching: false, isError: false, dataUpdatedAt: now, data: { enabled: true, version: 2 } });
   query.mockReturnValue({
     data: {
@@ -41,13 +40,14 @@ function setup(options: { moved?: boolean; isError?: boolean } = {}) {
       },
       detail: { canManage: true, localVersion: 3, rrule: null },
       coverage: "complete",
-      availability: { evaluatedAt: new Date(now).toISOString(), slots: [{ state: "free", coverageState: "complete", explanation: "Available" }] },
+      availability: { evaluatedAt: new Date(now - (options.stale ? 61_000 : 0)).toISOString(), slots: [{ state: "free", coverageState: "complete", explanation: "Available" }] },
     },
     dataUpdatedAt: now,
     isFetchedAfterMount: true,
     isFetching: false,
     isError: options.isError ?? false,
     isLoading: false,
+    refetch,
   });
   render(<CalendarOfflineEditReview intent={{
     identity: "org-1:user-1",
@@ -65,7 +65,20 @@ function setup(options: { moved?: boolean; isError?: boolean } = {}) {
 }
 
 describe("offline Calendar edit review", () => {
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => { jest.clearAllMocks(); mockIsMobile = false; });
+
+  it("keeps the review and actions in a desktop dialog", () => {
+    setup();
+    expect(screen.getByRole("dialog", { name: "Review offline event change" })).toHaveAttribute("data-slot", "dialog-content");
+    expect(screen.getByRole("button", { name: "Discard" })).toBeInTheDocument();
+  });
+
+  it("opens the review and actions from the bottom on mobile", () => {
+    mockIsMobile = true;
+    setup();
+    expect(screen.getByRole("dialog", { name: "Review offline event change" })).toHaveClass("data-[state=open]:slide-in-from-bottom");
+    expect(screen.getByRole("button", { name: "Continue to edit form" })).toBeEnabled();
+  });
 
   it("rejects an occurrence whose time changed without a parent version change", () => {
     expect(setup({ moved: true })).toBeDisabled();
@@ -75,7 +88,18 @@ describe("offline Calendar edit review", () => {
     expect(setup({ isError: true })).toBeDisabled();
   });
 
+  it("blocks a previously valid review after connectivity drops", () => {
+    expect(setup({ online: false })).toBeDisabled();
+    expect(screen.getByText("Reconnect to review this change.")).toBeInTheDocument();
+  });
+
   it("allows a current occurrence with complete fresh availability", () => {
     expect(setup()).toBeEnabled();
+  });
+
+  it("rechecks the occurrence and availability when the review expires", () => {
+    expect(setup({ stale: true })).toBeDisabled();
+    fireEvent.click(screen.getByRole("button", { name: "Recheck current state" }));
+    expect(refetch).toHaveBeenCalledTimes(1);
   });
 });

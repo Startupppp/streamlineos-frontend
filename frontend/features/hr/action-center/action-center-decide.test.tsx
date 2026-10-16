@@ -11,6 +11,7 @@ import {
   mockQueueState,
   mockSessionModule,
   mockRegularizationModule,
+  mockSessionModule,
   mockSonnerModule,
   mockWfhRow,
   mockEmployeeListModule,
@@ -161,6 +162,27 @@ describe("HR Action Center — inline decide", () => {
     expect(
       screen.queryByRole("button", { name: "Approve" }),
     ).not.toBeInTheDocument();
+  });
+});
+
+describe("HRMS-025: own leave request in the queue", () => {
+  it("hides Approve and Reject on a leave row submitted by the current user", () => {
+    const ownLeaveRow = { ...mockLeaveRow, id: 99, user: { id: "usr-admin", name: "Admin User", firstName: "Admin", lastName: "User", image: null } };
+    mockQueueState.leavePages = mockLeavePage([ownLeaveRow]);
+
+    render(<HrActionCenterPage />);
+
+    expect(screen.queryByRole("button", { name: "Approve" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Reject" })).not.toBeInTheDocument();
+  });
+
+  it("shows Approve and Reject for a different employee's leave", () => {
+    mockQueueState.leavePages = mockLeavePage([mockLeaveRow]);
+
+    render(<HrActionCenterPage />);
+
+    expect(screen.getByRole("button", { name: "Approve" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Reject" })).toBeInTheDocument();
   });
 });
 

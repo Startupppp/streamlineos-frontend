@@ -100,6 +100,9 @@ export function DatePicker({
   );
 
   const handleOpenChange = useCallback((o: boolean) => setOpen(o), []);
+  const handleOpenAutoFocus = useCallback((e: Event) => {
+    e.preventDefault();
+  }, []);
   const handleClear = useCallback(() => {
     onChange("");
   }, [onChange]);
@@ -149,6 +152,7 @@ export function DatePicker({
             "p-0",
           )}
           align="start"
+          onOpenAutoFocus={handleOpenAutoFocus}
         >
           <Calendar
             mode="single"
