@@ -1,9 +1,11 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import Image from "next/image";
 import { RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
+import { signOutStaleSession } from "@/lib/stale-session-sign-out";
 import { cn } from "@/lib/utils";
 
 interface AppLoadingStalledProps {
@@ -12,11 +14,16 @@ interface AppLoadingStalledProps {
 
 export const STALLED_TITLE = "This is taking longer than it should";
 export const STALLED_DESCRIPTION =
-  "Your workspace has not finished syncing. The connection to the server may be down. Reloading usually clears it; if it does not, sign in again.";
+  "Your workspace has not finished syncing. The connection to the server may be down. Reloading usually clears it; if it does not, sign out and sign in again.";
 
 export function AppLoadingStalled({ className }: AppLoadingStalledProps) {
+  const [signingOut, setSigningOut] = useState(false);
   const handleReload = useCallback(() => {
     window.location.reload();
+  }, []);
+  const handleSignOut = useCallback(() => {
+    setSigningOut(true);
+    void signOutStaleSession();
   }, []);
 
   return (
@@ -43,10 +50,15 @@ export function AppLoadingStalled({ className }: AppLoadingStalledProps) {
       <p className="mt-3 max-w-sm text-sm leading-relaxed text-muted-foreground">
         {STALLED_DESCRIPTION}
       </p>
-      <Button className="mt-7" onClick={handleReload}>
-        <RefreshCw className="mr-2 h-4 w-4" aria-hidden="true" />
-        Reload
-      </Button>
+      <div className="mt-7 flex flex-wrap items-center justify-center gap-2">
+        <Button onClick={handleReload}>
+          <RefreshCw className="mr-2 h-4 w-4" aria-hidden="true" />
+          Reload
+        </Button>
+        <LoadingButton variant="outline" isPending={signingOut} onClick={handleSignOut}>
+          Sign out
+        </LoadingButton>
+      </div>
     </div>
   );
 }

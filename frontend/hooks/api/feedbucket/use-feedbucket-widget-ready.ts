@@ -3,19 +3,22 @@
 import { useQuery } from "@tanstack/react-query";
 import { getFeedbucketApiBase, getFeedbucketProjectId } from "@/lib/feedbucket";
 
-const FB_CONFIG_FAIL_KEY = "fb-cfg-fail";
+const FB_CONFIG_MISS_PREFIX = "fb-cfg-miss:";
+/** A key with no widget stays missing until someone fixes the env; re-probe daily, not per tab. */
+const FB_CONFIG_MISS_TTL_MS = 24 * 60 * 60_000;
 
-function readFailCache(): boolean {
+function knownMissing(projectId: string): boolean {
   try {
-    return typeof sessionStorage !== "undefined" && sessionStorage.getItem(FB_CONFIG_FAIL_KEY) === "0";
+    const at = Number(localStorage.getItem(FB_CONFIG_MISS_PREFIX + projectId));
+    return at > 0 && Date.now() - at < FB_CONFIG_MISS_TTL_MS;
   } catch {
     return false;
   }
 }
 
-function writeFailCache(): void {
+function rememberMissing(projectId: string): void {
   try {
-    if (typeof sessionStorage !== "undefined") sessionStorage.setItem(FB_CONFIG_FAIL_KEY, "0");
+    localStorage.setItem(FB_CONFIG_MISS_PREFIX + projectId, String(Date.now()));
   } catch {
     return;
   }
@@ -29,16 +32,13 @@ export function useFeedbucketWidgetReady(): boolean {
   const { data } = useQuery({
     queryKey: ["feedbucket", "widget-config", projectId],
     queryFn: async ({ signal }) => {
-      if (readFailCache()) return false;
+      if (!projectId || knownMissing(projectId)) return false;
       const response = await fetch(
         `${apiBase}/public/feedbucket/${projectId}/config`,
         { signal },
       );
-      if (!response.ok) {
-        writeFailCache();
-        return false;
-      }
-      return true;
+      if (response.status === 404) rememberMissing(projectId);
+      return response.ok;
     },
     staleTime: 5 * 60_000,
     retry: false,

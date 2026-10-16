@@ -179,13 +179,22 @@ export const useUpdateOrgSettings = () => {
     mutationKey: ["organization", "settings", "update"],
     mutationFn: (data) =>
       apiClient.patch<{ success: boolean }>("/organization/settings", data, undefined, orgSuccessContract),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: platformCoreQueryKeys.organization.settings(),
-      });
-      queryClient.invalidateQueries({
-        queryKey: platformCoreQueryKeys.organization.display(),
-      });
+    onSuccess: async (_result, data) => {
+      const saved = Object.fromEntries(
+        Object.entries(data).filter(([, value]) => value !== undefined),
+      );
+      queryClient.setQueryData<OrgSettings>(
+        platformCoreQueryKeys.organization.settings(),
+        (current) => (current ? { ...current, ...saved } : current),
+      );
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: platformCoreQueryKeys.organization.settings(),
+        }),
+        queryClient.invalidateQueries({
+          queryKey: platformCoreQueryKeys.organization.display(),
+        }),
+      ]);
     },
   });
 };

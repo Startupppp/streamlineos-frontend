@@ -10,6 +10,8 @@ import {
   type UserApiToken,
 } from "@/hooks/api/user-api-tokens";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { formatDateTimeInOrgTz } from "@/lib/date-utils";
+import { useOrgTimeZone } from "@/hooks/api/org-display";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -42,11 +44,6 @@ function RevokeTokenButton({
   );
 }
 
-function formatDate(iso: string | null) {
-  if (!iso) return "—";
-  return new Date(iso).toLocaleDateString(undefined, { dateStyle: "medium" });
-}
-
 function isExpired(expiresAt: string | null) {
   if (!expiresAt) return false;
   return new Date(expiresAt) < new Date();
@@ -74,6 +71,7 @@ export function PersonalTokensTab({
     refetch,
   } = useUserApiTokens({ cursor: currentCursor, limit: pageSize });
   const revoke = useRevokeUserApiToken();
+  const orgTz = useOrgTimeZone();
 
   const [createdRawToken, setCreatedRawToken] = useState<string | null>(null);
   const [revoking, setRevoking] = useState<UserApiToken | null>(null);
@@ -175,7 +173,7 @@ export function PersonalTokensTab({
         return (
           <div className="flex items-center gap-1">
             {expired && <Clock className="h-3 w-3 text-destructive" />}
-            <span className={expired ? "text-destructive" : ""}>{formatDate(t.expiresAt)}</span>
+            <span className={expired ? "text-destructive" : ""}>{formatDateTimeInOrgTz(t.expiresAt, orgTz)}</span>
           </div>
         );
       },
@@ -184,7 +182,7 @@ export function PersonalTokensTab({
       key: "lastUsed",
       header: "Last Used",
       className: "text-muted-foreground",
-      cell: (t) => formatDate(t.lastUsedAt),
+      cell: (t) => (formatDateTimeInOrgTz(t.lastUsedAt, orgTz) || "—"),
     },
     {
       key: "actions",

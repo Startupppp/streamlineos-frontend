@@ -34,32 +34,6 @@ export const GOALS = [
 
 export const ALWAYS_ENABLED_MODULES = ["chat", "kb"] as const satisfies readonly OrgModuleKey[];
 
-export const INDUSTRIES: readonly string[] = [
-  "IT Services",
-  "Agency",
-  "Retail",
-  "Manufacturing",
-  "Healthcare",
-  "Education",
-  "Construction",
-  "Real Estate",
-  "Restaurant",
-  "Logistics",
-];
-
-export const INDUSTRY_TEMPLATE_HINTS: Record<string, string> = {
-  "IT Services": "Engineering, Product, Ops departments + delivery templates",
-  "Agency": "Creative, Strategy, Client Services departments",
-  "Retail": "Sales, Inventory, Customer Service departments",
-  "Manufacturing": "Production, Quality, Supply Chain departments",
-  "Healthcare": "Clinical, Administration, Compliance departments",
-  "Education": "Academic, Administration, IT departments",
-  "Construction": "Projects, Engineering, Safety departments",
-  "Real Estate": "Sales, Leasing, Operations departments",
-  "Restaurant": "Kitchen, Service, Management departments",
-  "Logistics": "Operations, Fleet, Warehouse departments",
-};
-
 export const TEAM_SIZES = [
   { value: "1-10", label: "1–10 employees" },
   { value: "11-50", label: "11–50 employees" },

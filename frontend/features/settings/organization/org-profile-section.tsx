@@ -24,8 +24,8 @@ import {
   SettingsField,
   SettingsFieldGrid,
 } from "./org-settings-chrome";
+import { INDUSTRIES } from "@/lib/constants/industries";
 import {
-  INDUSTRIES,
   orgGeneralSchema,
   type OrgGeneralValues,
 } from "./org-profile-schema";
@@ -166,6 +166,9 @@ export function OrgProfileSection({ org, canEdit }: OrgProfileSectionProps) {
                         <SelectTrigger><SelectValue placeholder="Select industry" /></SelectTrigger>
                       </FormControl>
                       <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
+                        {field.value && !INDUSTRIES.includes(field.value) ? (
+                          <SelectItem value={field.value}>{field.value}</SelectItem>
+                        ) : null}
                         {INDUSTRIES.map((i) => <SelectItem key={i} value={i}>{i}</SelectItem>)}
                       </SelectContent>
                     </Select>

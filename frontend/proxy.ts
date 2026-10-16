@@ -275,6 +275,7 @@ export async function proxy(req: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  let clearStaleSession = false;
   if (token) {
     if (token.isActive === false)
       return withExpiredSessionCookies(
@@ -288,11 +289,11 @@ export async function proxy(req: NextRequest) {
       );
 
     if (matchesAny(pathname, AUTH_ROUTES)) {
-      const serverReportedMissingSession =
+      clearStaleSession =
         req.nextUrl.searchParams.get(SESSION_EXPIRED_QUERY) ===
         SESSION_EXPIRED_VALUE;
 
-      if (!serverReportedMissingSession) {
+      if (!clearStaleSession) {
         const target = resolveSafeCallbackUrl(req);
         if (target) return redirectTo(req, target.pathname, target.search);
 
@@ -321,7 +322,7 @@ export async function proxy(req: NextRequest) {
     buildCsp(nonce, process.env.NEXT_PUBLIC_API_URL, frameAncestor ?? undefined),
   );
   if (!frameAncestor) response.headers.set("X-Frame-Options", "DENY");
-  return response;
+  return withExpiredSessionCookies(response, req, clearStaleSession);
 }
 
 export const config = {
