@@ -35,11 +35,16 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { useCreateProfile, useCreateWorkerProfile, usePatchProfile, usePatchWorkerProfile } from "@/hooks/api/payroll/employees";
 import { usePayrollWorkforceLabel } from "@/features/payroll/lib/payroll-workforce-label";
 import { usePayrollPolicyCurrent } from "@/hooks/api/payroll/policies";
-import type { ProfileDetail } from "@/hooks/api/payroll/employees-schema";
+import type { ProfileComponent, ProfileDetail } from "@/hooks/api/payroll/employees-schema";
 import type { PayrollPerson } from "@/hooks/api/payroll/people-schema";
 import { PayrollPersonPicker, personKey } from "./payroll-person-picker";
 import { SalaryBreakupPreview } from "@/features/payroll/salary-structures/salary-breakup-preview";
 import { SALARY_PREVIEW_CTC } from "@/hooks/api/payroll/salary-preview";
+import { PAYROLL_AMOUNT_MAX } from "@/lib/validation/payroll-bounds";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { ProfileComponentsField } from "@/features/payroll/employees/profile-components-field";
+
+const ANNUAL_CTC_MAX = PAYROLL_AMOUNT_MAX * 12;
 
 const profileSchema = z.object({
   effectiveFrom: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Required: YYYY-MM-DD"),
@@ -47,16 +52,19 @@ const profileSchema = z.object({
     .string()
     .regex(/^\d+(\.\d{1,2})?$/, "Enter a positive number without letters or symbols (e.g. 1200000)")
     .refine(
-      (v) => parseFloat(v) <= 9_999_999,
-      "Annual CTC cannot exceed ₹9,999,999",
+      (v) => parseFloat(v) <= ANNUAL_CTC_MAX,
+      `Annual CTC cannot exceed ₹${ANNUAL_CTC_MAX.toLocaleString("en-IN")}`,
     ),
   workerType: z.enum(["EMPLOYEE", "CONTRACTOR", "CONSULTANT", "INTERN", "EOR"]),
   currency: z.string().length(3),
   payoutCurrency: z.string().refine((v) => !v || v.length === 3, "Must be a 3-letter currency code"),
   taxRegime: z.enum(["OLD", "NEW", "none"]),
   costCenter: z.string().max(100),
+  componentIds: z.array(z.number()),
 });
 type ProfileForm = z.infer<typeof profileSchema>;
+
+const NO_COMPONENTS: readonly ProfileComponent[] = [];
 
 interface SalaryProfileSheetProps {
   employeeUserId?: string;
@@ -64,6 +72,7 @@ interface SalaryProfileSheetProps {
   open: boolean;
   onClose: () => void;
   existingProfile?: ProfileDetail | null;
+  existingComponents?: readonly ProfileComponent[];
 }
 
 export function SalaryProfileSheet({
@@ -72,6 +81,7 @@ export function SalaryProfileSheet({
   open,
   onClose,
   existingProfile,
+  existingComponents = NO_COMPONENTS,
 }: SalaryProfileSheetProps) {
   const [picked, setPicked] = useState<PayrollPerson | null>(null);
 
@@ -101,6 +111,7 @@ export function SalaryProfileSheet({
       payoutCurrency: "",
       taxRegime: "none",
       costCenter: "",
+      componentIds: [],
     },
   });
 
@@ -128,9 +139,10 @@ export function SalaryProfileSheet({
         payoutCurrency: existingProfile?.payoutCurrency ?? "",
         taxRegime: (existingProfile?.taxRegime as "OLD" | "NEW" | undefined) ?? "none",
         costCenter: existingProfile?.costCenter ?? "",
+        componentIds: existingComponents.map((c) => c.componentId),
       });
     }
-  }, [open, existingProfile, form, policyCurrency]);
+  }, [open, existingProfile, existingComponents, form, policyCurrency]);
 
   function handleSubmit(values: ProfileForm) {
     if (!resolvedUserId && !resolvedWorkerId) {
@@ -138,7 +150,25 @@ export function SalaryProfileSheet({
       return;
     }
 
+    const components = values.componentIds.map((componentId) => {
+      const kept = existingComponents.find((c) => c.componentId === componentId);
+      return kept
+        ? {
+            componentId,
+            calcMethodOverride: kept.calcMethodOverride ?? undefined,
+            amount: kept.amount ?? undefined,
+            percent: kept.percent ?? undefined,
+            formulaOverride: kept.formulaOverride ?? undefined,
+          }
+        : { componentId };
+    });
+    if (isEdit && components.length === 0 && existingComponents.length > 0) {
+      form.setError("componentIds", { message: "Keep at least one component on this profile" });
+      return;
+    }
+
     const sharedFields = {
+      components,
       annualCtc: values.annualCtc,
       workerType: values.workerType,
       currency: values.currency,
@@ -152,7 +182,7 @@ export function SalaryProfileSheet({
         toast.success("Profile updated");
         onClose();
       };
-      const onError = () => toast.error("Failed to update profile");
+      const onError = (err: unknown) => toast.error(getErrorMessage(err));
       if (resolvedWorkerId && !resolvedUserId) {
         patchWorkerMutation.mutate(
           { profileId: existingProfile.id, body: sharedFields },
@@ -169,7 +199,7 @@ export function SalaryProfileSheet({
         toast.success("Profile created");
         onClose();
       };
-      const onError = () => toast.error("Failed to create profile");
+      const onError = (err: unknown) => toast.error(getErrorMessage(err));
       const createPayload = { effectiveFrom: values.effectiveFrom, ...sharedFields };
       if (resolvedWorkerId && !resolvedUserId) {
         createWorkerMutation.mutate(createPayload, { onSuccess, onError });
@@ -259,6 +289,20 @@ export function SalaryProfileSheet({
                   ) : null}
                 </div>
               ) : null}
+              <FormField
+                control={form.control}
+                name="componentIds"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Salary components</FormLabel>
+                    <p className="text-dense text-muted-foreground">
+                      Payroll runs pay exactly the components ticked here.
+                    </p>
+                    <ProfileComponentsField value={field.value} onChange={field.onChange} />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <FormField
                 control={form.control}
                 name="workerType"

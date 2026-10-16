@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
@@ -18,12 +18,12 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { ToggleRow } from "@/features/payroll/shared";
+import { MonthPicker, monthFromToday } from "@/features/payroll/shared/month-picker";
 import { useCreatePolicyVersion, useToggleImpact, usePayrollPolicyCurrent } from "@/hooks/api/payroll";
 import {
   TOGGLE_GROUPS,
@@ -36,7 +36,10 @@ import type { PolicyVersionRow } from "@/hooks/api/payroll/policies-schema";
 type PendingChange = { key: string; newValue: boolean };
 
 const versionSchema = z.object({
-  effectiveFrom: z.string().min(1, "Required"),
+  effectiveFrom: z
+    .string()
+    .regex(/^\d{4}-\d{2}$/, "Pick the month this change starts")
+    .refine((v) => v >= monthFromToday(0), "Pick this month or a later one"),
   reason: z.string().min(1, "Reason is required").max(500),
 });
 type VersionForm = z.infer<typeof versionSchema>;
@@ -57,9 +60,9 @@ export function ToggleSettingsSection({ policy, activeVersion }: ToggleSettingsS
   const statutoryPack = currentData?.statutoryPack ?? null;
   const isNonIN = policy.country !== "IN";
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<VersionForm>({
+  const { register, handleSubmit, reset, control, formState: { errors } } = useForm<VersionForm>({
     resolver: zodResolver(versionSchema),
-    defaultValues: { effectiveFrom: "", reason: "" },
+    defaultValues: { effectiveFrom: monthFromToday(1), reason: "" },
   });
 
   const toggles = activeVersion?.toggles;
@@ -97,7 +100,7 @@ export function ToggleSettingsSection({ policy, activeVersion }: ToggleSettingsS
       {
         policyId: policy.id,
         toggleOverrides: { [pending.key]: pending.newValue },
-        effectiveFrom: data.effectiveFrom,
+        effectiveFrom: `${data.effectiveFrom}-01`,
         reason: data.reason,
       },
       {
@@ -253,12 +256,15 @@ export function ToggleSettingsSection({ policy, activeVersion }: ToggleSettingsS
                 </div>
               )}
               <div className="space-y-1">
-                <Label className="text-xs">Effective From (YYYY-MM)</Label>
-                <Input
-                  {...register("effectiveFrom")}
-                  placeholder="2026-08"
-                  className="text-sm font-mono"
+                <Label className="text-xs">Effective from</Label>
+                <Controller
+                  control={control}
+                  name="effectiveFrom"
+                  render={({ field }) => (
+                    <MonthPicker value={field.value} onChange={field.onChange} minMonth={monthFromToday(0)} />
+                  )}
                 />
+                <p className="text-micro text-muted-foreground">The change applies from the first day of this month.</p>
                 {errors.effectiveFrom && (
                   <p className="text-xs text-destructive">{errors.effectiveFrom.message}</p>
                 )}
