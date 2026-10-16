@@ -1,6 +1,6 @@
 import type { Session } from "next-auth";
 import { getSession, signIn } from "next-auth/react";
-import { signInWithMagicToken } from "./auth-hooks";
+import { CREDENTIALS_SIGN_IN_TIMEOUT_MS, signInWithMagicToken } from "./auth-hooks";
 
 jest.mock("next-auth/react", () => ({
   getSession: jest.fn(),
@@ -141,5 +141,20 @@ describe("I4 — signInWithMagicToken outcome discrimination", () => {
     mockSignIn.mockResolvedValueOnce(signInRejected("Token already used"));
     await signInWithMagicToken("one-shot-token");
     expect(mockSignIn).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("signInWithMagicToken — a stalled credentials sign-in", () => {
+  afterEach(() => jest.useRealTimers());
+
+  it("stops waiting at the deadline and reports what the session says", async () => {
+    jest.useFakeTimers();
+    mockSignIn.mockReset();
+    mockGetSession.mockReset();
+    mockSignIn.mockReturnValue(new Promise(() => undefined));
+    mockGetSession.mockResolvedValue(null);
+    const outcome = signInWithMagicToken("tok");
+    await jest.advanceTimersByTimeAsync(CREDENTIALS_SIGN_IN_TIMEOUT_MS);
+    await expect(outcome).resolves.toEqual({ status: "indeterminate" });
   });
 });

@@ -5,6 +5,7 @@ import {
   ClipboardList,
   FileText,
   FolderPlus,
+  Gift,
   ListPlus,
   MessageSquareText,
   Package,
@@ -14,6 +15,7 @@ import {
   TicketPlus,
   UserPlus,
   Users,
+  Wallet,
 } from "lucide-react"
 import type { PermissionKey } from "@/lib/rbac/permissions"
 import type { ProductKey } from "@/components/layout/sidebar/sidebar-nav-types"
@@ -143,7 +145,7 @@ export const QUICK_CREATE_GROUPS: CreateGroup[] = [
   {
     id: "people",
     label: "People",
-    products: ["hrms", "payroll", "timesheets", "administration"],
+    products: ["hrms", "timesheets", "administration"],
     items: [
       {
         id: "add-employee",
@@ -167,6 +169,37 @@ export const QUICK_CREATE_GROUPS: CreateGroup[] = [
         href: "/settings/users?view=invitations&create=1",
         icon: UserPlus,
         permission: "settings:organization:manage",
+      },
+    ],
+  },
+  {
+    id: "payroll",
+    label: "Payroll",
+    products: ["payroll"],
+    items: [
+      {
+        id: "payroll-run",
+        label: "Payroll run",
+        href: "/payroll/runs",
+        icon: Wallet,
+        permission: "payroll:runs:manage",
+        module: "PAYROLL",
+      },
+      {
+        id: "add-bonus",
+        label: "Bonus",
+        href: "/payroll/bonuses?create=1",
+        icon: Gift,
+        permission: "hr:bonuses:manage",
+        module: "PAYROLL",
+      },
+      {
+        id: "expense-claim",
+        label: "Expense claim",
+        href: "/payroll/reimbursements?create=1",
+        icon: Receipt,
+        permission: "hr:payroll:view",
+        module: "PAYROLL",
       },
     ],
   },

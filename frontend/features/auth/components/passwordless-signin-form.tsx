@@ -111,6 +111,8 @@ export function PasswordlessSigninForm({ getCallbackUrl, initialEmail }: Passwor
     onError: (error) => {
       resendRequestedRef.current = false;
       applyRateLimitCooldown(error);
+      if (!codeStageActiveRef.current)
+        emailForm.setError("email", { message: getErrorMessage(error) });
       toast.error(getErrorMessage(error));
     },
   });

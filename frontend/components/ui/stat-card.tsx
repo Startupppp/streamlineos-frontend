@@ -370,7 +370,7 @@ export const StatCard = memo(function StatCard({
         <TruncatedTooltipText
           text={label}
           className={cn(
-            "text-dense font-medium leading-tight truncate",
+            "text-dense font-medium leading-tight line-clamp-2 break-words",
             featured ? "text-primary-foreground/70" : "text-muted-foreground",
           )}
         />

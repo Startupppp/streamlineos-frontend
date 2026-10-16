@@ -290,6 +290,8 @@ export function StepProducts({
   const [preview, setPreview] = useState<OrgSetupPreview | null>(null);
   const [previewError, setPreviewError] = useState<string | null>(null);
   const previewRequestRef = useRef(0);
+  const [previewAttempt, setPreviewAttempt] = useState(0);
+  const retryPreview = useCallback(() => setPreviewAttempt((n) => n + 1), []);
   const { mutateAsync: previewSelection, isPending: previewPending } =
     useOrgSetupPreviewMutation();
 
@@ -327,7 +329,7 @@ export function StepProducts({
         });
     }, 300);
     return () => window.clearTimeout(timer);
-  }, [data.modules, moduleSelectionKey, previewSelection]);
+  }, [data.modules, moduleSelectionKey, previewSelection, previewAttempt]);
 
   const blockedModules = useMemo(
     () => preview?.modules.filter((module) => !module.eligible) ?? [],
@@ -397,7 +399,7 @@ export function StepProducts({
         </p>
       ) : null}
 
-      {previewPending || !previewMatchesSelection ? (
+      {!previewError && (previewPending || !previewMatchesSelection) ? (
         <p aria-live="polite" className="text-xs text-muted-foreground">
           Checking product availability…
         </p>
@@ -405,7 +407,14 @@ export function StepProducts({
 
       {previewError ? (
         <p role="alert" className="text-xs text-destructive">
-          {previewError}
+          {previewError}{" "}
+          <button
+            type="button"
+            onClick={retryPreview}
+            className="font-medium underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            Retry
+          </button>
         </p>
       ) : null}
 
