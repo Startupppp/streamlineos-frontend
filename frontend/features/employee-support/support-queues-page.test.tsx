@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import type { ReactNode } from "react";
 import type { HelpdeskTicket } from "@/hooks/api/hr/helpdesk-schema";
 
@@ -78,6 +78,10 @@ jest.mock("@/hooks/api/hr/helpdesk", () => ({
   useSupportQueueTicket: () => ({ data: undefined, isLoading: false, isError: false, error: null, refetch: jest.fn() }),
   useAddSupportQueueComment: () => ({ mutateAsync: jest.fn(), isPending: false }),
   useUpdateSupportQueueTicket: () => ({ mutateAsync: jest.fn(), isPending: false }),
+}));
+
+jest.mock("./create-request-dialog", () => ({
+  CreateRequestDialog: ({ open }: { open: boolean }) => (open ? <div data-testid="create-request" /> : null),
 }));
 
 jest.mock("./support-queue-settings-sheet", () => ({
@@ -231,5 +235,16 @@ describe("SupportQueuesPage — one company-wide surface, HR as one queue", () =
     mockUseCan.mockImplementation((key: string) => key === "hr:helpdesk:manage");
     render(<SupportQueuesPage />);
     expect(screen.getByRole("button", { name: /queue settings/i })).toBeInTheDocument();
+  });
+
+  it("lets an agent raise a new request from the queue page (HR-U-032)", () => {
+    render(<SupportQueuesPage />);
+    expect(screen.queryByRole("button", { name: /new request/i })).toBeNull();
+    cleanup();
+
+    mockUseCan.mockImplementation((key: string) => key === "self:support");
+    render(<SupportQueuesPage />);
+    fireEvent.click(screen.getByRole("button", { name: /new request/i }));
+    expect(screen.getByTestId("create-request")).toBeInTheDocument();
   });
 });
