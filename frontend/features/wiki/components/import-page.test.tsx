@@ -1,6 +1,7 @@
 import { act, render, screen, fireEvent, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import ImportPage from "./import-page";
+import { ImportDryRunCard } from "./import-dry-run-card";
 
 jest.mock("sonner", () => ({
   toast: { error: jest.fn(), success: jest.fn(), info: jest.fn() },
@@ -15,6 +16,21 @@ const mockImportMutate = jest.fn();
 const mockCancelMutate = jest.fn();
 const mockUseKbImportJob = jest.fn();
 let mockSearchParams = new URLSearchParams();
+
+it("does not present the skip count as an update count in an update-policy dry run", () => {
+  render(<ImportDryRunCard result={{ total: 2, wouldSucceed: 2, wouldSkip: 0, invalidItems: [] }} duplicatePolicy="update" onDismiss={jest.fn()} />);
+
+  expect(screen.getByText("would import or update")).toBeInTheDocument();
+  expect(screen.queryByText("would update")).not.toBeInTheDocument();
+  expect(screen.getByText("This preview cannot separate new pages from updates.")).toBeInTheDocument();
+});
+
+it("keeps the measured duplicate skip count for skip-policy dry runs", () => {
+  render(<ImportDryRunCard result={{ total: 2, wouldSucceed: 1, wouldSkip: 1, invalidItems: [] }} duplicatePolicy="skip" onDismiss={jest.fn()} />);
+
+  expect(screen.getByText("would skip")).toBeInTheDocument();
+  expect(screen.queryByText("This preview cannot separate new pages from updates.")).not.toBeInTheDocument();
+});
 
 function completeRead(reader: FileReader, result: string) {
   act(() => {
