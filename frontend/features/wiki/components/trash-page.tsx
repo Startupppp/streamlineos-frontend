@@ -15,7 +15,6 @@ import type { DataTableColumn } from "@/components/ui/data-table.types";
 import { useCursorPagination } from "@/hooks/common/use-cursor-pagination";
 import { useSourceOverride } from "@/hooks/common/use-source-override";
 import { useUrlFilters } from "@/lib/url-state/use-url-filters";
-import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import {
@@ -26,8 +25,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { ErrorReference } from "@/components/shared/error-reference";
 import { useCan } from "@/hooks/api/access";
 import { useKbPagesTrash, useEmptyKbTrash } from "@/hooks/api/kb";
 import {
@@ -36,7 +33,8 @@ import {
   useKbTrashPurgeImpact,
 } from "@/hooks/api/kb/pages";
 import { useKbSpaces } from "@/hooks/api/kb/spaces";
-import { KbRotateCcwIcon, KbTrash2Icon } from "@/features/wiki/lib/kb-icons";
+import { KbTrash2Icon } from "@/features/wiki/lib/kb-icons";
+import { reportTrashBulkResult, TrashBulkActions, TrashBulkPurgeConfirmation, TrashEmptyConfirmation } from "./trash-bulk-actions";
 import type { KbPageListItem } from "@/hooks/api/kb/page-types";
 import { kbTimeAgo } from "@/features/wiki/lib/kb-date-utils";
 import { TrashRetentionSection } from "@/features/wiki/components/trash-retention-section";
@@ -138,6 +136,8 @@ export default function TrashPage() {
   const [selected, setSelected] = useState<Set<string | number>>(new Set());
   const [emptyConfirmOpen, setEmptyConfirmOpen] = useState(false);
   const [bulkPurgeConfirmOpen, setBulkPurgeConfirmOpen] = useState(false);
+  const [emptyWriteError, setEmptyWriteError] = useState<unknown>(null);
+  const [purgeWriteError, setPurgeWriteError] = useState<unknown>(null);
   const selectedIds = [...selected].map(Number);
   const {
     data: purgeImpact,
@@ -212,40 +212,32 @@ export default function TrashPage() {
   }
 
   function handleEmptyTrash() {
+    setEmptyWriteError(null);
     emptyTrash.mutate(undefined, {
-      onSuccess: (d) =>
+      onSuccess: (d) => {
         toast.success(
           `Emptied trash — ${d.purgedCount} page${d.purgedCount === 1 ? "" : "s"} permanently deleted`,
-        ),
-      onError: (e) => toast.error(getErrorMessage(e)),
+        );
+        setEmptyConfirmOpen(false);
+      },
+      onError: (e) => { setEmptyWriteError(e); toast.error(getErrorMessage(e)); },
     });
-    setEmptyConfirmOpen(false);
   }
 
   function handleBulkRestore() {
     bulkRestore.mutate(selectedIds, {
-      onSuccess: () => {
-        toast.success(
-          `Restored ${selectedIds.length} page${selectedIds.length === 1 ? "" : "s"}`,
-        );
-        setSelected(new Set());
-      },
+      onSuccess: (result) => reportTrashBulkResult(result, "restore", setSelected),
       onError: (e) => toast.error(getErrorMessage(e)),
     });
   }
 
   function handleBulkPurge() {
     if (!canConfirmPurge) return;
+    setPurgeWriteError(null);
     bulkPurge.mutate(selectedIds, {
-      onSuccess: () => {
-        toast.success(
-          `Permanently deleted ${selectedIds.length} page${selectedIds.length === 1 ? "" : "s"}`,
-        );
-        setSelected(new Set());
-      },
-      onError: (e) => toast.error(getErrorMessage(e)),
+      onSuccess: (result) => { reportTrashBulkResult(result, "purge", setSelected); setBulkPurgeConfirmOpen(false); },
+      onError: (e) => { setPurgeWriteError(e); toast.error(getErrorMessage(e)); },
     });
-    setBulkPurgeConfirmOpen(false);
   }
 
   function handleMobileSelectionChange(id: number, checked: boolean) {
@@ -264,47 +256,18 @@ export default function TrashPage() {
   const pageCount = data?.data.length ?? 0;
 
   const actions = (
-    <div className="flex items-center gap-2">
-      {selectedCount > 0 && (
-        <>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={handleBulkRestore}
-            disabled={bulkRestore.isPending}
-          >
-            <KbRotateCcwIcon className="mr-1.5 h-3.5 w-3.5" />
-            Restore {selectedCount}
-          </Button>
-          {canPurge && (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              disabled={bulkPurge.isPending}
-              onClick={() => setBulkPurgeConfirmOpen(true)}
-              className="text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive"
-            >
-              <KbTrash2Icon className="mr-1.5 h-3.5 w-3.5" />
-              Purge {selectedCount}
-            </Button>
-          )}
-        </>
-      )}
-      {canPurge && canManageSettings && pageCount > 0 && selectedCount === 0 && (
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => setEmptyConfirmOpen(true)}
-          disabled={emptyTrash.isPending}
-          className="text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive"
-        >
-          Empty Trash
-        </Button>
-      )}
-    </div>
+    <TrashBulkActions
+      selectedCount={selectedCount}
+      pageCount={pageCount}
+      canPurge={canPurge}
+      canManageSettings={canManageSettings}
+      restoring={bulkRestore.isPending}
+      purging={bulkPurge.isPending}
+      emptying={emptyTrash.isPending}
+      onRestore={handleBulkRestore}
+      onPurge={() => { setPurgeWriteError(null); setBulkPurgeConfirmOpen(true); }}
+      onEmpty={() => { setEmptyWriteError(null); setEmptyConfirmOpen(true); }}
+    />
   );
 
   const columns: DataTableColumn<KbPageListItem>[] = [
@@ -491,36 +454,30 @@ export default function TrashPage() {
         </div>
       </PageWrapper>
 
-      <ConfirmDialog
+      <TrashEmptyConfirmation
         open={emptyConfirmOpen}
         onOpenChange={setEmptyConfirmOpen}
-        title="Empty the trash?"
-        description={
-          data?.pagination.hasMore
-            ? "This permanently deletes every page currently in the trash, not just the ones shown on this page. This cannot be undone."
-            : `All ${pageCount} page${pageCount === 1 ? "" : "s"} in the trash will be permanently deleted. This cannot be undone.`
-        }
-        confirmLabel="Empty Trash"
-        destructive
+        pageCount={pageCount}
+        hasMore={data?.pagination.hasMore ?? false}
         isPending={emptyTrash.isPending}
+        error={emptyWriteError}
         onConfirm={handleEmptyTrash}
       />
 
-      <ConfirmDialog
+      <TrashBulkPurgeConfirmation
         open={bulkPurgeConfirmOpen}
         onOpenChange={setBulkPurgeConfirmOpen}
-        title={`Permanently delete ${selectedCount} page${selectedCount === 1 ? "" : "s"}?`}
+        selectedCount={selectedCount}
         description={purgeImpactDescription}
-        content={canPurge && !purgeImpactLoading && (purgeImpactError || !purgeImpact) ? (
-          <div role="alert" className="space-y-2 text-sm text-destructive">
-            {purgeImpactError && <ErrorReference error={purgeImpactReadError} />}
-            <Button type="button" variant="outline" size="sm" onClick={handleRetryPurgeImpact}>Retry impact check</Button>
-          </div>
-        ) : undefined}
-        confirmLabel="Delete Forever"
-        destructive
-        hideConfirm={!canConfirmPurge}
+        canPurge={canPurge}
+        impactLoading={purgeImpactLoading}
+        impactError={purgeImpactError}
+        impactAvailable={!!purgeImpact}
+        impactReadError={purgeImpactReadError}
+        writeError={purgeWriteError}
+        canConfirm={canConfirmPurge}
         isPending={bulkPurge.isPending}
+        onRetryImpact={handleRetryPurgeImpact}
         onConfirm={handleBulkPurge}
       />
     </>
