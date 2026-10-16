@@ -58,6 +58,16 @@ describe("public calendar invitation page", () => {
     expect(await screen.findByText("Your response is accepted.")).toBeInTheDocument();
   });
 
+  it("shows the end date when an invitation crosses a calendar day", async () => {
+    mockedGet.mockResolvedValue({ ...invitation, endAt: "2026-10-16T11:00:00.000Z" });
+    renderPage();
+
+    expect(await screen.findByRole("heading", { name: "Quarterly planning" })).toBeInTheDocument();
+    expect(screen.getByText(/Wednesday, October 14, 2026/)).toBeInTheDocument();
+    expect(screen.getByText(/Friday, October 16, 2026/).closest("time"))
+      .toHaveAttribute("dateTime", "2026-10-16T11:00:00.000Z");
+  });
+
   it("shows meeting access only when the join scoped endpoint returns it", async () => {
     purpose = "join";
     mockedGet.mockResolvedValue({ ...invitation, meetingUrl: "https://meet.example.com/room" });

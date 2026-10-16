@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams, useSearchParams } from "next/navigation";
-import { format } from "date-fns";
+import { format, isSameDay } from "date-fns";
 import { CalendarDays, Check, Clock3, ExternalLink, Loader2, MapPin, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -86,10 +86,10 @@ export default function CalendarInvitationPage() {
                   <Clock3 className="mt-0.5 h-5 w-5 shrink-0 text-primary" aria-hidden="true" />
                   <div>
                     <p className="font-medium text-foreground">
-                      {format(new Date(invitation.startAt), "EEEE, MMMM d, yyyy")}
+                      <time dateTime={invitation.startAt}>{format(new Date(invitation.startAt), "EEEE, MMMM d, yyyy")}</time>
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      {format(new Date(invitation.startAt), "h:mm a")} – {format(new Date(invitation.endAt), "h:mm a")}
+                      <time dateTime={invitation.startAt}>{format(new Date(invitation.startAt), "h:mm a")}</time> – <time dateTime={invitation.endAt}>{format(new Date(invitation.endAt), isSameDay(new Date(invitation.startAt), new Date(invitation.endAt)) ? "h:mm a" : "EEEE, MMMM d, yyyy 'at' h:mm a")}</time>
                     </p>
                   </div>
                 </div>
