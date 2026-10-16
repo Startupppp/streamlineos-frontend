@@ -37,7 +37,9 @@ export function EmployeesDirectoryStats({
         ? counts.data.active
         : statusFilter === "inactive"
           ? counts.data.inactive
-          : counts.data.active + (counts.data.pending ?? 0) + counts.data.inactive;
+          : statusFilter === "pending"
+            ? counts.data.pending
+            : counts.data.active + (counts.data.pending ?? 0) + counts.data.inactive;
 
   return (
     <StatCardGrid>
@@ -54,7 +56,7 @@ export function EmployeesDirectoryStats({
             : `of ${matching} matching`
         }
       />
-      {counts.data && statusFilter !== "inactive" ? (
+      {counts.data && (statusFilter === "all" || statusFilter === "active") ? (
         <StatCard
           label="Active"
           value={counts.data.active}
@@ -64,7 +66,7 @@ export function EmployeesDirectoryStats({
           href={statusHref("active")}
         />
       ) : null}
-      {counts.data && (counts.data.pending ?? 0) > 0 && statusFilter === "all" ? (
+      {counts.data && (statusFilter === "pending" || ((counts.data.pending ?? 0) > 0 && statusFilter === "all")) ? (
         <StatCard
           label="Pending invite"
           value={counts.data.pending}
@@ -75,9 +77,10 @@ export function EmployeesDirectoryStats({
           // a two-person org report two active employees when one had never
           // opened the invitation.
           hint="Invited, not yet accepted"
+          href={statusHref("pending")}
         />
       ) : null}
-      {counts.data && statusFilter !== "active" ? (
+      {counts.data && (statusFilter === "all" || statusFilter === "inactive") ? (
         <StatCard
           label="Inactive"
           value={counts.data.inactive}

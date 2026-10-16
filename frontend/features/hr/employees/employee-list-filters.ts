@@ -4,7 +4,7 @@
  * URL params (source of truth):
  *   q       — search string (name, email, employee ID, designation)
  *   dept    — departmentId as number string
- *   status  — active | inactive | all  (maps to API isActive true|false|all)
+ *   status  — active | pending | inactive | all  (maps to API isActive true|pending|false|all)
  *   role    — user.role or "all"
  *   page    — 1-based page
  *   size    — page size
@@ -15,7 +15,7 @@
 
 import type { HrEmployeesParams } from "@/hooks/api/hr/employees";
 
-export const EMPLOYEE_STATUS_FILTERS = ["active", "inactive", "all"] as const;
+export const EMPLOYEE_STATUS_FILTERS = ["active", "pending", "inactive", "all"] as const;
 export type EmployeeStatusFilter = (typeof EMPLOYEE_STATUS_FILTERS)[number];
 
 export type EmployeeListFilters = {
@@ -30,7 +30,7 @@ export const DEFAULT_STATUS: EmployeeStatusFilter = "active";
 export const DEFAULT_PAGE_SIZE = 20;
 
 export function parseStatus(raw: string | null): EmployeeStatusFilter {
-  if (raw === "inactive" || raw === "all" || raw === "active") return raw;
+  if (raw === "inactive" || raw === "all" || raw === "active" || raw === "pending") return raw;
   // Legacy / mistaken values
   if (raw === "Inactive" || raw === "terminated") return "inactive";
   if (raw === "Active") return "active";
@@ -88,7 +88,9 @@ export function toHrEmployeesApiParams(
         ? "true"
         : filters.status === "inactive"
           ? "false"
-          : "all",
+          : filters.status === "pending"
+            ? "pending"
+            : "all",
     role: filters.role !== "all" ? filters.role : undefined,
   };
 }

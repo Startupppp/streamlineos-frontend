@@ -111,7 +111,7 @@ export type HrExportJobStatus =
 export interface HrEmployeeExportFilters {
   search?: string;
   departmentId?: string;
-  isActive?: "true" | "false" | "all";
+  isActive?: "true" | "false" | "all" | "pending";
   role?: string;
 }
 

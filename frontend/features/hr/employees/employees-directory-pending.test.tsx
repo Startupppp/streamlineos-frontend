@@ -25,11 +25,11 @@ jest.mock("@/hooks/api/hr/employee-list", () => ({
   useHrEmployeeCounts: (...args: unknown[]) => mockUseHrEmployeeCounts(...args),
 }));
 
-const statusHref = (status: "active" | "inactive") => `/hr/employees?status=${status}`;
+const statusHref = (status: "active" | "pending" | "inactive") => `/hr/employees?status=${status}`;
 
 function renderStats(
   data: { active: number; pending: number; inactive: number },
-  statusFilter: "all" | "active" | "inactive" = "all",
+  statusFilter: "all" | "active" | "pending" | "inactive" = "all",
 ) {
   mockUseHrEmployeeCounts.mockReturnValue({ isLoading: false, data });
   render(
@@ -74,6 +74,15 @@ describe("pending invites are not headcount", () => {
     expect(screen.getByTestId("stat-showing")).toHaveTextContent("of 1 matching");
     expect(screen.getByTestId("stat-active")).toHaveTextContent("Active: 1");
     expect(screen.queryByTestId("stat-pending-invite")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("stat-inactive")).not.toBeInTheDocument();
+  });
+
+  it("under the Pending invite filter the matching total is the invitee count alone", () => {
+    renderStats({ active: 1, pending: 2, inactive: 4 }, "pending");
+
+    expect(screen.getByTestId("stat-showing")).toHaveTextContent("of 2 matching");
+    expect(screen.getByTestId("stat-pending-invite")).toHaveTextContent("Pending invite: 2");
+    expect(screen.queryByTestId("stat-active")).not.toBeInTheDocument();
     expect(screen.queryByTestId("stat-inactive")).not.toBeInTheDocument();
   });
 });
