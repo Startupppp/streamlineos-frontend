@@ -5,6 +5,7 @@ import { calendarProjectionFields } from "./calendar-projection-fixtures";
 
 jest.mock("@/hooks/api/calendar", () => ({
   useEventAttendees: () => ({ data: [] }),
+  parseCalendarEventId: (id: string) => ({ occurrenceStart: id.includes("-2026-") ? "2026-10-20T09:00:00Z" : null }),
 }));
 
 jest.mock("./event-sync-status", () => ({ EventSyncStatus: () => null }));
@@ -75,4 +76,18 @@ it("keeps projected event facts visible without skeletons until the detail arriv
     "href",
     "https://example.com/meeting",
   );
+});
+
+it("keeps occurrence notes when the fetched detail describes the series", () => {
+  render(
+    <EventDetailContent
+      {...baseProps}
+      event={{ ...event, id: "event-7-2026-10-20T09:00:00Z", description: "Occurrence-only agenda" }}
+      detailLoading={false}
+      detail={detail}
+    />,
+  );
+
+  expect(screen.getByText("Occurrence-only agenda")).toBeInTheDocument();
+  expect(screen.queryByText("Full agenda")).not.toBeInTheDocument();
 });

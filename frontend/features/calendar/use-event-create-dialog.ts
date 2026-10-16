@@ -9,6 +9,7 @@ import {
   useCalendarMemberLookup,
   useCalendarEvent,
   useEventAttendees,
+  parseCalendarEventId,
   extractEventNumericId,
 } from "@/hooks/api/calendar";
 import type { CalendarListItem } from "@/hooks/api/calendar";
@@ -73,10 +74,10 @@ export function useEventCreateDialog({
   const { data: existingAttendees } = useEventAttendees(isEdit && open ? editNumericId : null);
   const { data: editingDetail } = useCalendarEvent(isEdit && open ? editNumericId : null);
   const effectiveForm = useMemo(
-    () => isEdit && !descriptionTouched && editingDetail
+    () => isEdit && !descriptionTouched && editingDetail && !parseCalendarEventId(event?.id ?? "")?.occurrenceStart
       ? { ...form, description: editingDetail.description ?? "" }
       : form,
-    [isEdit, descriptionTouched, editingDetail, form],
+    [isEdit, descriptionTouched, editingDetail, event?.id, form],
   );
 
   useEffect(() => {
