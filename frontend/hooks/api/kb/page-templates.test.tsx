@@ -1,6 +1,8 @@
-import { renderHook, waitFor } from "@testing-library/react";
+import { act, renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
+import { ApiError, getCorrelationId } from "@/lib/api-envelope";
+import { readErrorReachesBoundary } from "@/lib/query-error-policy";
 
 const mockGet = jest.fn<Promise<unknown>, [string, unknown, unknown, unknown]>();
 const mockUseCan = jest.fn<boolean, [string]>();
@@ -61,7 +63,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   mockUseCan.mockReturnValue(true);
   client = new QueryClient({
-    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+    defaultOptions: { queries: { retry: false, throwOnError: readErrorReachesBoundary }, mutations: { retry: false } },
   });
 });
 
@@ -97,6 +99,17 @@ describe("useKbPageTemplates — wire-shape is visible through selectFlatPages",
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.data).toEqual([TEMPLATE]);
+  });
+
+  it("keeps a first-read saved-template error inline with its request ID and recovers on retry", async () => {
+    mockGet.mockRejectedValueOnce(new ApiError("Saved templates failed", 500, "INTERNAL", { correlationId: "templates-read-123" }, "/kb/page-templates"));
+    mockGet.mockResolvedValueOnce({ data: [TEMPLATE], pagination: PAGINATION });
+    const { result } = renderHook(() => useKbPageTemplates(), { wrapper });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(getCorrelationId(result.current.error)).toBe("templates-read-123");
+    await act(async () => { await result.current.refetch(); });
+    await waitFor(() => expect(result.current.data).toEqual([TEMPLATE]));
   });
 
   it("when the wire renames data to items the result is not the templates list — so a wire-shape change breaks the test above", async () => {
