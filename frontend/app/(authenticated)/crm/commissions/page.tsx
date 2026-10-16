@@ -20,6 +20,7 @@ import { AccrualSummary } from "@/features/crm/commissions/accrual-summary";
 import { AccrualWorking } from "@/features/crm/commissions/accrual-working";
 import { EarningsLedger } from "@/features/crm/commissions/earnings-ledger";
 import { PlanList } from "@/features/crm/commissions/plan-list";
+import { CommissionHeaderActions } from "@/features/crm/commissions/commission-header-actions";
 import { formatPeriodRange } from "@/features/crm/commissions/commission-format";
 
 type CommissionTab = "period" | "earnings" | "plans";
@@ -103,6 +104,7 @@ export default function CommissionsPage() {
     <PageWrapper
       title="Commissions"
       subtitle={subtitle}
+      actions={<CommissionHeaderActions tab={tab} />}
       filters={
         <div className="flex w-full items-center gap-3">
           <Tabs value={tab} onValueChange={handleTabChange}>
