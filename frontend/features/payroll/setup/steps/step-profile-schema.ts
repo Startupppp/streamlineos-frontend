@@ -23,11 +23,14 @@ export const COUNTRIES: ComboboxOption[] = [
   { value: "LK", label: "Sri Lanka" }, { value: "NP", label: "Nepal" },
 ];
 
-export const PAY_DAY_OPTIONS = Array.from({ length: 28 }, (_, i) => {
-  const day = i + 1;
-  const suffix = day === 1 ? "st" : day === 2 ? "nd" : day === 3 ? "rd" : "th";
-  return { value: String(day), label: `${day}${suffix}` };
-});
+export function ordinal(n: number): string {
+  const lastTwo = n % 100;
+  if (lastTwo >= 11 && lastTwo <= 13) return `${n}th`;
+  const suffix = n % 10 === 1 ? "st" : n % 10 === 2 ? "nd" : n % 10 === 3 ? "rd" : "th";
+  return `${n}${suffix}`;
+}
+
+export const PAY_DAY_OPTIONS = Array.from({ length: 28 }, (_, i) => ({ value: String(i + 1), label: ordinal(i + 1) }));
 
 export const stepProfileSchema = z.object({
   country: z.string().min(1, "Country is required"),

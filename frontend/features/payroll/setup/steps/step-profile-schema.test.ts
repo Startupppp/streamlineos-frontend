@@ -1,4 +1,4 @@
-import { stepProfileSchema } from "./step-profile-schema";
+import { ordinal, PAY_DAY_OPTIONS, stepProfileSchema } from "./step-profile-schema";
 
 const ready = {
   country: "IN",
@@ -15,5 +15,14 @@ describe("payroll setup step 1", () => {
     expect(stepProfileSchema.safeParse({ ...ready, legalEntityName: "  " }).success).toBe(false);
     expect(stepProfileSchema.safeParse({ ...ready, startMonth: "" }).success).toBe(false);
     expect(stepProfileSchema.safeParse(ready).success).toBe(true);
+  });
+});
+
+describe("pay day ordinals (PAY-B-001) — 21th, 22th and 23th", () => {
+  it("uses st, nd and rd after twenty and th for the teens", () => {
+    expect([1, 2, 3, 4, 11, 12, 13, 21, 22, 23, 28, 31].map(ordinal)).toEqual([
+      "1st", "2nd", "3rd", "4th", "11th", "12th", "13th", "21st", "22nd", "23rd", "28th", "31st",
+    ]);
+    expect(PAY_DAY_OPTIONS.find((o) => o.value === "22")?.label).toBe("22nd");
   });
 });
