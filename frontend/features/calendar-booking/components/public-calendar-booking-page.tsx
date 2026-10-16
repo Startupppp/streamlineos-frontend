@@ -128,6 +128,11 @@ export function PublicCalendarBookingPage() {
                   {copy.unavailableDescription}
                 </p>
               </div>
+              <div className="w-full space-y-2 rounded-xl border border-border bg-surface-inset px-4 py-4 text-left dark:border-background">
+                <h3 className="text-sm font-semibold text-foreground">{copy.unavailableBookedTitle}</h3>
+                <p className="text-sm leading-relaxed text-muted-foreground">{copy.unavailableBookedDescription}</p>
+              </div>
+              <p className="text-sm leading-relaxed text-muted-foreground">{copy.unavailableNewLinkDescription}</p>
             </div>
           )}
 

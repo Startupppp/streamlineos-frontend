@@ -718,7 +718,12 @@ describe("public calendar booking page", () => {
     mockedPost.mockRejectedValue(new ApiError("Booking page not found", 404));
     renderPage();
     expect(await screen.findByRole("alert")).toHaveTextContent("This booking link is unavailable");
-    expect(screen.getByText("It may have expired or already been used. Ask the organizer for a new booking link.")).toBeInTheDocument();
+    expect(screen.getByText("This link may have expired or, if it was for one use, already been used.")).toBeInTheDocument();
+    expect(screen.getByText("Already booked?")).toBeInTheDocument();
+    expect(screen.getByText("Check your booking confirmation or contact the organizer before trying again.")).toBeInTheDocument();
+    expect(screen.getByText("If you still need to book, ask the organizer for a new link.")).toBeInTheDocument();
+    expect(screen.queryByText("Your booking is confirmed")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Refresh booking status" })).not.toBeInTheDocument();
     expect(screen.queryByText("Booking page not found")).not.toBeInTheDocument();
     expect(screen.queryByText("Discovery call")).not.toBeInTheDocument();
   });
