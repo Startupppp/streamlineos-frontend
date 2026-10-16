@@ -3,7 +3,13 @@ import { ApiError } from "@/lib/api-envelope";
 
 const templates = jest.fn();
 const refetch = jest.fn();
-const idleMutation = { mutate: jest.fn(), mutateAsync: jest.fn(), reset: jest.fn(), isPending: false, error: null };
+const idleMutation: {
+  mutate: jest.Mock;
+  mutateAsync: jest.Mock;
+  reset: jest.Mock;
+  isPending: boolean;
+  error: ApiError | null;
+} = { mutate: jest.fn(), mutateAsync: jest.fn(), reset: jest.fn(), isPending: false, error: null };
 const createMutation = jest.fn(() => idleMutation);
 const sheetProps = jest.fn();
 
