@@ -1,6 +1,6 @@
 import { render, screen, cleanup } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { ApiContractError } from "@/lib/api-envelope";
+import { ApiContractError, ApiError } from "@/lib/api-envelope";
 import { ImportHistorySection } from "./import-history-section";
 
 type IntersectionCallback = (entries: IntersectionObserverEntry[]) => void;
@@ -87,6 +87,27 @@ afterEach(() => {
 });
 
 describe("ImportHistorySection sentinel", () => {
+  it.each([401, 403, 404])("hides cached import jobs and retry actions after a %i access failure", (status) => {
+    useKbImportJobs.mockReturnValue({
+      data: [{ ...mockJob, status: "failed", canRetry: true }],
+      isLoading: false,
+      isError: true,
+      isFetchNextPageError: true,
+      error: new ApiError("Access lost", status),
+      refetch: jest.fn(),
+      hasNextPage: true,
+      isFetchingNextPage: false,
+      fetchNextPage: jest.fn(),
+    });
+
+    render(<ImportHistorySection />);
+
+    expect(screen.getByText("Access Restricted")).toBeInTheDocument();
+    expect(screen.queryByText("3/3 pages")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Retry failed pages" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Load more import jobs" })).not.toBeInTheDocument();
+  });
+
   it("calls fetchNextPage when the sentinel scrolls into view instead of requiring a button click", () => {
     const fetchNextPage = jest.fn();
     useKbImportJobs.mockReturnValue({
