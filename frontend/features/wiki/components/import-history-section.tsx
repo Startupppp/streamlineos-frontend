@@ -106,7 +106,8 @@ export function ImportHistorySection() {
     isFetchingNextPage,
     fetchNextPage,
   } = useKbImportJobs();
-  const accessLost = importGate.state === "denied" || (isError && isApiError(error) && (error.status === 401 || error.status === 403 || error.status === 404));
+  const accessLost = importGate.denied || (isError && isApiError(error) && (error.status === 401 || error.status === 403 || error.status === 404));
+  const accessReady = importGate.allowed && !accessLost;
 
   function handleRetryLoad() {
     if (isFetchNextPageError) {
@@ -117,6 +118,7 @@ export function ImportHistorySection() {
   }
 
   function handleRetryImport(jobId: number) {
+    if (!accessReady) return;
     retryMutation.mutate(jobId, {
       onSuccess: () => {
         toast.success("Retry queued for failed pages");
@@ -135,7 +137,10 @@ export function ImportHistorySection() {
   return (
     <PageSection title="Recent imports">
       {accessLost && <NoPermissionState permission="kb:pages:import" compact />}
-      {!accessLost && isLoading && (
+      {!accessLost && importGate.unavailable && (
+        <ErrorState compact title="Couldn't check import access" description="Refresh the page and try again." />
+      )}
+      {!accessLost && (importGate.pending || (importGate.allowed && isLoading)) && (
         <div className="space-y-1.5">
           {Array.from({ length: 3 }).map((_, index) => (
             <Skeleton key={index} className="h-9 w-full rounded-lg" />
@@ -143,7 +148,7 @@ export function ImportHistorySection() {
         </div>
       )}
 
-      {!accessLost && !isLoading && isError && jobs.length === 0 && (
+      {accessReady && !isLoading && isError && jobs.length === 0 && (
         <ErrorState
           compact
           title="Couldn't load import history"
@@ -153,7 +158,7 @@ export function ImportHistorySection() {
         />
       )}
 
-      {!accessLost && !isLoading && !isError && jobs.length === 0 && (
+      {accessReady && !isLoading && !isError && jobs.length === 0 && (
         <EmptyState
           compact
           access={importGate}
@@ -165,7 +170,7 @@ export function ImportHistorySection() {
         />
       )}
 
-      {!accessLost && !isLoading && jobs.length > 0 && (
+      {accessReady && !isLoading && jobs.length > 0 && (
         <div className="space-y-1.5">
           {jobs.map((job) => (
             <ImportJobRow
