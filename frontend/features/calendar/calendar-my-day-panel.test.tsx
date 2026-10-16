@@ -27,6 +27,40 @@ function event(id: string, start: string, complete = false): CalendarListItem {
 }
 
 describe("CalendarMyDayPanel", () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  it("keeps a view-only open task out of Action needed", () => {
+    const viewOnlyTask: CalendarListItem = {
+      ...event("view-only", "2000-01-01T09:00:00.000Z"),
+      category: "task",
+      status: "open",
+    };
+    const completableTask: CalendarListItem = {
+      ...event("completable", "2000-01-01T10:00:00.000Z", true),
+      category: "task",
+      status: "open",
+    };
+    render(
+      <CalendarMyDayPanel
+        events={[viewOnlyTask, completableTask]}
+        pages={[]}
+        search=""
+        onSearchChange={jest.fn()}
+        onSelectEvent={jest.fn()}
+        onLoadMore={jest.fn()}
+        hasMore={false}
+        isLoadingMore={false}
+      />,
+    );
+
+    expect((List as unknown as jest.Mock).mock.lastCall?.[0].rowProps.rows).toEqual([
+      { type: "header", title: "Action needed" },
+      { type: "event", event: completableTask },
+      { type: "header", title: "For your information" },
+      { type: "event", event: viewOnlyTask },
+    ]);
+  });
+
   it("virtualizes grouped items and requests the next page at the last row", () => {
     const onLoadMore = jest.fn();
     render(

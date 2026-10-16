@@ -37,8 +37,6 @@ function nextAction(event: CalendarListItem): string {
 
 function kind(event: CalendarListItem, now: number): "action" | "preparation" | "information" {
   if (event.actions.complete || event.actions.rsvp) return "action";
-  if (event.category === "task" && !/complete|done|closed|cancel|resolved/i.test(event.status ?? ""))
-    return "action";
   if (event.timeKind === "timed" && new Date(event.start).getTime() > now)
     return "preparation";
   return "information";
