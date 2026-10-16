@@ -83,6 +83,14 @@ describe("KB page grants through the HTTP parser", () => {
     expect(fetchMock.mock.calls[0]?.[0]).not.toContain("limit=100");
   });
 
+  it("accepts a manage-level grant returned by the backend list", async () => {
+    const manageGrant = { ...grant, access: "manage" };
+    fetchMock.mockResolvedValue(response({ data: [manageGrant], pagination }));
+    const { result } = renderHook(() => useKbPageGrants(12), { wrapper });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data).toEqual([manageGrant]);
+  });
+
   it("follows the backend cursor and retains both raw pages", async () => {
     const secondGrant = { ...grant, id: 6, granteeName: "Grace" };
     fetchMock
@@ -121,9 +129,26 @@ describe("KB page grants through the HTTP parser", () => {
     expect(fetchMock.mock.calls[0]?.[1]?.body).toBe(JSON.stringify({ membershipId: 30, access: "edit" }));
   });
 
+  it("accepts a created manage-level grant through the strict response parser", async () => {
+    const manageGrant = { ...grant, access: "manage" };
+    fetchMock.mockResolvedValue(response(manageGrant));
+    const { result } = renderHook(() => useCreateKbPageGrant(), { wrapper });
+    await act(async () => {
+      await expect(result.current.mutateAsync({ pageId: 12, membershipId: 30, access: "manage" })).resolves.toEqual(manageGrant);
+    });
+    expect(fetchMock.mock.calls[0]?.[1]?.body).toBe(JSON.stringify({ membershipId: 30, access: "manage" }));
+  });
+
   it("rejects a list item missing the grantee projection", async () => {
     const incomplete = Object.fromEntries(Object.entries(grant).filter(([key]) => key !== "granteeEmail"));
     fetchMock.mockResolvedValue(response({ data: [incomplete], pagination }));
+    const { result } = renderHook(() => useKbPageGrants(12), { wrapper });
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(result.current.error).toBeInstanceOf(ApiContractError);
+  });
+
+  it("rejects an unknown access level instead of weakening the grant contract", async () => {
+    fetchMock.mockResolvedValue(response({ data: [{ ...grant, access: "admin" }], pagination }));
     const { result } = renderHook(() => useKbPageGrants(12), { wrapper });
     await waitFor(() => expect(result.current.isError).toBe(true));
     expect(result.current.error).toBeInstanceOf(ApiContractError);

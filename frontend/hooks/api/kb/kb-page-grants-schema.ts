@@ -6,7 +6,7 @@ export const kbPageGrantItemContract = z.object({
   pageId: z.number().int(),
   membershipId: z.number().int().nullable(),
   role: z.string().nullable(),
-  access: z.enum(["view", "comment", "edit"]),
+  access: z.enum(["view", "comment", "edit", "manage"]),
   grantedByMembershipId: z.number().int().nullable(),
   createdAt: z.string(),
   revokedAt: z.string().nullable(),
