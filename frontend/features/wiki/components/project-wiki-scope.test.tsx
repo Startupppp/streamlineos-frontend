@@ -410,6 +410,50 @@ describe("project wiki page tree links stay inside the project", () => {
     expect(refetch).toHaveBeenCalledTimes(1);
   });
 
+  it("keeps loaded children and retries only a failed later child page", async () => {
+    rootNode = { ...ROOT_NODE, spaceId: 5, projectId: null };
+    const refetch = jest.fn();
+    const fetchNextPage = jest.fn();
+    childLevelOverride = {
+      ...treeLevel([CHILD_NODE]),
+      isError: true,
+      isFetchNextPageError: true,
+      error: new ApiError("Read failed", 500, "INTERNAL", { correlationId: "child-tree-later" }, "/kb/pages/tree"),
+      refetch,
+      hasNextPage: true,
+      fetchNextPage,
+    };
+    const user = userEvent.setup();
+    render(<PageTree spaceId={5} />);
+
+    await user.click(screen.getByRole("button", { name: "Expand" }));
+
+    expect(screen.getByRole("link", { name: "Rollback steps" })).toBeInTheDocument();
+    expect(screen.getByText("child-tree-later")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Load more child pages" })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Retry child pages" }));
+    expect(fetchNextPage).toHaveBeenCalledTimes(1);
+    expect(refetch).not.toHaveBeenCalled();
+  });
+
+  it.each([401, 403, 404])("hides cached children after a %i child-level read", async (status) => {
+    rootNode = { ...ROOT_NODE, spaceId: 5, projectId: null };
+    childLevelOverride = {
+      ...treeLevel([CHILD_NODE]),
+      isError: true,
+      error: new ApiError("Access lost", status, "ACCESS_LOST", { correlationId: `child-tree-${status}` }, "/kb/pages/tree"),
+      hasNextPage: true,
+    };
+    const user = userEvent.setup();
+    render(<PageTree spaceId={5} />);
+
+    await user.click(screen.getByRole("button", { name: "Expand" }));
+
+    expect(screen.queryByRole("link", { name: "Rollback steps" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Load more child pages" })).not.toBeInTheDocument();
+    expect(screen.getByText(`child-tree-${status}`)).toBeInTheDocument();
+  });
+
   it("keeps page actions discoverable at touch widths and reachable by keyboard on desktop", async () => {
     rootNode = { ...ROOT_NODE, spaceId: 5, projectId: null };
     const user = userEvent.setup();
