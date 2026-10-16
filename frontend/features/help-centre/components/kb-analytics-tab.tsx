@@ -8,6 +8,18 @@ import { Sparkles, Search, BookOpen, AlertCircle } from "lucide-react";
 import { KbContentGaps } from "./kb-content-gaps";
 import { useKbAnalyticsOverview } from "@/hooks/api/kb/analytics";
 
+function overviewValue(value: number | null, reason?: string): string | number {
+  if (reason === "minimum_cohort") return "Suppressed";
+  if (reason === "incomplete_scope") return "Unavailable";
+  return value ?? "Unavailable";
+}
+
+function overviewHint(reason?: string): string | undefined {
+  if (reason === "minimum_cohort") return "Fewer than 3 records in this cohort";
+  if (reason === "incomplete_scope") return "Historical space attribution is incomplete";
+  return undefined;
+}
+
 export function KbAnalyticsTab() {
   const { data, isLoading, isError, error, refetch } = useKbAnalyticsOverview();
   const pageState = usePageState({
@@ -24,6 +36,7 @@ export function KbAnalyticsTab() {
       published: data.publishedCount,
       aiAnswers: data.aiAnswers,
       aiNoContext: data.aiNoContext,
+      suppressionReasons: data.suppressionReasons,
     };
   }, [data]);
 
@@ -36,10 +49,10 @@ export function KbAnalyticsTab() {
       <div className="space-y-4">
         {stats && (
           <StatCardGrid cols={4}>
-            <StatCard label="Total articles" value={stats.total} icon={BookOpen} />
-            <StatCard label="Published" value={stats.published} icon={BookOpen} tone="emerald" />
-            <StatCard label="AI answers" value={stats.aiAnswers ?? "—"} icon={Sparkles} tone="blue" />
-            <StatCard label="AI no context" value={stats.aiNoContext ?? "—"} icon={AlertCircle} tone="amber" />
+            <StatCard label="Total articles" value={overviewValue(stats.total, stats.suppressionReasons.totalCount)} hint={overviewHint(stats.suppressionReasons.totalCount)} icon={BookOpen} />
+            <StatCard label="Published" value={overviewValue(stats.published, stats.suppressionReasons.publishedCount)} hint={overviewHint(stats.suppressionReasons.publishedCount)} icon={BookOpen} tone="emerald" />
+            <StatCard label="Organization AI answers" value={overviewValue(stats.aiAnswers, stats.suppressionReasons.aiAnswers)} hint={overviewHint(stats.suppressionReasons.aiAnswers)} icon={Sparkles} tone="blue" />
+            <StatCard label="Organization AI no context" value={overviewValue(stats.aiNoContext, stats.suppressionReasons.aiNoContext)} hint={overviewHint(stats.suppressionReasons.aiNoContext)} icon={AlertCircle} tone="amber" />
           </StatCardGrid>
         )}
 

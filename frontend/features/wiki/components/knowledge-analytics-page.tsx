@@ -376,6 +376,19 @@ function formatRatioAsPercent(ratio: number): string {
   return `${Math.round(Math.min(Math.max(ratio, 0), 1) * 100)}%`;
 }
 
+function overviewValue(value: number | null, reason?: string, percent = false): string | number {
+  if (reason === "minimum_cohort") return "Suppressed";
+  if (reason === "incomplete_scope") return "Unavailable";
+  if (value === null) return "Unavailable";
+  return percent ? formatRatioAsPercent(value) : value;
+}
+
+function overviewHint(reason?: string): string | undefined {
+  if (reason === "minimum_cohort") return "Fewer than 3 records in this cohort";
+  if (reason === "incomplete_scope") return "Historical space attribution is incomplete";
+  return undefined;
+}
+
 function AnalyticsSkeleton() {
   return (
     <div className="space-y-4">
@@ -630,31 +643,36 @@ export default function KnowledgeAnalyticsPage() {
           <StatCardGrid cols={5} className="mb-4">
             <StatCard
               label="Article views"
-              value={overview.totalViews}
+              value={overviewValue(overview.totalViews, overview.suppressionReasons.totalViews)}
+              hint={overviewHint(overview.suppressionReasons.totalViews)}
               icon={KbEyeIcon}
               tone="blue"
             />
             <StatCard
-              label="Searches"
-              value={overview.searches ?? "—"}
+              label={spaceId === undefined ? "Organization searches" : "Space searches"}
+              value={overviewValue(overview.searches, overview.suppressionReasons.searches)}
+              hint={overviewHint(overview.suppressionReasons.searches)}
               icon={KbSearchIcon}
               tone="violet"
             />
             <StatCard
               label="Helpful ratio"
-              value={formatRatioAsPercent(overview.helpfulRatio)}
+              value={overviewValue(overview.helpfulRatio, overview.suppressionReasons.helpfulRatio, true)}
+              hint={overviewHint(overview.suppressionReasons.helpfulRatio)}
               icon={KbThumbsUpIcon}
               tone="emerald"
             />
             <StatCard
-              label="Search success"
-              value={overview.searchSuccessRate === null ? "—" : formatRatioAsPercent(overview.searchSuccessRate)}
+              label={spaceId === undefined ? "Organization search success" : "Space search success"}
+              value={overviewValue(overview.searchSuccessRate, overview.suppressionReasons.searchSuccessRate, true)}
+              hint={overviewHint(overview.suppressionReasons.searchSuccessRate)}
               icon={KbBarChart2Icon}
               tone="amber"
             />
             <StatCard
               label="Tickets deflected"
-              value={overview.ticketsDeflected}
+              value={overviewValue(overview.ticketsDeflected, overview.suppressionReasons.ticketsDeflected)}
+              hint={overviewHint(overview.suppressionReasons.ticketsDeflected)}
               icon={KbCheckCircleIcon}
               tone="emerald"
             />

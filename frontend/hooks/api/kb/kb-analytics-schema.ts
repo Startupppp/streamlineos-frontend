@@ -22,23 +22,24 @@ export const KNOWLEDGE_GAP_STATUSES = [
 ] as const;
 
 export const kbAnalyticsOverviewContract = z.object({
-  totalCount: z.number().int(),
-  publishedCount: z.number().int(),
-  archivedCount: z.number().int(),
-  totalViews: z.number().int(),
-  helpfulUp: z.number().int(),
-  helpfulDown: z.number().int(),
-  helpfulRatio: z.number(),
+  totalCount: z.number().int().nullable(),
+  publishedCount: z.number().int().nullable(),
+  archivedCount: z.number().int().nullable(),
+  totalViews: z.number().int().nullable(),
+  helpfulUp: z.number().int().nullable(),
+  helpfulDown: z.number().int().nullable(),
+  helpfulRatio: z.number().nullable(),
   searches: z.number().int().nullable(),
   noResults: z.number().int().nullable(),
   searchSuccessRate: z.number().nullable(),
   aiAnswers: z.number().int().nullable(),
   aiNoContext: z.number().int().nullable(),
   searchScopeComplete: z.boolean(),
-  views: z.number().int(),
-  ticketsDeflected: z.number().int(),
-  verifiedPublished: z.number().int(),
-  trustScore: z.number(),
+  views: z.number().int().nullable(),
+  ticketsDeflected: z.number().int().nullable(),
+  verifiedPublished: z.number().int().nullable(),
+  trustScore: z.number().nullable(),
+  suppressionReasons: z.record(z.string(), z.enum(["minimum_cohort", "incomplete_scope"])),
 });
 
 export const kbAnalyticsNoResultsContract = z.object({

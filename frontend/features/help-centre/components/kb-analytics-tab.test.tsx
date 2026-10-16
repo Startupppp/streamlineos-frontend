@@ -55,4 +55,27 @@ describe("Support KB analytics tab states", () => {
     expect(refetch).toHaveBeenCalledTimes(1);
     expect(screen.queryByText("No content gaps")).not.toBeInTheDocument();
   });
+
+  it("separates suppressed counts from zero and names organization Ask metrics", () => {
+    mockUseOverview.mockReturnValue({
+      data: {
+        totalCount: null,
+        publishedCount: 0,
+        aiAnswers: null,
+        aiNoContext: 0,
+        suppressionReasons: { totalCount: "minimum_cohort", aiAnswers: "minimum_cohort" },
+      },
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+    resolve({ kind: "ready" });
+
+    expect(screen.getByText("Organization AI answers")).toBeInTheDocument();
+    expect(screen.getByText("Organization AI no context")).toBeInTheDocument();
+    expect(screen.getAllByText("Suppressed")).toHaveLength(2);
+    expect(screen.getAllByText("0")).toHaveLength(2);
+    expect(screen.getAllByText("Fewer than 3 records in this cohort")).toHaveLength(2);
+  });
 });

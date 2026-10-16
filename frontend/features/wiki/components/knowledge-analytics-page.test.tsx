@@ -99,6 +99,7 @@ const OVERVIEW = {
   ticketsDeflected: 3,
   verifiedPublished: 5,
   trustScore: 0.55,
+  suppressionReasons: {},
 };
 
 function settled<T>(data: T) {
@@ -274,8 +275,27 @@ describe("KnowledgeAnalyticsPage — activity counts are not success metrics", (
   it("still shows the decision-useful rates it is meant to drive action from", () => {
     render(<KnowledgeAnalyticsPage />);
 
-    expect(screen.getByText("Search success")).toBeInTheDocument();
+    expect(screen.getByText("Organization search success")).toBeInTheDocument();
     expect(screen.getByText("Tickets deflected")).toBeInTheDocument();
+  });
+
+  it("shows suppressed metrics separately from zero and names the tenant search scope", () => {
+    useKbAnalyticsOverview.mockReturnValue(settled({
+      ...OVERVIEW,
+      totalViews: null,
+      searches: 0,
+      searchSuccessRate: null,
+      ticketsDeflected: 0,
+      suppressionReasons: { totalViews: "minimum_cohort", searchSuccessRate: "incomplete_scope" },
+    }));
+
+    render(<KnowledgeAnalyticsPage />);
+
+    expect(screen.getByText("Organization searches")).toBeInTheDocument();
+    expect(screen.getByText("Suppressed")).toBeInTheDocument();
+    expect(screen.getByText("Unavailable")).toBeInTheDocument();
+    expect(screen.getByText("Fewer than 3 records in this cohort")).toBeInTheDocument();
+    expect(screen.getAllByText("0").length).toBeGreaterThan(0);
   });
 });
 

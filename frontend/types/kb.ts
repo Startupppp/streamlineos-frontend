@@ -92,23 +92,24 @@ export interface KbSearchParams {
 }
 
 export interface KbAnalyticsOverview {
-  totalCount: number;
-  publishedCount: number;
-  archivedCount: number;
-  totalViews: number;
-  helpfulUp: number;
-  helpfulDown: number;
-  helpfulRatio: number;
+  totalCount: number | null;
+  publishedCount: number | null;
+  archivedCount: number | null;
+  totalViews: number | null;
+  helpfulUp: number | null;
+  helpfulDown: number | null;
+  helpfulRatio: number | null;
   searches: number | null;
   noResults: number | null;
   searchSuccessRate: number | null;
   aiAnswers: number | null;
   aiNoContext: number | null;
   searchScopeComplete: boolean;
-  views: number;
-  ticketsDeflected: number;
-  verifiedPublished: number;
-  trustScore: number;
+  views: number | null;
+  ticketsDeflected: number | null;
+  verifiedPublished: number | null;
+  trustScore: number | null;
+  suppressionReasons: Record<string, "minimum_cohort" | "incomplete_scope">;
 }
 
 export interface KbNoResultRow {
