@@ -23,7 +23,6 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  useCloseLifecycle,
   useRecordLifecycleSignal,
   useRenewLifecycle,
 } from "@/hooks/api/crm/lifecycle";
@@ -31,16 +30,14 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import {
   SIGNAL_KINDS,
   SIGNAL_KIND_LABEL,
-  closeSchema,
   recordSignalSchema,
   renewSchema,
-  toCloseInput,
   toRenewInput,
   toSignalInput,
-  type CloseFormValues,
   type RecordSignalFormValues,
   type RenewFormValues,
 } from "./lifecycle-action-schema";
+import { CloseLifecycleDialog } from "./close-lifecycle-dialog";
 
 export type LifecycleAction = "signal" | "renew" | "close";
 
@@ -69,7 +66,7 @@ export function LifecycleActionDialog({
       />
     );
   if (action === "close")
-    return <CloseDialog customerLifecycleId={customerLifecycleId} onOpenChange={onOpenChange} />;
+    return <CloseLifecycleDialog customerLifecycleId={customerLifecycleId} onOpenChange={onOpenChange} />;
   return null;
 }
 
@@ -242,74 +239,6 @@ function RenewDialog({ customerLifecycleId, currency, onOpenChange }: DialogProp
                 <FormLabel>Note</FormLabel>
                 <FormControl>
                   <Textarea {...field} rows={2} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </>
-      )}
-    </EntityFormDialog>
-  );
-}
-
-const CLOSE_DEFAULTS: CloseFormValues = { status: "churned", reason: "" };
-
-function CloseDialog({ customerLifecycleId, onOpenChange }: DialogProps) {
-  const close = useCloseLifecycle();
-  const handleSubmit = (values: CloseFormValues) => {
-    close.mutate(toCloseInput(customerLifecycleId, values), {
-      onSuccess: () => {
-        toast.success("Contract closed");
-        onOpenChange(false);
-      },
-      onError: (error) => toast.error(getErrorMessage(error)),
-    });
-  };
-
-  return (
-    <EntityFormDialog<CloseFormValues>
-      open
-      onOpenChange={onOpenChange}
-      title="Close contract"
-      description="Ending a contract cannot be undone. A returning customer comes back through a new won deal."
-      resolver={zodResolver(closeSchema)}
-      defaultValues={CLOSE_DEFAULTS}
-      onSubmit={handleSubmit}
-      isSubmitting={close.isPending}
-      submitLabel="Close contract"
-    >
-      {(form) => (
-        <>
-          <FormField
-            control={form.control}
-            name="status"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Ending</FormLabel>
-                <Select value={field.value} onValueChange={field.onChange}>
-                  <FormControl>
-                    <SelectTrigger aria-label="Ending">
-                      <SelectValue />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent className={FIELD_SELECT_CONTENT_CLASS}>
-                    <SelectItem value="churned">Churned</SelectItem>
-                    <SelectItem value="cancelled">Cancelled</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="reason"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Reason</FormLabel>
-                <FormControl>
-                  <Textarea {...field} rows={3} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
