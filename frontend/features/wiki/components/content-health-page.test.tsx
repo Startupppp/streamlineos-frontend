@@ -21,6 +21,7 @@ const accessDenied = {
 
 const useContentHealthCounts = jest.fn();
 const useContentHealthSignals = jest.fn();
+const useContentHealthTrend = jest.fn();
 const mockUseAssignHealthItem = jest.fn();
 const mockUseBulkRepairHealthItems = jest.fn();
 const mockUseOrgMembersByIds = jest.fn();
@@ -44,7 +45,7 @@ jest.mock("@/hooks/api/kb/content-health", () => ({
   useContentHealthCounts: () => useContentHealthCounts(),
   useContentHealthSignals: () => useContentHealthSignals(),
   useDismissHealthItem: () => ({ mutateAsync: jest.fn(), isPending: false }),
-  useContentHealthTrend: () => ({ data: { beforeCount: 6, afterCount: 8 }, isLoading: false }),
+  useContentHealthTrend: () => useContentHealthTrend(),
   useAssignHealthItem: () => mockUseAssignHealthItem(),
   useContentHealthEvidence: () => ({ data: undefined, isLoading: false }),
   useBulkRepairHealthItems: () => mockUseBulkRepairHealthItems(),
@@ -134,6 +135,7 @@ beforeEach(() => {
   useAccess.mockReturnValue(accessGranted);
   useContentHealthCounts.mockReturnValue({ ...IDLE, data: MIXED_COUNTS });
   useContentHealthSignals.mockReturnValue({ ...IDLE, data: SIGNAL_PAGE_WITH_ROWS });
+  useContentHealthTrend.mockReturnValue({ data: { beforeCount: 6, afterCount: 8 }, isLoading: false });
   mockUseAssignHealthItem.mockReturnValue({ mutate: jest.fn(), isPending: false });
   mockUseBulkRepairHealthItems.mockReturnValue({ mutate: jest.fn(), isPending: false });
   mockUseOrgMembersByIds.mockReturnValue({
@@ -273,10 +275,17 @@ describe("ContentHealthPage — trend labels", () => {
   it("describes the global open cohorts without implying a signal-specific before-and-after comparison", () => {
     render(<ContentHealthPage />);
 
-    expect(screen.getByText("Still open from before 30 days ago")).toBeInTheDocument();
+    expect(screen.getByText("Open 30 days ago (all signals)")).toBeInTheDocument();
     expect(screen.getByText("Open now (all signals)")).toBeInTheDocument();
-    expect(screen.getByText("2 open issues detected in the last 30 days")).toBeInTheDocument();
+    expect(screen.getByText("+2 net change in visible open issues")).toBeInTheDocument();
     expect(screen.queryByText("Now (Unowned)")).not.toBeInTheDocument();
+  });
+
+  it("shows a decrease when fewer visible issues remain open than 30 days ago", () => {
+    useContentHealthTrend.mockReturnValue({ data: { beforeCount: 8, afterCount: 6 }, isLoading: false });
+    render(<ContentHealthPage />);
+
+    expect(screen.getByText("-2 net change in visible open issues")).toBeInTheDocument();
   });
 });
 

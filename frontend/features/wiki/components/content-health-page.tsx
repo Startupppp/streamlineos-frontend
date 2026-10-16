@@ -197,15 +197,15 @@ function HealthTrendWidget() {
   if (isLoading) return <Skeleton className="h-16 w-full rounded-xl" />;
   if (!data) return null;
 
-  const recentOpen = Math.max(0, data.afterCount - data.beforeCount);
+  const netChange = data.afterCount - data.beforeCount;
 
   return (
     <div className="rounded-xl border border-border bg-card/60 px-4 py-3 flex items-center gap-4">
       <div className="flex flex-col">
-        <span className="text-xs text-muted-foreground">Still open from before 30 days ago</span>
+        <span className="text-xs text-muted-foreground">Open 30 days ago (all signals)</span>
         <span className="text-lg font-semibold tabular-nums text-foreground">{data.beforeCount}</span>
       </div>
-      <span className="text-muted-foreground text-sm">+</span>
+      <span className="text-muted-foreground text-sm">→</span>
       <div className="flex flex-col">
         <span className="text-xs text-muted-foreground">Open now (all signals)</span>
         <span className="text-lg font-semibold tabular-nums text-foreground">
@@ -213,7 +213,7 @@ function HealthTrendWidget() {
         </span>
       </div>
       <p className="text-xs text-muted-foreground ml-auto text-right">
-        {recentOpen} open issues detected in the last 30 days
+        {netChange > 0 ? "+" : ""}{netChange} net change in visible open issues
       </p>
     </div>
   );
