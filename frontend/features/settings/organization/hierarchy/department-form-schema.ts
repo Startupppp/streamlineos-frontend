@@ -5,6 +5,10 @@ export const departmentFormSchema = z.object({
     .string()
     .trim()
     .min(1, "Name is required")
+    .refine(
+      (departmentName) => departmentName.length !== 1,
+      "Name must be at least 2 characters",
+    )
     .max(100, "Name must be at most 100 characters")
     .refine(
       (departmentName) => departmentName.length === 0 || /[\p{L}\p{N}]/u.test(departmentName),
