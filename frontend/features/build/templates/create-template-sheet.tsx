@@ -107,7 +107,7 @@ export function CreateTemplateSheet({ open, onClose }: CreateTemplateSheetProps)
 
   return (
     <Sheet open={open} onOpenChange={onClose}>
-      <SheetContent className="p-0 flex flex-col gap-0 w-full sm:max-w-lg">
+      <SheetContent aria-describedby={undefined} className="p-0 flex flex-col gap-0 w-full sm:max-w-lg">
         <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
           <SheetTitle>New Project Template</SheetTitle>
         </SheetHeader>

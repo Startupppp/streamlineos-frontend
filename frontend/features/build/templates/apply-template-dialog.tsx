@@ -73,7 +73,7 @@ export function ApplyTemplateDialog({ template, onClose }: ApplyTemplateDialogPr
 
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
+      <DialogContent aria-describedby={undefined} className="max-w-md">
         <DialogHeader>
           <DialogTitle>Apply &ldquo;{template.name}&rdquo;</DialogTitle>
         </DialogHeader>
