@@ -27,7 +27,7 @@ jest.mock("@/hooks/api/authorized-mutation", () => ({
   },
 }));
 
-import { useKbAiAnswerFeedback, useKbAsk, useKbAskPageOwners } from "./ask";
+import { useCreateKbKnowledgeGap, useKbAiAnswerFeedback, useKbAsk, useKbAskPageOwners } from "./ask";
 
 installAbortSignalPolyfill();
 
@@ -167,6 +167,36 @@ describe("useKbAiAnswerFeedback idempotency key", () => {
       expect(nextKey).not.toBe(firstKey);
     } finally {
       feedbackPost.mockRestore();
+    }
+  });
+});
+
+describe("useCreateKbKnowledgeGap idempotency key", () => {
+  it("reuses one key after a failed create and mints another after success", async () => {
+    const gapPost = jest.spyOn(apiClient, "post")
+      .mockRejectedValueOnce(new Error("network timeout"))
+      .mockResolvedValue({ success: true });
+    try {
+      const { result } = renderHook(() => useCreateKbKnowledgeGap(), { wrapper });
+      const input = { question: "leave policy?", spaceId: 3 };
+      await act(async () => {
+        await expect(result.current.mutateAsync(input)).rejects.toThrow("network timeout");
+      });
+      await act(async () => {
+        await result.current.mutateAsync(input);
+      });
+      const firstKey = (gapPost.mock.calls[0]?.[2] as { headers?: Record<string, string> } | undefined)?.headers?.[IDEMPOTENCY_HEADER];
+      const retryKey = (gapPost.mock.calls[1]?.[2] as { headers?: Record<string, string> } | undefined)?.headers?.[IDEMPOTENCY_HEADER];
+      expect(firstKey).toEqual(expect.any(String));
+      expect(retryKey).toBe(firstKey);
+      await act(async () => {
+        await result.current.mutateAsync(input);
+      });
+      const nextKey = (gapPost.mock.calls[2]?.[2] as { headers?: Record<string, string> } | undefined)?.headers?.[IDEMPOTENCY_HEADER];
+      expect(nextKey).toEqual(expect.any(String));
+      expect(nextKey).not.toBe(firstKey);
+    } finally {
+      gapPost.mockRestore();
     }
   });
 });
