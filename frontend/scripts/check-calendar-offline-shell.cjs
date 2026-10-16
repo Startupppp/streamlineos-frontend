@@ -67,6 +67,13 @@ async function main() {
     await page.reload();
     await page.waitForFunction(() => document.getElementById("status").textContent.includes("Saved"));
     assert.match(await page.locator("#windows").innerText(), /Busy/);
+    await page.evaluate(() => {
+      const key = "streamline-calendar-offline-policy-revocation:org-9:user-9";
+      localStorage.setItem(key, JSON.stringify({ version: 2, enabled: false }));
+      dispatchEvent(new StorageEvent("storage", { key, oldValue: null, newValue: '{"version":2,"enabled":false}' }));
+    });
+    assert.match(await page.locator("#windows").innerText(), /Busy/);
+    assert.match(await page.locator("#status").innerText(), /Saved/);
     await page.evaluate(() => localStorage.setItem("streamline-calendar-offline-policy-revocation:org-2:user-1", JSON.stringify({ version: 2, enabled: true })));
     await page.reload();
     await page.waitForFunction(() => document.getElementById("status").textContent.includes("No recent offline schedule"));

@@ -30,7 +30,12 @@
     const coverage = document.getElementById("coverage");
     const windows = document.getElementById("windows");
     addEventListener("storage", (event) => {
-      if (event.key !== "streamline-calendar-offline-identity" && !event.key?.startsWith("streamline-calendar-offline-policy-revocation:")) return;
+      let identity;
+      try { identity = sessionStorage.getItem("streamline-calendar-offline-session-identity"); }
+      catch { identity = null; }
+      if (identity && event.key !== `streamline-calendar-offline-policy-revocation:${identity}` &&
+        (event.key !== "streamline-calendar-offline-identity" || event.newValue === identity)) return;
+      if (!identity && event.key !== "streamline-calendar-offline-identity") return;
       coverage.replaceChildren();
       windows.replaceChildren();
       status.textContent = "Saved Calendar access changed. Reconnect to check your current permissions.";
