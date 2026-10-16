@@ -1,3 +1,4 @@
+import { isToday } from "date-fns";
 import { z } from "zod";
 import { orgScopedStorageKey } from "@/lib/org-scoped-storage";
 
@@ -47,6 +48,11 @@ function isoOrUndefined(value: Date | string | undefined): string | undefined {
   return typeof value === "string" ? value : undefined;
 }
 
+function joiningDateOrUndefined(value: Date | string | undefined): string | undefined {
+  if (value instanceof Date && isToday(value)) return undefined;
+  return isoOrUndefined(value);
+}
+
 function textOrUndefined(value: unknown): string | undefined {
   return typeof value === "string" ? value : undefined;
 }
@@ -64,7 +70,7 @@ export function toAdminWizardDraft(values: DraftSource, step: number): AdminWiza
     departmentId: values.departmentId,
     employeeId: textOrUndefined(values.employeeId),
     role: values.role,
-    joiningDate: isoOrUndefined(values.joiningDate),
+    joiningDate: joiningDateOrUndefined(values.joiningDate),
     taxId: textOrUndefined(values.taxId),
     monthlySalary: values.monthlySalary,
     locationId: values.locationId,

@@ -72,7 +72,7 @@ describe("MemberOnboardingNote — explains why the HR wizard runs", () => {
 
     render(<MemberOnboardingNote />);
 
-    expect(screen.getByText(/activates your access to the HR module/i)).toBeInTheDocument();
+    expect(screen.getByText(/so HR has your details/i)).toBeInTheDocument();
   });
 
   it("also shows for a MEMBER, since the wizard gate is now HR-scoped not role-scoped", () => {
@@ -80,7 +80,7 @@ describe("MemberOnboardingNote — explains why the HR wizard runs", () => {
 
     render(<MemberOnboardingNote />);
 
-    expect(screen.getByText(/activates your access to the HR module/i)).toBeInTheDocument();
+    expect(screen.getByText(/so HR has your details/i)).toBeInTheDocument();
   });
 
   it("is not shown to an org owner who follows the org-setup path instead — FE-122 negative", () => {

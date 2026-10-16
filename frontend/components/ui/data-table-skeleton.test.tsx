@@ -1,6 +1,6 @@
 import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
-import { render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { DataTableSkeleton } from "./data-table-skeleton";
 
 jest.mock("@/hooks/common/use-online-status", () => ({ useOnlineStatus: () => true }));
@@ -18,6 +18,27 @@ describe("a table skeleton shows the real column headers before the rows arrive"
     render(<DataTableSkeleton rows={2} columns={2} />);
     expect(screen.getByRole("columnheader", { name: "Column 1" })).toBeInTheDocument();
     expect(screen.getByRole("columnheader", { name: "Column 2" })).toBeInTheDocument();
+  });
+});
+
+describe("a table skeleton that has waited too long says so", () => {
+  afterEach(() => jest.useRealTimers());
+
+  it("offers a retry after the panel stall threshold when the caller can refetch", () => {
+    jest.useFakeTimers();
+    const retry = jest.fn();
+    render(<DataTableSkeleton rows={1} columns={1} onStalledRetry={retry} />);
+    expect(screen.queryByText(/Still loading results/)).not.toBeInTheDocument();
+    act(() => jest.advanceTimersByTime(10_000));
+    fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+    expect(retry).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps the plain skeleton for every caller that passes no retry", () => {
+    jest.useFakeTimers();
+    render(<DataTableSkeleton rows={1} columns={1} />);
+    act(() => jest.advanceTimersByTime(60_000));
+    expect(screen.queryByText(/Still loading results/)).not.toBeInTheDocument();
   });
 });
 

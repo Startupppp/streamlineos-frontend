@@ -25,6 +25,7 @@ export const en = {
   "attendance.takeBreak": "Take break",
   "attendance.resumeWork": "Resume work",
   "attendance.wait": "Wait {time}",
+  "attendance.cooldownHint": "You just clocked out. Clock-in reopens shortly to prevent accidental double punches.",
   "attendance.assignShift": "Assign a shift for today",
   "attendance.locationDisclosure": "Your location is recorded when you clock in.",
   "attendance.unavailable": "Attendance unavailable",
