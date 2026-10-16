@@ -29,6 +29,7 @@ import {
   MANAGED_PRODUCT_DETAIL_CONTENT_CLASS,
   ManagedProductDetailPrimarySection,
   ManagedProductDetailShell,
+  ManagedProductNotFound,
 } from "./managed-product-detail-layout";
 import { ProductGoalsGridSkeleton } from "./managed-product-page-skeletons";
 import { LinkExistingGoalDialog } from "./link-existing-goal-dialog";
@@ -138,6 +139,8 @@ export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
   const { iconRef: listIconRef, hoverHandlers: listHoverHandlers } = useAnimatedIcon();
   const { iconRef: tableIconRef, hoverHandlers: tableHoverHandlers } = useAnimatedIcon();
 
+  if (resolution.kind === "not-found") return <ManagedProductNotFound />;
+
   const viewToggle = (
     <Tabs value={viewMode} onValueChange={handleViewTabChange} aria-label="View mode">
       <TabsList className="h-10 min-h-10 w-auto gap-0.5 border border-input bg-card p-1 [&_[data-slot=tabs-trigger]]:h-8 [&_[data-slot=tabs-trigger]]:min-h-8 [&_[data-slot=tabs-trigger]]:min-w-8 [&_[data-slot=tabs-trigger]]:px-2">
@@ -164,9 +167,11 @@ export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
       actions={<BuildHeaderActions actions={createActions} />}
     >
       <ManagedProductDetailShell>
-        <PmSection index={0} className="shrink-0">
-          <ProductGoalsStats stats={stats} isLoading={isLoading} />
-        </PmSection>
+        {resolution.kind === "denied" ? null : (
+          <PmSection index={0} className="shrink-0">
+            <ProductGoalsStats stats={stats} isLoading={isLoading} />
+          </PmSection>
+        )}
 
         <BuildOfflineNotice dataUpdatedAt={dataUpdatedAt} />
 
@@ -187,7 +192,7 @@ export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
                 filtersActive={listFilters.isFiltered}
                 onClearFilters={listFilters.clearAll}
                 action={
-                  listFilters.isFiltered
+                  listFilters.isFiltered || !canManage
                     ? undefined
                     : { label: "New Goal", onClick: handleOpenCreate }
                 }

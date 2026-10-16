@@ -15,6 +15,7 @@ import {
   MANAGED_PRODUCT_DETAIL_CONTENT_CLASS,
   ManagedProductDetailPrimarySection,
   ManagedProductDetailShell,
+  ManagedProductNotFound,
 } from "@/features/build/managed-products/managed-product-detail-layout";
 import { PRODUCT_PROJECT_SKELETON_HEADERS } from "@/features/build/managed-products/managed-product-page-skeletons";
 import { useProductProjectsPage, type LinkedProjectRow } from "./use-product-projects-page";
@@ -103,6 +104,8 @@ export function ProductProjectsPage({ managedProductId }: ProductProjectsPagePro
     ),
     [handleUnlinkClick],
   );
+
+  if (resolution.kind === "not-found") return <ManagedProductNotFound />;
 
   return (
     <PageWrapper

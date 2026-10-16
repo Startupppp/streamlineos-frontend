@@ -303,10 +303,10 @@ export function useProductProjectsPage({ managedProductId }: UseProductProjectsP
 
   const headerActions = useMemo(
     () =>
-      canManage
+      canManage && resolution.kind !== "denied" && resolution.kind !== "not-found"
         ? [{ ...LINK_PROJECT_ACTION, onSelect: () => setLinkDialogOpen(true) }]
         : [],
-    [canManage],
+    [canManage, resolution.kind],
   );
 
   return {
