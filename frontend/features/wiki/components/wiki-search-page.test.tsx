@@ -1,6 +1,6 @@
 import { ZodError } from "zod";
 import React from "react";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { act, render, screen, fireEvent } from "@testing-library/react";
 import WikiSearchPage from "./wiki-search-page";
 import { kbSearchResponseContract } from "@/hooks/api/kb/kb-search-schema";
 
@@ -356,6 +356,47 @@ describe("WikiSearchPage — URL filter state", () => {
 
     const input = screen.getByTestId("search-input") as HTMLInputElement;
     expect(input.value).toBe("onboarding");
+  });
+
+  it("updates the input when in-place navigation changes the URL query", () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("q=onboarding"));
+    setupSearch([]);
+    usePageState.mockReturnValue({ kind: "ready" });
+
+    const { rerender } = render(<WikiSearchPage />);
+    expect(screen.getByRole("searchbox", { name: "Search pages" })).toHaveValue("onboarding");
+
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("q=runbook"));
+    rerender(<WikiSearchPage />);
+
+    expect(screen.getByRole("searchbox", { name: "Search pages" })).toHaveValue("runbook");
+    expect(useKbPageFullSearch).toHaveBeenLastCalledWith(
+      expect.objectContaining({ q: "runbook" }),
+      expect.anything(),
+    );
+  });
+
+  it("cancels a pending input update when navigation changes the URL query", () => {
+    jest.useFakeTimers();
+    try {
+      mockUseSearchParams.mockReturnValue(new URLSearchParams("q=onboarding"));
+      setupSearch([]);
+      usePageState.mockReturnValue({ kind: "ready" });
+
+      const { rerender } = render(<WikiSearchPage />);
+      fireEvent.change(screen.getByRole("searchbox", { name: "Search pages" }), {
+        target: { value: "unfinished" },
+      });
+
+      mockUseSearchParams.mockReturnValue(new URLSearchParams("q=runbook"));
+      rerender(<WikiSearchPage />);
+      act(() => jest.advanceTimersByTime(300));
+
+      expect(screen.getByRole("searchbox", { name: "Search pages" })).toHaveValue("runbook");
+      expect(mockUpdate).not.toHaveBeenCalled();
+    } finally {
+      jest.useRealTimers();
+    }
   });
 
   it("passes type from the URL param to the search hook, alongside q and status", () => {

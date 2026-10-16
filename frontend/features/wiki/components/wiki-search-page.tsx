@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useUrlFilters, parseEnum } from "@/lib/url-state/use-url-filters";
+import { useSourceOverride } from "@/hooks/common/use-source-override";
 import { useKbPageFullSearch } from "@/hooks/api/kb/search";
 import { useKbSpaces } from "@/hooks/api/kb/spaces";
 import { useHrKbLinkConfig } from "@/hooks/api/kb/hr-link-config";
@@ -156,10 +157,16 @@ export default function WikiSearchPage() {
   const spaceId = spaceParam !== null ? parseInt(spaceParam, 10) : undefined;
   const view = parseEnum(searchParams.get("view"), VIEW_VALUES, "list");
 
-  const [inputValue, setInputValue] = useState(q);
+  const [inputValue, setInputValue] = useSourceOverride(q, q);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const resultRefs = useRef<(HTMLAnchorElement | null)[]>([]);
   const [focusedIndex, setFocusedIndex] = useState(-1);
+
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [q]);
 
   const handleInputChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -170,7 +177,7 @@ export default function WikiSearchPage() {
         update({ q: value.trim() || null });
       }, 300);
     },
-    [update],
+    [setInputValue, update],
   );
 
   const {
