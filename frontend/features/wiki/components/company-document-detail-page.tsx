@@ -92,7 +92,6 @@ export default function CompanyDocumentDetailPage({ linkedDocumentId }: CompanyD
   const documentFailed = linkOn && isError;
   const documentMissing = documentFailed && isApiError(error) && error.status === 404;
   const notAvailable = linkOff || documentMissing;
-  const entry = notAvailable ? undefined : data;
   const pageState = usePageState({
     permission: "kb:pages:view",
     isLoading: isLoading || configLoading,
@@ -100,6 +99,7 @@ export default function CompanyDocumentDetailPage({ linkedDocumentId }: CompanyD
     error: configFailed ? configError : error,
     isEmpty: notAvailable,
   });
+  const entry = pageState.kind === "ready" ? data : undefined;
 
   const handleRetry = useCallback(() => {
     if (configFailed) void refetchConfig();
