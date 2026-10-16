@@ -18,7 +18,8 @@ import {
   DISPLAY_NAME_MAX_LENGTH,
   COMPANY_NAME_MAX_LENGTH,
 } from "../lib/basics-schema";
-import { TEAM_SIZES, INDUSTRIES } from "../lib/constants";
+import { INDUSTRIES } from "@/lib/constants/industries";
+import { TEAM_SIZES } from "../lib/constants";
 import type { WizardData } from "../lib/wizard-data-schema";
 import { NavButtons } from "./nav-buttons";
 import { StepBody } from "./step-body";

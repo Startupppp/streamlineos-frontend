@@ -1,4 +1,5 @@
-import { orgGeneralSchema, INDUSTRIES } from "./org-profile-schema";
+import { orgGeneralSchema } from "./org-profile-schema";
+import { INDUSTRIES } from "@/lib/constants/industries";
 
 const BASE = {
   name: "Acme Corp",
@@ -76,6 +77,13 @@ describe("organization profile form", () => {
 
   it("INDUSTRIES list contains Agency", () => {
     expect(INDUSTRIES).toContain("Agency");
+  });
+
+  it("settings can show every industry onboarding used to save, so no edit opens blank", () => {
+    for (const saved of ["IT Services", "Retail", "Construction", "Restaurant", "Logistics", "Manufacturing"]) {
+      expect(INDUSTRIES).toContain(saved);
+    }
+    expect(new Set(INDUSTRIES).size).toBe(INDUSTRIES.length);
   });
 
   it("rejects a javascript: URL for website", () => {
