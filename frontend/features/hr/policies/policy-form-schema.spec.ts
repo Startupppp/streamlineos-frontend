@@ -1,4 +1,4 @@
-import { policyFormSchema } from "./policy-form-types";
+import { policyFormSchema, withExplicitSwitches } from "./policy-form-types";
 
 const baseLeave = {
   policyType: "leave" as const,
@@ -68,5 +68,25 @@ describe("policyFormSchema leave — carryForwardLimit cross-field rule", () => 
   it("adds no cross-field issue when carryForwardLimit equals maxBalance because the carry forward may use the full ceiling", () => {
     const paths = issuePathsFor({ maxBalance: 20, carryForwardLimit: 20 });
     expect(paths.filter((p) => p === "rules.carryForwardLimit")).toHaveLength(0);
+  });
+});
+
+describe("withExplicitSwitches", () => {
+  it("sends a switch the user never touched as false, so the server default of true cannot store it ON", () => {
+    expect(withExplicitSwitches("leave", { accrualAmount: 1.5 })).toEqual({
+      accrualAmount: 1.5,
+      encashmentEligible: false,
+      probationRestricted: false,
+      sandwichRule: false,
+      halfDayAllowed: false,
+    });
+  });
+
+  it("keeps a switch the user turned on", () => {
+    expect(withExplicitSwitches("probation", { extensionAllowed: true })).toEqual({ extensionAllowed: true });
+  });
+
+  it("leaves a policy type with no switches unchanged", () => {
+    expect(withExplicitSwitches("attendance", { graceMinutes: 10 })).toEqual({ graceMinutes: 10 });
   });
 });

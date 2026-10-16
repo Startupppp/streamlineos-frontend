@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { HR_POLICY_TYPES, HR_SCOPE_TYPES } from "@/types/hr/policies";
+import { HR_POLICY_TYPES, HR_SCOPE_TYPES, type HrPolicyType } from "@/types/hr/policies";
 
 export const policyFormSchema = z.object({
   policyType: z.enum(HR_POLICY_TYPES),
@@ -62,3 +62,30 @@ export const policyFormSchema = z.object({
 });
 
 export type PolicyFormValues = z.infer<typeof policyFormSchema>;
+
+export const POLICY_SWITCHES: Partial<Record<HrPolicyType, readonly { name: string; label: string }[]>> = {
+  leave: [
+    { name: "encashmentEligible", label: "Encashment Eligible" },
+    { name: "probationRestricted", label: "Probation Restricted" },
+    { name: "sandwichRule", label: "Sandwich Rule" },
+    { name: "halfDayAllowed", label: "Half Day Allowed" },
+  ],
+  overtime: [{ name: "compOffConversion", label: "Convert to Comp-Off" }],
+  probation: [{ name: "extensionAllowed", label: "Extension Allowed" }],
+  notice_period: [{ name: "buyoutAllowed", label: "Buyout Allowed" }],
+  wfh: [
+    { name: "requireApproval", label: "Require Approval" },
+    { name: "probationRestricted", label: "Probation Restricted" },
+    { name: "allowConsecutive", label: "Allow Consecutive" },
+  ],
+  expense: [{ name: "requireReceipt", label: "Require Receipt" }],
+};
+
+export function withExplicitSwitches(
+  policyType: HrPolicyType,
+  rules: Record<string, unknown>,
+): Record<string, unknown> {
+  const explicit = { ...rules };
+  for (const { name } of POLICY_SWITCHES[policyType] ?? []) explicit[name] = rules[name] === true;
+  return explicit;
+}
