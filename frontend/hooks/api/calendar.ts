@@ -202,7 +202,7 @@ export function useCalendarEvents(start: Date, end: Date, enabled = true) {
       if (activeIdentity) void clearOfflineCalendarSnapshot().catch(() => undefined);
       return;
     }
-    if (offlinePolicy.data?.enabled && eventsQuery.data && eventsQuery.isSuccess && !eventsQuery.isFetching && !eventsQuery.isError && eventsQuery.dataUpdatedAt > 0 && orgId && userId && canView && navigator.onLine) {
+    if (offlinePolicy.data?.enabled && offlinePolicy.isFetchedAfterMount && !offlinePolicy.isFetching && !offlinePolicy.isError && eventsQuery.data && eventsQuery.isSuccess && eventsQuery.isFetchedAfterMount && !eventsQuery.isFetching && !eventsQuery.isError && eventsQuery.dataUpdatedAt > 0 && orgId && userId && canView && navigator.onLine) {
       const identity = `${orgId}:${userId}`;
       if (!allowOfflineCalendarPolicy(identity, offlinePolicy.data.version)) return;
       try {
@@ -212,7 +212,7 @@ export function useCalendarEvents(start: Date, end: Date, enabled = true) {
       void saveOfflineCalendarSnapshot(identity, start, end, eventsQuery.data, offlinePolicy.data, timeZone, eventsQuery.dataUpdatedAt).catch(() => undefined);
       if ("serviceWorker" in navigator) void navigator.serviceWorker.register("/sw.js").catch(() => undefined);
     }
-  }, [offlinePolicy.data, offlinePolicy.isError, eventsQuery.data, eventsQuery.dataUpdatedAt, eventsQuery.isSuccess, eventsQuery.isFetching, eventsQuery.isError, orgId, userId, canView, start, end, timeZone]);
+  }, [offlinePolicy.data, offlinePolicy.isError, offlinePolicy.isFetching, offlinePolicy.isFetchedAfterMount, eventsQuery.data, eventsQuery.dataUpdatedAt, eventsQuery.isSuccess, eventsQuery.isFetchedAfterMount, eventsQuery.isFetching, eventsQuery.isError, orgId, userId, canView, start, end, timeZone]);
   return eventsQuery;
 }
 

@@ -6,7 +6,7 @@ import { useCalendarEvents } from "./calendar";
 const get = jest.fn();
 const clear = jest.fn().mockResolvedValue(undefined);
 const save = jest.fn().mockResolvedValue(undefined);
-let policy = { data: { enabled: true, maxAgeDays: 7, version: 1 }, isError: true };
+let policy = { data: { enabled: true, maxAgeDays: 7, version: 1 }, isError: true, isFetching: false, isFetchedAfterMount: true };
 
 jest.mock("next-auth/react", () => ({
   useSession: () => ({ data: { orgId: "org-1", user: { id: "user-1" } }, status: "authenticated" }),
@@ -33,7 +33,7 @@ jest.mock("@/lib/api-client", () => ({
 }));
 
 it("clears an offline snapshot and does not save stale enabled policy data after an online policy error", async () => {
-  policy = { data: { enabled: true, maxAgeDays: 7, version: 1 }, isError: true };
+  policy = { data: { enabled: true, maxAgeDays: 7, version: 1 }, isError: true, isFetching: false, isFetchedAfterMount: true };
   clear.mockClear();
   save.mockClear();
   get.mockReset().mockResolvedValue({ events: [], failures: [], truncated: false, coverageState: "complete", coverage: [] });
@@ -64,7 +64,7 @@ it("clears an offline snapshot and does not save stale enabled policy data after
 });
 
 it("keeps the existing offline snapshot during a network outage", async () => {
-  policy = { data: { enabled: true, maxAgeDays: 7, version: 1 }, isError: true };
+  policy = { data: { enabled: true, maxAgeDays: 7, version: 1 }, isError: true, isFetching: false, isFetchedAfterMount: true };
   clear.mockClear();
   save.mockClear();
   get.mockReset().mockResolvedValue({ events: [], failures: [], truncated: false, coverageState: "complete", coverage: [] });
@@ -83,4 +83,28 @@ it("keeps the existing offline snapshot during a network outage", async () => {
   expect(clear).not.toHaveBeenCalled();
   expect(save).not.toHaveBeenCalled();
   Object.defineProperty(navigator, "onLine", { configurable: true, value: true });
+});
+
+it("waits for a fresh policy response before saving a completed event fetch after reconnect", async () => {
+  policy = { data: { enabled: true, maxAgeDays: 7, version: 1 }, isError: false, isFetching: true, isFetchedAfterMount: false };
+  clear.mockClear();
+  save.mockClear();
+  get.mockReset().mockResolvedValue({ events: [], failures: [], truncated: false, coverageState: "complete", coverage: [] });
+  Object.defineProperty(navigator, "onLine", { configurable: true, value: true });
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  function wrapper({ children }: { children: ReactNode }) {
+    return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
+  }
+  const { rerender } = renderHook(
+    () => useCalendarEvents(new Date("2026-10-14T00:00:00.000Z"), new Date("2026-10-15T00:00:00.000Z")),
+    { wrapper },
+  );
+
+  await waitFor(() => expect(get).toHaveBeenCalled());
+  await waitFor(() => expect(client.getQueryCache().findAll().some((query) => query.state.status === "success")).toBe(true));
+  expect(save).not.toHaveBeenCalled();
+
+  policy = { ...policy, isFetching: false, isFetchedAfterMount: true };
+  rerender();
+  await waitFor(() => expect(save).toHaveBeenCalledTimes(1));
 });
