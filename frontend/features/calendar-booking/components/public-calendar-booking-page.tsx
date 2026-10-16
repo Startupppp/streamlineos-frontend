@@ -63,9 +63,11 @@ export function PublicCalendarBookingPage() {
   const recoveryFailed = recoveredReceiptQuery.isError && !startBooking;
   const offeringQuery = usePublicCalendarBookingOffering(token, range.from, range.to, startBooking);
   const sessionQuery = usePublicCalendarBookingSession(token, sessionInput, startBooking);
-  const unavailable = startBooking && (offeringQuery.isError || sessionQuery.isError);
-  const offering = unavailable ? undefined : offeringQuery.data;
-  const session = unavailable ? undefined : sessionQuery.data;
+  const linkUnavailable = (error: unknown) => isApiError(error) && (error.status === 404 || error.status === 410);
+  const unavailable = startBooking && (linkUnavailable(offeringQuery.error) || linkUnavailable(sessionQuery.error));
+  const pageFailed = startBooking && !unavailable && (offeringQuery.isError || sessionQuery.isError);
+  const offering = unavailable || pageFailed ? undefined : offeringQuery.data;
+  const session = unavailable || pageFailed ? undefined : sessionQuery.data;
   const uiLocale = publicBookingUiLocale(session?.locale ?? locale);
   const copy = publicBookingCopy(uiLocale);
   const loading = recoveredReceiptQuery.isPending || (startBooking && (offeringQuery.isPending || sessionQuery.isPending));
@@ -149,6 +151,19 @@ export function PublicCalendarBookingPage() {
               <h2 className="text-xl font-semibold tracking-tight text-foreground">{copy.statusTitle}</h2>
               <p className="text-sm leading-relaxed text-muted-foreground">{copy.statusFailed}</p>
               <Button type="button" variant="outline" disabled={recoveredReceiptQuery.isFetching} onClick={() => void recoveredReceiptQuery.refetch()}>
+                {copy.retryReceipt}
+              </Button>
+            </div>
+          )}
+
+          {pageFailed && !loading && (
+            <div className="mx-auto max-w-md space-y-4 py-10 text-center sm:py-14" role="alert">
+              <h2 className="text-xl font-semibold tracking-tight text-foreground">{copy.pageFailedTitle}</h2>
+              <p className="text-sm leading-relaxed text-muted-foreground">{copy.pageFailedDescription}</p>
+              <Button type="button" variant="outline" disabled={offeringQuery.isFetching || sessionQuery.isFetching} onClick={() => {
+                if (offeringQuery.isError) void offeringQuery.refetch();
+                if (sessionQuery.isError) void sessionQuery.refetch();
+              }}>
                 {copy.retryReceipt}
               </Button>
             </div>

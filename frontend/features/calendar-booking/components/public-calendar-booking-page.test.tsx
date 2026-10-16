@@ -769,6 +769,28 @@ describe("public calendar booking page", () => {
     expect(screen.queryByText("Discovery call")).not.toBeInTheDocument();
   });
 
+  it("offers a retry instead of calling a valid link unavailable after a transient offering failure", async () => {
+    mockedGet.mockRejectedValueOnce(new ApiError("Temporary outage", 503));
+    const user = userEvent.setup();
+    renderPage();
+    expect(await screen.findByRole("alert")).toHaveTextContent("Booking page could not be loaded");
+    expect(screen.queryByText("This booking link is unavailable")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Confirm booking" })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Try again" }));
+    expect(await screen.findByRole("heading", { name: "Meet Northwind" })).toBeInTheDocument();
+  });
+
+  it("offers a retry instead of calling a valid link unavailable after a transient session failure", async () => {
+    mockedPost.mockRejectedValueOnce(new ApiError("Temporary outage", 503));
+    const user = userEvent.setup();
+    renderPage();
+    expect(await screen.findByRole("alert")).toHaveTextContent("Booking page could not be loaded");
+    expect(screen.queryByText("This booking link is unavailable")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Confirm booking" })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Try again" }));
+    expect(await screen.findByRole("heading", { name: "Meet Northwind" })).toBeInTheDocument();
+  });
+
   it("hides cached booking details when a refreshed public link is revoked", async () => {
     const { client } = renderPage();
     expect(await screen.findByRole("heading", { name: "Meet Northwind" })).toBeInTheDocument();
