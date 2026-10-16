@@ -15,7 +15,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 
 export function InventoryCalendarEquipmentCreate({ onCreated }: { onCreated: (equipment: InventoryCalendarEquipment) => void }) {
   const [warehousePage, setWarehousePage] = useState(1);
-  const warehouses = useWarehouses({ status: "active", page: warehousePage, limit: 50 });
+  const warehouses = useWarehouses({ status: "active", page: warehousePage, limit: 50 }, { inlineError: true });
   const create = useCreateInventoryCalendarEquipment();
   const [warehouseId, setWarehouseId] = useState<number | null>(null);
   const [productVariantId, setProductVariantId] = useState("");
