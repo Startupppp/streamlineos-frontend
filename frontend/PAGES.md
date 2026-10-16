@@ -184,6 +184,7 @@
 - `/crm/settings/automations/[automationId]` · **CRM** · hooks: `→ feature/crm/settings`
 - `/crm/settings/blueprints` · **CRM** · hooks: `→ feature/crm/settings`
 - `/crm/settings/custom-fields` · **CRM** · hooks: `→ feature/crm/settings`
+- `/crm/settings/web-forms` · **CRM** · hooks: `useWebForms`, `usePageState`, `→ features/crm/web-forms` — lead-capture form CRUD, copy public link; plan feature `crm.web-forms` + `crm:web-forms:manage`
 - `/crm/settings/data-quality` · **CRM** · hooks: `→ feature/crm/settings`
 - `/crm/settings/email-templates` · **CRM** · hooks: `→ feature/crm/settings`
 - `/crm/settings/import-export` · **CRM** · hooks: `→ feature/crm/settings`
@@ -1037,6 +1038,7 @@ PM Workspace is removed from Build entirely (not renamed, not consolidated into 
 - `/interview-booking/[bookingToken]` · **HR (public)** · hooks: `→ features/careers`
 - `/offer/[offerToken]` · **HR (public)** · hooks: `→ features/careers`
 - `/nps/[npsToken]` · **Support (public)** · hooks: `→ features/support`
+- `/lead-form/[leadFormToken]` · **CRM (public)** · hooks: `usePublicLeadForm`, `useSubmitLeadForm`, `→ features/crm/web-forms` — renders a web form and submits it as a lead
 - `/ticket-feedback/[csatToken]` · **Support (public)** · hooks: `→ features/support`
 - `/help/[orgId]` · **Support (public KB)** · hooks: `→ features/support/kb`
 - `/help/[orgId]/[articleSlug]` · **Support (public KB)** · hooks: `→ features/support/kb`

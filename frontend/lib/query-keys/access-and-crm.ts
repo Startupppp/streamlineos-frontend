@@ -222,7 +222,11 @@ export const accessAndCrmQueryKeys = {
         ? ([...base, "crmSettings", "slaBreachedLeads"] as const)
         : ([...base, "crmSettings", "slaBreachedLeads", params] as const),
     territories: () => [...base, "crmSettings", "territories"] as const,
+    webForms: () => [...base, "crmSettings", "webForms"] as const,
   },
+
+  /** A public lead form, read by token by a visitor who belongs to no tenant. */
+  publicLeadForm: (leadFormToken: string) => [...base, "publicLeadForm", leadFormToken] as const,
 
   crmLifecycle: {
     all: [...base, "crmLifecycle"] as const,
