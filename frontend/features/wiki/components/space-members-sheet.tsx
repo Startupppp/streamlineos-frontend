@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback } from "react";
+import { Component, useCallback, type ReactNode } from "react";
+import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -47,6 +48,7 @@ import type { KbSpaceMember } from "@/hooks/api/kb/spaces";
 import { useCan } from "@/hooks/api/access";
 import { KbUsersIcon } from "@/features/wiki/lib/kb-icons";
 import { PageState } from "@/components/shared/page-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { usePageState } from "@/hooks/api/use-page-state";
 import {
   addMemberSchema,
@@ -244,13 +246,43 @@ interface SpaceMembersSheetProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export function SpaceMembersSheet({
+class MembersReadBoundary extends Component<
+  { children: ReactNode; onReset: () => void },
+  { error: unknown | null }
+> {
+  state: { error: unknown | null } = { error: null };
+
+  static getDerivedStateFromError(error: unknown) {
+    return { error };
+  }
+
+  render() {
+    if (this.state.error !== null) {
+      return (
+        <ErrorState
+          compact
+          description={getErrorMessage(this.state.error)}
+          error={this.state.error}
+          onRetry={() => {
+            this.props.onReset();
+            this.setState({ error: null });
+          }}
+        />
+      );
+    }
+    return this.props.children;
+  }
+}
+
+function MembersRead({
   spaceId,
-  spaceName,
   open,
-  onOpenChange,
-}: SpaceMembersSheetProps) {
-  const canManage = useCan("kb:spaces:manage");
+  canManage,
+}: {
+  spaceId: number;
+  open: boolean;
+  canManage: boolean;
+}) {
   const {
     data: members,
     isLoading,
@@ -271,6 +303,48 @@ export function SpaceMembersSheet({
   }, [refetch]);
 
   return (
+    <PageState
+      resolution={membersState}
+      onRetry={handleRetry}
+      compact
+      loading={
+        <div className="divide-y divide-border">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <MemberRowSkeleton key={i} />
+          ))}
+        </div>
+      }
+      empty={
+        <EmptyState
+          illustration={<KbUsersIcon className="w-8 text-muted-foreground" />}
+          title="No members yet"
+          description="Add members to this space to control who can access it."
+        />
+      }
+    >
+      <div className="divide-y divide-border">
+        {(members ?? []).map((member) => (
+          <MemberRow
+            key={member.id}
+            member={member}
+            canManage={canManage}
+            spaceId={spaceId}
+          />
+        ))}
+      </div>
+    </PageState>
+  );
+}
+
+export function SpaceMembersSheet({
+  spaceId,
+  spaceName,
+  open,
+  onOpenChange,
+}: SpaceMembersSheetProps) {
+  const canManage = useCan("kb:spaces:manage");
+
+  return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="sm:max-w-sm p-0 flex flex-col">
         <SheetHeader className="px-6 py-4 border-b shrink-0">
@@ -281,38 +355,13 @@ export function SpaceMembersSheet({
         </SheetHeader>
         <SheetBody className="px-6 py-4 flex-1 overflow-y-auto space-y-4">
           {canManage && <AddMemberForm spaceId={spaceId} />}
-          <PageState
-            resolution={membersState}
-            onRetry={handleRetry}
-            compact
-            loading={
-              <div className="divide-y divide-border">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <MemberRowSkeleton key={i} />
-                ))}
-              </div>
-            }
-            empty={
-              <EmptyState
-                illustration={
-                  <KbUsersIcon className="w-8 text-muted-foreground" />
-                }
-                title="No members yet"
-                description="Add members to this space to control who can access it."
-              />
-            }
-          >
-            <div className="divide-y divide-border">
-              {(members ?? []).map((member) => (
-                <MemberRow
-                  key={member.id}
-                  member={member}
-                  canManage={canManage}
-                  spaceId={spaceId}
-                />
-              ))}
-            </div>
-          </PageState>
+          <QueryErrorResetBoundary>
+            {({ reset }) => (
+              <MembersReadBoundary key={spaceId} onReset={reset}>
+                <MembersRead spaceId={spaceId} open={open} canManage={canManage} />
+              </MembersReadBoundary>
+            )}
+          </QueryErrorResetBoundary>
         </SheetBody>
       </SheetContent>
     </Sheet>
