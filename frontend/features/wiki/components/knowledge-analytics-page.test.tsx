@@ -695,6 +695,47 @@ describe("KnowledgeAnalyticsPage — the failing query is the one whose request 
     expect(screen.getByText("req_noresults_2")).toBeInTheDocument();
   });
 
+  it("keeps loaded no-result searches on a later-page failure and retries only that cursor", async () => {
+    const fetchNextPage = jest.fn();
+    const refetch = jest.fn();
+    useKbNoResults.mockReturnValue({
+      ...settled({ data: [{ query: "billing", count: 4 }], scopeComplete: true }),
+      isError: true,
+      isFetchNextPageError: true,
+      error: failure("req_noresults_later"),
+      hasNextPage: true,
+      isFetchingNextPage: false,
+      fetchNextPage,
+      refetch,
+    });
+
+    render(<KnowledgeAnalyticsPage />);
+
+    expect(screen.getByText("billing")).toBeInTheDocument();
+    expect(screen.getByText("req_noresults_later")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Load more searches" })).not.toBeInTheDocument();
+    expect(screen.getByText("Couldn't load more searches")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Try again" }));
+    expect(fetchNextPage).toHaveBeenCalledTimes(1);
+    expect(refetch).not.toHaveBeenCalled();
+  });
+
+  it.each([401, 403, 404])("hides cached no-result searches after a %i cursor failure", (status) => {
+    useKbNoResults.mockReturnValue({
+      ...settled({ data: [{ query: "private billing", count: 4 }], scopeComplete: true }),
+      isError: true,
+      isFetchNextPageError: true,
+      error: new ApiError("Access unavailable", status),
+      hasNextPage: true,
+      fetchNextPage: jest.fn(),
+    });
+
+    render(<KnowledgeAnalyticsPage />);
+
+    expect(screen.queryByText("private billing")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Retry loading searches" })).not.toBeInTheDocument();
+  });
+
   it("quotes the page-analytics request id when only the page-analytics query failed", () => {
     usePageAnalytics.mockReturnValue({
       ...settledPages(undefined),

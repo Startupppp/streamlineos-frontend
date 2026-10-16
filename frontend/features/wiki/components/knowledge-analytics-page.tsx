@@ -6,6 +6,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { isApiError } from "@/lib/api-envelope";
 import {
   StatCard,
   StatCardGrid,
@@ -444,6 +446,7 @@ export default function KnowledgeAnalyticsPage() {
     data: noResultsResponse,
     isLoading: noResultsLoading,
     isError: noResultsError,
+    isFetchNextPageError: noResultsNextError,
     error: noResultsQueryError,
     refetch: refetchNoResults,
     fetchNextPage: fetchNextNoResults,
@@ -451,6 +454,8 @@ export default function KnowledgeAnalyticsPage() {
     isFetchingNextPage: isFetchingNextNoResults,
   } = useKbNoResults(spaceId !== undefined ? { ...range, spaceId } : range);
   const noResults = noResultsResponse?.data ?? [];
+  const noResultsAccessLost = noResultsError && isApiError(noResultsQueryError) && [401, 403, 404].includes(noResultsQueryError.status);
+  const noResultsPageError = noResultsError && (!noResultsNextError || noResultsAccessLost || noResults.length === 0);
   const {
     data: pageAnalytics = [],
     isLoading: pagesLoading,
@@ -572,10 +577,10 @@ export default function KnowledgeAnalyticsPage() {
     permission: "kb:analytics:view",
     isLoading:
       overviewLoading || noResultsLoading || pagesLoading || gapsLoading,
-    isError: overviewError || noResultsError || pagesError || gapsError,
+    isError: overviewError || noResultsPageError || pagesError || gapsError,
     error: overviewError
       ? overviewQueryError
-      : noResultsError
+      : noResultsPageError
         ? noResultsQueryError
         : pagesError
           ? pagesQueryError
@@ -778,7 +783,15 @@ export default function KnowledgeAnalyticsPage() {
                 {noResults.map((row, i) => (
                   <NoResultsRow key={i} row={row} rank={i + 1} />
                 ))}
-                {hasNextNoResults ? (
+                {noResultsNextError && !noResultsAccessLost ? (
+                  <ErrorState
+                    compact
+                    title="Couldn't load more searches"
+                    description={getErrorMessage(noResultsQueryError)}
+                    error={noResultsQueryError}
+                    onRetry={() => { void fetchNextNoResults(); }}
+                  />
+                ) : hasNextNoResults ? (
                   <Button
                     type="button"
                     variant="outline"
