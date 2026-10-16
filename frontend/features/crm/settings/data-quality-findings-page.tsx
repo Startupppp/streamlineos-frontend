@@ -1,13 +1,15 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { PageState } from "@/components/shared/page-state";
+import { RecordList } from "@/components/renderer";
+import { useTenantLayout } from "@/components/renderer/use-tenant-layout";
+import { DATA_QUALITY_FINDING_LAYOUT } from "@/lib/renderer/crm/settings/data-quality-finding-layout";
 import { useCursorPager } from "@/components/ui/table-pagination";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
@@ -25,7 +27,6 @@ import { cn } from "@/lib/utils";
 import {
   FindingPartyName,
   FindingRowActions,
-  FindingSeverityBadge,
   humanizeFindingKind,
   type FindingDecision,
 } from "./data-quality-finding-cells";
@@ -75,6 +76,7 @@ const DECISION_COPY: Record<FindingDecision["action"], { title: string; descript
 };
 
 export function DataQualityFindingsPage() {
+  const layout = useTenantLayout(DATA_QUALITY_FINDING_LAYOUT);
   const canResolve = useCan("crm:data-quality:resolve");
   const [status, setStatus] = useState<Status>("open");
   const [producer, setProducer] = useState<Producer | "all">("all");
@@ -142,26 +144,17 @@ export function DataQualityFindingsPage() {
     );
   }
 
-  const columns = useMemo<DataTableColumn<DataQualityFinding>[]>(
-    () => [
-      { key: "severity", header: "Severity", cell: (row) => <FindingSeverityBadge severity={row.severity} /> },
-      {
-        key: "finding",
-        header: "Finding",
-        cell: (row) => <span className="text-sm">{humanizeFindingKind(row.findingKind)}</span>,
-      },
-      { key: "party", header: "Record", cell: (row) => <FindingPartyName partyId={row.partyId} /> },
-      {
-        key: "age",
-        header: "Age",
-        cell: (row) => <span className="font-mono tabular-nums text-sm">{Math.floor(row.ageDays)}d</span>,
-      },
-      {
-        key: "actions",
-        header: "",
-        cell: (row) => <FindingRowActions finding={row} canResolve={canResolve} onDecide={setDecision} />,
-      },
-    ],
+  const cells = useMemo(
+    () => ({
+      findingKind: (row: DataQualityFinding) => humanizeFindingKind(row.findingKind),
+      partyId: (row: DataQualityFinding) => <FindingPartyName partyId={row.partyId} />,
+    }),
+    [],
+  );
+  const renderActions = useCallback(
+    (row: DataQualityFinding) => (
+      <FindingRowActions finding={row} canResolve={canResolve} onDecide={setDecision} />
+    ),
     [canResolve],
   );
 
@@ -229,15 +222,17 @@ export function DataQualityFindingsPage() {
     >
       <PageState
         resolution={pageState}
-        loading={<DataTableSkeleton rows={12} headers={["Severity", "Finding", "Record", "Age", ""]} className="flex-1" />}
+        loading={<DataTableSkeleton rows={12} headers={["Finding", "Severity", "Record", "Age (days)", "First detected"]} className="flex-1" />}
         empty={emptyState}
         onRetry={handleRetry}
         className="flex-1"
       >
-        <DataTable
-          data={rows}
-          columns={columns}
+        <RecordList
+          layout={layout}
+          rows={rows}
           getRowKey={findingRowKey}
+          cells={cells}
+          actions={renderActions}
           isLoading={query.isLoading}
           emptyState={emptyState}
           minWidth="720px"

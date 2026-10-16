@@ -2,31 +2,13 @@
 
 import { memo } from "react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useParty } from "@/hooks/api/party/parties";
 import type { DataQualityFinding } from "@/hooks/api/crm/data-quality-findings-schema";
-import { statusToneClasses, type StatusTone } from "@/lib/design-tokens";
-import { cn } from "@/lib/utils";
 
 export interface FindingDecision {
   finding: DataQualityFinding;
   action: "apply" | "dismiss";
-}
-
-const SEVERITY_TONE: Record<DataQualityFinding["severity"], StatusTone> = {
-  high: "danger",
-  medium: "warning",
-  low: "neutral",
-};
-
-export function FindingSeverityBadge({ severity }: { severity: DataQualityFinding["severity"] }) {
-  const tone = statusToneClasses(SEVERITY_TONE[severity]);
-  return (
-    <Badge variant="outline" className={cn("h-5 px-2 py-0.5 text-micro capitalize", tone.surface, tone.ink, tone.rule)}>
-      {severity}
-    </Badge>
-  );
 }
 
 /** `duplicate-email` → `Duplicate email`. The kind is a backend slug, never shown raw. */
