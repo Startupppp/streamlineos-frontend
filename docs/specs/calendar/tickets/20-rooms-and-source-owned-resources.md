@@ -10,5 +10,5 @@
 - [ ] Maintenance, location, accessibility, divisible capacity, and approval rules affect offered slots.
 - [ ] Resource owners revalidate eligibility and return committed, rejected, or pending receipts.
 - [x] A failed allocation cannot be presented as a fully confirmed booking.
-- [ ] Race tests cover last resource unit, simultaneous room booking, maintenance change, approval delay, and partial multi-resource failure.
+- [x] Race tests cover last resource unit, simultaneous room booking, maintenance change, approval delay, and partial multi-resource failure.
 
