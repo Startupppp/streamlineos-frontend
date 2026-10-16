@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { BookmarkPlus } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -48,6 +48,7 @@ export function CalendarSavedViewControls({
   const canWrite = useCan("calendar:read");
   const canManageTeam = useCan("calendar:admin:manage");
   const query = useCalendarSavedViews();
+  const { hasNextPage, isFetchingNextPage, dataUpdatedAt, fetchNextPage } = query;
   const create = useCreateCalendarSavedView();
   const update = useUpdateCalendarSavedView();
   const remove = useDeleteCalendarSavedView();
@@ -57,6 +58,9 @@ export function CalendarSavedViewControls({
       .flatMap((page) => page.items)
       .filter((view) => Boolean(view && view.definition.mode === mode)) ?? [];
   const selected = views.find((view) => view.id === selectedId);
+  const [selectOpen, setSelectOpen] = useState(false);
+  const nextPageSentinelRef = useRef<HTMLDivElement | null>(null);
+  const lastRequestedUpdateRef = useRef<number | null>(null);
   const [dialogMode, setDialogMode] = useState<"create" | "rename" | null>(
     null,
   );
@@ -65,6 +69,25 @@ export function CalendarSavedViewControls({
     resolver: zodResolver(calendarSavedViewFormSchema),
     defaultValues: calendarSavedViewFormValues(undefined, null),
   });
+
+  useEffect(() => {
+    if (
+      !selectOpen ||
+      !hasNextPage ||
+      isFetchingNextPage ||
+      !dataUpdatedAt
+    ) return;
+    const sentinel = nextPageSentinelRef.current;
+    if (!sentinel || typeof IntersectionObserver === "undefined") return;
+    const update = dataUpdatedAt;
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry?.isIntersecting || lastRequestedUpdateRef.current === update) return;
+      lastRequestedUpdateRef.current = update;
+      void fetchNextPage();
+    });
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [selectOpen, hasNextPage, isFetchingNextPage, dataUpdatedAt, fetchNextPage]);
 
   const selectView = (id: string | null) => {
     onSearchChange?.("");
@@ -122,6 +145,7 @@ export function CalendarSavedViewControls({
     <div className="flex shrink-0 flex-nowrap items-center gap-2">
       <Select
         value={selectedId ?? "none"}
+        onOpenChange={setSelectOpen}
         onValueChange={(value) => selectView(value === "none" ? null : value)}
       >
         <SelectTrigger
@@ -138,6 +162,11 @@ export function CalendarSavedViewControls({
               {view.scope === "team" ? " · Team" : ""}
             </SelectItem>
           ))}
+          {query.hasNextPage ? (
+            <div ref={nextPageSentinelRef} className="px-2 py-1 text-xs text-muted-foreground" role="status">
+              {query.isFetchingNextPage ? "Loading more views…" : "Scroll to see more views"}
+            </div>
+          ) : null}
         </SelectContent>
       </Select>
       {search !== undefined && onSearchChange ? (
@@ -149,19 +178,6 @@ export function CalendarSavedViewControls({
           className="h-9 min-w-40 max-w-64 text-sm"
           maxLength={200}
         />
-      ) : null}
-      {query.hasNextPage ? (
-        <Button
-          type="button"
-          size="sm"
-          variant="ghost"
-          disabled={query.isFetchingNextPage}
-          onClick={() => {
-            void query.fetchNextPage();
-          }}
-        >
-          More views
-        </Button>
       ) : null}
       {query.isError ? <div role="alert" className="text-xs text-destructive">Saved views are unavailable. <Button type="button" size="sm" variant="ghost" onClick={() => { void query.refetch(); }}>Retry</Button></div> : null}
       {canWrite ? (
