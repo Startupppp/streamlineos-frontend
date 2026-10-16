@@ -303,36 +303,39 @@ function MembersRead({
   }, [refetch]);
 
   return (
-    <PageState
-      resolution={membersState}
-      onRetry={handleRetry}
-      compact
-      loading={
+    <div className="space-y-4">
+      {canManage && (membersState.kind === "ready" || membersState.kind === "empty") && <AddMemberForm spaceId={spaceId} />}
+      <PageState
+        resolution={membersState}
+        onRetry={handleRetry}
+        compact
+        loading={
+          <div className="divide-y divide-border">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <MemberRowSkeleton key={i} />
+            ))}
+          </div>
+        }
+        empty={
+          <EmptyState
+            illustration={<KbUsersIcon className="w-8 text-muted-foreground" />}
+            title="No members yet"
+            description="Add members to this space to control who can access it."
+          />
+        }
+      >
         <div className="divide-y divide-border">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <MemberRowSkeleton key={i} />
+          {(members ?? []).map((member) => (
+            <MemberRow
+              key={member.id}
+              member={member}
+              canManage={canManage}
+              spaceId={spaceId}
+            />
           ))}
         </div>
-      }
-      empty={
-        <EmptyState
-          illustration={<KbUsersIcon className="w-8 text-muted-foreground" />}
-          title="No members yet"
-          description="Add members to this space to control who can access it."
-        />
-      }
-    >
-      <div className="divide-y divide-border">
-        {(members ?? []).map((member) => (
-          <MemberRow
-            key={member.id}
-            member={member}
-            canManage={canManage}
-            spaceId={spaceId}
-          />
-        ))}
-      </div>
-    </PageState>
+      </PageState>
+    </div>
   );
 }
 
@@ -354,7 +357,6 @@ export function SpaceMembersSheet({
           </SheetDescription>
         </SheetHeader>
         <SheetBody className="px-6 py-4 flex-1 overflow-y-auto space-y-4">
-          {canManage && <AddMemberForm spaceId={spaceId} />}
           <QueryErrorResetBoundary>
             {({ reset }) => (
               <MembersReadBoundary key={spaceId} onReset={reset}>

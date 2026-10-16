@@ -49,6 +49,7 @@ export function CalendarCapacitySheet({ onClose }: { onClose: () => void }) {
   const people = usePeople({ limit: 50, search: memberSearch });
   const resourceItems = resources.data?.pages.flatMap((page) => page.items) ?? [];
   const selectedId = resourceId || resourceItems[0]?.id || 0;
+  const selectedResource = resourceItems.find((resource) => resource.id === selectedId);
   const input = useMemo(() => {
     const begin = new Date(start);
     const finish = new Date(end);
@@ -427,7 +428,9 @@ export function CalendarCapacitySheet({ onClose }: { onClose: () => void }) {
             <>
               <p className="text-xs text-muted-foreground">
                 {capacity.data.coverage === "complete"
-                  ? "Complete Calendar-owned resource coverage"
+                  ? selectedResource?.ownership === "source"
+                    ? "Complete source-owner resource coverage"
+                    : "Complete Calendar-owned resource coverage"
                   : "Partial coverage; owner state needs confirmation"}{" "}
                 · evaluated{" "}
                 {new Date(capacity.data.evaluatedAt).toLocaleString()}

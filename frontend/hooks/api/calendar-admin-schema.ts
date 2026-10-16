@@ -39,10 +39,11 @@ export const calendarAnalyticsContract = z.object({
     to: z.string(),
     timeZone: z.string(),
     retentionApplied: z.boolean(),
+    availableAt: z.iso.datetime(),
   }),
   privacy: z.object({
     minimumCohort: z.number().int().min(5),
-    cohortState: z.enum(["sufficient", "below_threshold", "empty"]),
+    cohortState: z.enum(["sufficient", "below_threshold", "empty", "pending", "retention_withheld"]),
     suppressed: z.boolean(),
   }),
   methodology: z.object({

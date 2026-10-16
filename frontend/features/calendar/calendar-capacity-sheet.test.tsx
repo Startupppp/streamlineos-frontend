@@ -28,12 +28,18 @@ jest.mock("@/hooks/api/inventory/warehouses", () => ({
 
 jest.mock("@/hooks/api/calendar-capacity", () => ({
   useCalendarResources: () => ({
-    data: { pages: [{ items: [{ id: 1, name: "First room", kind: "room", location: null }], nextCursor: "1" }] },
+    data: { pages: [{ items: [
+      { id: 1, name: "First room", kind: "room", ownership: "calendar", location: null },
+      { id: 2, name: "QA equipment", kind: "equipment", ownership: "source", location: "Main" },
+    ], nextCursor: "2" }] },
     hasNextPage: true,
     isFetchingNextPage: false,
     fetchNextPage,
   }),
-  useCalendarCapacity: () => ({ isLoading: false }),
+  useCalendarCapacity: () => ({
+    isLoading: false,
+    data: { coverage: "complete", evaluatedAt: "2026-10-16T12:00:00.000Z", slices: [] },
+  }),
   useCalendarPersonalCapacity: () => ({ isLoading: false }),
   useCalendarTeamCapacity: () => ({ isLoading: false }),
   useCalendarWarehouseCapacity: () => ({ isLoading: false }),
@@ -48,4 +54,14 @@ it("loads the next resource page from the keyboard while the selector is open", 
   fireEvent.keyDown(first, { key: "End" });
 
   expect(fetchNextPage).toHaveBeenCalledTimes(1);
+});
+
+it("identifies source-owner coverage for source-owned equipment", async () => {
+  renderWithProviders(<CalendarCapacitySheet onClose={jest.fn()} />);
+
+  expect(screen.getByText(/Complete Calendar-owned resource coverage/)).toBeInTheDocument();
+  fireEvent.keyDown(screen.getByRole("combobox", { name: "Resource" }), { key: "ArrowDown" });
+  fireEvent.click(await screen.findByRole("option", { name: /QA equipment/ }));
+
+  expect(screen.getByText(/Complete source-owner resource coverage/)).toBeInTheDocument();
 });

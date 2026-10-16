@@ -167715,6 +167715,10 @@
                               "type": "string",
                               "format": "date-time"
                             },
+                            "availableAt": {
+                              "type": "string",
+                              "format": "date-time"
+                            },
                             "timeZone": {
                               "type": "string"
                             },
@@ -167726,6 +167730,7 @@
                             "requestedFrom",
                             "effectiveFrom",
                             "to",
+                            "availableAt",
                             "timeZone",
                             "retentionApplied"
                           ]
@@ -167743,7 +167748,9 @@
                               "enum": [
                                 "sufficient",
                                 "below_threshold",
-                                "empty"
+                                "empty",
+                                "pending",
+                                "retention_withheld"
                               ]
                             },
                             "suppressed": {
@@ -1150451,7 +1150458,11 @@
       },
       "post": {
         "operationId": "KbConversationsController_createConversation",
-        "parameters": [],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKeyHeader"
+          }
+        ],
         "responses": {
           "201": {
             "description": "Created",
@@ -1150553,7 +1150564,9 @@
               }
             }
           }
-        }
+        },
+        "x-idempotency-command": "kb.ask.conversation.create",
+        "x-idempotent": true
       }
     },
     "/kb/ask/conversations/{conversationId}": {
@@ -1155525,7 +1155538,11 @@
       },
       "post": {
         "operationId": "KbPageTemplatesController_create",
-        "parameters": [],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKeyHeader"
+          }
+        ],
         "responses": {
           "201": {
             "description": "Created",
@@ -1155730,7 +1155747,9 @@
               }
             }
           }
-        }
+        },
+        "x-idempotency-command": "kb.page-template.create",
+        "x-idempotent": true
       }
     },
     "/kb/page-templates/{templateId}": {
@@ -1175285,7 +1175304,11 @@
     "/kb/wiki/content-health/signals/bulk-repair": {
       "post": {
         "operationId": "KbContentHealthController_bulkRepair",
-        "parameters": [],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKeyHeader"
+          }
+        ],
         "responses": {
           "201": {
             "description": "Created",
@@ -1175422,13 +1175445,19 @@
               }
             }
           }
-        }
+        },
+        "x-idempotency-command": "kb.content-health.bulk-repair",
+        "x-idempotent": true
       }
     },
     "/kb/wiki/content-health/signals/dismiss": {
       "post": {
         "operationId": "KbContentHealthController_dismiss",
-        "parameters": [],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKeyHeader"
+          }
+        ],
         "responses": {
           "201": {
             "description": "Created",
@@ -1175694,7 +1175723,9 @@
               }
             }
           }
-        }
+        },
+        "x-idempotency-command": "kb.content-health.dismiss",
+        "x-idempotent": true
       }
     },
     "/kb/wiki/content-health/signals/evidence": {

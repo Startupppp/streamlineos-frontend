@@ -8,6 +8,7 @@ import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import { selectFlatPages, type Page } from "@/lib/api/select-flat-pages";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
 export type KbPageRecordLink = {
   id: number;
@@ -39,6 +40,7 @@ const kbRecordLinkSuccessContract = lazyContract(() =>
 export function useKbPageRecordLinks(pageId: number) {
   const canViewPages = useCan("kb:pages:view");
   return useInfiniteQuery({
+    ...INLINE_READ_ERROR,
     queryKey: knowledgeAndSurveysQueryKeys.kb.pageRecordLinks(pageId),
     initialPageParam: NO_CURSOR_YET,
     queryFn: ({ signal, pageParam }) => apiClient.get<KbPageRecordLinkPage>(

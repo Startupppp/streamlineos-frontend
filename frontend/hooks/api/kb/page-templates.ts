@@ -13,6 +13,7 @@ const noContentC = lazyContract(() =>
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
 
 export type KbPageTemplate = {
   id: number;
@@ -80,11 +81,13 @@ export function useKbPageTemplates(q?: string) {
 
 export function useCreateKbPageTemplate() {
   const qc = useQueryClient();
+  const operation = useIdempotentOperation();
   return useAuthorizedMutation("kb:templates:manage", {
     mutationKey: ["kb", "pageTemplates", "create"],
     mutationFn: (input: CreateKbPageTemplateInput) =>
-      apiClient.post<KbPageTemplate>("/kb/page-templates", input, undefined, kbPageTemplateSingleContract),
+      apiClient.post<KbPageTemplate>("/kb/page-templates", input, operation.configFor(input), kbPageTemplateSingleContract),
     onSuccess: () => {
+      operation.settle();
       qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.pageTemplates() });
     },
   });

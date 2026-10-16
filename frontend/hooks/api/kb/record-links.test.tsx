@@ -69,3 +69,13 @@ it("loads later record-link pages and keeps the cursor result in the cache", asy
     pages: [{ data: [first] }, { data: [second] }],
   });
 });
+
+it("keeps a failed first read inline even when the app query default throws", async () => {
+  client.clear();
+  client = new QueryClient({ defaultOptions: { queries: { retry: false, throwOnError: true } } });
+  fetchMock.mockRejectedValueOnce(new Error("offline"));
+
+  const { result } = renderHook(() => useKbPageRecordLinks(7), { wrapper });
+  await waitFor(() => expect(result.current.isError).toBe(true));
+  expect(result.current.error).toBeTruthy();
+});

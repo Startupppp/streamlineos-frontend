@@ -17,7 +17,7 @@ export function CalendarAdminSettings() {
       {policy.isError ? <ErrorState title="Calendar governance could not be loaded" onRetry={() => void policy.refetch()} /> : null}
       {policy.data ? <CalendarAdminPolicyCard policy={policy.data} /> : null}
       <CalendarResourceAdminCard />
-      <CalendarAnalyticsCard />
+      {policy.data ? <CalendarAnalyticsCard timeZone={policy.data.analyticsTimeZone} retentionDays={policy.data.analyticsRetentionDays} /> : null}
       <CalendarWorkflowSettings />
     </div>
   );
