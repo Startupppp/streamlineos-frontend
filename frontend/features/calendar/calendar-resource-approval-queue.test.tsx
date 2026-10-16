@@ -1,8 +1,9 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { CalendarResourceApprovalQueue } from "./calendar-resource-approval-queue";
 
 const requestedCursors: Array<string | null> = [];
+const mockResolveAllocation = jest.fn();
 
 jest.mock("next-auth/react", () => ({
   useSession: () => ({ data: { orgId: "org-1", user: { id: "user-1" } } }),
@@ -21,7 +22,7 @@ jest.mock("@/hooks/api/calendar/booking-resources", () => ({
       isError: false,
     };
   },
-  useResolveCalendarBookingAllocation: () => ({ isPending: false, mutateAsync: jest.fn() }),
+  useResolveCalendarBookingAllocation: () => ({ isPending: false, mutateAsync: mockResolveAllocation }),
 }));
 
 it("shows a later approval page and returns to the first page", async () => {
@@ -37,4 +38,22 @@ it("shows a later approval page and returns to the first page", async () => {
   await user.click(screen.getByRole("button", { name: "Previous page" }));
   expect(screen.getByText("First room")).toBeInTheDocument();
   expect(requestedCursors.at(-1)).toBeNull();
+});
+
+it("keeps a rejected owner decision open on failure and closes after a successful retry", async () => {
+  mockResolveAllocation.mockReset();
+  mockResolveAllocation.mockRejectedValueOnce(new Error("Owner approval unavailable"));
+  mockResolveAllocation.mockResolvedValueOnce({ bookingStatus: "declined" });
+  const user = userEvent.setup();
+  render(<CalendarResourceApprovalQueue />);
+
+  await user.click(screen.getByRole("button", { name: "Reject", exact: true }));
+  await user.click(screen.getByRole("button", { name: "Reject booking" }));
+  expect(await screen.findByRole("alert")).toHaveTextContent("Owner approval unavailable");
+  expect(screen.getByRole("alertdialog")).toBeInTheDocument();
+
+  await user.click(screen.getByRole("button", { name: "Reject booking" }));
+  await waitFor(() => expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument());
+  expect(mockResolveAllocation).toHaveBeenCalledTimes(2);
+  expect(mockResolveAllocation).toHaveBeenLastCalledWith(expect.objectContaining({ outcome: "rejected", expectedVersion: 1 }));
 });
