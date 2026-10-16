@@ -286,6 +286,7 @@ export const calendarOccurrenceExceptionContract = z.object({
   occurrenceStart: z.string(),
   isCancelled: z.boolean(),
   modifiedTitle: z.string().nullable(),
+  modifiedDescription: z.string().nullable(),
   modifiedStart: z.string().nullable(),
   modifiedEnd: z.string().nullable(),
   createdAt: z.string(),

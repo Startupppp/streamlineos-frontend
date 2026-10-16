@@ -5,6 +5,7 @@ import userEvent from "@testing-library/user-event";
 import { axe } from "jest-axe";
 import { apiClient } from "@/lib/api-client";
 import { ApiError } from "@/lib/api-envelope";
+import { readErrorReachesBoundary } from "@/lib/query-error-policy";
 import { PublicCalendarBookingPage } from "./public-calendar-booking-page";
 import { openCheckout } from "@/features/billing/lib/checkout-script";
 
@@ -122,7 +123,7 @@ function paidSaga(overrides: Record<string, unknown> = {}) {
 
 function renderPage() {
   const client = new QueryClient({
-    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+    defaultOptions: { queries: { retry: false, throwOnError: readErrorReachesBoundary }, mutations: { retry: false } },
   });
   function Wrapper({ children }: { children: ReactNode }) {
     return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
@@ -185,6 +186,35 @@ describe("public calendar booking page", () => {
       currency: "INR",
     }).format(25);
     expect(screen.getByRole("button", { name: `Pay ${formattedPrice} and book` })).toBeInTheDocument();
+  });
+
+  it("uses Hindi for booking controls, validation, and the confirmed receipt", async () => {
+    mockedPost.mockImplementation(async (path) => {
+      if (String(path).endsWith("/sessions")) return {
+        ...session,
+        locale: "hi-IN",
+        copy: { ...session.copy, locale: "hi-IN", title: "मुलाकात बुक करें", consentLabel: null },
+      };
+      if (String(path).endsWith("/holds")) return hold;
+      return receipt;
+    });
+    const user = userEvent.setup();
+    renderPage();
+    const title = await screen.findByRole("heading", { name: "मुलाकात बुक करें" });
+    expect(title.closest("main")).toHaveAttribute("lang", "hi-IN");
+    expect(screen.getByRole("heading", { name: "समय चुनें" })).toBeInTheDocument();
+    expect(screen.getByLabelText("आपका विवरण")).toBeInTheDocument();
+    await user.click(screen.getByRole("checkbox"));
+    await user.click(screen.getByRole("button", { name: "बुकिंग की पुष्टि करें" }));
+    expect(await screen.findByText("अपना नाम दर्ज करें")).toBeInTheDocument();
+    await user.click(screen.getByRole("radio"));
+    await user.type(screen.getByLabelText("नाम"), "Guest User");
+    await user.type(screen.getByLabelText("ईमेल"), "guest@example.test");
+    await user.type(screen.getByLabelText("Organization"), "Example");
+    await user.click(screen.getByRole("button", { name: "बुकिंग की पुष्टि करें" }));
+    expect(await screen.findByRole("heading", { name: "आपकी बुकिंग की पुष्टि हो गई है" })).toBeInTheDocument();
+    expect(screen.getByText("बुक किया गया समय")).toBeInTheDocument();
+    expect(screen.getByText("कैलेंडर से मिलान जारी है।")).toBeInTheDocument();
   });
 
   it("has no automated accessibility violations", async () => {
@@ -280,10 +310,9 @@ describe("public calendar booking page", () => {
       undefined,
       expect.anything(),
     );
-    await user.click(screen.getByRole("button", { name: "Refresh booking status" }));
     const confirmCalls = mockedPost.mock.calls.filter(([path]) => String(path).endsWith("/confirm"));
-    expect(confirmCalls).toHaveLength(2);
-    expect(confirmCalls[1][1]).toEqual(confirmCalls[0][1]);
+    expect(confirmCalls).toHaveLength(1);
+    expect(screen.queryByRole("button", { name: "Refresh booking status" })).not.toBeInTheDocument();
     expect(mockedPost.mock.calls.filter(([path]) => String(path).endsWith("/holds"))).toHaveLength(1);
     postMessage.mockRestore();
   });
@@ -347,17 +376,16 @@ describe("public calendar booking page", () => {
     expect(mockedPost.mock.calls.filter(([path]) => String(path).endsWith("/holds"))).toHaveLength(1);
   });
 
-  it("keeps the confirmed receipt visible while refreshing provider status", async () => {
-    let completeReplay!: (value: typeof receipt) => void;
-    const replay = new Promise<typeof receipt>((resolve) => {
-      completeReplay = resolve;
-    });
+  it("shows a confirmed receipt without a manual status refresh", async () => {
     let confirmations = 0;
     mockedPost.mockImplementation(async (path) => {
       const value = String(path);
       if (value.endsWith("/sessions")) return session;
       if (value.endsWith("/holds")) return hold;
-      if (value.endsWith("/confirm")) return ++confirmations === 1 ? receipt : replay;
+      if (value.endsWith("/confirm")) {
+        confirmations += 1;
+        return receipt;
+      }
       throw new Error("Unexpected request");
     });
     const user = userEvent.setup();
@@ -370,11 +398,37 @@ describe("public calendar booking page", () => {
     await user.click(screen.getByRole("checkbox"));
     await user.click(screen.getByRole("button", { name: "Confirm booking" }));
     expect(await screen.findByRole("heading", { name: "Your booking is confirmed" })).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Refresh booking status" }));
     expect(screen.getByRole("heading", { name: "Your booking is confirmed" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Confirm booking" })).not.toBeInTheDocument();
-    completeReplay({ ...receipt, providerSyncStatus: "synced" });
-    await waitFor(() => expect(screen.queryByText("Calendar synchronization is in progress.")).not.toBeInTheDocument());
+    expect(screen.queryByRole("button", { name: "Refresh booking status" })).not.toBeInTheDocument();
+    expect(confirmations).toBe(1);
+  });
+
+  it("rechecks a pending receipt with the original request and shows its confirmed outcome", async () => {
+    const pendingReceipt = { ...receipt, bookingId: null, outcome: "pending", providerSyncStatus: "not_requested" };
+    let confirmations = 0;
+    mockedPost.mockImplementation(async (path) => {
+      const value = String(path);
+      if (value.endsWith("/sessions")) return session;
+      if (value.endsWith("/holds")) return hold;
+      if (value.endsWith("/confirm")) return ++confirmations === 1 ? pendingReceipt : receipt;
+      throw new Error("Unexpected request");
+    });
+    const user = userEvent.setup();
+    renderPage();
+    await screen.findByRole("heading", { name: "Meet Northwind" });
+    await user.click(screen.getByRole("radio"));
+    await user.type(screen.getByLabelText("Name"), "Ada Lovelace");
+    await user.type(screen.getByLabelText("Email"), "ada@example.com");
+    await user.type(screen.getByLabelText("Organization"), "Analytical Engines");
+    await user.click(screen.getByRole("checkbox"));
+    await user.click(screen.getByRole("button", { name: "Confirm booking" }));
+    expect(await screen.findByRole("heading", { name: "Your booking is confirmed" })).toBeInTheDocument();
+    const confirmCalls = mockedPost.mock.calls.filter(([path]) => String(path).endsWith("/confirm"));
+    expect(confirmCalls).toHaveLength(2);
+    expect(confirmCalls[1][1]).toEqual(confirmCalls[0][1]);
+    expect(mockedPost.mock.calls.filter(([path]) => String(path).endsWith("/holds"))).toHaveLength(1);
+    expect(screen.queryByRole("button", { name: "Refresh booking status" })).not.toBeInTheDocument();
   });
 
   it.each(["rejected", "uncertain"] as const)("uses a new idempotency identity after a %s slot and offers recovery", async (outcome) => {
@@ -554,10 +608,12 @@ describe("public calendar booking page", () => {
   });
 
   it("hides offering details when the token cannot be resolved", async () => {
-    mockedGet.mockRejectedValue(new Error("Booking page not found"));
-    mockedPost.mockRejectedValue(new Error("Booking page not found"));
+    mockedGet.mockRejectedValue(new ApiError("Booking page not found", 404));
+    mockedPost.mockRejectedValue(new ApiError("Booking page not found", 404));
     renderPage();
-    expect(await screen.findByRole("alert")).toHaveTextContent("This booking page is unavailable");
+    expect(await screen.findByRole("alert")).toHaveTextContent("This booking link is unavailable");
+    expect(screen.getByText("It may have expired or already been used. Ask the organizer for a new booking link.")).toBeInTheDocument();
+    expect(screen.queryByText("Booking page not found")).not.toBeInTheDocument();
     expect(screen.queryByText("Discovery call")).not.toBeInTheDocument();
   });
 });

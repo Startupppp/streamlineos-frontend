@@ -17,7 +17,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import { useEventAttendees, type CalendarEventDetail, type CalendarListItem } from "@/hooks/api/calendar";
+import { parseCalendarEventId, useEventAttendees, type CalendarEventDetail, type CalendarListItem } from "@/hooks/api/calendar";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { EVENT_COLORS } from "./calendar-event-constants";
 import { EventSyncStatus } from "./event-sync-status";
@@ -120,7 +120,8 @@ export function EventDetailContent({
     pendingRsvp && pendingRsvp.eventId === numericEventId
       ? pendingRsvp.status
       : serverRsvp;
-  const description = (isCalendarEvent && !detailLoading ? detail?.description : event?.description) ?? null;
+  const isOccurrence = !!parseCalendarEventId(event?.id ?? "")?.occurrenceStart;
+  const description = (isOccurrence ? event?.description : isCalendarEvent && !detailLoading ? detail?.description : event?.description) ?? null;
   const creatorName = (isCalendarEvent && !detailLoading ? detail?.creatorName : event?.creatorName) ?? null;
   const rsvpBusy = deleteEventIsPending || rsvpMutationIsPending;
 
