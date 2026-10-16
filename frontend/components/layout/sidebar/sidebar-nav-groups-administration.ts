@@ -23,6 +23,7 @@ import {
   Plug,
   ShieldAlert,
   FileWarning,
+  Mail,
 } from "lucide-react";
 import type { NavGroup } from "./sidebar-nav-types";
 
@@ -271,6 +272,7 @@ export const ADMINISTRATION_NAV_GROUPS: NavGroup[] = [
       "notifications:events:view",
       "notifications:policy:view",
       "notifications:broadcasts:view",
+      "settings:email-templates:manage",
     ],
     routes: [
       {
@@ -278,6 +280,12 @@ export const ADMINISTRATION_NAV_GROUPS: NavGroup[] = [
         icon: FileText,
         href: "/settings/notifications/templates",
         requiredPermission: "notifications:templates:view",
+      },
+      {
+        label: "Email Templates",
+        icon: Mail,
+        href: "/settings/notifications/email-templates",
+        requiredPermission: "settings:email-templates:manage",
       },
       {
         label: "Broadcasts",

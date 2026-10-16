@@ -16,6 +16,7 @@ import type {
   PreferenceEventCatalogItem,
   UpdateEventPreferenceInput,
 } from "@/types/notifications";
+import type { NotificationConsent } from "@/hooks/api/notifications-schema";
 
 const notificationPreferenceContract = lazyContract(() =>
   import("@/hooks/api/notifications-schema").then((m) => m.notificationPreferenceContract),
@@ -34,6 +35,12 @@ const preferenceRulesListContract = lazyContract(() =>
 );
 const preferenceRuleOkContract = lazyContract(() =>
   import("@/hooks/api/notifications-schema").then((m) => m.preferenceRuleOkContract),
+);
+const consentsListContract = lazyContract(() =>
+  import("@/hooks/api/notifications-schema").then((m) => m.consentsListContract),
+);
+const consentRowContract = lazyContract(() =>
+  import("@/hooks/api/notifications-schema").then((m) => m.consentRowContract),
 );
 const preferenceEventCatalogContract = lazyContract(() =>
   import("@/hooks/api/notifications-schema").then((m) => m.preferenceEventCatalogContract),
@@ -193,5 +200,50 @@ export const useUpdateNotificationPreferenceEvent = () => {
         queryKey: platformCoreQueryKeys.notifications.preferenceEventCatalog(),
       });
     },
+  });
+};
+
+/** Back to the organisation's defaults; the response is the reset preference row. */
+export const useResetNotificationPreferences = () => {
+  const queryClient = useQueryClient();
+  return useMutation<NotificationPreferences, Error, void>({
+    mutationKey: ["notifications", "preferences", "reset"],
+    mutationFn: () => apiClient.post<NotificationPreferences>("/notification-preferences/reset", undefined, undefined, notificationPreferenceContract),
+    onSuccess: (prefs) => {
+      queryClient.setQueryData(platformCoreQueryKeys.notifications.preferences(), prefs);
+      void queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.notifications.preferenceEventCatalog() });
+    },
+  });
+};
+
+/** COMP-003: SMS and WhatsApp route only to a destination with a GRANTED consent row. */
+export const useNotificationConsents = () => {
+  const { data: session } = useSession();
+  return useQuery<NotificationConsent[], Error>({
+    queryKey: platformCoreQueryKeys.notifications.consents(),
+    queryFn: ({ signal }) =>
+      apiClient.get<NotificationConsent[]>("/notification-preferences/consents", undefined, signal, consentsListContract),
+    staleTime: 60_000,
+    enabled: !!session?.orgId,
+  });
+};
+
+export interface RecordConsentInput {
+  channel: "SMS" | "WHATSAPP";
+  destination: string;
+  state: "GRANTED" | "WITHDRAWN";
+}
+
+export const useRecordNotificationConsent = () => {
+  const queryClient = useQueryClient();
+  return useMutation<NotificationConsent, Error, RecordConsentInput>({
+    mutationKey: ["notifications", "consents", "record"],
+    mutationFn: (dto) =>
+      apiClient.put<NotificationConsent>("/notification-preferences/consents", dto, undefined, consentRowContract),
+    onSuccess: (row) =>
+      queryClient.setQueryData<NotificationConsent[]>(platformCoreQueryKeys.notifications.consents(), (prev) => {
+        const rest = (prev ?? []).filter((c) => !(c.channel === row.channel && c.destination === row.destination));
+        return [row, ...rest];
+      }),
   });
 };

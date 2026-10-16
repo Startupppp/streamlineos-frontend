@@ -81,6 +81,13 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
     reason: "Canonical settings route for notification template administration. Mirrors /notifications/templates which remains as a compatibility redirect.",
   },
   {
+    prefix: "/settings/notifications/email-templates",
+    product: "administration",
+    permission: "settings:email-templates:manage",
+    reason: "Built-in transactional email preview and test send. Matches the backend gate on GET /settings/email-templates/preview and POST /settings/email-templates/test.",
+    backendRoute: { method: "get", path: "/settings/email-templates/preview" },
+  },
+  {
     prefix: "/settings/notifications/events",
     product: "administration",
     permission: "notifications:events:view",
