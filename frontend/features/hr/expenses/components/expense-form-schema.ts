@@ -108,7 +108,7 @@ export const expenseFormSchema = z.object({
     if (!data.customCategory?.trim()) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Please describe what the other category is",
+        message: "Enter a name for the category",
         path: ["customCategory"],
       });
     } else {
@@ -119,7 +119,7 @@ export const expenseFormSchema = z.object({
     if (!data.customPaymentMethod?.trim()) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Please describe what the other payment method is",
+        message: "Enter a name for the payment method",
         path: ["customPaymentMethod"],
       });
     } else {
