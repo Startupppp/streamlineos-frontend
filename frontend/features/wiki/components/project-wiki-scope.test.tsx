@@ -264,6 +264,44 @@ describe("project wiki history path stays inside the project", () => {
     expect(refetch).toHaveBeenCalledTimes(1);
   });
 
+  it("hides cached selected-version metadata after access is revoked", async () => {
+    historyDetailOverride = {
+      data: { title: "Private version", content: { type: "doc", content: [] }, authorName: "Secret author", changeSummary: "Sensitive restoration summary", createdAt: "2026-08-01T10:00:00.000Z" },
+      isLoading: false,
+      isError: true,
+      error: new ApiError("Access denied", 403),
+      refetch: jest.fn(),
+    };
+    render(<PageHistorySheet pageId={5} open onOpenChange={jest.fn()} />);
+    await userEvent.setup().click(screen.getByRole("button", { name: /Version 2/ }));
+
+    expect(screen.queryByText("Secret author")).not.toBeInTheDocument();
+    expect(screen.queryByText("Sensitive restoration summary")).not.toBeInTheDocument();
+    expect(screen.getByRole("alert")).toBeInTheDocument();
+  });
+
+  it("hides a selected cached version when the versions list loses access", async () => {
+    historyListOverride = {
+      data: { pages: [{ data: [{ id: 2, versionNumber: 2, title: "Earlier runbook", authorName: "Bob", changeSummary: null, createdAt: "2026-08-01T10:00:00.000Z" }], pagination: { limit: 50, nextCursor: null, hasMore: false } }] },
+      isLoading: false,
+      isError: false,
+      isFetchNextPageError: false,
+      error: null,
+      refetch: jest.fn(),
+      hasNextPage: false,
+      fetchNextPage: jest.fn(),
+      isFetchingNextPage: false,
+    };
+    const view = render(<PageHistorySheet pageId={5} open onOpenChange={jest.fn()} />);
+    await userEvent.setup().click(screen.getByRole("button", { name: /Version 2/ }));
+    historyListOverride = { ...historyListOverride, isError: true, error: new ApiError("Access denied", 403) };
+    view.rerender(<PageHistorySheet pageId={5} open onOpenChange={jest.fn()} />);
+
+    expect(screen.queryByText("Earlier runbook")).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /version 2/i })).not.toBeInTheDocument();
+    expect(screen.getByRole("alert")).toBeInTheDocument();
+  });
+
   it("offers no link to the global knowledge history when the page is opened inside a project", () => {
     render(
       <PageHistorySheet pageId={5} open onOpenChange={jest.fn()} projectId={7} />,

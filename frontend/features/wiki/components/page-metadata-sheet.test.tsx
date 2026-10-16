@@ -3,6 +3,9 @@ import userEvent from "@testing-library/user-event";
 import { ApiError } from "@/lib/api-envelope";
 import type { KbPageDetail } from "@/hooks/api/kb/page-types";
 import PageMetadataSheet from "./page-metadata-sheet";
+import { toast } from "sonner";
+
+jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn() } }));
 
 jest.mock("@/hooks/api/access", () => ({ useCan: jest.fn() }));
 jest.mock("@/hooks/api/kb/spaces", () => ({ useKbSpaces: jest.fn(() => ({ data: { data: [] } })) }));
@@ -22,7 +25,7 @@ jest.mock("./page-record-links", () => ({ PageRecordLinks: () => null }));
 jest.mock("./reviews-decision-dialogs", () => ({ RequestReviewDialog: () => null }));
 
 const { useCan } = jest.requireMock<{ useCan: jest.Mock }>("@/hooks/api/access");
-const { usePublishKbPage } = jest.requireMock<{ usePublishKbPage: jest.Mock }>("@/hooks/api/kb/pages");
+const { usePublishKbPage, useArchiveKbPage, useUnarchiveKbPage } = jest.requireMock<{ usePublishKbPage: jest.Mock; useArchiveKbPage: jest.Mock; useUnarchiveKbPage: jest.Mock }>("@/hooks/api/kb/pages");
 const { useUpdateKbPage, useKbPage } = jest.requireMock<{ useUpdateKbPage: jest.Mock; useKbPage: jest.Mock }>("@/hooks/api/kb/pages");
 const { useKbSpaces } = jest.requireMock<{ useKbSpaces: jest.Mock }>("@/hooks/api/kb/spaces");
 
@@ -161,7 +164,30 @@ it("shows named metadata controls and allows an editor to publish", () => {
   expect(screen.getByRole("combobox", { name: "Content type" })).not.toBeDisabled();
   expect(screen.getByRole("button", { name: "Owner" })).not.toBeDisabled();
   fireEvent.click(screen.getByRole("button", { name: "Publish" }));
-  expect(mutate).toHaveBeenCalledWith(42, expect.anything());
+  expect(mutate).toHaveBeenCalledWith({ pageId: 42, expectedContentRevision: 3 }, expect.anything());
+});
+
+it("sends the current revision when archiving and unarchiving", () => {
+  const archive = jest.fn();
+  const unarchive = jest.fn();
+  useArchiveKbPage.mockReturnValue({ mutate: archive, isPending: false });
+  useUnarchiveKbPage.mockReturnValue({ mutate: unarchive, isPending: false });
+  const view = renderSheet(page({ status: "published", contentRevision: 8 }));
+  fireEvent.click(screen.getByRole("button", { name: "Archive" }));
+  expect(archive).toHaveBeenCalledWith({ pageId: 42, expectedContentRevision: 8 }, expect.anything());
+  view.rerender(<PageMetadataSheet page={page({ status: "archived", contentRevision: 9 })} pageId={42} open onOpenChange={jest.fn()} />);
+  fireEvent.click(screen.getByRole("button", { name: "Unarchive" }));
+  expect(unarchive).toHaveBeenCalledWith({ pageId: 42, expectedContentRevision: 9 }, expect.anything());
+});
+
+it("reports stale publish conflicts without retrying against newer content", () => {
+  const mutate = jest.fn();
+  usePublishKbPage.mockReturnValue({ mutate, isPending: false });
+  renderSheet(page());
+  fireEvent.click(screen.getByRole("button", { name: "Publish" }));
+  mutate.mock.calls[0]?.[1].onError(new ApiError("Stale", 409, "STALE_REVISION"));
+  expect(toast.error).toHaveBeenCalledWith("Page changed before publication. Refresh before trying again.");
+  expect(mutate).toHaveBeenCalledTimes(1);
 });
 
 it("keeps metadata controls read-only when page edit access is denied", () => {

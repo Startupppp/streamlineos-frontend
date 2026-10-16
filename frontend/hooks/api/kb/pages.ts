@@ -746,13 +746,15 @@ export function useSetKbPageVisibility() {
     mutationFn: ({
       pageId,
       visibility,
+      expectedContentRevision,
     }: {
       pageId: number;
       visibility: "private" | "org" | "public";
+      expectedContentRevision: number;
     }) =>
       apiClient.patch<KbPage>(
         `/kb/pages/${pageId}/visibility`,
-        { visibility },
+        { visibility, expectedContentRevision },
         undefined,
         kbPageContract,
       ),
@@ -769,16 +771,18 @@ export function useSetKbPageVisibility() {
 
 export function usePublishKbPage() {
   const qc = useQueryClient();
+  const operation = useIdempotentOperation();
   return useAuthorizedMutation("kb:pages:update", {
     mutationKey: ["kb", "pages", "publish"],
-    mutationFn: (pageId: number) =>
+    mutationFn: ({ pageId, expectedContentRevision }: { pageId: number; expectedContentRevision: number }) =>
       apiClient.post<KbPage>(
         `/kb/pages/${pageId}/publish`,
-        {},
-        undefined,
+        { expectedContentRevision },
+        operation.configFor({ pageId, expectedContentRevision }),
         kbPageContract,
       ),
-    onSuccess: (_, pageId) => {
+    onSuccess: (_, { pageId }) => {
+      operation.settle();
       qc.invalidateQueries({
         queryKey: knowledgeAndSurveysQueryKeys.kb.page(pageId),
       });
@@ -793,14 +797,14 @@ export function useArchiveKbPage() {
   const qc = useQueryClient();
   return useAuthorizedMutation("kb:pages:update", {
     mutationKey: ["kb", "pages", "archive"],
-    mutationFn: (pageId: number) =>
+    mutationFn: ({ pageId, expectedContentRevision }: { pageId: number; expectedContentRevision: number }) =>
       apiClient.post<KbPage>(
         `/kb/pages/${pageId}/archive`,
-        {},
+        { expectedContentRevision },
         undefined,
         kbPageContract,
       ),
-    onSuccess: (_, pageId) => {
+    onSuccess: (_, { pageId }) => {
       qc.invalidateQueries({
         queryKey: knowledgeAndSurveysQueryKeys.kb.page(pageId),
       });
@@ -815,14 +819,14 @@ export function useUnarchiveKbPage() {
   const qc = useQueryClient();
   return useAuthorizedMutation("kb:pages:update", {
     mutationKey: ["kb", "pages", "unarchive"],
-    mutationFn: (pageId: number) =>
+    mutationFn: ({ pageId, expectedContentRevision }: { pageId: number; expectedContentRevision: number }) =>
       apiClient.post<KbPage>(
         `/kb/pages/${pageId}/unarchive`,
-        {},
+        { expectedContentRevision },
         undefined,
         kbPageContract,
       ),
-    onSuccess: (_, pageId) => {
+    onSuccess: (_, { pageId }) => {
       qc.invalidateQueries({
         queryKey: knowledgeAndSurveysQueryKeys.kb.page(pageId),
       });

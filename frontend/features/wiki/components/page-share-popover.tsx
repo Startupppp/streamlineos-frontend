@@ -20,6 +20,7 @@ import {
   ResponsivePopoverContent,
 } from "@/components/ui/responsive-popover";
 import { toast } from "sonner";
+import { isApiError } from "@/lib/api-envelope";
 import { useSetKbPageVisibility } from "@/hooks/api/kb/pages";
 import type { KbPageDetail } from "@/hooks/api/kb/page-types";
 import { cn } from "@/lib/utils";
@@ -72,10 +73,12 @@ export default function PageSharePopover({ page }: PageSharePopoverProps) {
     )?.value;
     if (!value || value === currentVisibility) return;
     setVisibility.mutate(
-      { pageId: page.id, visibility: value },
+      { pageId: page.id, visibility: value, expectedContentRevision: page.contentRevision },
       {
         onSuccess: () => toast.success("Visibility updated"),
-        onError: () => toast.error("Failed to update visibility"),
+        onError: (error) => toast.error(isApiError(error) && error.status === 409
+          ? "Page changed before visibility was saved. Refresh before trying again."
+          : "Failed to update visibility"),
       },
     );
   }
