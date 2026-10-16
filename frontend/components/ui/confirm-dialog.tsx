@@ -24,6 +24,8 @@ interface ConfirmDialogBaseProps {
   cancelLabel?: string;
   destructive?: boolean;
   isPending?: boolean;
+  /** Holds the confirm button shut until the caller's precondition (a typed phrase) is met. */
+  confirmDisabled?: boolean;
   confirmIcon?: ReactNode;
   hideConfirm?: boolean;
   keepOpenOnConfirm?: boolean;
@@ -48,6 +50,7 @@ export function ConfirmDialog({
   cancelLabel = "Cancel",
   destructive = false,
   isPending = false,
+  confirmDisabled = false,
   icon,
   content,
   confirmIcon,
@@ -94,7 +97,7 @@ export function ConfirmDialog({
               <Button
                 type="button"
                 onClick={onConfirm}
-                disabled={isPending}
+                disabled={isPending || confirmDisabled}
                 aria-busy={isPending || undefined}
                 variant={destructive ? "destructive" : "default"}
               >
@@ -108,7 +111,7 @@ export function ConfirmDialog({
             ) : (
               <AlertDialogAction
                 onClick={onConfirm}
-                disabled={isPending}
+                disabled={isPending || confirmDisabled}
                 aria-busy={isPending || undefined}
                 variant={destructive ? "destructive" : "default"}
               >

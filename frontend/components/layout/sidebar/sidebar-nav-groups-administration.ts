@@ -21,6 +21,7 @@ import {
   Megaphone,
   FileText,
   Plug,
+  ShieldAlert,
 } from "lucide-react";
 import type { NavGroup } from "./sidebar-nav-types";
 
@@ -215,6 +216,19 @@ export const ADMINISTRATION_NAV_GROUPS: NavGroup[] = [
         icon: History,
         href: "/settings/audit-log",
         requiredPermission: "audit-log:read",
+      },
+    ],
+  },
+  {
+    label: "Privacy",
+    product: "administration",
+    requiredPermission: ["hr:retention:manage", "compliance:subject-requests:view"],
+    routes: [
+      {
+        label: "Privacy Requests",
+        icon: ShieldAlert,
+        href: "/settings/privacy",
+        requiredPermission: ["hr:retention:manage", "compliance:subject-requests:view"],
       },
     ],
   },
