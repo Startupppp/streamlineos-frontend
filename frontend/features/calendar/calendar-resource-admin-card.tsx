@@ -12,7 +12,7 @@ import { ErrorState } from "@/components/shared/error-state";
 import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { useCursorPager } from "@/components/ui/table-pagination";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useCan } from "@/hooks/api/access";
+import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import {
   useAddCalendarResourceMaintenance,
   useCalendarBookingResources,
@@ -21,8 +21,9 @@ import {
   useUpdateCalendarResource,
   type CalendarResourceInput,
 } from "@/hooks/api/calendar/booking-resources";
-import type { BookingResource } from "@/hooks/api/calendar/booking-resources-schema";
+import type { BookingResource, InventoryCalendarEquipment } from "@/hooks/api/calendar/booking-resources-schema";
 import { CalendarDateTimePicker } from "./calendar-date-time-picker";
+import { InventoryCalendarEquipmentCreate } from "./inventory-calendar-equipment-create";
 
 function newResource(): CalendarResourceInput {
   return {
@@ -58,7 +59,9 @@ export function CalendarResourceAdminCard() {
   const { data: session } = useSession();
   const resourcePager = useCursorPager(`${session?.orgId ?? ""}:${session?.user?.id ?? ""}`);
   const resources = useCalendarBookingResources(resourcePager.cursor);
-  const canManageInventoryEquipment = useCan("inventory:warehouses:manage");
+  const canManageInventory = useCan("inventory:warehouses:manage");
+  const inventoryModuleEnabled = useModuleEnabled("inventory");
+  const canManageInventoryEquipment = canManageInventory && inventoryModuleEnabled;
   const create = useCreateCalendarResource();
   const update = useUpdateCalendarResource();
   const addMaintenance = useAddCalendarResourceMaintenance();
@@ -72,6 +75,8 @@ export function CalendarResourceAdminCard() {
   const [error, setError] = useState<string | null>(null);
   const [inventoryCursor, setInventoryCursor] = useState<number | null>(null);
   const [inventoryCursorHistory, setInventoryCursorHistory] = useState<Array<number | null>>([]);
+  const [createdEquipment, setCreatedEquipment] = useState<InventoryCalendarEquipment | null>(null);
+  const [creatingEquipment, setCreatingEquipment] = useState(false);
   const inventoryEquipment = useInventoryCalendarEquipment(inventoryCursor, form?.sourceKey === "inventory.equipment" && !editing);
 
   function open(resource: BookingResource | null) {
@@ -82,11 +87,14 @@ export function CalendarResourceAdminCard() {
     setError(null);
     setInventoryCursor(null);
     setInventoryCursorHistory([]);
+    setCreatedEquipment(null);
+    setCreatingEquipment(false);
   }
 
   function changeInventoryPage(cursor: number | null, history: Array<number | null>) {
     setInventoryCursor(cursor);
     setInventoryCursorHistory(history);
+    setCreatedEquipment(null);
     setForm((current) => current ? { ...current, sourceRecordId: null, name: "", location: null, capacity: 1 } : current);
   }
 
@@ -95,7 +103,7 @@ export function CalendarResourceAdminCard() {
     if (!form.name.trim()) return setError("Enter a resource name.");
     if (form.ownership === "source" && !/^[1-9]\d*$/.test(form.sourceRecordId?.trim() ?? ""))
       return setError(form.sourceKey === "inventory.equipment" ? "Choose available Inventory equipment." : "Enter a valid HR asset ID.");
-    if (form.sourceKey === "inventory.equipment" && (!canManageInventoryEquipment || !inventoryEquipment.data?.items.some((equipment) => equipment.status === "available" && String(equipment.id) === form.sourceRecordId)))
+    if (form.sourceKey === "inventory.equipment" && (!canManageInventoryEquipment || !([...(inventoryEquipment.data?.items ?? []), ...(createdEquipment ? [createdEquipment] : [])].some((equipment) => equipment.status === "available" && String(equipment.id) === form.sourceRecordId))))
       return setError("Choose available Inventory equipment you can manage.");
     if (!Number.isInteger(form.capacity) || form.capacity < 1 || form.capacity > 10_000)
       return setError("Capacity must be between 1 and 10,000.");
@@ -167,7 +175,7 @@ export function CalendarResourceAdminCard() {
         <div className="space-y-1"><Label htmlFor="resource-owner">Owner</Label><Select value={form.ownership === "source" ? form.sourceKey === "inventory.equipment" ? "inventory" : "hr" : "calendar"} onValueChange={(owner) => { const ownership = owner === "calendar" ? "calendar" : "source"; setForm({ ...form, ownership, kind: ownership === "source" ? "equipment" : form.kind, sourceKey: owner === "inventory" ? "inventory.equipment" : owner === "hr" ? "hr.asset" : null, sourceRecordId: null, name: owner === "inventory" ? "" : form.name, location: owner === "inventory" ? null : form.location, capacity: owner === "inventory" ? 1 : form.capacity, requiresApproval: ownership === "source" || form.requiresApproval }); }}><SelectTrigger id="resource-owner" className="w-full"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="calendar">Calendar</SelectItem><SelectItem value="hr">HR asset</SelectItem>{canManageInventoryEquipment ? <SelectItem value="inventory">Inventory equipment</SelectItem> : null}</SelectContent></Select></div>
       </div> : <p className="text-sm text-muted-foreground">{editing.kind} · {editing.ownership} owned</p>}
       {form.ownership === "source" && form.sourceKey === "hr.asset" && !editing ? <div className="space-y-1"><Label htmlFor="resource-record">HR asset ID</Label><Input id="resource-record" inputMode="numeric" value={form.sourceRecordId ?? ""} onChange={(event) => setForm({ ...form, sourceRecordId: event.target.value || null })} /><p className="text-xs text-muted-foreground">The HR asset owner confirms eligibility before the booking is confirmed.</p></div> : null}
-      {form.ownership === "source" && form.sourceKey === "inventory.equipment" && !editing ? <div className="space-y-1"><Label htmlFor="resource-inventory-equipment">Inventory equipment</Label>{inventoryEquipment.access.denied ? <p className="text-sm text-muted-foreground">Inventory equipment access is unavailable to this account.</p> : inventoryEquipment.access.unavailable || inventoryEquipment.isError ? <ErrorState title="Inventory equipment unavailable" error={inventoryEquipment.error} onRetry={() => void inventoryEquipment.refetch()} /> : inventoryEquipment.access.pending || inventoryEquipment.isPending ? <p role="status">Loading Inventory equipment…</p> : inventoryEquipment.data?.items.some((equipment) => equipment.status === "available") ? <Select value={form.sourceRecordId ?? ""} onValueChange={(value) => { const equipment = inventoryEquipment.data?.items.find((item) => String(item.id) === value); setForm({ ...form, sourceRecordId: equipment ? String(equipment.id) : null, name: equipment?.name ?? "", location: equipment?.location ?? null, capacity: equipment?.capacity ?? 1 }); }}><SelectTrigger id="resource-inventory-equipment" className="w-full"><SelectValue placeholder="Choose available equipment" /></SelectTrigger><SelectContent>{inventoryEquipment.data?.items.filter((equipment) => equipment.status === "available").map((equipment) => <SelectItem key={equipment.id} value={String(equipment.id)}>{equipment.name} · warehouse {equipment.warehouseId} · capacity {equipment.capacity}</SelectItem>)}</SelectContent></Select> : <p className="text-sm text-muted-foreground">No available Inventory equipment is visible to this account.</p>}<p className="text-xs text-muted-foreground">The Inventory owner checks eligibility before the booking is confirmed.</p></div> : null}
+      {form.ownership === "source" && form.sourceKey === "inventory.equipment" && !editing ? <div className="space-y-2"><div className="space-y-1"><Label htmlFor="resource-inventory-equipment">Inventory equipment</Label>{inventoryEquipment.access.denied ? <p className="text-sm text-muted-foreground">Inventory is unavailable to this account or organization.</p> : inventoryEquipment.access.unavailable || inventoryEquipment.isError ? <ErrorState title="Inventory equipment unavailable" error={inventoryEquipment.error} onRetry={() => void inventoryEquipment.refetch()} /> : inventoryEquipment.access.pending || inventoryEquipment.isPending ? <p role="status">Loading Inventory equipment…</p> : inventoryEquipment.data?.items.some((equipment) => equipment.status === "available") || createdEquipment ? <Select value={form.sourceRecordId ?? ""} onValueChange={(value) => { const equipment = [...(inventoryEquipment.data?.items ?? []), ...(createdEquipment ? [createdEquipment] : [])].find((item) => String(item.id) === value); setForm({ ...form, sourceRecordId: equipment ? String(equipment.id) : null, name: equipment?.name ?? "", location: equipment?.location ?? null, capacity: equipment?.capacity ?? 1 }); }}><SelectTrigger id="resource-inventory-equipment" className="w-full"><SelectValue placeholder="Choose available equipment" /></SelectTrigger><SelectContent>{[...(inventoryEquipment.data?.items ?? []), ...(createdEquipment && !inventoryEquipment.data?.items.some((item) => item.id === createdEquipment.id) ? [createdEquipment] : [])].filter((equipment) => equipment.status === "available").map((equipment) => <SelectItem key={equipment.id} value={String(equipment.id)}>{equipment.name} · warehouse {equipment.warehouseId} · capacity {equipment.capacity}</SelectItem>)}</SelectContent></Select> : <p className="text-sm text-muted-foreground">No available Inventory equipment is visible to this account.</p>}<p className="text-xs text-muted-foreground">The Inventory owner checks eligibility before the booking is confirmed.</p></div>{canManageInventoryEquipment && inventoryEquipment.access.allowed ? <Button type="button" size="sm" variant="outline" onClick={() => setCreatingEquipment((value) => !value)}>{creatingEquipment ? "Close equipment setup" : "Create Inventory equipment"}</Button> : null}{creatingEquipment && canManageInventoryEquipment && inventoryEquipment.access.allowed ? <InventoryCalendarEquipmentCreate onCreated={(equipment) => { setCreatedEquipment(equipment); setForm((current) => current ? { ...current, sourceRecordId: String(equipment.id), name: equipment.name, location: equipment.location, capacity: equipment.capacity } : current); setCreatingEquipment(false); toast.success("Inventory equipment created and selected"); }} /> : null}</div> : null}
       {form.ownership === "source" && form.sourceKey === "inventory.equipment" && !editing && (inventoryCursorHistory.length > 0 || inventoryEquipment.data?.nextCursor) ? <div className="flex gap-2"><Button type="button" size="sm" variant="outline" disabled={inventoryCursorHistory.length === 0 || inventoryEquipment.isFetching} onClick={() => changeInventoryPage(inventoryCursorHistory.at(-1) ?? null, inventoryCursorHistory.slice(0, -1))}>Previous equipment</Button><Button type="button" size="sm" variant="outline" disabled={!inventoryEquipment.data?.nextCursor || inventoryEquipment.isFetching} onClick={() => { const next = inventoryEquipment.data?.nextCursor; if (next) changeInventoryPage(next, [...inventoryCursorHistory, inventoryCursor]); }}>Next equipment</Button></div> : null}
       <div className="grid grid-cols-2 gap-2"><div className="space-y-1"><Label htmlFor="resource-name">Name</Label><Input id="resource-name" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} /></div><div className="space-y-1"><Label htmlFor="resource-location">Location</Label><Input id="resource-location" value={form.location ?? ""} onChange={(event) => setForm({ ...form, location: event.target.value || null })} /></div><div className="space-y-1"><Label htmlFor="resource-capacity">Capacity</Label><Input id="resource-capacity" type="number" min={1} max={10000} value={form.capacity} onChange={(event) => setForm({ ...form, capacity: Number(event.target.value) })} /></div>{editing ? <div className="space-y-1"><Label htmlFor="resource-status">Status</Label><Select value={status} onValueChange={(value) => setStatus(value === "active" || value === "unavailable" ? value : "retired")}><SelectTrigger id="resource-status" className="w-full"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="active">Active</SelectItem><SelectItem value="unavailable">Unavailable</SelectItem><SelectItem value="retired">Retired</SelectItem></SelectContent></Select></div> : null}</div>
       <div className="space-y-1"><Label htmlFor="resource-accessibility">Accessibility features</Label><Input id="resource-accessibility" placeholder="Comma-separated" value={form.accessibility.join(", ")} onChange={(event) => setForm({ ...form, accessibility: event.target.value.split(",").map((value) => value.trim()).filter(Boolean) })} /></div>
