@@ -91,7 +91,7 @@
     },
     "components/editor/plate/plate-combobox-elements.tsx": {
       "as": 2,
-      "nonNull": 4
+      "nonNull": 1
     },
     "components/editor/plate/plate-elements.tsx": {
       "as": 13,
