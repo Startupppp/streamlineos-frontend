@@ -13,6 +13,7 @@ import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import { selectFlatPages, type Page } from "@/lib/api/select-flat-pages";
+import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
 
 export type KbPageComment = {
   id: number;
@@ -68,11 +69,13 @@ export function useKbPageComments(pageId: number) {
 
 export function useCreateKbPageComment() {
   const qc = useQueryClient();
+  const operation = useIdempotentOperation();
   return useAuthorizedMutation("kb:pages:update", {
     mutationKey: ["kb", "pageComments", "create"],
     mutationFn: ({ pageId, ...data }: CreateKbPageCommentInput & { pageId: number }) =>
-      apiClient.post<KbPageComment>(`/kb/pages/${pageId}/comments`, data, undefined, kbPageCommentContract),
+      apiClient.post<KbPageComment>(`/kb/pages/${pageId}/comments`, data, operation.configFor({ pageId, ...data }), kbPageCommentContract),
     onSuccess: (_, variables) => {
+      operation.settle();
       qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.pageComments(variables.pageId) });
     },
   });
