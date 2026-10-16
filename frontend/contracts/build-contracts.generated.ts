@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const OPENAPI_HASH = "sha256:1b48a24fc91f7c818a5812b97680d73583b9af31041016bbf107102b17810c9a" as const;
+export const OPENAPI_HASH = "sha256:f9224200fa753942e4dab8e6318efcc4bc06daa9c495d7b4979f1f62945bc55f" as const;
 
 export const agentTokensListResponseSchema = z.array(z.object({
   id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
@@ -1144,6 +1144,17 @@ export const managedProductRelationsAddMemberBodySchema = z.strictObject({
   role: z.enum(["member", "admin"]),
 });
 export type ManagedProductRelationsAddMemberBody = z.input<typeof managedProductRelationsAddMemberBodySchema>;
+
+export const managedProductRelationsUpdateMemberRoleResponseSchema = z.object({
+  id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
+  role: z.enum(["member", "admin"]),
+});
+export type ManagedProductRelationsUpdateMemberRoleResponse = z.infer<typeof managedProductRelationsUpdateMemberRoleResponseSchema>;
+
+export const managedProductRelationsUpdateMemberRoleBodySchema = z.strictObject({
+  role: z.enum(["member", "admin"]),
+});
+export type ManagedProductRelationsUpdateMemberRoleBody = z.input<typeof managedProductRelationsUpdateMemberRoleBodySchema>;
 
 export const discoveryListOpportunitiesResponseSchema = z.object({
   data: z.array(z.object({
@@ -9544,6 +9555,7 @@ export const BUILD_CONTRACT_OPERATIONS = [
   { operationId: "ManagedProductsController_getProductInsights", method: "GET", path: "/build/managed-products/{managedProductId}/insights", response: "managedProductsGetProductInsightsResponseSchema" },
   { operationId: "ManagedProductRelationsController_listMembers", method: "GET", path: "/build/managed-products/{managedProductId}/members", response: "managedProductRelationsListMembersResponseSchema" },
   { operationId: "ManagedProductRelationsController_addMember", method: "POST", path: "/build/managed-products/{managedProductId}/members", response: "managedProductRelationsAddMemberResponseSchema", body: "managedProductRelationsAddMemberBodySchema" },
+  { operationId: "ManagedProductRelationsController_updateMemberRole", method: "PATCH", path: "/build/managed-products/{managedProductId}/members/{membershipRowId}", response: "managedProductRelationsUpdateMemberRoleResponseSchema", body: "managedProductRelationsUpdateMemberRoleBodySchema" },
   { operationId: "ManagedProductRelationsController_removeMember", method: "DELETE", path: "/build/managed-products/{managedProductId}/members/{membershipRowId}" },
   { operationId: "DiscoveryController_listOpportunities", method: "GET", path: "/build/managed-products/{managedProductId}/opportunities", response: "discoveryListOpportunitiesResponseSchema" },
   { operationId: "DiscoveryController_createOpportunity", method: "POST", path: "/build/managed-products/{managedProductId}/opportunities", response: "discoveryCreateOpportunityResponseSchema", body: "discoveryCreateOpportunityBodySchema" },

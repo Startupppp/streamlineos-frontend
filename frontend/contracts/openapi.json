@@ -66176,7 +66176,8 @@
                 "properties": {
                   "name": {
                     "type": "string",
-                    "minLength": 1
+                    "minLength": 2,
+                    "maxLength": 100
                   },
                   "description": {
                     "type": "string"
@@ -130026,7 +130027,8 @@
                   },
                   "name": {
                     "type": "string",
-                    "minLength": 1
+                    "minLength": 2,
+                    "maxLength": 100
                   },
                   "description": {
                     "type": "string"
@@ -134878,6 +134880,130 @@
       }
     },
     "/build/managed-products/{managedProductId}/members/{membershipRowId}": {
+      "patch": {
+        "operationId": "ManagedProductRelationsController_updateMemberRole",
+        "parameters": [
+          {
+            "name": "managedProductId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          {
+            "name": "membershipRowId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "role": {
+                          "type": "string",
+                          "enum": [
+                            "member",
+                            "admin"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "role"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "tags": [
+          "ManagedProductRelations"
+        ],
+        "x-exposure": "permissioned",
+        "x-permission": "build:managed-products:update",
+        "description": "Exposure: permission — build:managed-products:update",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "member",
+                      "admin"
+                    ]
+                  }
+                },
+                "required": [
+                  "role"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      },
       "delete": {
         "operationId": "ManagedProductRelationsController_removeMember",
         "parameters": [
@@ -168416,6 +168542,9 @@
               "format": "uuid",
               "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
             }
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKeyHeader"
           }
         ],
         "responses": {
@@ -168469,6 +168598,8 @@
         "x-exposure": "permissioned",
         "x-permission": "calendar:admin:manage",
         "description": "Exposure: permission — calendar:admin:manage",
+        "x-idempotency-command": "calendar.api.credential.revoke",
+        "x-idempotent": true,
         "x-bodyless": true
       }
     },
@@ -168952,6 +169083,248 @@
         "x-exposure": "permissioned",
         "x-permission": "calendar:admin:manage",
         "description": "Exposure: permission — calendar:admin:manage",
+        "x-bodyless": true
+      }
+    },
+    "/calendar/admin/provider-triggers/{connectionId}": {
+      "get": {
+        "operationId": "CalendarComposioTriggerManagementController_inspect",
+        "parameters": [
+          {
+            "name": "connectionId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "connectionId": {
+                          "type": "integer",
+                          "exclusiveMinimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        "toolkit": {
+                          "type": "string",
+                          "enum": [
+                            "googlecalendar",
+                            "outlook"
+                          ]
+                        },
+                        "triggerSlug": {
+                          "type": "string",
+                          "enum": [
+                            "GOOGLECALENDAR_GOOGLE_CALENDAR_EVENT_UPDATED_TRIGGER",
+                            "OUTLOOK_EVENT_CHANGE_TRIGGER"
+                          ]
+                        },
+                        "providerAccountActive": {
+                          "type": "boolean"
+                        },
+                        "signingSecretConfigured": {
+                          "type": "boolean"
+                        },
+                        "webhookSubscriptionStatus": {
+                          "type": "string",
+                          "const": "unverified"
+                        },
+                        "activeTriggerCount": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "connectionId",
+                        "toolkit",
+                        "triggerSlug",
+                        "providerAccountActive",
+                        "signingSecretConfigured",
+                        "webhookSubscriptionStatus",
+                        "activeTriggerCount"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "tags": [
+          "CalendarComposioTriggerManagement"
+        ],
+        "x-exposure": "permissioned",
+        "x-permission": "calendar:admin:manage",
+        "description": "Exposure: permission — calendar:admin:manage"
+      }
+    },
+    "/calendar/admin/provider-triggers/{connectionId}/provision": {
+      "post": {
+        "operationId": "CalendarComposioTriggerManagementController_provision",
+        "parameters": [
+          {
+            "name": "connectionId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKeyHeader"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "connectionId": {
+                          "type": "integer",
+                          "exclusiveMinimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        "toolkit": {
+                          "type": "string",
+                          "enum": [
+                            "googlecalendar",
+                            "outlook"
+                          ]
+                        },
+                        "triggerSlug": {
+                          "type": "string",
+                          "enum": [
+                            "GOOGLECALENDAR_GOOGLE_CALENDAR_EVENT_UPDATED_TRIGGER",
+                            "OUTLOOK_EVENT_CHANGE_TRIGGER"
+                          ]
+                        },
+                        "providerAccountActive": {
+                          "type": "boolean"
+                        },
+                        "signingSecretConfigured": {
+                          "type": "boolean"
+                        },
+                        "webhookSubscriptionStatus": {
+                          "type": "string",
+                          "const": "unverified"
+                        },
+                        "activeTriggerCount": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "connectionId",
+                        "toolkit",
+                        "triggerSlug",
+                        "providerAccountActive",
+                        "signingSecretConfigured",
+                        "webhookSubscriptionStatus",
+                        "activeTriggerCount"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "tags": [
+          "CalendarComposioTriggerManagement"
+        ],
+        "x-exposure": "permissioned",
+        "x-permission": "calendar:admin:manage",
+        "description": "Exposure: permission — calendar:admin:manage",
+        "x-idempotency-command": "calendar.provider-trigger.provision",
+        "x-idempotent": true,
         "x-bodyless": true
       }
     },
@@ -170632,7 +171005,7 @@
                       "properties": {
                         "version": {
                           "type": "integer",
-                          "exclusiveMinimum": 0,
+                          "minimum": 0,
                           "maximum": 9007199254740991
                         },
                         "enabled": {
@@ -170670,8 +171043,15 @@
                           "maximum": 9007199254740991
                         },
                         "updatedAt": {
-                          "type": "string",
-                          "format": "date-time"
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
                         }
                       },
                       "required": [
@@ -170740,7 +171120,7 @@
                       "properties": {
                         "version": {
                           "type": "integer",
-                          "exclusiveMinimum": 0,
+                          "minimum": 0,
                           "maximum": 9007199254740991
                         },
                         "enabled": {
@@ -170778,8 +171158,15 @@
                           "maximum": 9007199254740991
                         },
                         "updatedAt": {
-                          "type": "string",
-                          "format": "date-time"
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
                         }
                       },
                       "required": [
@@ -172504,6 +172891,7 @@
                                               "outside_working_hours",
                                               "busy_commitment",
                                               "tentative_commitment",
+                                              "tentative_buffer",
                                               "approved_leave",
                                               "buffer",
                                               "source_failed",
@@ -184525,6 +184913,9 @@
                                       }
                                     ]
                                   },
+                                  "sourceOutcomeUnavailable": {
+                                    "type": "boolean"
+                                  },
                                   "version": {
                                     "type": "integer",
                                     "exclusiveMinimum": 0,
@@ -184560,6 +184951,7 @@
                                   "sourceActionProposalId",
                                   "sourceProposal",
                                   "sourceOutcome",
+                                  "sourceOutcomeUnavailable",
                                   "version",
                                   "reviewedAt",
                                   "createdAt",
@@ -185379,6 +185771,9 @@
                                   }
                                 ]
                               },
+                              "sourceOutcomeUnavailable": {
+                                "type": "boolean"
+                              },
                               "version": {
                                 "type": "integer",
                                 "exclusiveMinimum": 0,
@@ -185414,6 +185809,7 @@
                               "sourceActionProposalId",
                               "sourceProposal",
                               "sourceOutcome",
+                              "sourceOutcomeUnavailable",
                               "version",
                               "reviewedAt",
                               "createdAt",
@@ -185521,7 +185917,8 @@
         ],
         "x-exposure": "permissioned",
         "x-permission": "calendar:write",
-        "description": "Exposure: permission — calendar:write"
+        "description": "Exposure: permission — calendar:write",
+        "x-bodyless": true
       }
     },
     "/calendar/events/{eventId}/occurrences/{occurrenceStart}": {
@@ -187574,7 +187971,8 @@
         ],
         "x-exposure": "permissioned",
         "x-permission": "calendar:write",
-        "description": "Exposure: permission — calendar:write"
+        "description": "Exposure: permission — calendar:write",
+        "x-bodyless": true
       }
     },
     "/calendar/invitations/{invitationId}/preferences": {
@@ -188649,6 +189047,9 @@
                                   }
                                 ]
                               },
+                              "sourceOutcomeUnavailable": {
+                                "type": "boolean"
+                              },
                               "version": {
                                 "type": "integer",
                                 "exclusiveMinimum": 0,
@@ -188684,6 +189085,7 @@
                               "sourceActionProposalId",
                               "sourceProposal",
                               "sourceOutcome",
+                              "sourceOutcomeUnavailable",
                               "version",
                               "reviewedAt",
                               "createdAt",
@@ -189498,6 +189900,9 @@
                                   }
                                 ]
                               },
+                              "sourceOutcomeUnavailable": {
+                                "type": "boolean"
+                              },
                               "version": {
                                 "type": "integer",
                                 "exclusiveMinimum": 0,
@@ -189533,6 +189938,7 @@
                               "sourceActionProposalId",
                               "sourceProposal",
                               "sourceOutcome",
+                              "sourceOutcomeUnavailable",
                               "version",
                               "reviewedAt",
                               "createdAt",
@@ -190396,6 +190802,9 @@
                                   }
                                 ]
                               },
+                              "sourceOutcomeUnavailable": {
+                                "type": "boolean"
+                              },
                               "version": {
                                 "type": "integer",
                                 "exclusiveMinimum": 0,
@@ -190431,6 +190840,7 @@
                               "sourceActionProposalId",
                               "sourceProposal",
                               "sourceOutcome",
+                              "sourceOutcomeUnavailable",
                               "version",
                               "reviewedAt",
                               "createdAt",
@@ -191353,6 +191763,9 @@
                                   }
                                 ]
                               },
+                              "sourceOutcomeUnavailable": {
+                                "type": "boolean"
+                              },
                               "version": {
                                 "type": "integer",
                                 "exclusiveMinimum": 0,
@@ -191388,6 +191801,7 @@
                               "sourceActionProposalId",
                               "sourceProposal",
                               "sourceOutcome",
+                              "sourceOutcomeUnavailable",
                               "version",
                               "reviewedAt",
                               "createdAt",
@@ -192270,6 +192684,9 @@
                                   }
                                 ]
                               },
+                              "sourceOutcomeUnavailable": {
+                                "type": "boolean"
+                              },
                               "version": {
                                 "type": "integer",
                                 "exclusiveMinimum": 0,
@@ -192305,6 +192722,7 @@
                               "sourceActionProposalId",
                               "sourceProposal",
                               "sourceOutcome",
+                              "sourceOutcomeUnavailable",
                               "version",
                               "reviewedAt",
                               "createdAt",
@@ -193236,6 +193654,9 @@
                                   }
                                 ]
                               },
+                              "sourceOutcomeUnavailable": {
+                                "type": "boolean"
+                              },
                               "version": {
                                 "type": "integer",
                                 "exclusiveMinimum": 0,
@@ -193271,6 +193692,7 @@
                               "sourceActionProposalId",
                               "sourceProposal",
                               "sourceOutcome",
+                              "sourceOutcomeUnavailable",
                               "version",
                               "reviewedAt",
                               "createdAt",
@@ -194127,6 +194549,9 @@
                                   }
                                 ]
                               },
+                              "sourceOutcomeUnavailable": {
+                                "type": "boolean"
+                              },
                               "version": {
                                 "type": "integer",
                                 "exclusiveMinimum": 0,
@@ -194162,6 +194587,7 @@
                               "sourceActionProposalId",
                               "sourceProposal",
                               "sourceOutcome",
+                              "sourceOutcomeUnavailable",
                               "version",
                               "reviewedAt",
                               "createdAt",
@@ -195040,6 +195466,9 @@
                                   }
                                 ]
                               },
+                              "sourceOutcomeUnavailable": {
+                                "type": "boolean"
+                              },
                               "version": {
                                 "type": "integer",
                                 "exclusiveMinimum": 0,
@@ -195075,6 +195504,7 @@
                               "sourceActionProposalId",
                               "sourceProposal",
                               "sourceOutcome",
+                              "sourceOutcomeUnavailable",
                               "version",
                               "reviewedAt",
                               "createdAt",
@@ -197730,6 +198160,16 @@
                                   "source"
                                 ]
                               },
+                              "sourceKey": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
                               "startAt": {},
                               "endAt": {},
                               "state": {
@@ -197773,6 +198213,7 @@
                               "resourceId",
                               "resourceName",
                               "ownership",
+                              "sourceKey",
                               "startAt",
                               "endAt",
                               "state",
@@ -197872,6 +198313,16 @@
                               "source"
                             ]
                           },
+                          "sourceKey": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
                           "startAt": {},
                           "endAt": {},
                           "state": {
@@ -197915,6 +198366,7 @@
                           "resourceId",
                           "resourceName",
                           "ownership",
+                          "sourceKey",
                           "startAt",
                           "endAt",
                           "state",
@@ -203986,7 +204438,8 @@
         ],
         "x-exposure": "permissioned",
         "x-permission": "calendar:read",
-        "description": "Exposure: permission — calendar:read"
+        "description": "Exposure: permission — calendar:read",
+        "x-bodyless": true
       }
     },
     "/calendar/source-actions/proposals/{proposalId}/confirm": {
@@ -204344,6 +204797,314 @@
             }
           }
         }
+      }
+    },
+    "/calendar/source-actions/proposals/{proposalId}/recover": {
+      "post": {
+        "operationId": "CalendarSourceActionController_recover",
+        "parameters": [
+          {
+            "name": "proposalId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "PROPOSED",
+                            "APPLYING",
+                            "COMPLETED",
+                            "PARTIAL",
+                            "EXPIRED",
+                            "CANCELLED"
+                          ]
+                        },
+                        "version": {
+                          "type": "integer",
+                          "exclusiveMinimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        "expiresAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "confirmedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "completedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "updatedAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "steps": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "format": "uuid",
+                                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                              },
+                              "ordinal": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 9007199254740991
+                              },
+                              "sourceKey": {
+                                "type": "string"
+                              },
+                              "sourceRecordId": {
+                                "type": "string"
+                              },
+                              "entityType": {
+                                "type": "string"
+                              },
+                              "sourceActionId": {
+                                "type": "string"
+                              },
+                              "expectedSourceVersion": {
+                                "type": "string"
+                              },
+                              "intendedEffect": {
+                                "type": "string"
+                              },
+                              "input": {
+                                "type": "object",
+                                "propertyNames": {
+                                  "type": "string"
+                                },
+                                "additionalProperties": {}
+                              },
+                              "impactPreview": {
+                                "type": "object",
+                                "propertyNames": {
+                                  "type": "string"
+                                },
+                                "additionalProperties": {}
+                              },
+                              "status": {
+                                "type": "string",
+                                "enum": [
+                                  "PENDING",
+                                  "DECLINED",
+                                  "RUNNING",
+                                  "COMMITTED",
+                                  "FAILED",
+                                  "UNCERTAIN"
+                                ]
+                              },
+                              "version": {
+                                "type": "integer",
+                                "exclusiveMinimum": 0,
+                                "maximum": 9007199254740991
+                              },
+                              "attemptCount": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 9007199254740991
+                              },
+                              "outcomeCode": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "outcomeMessage": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "sourceReceipt": {
+                                "anyOf": [
+                                  {
+                                    "type": "object",
+                                    "propertyNames": {
+                                      "type": "string"
+                                    },
+                                    "additionalProperties": {}
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "repairState": {
+                                "type": "string",
+                                "enum": [
+                                  "NONE",
+                                  "AVAILABLE",
+                                  "REQUESTED",
+                                  "RESOLVED",
+                                  "MANUAL_REVIEW"
+                                ]
+                              },
+                              "repairOptions": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              "confirmedAt": {
+                                "anyOf": [
+                                  {
+                                    "type": "string",
+                                    "format": "date-time"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "completedAt": {
+                                "anyOf": [
+                                  {
+                                    "type": "string",
+                                    "format": "date-time"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "ordinal",
+                              "sourceKey",
+                              "sourceRecordId",
+                              "entityType",
+                              "sourceActionId",
+                              "expectedSourceVersion",
+                              "intendedEffect",
+                              "input",
+                              "impactPreview",
+                              "status",
+                              "version",
+                              "attemptCount",
+                              "outcomeCode",
+                              "outcomeMessage",
+                              "sourceReceipt",
+                              "repairState",
+                              "repairOptions",
+                              "confirmedAt",
+                              "completedAt"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "status",
+                        "version",
+                        "expiresAt",
+                        "confirmedAt",
+                        "completedAt",
+                        "createdAt",
+                        "updatedAt",
+                        "steps"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "tags": [
+          "CalendarSourceAction"
+        ],
+        "x-exposure": "permissioned",
+        "x-permission": "calendar:read",
+        "description": "Exposure: permission — calendar:read"
       }
     },
     "/calendar/source-actions/proposals/{proposalId}/steps/{stepId}/repair": {
@@ -848484,7 +849245,8 @@
         "x-permission": "build:goals:manage",
         "description": "Exposure: permission — build:goals:manage",
         "x-idempotency-command": "build.goal.product.link",
-        "x-idempotent": true
+        "x-idempotent": true,
+        "x-bodyless": true
       },
       "delete": {
         "operationId": "GoalsController_unlinkProduct",
@@ -884180,6 +884942,95 @@
             }
           }
         }
+      }
+    },
+    "/hr/employees/{employeeId}/archive": {
+      "post": {
+        "operationId": "RehireController_archive",
+        "parameters": [
+          {
+            "name": "employeeId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKeyHeader"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "const": true
+                    }
+                  },
+                  "required": [
+                    "success"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "tags": [
+          "Rehire"
+        ],
+        "x-exposure": "permissioned",
+        "x-permission": "hr:exit:manage",
+        "description": "Exposure: permission — hr:exit:manage",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "reason": {
+                    "type": "string",
+                    "maxLength": 500
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "x-idempotency-command": "hr.employee.archive",
+        "x-idempotent": true
       }
     },
     "/hr/employees/{employeeId}/history": {
@@ -1030597,6 +1031448,9 @@
                   "internalNotes": {
                     "type": "string",
                     "maxLength": 1000
+                  },
+                  "saveAsDraft": {
+                    "type": "boolean"
                   }
                 },
                 "required": [
@@ -1054149,7 +1055003,109 @@
         "parameters": [],
         "responses": {
           "201": {
-            "description": ""
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "integer",
+                          "exclusiveMinimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        "orgId": {
+                          "type": "string"
+                        },
+                        "warehouseId": {
+                          "type": "integer",
+                          "exclusiveMinimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        "productVariantId": {
+                          "anyOf": [
+                            {
+                              "type": "integer",
+                              "exclusiveMinimum": 0,
+                              "maximum": 9007199254740991
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "location": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "capacity": {
+                          "type": "integer",
+                          "exclusiveMinimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "available",
+                            "unavailable",
+                            "retired"
+                          ]
+                        },
+                        "version": {
+                          "type": "integer",
+                          "exclusiveMinimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "updatedAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "orgId",
+                        "warehouseId",
+                        "productVariantId",
+                        "name",
+                        "location",
+                        "capacity",
+                        "status",
+                        "version",
+                        "createdAt",
+                        "updatedAt"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
           },
           "400": {
             "$ref": "#/components/responses/BadRequest"
@@ -1054255,7 +1055211,109 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "integer",
+                          "exclusiveMinimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        "orgId": {
+                          "type": "string"
+                        },
+                        "warehouseId": {
+                          "type": "integer",
+                          "exclusiveMinimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        "productVariantId": {
+                          "anyOf": [
+                            {
+                              "type": "integer",
+                              "exclusiveMinimum": 0,
+                              "maximum": 9007199254740991
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "location": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "capacity": {
+                          "type": "integer",
+                          "exclusiveMinimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "available",
+                            "unavailable",
+                            "retired"
+                          ]
+                        },
+                        "version": {
+                          "type": "integer",
+                          "exclusiveMinimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "updatedAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "orgId",
+                        "warehouseId",
+                        "productVariantId",
+                        "name",
+                        "location",
+                        "capacity",
+                        "status",
+                        "version",
+                        "createdAt",
+                        "updatedAt"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
           },
           "400": {
             "$ref": "#/components/responses/BadRequest"
@@ -1054358,7 +1055416,85 @@
         ],
         "responses": {
           "201": {
-            "description": ""
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "integer",
+                          "exclusiveMinimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        "orgId": {
+                          "type": "string"
+                        },
+                        "equipmentId": {
+                          "type": "integer",
+                          "exclusiveMinimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        "startAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "endAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "active",
+                            "cancelled"
+                          ]
+                        },
+                        "reason": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "orgId",
+                        "equipmentId",
+                        "startAt",
+                        "endAt",
+                        "status",
+                        "reason",
+                        "createdAt"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
           },
           "400": {
             "$ref": "#/components/responses/BadRequest"
@@ -1054451,7 +1055587,85 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "integer",
+                          "exclusiveMinimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        "orgId": {
+                          "type": "string"
+                        },
+                        "equipmentId": {
+                          "type": "integer",
+                          "exclusiveMinimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        "startAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "endAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "active",
+                            "cancelled"
+                          ]
+                        },
+                        "reason": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "orgId",
+                        "equipmentId",
+                        "startAt",
+                        "endAt",
+                        "status",
+                        "reason",
+                        "createdAt"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
           },
           "400": {
             "$ref": "#/components/responses/BadRequest"
@@ -1054483,7 +1055697,8 @@
         ],
         "x-exposure": "permissioned",
         "x-permission": "inventory:warehouses:manage",
-        "description": "Exposure: permission — inventory:warehouses:manage"
+        "description": "Exposure: permission — inventory:warehouses:manage",
+        "x-bodyless": true
       }
     },
     "/inventory/carriers": {
@@ -1146019,7 +1147234,11 @@
     "/kb/ai/feedback": {
       "post": {
         "operationId": "KbAiFeedbackController_submitFeedback",
-        "parameters": [],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKeyHeader"
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK",
@@ -1146101,7 +1147320,9 @@
               }
             }
           }
-        }
+        },
+        "x-idempotency-command": "kb.ai-feedback.submit",
+        "x-idempotent": true
       }
     },
     "/kb/analytics/citation-reuse": {
@@ -1148963,6 +1150184,27 @@
               "exclusiveMinimum": 0,
               "maximum": 9007199254740991
             }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 512
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
           }
         ],
         "responses": {
@@ -1149274,9 +1150516,16 @@
                                 "type": "string",
                                 "enum": [
                                   "draft",
+                                  "in_progress",
+                                  "translated",
                                   "published",
-                                  "archived"
+                                  "outdated"
                                 ]
+                              },
+                              "revision": {
+                                "type": "integer",
+                                "exclusiveMinimum": 0,
+                                "maximum": 9007199254740991
                               },
                               "createdAt": {
                                 "type": "string",
@@ -1149297,6 +1150546,7 @@
                               "contentText",
                               "excerpt",
                               "status",
+                              "revision",
                               "createdAt",
                               "updatedAt"
                             ]
@@ -1149453,9 +1150703,16 @@
                           "type": "string",
                           "enum": [
                             "draft",
+                            "in_progress",
+                            "translated",
                             "published",
-                            "archived"
+                            "outdated"
                           ]
+                        },
+                        "revision": {
+                          "type": "integer",
+                          "exclusiveMinimum": 0,
+                          "maximum": 9007199254740991
                         },
                         "createdAt": {
                           "type": "string",
@@ -1149476,6 +1150733,7 @@
                         "contentText",
                         "excerpt",
                         "status",
+                        "revision",
                         "createdAt",
                         "updatedAt"
                       ]
@@ -1149595,9 +1150853,16 @@
                           "type": "string",
                           "enum": [
                             "draft",
+                            "in_progress",
+                            "translated",
                             "published",
-                            "archived"
+                            "outdated"
                           ]
+                        },
+                        "revision": {
+                          "type": "integer",
+                          "exclusiveMinimum": 0,
+                          "maximum": 9007199254740991
                         },
                         "createdAt": {
                           "type": "string",
@@ -1149618,6 +1150883,7 @@
                         "contentText",
                         "excerpt",
                         "status",
+                        "revision",
                         "createdAt",
                         "updatedAt"
                       ]
@@ -1149670,6 +1150936,16 @@
               "schema": {
                 "type": "object",
                 "properties": {
+                  "expectedRevision": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 2147483647
+                  },
+                  "expectedTranslationId": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 2147483647
+                  },
                   "title": {
                     "type": "string",
                     "minLength": 1,
@@ -1149706,6 +1150982,7 @@
                   }
                 },
                 "required": [
+                  "expectedRevision",
                   "title"
                 ],
                 "additionalProperties": false
@@ -1151502,7 +1152779,11 @@
     "/kb/ask/knowledge-gap": {
       "post": {
         "operationId": "KbAskController_createKnowledgeGap",
-        "parameters": [],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKeyHeader"
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK",
@@ -1151575,7 +1152856,9 @@
               }
             }
           }
-        }
+        },
+        "x-idempotency-command": "kb.ask.knowledge-gap.create",
+        "x-idempotent": true
       }
     },
     "/kb/ask/stream": {
@@ -1159273,7 +1160556,7 @@
     },
     "/kb/pages/{pageId}/archive": {
       "post": {
-        "operationId": "KbPagesController_archive",
+        "operationId": "KbPageStatusController_archive",
         "parameters": [
           {
             "name": "pageId",
@@ -1159706,12 +1160989,32 @@
           }
         },
         "tags": [
-          "KbPages"
+          "KbPageStatus"
         ],
         "x-exposure": "permissioned",
         "x-permission": "kb:pages:update",
         "description": "Exposure: permission — kb:pages:update",
-        "x-bodyless": true
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "expectedContentRevision": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "required": [
+                  "expectedContentRevision"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
       }
     },
     "/kb/pages/{pageId}/backlinks": {
@@ -1160791,6 +1162094,9 @@
               "exclusiveMinimum": 0,
               "maximum": 9007199254740991
             }
+          },
+          {
+            "$ref": "#/components/parameters/OptionalIdempotencyKeyHeader"
           }
         ],
         "responses": {
@@ -1160895,7 +1162201,9 @@
               }
             }
           }
-        }
+        },
+        "x-idempotency-command": "kb:pages.export",
+        "x-idempotent": true
       }
     },
     "/kb/pages/{pageId}/favorite": {
@@ -1161850,7 +1163158,7 @@
     },
     "/kb/pages/{pageId}/lock": {
       "patch": {
-        "operationId": "KbPagesController_lock",
+        "operationId": "KbPageStatusController_lock",
         "parameters": [
           {
             "name": "pageId",
@@ -1162283,7 +1163591,7 @@
           }
         },
         "tags": [
-          "KbPages"
+          "KbPageStatus"
         ],
         "x-exposure": "permissioned",
         "x-permission": "kb:pages:manage",
@@ -1162311,7 +1163619,7 @@
     },
     "/kb/pages/{pageId}/mark-stale": {
       "post": {
-        "operationId": "KbPagesController_markStale",
+        "operationId": "KbPageStatusController_markStale",
         "parameters": [
           {
             "name": "pageId",
@@ -1162744,7 +1164052,7 @@
           }
         },
         "tags": [
-          "KbPages"
+          "KbPageStatus"
         ],
         "x-exposure": "permissioned",
         "x-permission": "kb:pages:manage",
@@ -1162908,7 +1164216,7 @@
     },
     "/kb/pages/{pageId}/publish": {
       "post": {
-        "operationId": "KbPagesController_publish",
+        "operationId": "KbPageStatusController_publish",
         "parameters": [
           {
             "name": "pageId",
@@ -1163344,14 +1164652,34 @@
           }
         },
         "tags": [
-          "KbPages"
+          "KbPageStatus"
         ],
         "x-exposure": "permissioned",
         "x-permission": "kb:pages:update",
         "description": "Exposure: permission — kb:pages:update",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "expectedContentRevision": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "required": [
+                  "expectedContentRevision"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
         "x-idempotency-command": "kb.page.publish",
-        "x-idempotent": true,
-        "x-bodyless": true
+        "x-idempotent": true
       }
     },
     "/kb/pages/{pageId}/record-links": {
@@ -1164131,7 +1165459,7 @@
     },
     "/kb/pages/{pageId}/unarchive": {
       "post": {
-        "operationId": "KbPagesController_unarchive",
+        "operationId": "KbPageStatusController_unarchive",
         "parameters": [
           {
             "name": "pageId",
@@ -1164564,17 +1165892,37 @@
           }
         },
         "tags": [
-          "KbPages"
+          "KbPageStatus"
         ],
         "x-exposure": "permissioned",
         "x-permission": "kb:pages:update",
         "description": "Exposure: permission — kb:pages:update",
-        "x-bodyless": true
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "expectedContentRevision": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "required": [
+                  "expectedContentRevision"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
       }
     },
     "/kb/pages/{pageId}/verify": {
       "post": {
-        "operationId": "KbPagesController_verify",
+        "operationId": "KbPageStatusController_verify",
         "parameters": [
           {
             "name": "pageId",
@@ -1165007,7 +1166355,7 @@
           }
         },
         "tags": [
-          "KbPages"
+          "KbPageStatus"
         ],
         "x-exposure": "permissioned",
         "x-permission": "kb:pages:manage",
@@ -1165934,14 +1167282,34 @@
         "x-exposure": "permissioned",
         "x-permission": "kb:pages:update",
         "description": "Exposure: permission — kb:pages:update",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "expectedContentRevision": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "required": [
+                  "expectedContentRevision"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
         "x-idempotency-command": "kb.page-version.restore",
-        "x-idempotent": true,
-        "x-bodyless": true
+        "x-idempotent": true
       }
     },
     "/kb/pages/{pageId}/visibility": {
       "patch": {
-        "operationId": "KbPagesController_setVisibility",
+        "operationId": "KbPageStatusController_setVisibility",
         "parameters": [
           {
             "name": "pageId",
@@ -1166374,7 +1167742,7 @@
           }
         },
         "tags": [
-          "KbPages"
+          "KbPageStatus"
         ],
         "x-exposure": "permissioned",
         "x-permission": "kb:pages:update",
@@ -1166393,10 +1167761,16 @@
                       "org",
                       "public"
                     ]
+                  },
+                  "expectedContentRevision": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
                   }
                 },
                 "required": [
-                  "visibility"
+                  "visibility",
+                  "expectedContentRevision"
                 ],
                 "additionalProperties": false
               }
@@ -1173152,8 +1174526,29 @@
                     "maxLength": 200
                   },
                   "description": {
-                    "type": "string",
-                    "maxLength": 2000
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 2000
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "icon": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 100
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "isPublicHelpCenter": {
+                    "type": "boolean"
                   },
                   "audience": {
                     "default": "internal",
@@ -1173163,13 +1174558,6 @@
                       "public",
                       "mixed"
                     ]
-                  },
-                  "icon": {
-                    "type": "string",
-                    "maxLength": 100
-                  },
-                  "isPublicHelpCenter": {
-                    "type": "boolean"
                   }
                 },
                 "required": [
@@ -1173711,24 +1175099,37 @@
                     "maxLength": 200
                   },
                   "description": {
-                    "type": "string",
-                    "maxLength": 2000
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 2000
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "icon": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 100
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "isPublicHelpCenter": {
+                    "type": "boolean"
                   },
                   "audience": {
-                    "default": "internal",
                     "type": "string",
                     "enum": [
                       "internal",
                       "public",
                       "mixed"
                     ]
-                  },
-                  "icon": {
-                    "type": "string",
-                    "maxLength": 100
-                  },
-                  "isPublicHelpCenter": {
-                    "type": "boolean"
                   }
                 },
                 "additionalProperties": false
@@ -1173979,6 +1175380,27 @@
               "exclusiveMinimum": 0,
               "maximum": 9007199254740991
             }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 512
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
           }
         ],
         "responses": {
@@ -1173996,118 +1175418,155 @@
                       ]
                     },
                     "data": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "id": {
-                            "type": "integer",
-                            "minimum": -9007199254740991,
-                            "maximum": 9007199254740991
-                          },
-                          "orgId": {
-                            "type": "string"
-                          },
-                          "spaceId": {
-                            "type": "integer",
-                            "minimum": -9007199254740991,
-                            "maximum": 9007199254740991
-                          },
-                          "membershipId": {
-                            "anyOf": [
-                              {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
                                 "type": "integer",
                                 "minimum": -9007199254740991,
                                 "maximum": 9007199254740991
                               },
-                              {
-                                "type": "null"
-                              }
-                            ]
-                          },
-                          "role": {
-                            "anyOf": [
-                              {
+                              "orgId": {
                                 "type": "string"
                               },
-                              {
-                                "type": "null"
-                              }
-                            ]
-                          },
-                          "team": {
-                            "anyOf": [
-                              {
+                              "spaceId": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "membershipId": {
+                                "anyOf": [
+                                  {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "role": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "team": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "spaceRole": {
                                 "type": "string"
                               },
-                              {
-                                "type": "null"
-                              }
-                            ]
-                          },
-                          "spaceRole": {
-                            "type": "string"
-                          },
-                          "createdAt": {
-                            "type": "string",
-                            "format": "date-time"
-                          },
-                          "userId": {
-                            "anyOf": [
-                              {
-                                "type": "string"
+                              "createdAt": {
+                                "type": "string",
+                                "format": "date-time"
                               },
-                              {
-                                "type": "null"
-                              }
-                            ]
-                          },
-                          "userName": {
-                            "anyOf": [
-                              {
-                                "type": "string"
+                              "userId": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
                               },
-                              {
-                                "type": "null"
-                              }
-                            ]
-                          },
-                          "userEmail": {
-                            "anyOf": [
-                              {
-                                "type": "string"
+                              "userName": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
                               },
-                              {
-                                "type": "null"
-                              }
-                            ]
-                          },
-                          "userImage": {
-                            "anyOf": [
-                              {
-                                "type": "string"
+                              "userEmail": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
                               },
-                              {
-                                "type": "null"
+                              "userImage": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
                               }
+                            },
+                            "required": [
+                              "id",
+                              "orgId",
+                              "spaceId",
+                              "membershipId",
+                              "role",
+                              "team",
+                              "spaceRole",
+                              "createdAt",
+                              "userId",
+                              "userName",
+                              "userEmail",
+                              "userImage"
                             ]
                           }
                         },
-                        "required": [
-                          "id",
-                          "orgId",
-                          "spaceId",
-                          "membershipId",
-                          "role",
-                          "team",
-                          "spaceRole",
-                          "createdAt",
-                          "userId",
-                          "userName",
-                          "userEmail",
-                          "userImage"
-                        ]
-                      }
+                        "pagination": {
+                          "type": "object",
+                          "properties": {
+                            "limit": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "hasMore": {
+                              "type": "boolean"
+                            },
+                            "nextCursor": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            }
+                          },
+                          "required": [
+                            "limit",
+                            "hasMore",
+                            "nextCursor"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "data",
+                        "pagination"
+                      ]
                     }
                   },
                   "required": [
@@ -1194796,7 +1196255,8 @@
         "x-permission": "self:expenses",
         "description": "Exposure: permission — self:expenses",
         "x-idempotency-command": "expenses.employee.withdraw",
-        "x-idempotent": true
+        "x-idempotent": true,
+        "x-bodyless": true
       }
     },
     "/me/inbox": {
@@ -1223194,7 +1224654,7 @@
                 "properties": {
                   "name": {
                     "type": "string",
-                    "minLength": 1,
+                    "minLength": 2,
                     "maxLength": 100
                   },
                   "code": {
@@ -1223392,7 +1224852,7 @@
                 "properties": {
                   "name": {
                     "type": "string",
-                    "minLength": 1,
+                    "minLength": 2,
                     "maxLength": 100
                   },
                   "code": {
@@ -1264472,12 +1265932,19 @@
                           "items": {
                             "type": "string"
                           }
+                        },
+                        "affectedEmployeeNames": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
                         }
                       },
                       "required": [
                         "toggle",
                         "affectedEmployeeCount",
-                        "affectedStatutoryCodes"
+                        "affectedStatutoryCodes",
+                        "affectedEmployeeNames"
                       ]
                     }
                   },
@@ -1288091,6 +1289558,9 @@
                                   }
                                 ]
                               },
+                              "sourceOutcomeUnavailable": {
+                                "type": "boolean"
+                              },
                               "version": {
                                 "type": "integer",
                                 "exclusiveMinimum": 0,
@@ -1288126,6 +1289596,7 @@
                               "sourceActionProposalId",
                               "sourceProposal",
                               "sourceOutcome",
+                              "sourceOutcomeUnavailable",
                               "version",
                               "reviewedAt",
                               "createdAt",
@@ -1292079,7 +1293550,8 @@
                 "properties": {
                   "org": {
                     "type": "string",
-                    "minLength": 1
+                    "minLength": 1,
+                    "maxLength": 128
                   },
                   "question": {
                     "type": "string",
@@ -1292143,7 +1293615,8 @@
                 "properties": {
                   "org": {
                     "type": "string",
-                    "minLength": 1
+                    "minLength": 1,
+                    "maxLength": 128
                   },
                   "question": {
                     "type": "string",
@@ -1389812,48 +1391285,7 @@
         ],
         "x-exposure": "public",
         "description": "Exposure: public — unauthenticated",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "token": {
-                    "type": "string",
-                    "minLength": 32,
-                    "maxLength": 128
-                  },
-                  "firstName": {
-                    "type": "string",
-                    "minLength": 1,
-                    "maxLength": 100
-                  },
-                  "lastName": {
-                    "type": "string",
-                    "maxLength": 100
-                  },
-                  "companyName": {
-                    "type": "string",
-                    "minLength": 1,
-                    "maxLength": 200
-                  },
-                  "country": {
-                    "type": "string",
-                    "minLength": 2,
-                    "maxLength": 2
-                  }
-                },
-                "required": [
-                  "token",
-                  "firstName",
-                  "companyName"
-                ],
-                "additionalProperties": false
-              }
-            }
-          }
-        }
+        "x-bodyless": true
       }
     },
     "/waitlist/entries": {
