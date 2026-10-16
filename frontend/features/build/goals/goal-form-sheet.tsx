@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo, useRef } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Target } from "lucide-react";
 import { toast } from "sonner";
+import { useSubmitGuard } from "@/hooks/common/use-submit-guard";
 import {
   useCreateGoal,
   useGoals,
@@ -69,7 +70,6 @@ export function GoalFormSheet({
   const createGoal = useCreateGoal();
   const updateGoal = useUpdateGoal();
   const isPending = createGoal.isPending || updateGoal.isPending;
-  const submittingRef = useRef(false);
 
   const form = useForm<ProjectGoalFormValues>({
     resolver: zodResolver(projectGoalFormSchema),
@@ -112,13 +112,7 @@ export function GoalFormSheet({
     [],
   );
 
-  function releaseSubmit() {
-    submittingRef.current = false;
-  }
-
-  function handleSubmit(values: ProjectGoalFormValues) {
-    if (submittingRef.current) return;
-    submittingRef.current = true;
+  function handleSubmit(values: ProjectGoalFormValues, settle: () => void) {
     const resolvedOwner =
       values.ownerId === "unassigned" ? null : values.ownerId;
     const resolvedParent =
@@ -150,7 +144,7 @@ export function GoalFormSheet({
             }
             toast.error(getErrorMessage(e));
           },
-          onSettled: releaseSubmit,
+          onSettled: settle,
         },
       );
       return;
@@ -175,10 +169,14 @@ export function GoalFormSheet({
           handleOpenChange(false);
         },
         onError: (e) => toast.error(getErrorMessage(e)),
-        onSettled: releaseSubmit,
+        onSettled: settle,
       },
     );
   }
+
+  const submitGuard = useSubmitGuard(
+    (values: ProjectGoalFormValues) => new Promise<void>((settle) => { handleSubmit(values, settle); }),
+  );
 
   return (
     <Sheet open={open} onOpenChange={handleOpenChange}>
@@ -203,7 +201,7 @@ export function GoalFormSheet({
 
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit(handleSubmit)}
+            onSubmit={form.handleSubmit(submitGuard.submit)}
             className="flex flex-col flex-1 min-h-0"
           >
             <SheetBody>
