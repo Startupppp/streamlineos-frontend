@@ -41,12 +41,14 @@ interface AddProductMemberDialogProps {
   managedProductId: number;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  existingMembershipIds?: ReadonlySet<number>;
 }
 
 export function AddProductMemberDialog({
   managedProductId,
   open,
   onOpenChange,
+  existingMembershipIds,
 }: AddProductMemberDialogProps) {
   const [search, setSearch] = useState("");
   const [selectedLabel, setSelectedLabel] = useState("");
@@ -78,7 +80,9 @@ export function AddProductMemberDialog({
   }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
   const memberOptions = useMemo(() => {
-    const all = (data?.pages ?? []).flatMap((p) => p.data);
+    const all = (data?.pages ?? [])
+      .flatMap((p) => p.data)
+      .filter((m) => !existingMembershipIds?.has(m.membershipId));
     const opts = all.map((m) => ({
       value: String(m.membershipId),
       label: m.name ?? m.email,
@@ -87,7 +91,7 @@ export function AddProductMemberDialog({
       opts.unshift({ value: String(membershipId), label: selectedLabel || String(membershipId) });
     }
     return opts;
-  }, [data, membershipId, selectedLabel]);
+  }, [data, membershipId, selectedLabel, existingMembershipIds]);
 
   function handleOpenChange(next: boolean) {
     if (!next && addMember.isPending) return;

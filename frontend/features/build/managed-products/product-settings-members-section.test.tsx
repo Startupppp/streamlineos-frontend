@@ -1,5 +1,6 @@
 import React from "react";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, act } from "@testing-library/react";
+import { ApiError } from "@/lib/api-envelope";
 import { ProductSettingsMembersSection } from "./product-settings-members-section";
 
 let mockSearch = "";
@@ -33,9 +34,9 @@ jest.mock("./add-product-member-dialog", () => ({
     open ? <div data-testid="add-member-dialog" /> : null,
 }));
 
-const { useManagedProductMembers } = jest.requireMock(
+const { useManagedProductMembers, useRemoveManagedProductMember } = jest.requireMock(
   "@/hooks/api/build/managed-product-members",
-) as { useManagedProductMembers: jest.Mock };
+) as { useManagedProductMembers: jest.Mock; useRemoveManagedProductMember: jest.Mock };
 
 const MANAGED_PRODUCT_ID = 7;
 
@@ -77,6 +78,23 @@ describe("ProductSettingsMembersSection", () => {
   beforeEach(() => {
     mockSearch = "";
     mockReplace.mockClear();
+  });
+
+  it("keeps the remove dialog open and explains why when the last admin cannot be removed", async () => {
+    const mutate = jest.fn((_id: number, opts: { onError?: (e: unknown) => void }) =>
+      opts.onError?.(new ApiError("Cannot remove the last admin", 409, "CONFLICT")),
+    );
+    useRemoveManagedProductMember.mockReturnValue({ mutate, isPending: false });
+    useManagedProductMembers.mockReturnValue(result());
+    render(<ProductSettingsMembersSection managedProductId={MANAGED_PRODUCT_ID} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Remove Ada Lovelace" }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Remove" }));
+    });
+
+    expect(mutate).toHaveBeenCalledWith(MEMBER.id, expect.any(Object));
+    expect(screen.getByText("Cannot remove the last admin of a product.")).toBeInTheDocument();
   });
 
   it("lists the product members", () => {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { UserPlus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -96,7 +96,11 @@ export function ProductSettingsMembersSection({
     void refetch();
   }, [refetch]);
 
-  const members = data?.data ?? [];
+  const members = useMemo(() => data?.data ?? [], [data?.data]);
+  const memberIds = useMemo(
+    () => new Set(members.map((m) => m.organizationMembershipId)),
+    [members],
+  );
   const hasMore = data?.pagination?.hasMore ?? false;
 
   return (
@@ -185,6 +189,7 @@ export function ProductSettingsMembersSection({
           managedProductId={managedProductId}
           open={addOpen}
           onOpenChange={setAddOpen}
+          existingMembershipIds={memberIds}
         />
       ) : null}
 
@@ -201,6 +206,8 @@ export function ProductSettingsMembersSection({
         }
         confirmLabel="Remove"
         destructive
+        keepOpenOnConfirm
+        isPending={removeMember.isPending}
         onConfirm={handleRemoveConfirm}
       />
     </section>
