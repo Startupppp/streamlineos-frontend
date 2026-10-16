@@ -13,7 +13,7 @@ import {
   useTicketFilterParams,
 } from "@/features/build/shared/use-ticket-filter-params";
 import { categoryParams } from "@/components/list-view/list-filter-spec";
-import { useBuildListUrlState } from "@/features/build/shared/use-build-list-url-state";
+import { useBacklogListUrlState } from "./use-backlog-list-url-state";
 import { buildTicketDetailUrl } from "@/features/build/ticket-details/build-ticket-detail-url";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -46,7 +46,7 @@ export function ProjectBacklogPage({
   const searchParams = useSearchParams();
   const router = useRouter();
   const requestLeave = useNavigationLeave();
-  const { setListParams } = useBuildListUrlState();
+  const { setListParams, sortField, sortDirection, sortState } = useBacklogListUrlState();
   const {
     q, selectedStatuses, selectedPriorities, selectedTypes,
     selectedAssignees, selectedLabels, selectedCycles,
@@ -63,6 +63,8 @@ export function ProjectBacklogPage({
     cycle: selectedCycles.length > 0 ? selectedCycles.join(",") : undefined,
     dueDateFrom: dueDateFrom || undefined,
     dueDateTo: dueDateTo || undefined,
+    orderBy: sortField,
+    orderDir: sortDirection,
   };
   const {
     data,
@@ -246,6 +248,7 @@ export function ProjectBacklogPage({
           permission="build:tickets:view"
           rows={tickets}
           columns={columns}
+          sortState={sortState}
           isLoading={ticketsLoading}
           isError={ticketsError}
           error={ticketsErrorValue}
