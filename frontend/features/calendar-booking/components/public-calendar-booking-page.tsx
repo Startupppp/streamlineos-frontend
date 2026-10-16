@@ -1,13 +1,16 @@
 "use client";
 
-import { CalendarDays, Link2Off } from "lucide-react";
+import { CalendarDays, CircleCheck, Clock3, Link2Off } from "lucide-react";
 import Image from "next/image";
 import { useParams, useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { isApiError } from "@/lib/api-envelope";
 import {
   usePublicCalendarBookingOffering,
+  usePublicCalendarBookingRecoveredReceipt,
   usePublicCalendarBookingSession,
 } from "@/hooks/api/calendar-booking-public";
 import { PublicCalendarBookingForm } from "./public-calendar-booking-form";
@@ -55,16 +58,21 @@ export function PublicCalendarBookingPage() {
     honeypot: "",
     attribution,
   }), [attribution, callbackState, locale]);
-  const offeringQuery = usePublicCalendarBookingOffering(token, range.from, range.to);
-  const sessionQuery = usePublicCalendarBookingSession(token, sessionInput);
-  const unavailable = offeringQuery.isError || sessionQuery.isError;
+  const recoveredReceiptQuery = usePublicCalendarBookingRecoveredReceipt(token);
+  const startBooking = isApiError(recoveredReceiptQuery.error) && recoveredReceiptQuery.error.status === 404;
+  const recoveryFailed = recoveredReceiptQuery.isError && !startBooking;
+  const offeringQuery = usePublicCalendarBookingOffering(token, range.from, range.to, startBooking);
+  const sessionQuery = usePublicCalendarBookingSession(token, sessionInput, startBooking);
+  const unavailable = startBooking && (offeringQuery.isError || sessionQuery.isError);
   const offering = unavailable ? undefined : offeringQuery.data;
   const session = unavailable ? undefined : sessionQuery.data;
   const uiLocale = publicBookingUiLocale(session?.locale ?? locale);
   const copy = publicBookingCopy(uiLocale);
-  const loading = offeringQuery.isPending || sessionQuery.isPending;
-  const title = session?.copy.title ?? offering?.title ?? copy.defaultTitle;
+  const loading = recoveredReceiptQuery.isPending || (startBooking && (offeringQuery.isPending || sessionQuery.isPending));
+  const title = recoveredReceiptQuery.data ? copy.platform : session?.copy.title ?? offering?.title ?? copy.defaultTitle;
   const description = session?.copy.description ?? offering?.description;
+  const recoveredReceipt = recoveredReceiptQuery.data;
+  const visitorTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
   return (
     <main lang={uiLocale} className="flex min-h-dvh justify-center bg-background px-4 py-6 text-foreground sm:px-6 sm:py-12">
@@ -133,6 +141,36 @@ export function PublicCalendarBookingPage() {
                 <p className="text-sm leading-relaxed text-muted-foreground">{copy.unavailableBookedDescription}</p>
               </div>
               <p className="text-sm leading-relaxed text-muted-foreground">{copy.unavailableNewLinkDescription}</p>
+            </div>
+          )}
+
+          {recoveryFailed && (
+            <div className="mx-auto max-w-md space-y-4 py-10 text-center sm:py-14" role="alert">
+              <h2 className="text-xl font-semibold tracking-tight text-foreground">{copy.statusTitle}</h2>
+              <p className="text-sm leading-relaxed text-muted-foreground">{copy.statusFailed}</p>
+              <Button type="button" variant="outline" disabled={recoveredReceiptQuery.isFetching} onClick={() => void recoveredReceiptQuery.refetch()}>
+                {copy.retryReceipt}
+              </Button>
+            </div>
+          )}
+
+          {recoveredReceipt && (
+            <div className="mx-auto max-w-md space-y-6 py-6 text-center sm:py-10" aria-live="polite">
+              <span className="mx-auto flex size-12 items-center justify-center rounded-xl border border-border bg-surface-inset text-foreground dark:border-background">
+                {recoveredReceipt.outcome === "confirmed" ? <CircleCheck className="size-6" aria-hidden="true" /> : <Clock3 className="size-6" aria-hidden="true" />}
+              </span>
+              <h2 className="text-xl font-semibold tracking-tight text-foreground">
+                {recoveredReceipt.outcome === "confirmed" ? copy.confirmed : copy.pending}
+              </h2>
+              <div className="rounded-xl border border-border bg-surface-inset px-4 py-4 text-left dark:border-background">
+                <p className="text-xs font-medium text-muted-foreground">
+                  {recoveredReceipt.outcome === "confirmed" ? copy.bookedTime : copy.requestedTime}
+                </p>
+                <p className="mt-1 font-semibold text-foreground">
+                  {new Intl.DateTimeFormat(uiLocale, { dateStyle: "full", timeStyle: "short", timeZone: visitorTimeZone }).format(new Date(recoveredReceipt.startAt))}
+                </p>
+                <p className="mt-1 text-sm text-muted-foreground">{visitorTimeZone}</p>
+              </div>
             </div>
           )}
 

@@ -10,7 +10,7 @@ import { PublicCalendarBookingPage } from "./public-calendar-booking-page";
 import { openCheckout } from "@/features/billing/lib/checkout-script";
 
 jest.mock("@/lib/api-client", () => ({
-  apiClient: { get: jest.fn(), post: jest.fn() },
+  apiClient: { get: jest.fn(), post: jest.fn(), request: jest.fn() },
 }));
 
 jest.mock("next/navigation", () => ({
@@ -25,6 +25,7 @@ jest.mock("@/features/billing/lib/checkout-script", () => ({
 
 const mockedGet = jest.mocked(apiClient.get);
 const mockedPost = jest.mocked(apiClient.post);
+const mockedRequest = jest.mocked(apiClient.request);
 
 const offering = {
   title: "Discovery call",
@@ -134,6 +135,7 @@ function renderPage() {
 describe("public calendar booking page", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockedRequest.mockRejectedValue(new ApiError("Booking receipt not found", 404));
     mockedGet.mockImplementation(async (path) => {
       if (String(path).includes("/callback"))
         return {
@@ -149,6 +151,45 @@ describe("public calendar booking page", () => {
       if (value.endsWith("/holds")) return hold;
       return receipt;
     });
+  });
+
+  it("recovers a server-verified receipt after a fresh visit without creating another session", async () => {
+    mockedRequest.mockResolvedValue({
+      ok: true,
+      status: 200,
+      statusText: "OK",
+      json: async () => ({ success: true, data: receipt }),
+    } as Response);
+    renderPage();
+    expect(await screen.findByRole("heading", { name: "Your booking is confirmed" })).toBeInTheDocument();
+    expect(screen.getByText("Booked time")).toBeInTheDocument();
+    expect(mockedRequest).toHaveBeenCalledWith(
+      "/public/calendar/booking/booking-token-value-long-enough/receipt",
+      { method: "GET", credentials: "include" },
+      expect.anything(),
+    );
+    expect(mockedGet).not.toHaveBeenCalled();
+    expect(mockedPost).not.toHaveBeenCalled();
+    expect(screen.queryByRole("button", { name: "Refresh booking status" })).not.toBeInTheDocument();
+  });
+
+  it("keeps a transient receipt failure out of the new-booking flow and retries safely", async () => {
+    mockedRequest.mockRejectedValueOnce(new ApiError("Temporary outage", 503));
+    const user = userEvent.setup();
+    renderPage();
+    expect(await screen.findByRole("alert")).toHaveTextContent("Booking status could not be checked.");
+    expect(mockedGet).not.toHaveBeenCalled();
+    expect(mockedPost).not.toHaveBeenCalled();
+    mockedRequest.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      statusText: "OK",
+      json: async () => ({ success: true, data: receipt }),
+    } as Response);
+    await user.click(screen.getByRole("button", { name: "Try again" }));
+    expect(await screen.findByRole("heading", { name: "Your booking is confirmed" })).toBeInTheDocument();
+    expect(mockedGet).not.toHaveBeenCalled();
+    expect(mockedPost).not.toHaveBeenCalled();
   });
 
   it("renders localized branding and only configured intake", async () => {
@@ -413,7 +454,7 @@ describe("public calendar booking page", () => {
         intake: { company: "Analytical Engines" },
         sessionToken: "session-token-value-long-enough",
       }),
-      undefined,
+      { credentials: "include" },
       expect.anything(),
     );
     const confirmCalls = mockedPost.mock.calls.filter(([path]) => String(path).endsWith("/confirm"));
@@ -672,7 +713,7 @@ describe("public calendar booking page", () => {
     expect(mockedPost).toHaveBeenCalledWith(
       "/public/calendar/booking/booking-token-value-long-enough/payments/confirm",
       expect.objectContaining({ paymentId: "pay-1", signature: "provider-signature" }),
-      undefined,
+      { credentials: "include" },
       expect.anything(),
     );
   });

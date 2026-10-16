@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { parseApiResponse } from "@/lib/api-envelope";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import {
   publicCalendarBookingCallbackContract,
@@ -84,7 +85,7 @@ function basePath(token: string) {
   return `/public/calendar/booking/${encodeURIComponent(token)}`;
 }
 
-export function usePublicCalendarBookingOffering(token: string, from: string, to: string) {
+export function usePublicCalendarBookingOffering(token: string, from: string, to: string, enabled = true) {
   return useQuery({
     ...INLINE_READ_ERROR,
     queryKey: ["public", "calendar", "booking", token, "offering", from, to],
@@ -94,7 +95,7 @@ export function usePublicCalendarBookingOffering(token: string, from: string, to
       signal,
       publicCalendarBookingOfferingContract,
     ),
-    enabled: Boolean(token),
+    enabled: Boolean(token && enabled),
     retry: false,
     staleTime: 30_000,
   });
@@ -103,6 +104,7 @@ export function usePublicCalendarBookingOffering(token: string, from: string, to
 export function usePublicCalendarBookingSession(
   token: string,
   input: CreateCalendarBookingSessionInput,
+  enabled = true,
 ) {
   return useQuery({
     ...INLINE_READ_ERROR,
@@ -113,7 +115,7 @@ export function usePublicCalendarBookingSession(
       undefined,
       publicCalendarBookingSessionContract,
     ),
-    enabled: Boolean(token),
+    enabled: Boolean(token && enabled),
     retry: false,
     staleTime: Number.POSITIVE_INFINITY,
     refetchOnMount: false,
@@ -142,7 +144,7 @@ export function useConfirmPublicCalendarBooking(token: string) {
       apiClient.post<PublicCalendarBookingReceipt>(
         `${basePath(token)}/confirm`,
         input,
-        undefined,
+        { credentials: "include" },
         publicCalendarBookingReceiptContract,
       ),
   });
@@ -161,7 +163,7 @@ export function usePublicCalendarBookingStatus(
       return apiClient.post<PublicCalendarBookingReceipt>(
         `${basePath(token)}/confirm`,
         input,
-        { signal },
+        { signal, credentials: "include" },
         publicCalendarBookingReceiptContract,
       );
     },
@@ -197,9 +199,26 @@ export function useConfirmPublicCalendarBookingPayment(token: string) {
       apiClient.post<PublicCalendarBookingPayment>(
         `${basePath(token)}/payments/confirm`,
         input,
-        undefined,
+        { credentials: "include" },
         publicCalendarBookingPaymentContract,
       ),
+  });
+}
+
+export function usePublicCalendarBookingRecoveredReceipt(token: string) {
+  return useQuery({
+    ...INLINE_READ_ERROR,
+    queryKey: ["public", "calendar", "booking", token, "recovered-receipt"],
+    queryFn: async ({ signal }) => {
+      const path = `${basePath(token)}/receipt`;
+      const response = await apiClient.request(path, { method: "GET", credentials: "include" }, { signal });
+      return parseApiResponse(response, publicCalendarBookingReceiptContract, path);
+    },
+    enabled: Boolean(token),
+    retry: false,
+    staleTime: 0,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });
 }
 

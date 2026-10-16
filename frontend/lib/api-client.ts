@@ -90,6 +90,10 @@ function isPublicPath(path: string): boolean {
   );
 }
 
+function isPublicCalendarReceiptPath(path: string): boolean {
+  return /^\/public\/calendar\/booking\/[^/]+\/(?:receipt|confirm|payments\/confirm)$/.test(path);
+}
+
 const ORGANIZATION_ACCESS_ERROR_CODES = new Set([
   "ORG_MEMBERSHIP_INACTIVE",
   "ORG_MEMBERSHIP_SUSPENDED",
@@ -384,7 +388,7 @@ const OUTAGE_STATUSES = new Set([502, 503, 504]);
 
 function networkError(
   url: string,
-  requestInit: Omit<RequestInit, "headers" | "signal" | "credentials">,
+  requestInit: Omit<RequestInit, "headers" | "signal">,
   path: string,
   cause: string,
 ): ApiError {
@@ -402,7 +406,7 @@ function networkError(
 
 async function fetchOrThrowTransportError(
   url: string,
-  requestInit: Omit<RequestInit, "headers" | "signal" | "credentials">,
+  requestInit: Omit<RequestInit, "headers" | "signal">,
   headers: Headers,
   signal: AbortSignal,
   path: string,
@@ -410,7 +414,8 @@ async function fetchOrThrowTransportError(
   if (outageCircuitRemainingMs() > 0)
     throw networkError(url, requestInit, path, "Server unavailable; retrying shortly.");
   try {
-    const res = await fetch(url, { ...requestInit, headers, credentials: "omit", signal });
+    const credentials = requestInit.credentials === "include" && isPublicCalendarReceiptPath(path) ? "include" : "omit";
+    const res = await fetch(url, { ...requestInit, headers, credentials, signal });
     if (
       OUTAGE_STATUSES.has(res.status) &&
       !(res.headers.get("content-type") ?? "").includes("json")
@@ -494,6 +499,7 @@ export interface RequestConfig {
   timeoutMs?: number;
   asRealUser?: boolean;
   expectedIdentity?: ExpectedRequestIdentity;
+  credentials?: "include";
 }
 
 export async function request(
@@ -532,6 +538,7 @@ async function post<T>(
     buildUrl(url),
     {
       method: "POST",
+      credentials: config?.credentials,
       headers: {
         "Content-Type": "application/json",
         ...(config?.headers ?? {}),

@@ -21,6 +21,21 @@ describe("request", () => {
     clearBackendTokenCache();
   });
 
+  it("sends cookies only for the explicit Calendar receipt transport paths", async () => {
+    const seen: Array<{ path: string; credentials: RequestCredentials | undefined }> = [];
+    global.fetch = jest.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      seen.push({ path: String(input), credentials: init?.credentials });
+      return { ok: true, status: 200, json: async () => ({}) } as Response;
+    }) as typeof fetch;
+
+    await request("/public/calendar/booking/token/receipt", { method: "GET", credentials: "include" });
+    await request("/public/calendar/booking/token/confirm", { method: "POST", credentials: "include" });
+    await request("/public/calendar/booking/token/payments/confirm", { method: "POST", credentials: "include" });
+    await request("/public/calendar/booking/token/holds", { method: "POST", credentials: "include" });
+
+    expect(seen.map(({ credentials }) => credentials)).toEqual(["include", "include", "include", "omit"]);
+  });
+
   it("uses the shared token cache and 401 single-flight recovery for raw responses", async () => {
     const first = jwt("first");
     const replacement = jwt("replacement");
