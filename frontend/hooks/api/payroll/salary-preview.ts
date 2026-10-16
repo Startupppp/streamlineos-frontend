@@ -13,16 +13,17 @@ export type SalaryPreviewParams = {
   annualCtc: string;
   regime?: "OLD" | "NEW";
   workerType?: "EMPLOYEE" | "CONTRACTOR" | "CONSULTANT" | "INTERN" | "EOR";
+  componentIds?: readonly number[];
 };
 
-export function useSalaryPreview(params: SalaryPreviewParams) {
+export function useSalaryPreview(params: SalaryPreviewParams, options?: { enabled?: boolean }) {
   const canView = useCan("payroll:salaries:view");
   const validCtc = SALARY_PREVIEW_CTC.test(params.annualCtc) && Number(params.annualCtc) > 0;
   return useQuery({
     queryKey: [...payrollQueryKeys.payroll.components(), "salary-preview", params],
     queryFn: ({ signal }) =>
       apiClient.post<SalaryPreview>("/payroll/salary-preview", params, { signal }, salaryPreviewContract),
-    enabled: canView && validCtc,
+    enabled: canView && validCtc && (options?.enabled ?? true),
     staleTime: 60_000,
     placeholderData: keepPreviousData,
     ...INLINE_READ_ERROR,
