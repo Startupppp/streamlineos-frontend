@@ -10,9 +10,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { BarChart3, DatabaseZap, ShieldCheck } from "lucide-react";
 import { useCalendarAnalytics } from "@/hooks/api/calendar-admin";
+import { formatDateTimeInOrgTz } from "@/lib/date-utils";
 import { formatNumber, formatPercent } from "@/lib/format-utils";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { analyticsMonthWindow, availableAnalyticsMonths, currentAnalyticsMonth } from "./calendar-analytics-month";
+import { analyticsMonthWindow, availableAnalyticsMonths, currentAnalyticsMonth, defaultAnalyticsMonth } from "./calendar-analytics-month";
 
 export function CalendarAnalyticsCard({ timeZone, retentionDays }: { timeZone: string; retentionDays: number }) {
   const router = useRouter();
@@ -21,7 +22,7 @@ export function CalendarAnalyticsCard({ timeZone, retentionDays }: { timeZone: s
   const currentMonth = currentAnalyticsMonth(timeZone);
   const options = availableAnalyticsMonths(currentMonth, retentionDays);
   const requestedMonth = searchParams.get("analyticsMonth");
-  const month = requestedMonth && options.some((option) => option.value === requestedMonth) ? requestedMonth : currentMonth;
+  const month = requestedMonth && options.some((option) => option.value === requestedMonth) ? requestedMonth : defaultAnalyticsMonth(timeZone, retentionDays);
   const period = analyticsMonthWindow(month);
   const analytics = useCalendarAnalytics(period.from, period.to);
 
@@ -46,10 +47,10 @@ export function CalendarAnalyticsCard({ timeZone, retentionDays }: { timeZone: s
         {analytics.isError ? <Alert variant="destructive"><DatabaseZap /><AlertTitle>Analytics unavailable</AlertTitle><AlertDescription><div className="flex flex-wrap items-center justify-between gap-2"><span>{getErrorMessage(analytics.error)}</span><Button variant="outline" size="sm" onClick={() => void analytics.refetch()}>Retry</Button></div></AlertDescription></Alert> : null}
         {analytics.data ? (
           <>
-            {analytics.data.period.retentionApplied ? <Alert><DatabaseZap /><AlertTitle>Month withheld by retention</AlertTitle><AlertDescription>This month is not reported because its earliest events are outside the retained analytics window. Choose a newer month for a complete cohort.</AlertDescription></Alert> : (
+            {analytics.data.privacy.cohortState === "retention_withheld" || analytics.data.period.retentionApplied ? <Alert><DatabaseZap /><AlertTitle>Month withheld by retention</AlertTitle><AlertDescription>Part of this month falls outside the retained analytics window, so the complete month cannot be reported. Choose a newer month.</AlertDescription></Alert> : analytics.data.privacy.cohortState === "pending" ? <Alert><DatabaseZap /><AlertTitle>Monthly report pending</AlertTitle><AlertDescription>This complete month can be reported after {formatDateTimeInOrgTz(analytics.data.period.availableAt, analytics.data.period.timeZone)} ({analytics.data.period.timeZone}).</AlertDescription></Alert> : (
               <>
             <div className="flex flex-wrap items-center gap-2 text-sm"><Badge variant="outline">{analytics.data.period.timeZone}</Badge><Badge variant={analytics.data.coverage.state === "complete" ? "default" : "secondary"}>{analytics.data.coverage.state} source coverage</Badge><span className="text-muted-foreground">Cohort threshold {analytics.data.privacy.minimumCohort}</span></div>
-            {analytics.data.privacy.suppressed ? <Alert><ShieldCheck /><AlertTitle>Small cohort protected</AlertTitle><AlertDescription>Numeric values are hidden because this cohort is below the organization privacy threshold.</AlertDescription></Alert> : null}
+            {analytics.data.privacy.cohortState === "below_threshold" ? <Alert><ShieldCheck /><AlertTitle>Small cohort protected</AlertTitle><AlertDescription>Numeric values are hidden because this cohort is below the organization privacy threshold.</AlertDescription></Alert> : null}
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {analytics.data.metrics.map((metric) => (
                 <div key={metric.key} className="rounded-lg border p-4">

@@ -29,3 +29,36 @@ export function availableAnalyticsMonths(currentMonth: string, retentionDays: nu
     };
   });
 }
+
+function monthStartInTimeZone(month: string, timeZone: string): number {
+  const [year, monthNumber] = month.split("-").map(Number);
+  const target = Date.UTC(year, monthNumber - 1, 1);
+  const formatter = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hourCycle: "h23",
+  });
+  let instant = target;
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const parts = formatter.formatToParts(new Date(instant));
+    const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+    const displayed = Date.UTC(Number(values.year), Number(values.month) - 1, Number(values.day), Number(values.hour), Number(values.minute), Number(values.second));
+    instant += target - displayed;
+  }
+  return instant;
+}
+
+export function defaultAnalyticsMonth(timeZone: string, retentionDays: number, now = new Date()): string {
+  const currentMonth = currentAnalyticsMonth(timeZone, now);
+  const dayMs = 24 * 60 * 60_000;
+  return availableAnalyticsMonths(currentMonth, retentionDays).find(({ value }) => {
+    const { to } = analyticsMonthWindow(value);
+    return monthStartInTimeZone(to.slice(0, 7), timeZone) + 7 * dayMs <= now.getTime()
+      && monthStartInTimeZone(value, timeZone) + retentionDays * dayMs >= now.getTime();
+  })?.value ?? currentMonth;
+}

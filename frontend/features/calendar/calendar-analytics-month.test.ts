@@ -1,4 +1,4 @@
-import { analyticsMonthWindow, availableAnalyticsMonths, currentAnalyticsMonth } from "./calendar-analytics-month";
+import { analyticsMonthWindow, availableAnalyticsMonths, currentAnalyticsMonth, defaultAnalyticsMonth } from "./calendar-analytics-month";
 
 describe("Calendar analytics month window", () => {
   it("uses the organization's timezone to choose the current month", () => {
@@ -18,5 +18,16 @@ describe("Calendar analytics month window", () => {
     const months = availableAnalyticsMonths("2026-01", 30);
     expect(months[0]).toEqual({ value: "2026-01", label: "January 2026" });
     expect(months[1]).toEqual({ value: "2025-12", label: "December 2025" });
+  });
+
+  it("defaults to the newest released and fully retained month at the release cutoff", () => {
+    expect(defaultAnalyticsMonth("Asia/Calcutta", 365, new Date("2026-10-07T18:29:59.999Z"))).toBe("2026-08");
+    expect(defaultAnalyticsMonth("Asia/Calcutta", 365, new Date("2026-10-07T18:30:00.000Z"))).toBe("2026-09");
+    expect(defaultAnalyticsMonth("Asia/Calcutta", 30, new Date("2026-10-16T12:00:00.000Z"))).toBe("2026-10");
+  });
+
+  it("selects December across a year rollover only after its release cutoff", () => {
+    expect(defaultAnalyticsMonth("Asia/Calcutta", 365, new Date("2027-01-07T18:29:59.999Z"))).toBe("2026-11");
+    expect(defaultAnalyticsMonth("Asia/Calcutta", 365, new Date("2027-01-07T18:30:00.000Z"))).toBe("2026-12");
   });
 });
