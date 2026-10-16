@@ -5,7 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import { usersAndCommerceQueryKeys } from "@/lib/query-keys/users-and-commerce";
 import { invalidateCalendarMemberLookups, invalidatePersonAccountAccess } from "./cache";
-import type { BulkActionResult, BulkUpdatePayload } from "./types";
+import type { BulkActionResult, BulkUpdatePayload, OrgRole, UsersResponse } from "./types";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { lazyContract } from "@/lib/api-envelope";
 
@@ -89,6 +89,12 @@ export const useSendSigninLink = () => {
   });
 };
 
+const ORG_ROLES: ReadonlySet<string> = new Set<OrgRole>(["OWNER", "ORG_ADMIN", "MEMBER"]);
+
+function isOrgRole(role: string): role is OrgRole {
+  return ORG_ROLES.has(role);
+}
+
 export const useUpdateUserRole = () => {
   const queryClient = useQueryClient();
   return useAuthorizedMutation<
@@ -104,7 +110,15 @@ export const useUpdateUserRole = () => {
         undefined,
         updateUserRoleContract,
       ),
-    onSuccess: (_, { userId }) => {
+    onSuccess: ({ role }, { userId }) => {
+      if (isOrgRole(role))
+        queryClient.setQueriesData<UsersResponse>(
+          { queryKey: usersAndCommerceQueryKeys.users.list() },
+          (page) =>
+            page && Array.isArray(page.data)
+              ? { ...page, data: page.data.map((u) => (u.id === userId ? { ...u, role } : u)) }
+              : page,
+        );
       void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.detail(userId) });
       void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.all });
       void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.stats() });
