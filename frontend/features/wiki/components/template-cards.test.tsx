@@ -1,7 +1,8 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { TemplateCard } from "./template-cards";
 import { TemplatePreviewDialog } from "./template-preview-dialog";
 import type { KbPageTemplate } from "@/hooks/api/kb/page-templates";
+import type { StarterTemplate } from "@/features/wiki/lib/starter-templates";
 
 jest.mock("@/hooks/api/kb", () => ({
   useDeleteKbPageTemplate: () => ({ mutate: jest.fn(), isPending: false }),
@@ -89,6 +90,7 @@ describe("TemplatePreviewDialog", () => {
         onOpenChange={jest.fn()}
         onUse={jest.fn()}
         isPending={false}
+        canUse={true}
       />,
     );
 
@@ -96,5 +98,40 @@ describe("TemplatePreviewDialog", () => {
     expect(screen.getByText("A page with Decisions and Action Items sections.")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Preview" })).toBeInTheDocument();
     expect(screen.getByText("Decisions")).toBeInTheDocument();
+  });
+
+  it("keeps Use disabled without page-create permission and enables it when granted", () => {
+    const onUse = jest.fn();
+    const template: StarterTemplate = {
+      key: "meeting-notes",
+      name: "Meeting Notes",
+      icon: "📝",
+      description: "Capture meeting outcomes",
+      category: "Meetings & Decisions",
+      expectedOutput: "A page with decisions.",
+      content: { type: "doc", children: [] },
+    };
+    const view = render(
+      <TemplatePreviewDialog
+        template={template}
+        onOpenChange={jest.fn()}
+        onUse={onUse}
+        isPending={false}
+        canUse={false}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "Use this template" })).toBeDisabled();
+    view.rerender(
+      <TemplatePreviewDialog
+        template={template}
+        onOpenChange={jest.fn()}
+        onUse={onUse}
+        isPending={false}
+        canUse={true}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Use this template" }));
+    expect(onUse).toHaveBeenCalledWith(template);
   });
 });

@@ -32,6 +32,8 @@ import {
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { KB_TEMPLATES, pageHref } from "@/lib/knowledge-routes";
 import { parseEnum } from "@/lib/url-state/use-url-filters";
 import {
@@ -90,14 +92,23 @@ export default function TemplatesPage() {
     hasNextPage,
     fetchNextPage,
     isFetchingNextPage,
+    isFetchNextPageError,
   } = useKbPageTemplates(q || undefined);
   const canDelete = useCan("kb:templates:manage");
+  const canCreate = useCan("kb:pages:create");
 
   const savedTemplatesState = usePageState({
+    permission: "kb:pages:view",
     isLoading,
-    isError,
+    isError: isError && templates.length === 0,
     error,
     isEmpty: templates.length === 0,
+  });
+  const startersState = usePageState({
+    permission: "kb:pages:view",
+    isLoading: false,
+    isError: false,
+    error: undefined,
   });
 
   const [previewTemplate, setPreviewTemplate] = useState<StarterTemplate | null>(null);
@@ -235,6 +246,7 @@ export default function TemplatesPage() {
         />
 
         <TabsContent value="starters" className={TABS_CONTENT_PAGE_BODY_CLASS}>
+          <PageState resolution={startersState} loading={<TemplatesSkeleton />}>
           <div className="mb-3 flex items-center gap-2">
             <Select value={activeCategory} onValueChange={handleCategoryChange}>
               <SelectTrigger className="w-[220px]" aria-label="Filter templates by category">
@@ -262,12 +274,13 @@ export default function TemplatesPage() {
                 onPreview={handlePreviewStarter}
                 isPending={pendingTemplateKey === starterTemplateKey(template)}
                 isDisabled={
-                  pendingTemplateKey !== null &&
-                  pendingTemplateKey !== starterTemplateKey(template)
+                  !canCreate || (pendingTemplateKey !== null &&
+                  pendingTemplateKey !== starterTemplateKey(template))
                 }
               />
             ))}
           </div>
+          </PageState>
         </TabsContent>
 
         <TabsContent value="saved" className={TABS_CONTENT_PAGE_BODY_CLASS}>
@@ -308,28 +321,39 @@ export default function TemplatesPage() {
                   onUse={handleUseTemplate}
                   isPending={pendingTemplateKey === savedTemplateKey(template.id)}
                   isDisabled={
-                    pendingTemplateKey !== null &&
-                    pendingTemplateKey !== savedTemplateKey(template.id)
+                    !canCreate || (pendingTemplateKey !== null &&
+                    pendingTemplateKey !== savedTemplateKey(template.id))
                   }
                 />
               ))}
             </div>
-            <InfiniteScrollSentinel
-              hasNextPage={hasNextPage ?? false}
-              isFetchingNextPage={isFetchingNextPage}
-              onLoadMore={handleLoadMore}
-              label="Load more templates"
-            />
+            {isError && templates.length > 0 ? (
+              <ErrorState
+                compact
+                title={isFetchNextPageError ? "Couldn't load more templates" : "Couldn't refresh templates"}
+                description={getErrorMessage(error)}
+                error={error}
+                onRetry={isFetchNextPageError ? handleLoadMore : handleRetryTemplates}
+              />
+            ) : (
+              <InfiniteScrollSentinel
+                hasNextPage={hasNextPage ?? false}
+                isFetchingNextPage={isFetchingNextPage}
+                onLoadMore={handleLoadMore}
+                label="Load more templates"
+              />
+            )}
           </PageState>
         </TabsContent>
       </Tabs>
 
-      {previewTemplate && (
+      {previewTemplate && startersState.kind === "ready" && (
         <TemplatePreviewDialog
           template={previewTemplate}
           onOpenChange={handlePreviewOpenChange}
           onUse={handleUseStarter}
           isPending={pendingTemplateKey === starterTemplateKey(previewTemplate)}
+          canUse={canCreate}
         />
       )}
     </PageWrapper>

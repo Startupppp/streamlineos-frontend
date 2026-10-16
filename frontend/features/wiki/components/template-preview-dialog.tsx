@@ -10,6 +10,7 @@ interface TemplatePreviewDialogProps {
   onOpenChange: (open: boolean) => void;
   onUse: (template: StarterTemplate) => void;
   isPending: boolean;
+  canUse: boolean;
 }
 
 function blockText(children: Array<{ text: string }>): string {
@@ -21,6 +22,7 @@ export function TemplatePreviewDialog({
   onOpenChange,
   onUse,
   isPending,
+  canUse,
 }: TemplatePreviewDialogProps) {
   function handleUse() {
     onUse(template);
@@ -38,7 +40,7 @@ export function TemplatePreviewDialog({
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
             Close
           </Button>
-          <LoadingButton onClick={handleUse} isPending={isPending}>
+          <LoadingButton onClick={handleUse} isPending={isPending} disabled={!canUse}>
             Use this template
           </LoadingButton>
         </>
