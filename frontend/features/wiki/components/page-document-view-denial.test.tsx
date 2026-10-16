@@ -1,4 +1,5 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { ApiError } from "@/lib/api-envelope";
 import type { AccessState } from "@/lib/rbac/gate";
 import type { KbPageDetail } from "@/hooks/api/kb/page-types";
@@ -10,8 +11,8 @@ jest.mock("next/navigation", () => ({
 }));
 
 jest.mock("next/dynamic", () => () => {
-  return function PlateEditorStub({ editable }: { editable: boolean }) {
-    return <div data-testid="plate-editor" data-editable={editable} />;
+  return function PlateEditorStub({ editable, value, onChange }: { editable: boolean; value: unknown; onChange: (value: unknown, plainText: string) => void }) {
+    return <div data-testid="plate-editor" data-editable={editable} data-content={JSON.stringify(value)}><button onClick={() => onChange([{ type: "p", children: [{ text: "My body" }] }], "My body")}>Type body</button></div>;
   };
 });
 
@@ -23,6 +24,8 @@ jest.mock("@/hooks/api/access", () => ({
 }));
 
 const mockUseKbPage = jest.fn();
+const mockDiscardLocalEdits = jest.fn();
+let mockConflict: { currentContentRevision: number; lastEditedByName: string | null; lastEditedAt: string | null } | null = null;
 jest.mock("@/hooks/api/kb", () => ({
   useKbPage: (pageId: number) => mockUseKbPage(pageId),
   useUpdateKbPage: () => ({ mutate: jest.fn(), mutateAsync: jest.fn(), isPending: false }),
@@ -32,12 +35,12 @@ jest.mock("@/hooks/api/kb", () => ({
 jest.mock("./use-page-autosave", () => ({
   usePageAutosave: () => ({
     saveState: "idle",
-    conflict: null,
+    conflict: mockConflict,
     savedAt: null,
     isOffline: false,
     pendingFields: [],
     schedule: jest.fn(),
-    discardLocalEdits: jest.fn(),
+    discardLocalEdits: mockDiscardLocalEdits,
     keepLocalEdits: jest.fn(),
   }),
 }));
@@ -73,7 +76,7 @@ jest.mock("./page-right-panel", () => ({
   __esModule: true,
   default: () => <div data-testid="right-panel" />,
 }));
-jest.mock("./page-edit-conflict", () => ({ __esModule: true, default: () => null }));
+jest.mock("./page-edit-conflict", () => ({ __esModule: true, default: ({ onDiscardMine }: { onDiscardMine: () => void }) => <button onClick={onDiscardMine}>Load their version</button> }));
 
 function makePage(): KbPageDetail {
   return {
@@ -105,12 +108,64 @@ function makePage(): KbPageDetail {
 beforeEach(() => {
   mockViewAccess = "granted";
   mockCanUpdate = true;
+  mockConflict = null;
+  mockDiscardLocalEdits.mockClear();
   mockUseKbPage.mockReturnValue({
     data: makePage(),
     isLoading: false,
     isError: false,
     error: undefined,
     refetch: jest.fn(),
+  });
+});
+
+describe("PageDocument — conflict reload", () => {
+  beforeEach(() => {
+    mockConflict = { currentContentRevision: 2, lastEditedByName: "Priya", lastEditedAt: null };
+  });
+
+  async function typeLocalDraft() {
+    const user = userEvent.setup();
+    await user.clear(screen.getByLabelText("Page title"));
+    await user.type(screen.getByLabelText("Page title"), "My title");
+    await user.click(screen.getByRole("button", { name: "Type body" }));
+    return user;
+  }
+
+  it.each([
+    ["rejected", jest.fn().mockRejectedValue(new ApiError("Offline", 503))],
+    ["resolved error", jest.fn().mockResolvedValue({ isSuccess: false, isError: true, error: new ApiError("Offline", 503), data: makePage() })],
+    ["stale success", jest.fn().mockResolvedValue({ isSuccess: true, isError: false, data: makePage() })],
+  ])("keeps the local title and body when the reload has a %s result", async (_kind, refetch) => {
+    mockUseKbPage.mockReturnValue({ data: makePage(), isLoading: false, isError: false, error: undefined, refetch });
+    render(<PageDocument pageId={42} projectId={7} />);
+    const user = await typeLocalDraft();
+
+    await user.click(screen.getByRole("button", { name: "Load their version" }));
+
+    await waitFor(() => expect(refetch).toHaveBeenCalledTimes(1));
+    expect(mockDiscardLocalEdits).not.toHaveBeenCalled();
+    expect(screen.getByLabelText("Page title")).toHaveValue("My title");
+    expect(screen.getByTestId("plate-editor")).toHaveAttribute("data-content", JSON.stringify([{ type: "p", children: [{ text: "My body" }] }]));
+    expect(screen.getByRole("button", { name: "Load their version" })).toBeInTheDocument();
+  });
+
+  it("loads the server revision after a successful fresh refetch", async () => {
+    let currentPage = makePage();
+    const freshPage = { ...makePage(), title: "Their title", contentRevision: 2, content: [{ type: "p", children: [{ text: "Their body" }] }] };
+    const refetch = jest.fn(async () => {
+      currentPage = freshPage;
+      return { isSuccess: true, isError: false, data: freshPage };
+    });
+    mockUseKbPage.mockImplementation(() => ({ data: currentPage, isLoading: false, isError: false, error: undefined, refetch }));
+    render(<PageDocument pageId={42} projectId={7} />);
+    const user = await typeLocalDraft();
+
+    await user.click(screen.getByRole("button", { name: "Load their version" }));
+
+    await waitFor(() => expect(mockDiscardLocalEdits).toHaveBeenCalledTimes(1));
+    expect(screen.getByLabelText("Page title")).toHaveValue("Their title");
+    expect(screen.getByTestId("plate-editor")).toHaveAttribute("data-content", JSON.stringify(freshPage.content));
   });
 });
 
