@@ -1,18 +1,3 @@
-/**
- * Shared employee directory query contract for /hr and /hr/employees.
- *
- * URL params (source of truth):
- *   q       — search string (name, email, employee ID, designation)
- *   dept    — departmentId as number string
- *   status  — active | pending | inactive | all  (maps to API isActive true|pending|false|all)
- *   role    — user.role or "all"
- *   page    — 1-based page
- *   size    — page size
- *
- * Status is only isActive-backed. There is no separate "terminated" API flag;
- * terminated people appear under inactive (isActive=false).
- */
-
 import type { HrEmployeesParams } from "@/hooks/api/hr/employees";
 
 export const EMPLOYEE_STATUS_FILTERS = ["active", "pending", "inactive", "all"] as const;
