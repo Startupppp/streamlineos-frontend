@@ -128,6 +128,15 @@ export function CalendarBookingDistributionPanel({ rule, onBack }: { rule: Calen
     if (next) change({ ...form, localizedCopy: [...form.localizedCopy, { locale: next.value, title: null, description: null, consentLabel: null, fieldLabels: {} }] });
   }
 
+  function customizeColor() {
+    const color = getComputedStyle(document.documentElement).getPropertyValue("--primary").trim();
+    if (!/^#[0-9a-f]{6}$/i.test(color)) {
+      setError("The current palette color could not be selected.");
+      return;
+    }
+    change({ ...form, branding: { ...form.branding, primaryColor: color } });
+  }
+
   async function issueLink() {
     if (!current) return;
     if (channel === "embed" && !allowedOrigin) {
@@ -180,7 +189,21 @@ export function CalendarBookingDistributionPanel({ rule, onBack }: { rule: Calen
         <Button type="button" variant="outline" disabled={supportedLocales.every((locale) => form.localizedCopy.some((copy) => supportedLocale(copy.locale) === locale.value))} onClick={addLanguage}>Add language</Button>
         <div className="space-y-1"><Label htmlFor="distribution-display-name">Brand name</Label><Input id="distribution-display-name" value={form.branding.displayName ?? ""} onChange={(event) => change({ ...form, branding: { ...form.branding, displayName: event.target.value || null } })} /></div>
         <div className="space-y-1"><Label htmlFor="distribution-logo">HTTPS logo URL</Label><Input id="distribution-logo" type="url" value={form.branding.logoUrl ?? ""} onChange={(event) => change({ ...form, branding: { ...form.branding, logoUrl: event.target.value || null } })} /></div>
-        <div className="space-y-1"><Label htmlFor="distribution-color">Brand color</Label><Input id="distribution-color" type="color" value={form.branding.primaryColor ?? "#2563eb"} onChange={(event) => change({ ...form, branding: { ...form.branding, primaryColor: event.target.value } })} /></div>
+        <div className="space-y-1">
+          {form.branding.primaryColor ? <Label htmlFor="distribution-color">Brand color</Label> : <span className="text-sm font-medium">Brand color</span>}
+          {form.branding.primaryColor ? (
+            <div className="flex items-center gap-2">
+              <Input id="distribution-color" type="color" value={form.branding.primaryColor} onChange={(event) => change({ ...form, branding: { ...form.branding, primaryColor: event.target.value } })} />
+              <Button type="button" variant="outline" onClick={() => change({ ...form, branding: { ...form.branding, primaryColor: null } })}>Use platform palette</Button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <span className="size-9 shrink-0 rounded-md border border-border bg-primary" aria-hidden="true" />
+              <span className="text-sm text-muted-foreground">Platform palette</span>
+              <Button type="button" variant="outline" onClick={customizeColor}>Customize color</Button>
+            </div>
+          )}
+        </div>
         <Label className="flex items-center gap-2 text-sm font-normal"><Checkbox checked={form.branding.showPoweredBy} onCheckedChange={(checked) => change({ ...form, branding: { ...form.branding, showPoweredBy: checked === true } })} />Show StreamlineOS credit</Label>
         <div className="space-y-1"><Label htmlFor="distribution-origins">Approved embed origins</Label><Textarea id="distribution-origins" placeholder="https://example.com" value={form.allowedOrigins.join("\n")} onChange={(event) => change({ ...form, allowedOrigins: event.target.value.split("\n") })} /><p className="text-xs text-muted-foreground">One exact HTTPS origin per line.</p></div>
         <fieldset className="space-y-2"><legend className="text-sm font-medium">Visitor questions</legend>{rule.intakeFields.map((field) => <Label key={field.key} className="flex items-center gap-2 text-sm font-normal"><Checkbox checked={form.intakeKeys.includes(field.key)} disabled={field.required} onCheckedChange={(checked) => change({ ...form, intakeKeys: checked === true ? [...form.intakeKeys, field.key] : form.intakeKeys.filter((key) => key !== field.key) })} />{field.label}{field.required ? " (required)" : ""}</Label>)}</fieldset>
