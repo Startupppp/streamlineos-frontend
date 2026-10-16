@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 import PageEditConflict from "./page-edit-conflict";
@@ -12,16 +12,20 @@ const CONFLICT = {
 function renderConflict(over: Partial<React.ComponentProps<typeof PageEditConflict>> = {}) {
   const onKeepMine = jest.fn();
   const onDiscardMine = jest.fn();
+  const onCompare = jest.fn().mockResolvedValue({ title: "Their title", body: "Their body" });
   render(
     <PageEditConflict
       conflict={CONFLICT}
       isReloading={false}
+      localTitle="My title"
+      localBody="My body"
       onKeepMine={onKeepMine}
       onDiscardMine={onDiscardMine}
+      onCompare={onCompare}
       {...over}
     />,
   );
-  return { onKeepMine, onDiscardMine };
+  return { onKeepMine, onDiscardMine, onCompare };
 }
 
 describe("PageEditConflict", () => {
@@ -108,5 +112,45 @@ describe("PageEditConflict", () => {
     const alert = screen.getByRole("alert");
     expect(alert).toHaveTextContent("Your local changes: body");
     expect(alert).not.toHaveTextContent("body and body");
+  });
+
+  it("compares only pending title and body fields after an accessible action", async () => {
+    const user = userEvent.setup();
+    const { onCompare } = renderConflict({ pendingFields: ["title", "contentText"] });
+
+    await user.tab();
+    expect(screen.getByRole("button", { name: "Compare versions" })).toHaveFocus();
+    await user.keyboard("{Enter}");
+
+    expect(onCompare).toHaveBeenCalledTimes(1);
+    const comparison = await screen.findByRole("region", { name: "Version comparison" });
+    expect(comparison).toHaveTextContent("My title");
+    expect(comparison).toHaveTextContent("Their title");
+    expect(comparison).toHaveTextContent("My body");
+    expect(comparison).toHaveTextContent("Their body");
+  });
+
+  it("omits the body when only the title is pending", async () => {
+    const user = userEvent.setup();
+    renderConflict({ pendingFields: ["title"] });
+
+    await user.click(screen.getByRole("button", { name: "Compare versions" }));
+
+    const comparison = await screen.findByRole("region", { name: "Version comparison" });
+    expect(comparison).toHaveTextContent("My title");
+    expect(comparison).not.toHaveTextContent("My body");
+    expect(comparison).not.toHaveTextContent("Their body");
+  });
+
+  it("retains the conflict action and offers retry when comparison read fails", async () => {
+    const user = userEvent.setup();
+    const onCompare = jest.fn().mockRejectedValue(new Error("Offline"));
+    renderConflict({ pendingFields: ["content"], onCompare });
+
+    await user.click(screen.getByRole("button", { name: "Compare versions" }));
+
+    await waitFor(() => expect(screen.getByText("Couldn't compare versions. Try again.")).toBeInTheDocument());
+    expect(screen.getByRole("button", { name: "Compare versions" })).toBeEnabled();
+    expect(screen.queryByRole("region", { name: "Version comparison" })).toBeNull();
   });
 });

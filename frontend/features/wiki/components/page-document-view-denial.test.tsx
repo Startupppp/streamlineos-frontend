@@ -25,6 +25,8 @@ jest.mock("@/hooks/api/access", () => ({
 
 const mockUseKbPage = jest.fn();
 const mockDiscardLocalEdits = jest.fn();
+const mockCompared = jest.fn();
+const mockCompareFailed = jest.fn();
 let mockConflict: { currentContentRevision: number; lastEditedByName: string | null; lastEditedAt: string | null } | null = null;
 jest.mock("@/hooks/api/kb", () => ({
   useKbPage: (pageId: number) => mockUseKbPage(pageId),
@@ -76,7 +78,7 @@ jest.mock("./page-right-panel", () => ({
   __esModule: true,
   default: () => <div data-testid="right-panel" />,
 }));
-jest.mock("./page-edit-conflict", () => ({ __esModule: true, default: ({ onDiscardMine }: { onDiscardMine: () => void }) => <button onClick={onDiscardMine}>Load their version</button> }));
+jest.mock("./page-edit-conflict", () => ({ __esModule: true, default: ({ onDiscardMine, onCompare }: { onDiscardMine: () => void; onCompare: () => Promise<{ title: string; body: string }> }) => <><button onClick={onDiscardMine}>Load their version</button><button onClick={() => { void onCompare().then(mockCompared, mockCompareFailed); }}>Compare versions</button></> }));
 
 function makePage(): KbPageDetail {
   return {
@@ -110,6 +112,8 @@ beforeEach(() => {
   mockCanUpdate = true;
   mockConflict = null;
   mockDiscardLocalEdits.mockClear();
+  mockCompared.mockClear();
+  mockCompareFailed.mockClear();
   mockUseKbPage.mockReturnValue({
     data: makePage(),
     isLoading: false,
@@ -166,6 +170,26 @@ describe("PageDocument — conflict reload", () => {
     await waitFor(() => expect(mockDiscardLocalEdits).toHaveBeenCalledTimes(1));
     expect(screen.getByLabelText("Page title")).toHaveValue("Their title");
     expect(screen.getByTestId("plate-editor")).toHaveAttribute("data-content", JSON.stringify(freshPage.content));
+  });
+
+  it("rejects a stale comparison read and accepts a fresh one without discarding the draft", async () => {
+    const freshPage = { ...makePage(), title: "Their title", contentRevision: 2 };
+    const refetch = jest.fn()
+      .mockResolvedValueOnce({ isSuccess: true, data: makePage() })
+      .mockResolvedValueOnce({ isSuccess: true, data: freshPage });
+    mockUseKbPage.mockReturnValue({ data: makePage(), isLoading: false, isError: false, error: undefined, refetch });
+    render(<PageDocument pageId={42} projectId={7} />);
+    const user = await typeLocalDraft();
+
+    await user.click(screen.getByRole("button", { name: "Compare versions" }));
+    await waitFor(() => expect(mockCompareFailed).toHaveBeenCalledTimes(1));
+    expect(mockCompared).not.toHaveBeenCalled();
+    expect(mockDiscardLocalEdits).not.toHaveBeenCalled();
+    expect(screen.getByLabelText("Page title")).toHaveValue("My title");
+
+    await user.click(screen.getByRole("button", { name: "Compare versions" }));
+    await waitFor(() => expect(mockCompared).toHaveBeenCalledWith({ title: "Their title", body: "" }));
+    expect(mockDiscardLocalEdits).not.toHaveBeenCalled();
   });
 });
 
