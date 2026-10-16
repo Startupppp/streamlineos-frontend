@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import type { UseMutationOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
@@ -30,6 +31,8 @@ export function useRankTicket<TContext = unknown>(
   >,
 ) {
   const queryClient = useQueryClient();
+  const priorStatuses = useRef(new Map<number, string>());
+  const callerOnMutate = options?.onMutate;
   return useAuthorizedMutation<
     RankTicketResponse,
     Error,
@@ -45,8 +48,14 @@ export function useRankTicket<TContext = unknown>(
         undefined,
         rankTicketResultLazy,
       ),
+    onMutate: callerOnMutate && ((variables, mutationContext) => {
+      const status = resolveTicketStatus(queryClient, variables.projectId, variables.ticketId);
+      if (status) priorStatuses.current.set(variables.ticketId, status);
+      return callerOnMutate(variables, mutationContext);
+    }),
     onSuccess: (data, variables, context, mutationContext) => {
-      const prevStatus = resolveTicketStatus(queryClient, variables.projectId, variables.ticketId);
+      const prevStatus = priorStatuses.current.get(variables.ticketId)
+        ?? resolveTicketStatus(queryClient, variables.projectId, variables.ticketId);
       const applyServerRank = (ticket: Ticket) =>
         ticket.id === data.id
           ? { ...ticket, rank: data.rank, status: data.status, version: data.version }
@@ -71,6 +80,7 @@ export function useRankTicket<TContext = unknown>(
       options?.onSuccess?.(data, variables, context, mutationContext);
     },
     onSettled: (data, error, variables, context, mutationContext) => {
+      priorStatuses.current.delete(variables.ticketId);
       invalidateTicketUpdateViews(
         queryClient,
         variables.projectId,
