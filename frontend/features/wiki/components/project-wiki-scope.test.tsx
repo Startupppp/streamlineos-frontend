@@ -45,6 +45,7 @@ const CHILD_NODE: KbPageTreeNode = {
 };
 
 let rootNode = ROOT_NODE;
+let rootLevelOverride: Record<string, unknown> | null = null;
 let childLevelOverride: Record<string, unknown> | null = null;
 let historyListOverride: Record<string, unknown> | null = null;
 let historyDetailOverride: Record<string, unknown> | null = null;
@@ -80,7 +81,7 @@ jest.mock("@/hooks/api/kb", () => ({
   useCreateKbPage: () => ({ mutate: createPageMutate, isPending: false }),
   useDeleteKbPage: () => ({ mutate: jest.fn(), isPending: false }),
   useUpdateKbPage: () => ({ mutate: updatePageMutate, isPending: false }),
-  useKbPageTreeInfinite: () => treeLevel([rootNode]),
+  useKbPageTreeInfinite: () => rootLevelOverride ?? treeLevel([rootNode]),
   useKbPageChildrenLevel: (pageId: number, enabled: boolean, spaceId?: number, projectId?: number) => {
     mockChildLevelRequest(pageId, enabled, spaceId, projectId);
     return enabled
@@ -188,6 +189,7 @@ async function openDuplicateItem() {
 beforeEach(() => {
   jest.clearAllMocks();
   rootNode = ROOT_NODE;
+  rootLevelOverride = null;
   childLevelOverride = null;
   historyListOverride = null;
   historyDetailOverride = null;
@@ -305,6 +307,64 @@ describe("project wiki history path stays inside the project", () => {
 });
 
 describe("project wiki page tree links stay inside the project", () => {
+  it("shows the root tree request reference and retries a failed first read", async () => {
+    const refetch = jest.fn();
+    rootLevelOverride = {
+      ...treeLevel([]),
+      data: undefined,
+      isError: true,
+      error: new ApiError("Read failed", 500, "INTERNAL", { correlationId: "root-tree-first" }, "/kb/pages/tree"),
+      refetch,
+    };
+    const user = userEvent.setup();
+
+    render(<PageTree projectId={7} baseHref="/build/7/wiki" />);
+
+    expect(screen.getByText("Couldn't load pages")).toBeInTheDocument();
+    expect(screen.getByText("root-tree-first")).toBeInTheDocument();
+    expect(screen.queryByText("No pages yet")).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Try again" }));
+    expect(refetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps loaded root pages and retries only a failed later tree page", async () => {
+    const refetch = jest.fn();
+    const fetchNextPage = jest.fn();
+    rootLevelOverride = {
+      ...treeLevel([rootNode]),
+      isError: true,
+      isFetchNextPageError: true,
+      error: new ApiError("Read failed", 500, "INTERNAL", { correlationId: "root-tree-later" }, "/kb/pages/tree"),
+      refetch,
+      hasNextPage: true,
+      fetchNextPage,
+    };
+    const user = userEvent.setup();
+
+    render(<PageTree projectId={7} baseHref="/build/7/wiki" />);
+
+    expect(screen.getByRole("link", { name: /deployment runbook/i })).toBeInTheDocument();
+    expect(screen.getByText("Couldn't load more pages")).toBeInTheDocument();
+    expect(screen.getByText("root-tree-later")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Load more pages" })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Try again" }));
+    expect(fetchNextPage).toHaveBeenCalledTimes(1);
+    expect(refetch).not.toHaveBeenCalled();
+  });
+
+  it("hides cached root pages after the tree read reports lost access", () => {
+    rootLevelOverride = {
+      ...treeLevel([rootNode]),
+      isError: true,
+      error: new ApiError("Access revoked", 403, "FORBIDDEN", { correlationId: "root-tree-denied" }, "/kb/pages/tree"),
+    };
+
+    render(<PageTree projectId={7} baseHref="/build/7/wiki" />);
+
+    expect(screen.queryByRole("link", { name: /deployment runbook/i })).not.toBeInTheDocument();
+    expect(screen.getByText("root-tree-denied")).toBeInTheDocument();
+  });
+
   it("loads space children only after expansion and keeps the space scope", async () => {
     rootNode = { ...ROOT_NODE, spaceId: 5, projectId: null };
     const user = userEvent.setup();

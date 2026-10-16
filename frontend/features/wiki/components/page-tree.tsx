@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { Button } from "@/components/ui/button";
+import { ErrorState } from "@/components/shared/error-state";
 import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { useCan } from "@/hooks/api/access";
 import { useCreateKbPage, useKbPageTreeInfinite } from "@/hooks/api/kb";
@@ -13,6 +13,7 @@ import { KbPlusIcon } from "@/features/wiki/lib/kb-icons";
 import PageTreeItem from "./page-tree-item";
 import type { KbPageTreeNode } from "@/hooks/api/kb/page-types";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { isApiError } from "@/lib/api-envelope";
 
 interface PageTreeProps {
   onCloseMobile?: () => void;
@@ -35,6 +36,7 @@ export default function PageTree({
     data,
     isLoading,
     isError,
+    isFetchNextPageError,
     error,
     refetch,
     hasNextPage,
@@ -43,6 +45,7 @@ export default function PageTree({
   } = useKbPageTreeInfinite({ spaceId, projectId });
 
   const rootNodes: KbPageTreeNode[] = data?.pages.flatMap((p) => p.data) ?? [];
+  const accessLost = isApiError(error) && [401, 403, 404].includes(error.status);
 
   function handleNewPage() {
     if (!canCreate) return;
@@ -61,6 +64,10 @@ export default function PageTree({
   }
 
   function handleRetry() {
+    if (isFetchNextPageError) {
+      void fetchNextPage();
+      return;
+    }
     void refetch();
   }
 
@@ -78,22 +85,15 @@ export default function PageTree({
     );
   }
 
-  if (isError) {
+  if (isError && (rootNodes.length === 0 || accessLost)) {
     return (
-      <div className="flex flex-col items-center gap-2 px-2 py-4 text-center">
-        <p className="text-xs text-muted-foreground">
-          {getErrorMessage(error)}
-        </p>
-        <Button
-          type="button"
-          size="sm"
-          variant="outline"
-          className="h-7 text-xs"
-          onClick={handleRetry}
-        >
-          Try again
-        </Button>
-      </div>
+      <ErrorState
+        compact
+        title="Couldn't load pages"
+        description={getErrorMessage(error)}
+        error={error}
+        onRetry={handleRetry}
+      />
     );
   }
 
@@ -131,12 +131,22 @@ export default function PageTree({
           baseHref={baseHref}
         />
       ))}
-      <InfiniteScrollSentinel
-        hasNextPage={hasNextPage}
-        isFetchingNextPage={isFetchingNextPage}
-        onLoadMore={fetchNextPage}
-        label="Load more pages"
-      />
+      {isError ? (
+        <ErrorState
+          compact
+          title={isFetchNextPageError ? "Couldn't load more pages" : "Couldn't refresh pages"}
+          description={getErrorMessage(error)}
+          error={error}
+          onRetry={handleRetry}
+        />
+      ) : (
+        <InfiniteScrollSentinel
+          hasNextPage={hasNextPage}
+          isFetchingNextPage={isFetchingNextPage}
+          onLoadMore={fetchNextPage}
+          label="Load more pages"
+        />
+      )}
     </div>
   );
 }
