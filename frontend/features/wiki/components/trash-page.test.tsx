@@ -151,6 +151,13 @@ const { useKbTrashDeleters } = jest.requireMock("@/hooks/api/kb/pages") as {
 const { useCursorPagination } = jest.requireMock("@/hooks/common/use-cursor-pagination") as {
   useCursorPagination: jest.Mock;
 };
+const { useKbTrashPurgeImpact, useKbBulkPurgePages } = jest.requireMock("@/hooks/api/kb/pages") as {
+  useKbTrashPurgeImpact: jest.Mock;
+  useKbBulkPurgePages: jest.Mock;
+};
+const { ConfirmDialog } = jest.requireMock("@/components/ui/confirm-dialog") as {
+  ConfirmDialog: jest.Mock;
+};
 
 const emptyListResponse = {
   data: [] as KbPageListItem[],
@@ -220,6 +227,69 @@ beforeEach(() => {
   });
   usePageState.mockReturnValue({ kind: "empty" });
   useCan.mockReturnValue(true);
+  useKbTrashPurgeImpact.mockReturnValue({ data: undefined, isLoading: false, isError: false, error: null, refetch: jest.fn() });
+  useKbBulkPurgePages.mockReturnValue({ mutate: jest.fn(), isPending: false });
+});
+
+describe("trash bulk purge impact confirmation", () => {
+  function openPurgeConfirmation() {
+    usePageState.mockReturnValue({ kind: "ready" });
+    useKbPagesTrash.mockReturnValue({ data: nonEmptyListResponse, isLoading: false, isError: false, error: null, refetch: jest.fn() });
+    const view = render(<TrashPage />);
+    const table = DataTable as jest.Mock;
+    const selection = table.mock.calls.at(-1)?.[0].selection as { onChange: (selected: Set<string>) => void };
+    act(() => selection.onChange(new Set(["9"])));
+    fireEvent.click(screen.getByRole("button", { name: "Purge 1" }));
+    return view;
+  }
+
+  function purgeDialog() {
+    return ConfirmDialog.mock.calls.at(-1)?.[0] as {
+      description: string;
+      content?: React.ReactNode;
+      hideConfirm: boolean;
+      onConfirm: () => void;
+    };
+  }
+
+  it("keeps permanent deletion unavailable while impact is loading or failed", () => {
+    const mutate = jest.fn();
+    const refetch = jest.fn();
+    useKbBulkPurgePages.mockReturnValue({ mutate, isPending: false });
+    useKbTrashPurgeImpact.mockReturnValue({ data: undefined, isLoading: true, isError: false, error: null, refetch });
+    const view = openPurgeConfirmation();
+
+    expect(purgeDialog().hideConfirm).toBe(true);
+    expect(purgeDialog().description).toContain("Checking child pages");
+    act(() => purgeDialog().onConfirm());
+    expect(mutate).not.toHaveBeenCalled();
+
+    useKbTrashPurgeImpact.mockReturnValue({ data: undefined, isLoading: false, isError: true, error: new Error("offline"), refetch });
+    view.rerender(<TrashPage />);
+
+    expect(purgeDialog().hideConfirm).toBe(true);
+    expect(purgeDialog().description).toContain("Could not verify the impact");
+    act(() => purgeDialog().onConfirm());
+    expect(mutate).not.toHaveBeenCalled();
+    render(<>{purgeDialog().content}</>);
+    fireEvent.click(screen.getByRole("button", { name: "Retry impact check" }));
+    expect(refetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("enables deletion only after the impact read includes descendant pages", () => {
+    const mutate = jest.fn();
+    useKbBulkPurgePages.mockReturnValue({ mutate, isPending: false });
+    const view = openPurgeConfirmation();
+
+    expect(purgeDialog().hideConfirm).toBe(true);
+    useKbTrashPurgeImpact.mockReturnValue({ data: { pageCount: 1, descendantCount: 2 }, isLoading: false, isError: false, error: null, refetch: jest.fn() });
+    view.rerender(<TrashPage />);
+
+    expect(purgeDialog().hideConfirm).toBe(false);
+    expect(purgeDialog().description).toContain("2 child pages");
+    act(() => purgeDialog().onConfirm());
+    expect(mutate).toHaveBeenCalledWith([9], expect.anything());
+  });
 });
 
 describe("trash page deleted-by filter", () => {

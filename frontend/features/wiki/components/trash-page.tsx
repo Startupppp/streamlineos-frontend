@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { ErrorReference } from "@/components/shared/error-reference";
 import { useCan } from "@/hooks/api/access";
 import { useKbPagesTrash, useEmptyKbTrash } from "@/hooks/api/kb";
 import {
@@ -138,9 +139,32 @@ export default function TrashPage() {
   const [emptyConfirmOpen, setEmptyConfirmOpen] = useState(false);
   const [bulkPurgeConfirmOpen, setBulkPurgeConfirmOpen] = useState(false);
   const selectedIds = [...selected].map(Number);
-  const { data: purgeImpact } = useKbTrashPurgeImpact(selectedIds, {
+  const {
+    data: purgeImpact,
+    isLoading: purgeImpactLoading,
+    isError: purgeImpactError,
+    error: purgeImpactReadError,
+    refetch: refetchPurgeImpact,
+  } = useKbTrashPurgeImpact(selectedIds, {
     enabled: bulkPurgeConfirmOpen,
   });
+  const canConfirmPurge = canPurge && !purgeImpactLoading && !purgeImpactError && !!purgeImpact && selectedIds.length > 0;
+  let purgeImpactDescription = "This cannot be undone. The selected pages will be permanently removed along with their history, attachments, and index entries.";
+  if (!canPurge) {
+    purgeImpactDescription = "You no longer have permission to permanently delete these pages.";
+  } else if (purgeImpactLoading) {
+    purgeImpactDescription = "Checking child pages and dependent data before permanent deletion.";
+  } else if (purgeImpactError) {
+    purgeImpactDescription = "Could not verify the impact of permanently deleting these pages. Retry the check before continuing.";
+  } else if (!purgeImpact) {
+    purgeImpactDescription = "Deletion impact is unavailable. Retry the check before continuing.";
+  } else if (purgeImpact.descendantCount > 0) {
+    purgeImpactDescription = `This cannot be undone. ${purgeImpact.descendantCount} child page${purgeImpact.descendantCount === 1 ? "" : "s"} nested under the selection will also be permanently removed, along with history, attachments, and index entries.`;
+  }
+
+  function handleRetryPurgeImpact() {
+    void refetchPurgeImpact();
+  }
 
   function handleSearchChange(e: React.ChangeEvent<HTMLInputElement>) {
     const value = e.target.value;
@@ -211,6 +235,7 @@ export default function TrashPage() {
   }
 
   function handleBulkPurge() {
+    if (!canConfirmPurge) return;
     bulkPurge.mutate(selectedIds, {
       onSuccess: () => {
         toast.success(
@@ -485,13 +510,16 @@ export default function TrashPage() {
         open={bulkPurgeConfirmOpen}
         onOpenChange={setBulkPurgeConfirmOpen}
         title={`Permanently delete ${selectedCount} page${selectedCount === 1 ? "" : "s"}?`}
-        description={
-          purgeImpact && purgeImpact.descendantCount > 0
-            ? `This cannot be undone. ${purgeImpact.descendantCount} child page${purgeImpact.descendantCount === 1 ? "" : "s"} nested under the selection will also be permanently removed, along with history, attachments, and index entries.`
-            : "This cannot be undone. The selected pages will be permanently removed along with their history, attachments, and index entries."
-        }
+        description={purgeImpactDescription}
+        content={canPurge && !purgeImpactLoading && (purgeImpactError || !purgeImpact) ? (
+          <div role="alert" className="space-y-2 text-sm text-destructive">
+            {purgeImpactError && <ErrorReference error={purgeImpactReadError} />}
+            <Button type="button" variant="outline" size="sm" onClick={handleRetryPurgeImpact}>Retry impact check</Button>
+          </div>
+        ) : undefined}
         confirmLabel="Delete Forever"
         destructive
+        hideConfirm={!canConfirmPurge}
         isPending={bulkPurge.isPending}
         onConfirm={handleBulkPurge}
       />

@@ -324,6 +324,7 @@ export function useKbTrashPurgeImpact(
 ) {
   const canPurge = useCan("kb:pages:purge");
   return useQuery({
+    ...INLINE_READ_ERROR,
     queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTrashPurgeImpact(pageIds),
     queryFn: ({ signal }) =>
       apiClient.post<KbPageTrashPurgeImpact>(
