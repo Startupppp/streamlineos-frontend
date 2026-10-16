@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { payrollQueryKeys } from "@/lib/query-keys/payroll";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type { RunInput } from "@/types/payroll/runs";
@@ -27,9 +28,10 @@ interface PatchInputBody {
   reason: string;
 }
 
-export function useRunInputs(runId: number, params?: { userId?: string }) {
+export function useRunInputs(runId: number, params?: { userId?: string; cursor?: string; limit?: number }) {
   const canView = useCan("payroll:runs:view");
   return useQuery({
+    ...INLINE_READ_ERROR,
     queryKey: payrollQueryKeys.payroll.runInputs(runId, params),
     queryFn: ({ signal }) =>
       apiClient.get(`/payroll/runs/${runId}/inputs`, params, signal, inputsListC),

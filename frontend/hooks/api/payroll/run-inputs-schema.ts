@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { cursorPageContract } from "@/hooks/api/cursor-page-schema";
 
 export const inputItemContract = z.object({
   id: z.number(),
@@ -19,7 +20,7 @@ export const inputItemContract = z.object({
   userEmail: z.string(),
 });
 
-export const inputsListContract = z.array(inputItemContract);
+export const inputsListContract = cursorPageContract(inputItemContract);
 
 export const reimportResponseContract = z.object({
   ok: z.literal(true),

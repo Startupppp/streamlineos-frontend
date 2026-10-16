@@ -7,6 +7,7 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { AlertTriangle } from "lucide-react";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { useCursorPager } from "@/components/ui/table-pagination";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -87,6 +88,8 @@ interface InputsTabProps {
   runId: number;
   isLocked?: boolean;
 }
+
+const PAGE_SIZE = 50;
 
 const COLUMNS: DataTableColumn<InputItem>[] = [
   {
@@ -171,12 +174,21 @@ export function InputsTab({ runId, isLocked }: InputsTabProps) {
   const [showReimport, setShowReimport] = useState(false);
   const canUpdate = useCan("payroll:runs:update");
 
-  const { data: inputs, isLoading, isError, error, refetch } = useRunInputs(runId);
+  const pager = useCursorPager();
+  const { data, isLoading, isError, error, refetch } = useRunInputs(runId, { cursor: pager.cursor, limit: PAGE_SIZE });
   const patchMutation = usePatchInput(runId);
   const reimportMutation = useReimportInputs(runId);
 
   function handleRetry() {
     void refetch();
+  }
+
+  function handleNextPage() {
+    pager.goNext(data?.pagination.nextCursor);
+  }
+
+  function handlePreviousPage() {
+    pager.goPrevious();
   }
 
   const form = useForm<OverrideForm>({
@@ -251,16 +263,25 @@ export function InputsTab({ runId, isLocked }: InputsTabProps) {
           className="flex-1"
           title="Couldn't load run inputs"
           description={getErrorMessage(error)}
+          error={error}
           onRetry={handleRetry}
         />
       ) : (
         <DataTable
-          data={inputs ?? []}
+          data={data?.data ?? []}
           columns={COLUMNS}
           getRowKey={(row) => row.id}
           onRowClick={!isLocked && canUpdate ? handleRowClick : undefined}
           isLoading={isLoading}
           minWidth="900px"
+          pagination={{
+            mode: "cursor",
+            pageSize: PAGE_SIZE,
+            hasMore: data?.pagination.hasMore ?? false,
+            hasPrevious: pager.hasPrevious,
+            onNext: handleNextPage,
+            onPrevious: handlePreviousPage,
+          }}
           emptyState={
             <EmptyState
               compact
