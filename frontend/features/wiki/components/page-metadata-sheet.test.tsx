@@ -1,10 +1,13 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { ApiError } from "@/lib/api-envelope";
 import type { KbPageDetail } from "@/hooks/api/kb/page-types";
 import PageMetadataSheet from "./page-metadata-sheet";
 
 jest.mock("@/hooks/api/access", () => ({ useCan: jest.fn() }));
 jest.mock("@/hooks/api/kb/spaces", () => ({ useKbSpaces: jest.fn(() => ({ data: { data: [] } })) }));
 jest.mock("@/hooks/api/kb/pages", () => ({
+  useKbPage: jest.fn(() => ({ refetch: jest.fn() })),
   useUpdateKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   usePublishKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   useArchiveKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
@@ -13,13 +16,15 @@ jest.mock("@/hooks/api/kb/pages", () => ({
   useMarkStaleKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
 }));
 jest.mock("@/components/ui/user-combobox", () => ({
-  UserCombobox: ({ disabled, id }: { disabled?: boolean; id?: string }) => <button type="button" id={id} disabled={disabled}>Select owner</button>,
+  UserCombobox: ({ disabled, id, onChange }: { disabled?: boolean; id?: string; onChange: (value: string) => void }) => <button type="button" id={id} disabled={disabled} onClick={() => onChange("user-2")}>Select owner</button>,
 }));
 jest.mock("./page-record-links", () => ({ PageRecordLinks: () => null }));
 jest.mock("./reviews-decision-dialogs", () => ({ RequestReviewDialog: () => null }));
 
 const { useCan } = jest.requireMock<{ useCan: jest.Mock }>("@/hooks/api/access");
 const { usePublishKbPage } = jest.requireMock<{ usePublishKbPage: jest.Mock }>("@/hooks/api/kb/pages");
+const { useUpdateKbPage, useKbPage } = jest.requireMock<{ useUpdateKbPage: jest.Mock; useKbPage: jest.Mock }>("@/hooks/api/kb/pages");
+const { useKbSpaces } = jest.requireMock<{ useKbSpaces: jest.Mock }>("@/hooks/api/kb/spaces");
 
 function page(overrides: Partial<KbPageDetail> = {}): KbPageDetail {
   return {
@@ -46,6 +51,67 @@ function renderSheet(currentPage: KbPageDetail) {
 beforeEach(() => {
   jest.clearAllMocks();
   useCan.mockImplementation((key: string) => key === "kb:pages:update");
+  useUpdateKbPage.mockReturnValue({ mutate: jest.fn(), mutateAsync: jest.fn(), isPending: false });
+  useKbPage.mockReturnValue({ refetch: jest.fn() });
+  useKbSpaces.mockReturnValue({ data: { data: [] } });
+});
+
+it("sends the current content revision when assigning a page owner", async () => {
+  const mutate = jest.fn();
+  useUpdateKbPage.mockReturnValue({ mutate, mutateAsync: jest.fn(), isPending: false });
+  renderSheet(page({ contentRevision: 7 }));
+
+  await userEvent.setup().click(screen.getByRole("button", { name: "Owner" }));
+
+  expect(mutate).toHaveBeenCalledWith(
+    { pageId: 42, ownerUserId: "user-2", expectedContentRevision: 7 },
+    expect.any(Object),
+  );
+});
+
+it("sends the current content revision when moving a page into a space", async () => {
+  const mutate = jest.fn();
+  useKbSpaces.mockReturnValue({ data: { data: [{ id: 5, name: "Team space", icon: null }] } });
+  useUpdateKbPage.mockReturnValue({ mutate, mutateAsync: jest.fn(), isPending: false });
+  renderSheet(page({ contentRevision: 7 }));
+
+  fireEvent.keyDown(screen.getByRole("combobox", { name: "Space" }), { key: "ArrowDown" });
+  fireEvent.click(screen.getByRole("option", { name: "Team space" }));
+
+  expect(mutate).toHaveBeenCalledWith(
+    { pageId: 42, spaceId: 5, expectedContentRevision: 7 },
+    expect.any(Object),
+  );
+});
+
+it("retains a stale owner choice and retries only after a fresh page read", async () => {
+  const mutate = jest.fn((_payload, options) => options.onError(new ApiError("Stale", 409, "STALE_REVISION", {
+    currentContentRevision: 8,
+    lastEditedByName: null,
+    lastEditedAt: null,
+  })));
+  const mutateAsync = jest.fn().mockResolvedValue({ contentRevision: 9 });
+  const refetch = jest.fn()
+    .mockResolvedValueOnce({ isSuccess: true, data: page({ contentRevision: 7 }) })
+    .mockResolvedValueOnce({ isSuccess: true, data: page({ contentRevision: 8 }) });
+  useUpdateKbPage.mockReturnValue({ mutate, mutateAsync, isPending: false });
+  useKbPage.mockReturnValue({ refetch });
+  renderSheet(page({ contentRevision: 7 }));
+  const user = userEvent.setup();
+
+  await user.click(screen.getByRole("button", { name: "Owner" }));
+  expect(screen.getByRole("button", { name: "Retry owner change" })).toBeInTheDocument();
+  await user.click(screen.getByRole("button", { name: "Retry owner change" }));
+  expect(mutateAsync).not.toHaveBeenCalled();
+  expect(screen.getByRole("button", { name: "Retry owner change" })).toBeInTheDocument();
+  await user.click(screen.getByRole("button", { name: "Retry owner change" }));
+
+  await waitFor(() => expect(mutateAsync).toHaveBeenCalledWith({
+    pageId: 42,
+    ownerUserId: "user-2",
+    expectedContentRevision: 8,
+  }));
+  expect(screen.queryByRole("button", { name: "Retry owner change" })).toBeNull();
 });
 
 it("shows named metadata controls and allows an editor to publish", () => {

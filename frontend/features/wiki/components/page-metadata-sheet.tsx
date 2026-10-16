@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
+import { isApiError } from "@/lib/api-envelope";
+import { kbPageEditConflictContract } from "@/features/wiki/lib/wiki-schema";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
@@ -26,6 +28,7 @@ import {
 import { useCan } from "@/hooks/api/access";
 import { useKbSpaces } from "@/hooks/api/kb/spaces";
 import {
+  useKbPage,
   useUpdateKbPage,
   usePublishKbPage,
   useArchiveKbPage,
@@ -71,6 +74,10 @@ interface PageMetadataSheetProps {
   onOpenChange: (open: boolean) => void;
 }
 
+type ScopeChange =
+  | { field: "spaceId"; value: number | null }
+  | { field: "ownerUserId"; value: string | null };
+
 export default function PageMetadataSheet({
   page,
   pageId,
@@ -84,7 +91,10 @@ export default function PageMetadataSheet({
   const [intervalDays, setIntervalDays] = useState<string>("");
   const [verifyFormOpen, setVerifyFormOpen] = useState(false);
   const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
+  const [pendingScope, setPendingScope] = useState<(ScopeChange & { pageId: number; minimumRevision: number | null }) | null>(null);
+  const [isRetryingScope, setIsRetryingScope] = useState(false);
 
+  const { refetch } = useKbPage(pageId);
   const updatePage = useUpdateKbPage();
   const publishPage = usePublishKbPage();
   const archivePage = useArchiveKbPage();
@@ -95,12 +105,30 @@ export default function PageMetadataSheet({
   const { data: spacesPage } = useKbSpaces();
   const spaces = spacesPage?.data ?? [];
 
-  function handleSpaceChange(value: string) {
+  function changeScope(change: ScopeChange) {
     if (!isEditable) return;
     updatePage.mutate(
-      { pageId, spaceId: value === "none" ? null : Number(value) },
-      { onSuccess: () => toast.success("Space updated"), onError: () => toast.error("Failed to update space") }
+      { pageId, [change.field]: change.value, expectedContentRevision: page.contentRevision },
+      {
+        onSuccess: () => {
+          setPendingScope((pending) => pending?.pageId === pageId && pending.field === change.field ? null : pending);
+          toast.success(`${change.field === "spaceId" ? "Space" : "Owner"} updated`);
+        },
+        onError: (error) => {
+          if (isApiError(error) && error.status === 409) {
+            const details = kbPageEditConflictContract.safeParse(error.details);
+            setPendingScope({ ...change, pageId, minimumRevision: details.success ? details.data.currentContentRevision : null });
+            toast.error("Page changed before this setting was saved");
+            return;
+          }
+          toast.error(`Failed to update ${change.field === "spaceId" ? "space" : "owner"}`);
+        },
+      },
     );
+  }
+
+  function handleSpaceChange(value: string) {
+    changeScope({ field: "spaceId", value: value === "none" ? null : Number(value) });
   }
 
   function handleStatusChange(value: string) {
@@ -120,11 +148,31 @@ export default function PageMetadataSheet({
   }
 
   function handleOwnerChange(value: string) {
-    if (!isEditable) return;
-    updatePage.mutate(
-      { pageId, ownerUserId: value || null },
-      { onError: () => toast.error("Failed to update owner") }
-    );
+    changeScope({ field: "ownerUserId", value: value || null });
+  }
+
+  async function retryScopeChange() {
+    const pending = pendingScope?.pageId === pageId ? pendingScope : null;
+    if (!pending || isRetryingScope || !isEditable) return;
+    setIsRetryingScope(true);
+    try {
+      const latest = await refetch();
+      if (!latest.isSuccess || !latest.data || latest.data.canEdit !== true ||
+        (latest.data.isLocked && !canManage) ||
+        (pending.minimumRevision !== null && latest.data.contentRevision < pending.minimumRevision))
+        throw new Error("Current page version is unavailable");
+      await updatePage.mutateAsync({
+        pageId,
+        [pending.field]: pending.value,
+        expectedContentRevision: latest.data.contentRevision,
+      });
+      setPendingScope(null);
+      toast.success(`${pending.field === "spaceId" ? "Space" : "Owner"} updated`);
+    } catch {
+      toast.error("Could not retry the setting change. Your choice is still available.");
+    } finally {
+      setIsRetryingScope(false);
+    }
   }
 
   function handlePublish() {
@@ -215,6 +263,17 @@ export default function PageMetadataSheet({
 
         <ScrollArea className="flex-1 min-h-0">
           <div className="min-h-full px-5 py-4 space-y-5 bg-muted">
+            {pendingScope?.pageId === pageId && (
+              <div role="alert" className="space-y-2 rounded-lg border border-status-warning-rule bg-status-warning-surface p-3 text-sm text-status-warning-ink">
+                <p>The page changed before your {pendingScope.field === "spaceId" ? "space" : "owner"} choice was saved. Your choice is ready to retry.</p>
+                <div className="flex flex-wrap gap-2">
+                  <Button size="sm" onClick={retryScopeChange} disabled={isRetryingScope || !isEditable}>
+                    {isRetryingScope ? "Retrying…" : `Retry ${pendingScope.field === "spaceId" ? "space" : "owner"} change`}
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => setPendingScope(null)} disabled={isRetryingScope}>Discard choice</Button>
+                </div>
+              </div>
+            )}
             <div className="space-y-2">
               <p className="text-label font-medium text-foreground">Space</p>
               <Select
