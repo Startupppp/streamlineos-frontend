@@ -92,7 +92,7 @@ export function CommitmentRadarSheet({ root, open, onClose }: {
     }
   };
   return (
-    <AppSheet open={open} onOpenChange={(next) => { if (!next) onClose(); }} title="Commitment radar" className="z-[110] md:max-w-xl">
+    <AppSheet open={open} onOpenChange={(next) => { if (!next) onClose(); }} title="Commitment radar" description="View linked commitments and their status." className="z-[110] md:max-w-xl">
         <div className="space-y-4">
           {chain.isLoading ? <p className="text-sm text-muted-foreground">Loading commitment chain</p> : null}
           {chain.isError ? <div className="space-y-2"><p className="text-sm text-destructive">{getErrorMessage(chain.error)}</p><Button variant="outline" onClick={() => { void chain.refetch(); }}>Retry</Button></div> : null}

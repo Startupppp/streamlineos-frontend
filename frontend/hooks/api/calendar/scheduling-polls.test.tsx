@@ -68,8 +68,8 @@ it("refreshes organizer vote counts after replacing a guest's signed link", asyn
     options: [{ ...poll.options[0], votes: { yes: 0, maybe: 0, no: 0 } }],
     guestVoters: [{ voterId, email: "new@example.com", name: "New guest", voterVersion: 2 }],
   };
-  get.mockResolvedValueOnce(poll).mockResolvedValueOnce(refreshed);
-  put.mockResolvedValue({ voterId, email: "new@example.com", token: "new-link", voterVersion: 2 });
+  get.mockResolvedValueOnce(poll);
+  put.mockResolvedValue({ voterId, email: "new@example.com", token: "new-link", voterVersion: 2, optionVotes: refreshed.options.map((option) => ({ id: option.id, votes: option.votes })) });
   const client = new QueryClient({ defaultOptions: { queries: { retry: false, staleTime: Infinity } } });
   const { result } = renderHook(() => ({
     detail: useSchedulingPoll(pollId),
@@ -93,7 +93,7 @@ it("refreshes organizer vote counts after replacing a guest's signed link", asyn
     undefined,
     expect.anything(),
   );
-  expect(get).toHaveBeenCalledTimes(2);
+  expect(get).toHaveBeenCalledTimes(1);
   await waitFor(() => expect(result.current.detail.data?.options[0].votes).toEqual({ yes: 0, maybe: 0, no: 0 }));
   expect(result.current.detail.data?.guestVoters?.[0]).toMatchObject({ email: "new@example.com", voterVersion: 2 });
 });

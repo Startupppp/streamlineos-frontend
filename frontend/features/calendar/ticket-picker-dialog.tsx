@@ -89,7 +89,7 @@ export const TicketPickerDialog = memo(function TicketPickerDialog({
   onSelect,
 }: TicketPickerDialogProps) {
   return (
-    <AppDialog open={open} onOpenChange={onOpenChange} title="Link a ticket">
+    <AppDialog open={open} onOpenChange={onOpenChange} title="Link a ticket" description="Find a ticket to link to this event.">
       <TicketPickerBody onSelect={onSelect} />
     </AppDialog>
   );

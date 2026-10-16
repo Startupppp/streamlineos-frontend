@@ -33,11 +33,6 @@ import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
@@ -71,7 +66,7 @@ const VIEW_MODE_OPTIONS: ViewOption<ViewMode>[] = [
 interface CalendarToolbarPrimaryActionsProps {
   activeConnectionCount: number;
   onOpenAccounts: () => void;
-  onOpenBookingPages?: () => void;
+  onOpenBookingPages: () => void;
   onOpenCreate: () => void;
 }
 
@@ -91,16 +86,6 @@ function AddEventButton({ onOpenCreate }: { onOpenCreate: () => void }) {
   );
 }
 
-function ShareMenuItems() {
-  return (
-    <>
-      <DropdownMenuItem>Copy link</DropdownMenuItem>
-      <DropdownMenuItem>Email calendar</DropdownMenuItem>
-      <DropdownMenuItem>Embed calendar</DropdownMenuItem>
-    </>
-  );
-}
-
 export const CalendarToolbarPrimaryActions = memo(
   function CalendarToolbarPrimaryActions({
     activeConnectionCount,
@@ -110,17 +95,9 @@ export const CalendarToolbarPrimaryActions = memo(
   }: CalendarToolbarPrimaryActionsProps) {
     return (
       <div className="flex shrink-0 items-center gap-2">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="icon" aria-label="Share">
-              <Share2 className="h-3.5 w-3.5" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-40">
-            {onOpenBookingPages ? <DropdownMenuItem onSelect={onOpenBookingPages}>Booking pages</DropdownMenuItem> : null}
-            <ShareMenuItems />
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <Button variant="outline" size="icon" aria-label="Booking pages" onClick={onOpenBookingPages}>
+          <Share2 className="h-3.5 w-3.5" />
+        </Button>
 
         <Button
           variant="outline"
@@ -242,19 +219,6 @@ export const CalendarToolbar = memo(function CalendarToolbar({
               </Button>
             ) : null}
             <div className="hidden items-center gap-1.5 lg:flex sm:gap-2">
-              {!hidePrimaryActions ? (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="icon" aria-label="Share">
-                      <Share2 className="h-3.5 w-3.5" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-40">
-                    <ShareMenuItems />
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              ) : null}
-
               {isAttendanceEnabled ? (
                 <Button
                   variant={attendanceEventsVisible ? "secondary" : "outline"}
@@ -313,21 +277,6 @@ export const CalendarToolbar = memo(function CalendarToolbar({
                   />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-52">
-                  {!hidePrimaryActions ? (
-                    <DropdownMenuSub>
-                      <DropdownMenuSubTrigger>
-                        <Share2 className="mr-2 h-3.5 w-3.5" />
-                        Share
-                      </DropdownMenuSubTrigger>
-                      <DropdownMenuSubContent className="w-40">
-                        <ShareMenuItems />
-                      </DropdownMenuSubContent>
-                    </DropdownMenuSub>
-                  ) : null}
-                  {!hidePrimaryActions &&
-                  (isAttendanceEnabled || isHrEnabled || isCrmEnabled) ? (
-                    <DropdownMenuSeparator />
-                  ) : null}
                   {isAttendanceEnabled ? (
                     <DropdownMenuCheckboxItem
                       checked={attendanceEventsVisible}

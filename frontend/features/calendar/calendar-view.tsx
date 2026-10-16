@@ -28,7 +28,6 @@ import {
   CalendarAgendaPreview,
   CalendarListFallback,
   CalendarLoadingStatus,
-  CalendarSheetFallback,
 } from "./calendar-lazy-fallbacks";
 import { CALENDAR_TRUNCATED_WARNING } from "./calendar-event-constants";
 import { useCalendarAccountFilters } from "./use-calendar-account-filters";
@@ -114,15 +113,12 @@ const CalendarAccountsSheet = dynamic(
     import("./calendar-accounts-sheet").then((m) => ({
       default: m.CalendarAccountsSheet,
     })),
-  {
-    ssr: false,
-    loading: () => <CalendarSheetFallback label="Loading calendar accounts" />,
-  },
+  { ssr: false },
 );
 
 const CalendarBookingRulesSheet = dynamic(
   () => import("./calendar-booking-rules-sheet").then((module) => ({ default: module.CalendarBookingRulesSheet })),
-  { ssr: false, loading: () => <CalendarSheetFallback label="Loading booking pages" /> },
+  { ssr: false },
 );
 
 const CalendarCoachSheet = dynamic(
@@ -130,10 +126,7 @@ const CalendarCoachSheet = dynamic(
     import("./calendar-coach-sheet").then((module) => ({
       default: module.CalendarCoachSheet,
     })),
-  {
-    ssr: false,
-    loading: () => <CalendarSheetFallback label="Loading personal insights" />,
-  },
+  { ssr: false },
 );
 
 const CalendarCapacitySheet = dynamic(
@@ -141,10 +134,7 @@ const CalendarCapacitySheet = dynamic(
     import("./calendar-capacity-sheet").then((module) => ({
       default: module.CalendarCapacitySheet,
     })),
-  {
-    ssr: false,
-    loading: () => <CalendarSheetFallback label="Loading resource capacity" />,
-  },
+  { ssr: false },
 );
 
 const CalendarScenarioWorkspace = dynamic(
@@ -152,10 +142,7 @@ const CalendarScenarioWorkspace = dynamic(
     import("./calendar-scenario-workspace").then((module) => ({
       default: module.CalendarScenarioWorkspace,
     })),
-  {
-    ssr: false,
-    loading: () => <CalendarSheetFallback label="Loading scenario" />,
-  },
+  { ssr: false },
 );
 
 const NO_CALENDAR_EVENTS: CalendarListItem[] = [];

@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import { AppSheet } from "@/components/shared/app-sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { CalendarListItem } from "@/hooks/api/calendar";
 import { formatEventDate, formatEventTimeRange } from "@/lib/date-utils";
@@ -65,14 +64,6 @@ export function CalendarAgendaPreview({
       ))}
     </div>
     </ScrollArea>
-  );
-}
-
-export function CalendarSheetFallback({ label }: { label: string }) {
-  return (
-    <AppSheet open onOpenChange={() => {}} title={label}>
-      <p role="status" aria-live="polite" aria-label={label} className="text-sm text-muted-foreground">{label}…</p>
-    </AppSheet>
   );
 }
 

@@ -1,14 +1,16 @@
 import type { ReactNode } from "react";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { focusManager, QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useCalendarBookingResources, useInventoryCalendarEquipment, usePendingCalendarBookingAllocations, useResolveCalendarBookingAllocation } from "./booking-resources";
+import { useCalendarBookingResources, useCreateInventoryCalendarEquipment, useInventoryCalendarEquipment, usePendingCalendarBookingAllocations, useResolveCalendarBookingAllocation } from "./booking-resources";
 
 const get = jest.fn();
 const put = jest.fn();
+const post = jest.fn();
 let accessSnapshot: { isOrgOwner: boolean; scopes: Record<string, "all"> } | undefined;
 
 jest.mock("@/hooks/api/access", () => ({
   useAccess: () => ({ data: accessSnapshot, isError: false, refetch: async () => ({ data: accessSnapshot }) }),
+  useCan: (permission: string) => Boolean(accessSnapshot?.scopes[permission]),
   usePermissionGate: (permission: string) => ({
     permission,
     allowed: Boolean(accessSnapshot?.scopes[permission]),
@@ -23,7 +25,7 @@ jest.mock("./booking-rules", () => ({
 }));
 
 jest.mock("@/lib/api-client", () => ({
-  apiClient: { get: (...args: unknown[]) => get(...args), put: (...args: unknown[]) => put(...args) },
+  apiClient: { get: (...args: unknown[]) => get(...args), put: (...args: unknown[]) => put(...args), post: (...args: unknown[]) => post(...args) },
 }));
 
 function wrapper(client: QueryClient) {
@@ -35,7 +37,19 @@ function wrapper(client: QueryClient) {
 beforeEach(() => {
   get.mockReset().mockResolvedValue({ items: [], nextCursor: null });
   put.mockReset().mockResolvedValue({});
+  post.mockReset().mockResolvedValue({ id: 27 });
   accessSnapshot = undefined;
+});
+
+it("creates Inventory-owned equipment through the Calendar equipment contract", async () => {
+  accessSnapshot = { isOrgOwner: false, scopes: { "inventory:warehouses:manage": "all" } };
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } });
+  const { result } = renderHook(() => useCreateInventoryCalendarEquipment(), { wrapper: wrapper(client) });
+
+  await act(async () => {
+    await result.current.mutateAsync({ warehouseId: 4, name: "QA camera", location: "Studio", capacity: 1 });
+  });
+  expect(post).toHaveBeenCalledWith("/inventory/calendar-equipment", { warehouseId: 4, name: "QA camera", location: "Studio", capacity: 1 }, undefined, expect.anything());
 });
 
 it("allows an Inventory manager without Calendar read to load and resolve resource approvals", async () => {

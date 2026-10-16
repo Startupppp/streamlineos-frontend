@@ -1,9 +1,9 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Clock3, ShieldCheck } from "lucide-react";
+import { CalendarClock, CircleAlert, CircleCheck, CircleX, Clock3, Mail } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,7 @@ import type {
   PublicCalendarBookingSession,
 } from "@/hooks/api/calendar-booking-public-schema";
 import { isApiError } from "@/lib/api-envelope";
+import { statusToneClasses } from "@/lib/design-tokens";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import { usePaidCalendarBooking } from "../hooks/use-paid-calendar-booking";
@@ -223,6 +224,18 @@ export function PublicCalendarBookingForm({
     void queryClient.invalidateQueries({ queryKey: ["public", "calendar", "booking", token, "offering"] });
   }
 
+  function handleRefreshBookingStatus() {
+    if (replayPayload.current) confirmBooking.mutate(replayPayload.current);
+  }
+
+  function handleChooseAnotherTime() {
+    chooseAnotherTime();
+  }
+
+  function handleAlternativeClick(event: MouseEvent<HTMLButtonElement>) {
+    chooseAnotherTime(event.currentTarget.dataset.start);
+  }
+
   if (
     paymentResult &&
     !(
@@ -234,30 +247,88 @@ export function PublicCalendarBookingForm({
   }
 
   if (receipt) {
+    const tone = statusToneClasses(
+      receipt.outcome === "confirmed" ? "success" :
+        receipt.outcome === "pending" || receipt.outcome === "uncertain" ? "warning" : "danger",
+    );
+    const ReceiptIcon = receipt.outcome === "confirmed" ? CircleCheck :
+      receipt.outcome === "pending" || receipt.outcome === "uncertain" ? CircleAlert : CircleX;
+    const hasFollowUps = ["pending", "failed", "uncertain"].includes(receipt.providerSyncStatus) ||
+      ["pending", "failed", "uncertain"].includes(receipt.externalEffectsStatus);
     return (
-      <div className="space-y-4 py-12 text-center" aria-live="polite">
-        <ShieldCheck className="mx-auto size-10 text-success" aria-hidden="true" />
-        <h2 className="text-xl font-semibold text-foreground">
-          {outcomeTitle(receipt.outcome)}
-        </h2>
-        <p className="text-sm text-muted-foreground">
-          {bookingTime(receipt.startAt, offering.timeZone, session.locale)} · {offering.timeZone}
-        </p>
-        {receipt.reasonCode && (
-          <p className="text-sm text-muted-foreground">
-            {receipt.reasonCode.replaceAll("_", " ")}
+      <div className="mx-auto max-w-xl space-y-6 py-2" aria-live="polite">
+        <div className="space-y-3 text-center">
+          <span className={cn("mx-auto flex size-12 items-center justify-center rounded-xl border", tone.surface, tone.ink, tone.rule)}>
+            <ReceiptIcon className="size-6" aria-hidden="true" />
+          </span>
+          <h2 className="text-xl font-semibold tracking-tight text-foreground">
+            {outcomeTitle(receipt.outcome)}
+          </h2>
+          {receipt.reasonCode && (
+            <p className="text-sm text-muted-foreground">
+              {receipt.reasonCode.replaceAll("_", " ")}
+            </p>
+          )}
+        </div>
+
+        <div className="rounded-xl border border-border bg-surface-inset p-4 dark:border-background">
+          <p className="text-xs font-medium text-muted-foreground">
+            {receipt.outcome === "confirmed" ? "Booked time" : "Requested time"}
           </p>
+          <p className="mt-1 font-semibold text-foreground">
+            {bookingTime(receipt.startAt, offering.timeZone, session.locale)}
+          </p>
+          <p className="mt-1 text-sm text-muted-foreground">{offering.timeZone}</p>
+        </div>
+
+        {hasFollowUps && (
+          <div className="space-y-3" aria-label="Booking follow-ups">
+            <h3 className="text-sm font-semibold text-foreground">What happens next</h3>
+            {["pending", "failed", "uncertain"].includes(receipt.providerSyncStatus) && (
+              <div className="flex items-start gap-3 text-sm text-muted-foreground">
+                <CalendarClock className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+                <p>
+                  {receipt.providerSyncStatus === "pending" && "Calendar synchronization is in progress."}
+                  {receipt.providerSyncStatus === "failed" && "Calendar synchronization needs attention. Your local booking status is shown above."}
+                  {receipt.providerSyncStatus === "uncertain" && "Calendar synchronization has not been confirmed yet."}
+                </p>
+              </div>
+            )}
+            {["pending", "failed", "uncertain"].includes(receipt.externalEffectsStatus) && (
+              <div className="flex items-start gap-3 text-sm text-muted-foreground">
+                <Mail className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+                <p>
+                  {receipt.externalEffectsStatus === "pending" && "Invitations and other follow-ups are in progress."}
+                  {receipt.externalEffectsStatus === "failed" && "A booking follow-up needs attention."}
+                  {receipt.externalEffectsStatus === "uncertain" && "Booking follow-ups have not been confirmed yet."}
+                </p>
+              </div>
+            )}
+          </div>
         )}
-        {receipt.providerSyncStatus === "pending" && <p className="text-sm text-muted-foreground">Calendar synchronization is in progress.</p>}
-        {receipt.providerSyncStatus === "failed" && <p className="text-sm text-muted-foreground">Calendar synchronization needs attention. Your local booking status is shown above.</p>}
-        {receipt.providerSyncStatus === "uncertain" && <p className="text-sm text-muted-foreground">Calendar synchronization has not been confirmed yet.</p>}
-        {receipt.externalEffectsStatus === "pending" && <p className="text-sm text-muted-foreground">Invitations and other follow-ups are in progress.</p>}
-        {receipt.externalEffectsStatus === "failed" && <p className="text-sm text-muted-foreground">A booking follow-up needs attention.</p>}
-        {receipt.externalEffectsStatus === "uncertain" && <p className="text-sm text-muted-foreground">Booking follow-ups have not been confirmed yet.</p>}
-        {replayPayload.current && ["confirmed", "pending", "uncertain"].includes(receipt.outcome) && <Button type="button" variant="link" disabled={confirmBooking.isPending} onClick={() => { if (replayPayload.current) confirmBooking.mutate(replayPayload.current); }}>{confirmBooking.isPending ? "Checking booking status…" : "Refresh booking status"}</Button>}
+
         {confirmBooking.isError && <p className="text-sm text-destructive" role="alert">{getErrorMessage(confirmBooking.error) || "Booking status could not be refreshed. Try again."}</p>}
-        {receipt.alternatives.length > 0 && <div className="space-y-2"><p className="text-sm font-medium">Other available times</p>{receipt.alternatives.map((alternative) => <Button key={alternative.start} type="button" variant="outline" className="w-full justify-start" onClick={() => chooseAnotherTime(alternative.start)}>Review {slotTime(alternative.start, offering.timeZone, session.locale)}</Button>)}</div>}
-        {["rejected", "expired", "cancelled", "uncertain"].includes(receipt.outcome) && <Button type="button" variant="link" onClick={() => chooseAnotherTime()}>Choose another time</Button>}
+        <div className="flex flex-wrap gap-2">
+          {replayPayload.current && ["confirmed", "pending", "uncertain"].includes(receipt.outcome) && (
+            <Button type="button" variant="outline" disabled={confirmBooking.isPending} onClick={handleRefreshBookingStatus}>
+              {confirmBooking.isPending ? "Checking booking status…" : "Refresh booking status"}
+            </Button>
+          )}
+          {["rejected", "expired", "cancelled", "uncertain"].includes(receipt.outcome) && (
+            <Button type="button" variant="secondary" onClick={handleChooseAnotherTime}>Choose another time</Button>
+          )}
+        </div>
+
+        {receipt.alternatives.length > 0 && (
+          <div className="space-y-2 border-t border-border pt-5">
+            <h3 className="text-sm font-semibold text-foreground">Other available times</h3>
+            {receipt.alternatives.map((alternative) => (
+              <Button key={alternative.start} type="button" variant="outline" data-start={alternative.start} className="w-full justify-start" onClick={handleAlternativeClick}>
+                Review {slotTime(alternative.start, offering.timeZone, session.locale)}
+              </Button>
+            ))}
+          </div>
+        )}
       </div>
     );
   }

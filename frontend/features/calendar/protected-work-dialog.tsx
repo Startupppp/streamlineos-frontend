@@ -103,6 +103,7 @@ export function ProtectedWorkDialog({
       open={open}
       onOpenChange={(next) => { if (!next) onClose(); }}
       title="Protected work"
+      description="View or reserve focus time for this event."
       className="z-[110] md:max-w-xl"
       footer={!workQuery.isLoading && !workQuery.isError && !work ? (
         <LoadingButton form="protected-work-form" type="submit" isPending={register.isPending}>Protect time</LoadingButton>

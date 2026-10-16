@@ -309,7 +309,7 @@ export const calendarSyncStatusContract = z.object({
   status: z.enum(["synced", "pending", "in_flight", "failed", "not_synced"]),
   attemptCount: z.number(),
   lastError: z.string().nullable(),
-  operation: z.enum(["create", "update", "delete"]).nullable(),
+  operation: z.enum(["create", "update", "delete", "restore"]).nullable(),
   queuedAt: z.string().nullable(),
   processedAt: z.string().nullable(),
   retryable: z.boolean(),

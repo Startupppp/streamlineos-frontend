@@ -27,6 +27,7 @@ export const inventoryCalendarEquipmentContract = z.array(z.object({
   id: z.number().int().positive(),
   orgId: z.string(),
   warehouseId: z.number().int().positive(),
+  productVariantId: z.number().int().positive().nullable(),
   name: z.string(),
   location: z.string().nullable(),
   capacity: z.number().int().positive(),

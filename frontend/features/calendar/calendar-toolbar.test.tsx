@@ -30,29 +30,37 @@ beforeEach(() => {
 });
 
 describe("CalendarToolbarPrimaryActions", () => {
-  it("opens calendar accounts from the header beside Share", () => {
+  it("opens calendar accounts from the header beside Booking pages", () => {
     const onOpenAccounts = jest.fn();
+    const onOpenBookingPages = jest.fn();
 
     render(
       <CalendarToolbarPrimaryActions
         activeConnectionCount={1}
         onOpenAccounts={onOpenAccounts}
+        onOpenBookingPages={onOpenBookingPages}
         onOpenCreate={jest.fn()}
       />,
     );
 
-    const shareButton = screen.getByRole("button", { name: "Share" });
+    const bookingPagesButton = screen.getByRole("button", { name: "Booking pages" });
     const accountsButton = screen.getByRole("button", {
       name: "Calendar accounts",
     });
 
-    expect(shareButton.compareDocumentPosition(accountsButton)).toBe(
+    expect(bookingPagesButton.compareDocumentPosition(accountsButton)).toBe(
       Node.DOCUMENT_POSITION_FOLLOWING,
     );
 
+    fireEvent.click(bookingPagesButton);
     fireEvent.click(accountsButton);
 
+    expect(onOpenBookingPages).toHaveBeenCalledTimes(1);
     expect(onOpenAccounts).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole("button", { name: "Share" })).toBeNull();
+    expect(screen.queryByText("Copy link")).toBeNull();
+    expect(screen.queryByText("Email calendar")).toBeNull();
+    expect(screen.queryByText("Embed calendar")).toBeNull();
   });
 });
 
@@ -304,6 +312,7 @@ describe("CalendarToolbarPrimaryActions — Add opens an event", () => {
       <CalendarToolbarPrimaryActions
         activeConnectionCount={0}
         onOpenAccounts={jest.fn()}
+        onOpenBookingPages={jest.fn()}
         onOpenCreate={onOpenCreate}
       />,
     );

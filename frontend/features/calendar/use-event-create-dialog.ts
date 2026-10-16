@@ -2,7 +2,6 @@
 
 import { useState, useCallback, useEffect, useMemo, type ChangeEvent } from "react";
 import { addHours, endOfDay, format, parseISO, startOfDay } from "date-fns";
-import { useIsMobile } from "@/hooks/common/use-mobile";
 import {
   useCreateCalendarEvent,
   useUpdateCalendarEvent,
@@ -62,6 +61,7 @@ export function useEventCreateDialog({
   );
   const [dateTimeError, setDateTimeError] = useState("");
   const [titleError, setTitleError] = useState("");
+  const [descriptionTouched, setDescriptionTouched] = useState(false);
   const [linkedTicket, setLinkedTicket] = useState<TicketSearchResult | null>(null);
   const [existingEntityId, setExistingEntityId] = useState<string | null>(null);
   const [ticketPickerOpen, setTicketPickerOpen] = useState(false);
@@ -72,6 +72,12 @@ export function useEventCreateDialog({
   const { data: connections = [] } = useCalendarConnections();
   const { data: existingAttendees } = useEventAttendees(isEdit && open ? editNumericId : null);
   const { data: editingDetail } = useCalendarEvent(isEdit && open ? editNumericId : null);
+  const effectiveForm = useMemo(
+    () => isEdit && !descriptionTouched && editingDetail
+      ? { ...form, description: editingDetail.description ?? "" }
+      : form,
+    [isEdit, descriptionTouched, editingDetail, form],
+  );
 
   useEffect(() => {
     if (!open) return;
@@ -80,6 +86,7 @@ export function useEventCreateDialog({
     setShowEndDate(needsEndDateField(base));
     setDateTimeError("");
     setTitleError("");
+    setDescriptionTouched(false);
     setLinkedTicket(null);
     setExistingEntityId(
       isEdit && event?.entityType === "ticket" && event.entityId ? event.entityId : null,
@@ -136,7 +143,10 @@ export function useEventCreateDialog({
   );
 
   const handleDescriptionChange = useCallback(
-    (e: ChangeEvent<HTMLTextAreaElement>) => set("description", e.target.value),
+    (e: ChangeEvent<HTMLTextAreaElement>) => {
+      setDescriptionTouched(true);
+      set("description", e.target.value);
+    },
     [set],
   );
 
@@ -223,7 +233,8 @@ export function useEventCreateDialog({
     [],
   );
 
-  const handleSave = useCallback(async () => {
+  const handleSave = useCallback(async (times: { startTime?: string; endTime?: string } = {}) => {
+    const submittedForm = { ...effectiveForm, ...times };
     const titleErr = validateEventTitle(form.title);
     if (titleErr) { setTitleError(titleErr); return; }
     setTitleError("");
@@ -232,7 +243,7 @@ export function useEventCreateDialog({
     const locErr = validateEventLocation(form.location);
     if (locErr) { toast.error(locErr); return; }
 
-    const result = buildEventPayload({ form, showEndDate, linkedTicket, existingEntityId, isEdit });
+    const result = buildEventPayload({ form: submittedForm, showEndDate, linkedTicket, existingEntityId, isEdit });
     if (result.error !== null) { toast.error(result.error); return; }
 
     if (isEdit && rrule) {
@@ -245,6 +256,7 @@ export function useEventCreateDialog({
         const numericId = extractEventNumericId(event.id);
         if (numericId === null) { toast.error("Cannot edit this event type"); return; }
         const { syncConnectionId: _sc, addConference: _ac, ...editPayload } = result.payload;
+        if (!descriptionTouched && !editingDetail && !event.description) delete editPayload.description;
         await updateEvent.mutateAsync({
           calendarEventId: numericId,
           ...editPayload,
@@ -265,7 +277,7 @@ export function useEventCreateDialog({
     } catch (error) {
       toast.error(getErrorMessage(error));
     }
-  }, [form, showEndDate, isEdit, event, rrule, createEvent, updateEvent, handleClose, existingEntityId, linkedTicket, seriesScope, editingDetail]);
+  }, [form, effectiveForm, showEndDate, isEdit, event, rrule, createEvent, updateEvent, handleClose, existingEntityId, linkedTicket, seriesScope, editingDetail, descriptionTouched]);
 
   const handleOpenTicketPicker = useCallback(() => setTicketPickerOpen(true), []);
 
@@ -286,12 +298,11 @@ export function useEventCreateDialog({
   );
 
   const isPending = isEdit ? updateEvent.isPending : createEvent.isPending;
-  const isMobile = useIsMobile();
 
   return {
-    form, titleError, dateTimeError, showEndDate, members, connections,
+    form: effectiveForm, titleError, dateTimeError, showEndDate, members, connections,
     linkedTicket, existingEntityId, ticketPickerOpen, setTicketPickerOpen,
-    isPending, isMobile, isEdit,
+    isPending, isEdit,
     handleClose, handleTitleChange, handleDescriptionChange, handleLocationChange,
     handleAllDayChange, handleStartDateChange, handleStartTimeChange,
     handleEndDateChange, handleEndTimeChange, handleShowEndDate,

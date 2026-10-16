@@ -22,6 +22,7 @@ import type {
   BookingResourcePage,
   BookingResourceMaintenance,
   BookingRuleResource,
+  InventoryCalendarEquipment,
   InventoryCalendarEquipmentPage,
   PendingBookingAllocationPage,
 } from "./booking-resources-schema";
@@ -69,6 +70,11 @@ const allocationResolutionContract = lazyContract(() =>
 const inventoryEquipmentPageContract = lazyContract(() =>
   import("./booking-resources-schema").then(
     (module) => module.inventoryCalendarEquipmentPageContract,
+  ),
+);
+const inventoryEquipmentContract = lazyContract(() =>
+  import("./booking-resources-schema").then(
+    (module) => module.inventoryCalendarEquipmentContract.element,
   ),
 );
 const approvalPermissions = [
@@ -153,6 +159,28 @@ export function useInventoryCalendarEquipment(cursor: number | null = null, enab
     enabled: enabled && Boolean(scope.orgId && scope.userId),
     staleTime: 30_000,
     ...INLINE_READ_ERROR,
+  });
+}
+
+export interface CreateInventoryCalendarEquipmentInput {
+  warehouseId: number;
+  name: string;
+  location: string | null;
+  capacity: number;
+  productVariantId?: number | null;
+}
+
+export function useCreateInventoryCalendarEquipment() {
+  const queryClient = useQueryClient();
+  return useAuthorizedMutation<InventoryCalendarEquipment, Error, CreateInventoryCalendarEquipmentInput>("inventory:warehouses:manage", {
+    mutationKey: calendarBookingQueryKeys.mutation("create-inventory-equipment"),
+    mutationFn: (input) => apiClient.post<InventoryCalendarEquipment>(
+      "/inventory/calendar-equipment",
+      input,
+      undefined,
+      inventoryEquipmentContract,
+    ),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: calendarBookingQueryKeys.all() }),
   });
 }
 

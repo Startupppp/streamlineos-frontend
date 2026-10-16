@@ -135,6 +135,7 @@ export function CreateTicketFromCalendarDialog({
       open={open}
       onOpenChange={handleOpenChange}
       title="Add ticket due date"
+      description="Choose a project and enter the ticket details."
       className="md:max-w-sm"
       footer={<>
         <Button

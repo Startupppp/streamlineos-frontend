@@ -19,6 +19,7 @@ beforeEach(() => {
   push.mockReset();
   replace.mockReset();
   params = new URLSearchParams();
+  window.history.replaceState(null, "", "/calendar");
 });
 
 describe("useCalendarViewState URL navigation", () => {
@@ -66,6 +67,7 @@ describe("useCalendarViewState URL navigation", () => {
 
   it("keeps a selected external item in the URL and removes it safely on close", () => {
     params = new URLSearchParams("mode=history&historyPages=3");
+    window.history.replaceState(null, "", `/calendar?${params.toString()}`);
     const { result } = renderHook(() => useCalendarViewState());
     const event: BigCalEvent = {
       id: "external:4:provider-8",
@@ -78,19 +80,22 @@ describe("useCalendarViewState URL navigation", () => {
         actions: { view: true, edit: false, delete: false, rsvp: false, complete: false },
       },
     };
+    replace.mockClear();
 
     act(() => result.current.handleSelectEvent(event));
-    expect(push).toHaveBeenLastCalledWith(
+    expect(window.location.pathname + window.location.search).toBe(
       "/calendar?mode=history&historyPages=3&event=external%3A4%3Aprovider-8&eventSource=external",
     );
+    expect(push).not.toHaveBeenCalled();
 
     params = new URLSearchParams(
       "mode=history&historyPages=3&event=external%3A4%3Aprovider-8&eventSource=external",
     );
     act(() => result.current.handleCloseSelected());
-    expect(replace).toHaveBeenLastCalledWith(
+    expect(window.location.pathname + window.location.search).toBe(
       "/calendar?mode=history&historyPages=3",
     );
+    expect(replace).not.toHaveBeenCalled();
   });
 
   it("does not open a Grid event whose projection denies viewing", () => {
