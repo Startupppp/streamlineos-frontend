@@ -6,7 +6,7 @@
 
 **Status:** in-progress
 
-- [ ] Polls support required and optional voters, expiry, early close, duplicate-vote prevention, and organizer finalization.
+- [x] Polls support required and optional voters, expiry, early close, duplicate-vote prevention, and organizer finalization.
 - [x] Option holds expire and release capacity without turning votes into permanent reservations.
 - [ ] Finalization rechecks availability and sends exactly one committed invitation.
 - [ ] If the chosen option became unavailable, votes remain visible and fresh alternatives are offered.
