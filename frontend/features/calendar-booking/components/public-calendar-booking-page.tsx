@@ -42,7 +42,10 @@ export function PublicCalendarBookingPage() {
     return { from: from.toISOString(), to: to.toISOString() };
   });
   const callbackState = searchParams.get("state")?.slice(0, 500) ?? null;
-  const locale = searchParams.get("locale")?.slice(0, 35);
+  const requestedLocale = searchParams.get("locale")?.trim();
+  const locale = requestedLocale && requestedLocale.length <= 35 && /^[A-Za-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$/.test(requestedLocale)
+    ? requestedLocale
+    : undefined;
   const attribution = useMemo(() => ({
     source: queryValue(searchParams, "utm_source"),
     medium: queryValue(searchParams, "utm_medium"),
