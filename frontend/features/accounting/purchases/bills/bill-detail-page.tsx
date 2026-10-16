@@ -23,6 +23,8 @@ import { BillEditorForm } from "./bill-editor-form";
 import { BillLinesTable } from "./bill-lines-table";
 import { BillSummaryCard } from "./bill-summary-card";
 import { BillTaxPreviewCard } from "./bill-tax-preview-card";
+import { DocumentAttachmentsCard } from "../../documents/document-attachments-card";
+import { DocumentPdfButton } from "../../documents/document-pdf-button";
 
 interface BillDetailPageProps {
   apDocumentId: string;
@@ -119,9 +121,16 @@ export function BillDetailPage({ apDocumentId }: BillDetailPageProps) {
       backHref={backHref}
       backLabel="Back"
       actions={
-        canApplyCredit ? (
-          <ApplyVendorCreditAction document={document} />
-        ) : canManage && isDraft ? (
+        !isDraft ? (
+          <div className="flex w-full items-center gap-2 sm:w-auto">
+            <DocumentPdfButton
+              kind="bill"
+              documentId={document.id}
+              fallbackName={`${document.documentNumber ?? "bill"}.pdf`}
+            />
+            {canApplyCredit ? <ApplyVendorCreditAction document={document} /> : null}
+          </div>
+        ) : canManage ? (
           <div className="flex w-full items-center gap-2 sm:w-auto">
             <Button
               variant="outline"
@@ -169,6 +178,10 @@ export function BillDetailPage({ apDocumentId }: BillDetailPageProps) {
               lineDescriptions={lineDescriptions}
             />
           ) : null}
+          <DocumentAttachmentsCard
+            documentType={document.documentType === "DEBIT_NOTE" ? "debit_note" : "purchase_bill"}
+            documentId={document.id}
+          />
         </div>
       </div>
 

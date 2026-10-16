@@ -10,6 +10,7 @@ import { accountingReportsQueryKeys } from "./query-keys/accounting-reports";
 import { accountingBankingQueryKeys } from "./query-keys/accounting-banking";
 import { accountingApQueryKeys } from "./query-keys/accounting-ap";
 import { accountingArQueryKeys } from "./query-keys/accounting-ar";
+import { accountingDocumentsQueryKeys } from "./query-keys/accounting-documents";
 import { knowledgeAndSurveysQueryKeys } from "./query-keys/knowledge-and-surveys";
 import { supportAndWorkflowsQueryKeys } from "./query-keys/support-and-workflows";
 import { platformHierarchyQueryKeys } from "./query-keys/platform-hierarchy";
@@ -56,6 +57,7 @@ export const queryKeys = {
   ...accountingBankingQueryKeys,
   ...accountingApQueryKeys,
   ...accountingArQueryKeys,
+  ...accountingDocumentsQueryKeys,
   ...knowledgeAndSurveysQueryKeys,
   ...supportAndWorkflowsQueryKeys,
   ...platformHierarchyQueryKeys,
