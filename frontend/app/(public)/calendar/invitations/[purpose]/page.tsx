@@ -42,15 +42,21 @@ export default function CalendarInvitationPage() {
   }
 
   return (
-    <main className="min-h-dvh surface-soft flex items-start justify-center px-4 py-8 sm:py-12">
-      <div className="w-full max-w-lg">
-        <div className="gradient-brand rounded-t-2xl px-6 py-8 text-center text-white shadow-noir">
-          <CalendarDays className="mx-auto h-9 w-9" aria-hidden="true" />
-          <h1 className="mt-3 text-2xl font-bold tracking-tight">
-            {purpose === "join" ? "Join your meeting" : "Calendar invitation"}
-          </h1>
-        </div>
-        <Card className="rounded-t-none border-t-0 px-5 py-6 shadow-noir sm:px-7">
+    <main className="flex min-h-dvh justify-center bg-background px-4 py-6 text-foreground sm:px-6 sm:py-12">
+      <Card className="h-fit w-full max-w-2xl gap-0 overflow-hidden rounded-xl border-border bg-card py-0 shadow-sm">
+        <div className="h-1 bg-primary" aria-hidden="true" />
+        <header className="flex items-center gap-4 border-b border-border px-5 py-6 sm:px-8 sm:py-7">
+          <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground">
+            <CalendarDays className="size-6" aria-hidden="true" />
+          </span>
+          <div className="min-w-0 space-y-1">
+            <p className="text-xs font-medium text-muted-foreground">StreamlineOS Calendar</p>
+            <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">
+              {purpose === "join" ? "Join your meeting" : "Calendar invitation"}
+            </h1>
+          </div>
+        </header>
+        <div className="px-5 py-6 sm:px-8 sm:py-8">
           {invitationQuery.isPending && (
             <div className="flex min-h-48 items-center justify-center" aria-label="Loading invitation">
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -145,8 +151,8 @@ export default function CalendarInvitationPage() {
               )}
             </div>
           )}
-        </Card>
-      </div>
+        </div>
+      </Card>
     </main>
   );
 }
