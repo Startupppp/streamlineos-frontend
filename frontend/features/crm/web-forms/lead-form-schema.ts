@@ -7,7 +7,7 @@ import type { WebFormField } from "@/hooks/api/crm/web-forms-schema";
  * backend would answer with.
  */
 export function buildLeadFormSchema(fields: readonly WebFormField[]) {
-  const shape: Record<string, z.ZodType<string>> = {};
+  const shape: Record<string, z.ZodString> = {};
   for (const field of fields) {
     let value = z.string().trim().max(5000);
     if (field.required) value = value.min(1, `${field.label} is required`);
