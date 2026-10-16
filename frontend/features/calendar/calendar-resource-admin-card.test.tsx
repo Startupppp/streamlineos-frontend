@@ -20,6 +20,10 @@ jest.mock("@/hooks/api/inventory/warehouses", () => ({
   useWarehouses: () => ({ data: { items: [{ id: 4, name: "Main warehouse", code: "MAIN", isActive: true }], totalPages: 1 }, isPending: false, isError: false, isFetching: false }),
 }));
 
+jest.mock("@/hooks/api/inventory/products", () => ({
+  useProductVariants: () => ({ data: [{ id: 7, productName: "Camera", name: "Standard", sku: "CAM-STD" }], isLoading: false }),
+}));
+
 jest.mock("@/hooks/api/calendar/booking-resources", () => ({
   useCalendarBookingResources: (cursor: string | undefined) => ({
     data: cursor === "1"
@@ -77,7 +81,7 @@ it("does not offer Inventory equipment ownership when the organization has Inven
 
 it("creates source-owned equipment from Calendar and links the returned record", async () => {
   createResource.mockReset().mockResolvedValue({});
-  createEquipment.mockReset().mockResolvedValue({ id: 27, orgId: "org-1", warehouseId: 4, productVariantId: null, name: "QA camera", location: "Studio", capacity: 1, status: "available", version: 1, createdAt: "2026-10-16T00:00:00.000Z", updatedAt: "2026-10-16T00:00:00.000Z" });
+  createEquipment.mockReset().mockResolvedValue({ id: 27, orgId: "org-1", warehouseId: 4, productVariantId: 7, name: "QA camera", location: "Studio", capacity: 1, status: "available", version: 1, createdAt: "2026-10-16T00:00:00.000Z", updatedAt: "2026-10-16T00:00:00.000Z" });
   const user = userEvent.setup();
   render(<CalendarResourceAdminCard />);
 
@@ -87,11 +91,13 @@ it("creates source-owned equipment from Calendar and links the returned record",
   await user.click(screen.getByRole("button", { name: "Create Inventory equipment" }));
   fireEvent.keyDown(screen.getByRole("combobox", { name: "Warehouse" }), { key: "ArrowDown" });
   await user.click(screen.getByRole("option", { name: "Main warehouse · MAIN" }));
+  await user.click(screen.getByRole("combobox", { name: "Inventory product variant" }));
+  await user.click(screen.getByRole("option", { name: /Camera — Standard/ }));
   await user.type(screen.getByRole("textbox", { name: "Equipment name" }), "QA camera");
   await user.type(screen.getByRole("textbox", { name: "Equipment location" }), "Studio");
   await user.click(screen.getByRole("button", { name: "Create and select equipment" }));
 
-  await waitFor(() => expect(createEquipment).toHaveBeenCalledWith({ warehouseId: 4, name: "QA camera", location: "Studio", capacity: 1 }));
+  await waitFor(() => expect(createEquipment).toHaveBeenCalledWith({ warehouseId: 4, productVariantId: 7, name: "QA camera", location: "Studio", capacity: 1 }));
   await user.click(screen.getByRole("button", { name: "Save resource" }));
   await waitFor(() => expect(createResource).toHaveBeenCalledWith(expect.objectContaining({ sourceKey: "inventory.equipment", sourceRecordId: "27", ownership: "source", requiresApproval: true })));
 });
