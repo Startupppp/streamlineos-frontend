@@ -50,7 +50,7 @@ type EventCreateFormProps = {
   onTicketSelect: (ticket: TicketSearchResult) => void;
   onRemoveLinkedTicket: () => void;
   onTicketPickerChange: (open: boolean) => void;
-  onSave: () => void;
+  onSave: (times: { startTime?: string; endTime?: string }) => void;
   recurrence: RecurrenceState;
   onRecurrenceChange: (next: RecurrenceState) => void;
 };
@@ -96,9 +96,13 @@ export function EventCreateForm({
   const displayLinkedKey = linkedTicket ? `${linkedTicket.projectKey}-${linkedTicket.ticketNumber}` : existingEntityId ? `#${existingEntityId}` : null;
   const displayLinkedTitle = linkedTicket?.title ?? null;
 
-  const handleFormSubmit = useCallback((e: React.FormEvent) => {
+  const handleFormSubmit = useCallback((e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    onSave();
+    const values = new FormData(e.currentTarget);
+    onSave({
+      ...(values.has("startTime") ? { startTime: String(values.get("startTime")) } : {}),
+      ...(values.has("endTime") ? { endTime: String(values.get("endTime")) } : {}),
+    });
   }, [onSave]);
 
   return (

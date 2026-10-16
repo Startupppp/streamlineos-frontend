@@ -88,7 +88,7 @@ export function buildEventPayload({
   return {
     payload: {
       title: trimmedTitle,
-      description: form.description || undefined,
+      description: isEdit ? form.description : form.description || undefined,
       location: form.location || undefined,
       startDate: startDate.toISOString(),
       endDate: endDate.toISOString(),

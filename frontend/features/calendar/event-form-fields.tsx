@@ -153,6 +153,7 @@ export function EventFormFields({
               {!allDay && (
                 <Input
                   type="time"
+                  name="startTime"
                   className="w-[5.5rem] min-w-[5.5rem] shrink-0 text-xs"
                   value={startTime}
                   onChange={onStartTimeChange}
@@ -185,6 +186,7 @@ export function EventFormFields({
               {showEndDate && !allDay && (
                 <Input
                   type="time"
+                  name="endTime"
                   className={cn(
                     "w-[5.5rem] min-w-[5.5rem] shrink-0 text-xs",
                     dateTimeError && "border-destructive",

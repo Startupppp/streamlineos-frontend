@@ -14,7 +14,12 @@ jest.mock("./ticket-picker-dialog", () => ({
 }));
 
 jest.mock("./event-form-fields", () => ({
-  EventFormFields: () => <div data-testid="event-form-fields" />,
+  EventFormFields: ({ startTime, endTime, showEndDate }: { startTime: string; endTime: string; showEndDate: boolean }) => (
+    <div data-testid="event-form-fields">
+      <input type="time" name="startTime" value={startTime} readOnly />
+      {showEndDate && <input type="time" name="endTime" value={endTime} readOnly />}
+    </div>
+  ),
 }));
 
 jest.mock("@/hooks/common/use-animated-icon", () => ({
@@ -114,5 +119,17 @@ describe("EventCreateForm responsive sheet", () => {
     const { getByRole } = render(<EventCreateForm {...baseProps} onSave={onSave} />);
     fireEvent.click(getByRole("button", { name: "Save" }));
     expect(onSave).toHaveBeenCalledTimes(1);
+  });
+
+  it("submits the visible time even when the controlled form state has not updated", () => {
+    const onSave = jest.fn();
+    const { container, getByRole } = render(<EventCreateForm {...baseProps} onSave={onSave} />);
+    const startTime = container.querySelector('input[name="startTime"]');
+    if (!(startTime instanceof HTMLInputElement)) throw new Error("Start time input missing");
+    startTime.value = "17:00";
+
+    fireEvent.click(getByRole("button", { name: "Save" }));
+
+    expect(onSave).toHaveBeenCalledWith({ startTime: "17:00" });
   });
 });
