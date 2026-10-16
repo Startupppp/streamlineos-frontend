@@ -4,6 +4,7 @@ import { PageDocumentToolbar } from "./page-document-toolbar";
 import PageHistorySheet from "./page-history-sheet";
 import PageTree from "./page-tree";
 import type { KbPageDetail, KbPageTreeNode } from "@/hooks/api/kb/page-types";
+import { ApiError } from "@/lib/api-envelope";
 
 const routerPush = jest.fn();
 
@@ -44,6 +45,8 @@ const CHILD_NODE: KbPageTreeNode = {
 };
 
 let rootNode = ROOT_NODE;
+let childLevelOverride: Record<string, unknown> | null = null;
+const mockChildLevelRequest = jest.fn();
 
 function treeLevel(nodes: KbPageTreeNode[]) {
   return {
@@ -71,10 +74,12 @@ jest.mock("@/hooks/api/kb", () => ({
   useDeleteKbPage: () => ({ mutate: jest.fn(), isPending: false }),
   useUpdateKbPage: () => ({ mutate: updatePageMutate, isPending: false }),
   useKbPageTreeInfinite: () => treeLevel([rootNode]),
-  useKbPageChildrenLevel: (_pageId: number, enabled: boolean) =>
-    enabled
-      ? treeLevel([CHILD_NODE])
-      : { ...treeLevel([]), data: undefined },
+  useKbPageChildrenLevel: (pageId: number, enabled: boolean, spaceId?: number, projectId?: number) => {
+    mockChildLevelRequest(pageId, enabled, spaceId, projectId);
+    return enabled
+      ? childLevelOverride ?? treeLevel([CHILD_NODE])
+      : { ...treeLevel([]), data: undefined };
+  },
   useKbPageVersionsInfinite: () => ({
     data: {
       pages: [
@@ -169,6 +174,7 @@ async function openDuplicateItem() {
 beforeEach(() => {
   jest.clearAllMocks();
   rootNode = ROOT_NODE;
+  childLevelOverride = null;
 });
 
 describe("project wiki read path stays inside the project", () => {
@@ -233,6 +239,51 @@ describe("project wiki history path stays inside the project", () => {
 });
 
 describe("project wiki page tree links stay inside the project", () => {
+  it("loads space children only after expansion and keeps the space scope", async () => {
+    rootNode = { ...ROOT_NODE, spaceId: 5, projectId: null };
+    const user = userEvent.setup();
+    render(<PageTree spaceId={5} />);
+
+    expect(mockChildLevelRequest).toHaveBeenCalledWith(42, false, 5, undefined);
+    expect(screen.queryByRole("link", { name: "Rollback steps" })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Expand" }));
+
+    expect(mockChildLevelRequest).toHaveBeenCalledWith(42, true, 5, undefined);
+    expect(screen.getByRole("link", { name: "Rollback steps" })).toBeInTheDocument();
+  });
+
+  it("shows a loading state while an expanded child level is pending", async () => {
+    rootNode = { ...ROOT_NODE, spaceId: 5, projectId: null };
+    childLevelOverride = { ...treeLevel([]), data: undefined, isLoading: true };
+    const user = userEvent.setup();
+    render(<PageTree spaceId={5} />);
+
+    await user.click(screen.getByRole("button", { name: "Expand" }));
+
+    expect(screen.getByRole("status")).toHaveTextContent("Loading child pages");
+  });
+
+  it("keeps a failed child level visible with its reference and retry", async () => {
+    rootNode = { ...ROOT_NODE, spaceId: 5, projectId: null };
+    const refetch = jest.fn();
+    childLevelOverride = {
+      ...treeLevel([]),
+      data: undefined,
+      isError: true,
+      error: new ApiError("Read failed", 500, "INTERNAL", { correlationId: "tree-request-1" }, "/kb/pages/tree"),
+      refetch,
+    };
+    const user = userEvent.setup();
+    render(<PageTree spaceId={5} />);
+
+    await user.click(screen.getByRole("button", { name: "Expand" }));
+
+    expect(screen.getByRole("alert")).toHaveTextContent("Read failed");
+    expect(screen.getByText("tree-request-1")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Retry child pages" }));
+    expect(refetch).toHaveBeenCalledTimes(1);
+  });
+
   it("keeps page actions discoverable at touch widths and reachable by keyboard on desktop", async () => {
     rootNode = { ...ROOT_NODE, spaceId: 5, projectId: null };
     const user = userEvent.setup();

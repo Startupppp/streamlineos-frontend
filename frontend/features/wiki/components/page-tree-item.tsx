@@ -28,6 +28,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { ErrorReference } from "@/components/shared/error-reference";
 import {
   useCreateKbPage,
   useDeleteKbPage,
@@ -47,6 +49,7 @@ import {
   KbFileTextIcon,
 } from "@/features/wiki/lib/kb-icons";
 import { cn } from "@/lib/utils";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
 interface PageTreeItemProps {
@@ -97,6 +100,10 @@ const PageTreeItem = memo(function PageTreeItemInner({
 
   const {
     data: childrenData,
+    isLoading: childrenLoading,
+    isError: childrenError,
+    error: childrenReadError,
+    refetch: refetchChildren,
     hasNextPage: childrenHasNextPage,
     isFetchingNextPage: childrenFetchingNext,
     fetchNextPage: fetchChildrenNextPage,
@@ -108,6 +115,10 @@ const PageTreeItem = memo(function PageTreeItemInner({
 
   function handleNavigate() {
     onCloseMobile?.();
+  }
+
+  function handleRetryChildren() {
+    void refetchChildren();
   }
 
   function handleToggleExpand(e: React.MouseEvent) {
@@ -353,7 +364,7 @@ const PageTreeItem = memo(function PageTreeItemInner({
         </div>
 
         <AnimatePresence initial={false}>
-          {isExpanded && (children.length > 0 || childrenHasNextPage) && (
+          {isExpanded && (children.length > 0 || childrenHasNextPage || childrenLoading || childrenError) && (
             <motion.div
               className="min-w-0 overflow-hidden"
               initial={{ opacity: 0, y: shouldReduceMotion ? 0 : -4 }}
@@ -361,6 +372,18 @@ const PageTreeItem = memo(function PageTreeItemInner({
               exit={{ opacity: 0, y: shouldReduceMotion ? 0 : -4 }}
               transition={{ duration: shouldReduceMotion ? 0 : 0.15, ease: "easeOut" }}
             >
+              {childrenLoading && children.length === 0 && (
+                <p role="status" className="px-2 py-2 text-xs text-muted-foreground" style={{ paddingLeft: (depth + 1) * 16 }}>
+                  Loading child pages…
+                </p>
+              )}
+              {childrenError && (
+                <div role="alert" className="space-y-2 px-2 py-2 text-xs" style={{ paddingLeft: (depth + 1) * 16 }}>
+                  <p className="text-muted-foreground">{getErrorMessage(childrenReadError)}</p>
+                  <ErrorReference error={childrenReadError} className="justify-start" />
+                  <Button type="button" size="sm" variant="outline" onClick={handleRetryChildren}>Retry child pages</Button>
+                </div>
+              )}
               {children.map((child) => (
                 <PageTreeItem
                   key={child.id}
