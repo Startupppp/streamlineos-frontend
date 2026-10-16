@@ -45,7 +45,7 @@ describe("a create settles without waiting for its list to refetch", () => {
     let settled = false;
     await act(async () => {
       settled = await settlesWithin(
-        result.current.mutateAsync({ category: "Travel", amount: 10, expenseDate: "2026-10-13" }),
+        result.current.mutateAsync({ body: { category: "Travel", amount: 10, expenseDate: "2026-10-13" } }),
       );
     });
     expect(settled).toBe(true);

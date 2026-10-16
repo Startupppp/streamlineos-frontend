@@ -11,7 +11,6 @@ import {
   mockQueueState,
   mockSessionModule,
   mockRegularizationModule,
-  mockSessionModule,
   mockSonnerModule,
   mockWfhRow,
   mockEmployeeListModule,

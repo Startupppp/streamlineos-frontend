@@ -22,7 +22,8 @@ import {
 } from "@/components/ui/table-pagination";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { PlusIcon } from "@animateicons/react/lucide";
+import { useRouter } from "next/navigation";
+import { PlusIcon, UserXIcon } from "@animateicons/react/lucide";
 import { EmptyPersonIllustration } from "@/components/illustrations";
 import { useSession } from "next-auth/react";
 import { useCan } from "@/hooks/api/access";
@@ -37,6 +38,7 @@ import { OffboardingChecklistSummaryPanel } from "@/features/hr/exit/offboarding
 const ACTIVE_RESIGNATION_STATUSES = ["SUBMITTED", "PENDING_HR", "HR_APPROVED"];
 
 export function ExitManagementPage() {
+  const router = useRouter();
   const { data: session } = useSession();
   const pager = useCursorPager();
   const {
@@ -118,20 +120,23 @@ export function ExitManagementPage() {
     pager.goNext(pagination?.nextCursor);
   }
 
-  const canSubmit = !isAdmin && canSelfResign && !hasActiveResignation;
+  function handleInitiateTermination() {
+    router.push("/hr/termination");
+  }
+
+  const canSubmit = canSelfResign && !hasActiveResignation;
   const canStartResignation = isAdmin || canSubmit;
   const handleStartResignation = isAdmin ? handleOpenAdminSheet : handleOpenSheet;
 
-  const canSubmitOwn = canSubmit && !hasActiveResignation;
   const primaryAction =
-    hasActiveResignation || canSubmitOwn || isAdmin ? (
+    hasActiveResignation || canSubmit || isAdmin ? (
       <div className="flex items-center gap-2">
         {hasActiveResignation ? (
           <span className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border bg-status-warning-surface text-status-warning-ink border-status-warning-rule">
             Resignation pending
           </span>
         ) : null}
-        {canSubmitOwn ? (
+        {canSubmit ? (
           <AnimatedIconButton
             icon={PlusIcon}
             iconSize={14}
