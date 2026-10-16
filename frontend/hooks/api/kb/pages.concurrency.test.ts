@@ -241,6 +241,17 @@ describe("KB page visibility and status revision requests", () => {
     expect(apiClient.patch).toHaveBeenCalledWith("/kb/pages/1/visibility", { visibility: "public", expectedContentRevision: 4 }, undefined, expect.any(Function));
   });
 
+  it("writes the saved visibility into the open page at once, so the share badge does not lag behind a refetch", async () => {
+    const { apiClient } = jest.requireMock("@/lib/api-client") as { apiClient: { patch: jest.Mock } };
+    apiClient.patch.mockResolvedValueOnce({ id: 1, visibility: "private", publicToken: null, contentRevision: 5 });
+    const client = makeClient();
+    const key = knowledgeAndSurveysQueryKeys.kb.page(1);
+    client.setQueryData(key, { id: 1, visibility: "public", publicToken: "tok", contentRevision: 4, title: "T" });
+    const { result } = renderHook(() => useSetKbPageVisibility(), { wrapper: wrapper(client) });
+    await act(async () => { await result.current.mutateAsync({ pageId: 1, visibility: "private", expectedContentRevision: 4 }); });
+    expect(client.getQueryData(key)).toEqual({ id: 1, visibility: "private", publicToken: null, contentRevision: 5, title: "T" });
+  });
+
   it.each([
     ["publish", usePublishKbPage],
     ["archive", useArchiveKbPage],

@@ -8,6 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { MANIFEST } from "@/lib/module-manifest";
 import type { ModuleEntry } from "@/lib/module-manifest-schema";
@@ -67,6 +68,21 @@ interface ModuleAccessRowProps {
   displayName: string;
   currentStanding: string;
   onStandingChange: (moduleKey: string, standing: string) => void;
+}
+
+function IncludedModuleRow({ displayName }: { displayName: string }) {
+  return (
+    <div className="flex items-center justify-between gap-2">
+      <span className="text-sm">{displayName}</span>
+      <Badge
+        variant="outline"
+        className="h-5 px-2 py-0.5 text-micro"
+        aria-label={`Module access for ${displayName}: included for every member`}
+      >
+        Included
+      </Badge>
+    </div>
+  );
 }
 
 function ModuleAccessRow({
@@ -134,10 +150,13 @@ export function ModuleAccessSection({ field }: ModuleAccessSectionProps) {
         ))}
       </div>
       <p className="text-xs text-muted-foreground">
-        A preset fills the grants below; Viewer clears them, leaving self-service only.
+        A preset fills the grants below; Viewer clears them, leaving self-service and the included modules.
       </p>
       <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
         {ADMINISTRABLE_MODULES.map((mod) => {
+          if (!mod.planGated) {
+            return <IncludedModuleRow key={mod.id} displayName={mod.displayName} />;
+          }
           const entry = (field.value ?? []).find(
             (item) => item.moduleKey === mod.id,
           );

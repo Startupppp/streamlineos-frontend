@@ -1,5 +1,6 @@
 "use client";
 
+import { useGuardedCreateKbPage } from "@/features/wiki/hooks/use-guarded-create-kb-page";
 import { memo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
@@ -31,7 +32,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ErrorReference } from "@/components/shared/error-reference";
 import {
-  useCreateKbPage,
   useDeleteKbPage,
   useDuplicateKbPage,
   useKbPageChildrenLevel,
@@ -89,7 +89,10 @@ const PageTreeItem = memo(function PageTreeItemInner({
   const isActive = pathname === nodeHref || pathname.startsWith(`${nodeHref}/`);
   const canCreate = useCan("kb:pages:create");
   const canDelete = useCan("kb:pages:delete");
-  const createPage = useCreateKbPage();
+  const createPage = useGuardedCreateKbPage((page) => {
+    setExpanded(true);
+    router.push(baseHref ? `${baseHref}/${page.id}` : pageHref(page.id));
+  });
   const deletePage = useDeleteKbPage();
   const duplicatePage = useDuplicateKbPage();
   const toggleFavorite = useToggleFavoriteKbPage();
@@ -137,20 +140,11 @@ const PageTreeItem = memo(function PageTreeItemInner({
   function handleAddChild(e: React.MouseEvent) {
     e.stopPropagation();
     if (!canCreate) return;
-    createPage.mutate(
-      {
-        parentPageId: node.id,
-        ...(node.spaceId !== null ? { spaceId: node.spaceId } : {}),
-        ...(node.projectId !== null ? { projectId: node.projectId } : {}),
-      },
-      {
-        onSuccess: (page) => {
-          setExpanded(true);
-          router.push(baseHref ? `${baseHref}/${page.id}` : pageHref(page.id));
-        },
-        onError: () => toast.error("Failed to create page"),
-      }
-    );
+    void createPage.submit({
+      parentPageId: node.id,
+      ...(node.spaceId !== null ? { spaceId: node.spaceId } : {}),
+      ...(node.projectId !== null ? { projectId: node.projectId } : {}),
+    });
   }
 
   function handleDuplicate() {

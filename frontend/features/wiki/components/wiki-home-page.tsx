@@ -1,5 +1,6 @@
 "use client";
 
+import { useGuardedCreateKbPage } from "@/features/wiki/hooks/use-guarded-create-kb-page";
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -10,13 +11,10 @@ import { useCan } from "@/hooks/api/access";
 import {
   useKbPagesFavorites,
   useKbPagesRecent,
-  useCreateKbPage,
 } from "@/hooks/api/kb";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { ErrorState } from "@/components/shared/error-state";
-import { getErrorMessage } from "@/lib/get-error-message";
-import { toast } from "sonner";
 import { KB_SEARCH, pageHref, projectPageHref } from "@/lib/knowledge-routes";
 import { kbTimeAgo } from "@/features/wiki/lib/kb-date-utils";
 import {
@@ -70,7 +68,6 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
   const { data: recentPages = [] } = useKbPagesRecent();
   const favoritesQuery = useKbPagesFavorites();
   const favoritePages = favoritesQuery.data ?? [];
-  const createPage = useCreateKbPage();
   const canCreate = useCan("kb:pages:create");
 
   const resolveHref = useCallback(
@@ -80,6 +77,7 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
         : pageHref(pageId),
     [projectId],
   );
+  const createPage = useGuardedCreateKbPage((page) => router.push(resolveHref(page.id)));
 
   function handleSearchSubmit() {
     if (isProjectScoped) {
@@ -98,13 +96,7 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
   }
 
   function handleNewPage() {
-    createPage.mutate(
-      { projectId: isProjectScoped ? projectId : undefined },
-      {
-        onSuccess: (page) => router.push(resolveHref(page.id)),
-        onError: (err) => toast.error(getErrorMessage(err)),
-      },
-    );
+    void createPage.submit({ projectId: isProjectScoped ? projectId : undefined });
   }
 
   function handleLoadMoreFavorites() {
@@ -157,7 +149,7 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
       iconClassName="mr-1.5"
       size="sm"
       onClick={handleNewPage}
-      disabled={createPage.isPending}
+      disabled={createPage.isSubmitting}
       suppressHydrationWarning
     >
       New page
