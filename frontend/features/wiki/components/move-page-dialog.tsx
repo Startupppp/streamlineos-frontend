@@ -15,8 +15,10 @@ import { Input } from "@/components/ui/input";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { ErrorState } from "@/components/shared";
 import { useKbPagesSearch, useMoveKbPage } from "@/hooks/api/kb";
 import type { KbPageSearchResult } from "@/hooks/api/kb/page-types";
+import { getErrorMessage } from "@/lib/get-error-message";
 import {
   KbMoveRightIcon,
   KbFileTextIcon,
@@ -42,7 +44,7 @@ export default function MovePageDialog({
   );
   const [searchQuery, setSearchQuery] = useState("");
 
-  const { data: searchResults, isLoading: searching } =
+  const { data: searchResults, isLoading: searching, isError: searchError, error, refetch } =
     useKbPagesSearch(searchQuery);
 
   const results: KbPageSearchResult[] =
@@ -77,6 +79,10 @@ export default function MovePageDialog({
 
   function handleCancel() {
     onOpenChange(false);
+  }
+
+  function handleRetrySearch() {
+    void refetch();
   }
 
   return (
@@ -117,12 +123,21 @@ export default function MovePageDialog({
                 Searching…
               </div>
             )}
-            {!searching && searchQuery.length > 0 && results.length === 0 && (
+            {!searching && searchError && searchQuery.length > 0 && (
+              <ErrorState
+                title="Couldn't search pages"
+                description={getErrorMessage(error)}
+                error={error}
+                onRetry={handleRetrySearch}
+                compact
+              />
+            )}
+            {!searching && !searchError && searchQuery.length > 0 && results.length === 0 && (
               <div className="px-3 py-2 text-sm text-muted-foreground">
                 No pages found
               </div>
             )}
-            {!searching &&
+            {!searching && !searchError &&
               results.map((page) => (
                 <button
                   key={page.id}
