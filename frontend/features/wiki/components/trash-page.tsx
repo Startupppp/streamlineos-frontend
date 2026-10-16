@@ -15,6 +15,7 @@ import type { DataTableColumn } from "@/components/ui/data-table.types";
 import { useCursorPagination } from "@/hooks/common/use-cursor-pagination";
 import { useUrlFilters } from "@/lib/url-state/use-url-filters";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -215,6 +216,18 @@ export default function TrashPage() {
     setBulkPurgeConfirmOpen(false);
   }
 
+  function handleMobileSelectionChange(id: number, checked: boolean) {
+    setSelected((previous) => {
+      const next = new Set(previous);
+      if (checked) next.add(String(id));
+      else {
+        next.delete(String(id));
+        next.delete(id);
+      }
+      return next;
+    });
+  }
+
   const selectedCount = selected.size;
   const pageCount = data?.data.length ?? 0;
 
@@ -403,7 +416,13 @@ export default function TrashPage() {
                 onPrevious: cursorState.goPrevious,
               }}
               mobileCard={(row) => (
-                <div className="flex items-center justify-between gap-2 p-3">
+                <div className="flex items-center gap-3">
+                  <Checkbox
+                    checked={selected.has(String(row.id)) || selected.has(row.id)}
+                    onCheckedChange={(checked) => handleMobileSelectionChange(row.id, checked === true)}
+                    aria-label={`Select ${row.title || "Untitled"}`}
+                    className="shrink-0"
+                  />
                   <div className="flex items-center gap-2 min-w-0">
                     {row.icon && (
                       <span className="shrink-0 text-base">{row.icon}</span>

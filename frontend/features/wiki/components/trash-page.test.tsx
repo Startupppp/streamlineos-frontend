@@ -1,8 +1,10 @@
 import React from "react";
 import { render, screen, fireEvent, act } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import TrashPage from "./trash-page";
 import type { KbPageListItem } from "@/hooks/api/kb/page-types";
 import type { DataTableColumn } from "@/components/ui/data-table.types";
+import { DataTable } from "@/components/ui/data-table";
 
 jest.mock("next/navigation", () => ({
   useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn() })),
@@ -542,6 +544,31 @@ describe("trash page retention permission split", () => {
     render(<TrashPage />);
 
     expect(screen.queryByRole("button", { name: /empty trash/i })).not.toBeInTheDocument();
+  });
+});
+
+describe("trash page mobile card selection", () => {
+  it("exposes a labelled keyboard-operable checkbox that reaches bulk restore", async () => {
+    usePageState.mockReturnValue({ kind: "content" });
+    useKbPagesTrash.mockReturnValue({
+      data: nonEmptyListResponse,
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+
+    render(<TrashPage />);
+
+    const mobileCard = jest.mocked(DataTable).mock.calls.at(-1)?.[0].mobileCard;
+    expect(mobileCard).toBeDefined();
+    render(<>{mobileCard?.(nonEmptyListResponse.data[0], 0)}</>);
+
+    const select = screen.getByRole("checkbox", { name: "Select Some Page" });
+    select.focus();
+    await userEvent.setup().keyboard(" ");
+
+    expect(screen.getByRole("button", { name: "Restore 1" })).toBeInTheDocument();
   });
 });
 
