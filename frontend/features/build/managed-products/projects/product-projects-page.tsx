@@ -76,6 +76,7 @@ export function ProductProjectsPage({ managedProductId }: ProductProjectsPagePro
     handleNextPage,
     handlePreviousPage,
     handleUnlinkClick,
+    handleSetPrimaryClick,
     handleUnlinkConfirm,
     handleUnlinkDialogOpenChange,
     handleRetry,
@@ -88,8 +89,12 @@ export function ProductProjectsPage({ managedProductId }: ProductProjectsPagePro
   );
 
   const columns = useMemo(
-    () => buildProductProjectsColumns({ onUnlinkClick: handleUnlinkClick }),
-    [handleUnlinkClick],
+    () =>
+      buildProductProjectsColumns({
+        onUnlinkClick: handleUnlinkClick,
+        onSetPrimaryClick: handleSetPrimaryClick,
+      }),
+    [handleUnlinkClick, handleSetPrimaryClick],
   );
 
   const mobileCard = useCallback(

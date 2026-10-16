@@ -180,7 +180,7 @@ export function useLinkProjectSecondary() {
         queryClient.invalidateQueries({
           queryKey: buildWorkQueryKeys.projects.managedProducts.linkedProjects(variables.managedProductId),
           exact: false,
-          refetchType: "none",
+          refetchType: "active",
         });
       },
     },
@@ -214,7 +214,7 @@ export function useSetPrimaryProject() {
         queryClient.invalidateQueries({
           queryKey: buildWorkQueryKeys.projects.managedProducts.linkedProjects(variables.managedProductId),
           exact: false,
-          refetchType: "none",
+          refetchType: "active",
         });
       },
     },
