@@ -33,6 +33,17 @@ export function RegularizationStatusBadge({ status }: { status: string }) {
   );
 }
 
+/** "+45 min", "−1 h 10 min" or null when either punch is missing or they match. */
+function punchShift(original: string | null | undefined, requested: string | null | undefined): string | null {
+  if (!original || !requested) return null;
+  const minutes = Math.round((Date.parse(requested) - Date.parse(original)) / 60_000);
+  if (!Number.isFinite(minutes) || minutes === 0) return null;
+  const abs = Math.abs(minutes);
+  const hours = Math.floor(abs / 60);
+  const body = hours > 0 ? `${hours} h${abs % 60 ? ` ${abs % 60} min` : ""}` : `${abs} min`;
+  return `${minutes > 0 ? "+" : "−"}${body}`;
+}
+
 interface RegularizationRowProps {
   row: AttendanceRegularization;
   canDecide: boolean;
@@ -57,6 +68,8 @@ export function RegularizationRow({
   const status = (row.status ?? "PENDING").toUpperCase();
   const isDecidable = status === "PENDING";
   const isSelf = Boolean(currentUserId && row.userId === currentUserId);
+  const inShift = punchShift(row.originalCheckIn, row.requestedCheckIn);
+  const outShift = punchShift(row.originalCheckOut, row.requestedCheckOut);
 
   return (
     <li className="flex flex-col gap-2 py-3 sm:flex-row sm:items-start sm:justify-between">
@@ -82,6 +95,11 @@ export function RegularizationRow({
           {row.requestedCheckIn ? formatTimeInOrgTz(row.requestedCheckIn, orgTz) : "—"} · Out{" "}
           {row.requestedCheckOut ? formatTimeInOrgTz(row.requestedCheckOut, orgTz) : "—"}
         </p>
+        {inShift || outShift ? (
+          <p className="text-dense tabular-nums text-foreground">
+            Change · In {inShift ?? "—"} · Out {outShift ?? "—"}
+          </p>
+        ) : null}
         <p className="text-dense text-muted-foreground">{row.reason}</p>
         {status === "REJECTED" && row.rejectionReason ? (
           <p className="text-dense text-status-danger-ink">{row.rejectionReason}</p>
