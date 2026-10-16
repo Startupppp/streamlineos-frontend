@@ -242,6 +242,11 @@ export function MeetingWorkspaceOutcomes({
                 ))}
               </div>
             ) : null}
+            {draft.sourceOutcomeUnavailable ? (
+              <p role="status" className="text-xs text-status-warning-foreground">
+                Source action status is temporarily unavailable. Refresh the meeting workspace to retry.
+              </p>
+            ) : null}
             <p className="text-micro text-muted-foreground">
               {draft.sharedWithGuests && draft.status !== "DRAFT"
                 ? "Shared with guests"

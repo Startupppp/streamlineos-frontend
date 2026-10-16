@@ -49,6 +49,7 @@ export const calendarMeetingDraftContract = z.object({
       receiptRecorded: z.boolean(),
     })),
   }).nullable(),
+  sourceOutcomeUnavailable: z.boolean(),
   version: z.number().int().positive(),
   reviewedAt: z.string().datetime().nullable(),
   createdAt: z.string().datetime(),
