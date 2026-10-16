@@ -81,7 +81,7 @@ export function PortalCrSheet({ projectId, open, onOpenChange }: PortalCrSheetPr
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="flex w-full flex-col gap-0 p-0 sm:max-w-lg">
+      <SheetContent aria-describedby={undefined} className="flex w-full flex-col gap-0 p-0 sm:max-w-lg">
         <SheetHeader className="shrink-0 border-b px-5 py-4">
           <SheetTitle>Submit a Change Request</SheetTitle>
         </SheetHeader>

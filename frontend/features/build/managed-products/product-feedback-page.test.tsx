@@ -71,6 +71,28 @@ jest.mock("./feedback/feedback-pane", () => ({
   ),
 }));
 
+describe("ProductFeedbackPage — Feedbucket module switched off", () => {
+  it("hides the capture actions and does not read submissions when the module is disabled", () => {
+    const { useModuleEnabled } = jest.requireMock("@/hooks/api/access") as { useModuleEnabled: jest.Mock };
+    useModuleEnabled.mockReturnValue(false);
+    usePageState.mockReturnValue({ kind: "module-disabled", moduleKey: "feedbucket" });
+    useFeedbucketSubmissions.mockReturnValue(EMPTY_FEEDBUCKET_RESULT);
+
+    render(<ProductFeedbackPage managedProductId={7} />);
+
+    expect(screen.queryByRole("button", { name: "Capture feedback" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Collect via Feedbucket" })).not.toBeInTheDocument();
+    expect(useFeedbucketSubmissions).toHaveBeenCalledWith(expect.anything(), { enabled: false });
+    useModuleEnabled.mockReturnValue(true);
+  });
+
+  it("shows the capture actions when the module is on", () => {
+    useFeedbucketSubmissions.mockReturnValue(EMPTY_FEEDBUCKET_RESULT);
+    render(<ProductFeedbackPage managedProductId={7} />);
+    expect(screen.getByRole("button", { name: "Capture feedback" })).toBeInTheDocument();
+  });
+});
+
 describe("ProductFeedbackPage — usePageState integration (BSN-01-012)", () => {
   it("uses the table's matching mobile-card skeleton while the feedback list loads", () => {
     usePageState.mockReturnValue({ kind: "loading" });

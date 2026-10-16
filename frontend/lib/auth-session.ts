@@ -221,6 +221,7 @@ const SESSION_DATA_TTL_MS = 15_000;
 interface SessionDataEntry {
   data: SessionData;
   expiresAt: number;
+  fetchedAt: number;
 }
 const sessionDataStore = new Map<string, SessionDataEntry>();
 const sessionDataInflight = new Map<string, Promise<SessionData | null>>();
@@ -268,30 +269,35 @@ export function primeSessionData(
   userId: string,
   data: SessionData,
   scopeOrgId?: string | null,
+  fetchedAt = Date.now(),
 ): void {
   if (sessionDataStore.size >= MAX_STORE_SIZE) evictExpiredSessionData();
   if (sessionDataStore.size < MAX_STORE_SIZE)
     sessionDataStore.set(sessionDataKey(userId, scopeOrgId), {
       data,
       expiresAt: Date.now() + SESSION_DATA_TTL_MS,
+      fetchedAt,
     });
 }
 
 async function fetchSessionDataWithCache(
   userId: string,
   scopeOrgId?: string | null,
+  notFetchedBefore = 0,
 ): Promise<SessionData | null> {
   const key = sessionDataKey(userId, scopeOrgId);
   const entry = sessionDataStore.get(key);
-  if (entry && entry.expiresAt > Date.now()) return entry.data;
+  if (entry && entry.expiresAt > Date.now() && entry.fetchedAt >= notFetchedBefore)
+    return entry.data;
 
   const current = sessionDataInflight.get(key);
   if (current) return current;
 
   const generation = sessionDataGenerations.get(userId) ?? 0;
+  const startedAt = Date.now();
   const request = fetchSessionData(userId, scopeOrgId).then((fresh) => {
     if (fresh && (sessionDataGenerations.get(userId) ?? 0) === generation)
-      primeSessionData(userId, fresh, scopeOrgId);
+      primeSessionData(userId, fresh, scopeOrgId, startedAt);
     return fresh;
   });
   sessionDataPendingCounts.set(

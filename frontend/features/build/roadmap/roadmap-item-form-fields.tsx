@@ -2,7 +2,7 @@
 
 import { parseISO, isValid } from "date-fns";
 import { useWatch, type Control } from "react-hook-form";
-import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import { FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from "@/components/ui/form";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -20,7 +20,7 @@ import { ROADMAP_STATUS_OPTIONS, ROADMAP_HORIZON_OPTIONS, BUILD_FILTER_NONE } fr
 import { RoadmapDeliveryProgress } from "./roadmap-delivery-progress";
 import { RoadmapRiceFormFields } from "./roadmap-rice-form-fields";
 import { RoadmapDeliveryFields } from "./roadmap-delivery-fields";
-import type { RoadmapItemFormValues } from "./roadmap-schema";
+import { ROADMAP_TITLE_MAX, type RoadmapItemFormValues } from "./roadmap-schema";
 import type { ScorableRoadmapItem } from "./roadmap-item-card";
 import { useGoals } from "@/hooks/api/goals";
 
@@ -118,6 +118,9 @@ export function RoadmapItemFormFields({
             <FormControl>
               <Input {...field} placeholder="e.g. Dark mode support" />
             </FormControl>
+            <FormDescription className="text-xs tabular-nums">
+              {field.value.length}/{ROADMAP_TITLE_MAX}
+            </FormDescription>
             <FormMessage className="text-xs" />
           </FormItem>
         )}
@@ -204,6 +207,28 @@ export function RoadmapItemFormFields({
           )}
         />
       </div>
+      <FormField
+        control={control}
+        name="isPublic"
+        render={({ field }) => (
+          <FormItem>
+            <div className="flex items-center justify-between rounded-lg border border-border bg-muted/30 px-3 py-2.5">
+              <div>
+                <p className="text-sm font-medium text-foreground">Public</p>
+                <p className="text-xs text-muted-foreground">Show this item on the public board</p>
+              </div>
+              <FormControl>
+                <Switch
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                  className="border border-border data-[state=unchecked]:bg-input"
+                />
+              </FormControl>
+            </div>
+            <FormMessage className="text-xs" />
+          </FormItem>
+        )}
+      />
       <div className="grid grid-cols-2 gap-3">
         <FormField
           control={control}
@@ -317,28 +342,6 @@ export function RoadmapItemFormFields({
       />
       {isEdit && item ? <RoadmapDeliveryProgress roadmapItemId={item.id} /> : null}
       {decisionSnapshot ? <DecisionSnapshotSummary snapshot={decisionSnapshot} /> : null}
-      <FormField
-        control={control}
-        name="isPublic"
-        render={({ field }) => (
-          <FormItem>
-            <div className="flex items-center justify-between rounded-lg border border-border bg-muted/30 px-3 py-2.5">
-              <div>
-                <p className="text-sm font-medium text-foreground">Public</p>
-                <p className="text-xs text-muted-foreground">Show this item on the public board</p>
-              </div>
-              <FormControl>
-                <Switch
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                  className="border border-border data-[state=unchecked]:bg-input"
-                />
-              </FormControl>
-            </div>
-            <FormMessage className="text-xs" />
-          </FormItem>
-        )}
-      />
     </>
   );
 }

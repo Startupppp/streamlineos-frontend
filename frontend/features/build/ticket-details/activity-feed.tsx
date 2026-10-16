@@ -14,6 +14,7 @@ import {
 import { CommentItem } from "./comment-item";
 import { useActivityFeed } from "./use-activity-feed";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { PROJECT_FILE_TYPES_LABEL } from "@/hooks/api/build/project-files";
 
 const noopVoid = () => {};
 const noopStr = (_: string) => {};
@@ -172,6 +173,7 @@ export function ActivityFeed({
                     onClick={handleChooseFiles}
                     disabled={isAttachingFiles}
                     aria-label="Attach files to ticket"
+                    title={`Attach files: ${PROJECT_FILE_TYPES_LABEL}, up to 2MB each`}
                   />
                 </>
               ) : null}

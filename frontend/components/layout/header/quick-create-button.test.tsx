@@ -1,5 +1,13 @@
-import { render, screen } from "@testing-library/react"
-import { QuickCreatePanel } from "./quick-create-button"
+import { render, renderHook, screen } from "@testing-library/react"
+import { QuickCreatePanel, useQuickCreateGroups } from "./quick-create-button"
+
+let granted: (key: string) => boolean = () => true
+let enabledModules: string[] = []
+
+jest.mock("next/navigation", () => ({ usePathname: () => "/payroll" }))
+jest.mock("@/features/mail/mail-compose-provider", () => ({
+  useGlobalMailComposer: () => ({ openCompose: jest.fn() }),
+}))
 
 jest.mock("next/link", () => {
   return function Link({
@@ -31,11 +39,11 @@ jest.mock("@/components/ui/scroll-area", () => ({
 }))
 
 jest.mock("@/hooks/api/access", () => ({
-  useCan: () => true,
+  useCan: (key: string) => granted(key),
 }))
 
 jest.mock("@/hooks/api/access/org-modules", () => ({
-  useEnabledModules: () => [],
+  useEnabledModules: () => enabledModules,
 }))
 
 jest.mock("@/components/command-palette/hooks/use-command-palette", () => ({
@@ -57,5 +65,33 @@ describe("QuickCreatePanel", () => {
 
     expect(scrollport).toHaveAttribute("data-fill", "false")
     expect(scrollport).toHaveClass("min-h-0", "flex-1")
+  })
+})
+describe("the Create menu's Payroll group", () => {
+  afterEach(() => {
+    granted = () => true
+    enabledModules = []
+  })
+
+  function payrollItems() {
+    const { result } = renderHook(() => useQuickCreateGroups())
+    return result.current.find((group) => group.id === "payroll")?.items.map((item) => item.id) ?? []
+  }
+
+  it("leads the menu inside Payroll with run, bonus and expense-claim shortcuts", () => {
+    enabledModules = ["PAYROLL"]
+    const { result } = renderHook(() => useQuickCreateGroups())
+    expect(result.current[0]?.id).toBe("payroll")
+    expect(payrollItems()).toEqual(["payroll-run", "add-bonus", "expense-claim"])
+  })
+
+  it("drops each shortcut whose destination permission the viewer lacks", () => {
+    enabledModules = ["PAYROLL"]
+    granted = (key) => key === "hr:payroll:view"
+    expect(payrollItems()).toEqual(["expense-claim"])
+  })
+
+  it("hides the group when the Payroll module is off", () => {
+    expect(payrollItems()).toEqual([])
   })
 })

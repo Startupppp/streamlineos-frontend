@@ -310,6 +310,10 @@ export function AdminExpenseItem({
               Approve
             </LoadingButton>
           </div>
+        ) : status === "PENDING" ? (
+          <p className="text-right text-xs text-muted-foreground italic">
+            Your own claim — needs another approver
+          </p>
         ) : null}
       </div>
     </div>

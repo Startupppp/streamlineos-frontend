@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, type ChangeEvent } from "react";
-import { motion } from "framer-motion";
 import { Users, DollarSign, Calendar } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
@@ -47,12 +46,7 @@ export function WorkforceCostPage() {
       subtitle="Real-time cost breakdown by department and location"
     >
       <PageState resolution={pageState} loading={null} onRetry={handleRetrySummary} className="flex-1">
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.22, ease: "easeOut" }}
-        className="flex flex-1 min-h-0 flex-col gap-4"
-      >
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
         {summaryLoading ? (
           <StatCardGridSkeleton cols={3} />
         ) : summaryIsError ? (
@@ -147,7 +141,7 @@ export function WorkforceCostPage() {
             )}
           </div>
         </div>
-      </motion.div>
+      </div>
       </PageState>
     </PageWrapper>
   );

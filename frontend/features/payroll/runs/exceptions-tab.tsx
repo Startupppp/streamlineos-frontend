@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -51,6 +52,8 @@ const SEVERITY_CONFIG: Record<
   WARNING: { className: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule", label: "Warning" },
   INFO: { className: "bg-status-info-surface text-status-info-ink border-status-info-rule", label: "Info" },
 };
+
+const PROFILE_FIX_CODES = new Set(["MISSING_SALARY_PROFILE", "NO_EARNING_COMPONENTS"]);
 
 const STATUS_CONFIG: Record<PayrollExceptionStatus, { className: string; label: string }> = {
   OPEN: { className: "bg-muted text-muted-foreground border-border", label: "Open" },
@@ -222,6 +225,11 @@ export function ExceptionsTab({ runId, isLocked }: ExceptionsTabProps) {
                       {ex.code}
                     </span>
                     <TruncatedText text={ex.message ?? ""} className="flex-1 text-foreground min-w-0" />
+                    {ex.status === "OPEN" && ex.userId && PROFILE_FIX_CODES.has(ex.code) && (
+                      <Button asChild size="sm" variant="ghost" className="h-6 px-2 text-micro shrink-0">
+                        <Link href={`/payroll/employees/${encodeURIComponent(ex.userId)}`}>Fix profile</Link>
+                      </Button>
+                    )}
                     <span
                       className={`inline-flex items-center px-1.5 py-0.5 rounded text-micro font-medium border shrink-0 ${stCfg.className}`}
                     >

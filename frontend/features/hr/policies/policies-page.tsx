@@ -2,7 +2,6 @@
 
 import { useState, useCallback } from "react";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
-import { motion } from "framer-motion";
 import { Plus, Pencil } from "lucide-react";
 import { EyeIcon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
@@ -24,7 +23,8 @@ import { useCursorPager } from "@/components/ui/table-pagination";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCan } from "@/hooks/api/access";
-import { useHrPolicies, useSeedDefaultPolicies, useOrgPolicyConflicts } from "@/hooks/api/hr/policies";
+import { useActivatePolicy, useHrPolicies, useSeedDefaultPolicies, useOrgPolicyConflicts } from "@/hooks/api/hr/policies";
+import { isApiError } from "@/lib/api-envelope";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { usePageState } from "@/hooks/api/use-page-state";
 import {
@@ -45,18 +45,75 @@ const STATUS_BADGE: Record<string, string> = {
   archived: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
 };
 
+export interface PolicyLineage {
+  latest: HrPolicy;
+  versions: HrPolicy[];
+}
+
+export function groupPolicyVersions(policies: readonly HrPolicy[]): PolicyLineage[] {
+  const byLineage = new Map<string, HrPolicy[]>();
+  for (const policy of policies) {
+    const key = `${policy.policyType}\u0000${policy.name}`;
+    const group = byLineage.get(key);
+    if (group) group.push(policy);
+    else byLineage.set(key, [policy]);
+  }
+  return Array.from(byLineage.values(), (group) => {
+    const versions = [...group].sort((a, b) => a.version - b.version);
+    return { latest: versions[versions.length - 1], versions };
+  });
+}
+
+interface PolicyVersionChipProps {
+  policy: HrPolicy;
+  isLatest: boolean;
+  onPreview: (id: number) => void;
+}
+
+function PolicyVersionChip({ policy, isLatest, onPreview }: PolicyVersionChipProps) {
+  function handleClick() { onPreview(policy.id); }
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      aria-label={`Preview version ${policy.version} (${policy.status})`}
+      className={cn(
+        "rounded border px-1.5 py-0.5 text-xs font-mono",
+        STATUS_BADGE[policy.status] ?? "",
+        isLatest && "font-semibold",
+      )}
+    >
+      v{policy.version} {policy.status}
+    </button>
+  );
+}
+
 interface PolicyRowActionsProps {
-  row: HrPolicy;
+  row: PolicyLineage;
   canManage: boolean;
   onPreview: (id: number) => void;
   onEdit: (policy: HrPolicy) => void;
+  onActivate: (id: number) => void;
+  activatingId: number | null;
 }
 
-function PolicyRowActions({ row, canManage, onPreview, onEdit }: PolicyRowActionsProps) {
-  function handlePreview() { onPreview(row.id); }
-  function handleEdit() { onEdit(row); }
+function PolicyRowActions({ row, canManage, onPreview, onEdit, onActivate, activatingId }: PolicyRowActionsProps) {
+  function handlePreview() { onPreview(row.latest.id); }
+  function handleEdit() { onEdit(row.latest); }
+  function handleActivate() { onActivate(row.latest.id); }
   return (
     <div className="flex items-center gap-1 justify-end">
+      {canManage && row.latest.status === "draft" && (
+        <LoadingButton
+          variant="outline"
+          size="sm"
+          className="h-7 text-xs"
+          isPending={activatingId === row.latest.id}
+          onClick={handleActivate}
+        >
+          Activate
+        </LoadingButton>
+      )}
       <TooltipIconButton
         icon={EyeIcon}
         label="Preview"
@@ -87,6 +144,19 @@ export function HrPoliciesPage() {
   const [previewPolicyId, setPreviewPolicyId] = useState<number | null>(null);
 
   const seed = useSeedDefaultPolicies();
+  const activate = useActivatePolicy();
+  const activatingId = activate.isPending && typeof activate.variables === "number" ? activate.variables : null;
+  const handleActivate = useCallback((id: number) => {
+    activate.mutate(id, {
+      onSuccess: () => toast.success("Policy activated"),
+      onError: (err) =>
+        toast.error(
+          isApiError(err) && err.status === 409
+            ? `${getErrorMessage(err)} Open the policy to review the conflict or force-activate it.`
+            : getErrorMessage(err),
+        ),
+    });
+  }, [activate]);
 
   const pager = useCursorPager(
     `${debouncedSearch.trim()}|${typeFilter}|${statusFilter}`,
@@ -168,11 +238,11 @@ export function HrPoliciesPage() {
     {
       key: "name",
       header: "Name",
-      cell: (row: HrPolicy) => (
+      cell: (row: PolicyLineage) => (
         <div className="min-w-0">
-          <TruncatedText text={row.name} className="text-sm font-medium" />
-          {row.description && (
-            <TruncatedText text={row.description} className="text-xs text-muted-foreground" />
+          <TruncatedText text={row.latest.name} className="text-sm font-medium" />
+          {row.latest.description && (
+            <TruncatedText text={row.latest.description} className="text-xs text-muted-foreground" />
           )}
         </div>
       ),
@@ -180,56 +250,73 @@ export function HrPoliciesPage() {
     {
       key: "type",
       header: "Type",
-      cell: (row: HrPolicy) => (
-        <span className="text-xs text-muted-foreground">{POLICY_TYPE_LABELS[row.policyType]}</span>
+      cell: (row: PolicyLineage) => (
+        <span className="text-xs text-muted-foreground">{POLICY_TYPE_LABELS[row.latest.policyType]}</span>
       ),
     },
     {
       key: "status",
       header: "Status",
-      cell: (row: HrPolicy) => (
-        <Badge variant="outline" className={`text-xs px-2 py-0.5 ${STATUS_BADGE[row.status] ?? ""}`}>
-          {row.status}
+      cell: (row: PolicyLineage) => (
+        <Badge variant="outline" className={`text-xs px-2 py-0.5 ${STATUS_BADGE[row.latest.status] ?? ""}`}>
+          {row.latest.status}
         </Badge>
       ),
     },
     {
       key: "version",
-      header: "Version",
-      cell: (row: HrPolicy) => (
-        <span className="text-xs font-mono text-muted-foreground">v{row.version}</span>
+      header: "Versions",
+      cell: (row: PolicyLineage) => (
+        row.versions.length === 1 ? (
+          <span className="text-xs font-mono text-muted-foreground">v{row.latest.version}</span>
+        ) : (
+          <div className="flex flex-wrap gap-1">
+            {row.versions.map((version) => (
+              <PolicyVersionChip
+                key={version.id}
+                policy={version}
+                isLatest={version.id === row.latest.id}
+                onPreview={handlePreview}
+              />
+            ))}
+          </div>
+        )
       ),
     },
     {
       key: "effective",
       header: "Effective",
-      cell: (row: HrPolicy) => (
+      cell: (row: PolicyLineage) => (
         <span className="text-xs text-muted-foreground">
-          {row.effectiveFrom}
-          {row.effectiveTo ? ` → ${row.effectiveTo}` : ""}
+          {row.latest.effectiveFrom}
+          {row.latest.effectiveTo ? ` → ${row.latest.effectiveTo}` : ""}
         </span>
       ),
     },
     {
       key: "scopes",
       header: "Scopes",
-      cell: (row: HrPolicy) => (
-        <span className="text-xs text-muted-foreground">{row.scopes.length}</span>
+      cell: (row: PolicyLineage) => (
+        <span className="text-xs text-muted-foreground">{row.latest.scopes.length}</span>
       ),
     },
     {
       key: "actions",
       header: "",
-      cell: (row: HrPolicy) => (
+      cell: (row: PolicyLineage) => (
         <PolicyRowActions
           row={row}
           canManage={canManage}
           onPreview={handlePreview}
           onEdit={handleOpenEdit}
+          onActivate={handleActivate}
+          activatingId={activatingId}
         />
       ),
     },
   ];
+
+  const lineages = groupPolicyVersions(data?.data ?? []);
 
   return (
     <PageWrapper
@@ -297,12 +384,7 @@ export function HrPoliciesPage() {
           <span>Resolve overlapping scopes and dates before activating drafts.</span>
         </div>
       )}
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.22, ease: "easeOut" }}
-        className="flex flex-1 min-h-0 flex-col py-4"
-      >
+      <div className="flex flex-1 min-h-0 flex-col py-4">
         {data?.data.length === 0 ? (
           <EmptyState
             className="flex-1"
@@ -324,9 +406,9 @@ export function HrPoliciesPage() {
         ) : (
           <DataTable
             className="flex-1 min-h-0"
-            data={data?.data ?? []}
+            data={lineages}
             columns={columns}
-            getRowKey={(row) => String(row.id)}
+            getRowKey={(row) => String(row.latest.id)}
             pagination={{
               mode: "cursor",
               pageSize: 20,
@@ -337,7 +419,7 @@ export function HrPoliciesPage() {
             }}
           />
         )}
-      </motion.div>
+      </div>
 
       <PolicyUpsertSheet
         open={sheetOpen}

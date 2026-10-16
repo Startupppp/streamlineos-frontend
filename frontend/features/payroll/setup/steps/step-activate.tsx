@@ -31,10 +31,10 @@ const FREQUENCY_LABELS: Record<string, string> = {
 
 type StepActivateProps = {
   draft: SetupDraft;
-  clearAll: () => void;
+  onActivated: () => void;
 };
 
-export function StepActivate({ draft, clearAll }: StepActivateProps) {
+export function StepActivate({ draft, onActivated }: StepActivateProps) {
   const [activated, setActivated] = useState<PolicyActivateResult | null>(null);
   const activate = useActivatePolicy();
   const shouldReduceMotion = useReducedMotion();
@@ -55,7 +55,7 @@ export function StepActivate({ draft, clearAll }: StepActivateProps) {
       {
         onSuccess: (result) => {
           setActivated(result);
-          clearAll();
+          onActivated();
         },
         onError: () => toast.error("Failed to activate payroll. Please try again."),
       },
@@ -75,9 +75,11 @@ export function StepActivate({ draft, clearAll }: StepActivateProps) {
         </motion.div>
 
         <div className="space-y-1">
-          <p className="text-base font-semibold text-foreground">Payroll is live!</p>
+          <p className="text-base font-semibold text-foreground">Payroll activated</p>
           <p className="text-sm text-muted-foreground">
-            {activated.componentCount} component{activated.componentCount !== 1 ? "s" : ""} configured
+            {activated.componentCount === 0
+              ? "No default components were added because your catalog already has them."
+              : `${activated.componentCount} default component${activated.componentCount !== 1 ? "s were" : " was"} added. Review them before you run payroll.`}
           </p>
         </div>
 

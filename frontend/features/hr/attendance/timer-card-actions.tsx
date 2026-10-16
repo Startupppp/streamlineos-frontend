@@ -62,6 +62,10 @@ export function TimerCardActions({
           </Tooltip>
         ) : null}
 
+        {!isActive && isInCooldown ? (
+          <p className="text-center text-xs text-muted-foreground">{t("attendance.cooldownHint")}</p>
+        ) : null}
+
         {!isActive && isBlockedDay ? (
           <div className="flex flex-col gap-1.5">
             <LoadingButton

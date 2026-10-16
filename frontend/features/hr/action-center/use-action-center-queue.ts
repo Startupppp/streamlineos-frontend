@@ -102,7 +102,7 @@ export function useActionCenterQueue(): ActionCenterQueue {
         key: "leave",
         label: "Leave",
         permission: "hr:leaves:view",
-        isLoading: leaves.isLoading || leaveGate.pending,
+        isLoading: leaveGate.pending || (leaveGate.allowed && leaves.isPending),
         isError: leaves.isError,
         denied: leaveGate.denied,
         retry: () => void leaves.refetch(),

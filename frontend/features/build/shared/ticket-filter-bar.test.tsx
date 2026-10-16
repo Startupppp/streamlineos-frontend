@@ -309,4 +309,11 @@ describe("ticket filter bar", () => {
     expect(strip).toBeTruthy();
     expect(strip?.className).not.toContain("overflow-x-auto");
   });
+
+  it("caps the search field at the 200-character search limit and says so instead of truncating silently", () => {
+    renderWith("");
+    const input = screen.getByPlaceholderText("Search...");
+    expect(input).toHaveAttribute("maxLength", "200");
+    expect(input).toHaveAttribute("title", "Search is limited to 200 characters");
+  });
 });

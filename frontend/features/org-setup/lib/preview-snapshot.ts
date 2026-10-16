@@ -12,7 +12,7 @@ export type WorkspacePreviewSnapshot = {
 
 export function toPreviewSnapshot(data: WizardData): WorkspacePreviewSnapshot {
   return {
-    companyName: data.companyName,
+    companyName: data.companyName.trim() || data.displayName,
     industry: data.industry,
     teamSize: data.teamSize,
     goals: data.goals,

@@ -656,6 +656,7 @@
     "self:payslips",
     "self:recruitment",
     "self:referrals",
+    "self:resignation",
     "self:support",
     "settings:api-tokens:read",
     "settings:api-tokens:write",
@@ -4143,6 +4144,11 @@
       "action": "referrals",
       "description": "Submit candidate referrals and track own referrals"
     },
+    "self:resignation": {
+      "resource": "self",
+      "action": "resignation",
+      "description": "Submit, follow and withdraw one's own resignation"
+    },
     "self:support": {
       "resource": "self",
       "action": "support",
@@ -4810,6 +4816,7 @@
     "self:payslips",
     "self:recruitment",
     "self:referrals",
+    "self:resignation",
     "self:support",
     "settings:api-tokens:read",
     "settings:api-tokens:write",

@@ -218,7 +218,7 @@ export function FormSubmissionsTab({
       />
 
       <Dialog open={!!viewTarget} onOpenChange={handleViewClose}>
-        <DialogContent className="max-w-lg">
+        <DialogContent aria-describedby={undefined} className="max-w-lg">
           <DialogHeader>
             <DialogTitle>Submission #{viewTarget?.id}</DialogTitle>
           </DialogHeader>

@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/select";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { formatRoleLabel } from "@/lib/constants/user-invite-roles";
-import { MODULE_CATALOG } from "../lib/constants";
+import { ALWAYS_ENABLED_MODULES, MODULE_CATALOG } from "../lib/constants";
 import { effectiveInviteModuleAccess } from "../lib/setup-payload";
 import type { Invitee, OrgModuleKey } from "../lib/wizard-data-schema";
 
@@ -25,6 +25,8 @@ type InviteeAccessRowProps = {
   onAccessChange: (email: string, moduleKey: OrgModuleKey, standing: string) => void;
   onRemoveUnavailableAccess: (email: string) => void;
 };
+
+const ALWAYS_ENABLED_KEYS: ReadonlySet<string> = new Set(ALWAYS_ENABLED_MODULES);
 
 function moduleLabel(moduleKey: OrgModuleKey): string {
   return (
@@ -46,6 +48,9 @@ export function InviteeAccessRow({
   const access = effectiveInviteModuleAccess(invitee, selectedModules);
   const selected = new Set(selectedModules);
   const unavailable = access.filter((item) => !selected.has(item.moduleKey));
+  const assignableModules = selectedModules.filter(
+    (moduleKey) => !ALWAYS_ENABLED_KEYS.has(moduleKey),
+  );
 
   return (
     <motion.li
@@ -81,13 +86,13 @@ export function InviteeAccessRow({
             ? "Access: no products until assigned"
             : `Access: ${access.map((item) => `${moduleLabel(item.moduleKey)} ${formatRoleLabel(item.standing)}`).join(", ")}`}
       </p>
-      {invitee.role === "MEMBER" && selectedModules.length > 0 && (
+      {invitee.role === "MEMBER" && assignableModules.length > 0 && (
         <details className="mt-2 text-xs">
           <summary className="w-fit cursor-pointer font-medium text-foreground">
             Edit product access for {invitee.email}
           </summary>
           <div className="mt-2 space-y-2">
-            {selectedModules.map((moduleKey) => (
+            {assignableModules.map((moduleKey) => (
               <div key={moduleKey} className="flex items-center justify-between gap-2">
                 <span>{moduleLabel(moduleKey)}</span>
                 <Select

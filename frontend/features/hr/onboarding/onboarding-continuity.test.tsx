@@ -101,10 +101,9 @@ describe("HRMS-UX-013 — initiate validation says what is missing (C-003 class)
 
     await user.click(screen.getByRole("button", { name: /next/i }));
 
-    await waitFor(() => expect(toastError).toHaveBeenCalled());
-    const message = String(toastError.mock.calls[0]?.[0] ?? "");
-    expect(message.length).toBeGreaterThan(0);
-    expect(message).not.toMatch(/^(error|invalid|failed)\.?$/i);
+    expect(await screen.findByText("First name is required")).toBeInTheDocument();
+    expect(screen.getByText("Email is required")).toBeInTheDocument();
+    expect(toastError).not.toHaveBeenCalled();
     expect(screen.getByRole("button", { name: /next/i })).toBeInTheDocument();
     expect(screen.getByLabelText(/^email/i)).toBeInTheDocument();
   });

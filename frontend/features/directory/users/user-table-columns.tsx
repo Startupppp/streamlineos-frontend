@@ -17,6 +17,9 @@ import { propagationShield } from "@/lib/keyboard-activation";
 import type { PresenceStatus } from "@/lib/presence";
 import { AvatarWithPresence } from "@/components/shared/presence-dot";
 
+const STICKY_ACTIONS_CELL = "sticky right-0 w-8 bg-card";
+const STICKY_ACTIONS_HEADER = "sticky right-0 bg-muted";
+
 interface UserActionCellProps {
   user: User;
   onView: (userId: string) => void;
@@ -137,6 +140,12 @@ export function getUserTableColumns(
       className: "tabular-nums font-mono",
       cell: renderJoinedAt,
     },
-    { key: "actions", header: "", className: "w-8", cell: renderActions },
+    {
+      key: "actions",
+      header: "",
+      className: STICKY_ACTIONS_CELL,
+      headerClassName: STICKY_ACTIONS_HEADER,
+      cell: renderActions,
+    },
   ];
 }

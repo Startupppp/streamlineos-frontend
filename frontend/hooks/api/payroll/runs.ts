@@ -2,6 +2,7 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { lazyContract } from "@/lib/api-envelope";
 import { payrollQueryKeys } from "@/lib/query-keys/payroll";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
@@ -15,6 +16,9 @@ import {
 
 const runCreateC = lazyContract(() =>
   import("@/hooks/api/payroll/runs-schema").then((m) => m.runCreateResponseContract),
+);
+const runNoContentC = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
 );
 const runOperationC = lazyContract(() =>
   import("@/hooks/api/payroll/runs-schema").then((m) => m.runOperationResponseContract),
@@ -44,6 +48,7 @@ export function usePayrollRun(runId: number) {
     queryFn: ({ signal }) => apiClient.get(`/payroll/runs/${runId}`, undefined, signal, payrollRunDetailContract),
     staleTime: 30_000,
     enabled: canView && payrollOn && runId > 0,
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -107,6 +112,20 @@ export function useRecalculateRun() {
       void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.runEmployeesAll(runId) });
       void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.runExceptionsAll(runId) });
       void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.runVariance(runId) });
+      void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.commandCenterAll });
+    },
+  });
+}
+
+export function useDiscardRun() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("payroll:runs:manage", {
+    mutationKey: ["payroll", "runs", "discard"],
+    mutationFn: (runId: number) =>
+      apiClient.delete<void>(`/payroll/runs/${runId}`, undefined, undefined, runNoContentC),
+    onSuccess: (_, runId) => {
+      qc.removeQueries({ queryKey: payrollQueryKeys.payroll.run(runId) });
+      void qc.invalidateQueries({ queryKey: [...payrollQueryKeys.payroll.all, "runs"] });
       void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.commandCenterAll });
     },
   });

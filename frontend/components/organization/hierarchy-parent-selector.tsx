@@ -251,7 +251,7 @@ function HierarchyParentSelector(
             ) : null}
             {!optionsQuery.isError ? (
               <CommandGroup>
-                {optionalLabel ? (
+                {optionalLabel && !optionsQuery.isLoading ? (
                   <CommandItem
                     value="__no_parent__"
                     onSelect={handleClear}

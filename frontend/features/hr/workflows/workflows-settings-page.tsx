@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
 import { Plus, Play, Archive, Copy, Trash2, Settings2, FlaskConical } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -203,11 +202,7 @@ export function WorkflowsSettingsPage() {
         </div>
       }
     >
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.22, ease: "easeOut" }}
-      >
+      <div>
         <PageState
           resolution={pageState}
           onRetry={handleRetry}
@@ -317,7 +312,7 @@ export function WorkflowsSettingsPage() {
             })}
           </div>
         </PageState>
-      </motion.div>
+      </div>
 
       <ConfirmDialog
         open={deleteTarget !== null}

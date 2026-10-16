@@ -14,7 +14,13 @@ import {
 interface RoadmapPriorityScoreProps {
   prioritization: RoadmapPrioritization | undefined;
   tierWeighting?: RoadmapTierWeighting;
+  decisionSnapshot?: Record<string, unknown> | null;
   className?: string;
+}
+
+function acceptedOverrideScore(snapshot: Record<string, unknown> | null | undefined): number | null {
+  if (snapshot?.scoreIsOverride !== true) return null;
+  return typeof snapshot.score === "number" && Number.isFinite(snapshot.score) ? snapshot.score : null;
 }
 
 
@@ -54,8 +60,30 @@ function LinkedRevenueBadge({ tierWeighting }: { tierWeighting: RoadmapTierWeigh
 export function RoadmapPriorityScore({
   prioritization,
   tierWeighting,
+  decisionSnapshot,
   className,
 }: RoadmapPriorityScoreProps) {
+  const overrideScore = acceptedOverrideScore(decisionSnapshot);
+  if (overrideScore !== null) {
+    const computed = prioritization?.score ?? null;
+    return (
+      <span className={cn("inline-flex items-center gap-1", className)}>
+        <Badge variant="default" className="text-micro tabular-nums">
+          RICE {overrideScore}
+        </Badge>
+        <Badge
+          variant="outline"
+          className="text-micro text-muted-foreground"
+          title={`Score override carried from the accepted opportunity.${
+            computed === null ? "" : ` Computed RICE from this item's inputs: ${String(computed)}.`
+          }`}
+        >
+          Opportunity override
+        </Badge>
+      </span>
+    );
+  }
+
   if (!prioritization) return null;
 
   if (prioritization.isComplete && prioritization.score !== null) {

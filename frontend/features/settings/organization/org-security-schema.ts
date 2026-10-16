@@ -9,6 +9,10 @@ const splitValues = (value: string) =>
 export const SECURITY_LIST_MAX_ENTRIES = 100;
 const DOMAIN_MAX_LENGTH = 253;
 const IP_ENTRY_MAX_LENGTH = 128;
+const IP_ENTRY_FORMATS = [z.ipv4(), z.ipv6(), z.cidrv4(), z.cidrv6()];
+
+const isIpOrCidr = (entry: string) =>
+  IP_ENTRY_FORMATS.some((format) => format.safeParse(entry).success);
 
 export const orgSecurityFormSchema = z.object({
   mfaEnforced: z.boolean(),
@@ -33,6 +37,10 @@ export const orgSecurityFormSchema = z.object({
     .refine(
       (value) => splitValues(value).every((entry) => entry.length <= IP_ENTRY_MAX_LENGTH),
       `Each entry must be ${IP_ENTRY_MAX_LENGTH} characters or fewer`,
+    )
+    .refine(
+      (value) => splitValues(value).every(isIpOrCidr),
+      "Enter IPv4 or IPv6 addresses, optionally with a CIDR prefix such as 203.0.113.0/24",
     )
     .refine(
       (value) => new Set(splitValues(value)).size <= SECURITY_LIST_MAX_ENTRIES,

@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import {
   Sheet,
@@ -20,16 +21,15 @@ interface Props {
 
 export function PayslipPreviewSheet({ template, open, onOpenChange }: Props) {
   const previewMutation = usePreviewPayslipTemplate();
+  const { mutate } = previewMutation;
+  const { layout, config } = template;
 
-  function handleOpenChange(nextOpen: boolean) {
-    if (nextOpen) {
-      previewMutation.mutate({ layout: template.layout, config: template.config });
-    }
-    onOpenChange(nextOpen);
-  }
+  useEffect(() => {
+    if (open) mutate({ layout, config });
+  }, [open, layout, config, mutate]);
 
   return (
-    <Sheet open={open} onOpenChange={handleOpenChange}>
+    <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="p-0 flex flex-col gap-0 overflow-hidden w-full sm:max-w-2xl">
         <div className="shrink-0 px-6 py-4 border-b">
           <SheetHeader>

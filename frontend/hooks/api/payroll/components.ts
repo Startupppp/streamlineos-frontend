@@ -76,8 +76,9 @@ export function useCreatePayrollComponent() {
     mutationKey: ["payroll", "components", "create"],
     mutationFn: (data: CreateComponentInput) =>
       apiClient.post<SalaryComponent>("/payroll/components", data, undefined, salaryComponentC),
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.components() }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.components() });
+    },
   });
 }
 
@@ -87,8 +88,9 @@ export function useUpdatePayrollComponent() {
     mutationKey: ["payroll", "components", "update"],
     mutationFn: ({ componentId, data }: UpdateComponentInput) =>
       apiClient.patch<SalaryComponent>(`/payroll/components/${componentId}`, data, undefined, salaryComponentC),
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.components() }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.components() });
+    },
   });
 }
 
@@ -100,7 +102,8 @@ export function useDeletePayrollComponent() {
       apiClient.delete<void>(
         `/payroll/components/${componentId}`, undefined, undefined, noContentC,
       ),
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.components() }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.components() });
+    },
   });
 }

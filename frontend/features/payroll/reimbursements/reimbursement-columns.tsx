@@ -46,6 +46,7 @@ const PendingActions = memo(function PendingActions({
 
 interface BuildReimbursementColumnsOptions {
   canApprove: boolean;
+  currentUserId?: string;
   isProcessing: boolean;
   onApprove: (claimId: number) => void;
   onReject: (claimId: number, reason: string) => void;
@@ -53,6 +54,7 @@ interface BuildReimbursementColumnsOptions {
 
 export function buildReimbursementColumns({
   canApprove,
+  currentUserId,
   isProcessing,
   onApprove,
   onReject,
@@ -61,14 +63,16 @@ export function buildReimbursementColumns({
     key: "actions",
     header: "",
     cell: (row) =>
-      row.status === "PENDING" ? (
+      row.status !== "PENDING" ? null : row.userId === currentUserId ? (
+        <span className="text-micro text-muted-foreground">Your claim — another approver decides</span>
+      ) : (
         <PendingActions
           claimId={row.id}
           isProcessing={isProcessing}
           onApprove={onApprove}
           onReject={onReject}
         />
-      ) : null,
+      ),
   };
 
   return [

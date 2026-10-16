@@ -124,6 +124,7 @@ function OrganizationSwitcher({
   const isLabelHidden = isSidebar && iconOnly;
   const isOrgLoading = organizations === undefined;
   const workspaceName = activeOrg?.name ?? "";
+  const triggerLabel = otherOrgs.length > 0 ? "Switch organization" : "Organization menu";
 
   const panelProps = {
     canLeave,
@@ -175,8 +176,8 @@ function OrganizationSwitcher({
       onClick={triggerOnly ? handleTriggerClick : undefined}
       aria-label={
         isLabelHidden
-          ? `Switch organization${workspaceName ? ` — ${workspaceName}` : ""}`
-          : "Switch organization"
+          ? `${triggerLabel}${workspaceName ? ` — ${workspaceName}` : ""}`
+          : triggerLabel
       }
       className={cn(
         identityClassName,

@@ -24,19 +24,32 @@ export function buildAvailableHint(
   if (noPolicyConfigured)
     return "No leave policy is set up yet, so nothing has accrued — an HR admin can add leave types under Leave settings.";
 
-  const perType = balances
-    .filter((b) => b.typeName)
-    .map((b) => `${b.typeName} ${formatDayCount(Number(b.balance ?? 0))}`)
-    .join(" · ");
-
   const joined = joiningDate ? new Date(joiningDate) : null;
-  const prorated =
+  const proratedMonths =
     joined && !Number.isNaN(joined.getTime()) &&
     joined.getFullYear() === new Date().getFullYear()
-      ? `Prorated from your joining date (${format(joined, "d MMM yyyy")}): ${12 - joined.getMonth()} of 12 months`
-      : "";
+      ? 12 - joined.getMonth()
+      : 12;
 
-  return [perType, prorated].filter(Boolean).join(" — ") || undefined;
+  const perType = balances
+    .filter((b) => b.typeName)
+    .map((b) => {
+      const available = Number(b.balance ?? 0);
+      if (b.daysPerYear === null || b.daysPerYear <= 0)
+        return `${b.typeName} ${formatDayCount(available)}`;
+      const entitled = Math.floor((proratedMonths / 12) * b.daysPerYear * 2) / 2;
+      const used = Math.max(0, entitled - available);
+      return `${b.typeName}: ${formatDayCount(entitled)} entitled − ${formatDayCount(used)} used = ${formatDayCount(available)}`;
+    })
+    .join(" · ");
+
+  const prorated =
+    proratedMonths < 12 && joined
+      ? `Prorated from your joining date (${format(joined, "d MMM yyyy")}): ${proratedMonths} of 12 months`
+      : "";
+  const pendingNote = perType ? "Pending requests are deducted when approved" : "";
+
+  return [perType, prorated, pendingNote].filter(Boolean).join(" — ") || undefined;
 }
 
 export const LeavesSummaryStrip = React.memo(function LeavesSummaryStrip({

@@ -82,7 +82,7 @@ export function MemberOnboardingNote() {
 
   return (
     <p className="rounded-xl border border-border bg-muted/40 px-4 py-3 text-dense text-muted-foreground">
-      Completing your employee profile activates your access to the HR module.
+      Complete your employee profile so HR has your details.
       You can finish this now or come back to it any time.
     </p>
   );

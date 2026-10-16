@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type { SalaryTemplateList, SalaryTemplateRow } from "@/hooks/api/hr/salary-structures-schema";
@@ -24,12 +25,13 @@ const salaryDeleteContract = lazyContract(() =>
 
 export function useSalaryStructureTemplates(options?: { enabled?: boolean }) {
   const canView = useCan("hr:salary:view");
-  const hrEnabled = useModuleEnabled("hr");
+  const payrollEnabled = useModuleEnabled("payroll");
   return useQuery<SalaryTemplateList>({
     queryKey: humanResourcesQueryKeys.hr.salaryStructureTemplates(),
     queryFn: ({ signal }) => apiClient.get("/hr/payroll/salary-structures", undefined, signal, salaryListContract),
     staleTime: 120_000,
-    enabled: canView && hrEnabled && (options?.enabled ?? true),
+    enabled: canView && payrollEnabled && (options?.enabled ?? true),
+    ...INLINE_READ_ERROR,
   });
 }
 

@@ -62,7 +62,7 @@ export function AutomationSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="flex flex-col gap-0 p-0 w-full sm:max-w-lg overflow-hidden">
+      <SheetContent aria-describedby={undefined} className="flex flex-col gap-0 p-0 w-full sm:max-w-lg overflow-hidden">
         <SheetHeader className="px-4 py-3 border-b shrink-0">
           <SheetTitle className="text-base">
             {editingAutomation ? "Edit Automation" : "New Automation"}

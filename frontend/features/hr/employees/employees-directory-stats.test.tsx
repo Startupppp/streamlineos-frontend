@@ -17,7 +17,7 @@ jest.mock("@/hooks/api/hr/employee-list", () => ({
   useHrEmployeeCounts: (...args: unknown[]) => mockUseHrEmployeeCounts(...args),
 }));
 
-const statusHref = (status: "active" | "inactive") => `/hr/employees?dept=eng&status=${status}`;
+const statusHref = (status: "active" | "pending" | "inactive") => `/hr/employees?dept=eng&status=${status}`;
 
 beforeEach(() => {
   jest.clearAllMocks();

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { DB_ENUMS } from "@/contracts/db-enums.generated";
 
 export const fnfRowContract = z.object({
   id: z.number(),
@@ -12,7 +13,7 @@ export const fnfRowContract = z.object({
   deductions: z.string(),
   loanRecovery: z.string(),
   netPayable: z.string(),
-  status: z.enum(["PENDING", "HR_REVIEW", "FINANCE_REVIEW", "APPROVED", "PAID"]),
+  status: z.enum(DB_ENUMS.fnf_status),
   userMembershipId: z.number().nullable(),
   approvedBy: z.string().nullable(),
   notes: z.string().nullable(),
@@ -25,7 +26,7 @@ export const fnfRowContract = z.object({
   updatedAt: z.string(),
 });
 
-export const fnfGetOneContract = fnfRowContract.extend({
+export const fnfGetOneContract = fnfRowContract.omit({ resignationId: true, userMembershipId: true }).extend({
   userName: z.string().nullable(),
   userEmail: z.string().nullable(),
 });

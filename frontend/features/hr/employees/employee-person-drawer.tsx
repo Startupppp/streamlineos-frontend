@@ -47,7 +47,7 @@ export function EmployeePersonDrawer({
             departmentName: employee.department?.name ?? null,
             isActive: employee.isActive,
             hasAccepted: employee.hasAccepted,
-            reportingToName: employee.reportingTo,
+            reportingToName: employee.reportingToName,
           }
         : null,
     [employee],

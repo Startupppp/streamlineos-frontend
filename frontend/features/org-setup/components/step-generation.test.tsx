@@ -444,6 +444,69 @@ describe("StepGeneration — background failed + isReady true → user can conti
   });
 });
 
+describe("StepGeneration — invitations wait for the background result", () => {
+  const WITH_INVITEE = {
+    ...TEST_DATA,
+    invitees: [{ email: "teammate@example.com", role: "MEMBER" as const }],
+  };
+
+  it("does not leave the progress screen while invitations are still pending", async () => {
+    mockProvisioning = { ...mockProvisioning, isReady: true, background: "pending" };
+    mockMutateAsync.mockResolvedValue({ ...SETUP_RESPONSE, autoLoginToken: null });
+    mockRefreshSessionClaims.mockResolvedValue(FAKE_SESSION);
+
+    render(<StepGeneration data={WITH_INVITEE} />);
+
+    await waitFor(() => {
+      expect(mockMutateAsync).toHaveBeenCalled();
+    });
+    expect(mockRefreshSessionClaims).not.toHaveBeenCalled();
+    expect(capturedProgressProps.showWelcome).toBe(false);
+  });
+
+  it("keeps a failed invitation result on screen instead of auto-continuing", async () => {
+    const issue = {
+      title: "Some optional setup steps didn't finish",
+      message: "Your invitations didn't complete.",
+      reference: null,
+      canContinue: true,
+    };
+    const recipientOutcomes = [
+      { email: "teammate@example.com", outcome: "failed" as const, reason: "unknown" as const },
+    ];
+    mockProvisioning = {
+      ...mockProvisioning,
+      isReady: true,
+      background: "completed",
+      issue,
+      recipientOutcomes,
+    };
+    mockMutateAsync.mockResolvedValue({ ...SETUP_RESPONSE, autoLoginToken: null });
+    mockRefreshSessionClaims.mockResolvedValue(FAKE_SESSION);
+
+    render(<StepGeneration data={WITH_INVITEE} />);
+
+    await waitFor(() => {
+      expect(capturedProgressProps.recipientOutcomes).toBe(recipientOutcomes);
+    });
+    expect(capturedProgressProps.provisioningIssue).toBe(issue);
+    expect(capturedProgressProps.showWelcome).toBe(false);
+    expect(mockRefreshSessionClaims).not.toHaveBeenCalled();
+  });
+
+  it("finishes once the invitations completed cleanly", async () => {
+    mockProvisioning = { ...mockProvisioning, isReady: true, background: "completed" };
+    mockMutateAsync.mockResolvedValue({ ...SETUP_RESPONSE, autoLoginToken: null });
+    mockRefreshSessionClaims.mockResolvedValue(FAKE_SESSION);
+
+    render(<StepGeneration data={WITH_INVITEE} />);
+
+    await waitFor(() => {
+      expect(capturedProgressProps.showWelcome).toBe(true);
+    });
+  });
+});
+
 describe("StepGeneration — second mount markers", () => {
   it("redirects when marker matches current user + org from session", () => {
     mockHasCompletionMarker.mockReturnValue(true);

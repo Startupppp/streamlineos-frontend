@@ -92,6 +92,8 @@ export function RoadmapPublicationPanel({ managedProductId, onClose }: RoadmapPu
         description="The share link will stop working immediately. You can re-publish at any time with a new link."
         confirmLabel="Unpublish"
         destructive
+        keepOpenOnConfirm
+        isPending={controls.isUnpublishing}
         onConfirm={controls.handleUnpublish}
       />
 
@@ -102,6 +104,8 @@ export function RoadmapPublicationPanel({ managedProductId, onClose }: RoadmapPu
         description="The current link will stop working immediately. A new unique link will be generated."
         confirmLabel="Rotate link"
         destructive
+        keepOpenOnConfirm
+        isPending={controls.isPublishing}
         onConfirm={controls.handleRotate}
       />
     </>

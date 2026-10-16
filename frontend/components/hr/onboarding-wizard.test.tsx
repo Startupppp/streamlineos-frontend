@@ -17,13 +17,19 @@ jest.mock("@/components/hr/check-employee-email", () => {
 });
 
 const onboardMutate = jest.fn();
-const onboardState = { isPending: false };
+const onboardState: { isPending: boolean; error: Error | null } = { isPending: false, error: null };
 
 jest.mock("@/hooks/api/hr", () => ({
   useOnboardEmployee: () => ({
     mutate: onboardMutate,
     get isPending() {
       return onboardState.isPending;
+    },
+    get isError() {
+      return onboardState.error !== null;
+    },
+    get error() {
+      return onboardState.error;
     },
   }),
 }));
@@ -107,6 +113,7 @@ describe("OnboardingWizard — the email check explains which case the admin is 
   beforeEach(() => {
     jest.clearAllMocks();
     onboardState.isPending = false;
+    onboardState.error = null;
   });
 
   async function enterEmail(
@@ -210,5 +217,19 @@ describe("OnboardingWizard — the email check explains which case the admin is 
 
     expect(screen.getByRole("button", { name: /^next$/i })).toBeEnabled();
     expect(screen.getByRole("button", { name: /back/i })).toBeDisabled();
+  });
+
+  it("BUG-011: a failed submit says why inline and keeps what was typed", async () => {
+    const user = userEvent.setup();
+    const { rerender } = render(<OnboardingWizard />);
+    await user.type(screen.getByLabelText(/^first name/i), "Jane");
+
+    onboardState.error = new Error("The service is temporarily unavailable. Please try again.");
+    rerender(<OnboardingWizard />);
+
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      /temporarily unavailable.*entries are kept; submit again/i,
+    );
+    expect(screen.getByLabelText(/^first name/i)).toHaveValue("Jane");
   });
 });

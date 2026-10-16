@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, memo, type ChangeEvent } from "react";
+import { useState, memo, type ChangeEvent, type ReactNode } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -46,6 +46,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { formatMoney } from "@/features/payroll/shared/payroll-format";
 import { cn } from "@/lib/utils";
 import { SourceWhyList } from "./source-why-list";
+import { AdjustmentRemoveAction, adjustmentIdFromCode } from "./adjustment-remove-action";
 import type { CalculationSnapshotLine, SalaryComponentType } from "@/types/payroll/runs";
 
 const adjustmentSchema = z.object({
@@ -76,7 +77,7 @@ const CATEGORY_LABELS: Record<SalaryComponentType, string> = {
   ADJUSTMENT: "Adjustments",
 };
 
-const LineItemRow = memo(function LineItemRow({ line }: { line: CalculationSnapshotLine }) {
+const LineItemRow = memo(function LineItemRow({ line, action }: { line: CalculationSnapshotLine; action?: ReactNode }) {
   const [expanded, setExpanded] = useState(false);
 
   function handleToggle() {
@@ -104,6 +105,7 @@ const LineItemRow = memo(function LineItemRow({ line }: { line: CalculationSnaps
         <span className="font-mono text-dense tabular-nums text-foreground">
           {formatMoney(line.amount)}
         </span>
+        {action}
       </div>
       <SourceWhyList sources={line.explain.sources} />
       {expanded && (
@@ -256,9 +258,19 @@ export function BreakdownSheet({
                       </div>
                       {lines
                         .sort((a, b) => a.sortOrder - b.sortOrder)
-                        .map((line) => (
-                          <LineItemRow key={line.code} line={line} />
-                        ))}
+                        .map((line) => {
+                          const adjustmentId = adjustmentIdFromCode(line.code);
+                          const removable = adjustmentId !== null && runEmployeeId !== null && canManage && !isLocked;
+                          return (
+                            <LineItemRow
+                              key={line.code}
+                              line={line}
+                              action={removable ? (
+                                <AdjustmentRemoveAction runId={runId} runEmployeeId={runEmployeeId} adjustmentId={adjustmentId} name={line.name} />
+                              ) : undefined}
+                            />
+                          );
+                        })}
                     </div>
                   );
                 })}

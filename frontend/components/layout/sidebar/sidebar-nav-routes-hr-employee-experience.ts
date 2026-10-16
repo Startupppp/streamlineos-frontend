@@ -75,15 +75,17 @@ export const HR_TIME_ROUTES: NavRoute[] = [
     requiredPermission: ["self:leaves", "hr:leaves:view"],
     children: [
       {
-        label: "Policies",
+        label: "Leave types & policies",
         icon: FileText,
         href: "/hr/leave-policies",
+        searchTerms: ["leave types", "leave policy", "leave policies", "accrual", "carry forward"],
         requiredPermission: "hr:leaves:manage",
       },
       {
         label: "Holiday Calendar",
         icon: CalendarDays,
         href: "/hr/holidays",
+        searchTerms: ["holidays", "public holidays", "leave calendar"],
         requiredPermission: "self:attendance",
       },
       {
@@ -96,6 +98,7 @@ export const HR_TIME_ROUTES: NavRoute[] = [
         label: "Analytics",
         icon: BarChart3,
         href: "/hr/leaves/analytics",
+        searchTerms: ["leave analytics", "leave report", "absence trends"],
         requiredPermission: "hr:leaves:view",
       },
     ],

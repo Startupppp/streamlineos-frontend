@@ -226,3 +226,33 @@ describe("session callback — minting, caching and two device sessions", () => 
     expect(transport.exchangeBodies).toEqual([{ orgId: null }]);
   });
 });
+
+describe("session callback — a claims update outranks another instance's cached session data", () => {
+  it("re-reads the session data when the cached entry predates the token's last update (BUG-015)", async () => {
+    const names = ["Old Name", "New Name"];
+    const fetchMock = jest.fn(() =>
+      Promise.resolve(
+        new Response(
+          JSON.stringify({
+            success: true,
+            data: { ...sessionDataPayload(ORG), name: names.shift() },
+          }),
+        ),
+      ),
+    );
+    Object.defineProperty(globalThis, "fetch", {
+      value: fetchMock,
+      configurable: true,
+      writable: true,
+    });
+
+    const before = await resolveAuthSession(makeSession(), makeToken(undefined));
+    expect(before.user.name).toBe("Old Name");
+
+    const updated = { ...makeToken(undefined), claimsRefreshedAt: Date.now() + 1 };
+    const after = await resolveAuthSession(makeSession(), updated);
+
+    expect(after.user.name).toBe("New Name");
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+});

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -34,12 +33,7 @@ export function OvertimePage() {
         ) : undefined
       }
     >
-      <motion.div
-        className="flex flex-1 min-h-0 flex-col"
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.22, ease: "easeOut" }}
-      >
+      <div className="flex flex-1 min-h-0 flex-col">
         <Tabs defaultValue="requests" className="flex flex-1 min-h-0 flex-col">
           <TabsList className="shrink-0">
             <TabsTrigger value="requests">Overtime Requests</TabsTrigger>
@@ -52,7 +46,7 @@ export function OvertimePage() {
             <CompOffPanel />
           </TabsContent>
         </Tabs>
-      </motion.div>
+      </div>
       <OvertimeRequestSheet open={open} onOpenChange={setOpen} />
     </PageWrapper>
   );

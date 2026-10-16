@@ -108,6 +108,7 @@ async function probeSession(): Promise<SessionProbe> {
 }
 
 const CREDENTIALS_CALLBACK_ECHO_PATH = "/dashboard";
+export const CREDENTIALS_SIGN_IN_TIMEOUT_MS = 45_000;
 
 async function confirmSessionEstablished(): Promise<MagicLinkSignInOutcome> {
   const established = await probeSession();
@@ -122,14 +123,22 @@ async function attemptCredentialsSignIn(
   magicToken: string,
 ): Promise<MagicLinkSignInOutcome> {
   let result: SignInResponse | undefined;
+  let timer: ReturnType<typeof setTimeout> | undefined;
   try {
-    result = await signIn("credentials", {
-      magicToken,
-      redirect: false,
-      callbackUrl: CREDENTIALS_CALLBACK_ECHO_PATH,
-    });
+    result = await Promise.race([
+      signIn("credentials", {
+        magicToken,
+        redirect: false,
+        callbackUrl: CREDENTIALS_CALLBACK_ECHO_PATH,
+      }),
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(() => reject(new Error("sign-in timed out")), CREDENTIALS_SIGN_IN_TIMEOUT_MS);
+      }),
+    ]);
   } catch {
     return confirmSessionEstablished();
+  } finally {
+    clearTimeout(timer);
   }
   if (!result?.ok || result.error) return { status: "failed" };
   return { status: "signed-in" };

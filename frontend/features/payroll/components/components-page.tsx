@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { toast } from "sonner";
@@ -22,10 +22,12 @@ import { useCursorPager } from "@/components/ui/table-pagination";
 import { EmptyPayroll } from "@/components/illustrations";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { usePayrollComponents, useDeletePayrollComponent } from "@/hooks/api/payroll";
-import type { SalaryComponent, ComponentType } from "@/types/payroll/setup";
+import type { ComponentType } from "@/types/payroll/setup";
+import type { SalaryComponentListItem } from "@/hooks/api/payroll/components-schema";
 import { buildComponentColumns } from "./component-columns";
 import { ComponentFormSheet } from "./component-form-sheet";
 import { BreakupPreviewSheet } from "./breakup-preview-sheet";
+import { duplicatedRoles } from "./lib/component-role";
 import { useCan } from "@/hooks/api/access";
 
 const COMPONENT_PAGE_SIZE = 20;
@@ -51,8 +53,8 @@ export function ComponentsPageContent() {
     () => searchParams.get("search") ?? "",
   );
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [editTarget, setEditTarget] = useState<SalaryComponent | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<SalaryComponent | null>(null);
+  const [editTarget, setEditTarget] = useState<SalaryComponentListItem | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<SalaryComponentListItem | null>(null);
 
   const deleteMutation = useDeletePayrollComponent();
 
@@ -84,6 +86,9 @@ export function ComponentsPageContent() {
     limit: COMPONENT_PAGE_SIZE,
   });
 
+  const { data: activeCatalog } = usePayrollComponents({ active: true, limit: 100 });
+  const duplicates = useMemo(() => duplicatedRoles(activeCatalog?.items ?? []), [activeCatalog]);
+
   const filtersActive =
     searchInput.trim() !== "" || typeFilter !== "" || activeFilter !== "";
 
@@ -106,21 +111,22 @@ export function ComponentsPageContent() {
     pager.goNext(data?.pagination.nextCursor);
   }
 
-  function handleEdit(row: SalaryComponent) {
+  function handleEdit(row: SalaryComponentListItem) {
     setEditTarget(row);
     setSheetOpen(true);
   }
 
-  function handleDeleteRequest(row: SalaryComponent) { setDeleteTarget(row); }
+  function handleDeleteRequest(row: SalaryComponentListItem) { setDeleteTarget(row); }
 
   function handleDeleteConfirm() {
     if (!deleteTarget) return;
+    const deactivates = deleteTarget.profileCount > 0;
     deleteMutation.mutate(deleteTarget.id, {
       onSuccess: () => {
-        toast.success("Component removed");
+        toast.success(deactivates ? "Component deactivated" : "Component deleted");
         setDeleteTarget(null);
       },
-      onError: () => { toast.error("Failed to delete component"); setDeleteTarget(null); },
+      onError: (err) => { toast.error(getErrorMessage(err)); setDeleteTarget(null); },
     });
   }
 
@@ -131,7 +137,7 @@ export function ComponentsPageContent() {
 
   function handleAddNew() { setEditTarget(null); setSheetOpen(true); }
 
-  const columns = buildComponentColumns(handleEdit, handleDeleteRequest, canManage);
+  const columns = buildComponentColumns(handleEdit, handleDeleteRequest, canManage, duplicates);
 
   const filters = (
     <>
@@ -242,10 +248,13 @@ export function ComponentsPageContent() {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete component?</AlertDialogTitle>
+            <AlertDialogTitle>
+              {deleteTarget && deleteTarget.profileCount > 0 ? "Deactivate component?" : "Delete component?"}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              {deleteTarget?.name} ({deleteTarget?.code}) will be permanently deleted.
-              If it has existing payroll data, it will be deactivated instead.
+              {deleteTarget && deleteTarget.profileCount > 0
+                ? `${deleteTarget.name} (${deleteTarget.code}) is used by ${deleteTarget.profileCount} salary profile${deleteTarget.profileCount === 1 ? "" : "s"}, so it will be deactivated, not deleted. Future runs stop paying it.`
+                : `${deleteTarget?.name ?? ""} (${deleteTarget?.code ?? ""}) is not used by any salary profile, so it will be permanently deleted.`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -255,9 +264,9 @@ export function ComponentsPageContent() {
                 variant="destructive"
                 onClick={handleDeleteConfirm}
                 isPending={deleteMutation.isPending}
-                loadingText="Deleting…"
+                loadingText={deleteTarget && deleteTarget.profileCount > 0 ? "Deactivating…" : "Deleting…"}
               >
-                Delete
+                {deleteTarget && deleteTarget.profileCount > 0 ? "Deactivate" : "Delete"}
               </LoadingButton>
             </AlertDialogAction>
           </AlertDialogFooter>

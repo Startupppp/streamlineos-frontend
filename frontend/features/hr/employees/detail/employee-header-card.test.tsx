@@ -50,6 +50,7 @@ function employee(overrides: Partial<EmployeeData> = {}): EmployeeData {
     orgDepartmentId: null,
     image: null,
     isActive: true,
+    hasAccepted: true,
     joiningDate: null,
     reportingTo: null,
     bio: null,

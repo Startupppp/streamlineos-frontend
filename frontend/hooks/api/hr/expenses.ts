@@ -88,8 +88,9 @@ export function useCreateExpense() {
     mutationKey: ["hr", "expenses", "create"],
     mutationFn: ({ body, config }: { body: CreateExpenseInput; config?: RequestConfig }) =>
       apiClient.post("/me/expenses", body, config, _expenseRowContract),
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.expenses() }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.expenses() });
+    },
   });
 }
 
@@ -99,8 +100,9 @@ export function useUpdateExpenseStatus() {
     mutationKey: ["hr", "expenses", "update-status"],
     mutationFn: ({ expenseId, ...data }: UpdateExpenseStatusInput) =>
       apiClient.patch(`/hr/expenses/${expenseId}`, data, undefined, _successContract),
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.expenses() }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.expenses() });
+    },
   });
 }
 
@@ -128,8 +130,9 @@ export function useUpdateExpense(options?: { selfService?: boolean }) {
         undefined,
         _successContract,
       ),
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.expenses() }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.expenses() });
+    },
   });
 }
 

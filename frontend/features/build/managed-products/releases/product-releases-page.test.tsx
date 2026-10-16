@@ -40,6 +40,7 @@ jest.mock("@/components/shared/page-state", () => ({
   }) => {
     if (resolution.kind === "loading") return <div data-testid="page-loading" />;
     if (resolution.kind === "denied") return <div data-testid="no-permission" />;
+    if (resolution.kind === "not-found") return <div data-testid="page-not-found" />;
     if (resolution.kind === "empty") return <div data-testid="page-empty">{empty}</div>;
     return <div data-testid="page-ready">{children}</div>;
   },
@@ -55,6 +56,16 @@ jest.mock("@/hooks/api/build/managed-product-releases", () => ({
     isError: false,
     error: null,
     refetch: jest.fn(),
+  }),
+}));
+
+jest.mock("@/hooks/api/organization", () => ({
+  useOrgMembersByIds: (ids: string[]) => ({
+    data: {
+      data: ids
+        .filter((id) => id === "user-abc")
+        .map((id) => ({ userId: id, membershipId: 1, name: "Ada Lovelace", email: "ada@example.com", image: null })),
+    },
   }),
 }));
 
@@ -131,6 +142,13 @@ describe("ProductReleasesPage", () => {
     expect(within(shipped).getByText("Winter polish")).toBeInTheDocument();
     expect(within(shipped).getByText("Faster search")).toBeInTheDocument();
     expect(screen.queryByText("Legacy beta")).not.toBeInTheDocument();
+  });
+
+  it("renders the product-not-found page without a New release action when the product is not reachable", () => {
+    mockUsePageState.mockReturnValue({ kind: "not-found" });
+    render(<ProductReleasesPage managedProductId={7} />);
+    expect(screen.getByTestId("page-not-found")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /New release/ })).not.toBeInTheDocument();
   });
 
   it("gates the page on the exact GET /releases permission", () => {
@@ -261,13 +279,12 @@ describe("ProductReleasesPage", () => {
     expect(link).toHaveAttribute("rel", "noopener noreferrer");
   });
 
-  it("shows the owner indicator on releases that have an ownerUserId", () => {
+  it("names the release owner, and falls back to a neutral label when the name cannot be resolved", () => {
     setReleases(ROWS_WITH_EVIDENCE);
     render(<ProductReleasesPage managedProductId={7} />);
-    const shipped = screen.getByRole("list", { name: "Shipped releases" });
-    expect(within(shipped).getByText("Owner")).toBeInTheDocument();
-    const upcoming = screen.getByRole("list", { name: "Upcoming releases" });
-    expect(within(upcoming).getByText("Owner")).toBeInTheDocument();
+    expect(screen.getByText("Ada Lovelace")).toBeInTheDocument();
+    expect(screen.getByText("Owner assigned")).toBeInTheDocument();
+    expect(screen.queryByText("Owner")).not.toBeInTheDocument();
   });
 
   it("does not show evidence indicators when fields are null", () => {
@@ -275,6 +292,6 @@ describe("ProductReleasesPage", () => {
     const shipped = screen.getByRole("list", { name: "Shipped releases" });
     expect(within(shipped).queryByText("Approved")).not.toBeInTheDocument();
     expect(within(shipped).queryByRole("link", { name: "Evidence" })).not.toBeInTheDocument();
-    expect(within(shipped).queryByText("Owner")).not.toBeInTheDocument();
+    expect(within(shipped).queryByText("Owner assigned")).not.toBeInTheDocument();
   });
 });

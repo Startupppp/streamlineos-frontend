@@ -29,6 +29,7 @@ import {
 import { ColumnColorPicker } from "@/features/build/shared/column-color-picker";
 import { resolveColumnColor } from "@/lib/column-colors";
 import { cn } from "@/lib/utils";
+import { formatStatusName } from "../views/kanban-board-utils";
 import {
   isStateType,
   resolveStateType,
@@ -239,7 +240,7 @@ export const StatusRow = memo(function StatusRow({
             canManage && "cursor-text hover:text-foreground/80",
           )}
         >
-          {state.name}
+          {formatStatusName(state.name)}
         </button>
       )}
 

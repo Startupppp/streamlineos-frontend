@@ -94,6 +94,31 @@ describe("RoadmapPriorityScore — a score is only shown when its inputs are all
   });
 });
 
+describe("RoadmapPriorityScore — an accepted opportunity override is authoritative", () => {
+  it("shows the carried override instead of the computed RICE when the item was accepted with an override", () => {
+    render(
+      <RoadmapPriorityScore
+        prioritization={prioritization({ score: 400, isComplete: true, missingInputs: [], unavailableReason: null })}
+        decisionSnapshot={{ score: 250, scoreIsOverride: true }}
+      />,
+    );
+    expect(screen.getByText("RICE 250")).toBeInTheDocument();
+    expect(screen.getByText("Opportunity override")).toBeInTheDocument();
+    expect(screen.queryByText("RICE 400")).not.toBeInTheDocument();
+  });
+
+  it("keeps the computed RICE when the accepted score was not an override", () => {
+    render(
+      <RoadmapPriorityScore
+        prioritization={prioritization({ score: 400, isComplete: true, missingInputs: [], unavailableReason: null })}
+        decisionSnapshot={{ score: 400, scoreIsOverride: false }}
+      />,
+    );
+    expect(screen.getByText("RICE 400")).toBeInTheDocument();
+    expect(screen.queryByText("Opportunity override")).not.toBeInTheDocument();
+  });
+});
+
 describe("RoadmapDeliveryProgress — progress from linked project work (BLD-07-008)", () => {
   it("renders the completed share when delivery work is linked — positive control", () => {
     mockUseSignals.mockReturnValue({ data: signals(), isLoading: false, isError: false });

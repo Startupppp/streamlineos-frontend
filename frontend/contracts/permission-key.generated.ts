@@ -655,6 +655,7 @@ export type PermissionKey =
   | "self:payslips"
   | "self:recruitment"
   | "self:referrals"
+  | "self:resignation"
   | "self:support"
   | "settings:api-tokens:read"
   | "settings:api-tokens:write"
@@ -1443,6 +1444,7 @@ export const PERMISSION_METADATA: Readonly<Record<PermissionKey, PermissionMetad
   "self:payslips": { resource: "self", action: "payslips", description: "View own payslips" },
   "self:recruitment": { resource: "self", action: "recruitment", description: "View assigned interviews and submit own hiring feedback" },
   "self:referrals": { resource: "self", action: "referrals", description: "Submit candidate referrals and track own referrals" },
+  "self:resignation": { resource: "self", action: "resignation", description: "Submit, follow and withdraw one's own resignation" },
   "self:support": { resource: "self", action: "support", description: "Raise employee support requests and follow own requests" },
   "settings:api-tokens:read": { resource: "settings:api-tokens", action: "read", description: "View personal API tokens" },
   "settings:api-tokens:write": { resource: "settings:api-tokens", action: "write", description: "Create and revoke personal API tokens" },

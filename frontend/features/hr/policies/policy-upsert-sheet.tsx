@@ -36,7 +36,7 @@ import { PolicyScopesEditor } from "./policy-scopes-editor";
 import { PolicyVersionHistory } from "./policy-version-history";
 import { useCan } from "@/hooks/api/access";
 import { PolicyRulesFields } from "./policy-rules-fields";
-import { policyFormSchema, type PolicyFormValues } from "./policy-form-types";
+import { policyFormSchema, withExplicitSwitches, type PolicyFormValues } from "./policy-form-types";
 import { numericFieldChangeOr } from "@/lib/numeric-field";
 
 interface Props {
@@ -126,7 +126,7 @@ export function PolicyUpsertSheet({ open, onOpenChange, policy }: Props) {
           effectiveFrom: data.effectiveFrom,
           effectiveTo: data.effectiveTo || undefined,
           priority: data.priority,
-          rules: data.rules,
+          rules: withExplicitSwitches(policy.policyType, data.rules),
           scopes: data.scopes,
         };
         update.mutate(
@@ -147,7 +147,7 @@ export function PolicyUpsertSheet({ open, onOpenChange, policy }: Props) {
           effectiveFrom: data.effectiveFrom,
           effectiveTo: data.effectiveTo || undefined,
           priority: data.priority,
-          rules: data.rules,
+          rules: withExplicitSwitches(data.policyType, data.rules),
           scopes: data.scopes,
         };
         create.mutate(createPayload, {
@@ -164,6 +164,7 @@ export function PolicyUpsertSheet({ open, onOpenChange, policy }: Props) {
 
   const policyType = form.watch("policyType") as HrPolicyType;
   const isActive = policy?.status === "active";
+  const handleActivated = useCallback(() => onOpenChange(false), [onOpenChange]);
 
   return (
     <HrSheet
@@ -346,7 +347,9 @@ export function PolicyUpsertSheet({ open, onOpenChange, policy }: Props) {
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 Versions &amp; Activation
               </p>
-              <PolicyVersionHistory policy={policy} canManage={canManage} />
+              <PolicyVersionHistory policy={policy} canManage={canManage} onActivated={handleActivated}
+                unsavedChanges={form.formState.isDirty}
+              />
             </div>
           )}
         </div>

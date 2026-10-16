@@ -8,6 +8,7 @@ import {
   MAX_FILE_BYTES,
   ALLOWED_ATTACHMENT_MIME_TYPES,
   ALLOWED_ATTACHMENT_EXTENSIONS,
+  ATTACHMENT_TYPES_LABEL,
   isImageMime,
 } from "./ticket-attachment-preview";
 import { validatePreUpload } from "@/lib/build-upload-validator";
@@ -50,7 +51,7 @@ export function useTicketFileDrop({ files, addFiles, handleRemoveFile }: UseTick
   const validateAndAddFiles = useCallback(
     (selected: File[]) => {
       for (const f of selected) {
-        const error = validatePreUpload(f, isAllowedAttachment);
+        const error = validatePreUpload(f, isAllowedAttachment, ATTACHMENT_TYPES_LABEL);
         if (error) {
           setFileError(error);
           toast.error(error);

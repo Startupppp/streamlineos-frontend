@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { lazyContract } from "@/lib/api-envelope";
 import { payrollQueryKeys } from "@/lib/query-keys/payroll";
 import { useCan } from "@/hooks/api/access";
@@ -19,6 +20,9 @@ const runVarianceC = lazyContract(() =>
 );
 const releaseHoldC = lazyContract(() =>
   import("@/hooks/api/payroll/publications-schema").then((m) => m.publishResponseContract),
+);
+const voidAdjustmentC = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
 );
 const addAdjustmentC = lazyContract(() =>
   import("@/hooks/api/payroll/run-employees-schema").then((m) => m.addAdjustmentResponseContract),
@@ -45,6 +49,7 @@ export function useRunEmployees(
       ),
     staleTime: 30_000,
     enabled: canView && runId > 0,
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -66,6 +71,7 @@ export function useRunVariance(runId: number) {
     queryFn: ({ signal }) => apiClient.get<VarianceData>(`/payroll/runs/${runId}/variance`, undefined, signal, runVarianceC),
     staleTime: 60_000,
     enabled: canView && runId > 0,
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -77,6 +83,23 @@ export function useAddAdjustment(runId: number, runEmployeeId: number) {
       apiClient.post<{ ok: boolean }>(`/payroll/runs/${runId}/employees/${runEmployeeId}/adjustments`, body, undefined, addAdjustmentC),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.runEmployee(runId, runEmployeeId) });
+    },
+  });
+}
+
+export function useVoidAdjustment(runId: number, runEmployeeId: number) {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("payroll:runs:manage", {
+    mutationKey: ["payroll", "run-employees", runId, runEmployeeId, "adjustment", "void"],
+    mutationFn: (adjustmentId: number) =>
+      apiClient.delete<void>(
+        `/payroll/runs/${runId}/employees/${runEmployeeId}/adjustments/${adjustmentId}`,
+        undefined, undefined, voidAdjustmentC,
+      ),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.runEmployee(runId, runEmployeeId) });
+      void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.runEmployeesAll(runId) });
+      void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.run(runId) });
     },
   });
 }

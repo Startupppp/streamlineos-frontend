@@ -31,8 +31,7 @@ import {
 import { useBoardViewApply } from "./use-board-view-apply";
 import { parseBoardOrderBy } from "./board-filter-params";
 import { orderDirectionFor } from "./use-display-options";
-
-const SEARCH_TERM_MAX_LENGTH = 200;
+import { LIST_SEARCH_MAX } from "@/lib/build/normalize-list-search";
 
 export function useBoardUrlState(
   projectId: number,
@@ -91,8 +90,8 @@ export function useBoardUrlState(
   const effectiveBoardFilters = useMemo(
     () => {
       const rawQ = boardFilters.q;
-      const safeQ = rawQ && rawQ.length > SEARCH_TERM_MAX_LENGTH
-        ? rawQ.slice(0, SEARCH_TERM_MAX_LENGTH)
+      const safeQ = rawQ && rawQ.length > LIST_SEARCH_MAX
+        ? rawQ.slice(0, LIST_SEARCH_MAX)
         : rawQ;
       return {
         ...boardFilters,

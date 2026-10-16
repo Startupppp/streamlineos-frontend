@@ -1,5 +1,5 @@
 import { CONFLICT_KEY, LEGACY_PRIMARY_KEY, SOURCE_ROW_KEY } from "./bulk-onboard-columns";
-import { parseFile, ParseStructuralError } from "./bulk-onboard-parse";
+import { missingRequiredHeaders, parseFile, ParseStructuralError } from "./bulk-onboard-parse";
 
 function csvFile(text: string): File {
   const file = new File([text], "employees.csv", { type: "text/csv" });
@@ -86,5 +86,17 @@ describe("parseFile (xlsx)", () => {
     expect(await parseFile(file)).toEqual([
       { firstName: "Priya", joiningDate: "2026-04-01", monthlySalary: "75000", primaryManagerEmail: "boss@example.com", [LEGACY_PRIMARY_KEY]: "Manager Email", [SOURCE_ROW_KEY]: "1" },
     ]);
+  });
+});
+
+describe("missingRequiredHeaders", () => {
+  it("names every required template column a wrong-template file lacks", async () => {
+    const rows = await parseFile(csvFile("Name,Mail\nAnn One,ann@example.com\nBob Two,bob@example.com\n"));
+    expect(missingRequiredHeaders(rows)).toEqual(["firstName", "lastName", "email", "designation", "department"]);
+  });
+
+  it("finds nothing missing when the template header row is kept, even with blank cells", async () => {
+    const rows = await parseFile(csvFile("firstName,lastName,email,designation,department\nAnn,,ann@example.com,,\n"));
+    expect(missingRequiredHeaders(rows)).toEqual([]);
   });
 });

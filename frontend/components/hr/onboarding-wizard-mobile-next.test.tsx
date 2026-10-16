@@ -80,6 +80,9 @@ describe("Flow 1 at 390 — Next must be reachable and blocked by validation, ne
       expect(screen.getByText("First name is required")).toBeInTheDocument();
     });
     expect(screen.getByText("Last name is required")).toBeInTheDocument();
+    expect(screen.getByText("Email is required")).toBeInTheDocument();
+    expect(screen.queryByText("Invalid email address")).not.toBeInTheDocument();
+    expect(toastError).not.toHaveBeenCalled();
     expect(screen.getByLabelText(/First Name/)).toBeInTheDocument();
     expect(screen.queryByLabelText(/Designation/)).not.toBeInTheDocument();
     expect(admissionCheck).not.toHaveBeenCalled();

@@ -22,21 +22,16 @@ import { WifiOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ChartEmptyState } from "@/components/charts/chart-empty-state";
 import { DataTableFooter } from "@/components/ui/data-table-footer";
-import {
-  PAUSED_LABEL,
-  PAUSED_MESSAGE,
-} from "@/components/shared/loading-state";
+import { PAUSED_LABEL, PAUSED_MESSAGE } from "@/components/shared/loading-state";
+import { StalledReadNotice } from "@/components/shared/stalled-read-notice";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
+import { PANEL_STALLED_AFTER_MS, useStalledAfter } from "@/hooks/common/use-stalled-after";
 import { DataTableHeader } from "@/components/ui/data-table-header";
 import { SearchInput } from "@/components/ui/search-input";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { DataTableColumn, DataTableProps } from "./data-table.types";
 import {
   createRowActivationKeyHandler,
@@ -59,6 +54,7 @@ export function DataTable<T>({
   selection,
   pagination,
   isLoading,
+  onStalledRetry,
   emptyState,
   footer,
   minWidth,
@@ -72,6 +68,7 @@ export function DataTable<T>({
   mobileCardBreakpoint = "sm",
 }: DataTableProps<T>) {
   const isOnline = useOnlineStatus();
+  const loadingStalled = useStalledAfter(!!isLoading && isOnline && !!onStalledRetry, PANEL_STALLED_AFTER_MS);
   const [sorting, setSorting] = useState<SortingState>([]);
   const externalSorting: SortingState = sortState?.field
     ? [{ id: sortState.field, desc: sortState.direction === "desc" }]
@@ -405,6 +402,9 @@ export function DataTable<T>({
                 {PAUSED_MESSAGE}
               </p>
             )}
+            {loadingStalled && onStalledRetry ? (
+              <StalledReadNotice subject="results" onRetry={onStalledRetry} className="m-2" />
+            ) : null}
             {mobileCard ? (
               <div
                 className={cn(

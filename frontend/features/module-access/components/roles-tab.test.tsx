@@ -4,10 +4,17 @@ import { RolesTab } from "./roles-tab";
 const mockRename = { mutate: jest.fn(), isPending: false };
 const mockDelete = { mutate: jest.fn(), isPending: false };
 
-let viewAccess: "loading" | "granted" | "denied" = "granted";
+let viewAccess: "loading" | "granted" | "denied" | "unavailable" = "granted";
+const mockRefetchAccess = jest.fn();
 
 jest.mock("@/hooks/api/access", () => ({
-  useCanState: () => viewAccess,
+  useAccess: () => ({ refetch: mockRefetchAccess }),
+  usePermissionGate: () => ({
+    allowed: viewAccess === "granted",
+    denied: viewAccess === "denied",
+    pending: viewAccess === "loading",
+    unavailable: viewAccess === "unavailable",
+  }),
 }));
 
 jest.mock("@/hooks/api/module-access", () => ({
@@ -64,6 +71,16 @@ describe("RolesTab access resolution", () => {
 
     expect(screen.queryByText("Hiring managers")).not.toBeInTheDocument();
     expect(screen.queryByText(/no role groups/i)).not.toBeInTheDocument();
+  });
+
+  it("offers Retry instead of a skeleton for ever when the access snapshot fails", () => {
+    viewAccess = "unavailable";
+    render(<RolesTab moduleKey="payroll" canManage={false} />);
+
+    screen.getByRole("button", { name: "Retry" }).click();
+
+    expect(screen.getByText("Failed to load access configuration")).toBeInTheDocument();
+    expect(mockRefetchAccess).toHaveBeenCalled();
   });
 
   it("tells a denied viewer they lack access instead of showing an empty list", () => {

@@ -16,7 +16,7 @@ import {
   type ModuleMember,
 } from "@/hooks/api/module-access";
 import { viewKey } from "@/hooks/api/module-access/types";
-import { useCanState } from "@/hooks/api/access";
+import { useAccess, usePermissionGate } from "@/hooks/api/access";
 import { NoPermissionState } from "@/components/shared/no-permission-state";
 import {
   AddMemberDialog,
@@ -153,7 +153,8 @@ export function ModuleMembersTab({
   const addOpen = onAddOpenChange ? (addOpenProp ?? false) : internalAddOpen;
   const setAddOpen = onAddOpenChange ?? setInternalAddOpen;
 
-  const viewAccess = useCanState(viewKey(moduleKey));
+  const { refetch: refetchAccess } = useAccess();
+  const viewGate = usePermissionGate(viewKey(moduleKey));
   const membersQuery = useModuleMembersInfinite(moduleKey, PAGE_SIZE);
   const groupsQuery = useModuleRoleGroups(moduleKey);
 
@@ -225,6 +226,11 @@ export function ModuleMembersTab({
   const handleGrantsClose = useCallback((open: boolean) => {
     if (!open) setGrantsTarget(null);
   }, []);
+  const { refetch: refetchMembers } = membersQuery;
+  const handleRetryMembers = useCallback(() => {
+    if (viewGate.unavailable) void refetchAccess();
+    void refetchMembers();
+  }, [viewGate.unavailable, refetchAccess, refetchMembers]);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4">
@@ -238,23 +244,20 @@ export function ModuleMembersTab({
       ) : null}
 
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-border bg-card">
-        {viewAccess === "loading" || membersQuery.isLoading ? (
+        {viewGate.pending || membersQuery.isLoading ? (
           <div className="divide-y divide-border/60">
             {Array.from({ length: 5 }).map((_, i) => (
               <MemberRowSkeleton key={i} />
             ))}
           </div>
-        ) : viewAccess === "denied" ? (
+        ) : viewGate.denied ? (
           <NoPermissionState permission={viewKey(moduleKey)} />
-        ) : membersQuery.isError ? (
+        ) : viewGate.unavailable || membersQuery.isError ? (
           <EmptyState
             illustrationPreset="team"
             title="Failed to load members"
             description="Check your connection and try again."
-            action={{
-              label: "Retry",
-              onClick: () => void membersQuery.refetch(),
-            }}
+            action={{ label: "Retry", onClick: handleRetryMembers }}
           />
         ) : members.length === 0 ? (
           <EmptyState

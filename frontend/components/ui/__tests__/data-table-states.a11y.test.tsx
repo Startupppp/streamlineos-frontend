@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
@@ -31,6 +31,27 @@ function renderTable(props: Partial<React.ComponentProps<typeof DataTable<Row>>>
     />,
   );
 }
+
+describe("DataTable — a stalled load offers a retry only when the caller can refetch", () => {
+  afterEach(() => jest.useRealTimers());
+
+  it("shows the stall notice after the panel threshold and retries on request", () => {
+    jest.useFakeTimers();
+    const retry = jest.fn();
+    renderTable({ isLoading: true, data: [], onStalledRetry: retry });
+    expect(screen.queryByText(/Still loading results/)).not.toBeInTheDocument();
+    act(() => jest.advanceTimersByTime(10_000));
+    fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+    expect(retry).toHaveBeenCalledTimes(1);
+  });
+
+  it("leaves the default loading state unchanged without a retry", () => {
+    jest.useFakeTimers();
+    renderTable({ isLoading: true, data: [] });
+    act(() => jest.advanceTimersByTime(60_000));
+    expect(screen.queryByText(/Still loading results/)).not.toBeInTheDocument();
+  });
+});
 
 describe("DataTable — loading state is announced, not silent", () => {
   it("marks the skeleton region aria-busy so assistive tech knows content is pending", () => {

@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { getValidationFieldErrors, isApiError } from "@/lib/api-envelope";
 import { useCreatePayrollComponent, useUpdatePayrollComponent } from "@/hooks/api/payroll";
 import type { SalaryComponent } from "@/types/payroll/setup";
 import {
@@ -37,6 +38,15 @@ type ComponentFormSheetProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 };
+
+const FORM_FIELDS = new Map<string, "name" | "code" | "amount" | "percent" | "formula" | "sortOrder">([
+  ["name", "name"],
+  ["code", "code"],
+  ["amount", "amount"],
+  ["percent", "percent"],
+  ["formula", "formula"],
+  ["sortOrder", "sortOrder"],
+]);
 
 const EMPTY_DEFAULTS: ComponentForm = {
   name: "", code: "", type: "EARNING", calcMethod: "FIXED",
@@ -78,6 +88,22 @@ export function ComponentFormSheet({ component, open, onOpenChange }: ComponentF
     onOpenChange(isOpen);
   }
 
+  function handleSaveError(err: unknown) {
+    let mapped = false;
+    for (const issue of getValidationFieldErrors(err)) {
+      const field = FORM_FIELDS.get(issue.path);
+      if (!field) continue;
+      const shown = field === "formula" && form.getValues("calcMethod") === "PERCENT_OF" ? "percent" : field;
+      form.setError(shown, { message: issue.message });
+      mapped = true;
+    }
+    if (!mapped && !component && isApiError(err) && err.status === 409) {
+      form.setError("code", { message: getErrorMessage(err) });
+      mapped = true;
+    }
+    if (!mapped) toast.error(getErrorMessage(err));
+  }
+
   function onSubmit(data: ComponentForm) {
     const sharedFields = {
       name: data.name,
@@ -86,7 +112,7 @@ export function ComponentFormSheet({ component, open, onOpenChange }: ComponentF
       taxable: data.taxable,
       showOnPayslip: data.showOnPayslip,
       includeInCtc: data.includeInCtc,
-      amount: data.amount || undefined,
+      amount: data.calcMethod === "FIXED" ? data.amount || undefined : undefined,
       sortOrder: data.sortOrder ? parseInt(data.sortOrder, 10) : undefined,
     };
 
@@ -95,13 +121,13 @@ export function ComponentFormSheet({ component, open, onOpenChange }: ComponentF
         { componentId: component.id, data: sharedFields },
         {
           onSuccess: () => { toast.success("Component updated"); handleOpenChange(false); },
-          onError: (err) => toast.error(getErrorMessage(err)),
+          onError: handleSaveError,
         },
       );
     } else {
       create.mutate({ code: data.code.toUpperCase(), ...sharedFields }, {
         onSuccess: () => { toast.success("Component created"); handleOpenChange(false); },
-        onError: (err) => toast.error(getErrorMessage(err)),
+        onError: handleSaveError,
       });
     }
   }

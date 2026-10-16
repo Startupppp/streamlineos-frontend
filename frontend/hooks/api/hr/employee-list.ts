@@ -4,6 +4,7 @@ import { keepPreviousData, useQuery, useInfiniteQuery } from "@tanstack/react-qu
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
 const employeeListPageLazy = lazyContract(() =>
   import("@/hooks/api/hr/employee-list-schema").then((m) => m.employeeListPageContract),
@@ -11,7 +12,11 @@ const employeeListPageLazy = lazyContract(() =>
 const employeeCountsLazy = lazyContract(() =>
   import("@/hooks/api/hr/employee-list-schema").then((m) => m.employeeCountsContract),
 );
+const employeeDetailLazy = lazyContract(() =>
+  import("@/features/hr/employees/detail/employee-data").then((m) => m.employeeDataSchema),
+);
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
+import type { EmployeeData } from "@/features/hr/employees/detail/employee-data";
 import type {
   EmployeeCursorPage,
   EmployeeListItem,
@@ -23,7 +28,7 @@ export type HrEmployeesParams = {
   limit?: number;
   search?: string;
   departmentId?: string;
-  isActive?: "true" | "false" | "all";
+  isActive?: "true" | "false" | "all" | "pending" | "current";
   /** Server-side role filter (users.role). */
   role?: string;
 };
@@ -131,6 +136,25 @@ export function useHrEmployees(
   });
 }
 
+export function useHrEmployee(employeeUserId: string | null) {
+  const canView = useCan("hr:employees:view");
+  const hrEnabled = useModuleEnabled("hr");
+  return useQuery({
+    queryKey: humanResourcesQueryKeys.hr.employee(employeeUserId ?? ""),
+    queryFn: ({ signal }) =>
+      apiClient.get<EmployeeData>(
+        `/hr/employees/${encodeURIComponent(employeeUserId ?? "")}`,
+        undefined,
+        signal,
+        employeeDetailLazy,
+      ),
+    staleTime: 60_000,
+    retry: false,
+    ...INLINE_READ_ERROR,
+    enabled: hrEnabled && canView && !!employeeUserId,
+  });
+}
+
 export function useInfiniteHrEmployees(
   params?: Omit<HrEmployeesParams, "cursor">,
   options?: { enabled?: boolean },
@@ -164,6 +188,7 @@ export function useInfiniteHrEmployees(
      * being allowed to land late.
      */
     placeholderData: keepPreviousData,
+    ...INLINE_READ_ERROR,
     enabled: hrEnabled && canView && (options?.enabled ?? true),
   });
 }
@@ -188,7 +213,7 @@ export function useHrEmployeeOptions(
 ) {
   const canView = useCan("hr:employees:view");
   const { enabled, ...rest } = params ?? {};
-  const merged = { limit: 100, isActive: "true" as const, ...rest };
+  const merged = { limit: 100, isActive: "current" as const, ...rest };
   const query = useHrEmployees(
     { ...merged, limit: Math.min(merged.limit, 100) },
     { enabled: canView && (enabled ?? true) },

@@ -6,6 +6,8 @@ import type { ManagedProductRelease } from "@/hooks/api/build/managed-product-re
 import type { StatusTone } from "@/lib/design-tokens";
 import { statusToneClasses } from "@/lib/design-tokens";
 import { cn } from "@/lib/utils";
+import { useOrgMembersByIds } from "@/hooks/api/organization";
+import { getUserDisplayName } from "@/lib/person-display";
 
 interface ReleaseSectionProps {
   id: string;
@@ -96,12 +98,18 @@ export function EvidenceLink({ url }: { url: string | null }) {
   );
 }
 
-export function OwnerIndicator({ ownerUserId }: { ownerUserId: string | null }) {
-  if (!ownerUserId) return null;
+function OwnerName({ ownerUserId }: { ownerUserId: string }) {
+  const { data } = useOrgMembersByIds([ownerUserId]);
+  const owner = data?.data.find((m) => m.userId === ownerUserId);
   return (
     <span className="flex items-center gap-1 text-dense text-muted-foreground">
       <User className="h-3 w-3 shrink-0" aria-hidden="true" />
-      <span>Owner</span>
+      <span className="truncate">{owner ? getUserDisplayName(owner) : "Owner assigned"}</span>
     </span>
   );
+}
+
+export function OwnerIndicator({ ownerUserId }: { ownerUserId: string | null }) {
+  if (!ownerUserId) return null;
+  return <OwnerName ownerUserId={ownerUserId} />;
 }

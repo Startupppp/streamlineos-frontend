@@ -1,5 +1,5 @@
 import { collectManagerColumns, resolveManagerHeader } from "@/components/hr/reporting-lines/manager-columns";
-import { CONFLICT_KEY, LEGACY_PRIMARY_KEY, SOURCE_ROW_KEY, normalizeHeader, type ColumnKey, type ParsedRow } from "./bulk-onboard-columns";
+import { BULK_ONBOARD_COLUMNS, CONFLICT_KEY, LEGACY_PRIMARY_KEY, SOURCE_ROW_KEY, normalizeHeader, type ColumnKey, type ParsedRow } from "./bulk-onboard-columns";
 
 export const EXTRA_COLUMNS_KEY = "__hasExtraColumns";
 
@@ -77,6 +77,13 @@ function mapRawRows(
     if (hasExtra) out[EXTRA_COLUMNS_KEY] = "1";
     return out;
   });
+}
+
+export function missingRequiredHeaders(rows: ParsedRow[]): string[] {
+  const first = rows[0] ?? {};
+  return BULK_ONBOARD_COLUMNS.filter((column) => column.required && !(column.key in first)).map(
+    (column) => column.header,
+  );
 }
 
 export class ParseStructuralError extends Error {

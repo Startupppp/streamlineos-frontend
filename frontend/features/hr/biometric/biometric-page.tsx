@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -45,12 +44,7 @@ export function BiometricPage() {
         ) : undefined
       }
     >
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.22, ease: "easeOut" }}
-        className="flex flex-1 min-h-0 flex-col"
-      >
+      <div className="flex flex-1 min-h-0 flex-col">
         <Tabs defaultValue="devices" className="flex flex-1 min-h-0 flex-col gap-4">
           <TabsList>
             <TabsTrigger value="devices">Devices</TabsTrigger>
@@ -63,7 +57,7 @@ export function BiometricPage() {
             <BiometricLogsList />
           </TabsContent>
         </Tabs>
-      </motion.div>
+      </div>
       <AddDeviceSheet open={open} onOpenChange={handleOpenChange} device={editing} />
     </PageWrapper>
   );

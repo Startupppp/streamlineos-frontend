@@ -21,7 +21,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, UserX, Download } from "lucide-react";
+import { ArrowLeft, UserX, UserCheck, Download } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
@@ -39,6 +39,9 @@ import { getUserDisplayName } from "@/lib/person-display";
 const EmployeeTimelineTab = dynamic(
   () => import("@/features/hr/employees/detail/timeline-tab").then(m => ({ default: m.EmployeeTimelineTab })),
   { loading: () => <div className="space-y-3">{Array.from({ length: 10 }).map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-xl" />)}</div> }
+);
+const RehireEmployeeDialog = dynamic(() =>
+  import("@/features/hr/employees/detail/rehire-employee-dialog").then((m) => ({ default: m.RehireEmployeeDialog })),
 );
 const EmployeeSensitiveTab = dynamic(
   () => import("@/features/hr/employees/detail/sensitive-tab").then(m => ({ default: m.EmployeeSensitiveTab })),
@@ -61,6 +64,7 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
   const canDraftReview = useCan("hr:performance:manage");
   const sensitiveScope = useScope("hr:sensitive:view");
   const canUpdateEmployee = useCan("hr:employees:update");
+  const manageScope = useScope("hr:employees:manage");
   const searchParams = useSearchParams();
   const defaultTab = searchParams.get("tab") ?? "overview";
   const [activeTab, setActiveTab] = useState(defaultTab);
@@ -85,7 +89,7 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
   const isSelf = hydrated && session?.user?.id === employee.id;
   const showManageActions = hydrated && canManageEmployees;
   const showSensitiveTab = hydrated && sensitiveScope !== "none" && (isSelf || sensitiveScope !== "own");
-  const showEditTab = hydrated && canUpdateEmployee;
+  const showEditTab = hydrated && canUpdateEmployee && (isSelf || manageScope === "all");
   // V-023/V-025: the same helper the header card uses. Composing first+last
   // here ignored `employee.name`, so a display-name-only person exported a PDF
   // called "Employee".
@@ -144,6 +148,10 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
   const handleTerminateClick = useCallback(() => {
     router.push(`/hr/termination?employeeId=${employee.id}`);
   }, [employee.id, router]);
+
+  const [rehireOpen, setRehireOpen] = useState(false);
+  const handleRehireClick = useCallback(() => setRehireOpen(true), []);
+  const handleRehired = useCallback(() => router.refresh(), [router]);
 
   const handleBack = useCallback(() => {
     requestLeaveIfNeeded(() => router.back());
@@ -214,7 +222,8 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
       ? employmentStatusRaw.toUpperCase()
       : null;
   const isAlreadyTerminated =
-    employee.isActive === false || employmentStatus === "TERMINATED";
+    employee.isActive === false || employmentStatus === "EXITED" || employmentStatus === "ALUMNI";
+  const canRehire = hydrated && canManageExits && isAlreadyTerminated;
   const canTerminate =
     hydrated &&
     !isAlreadyTerminated &&
@@ -283,6 +292,18 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
             >
               <UserX className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">Terminate</span>
+            </Button>
+          )}
+          {canRehire && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5 px-2.5"
+              onClick={handleRehireClick}
+              aria-label="Rehire employee"
+            >
+              <UserCheck className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Rehire</span>
             </Button>
           )}
           {showManageActions && aiActions.length > 0 && (
@@ -389,6 +410,15 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
           />
         </TabsContent>
       </Tabs>
+      {canRehire && rehireOpen && (
+        <RehireEmployeeDialog
+          open={rehireOpen}
+          onOpenChange={setRehireOpen}
+          employeeUserId={employee.id}
+          employeeName={employeeName}
+          onRehired={handleRehired}
+        />
+      )}
     </PageWrapper>
   );
 }

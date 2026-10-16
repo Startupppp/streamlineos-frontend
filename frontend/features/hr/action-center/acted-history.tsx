@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { ArrowRight } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState, NoPermissionState } from "@/components/shared";
@@ -14,6 +14,8 @@ import { formatRelativeTime } from "@/lib/date-utils";
 import { getUserDisplayName } from "@/lib/person-display";
 import { activationProps } from "@/lib/keyboard-activation";
 import { useWorkflowActed } from "@/hooks/api/hr/hr-workflows";
+import { useHrLeaveApprovals } from "@/hooks/api/hr/leaves";
+import type { LeavesTeamPage } from "@/hooks/api/hr/leaves-schema";
 import {
   HR_WORKFLOW_OBJECT_TYPE_LABELS,
   type HrWorkflowInstance,
@@ -33,9 +35,16 @@ export function ActedHistory({ enabled, onOpenInstance }: ActedHistoryProps) {
 
   const { data, isLoading, isFetching, isError, refetch, access } =
     useWorkflowActed({ cursor, limit: 50 }, { enabled });
+  const leaves = useHrLeaveApprovals({ decidedBy: "me", limit: 20, enabled });
+  const leaveDecisions = useMemo(
+    () => leaves.data?.pages[0]?.data ?? [],
+    [leaves.data],
+  );
+  const refetchLeaves = leaves.refetch;
 
   function handleRetry(): void {
     void refetch();
+    void refetchLeaves();
   }
 
   function handlePrevious(): void {
@@ -49,10 +58,10 @@ export function ActedHistory({ enabled, onOpenInstance }: ActedHistoryProps) {
     if (nextCursor) setCursorHistory((history) => [...history, nextCursor]);
   }
 
-  if (access.denied)
+  if (access.denied && leaveDecisions.length === 0)
     return <NoPermissionState permission="hr:workflows:approve" />;
 
-  if (isError)
+  if (isError || leaves.isError)
     return (
       <ErrorState
         className="flex-1"
@@ -62,7 +71,7 @@ export function ActedHistory({ enabled, onOpenInstance }: ActedHistoryProps) {
       />
     );
 
-  if (isLoading)
+  if (isLoading || leaves.isLoading)
     return (
       <ContentFillPanel className="gap-2 p-3">
         {Array.from({ length: 6 }).map((_, index) => (
@@ -73,7 +82,7 @@ export function ActedHistory({ enabled, onOpenInstance }: ActedHistoryProps) {
 
   const acted = data?.data ?? [];
 
-  if (acted.length === 0)
+  if (acted.length === 0 && leaveDecisions.length === 0)
     return (
       <EmptyState
         illustrationPreset="approval"
@@ -87,6 +96,9 @@ export function ActedHistory({ enabled, onOpenInstance }: ActedHistoryProps) {
     <div className="flex min-h-0 flex-1 flex-col gap-3">
       <ContentFillPanel className="p-0">
         <ul>
+          {leaveDecisions.map((leave) => (
+            <LeaveDecisionRow key={`leave-${leave.id}`} leave={leave} />
+          ))}
           {acted.map((instance) => (
             <ActedRow
               key={instance.id}
@@ -140,6 +152,25 @@ function ActedRow({
         </p>
       </div>
       <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+    </li>
+  );
+}
+
+type LeaveDecision = LeavesTeamPage["data"][number];
+
+function LeaveDecisionRow({ leave }: { leave: LeaveDecision }) {
+  return (
+    <li className="flex items-center gap-3 border-b border-border/60 px-3 py-2.5 last:border-b-0">
+      <div className="min-w-0 flex-1 space-y-0.5">
+        <p className="truncate text-sm font-medium">
+          {leave.leaveType?.name ?? "Leave"} · {leave.status === "APPROVED" ? "Approved" : "Rejected"}
+        </p>
+        <p className="truncate text-dense text-muted-foreground">
+          {leave.user ? getUserDisplayName(leave.user) : "Employee"}
+          {" · "}
+          <span className="tabular-nums">{formatRelativeTime(leave.updatedAt)}</span>
+        </p>
+      </div>
     </li>
   );
 }

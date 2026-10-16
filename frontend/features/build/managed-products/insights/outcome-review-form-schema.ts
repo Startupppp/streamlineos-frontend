@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { optionalDecimalField } from "./opportunity-rice-schema";
 
 export const MEASURE_KIND_OPTIONS = [
   { label: "Self-reported", value: "self_reported" },
@@ -13,8 +14,8 @@ export const scheduleOutcomeReviewSchema = z.object({
   hypothesis: z.string().trim().max(5000).optional(),
   metric: z.string().trim().max(500).optional(),
   unit: z.string().trim().max(100).optional(),
-  baseline: z.string().trim().optional(),
-  target: z.string().trim().optional(),
+  baseline: optionalDecimalField,
+  target: optionalDecimalField,
   scheduledFor: z.union([z.iso.date(), z.literal("")]).optional(),
   measureKind: z.enum(["self_reported", "measured"]).optional(),
   metricPeriod: z.string().trim().max(200).optional(),

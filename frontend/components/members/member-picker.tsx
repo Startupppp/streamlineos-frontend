@@ -196,7 +196,7 @@ export function MemberPicker(props: MemberPickerProps) {
     [candidates, scopeProp, projectId, moduleKey, directory, excludeAssigned, includeRevoked, candidateMembers],
   );
 
-  const { members, selectedMembers, isServerFiltered } = useMemberDirectory(
+  const { members, selectedMembers, isServerFiltered, isLoading } = useMemberDirectory(
     derivedScope,
     { search, enabled: directoryEnabled, selectedIds },
   );
@@ -213,6 +213,8 @@ export function MemberPicker(props: MemberPickerProps) {
       ),
     [members, search, serverFiltered, excludeUserId, excludeUserIds],
   );
+
+  const emptyText = isLoading ? "Loading members…" : "No members found.";
 
   const handleSearchChange = useCallback(
     (v: string) => {
@@ -313,7 +315,7 @@ export function MemberPicker(props: MemberPickerProps) {
                   aria-live="polite"
                   className="py-2 text-center text-xs text-muted-foreground"
                 >
-                  No members found.
+                  {emptyText}
                 </div>
               ) : (
                 <CommandList className="max-h-52 overflow-y-auto scrollbar-hide">
@@ -420,7 +422,7 @@ export function MemberPicker(props: MemberPickerProps) {
               aria-live="polite"
               className="py-2 text-center text-xs text-muted-foreground"
             >
-              No members found.
+              {emptyText}
             </div>
           ) : (
             <CommandList className="max-h-52 overflow-y-auto scrollbar-hide">

@@ -58,6 +58,27 @@ describe("org setup invitation access", () => {
     ]);
   });
 
+  it("refuses chat and kb grants the server would refuse for the whole invitation batch", () => {
+    const data = wizard(
+      [
+        {
+          email: "member@example.com",
+          role: "MEMBER",
+          moduleAccess: [
+            { moduleKey: "hr", standing: "MEMBER" },
+            { moduleKey: "kb", standing: "ADMIN" },
+          ],
+        },
+      ],
+      ["hr", "chat", "kb"],
+    );
+    expect(getInviteAccessError(data)).toMatch(/kb access, but that product is on for everyone/);
+    expect(getInviteAccessError(wizard(
+      [{ email: "member@example.com", role: "MEMBER", moduleAccess: [{ moduleKey: "hr", standing: "MEMBER" }] }],
+      ["hr", "chat", "kb"],
+    ))).toBeNull();
+  });
+
   it("preserves an explicit decision to give a member no product access", () => {
     const data = wizard([
       { email: "member@example.com", role: "MEMBER", moduleAccess: [] },

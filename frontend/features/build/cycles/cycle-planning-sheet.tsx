@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { Check, Plus, Search, X } from "lucide-react";
 import { toast } from "sonner";
-import { Sheet, SheetBody, SheetContent, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Sheet, SheetBody, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -86,7 +86,7 @@ export function CyclePlanningSheet({ cycle, tickets, projectId, open, onOpenChan
       <SheetContent className="flex flex-col overflow-hidden p-0 sm:max-w-2xl">
         <SheetHeader className="shrink-0 border-b px-6 py-5">
           <SheetTitle>Plan {cycle?.name ?? "cycle"}</SheetTitle>
-          <p className="text-sm text-muted-foreground">Move work between the backlog and this cycle.</p>
+          <SheetDescription>Move work between the backlog and this cycle.</SheetDescription>
         </SheetHeader>
         <SheetBody className="min-h-0 space-y-4 overflow-y-auto px-6 py-4">
           <div className="relative">

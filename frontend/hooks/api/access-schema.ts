@@ -2,6 +2,7 @@ import { z } from "zod";
 import type { Permission } from "@/lib/rbac/permissions";
 import { isPermissionKey } from "@/contracts/permission-key.generated";
 import type { ResponseContract } from "@/lib/api-envelope";
+import { moduleDenialReasonContract } from "@/lib/page-state/page-state-schema";
 
 /**
  * Response contracts for the access endpoints. Everything a permission check
@@ -34,6 +35,7 @@ export const accessResponseContract = z.object({
   isOrgOwner: z.boolean(),
   canManageOrganizationMembership: z.boolean(),
   modules: z.record(z.string(), z.boolean()),
+  moduleReasons: z.record(z.string(), moduleDenialReasonContract).optional(),
   mfa: mfaStateContract.optional(),
   version: z.number().optional(),
 });

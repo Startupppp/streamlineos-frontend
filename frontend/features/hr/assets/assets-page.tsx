@@ -326,7 +326,7 @@ export function AssetsPage() {
         />
       }
     >
-      <PageState resolution={pageState} loading={<DataTableSkeleton />} onRetry={handleRetry} className="flex-1">
+      <PageState resolution={pageState} loading={<DataTableSkeleton onStalledRetry={handleRetry} />} onRetry={handleRetry} className="flex-1">
       <div className="flex flex-1 min-h-0 flex-col space-y-4">
         <StatCardGrid cols={4}>
           <StatCard label="Total Assets" value={counts.total} icon={Package} color="blue" />

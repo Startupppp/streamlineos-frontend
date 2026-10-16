@@ -186,7 +186,7 @@ export function AssetReturnsPage() {
         ) : undefined
       }
     >
-      <PageState resolution={pageState} loading={<DataTableSkeleton headers={["Asset", "Employee", "Status", "Condition", "Date"]} />} onRetry={handleRetry} className="flex-1">
+      <PageState resolution={pageState} loading={<DataTableSkeleton headers={["Asset", "Employee", "Status", "Condition", "Date"]} onStalledRetry={handleRetry} />} onRetry={handleRetry} className="flex-1">
       <DataTable<AssetReturn>
         className="flex-1 min-h-0"
         data={items ?? []}

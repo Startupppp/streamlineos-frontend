@@ -129,7 +129,7 @@ export function ProductReleaseEvidenceSheet({
                 <EvidenceTicketList evidence={detail.data.evidence} owner={owner} />
                 <EvidenceTestRunList evidence={detail.data.evidence} owner={owner} />
                 <EvidenceIncidentList evidence={detail.data.evidence} owner={owner} />
-                <EvidenceApprovalState evidence={detail.data.evidence} owner={owner} />
+                <EvidenceApprovalState evidence={detail.data.evidence} owner={owner} qaState={detail.data.qaState} />
               </div>
             ) : null}
           </PageState>

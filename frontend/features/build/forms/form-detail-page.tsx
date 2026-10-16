@@ -202,7 +202,7 @@ export function FormDetailPage({ projectId, formId }: FormDetailPageProps) {
             </motion.div>
 
             <Dialog open={previewOpen} onOpenChange={handlePreviewOpenChange}>
-              <DialogContent className="max-w-lg max-h-[90dvh] overflow-y-auto">
+              <DialogContent aria-describedby={undefined} className="max-w-lg max-h-[90dvh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>Preview — {form.name}</DialogTitle>
                 </DialogHeader>

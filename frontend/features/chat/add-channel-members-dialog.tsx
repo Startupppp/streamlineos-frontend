@@ -63,7 +63,12 @@ export function AddChannelMembersDialog({
   existingMemberIds,
   isAdmin = false,
 }: AddChannelMembersDialogProps) {
-  const { data: orgUsers } = useChatOrgUsers(open);
+  const {
+    data: orgUsers,
+    isLoading: isUsersLoading,
+    isError: isUsersError,
+    error: usersError,
+  } = useChatOrgUsers(open);
   const addMember = useAddChannelMember();
   const { data: inviteLink, isLoading: isInviteLinkLoading } = useChannelInviteLink(
     channelId,
@@ -211,7 +216,15 @@ export function AddChannelMembersDialog({
           className="border-t border-border/30 p-1"
           style={{ height: MEMBER_LIST_BOX_HEIGHT }}
         >
-          {filteredUsers.length === 0 ? (
+          {isUsersLoading ? (
+            <p role="status" className="text-label text-muted-foreground text-center py-8 px-4">
+              Loading members…
+            </p>
+          ) : isUsersError ? (
+            <p role="alert" className="text-label text-destructive text-center py-8 px-4">
+              {getErrorMessage(usersError)}
+            </p>
+          ) : filteredUsers.length === 0 ? (
             <p className="text-label text-muted-foreground text-center py-8 px-4">
               {availableUsers.length === 0
                 ? "Everyone in your org is already in this channel."

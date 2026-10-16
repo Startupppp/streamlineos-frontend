@@ -121,7 +121,7 @@ export function ChangeRequestSheet({ projectId, open, onOpenChange, editCr }: Ch
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="p-0 flex flex-col w-full sm:max-w-lg">
+      <SheetContent aria-describedby={undefined} className="p-0 flex flex-col w-full sm:max-w-lg">
         <SheetHeader className="px-5 py-4 border-b shrink-0">
           <SheetTitle>{editCr ? `Edit CR-${editCr.crNumber}` : "New Change Request"}</SheetTitle>
         </SheetHeader>

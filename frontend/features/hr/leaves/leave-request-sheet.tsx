@@ -3,7 +3,6 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { format, startOfDay } from "date-fns";
 import { toast } from "sonner";
 import { useSubmitGuard } from "@/hooks/common/use-submit-guard";
 
@@ -17,7 +16,9 @@ import {
   startOfLocalDay,
 } from "@/lib/date-constraints";
 import { useRequestLeave, useLeavePolicy } from "@/hooks/api/hr";
-import { leaveFormSchema, type LeaveFormValues } from "./leave-request-schema";
+import { useCan } from "@/hooks/api/access";
+import { leaveStartFloor } from "./leave-date-helpers";
+import { effectiveLeaveEnd, leaveFormSchema, type LeaveFormValues } from "./leave-request-schema";
 import { LeaveRequestFormFields } from "./leave-request-form-fields";
 import { useLeaveRequestValidation } from "./use-leave-request-validation";
 import type { LeaveSpan } from "./leave-overlap";
@@ -48,7 +49,8 @@ export function LeaveRequestSheet({
   balances = [],
   existingRequests = NO_EXISTING_REQUESTS,
 }: LeaveRequestSheetProps) {
-  const approverAvailable = approvalRoute !== undefined && approvalRoute.rung !== null;
+  const approverAvailable =
+    approvalRoute !== undefined && (approvalRoute.rung !== null || approvalRoute.ownerSelfApproval);
   const requestLeaveMutation = useRequestLeave();
   const { data: policy } = useLeavePolicy();
   const leaveMaxDays = useMemo<Record<string, number>>(
@@ -62,9 +64,9 @@ export function LeaveRequestSheet({
   );
   const [attachmentUrl, setAttachmentUrl] = useState<string | null>(null);
 
-  const minDate = joiningDate
-    ? format(new Date(joiningDate), "yyyy-MM-dd")
-    : format(startOfDay(new Date()), "yyyy-MM-dd");
+  const canApprove = useCan("hr:leaves:approve");
+  const canManage = useCan("hr:leaves:manage");
+  const canBackdate = canApprove || canManage;
 
   const form = useForm<LeaveFormValues>({
     resolver: zodResolver(leaveFormSchema),
@@ -92,16 +94,20 @@ export function LeaveRequestSheet({
   const watchedEndDate = form.watch("endDate");
   const watchedHalfDay = form.watch("halfDay");
 
-  const leaveStartFloor = parseDateOnly(minDate) ?? startOfLocalDay();
+  const startFloor = leaveStartFloor(
+    parseDateOnly(joiningDate?.slice(0, 10)),
+    canBackdate,
+    startOfLocalDay(),
+  );
   const leaveStartBounds = {
-    fromDate: leaveStartFloor,
-    fromYear: leaveStartFloor.getFullYear(),
+    fromDate: startFloor,
+    fromYear: startFloor.getFullYear(),
     toYear: startOfLocalDay().getFullYear() + 10,
   };
   const leaveEndBounds = planningEndPickerProps({
     startDate: watchedStartDate,
     mode: "onOrAfter",
-    floorDate: leaveStartFloor,
+    floorDate: startFloor,
     enforceTodayFloor: false,
   });
 
@@ -117,7 +123,7 @@ export function LeaveRequestSheet({
   const validation = useLeaveRequestValidation({
     leaveTypeId: watchedLeaveTypeId,
     startDate: watchedStartDate,
-    endDate: watchedEndDate,
+    endDate: effectiveLeaveEnd({ halfDay: watchedHalfDay, startDate: watchedStartDate, endDate: watchedEndDate }),
     halfDay: watchedHalfDay,
     leaveTypes,
     balances,
@@ -140,18 +146,22 @@ export function LeaveRequestSheet({
         toast.error(validation.dayLimitError);
         return;
       }
+      if (validation.balanceError) {
+        toast.error(validation.balanceError);
+        return;
+      }
       try {
         await requestLeaveMutation.mutateAsync({
           leaveTypeId: parseInt(data.leaveTypeId),
           startDate: data.startDate,
-          endDate: data.endDate,
+          endDate: effectiveLeaveEnd(data),
           reason: data.reason,
           priority: data.priority,
           attachmentUrl: attachmentUrl || undefined,
           isHalfDay: data.halfDay,
           halfDayPeriod: data.halfDay ? data.halfDayPeriod : undefined,
         });
-        toast.success("Leave requested successfully!");
+        toast.success("Leave request submitted");
         form.reset();
         setAttachmentUrl(null);
         onOpenChange(false);
@@ -173,7 +183,9 @@ export function LeaveRequestSheet({
         ? "No approver available"
         : validation.overlapMessage
           ? "Dates overlap approved leave"
-          : "Submit leave request";
+          : validation.balanceError
+            ? "Not enough leave balance"
+            : "Submit leave request";
 
   return (
     <HrSheet
@@ -187,7 +199,8 @@ export function LeaveRequestSheet({
       submitDisabled={
         leaveTypes.length === 0 ||
         !approverAvailable ||
-        validation.overlapMessage !== null
+        validation.overlapMessage !== null ||
+        validation.balanceError !== null
       }
       isDirty={isDirty}
       onDiscard={form.reset}
@@ -203,6 +216,7 @@ export function LeaveRequestSheet({
           onStartDateChange={handleLeaveStartDateChange}
           onAttachmentUpload={handleAttachmentUpload}
           validation={validation}
+          pastDatesBlocked={!canBackdate}
         />
       </Form>
     </HrSheet>

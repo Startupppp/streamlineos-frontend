@@ -442,7 +442,7 @@ export function HrEngagementPage() {
             ))}
           </FilterPillGroup>
 
-          <AnimatePresence mode="wait">
+          <AnimatePresence mode="wait" initial={false}>
             <motion.div
               key={activeTab}
               initial={{ opacity: 0, x: 24 }}
