@@ -31,32 +31,14 @@ export type CalendarSourceFamily =
 export function calendarSourceFamily(
   event: CalendarListItem,
 ): CalendarSourceFamily {
-  const source = event.source.toLowerCase();
   const sourceKey = event.sourceKey.toLowerCase();
-  const entityType = event.entityType?.toUpperCase() ?? "";
-  if (source === "external" || sourceKey.startsWith("external:"))
-    return "external";
-  if (source === "attendance" || sourceKey === "hr-attendance")
-    return "attendance";
-  if (
-    ["LEAD", "DEAL", "CONTACT"].includes(entityType) ||
-    sourceKey.startsWith("crm")
-  )
-    return "crm";
-  if (
-    source === "hr" ||
-    ["leave", "interview", "holiday"].includes(source) ||
-    sourceKey.startsWith("hr-")
-  )
-    return "hr";
-  if (sourceKey === "build" || entityType === "TICKET") return "build";
-  if (sourceKey === "tasks" || source === "task") return "tasks";
-  if (
-    sourceKey === "calendar" ||
-    sourceKey === "calendar-events" ||
-    source === "calendar"
-  )
-    return "calendar";
+  if (sourceKey === "calendar" || sourceKey === "calendar-events") return "calendar";
+  if (sourceKey === "build") return "build";
+  if (sourceKey === "tasks") return "tasks";
+  if (sourceKey === "hr-attendance") return "attendance";
+  if (sourceKey.startsWith("hr-")) return "hr";
+  if (sourceKey.startsWith("crm")) return "crm";
+  if (sourceKey.startsWith("external:")) return "external";
   return "other";
 }
 

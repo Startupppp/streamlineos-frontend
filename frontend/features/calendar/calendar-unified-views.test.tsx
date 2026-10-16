@@ -87,7 +87,7 @@ describe("unified Calendar views", () => {
 
   const events = [
     event("event-1", "calendar"),
-    event("deal-1", "tasks", { entityType: "DEAL", source: "task" }),
+    event("deal-1", "crm-deals", { entityType: "DEAL", source: "task" }),
     event("attendance-1", "hr-attendance", { source: "attendance" }),
     event("birthday-user-1", "hr-supplemental", { source: "hr", category: "birthday" }),
   ];
@@ -122,6 +122,23 @@ describe("unified Calendar views", () => {
     expect(result.current.visibleEvents.map((item) => item.id)).toEqual(["event-1"]);
     expect(calendarSourceFamily(events[1])).toBe("crm");
     expect(calendarSourceFamily(events[2])).toBe("attendance");
+  });
+
+  it("keeps native events with linked Build and CRM records under the Calendar source filter", () => {
+    const linkedEvents = [
+      event("event-ticket", "calendar-events", { source: "event", entityType: "ticket", entityId: "42" }),
+      event("event-deal", "calendar-events", { source: "event", entityType: "deal", entityId: "43" }),
+      event("event-lead", "calendar-events", { source: "event", entityType: "lead", entityId: "44" }),
+      event("task-linked-deal", "tasks", { source: "task", entityType: "deal", entityId: "43" }),
+    ];
+
+    expect(linkedEvents.map(calendarSourceFamily)).toEqual(["calendar", "calendar", "calendar", "tasks"]);
+    expect(filterCalendarEventsBySources(linkedEvents, {
+      hrVisible: false,
+      crmVisible: false,
+      attendanceVisible: false,
+    }).map((item) => item.id)).toEqual(linkedEvents.map((item) => item.id));
+    expect(calendarSourceFamily(event("unknown", "custom-source", { source: "calendar", entityType: "deal" }))).toBe("other");
   });
 
   it("keeps every enabled source identity in Grid and List and applies the History source filter", () => {
