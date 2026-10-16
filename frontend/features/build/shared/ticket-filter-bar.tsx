@@ -234,7 +234,11 @@ export function TicketFilterBar({
         ) : null}
         <div
           className={cn(
-            "order-3 flex shrink-0 items-center gap-0.5",
+            "order-3 flex items-center gap-0.5",
+            // A shrink-0 group of filter chips + Hide done is wider than a
+            // 768px content column; wrapping the row alone moved the whole
+            // group off-screen (B-029), so the group wraps too.
+            wrapActions ? "min-w-0 max-w-full flex-wrap" : "shrink-0",
             MOBILE_SEARCH_FIRST_LAYOUT[mobileSearchFirstBreakpoint].actions,
           )}
         >
