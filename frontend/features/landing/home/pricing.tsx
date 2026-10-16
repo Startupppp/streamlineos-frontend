@@ -11,14 +11,14 @@ export function Pricing() {
   return (
     <Section id="pricing">
       <SectionHeading
-        title="Pricing"
-        lede={`Start free with up to ${PRICING.freeSeatLimit} seats. Paid plans are billed per organisation, and annual billing saves ${PRICING.annualDiscountPct}%.`}
-        className="mx-auto mb-10 text-center"
+        title="Simple pricing that grows with you"
+        lede={`Start free with up to ${PRICING.freeSeatLimit} people. Paid plans are priced per company, and paying yearly saves ${PRICING.annualDiscountPct}%.`}
+        className="mb-12"
       />
-      <PricingTierGrid showAppsGrid={false} tiers={TIERS} />
+      <PricingTierGrid tiers={TIERS} />
       <p className="mt-10 text-center text-sm text-muted-foreground">
         Comparing against your current tools?{" "}
-        <Link href="/pricing" className="font-medium text-status-info-ink underline-offset-4 hover:underline">
+        <Link href="/pricing" className="font-medium text-foreground underline underline-offset-4 hover:text-(--lp-accent)">
           See the full plan comparison and savings calculator
         </Link>
       </p>
