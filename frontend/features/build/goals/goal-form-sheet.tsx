@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useRef } from "react";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -69,6 +69,7 @@ export function GoalFormSheet({
   const createGoal = useCreateGoal();
   const updateGoal = useUpdateGoal();
   const isPending = createGoal.isPending || updateGoal.isPending;
+  const submittingRef = useRef(false);
 
   const form = useForm<ProjectGoalFormValues>({
     resolver: zodResolver(projectGoalFormSchema),
@@ -111,7 +112,13 @@ export function GoalFormSheet({
     [],
   );
 
+  function releaseSubmit() {
+    submittingRef.current = false;
+  }
+
   function handleSubmit(values: ProjectGoalFormValues) {
+    if (submittingRef.current) return;
+    submittingRef.current = true;
     const resolvedOwner =
       values.ownerId === "unassigned" ? null : values.ownerId;
     const resolvedParent =
@@ -143,6 +150,7 @@ export function GoalFormSheet({
             }
             toast.error(getErrorMessage(e));
           },
+          onSettled: releaseSubmit,
         },
       );
       return;
@@ -167,6 +175,7 @@ export function GoalFormSheet({
           handleOpenChange(false);
         },
         onError: (e) => toast.error(getErrorMessage(e)),
+        onSettled: releaseSubmit,
       },
     );
   }

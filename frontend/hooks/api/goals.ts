@@ -175,10 +175,10 @@ function forEachGoalList(
   qc: QueryClient,
   fn: (cache: GoalsListCache) => GoalsListCache | undefined,
 ): void {
-  for (const [key, cache] of qc.getQueriesData<GoalsListCache>({
+  for (const [key, cache] of qc.getQueriesData({
     queryKey: accountingAndSupportQueryKeys.goals.list(),
   })) {
-    if (cache === undefined) continue;
+    if (!isGoalsListCache(cache)) continue;
     qc.setQueryData<GoalsListCache>(key, fn(cache));
   }
 }
@@ -253,7 +253,7 @@ export function useCreateGoal() {
           ? [newItem, ...cache]
           : { ...cache, items: [newItem, ...cache.items], total: cache.total + 1 },
       );
-      qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.goals.stats(), refetchType: "none" });
+      qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.goals.stats(), refetchType: "active" });
     },
   });
 }
@@ -267,7 +267,7 @@ export function useUpdateGoal() {
     onSuccess: (updated, variables) => {
       qc.setQueryData(accountingAndSupportQueryKeys.goals.detail(variables.id), updated);
       forEachGoalList(qc, (cache) => patchGoalsListCache(cache, updated));
-      qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.goals.stats(), refetchType: "none" });
+      qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.goals.stats(), refetchType: "active" });
     },
   });
 }
@@ -281,7 +281,7 @@ export function useDeleteGoal() {
     onSuccess: (_, goalId) => {
       forEachGoalList(qc, (cache) => removeGoalFromListCache(cache, goalId));
       qc.removeQueries({ queryKey: accountingAndSupportQueryKeys.goals.detail(goalId), exact: true });
-      qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.goals.stats(), refetchType: "none" });
+      qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.goals.stats(), refetchType: "active" });
     },
   });
 }
@@ -295,7 +295,7 @@ export function useCheckIn(goalId: number) {
     onSuccess: (updated) => {
       qc.setQueryData(accountingAndSupportQueryKeys.goals.detail(goalId), updated);
       forEachGoalList(qc, (cache) => patchGoalsListCache(cache, updated));
-      qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.goals.stats(), refetchType: "none" });
+      qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.goals.stats(), refetchType: "active" });
     },
   });
 }
@@ -360,6 +360,10 @@ export function useRemoveGoalLink(goalId: number) {
 
 function isGoalsParams(v: unknown): v is GoalsParams {
   return typeof v === "object" && v !== null && !Array.isArray(v);
+}
+
+function isGoalsListCache(v: unknown): v is GoalsListCache {
+  return Array.isArray(v) || isGoalsListPage(v);
 }
 
 function isGoalsListPage(v: unknown): v is GoalsListPage {
