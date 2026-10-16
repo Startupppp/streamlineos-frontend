@@ -105,7 +105,7 @@ export function AdminExpenseItem({
         status === "PENDING" && "border-l-status-warning-rule",
         status === "APPROVED" && "border-l-status-success-rule",
         status === "REJECTED" && "border-l-status-danger-rule",
-        status === "PAID" && "border-l-border",
+        (status === "PAID" || status === "WITHDRAWN") && "border-l-border",
       )}
     >
       <div className="flex-shrink-0 flex flex-col items-center gap-1.5">
@@ -176,7 +176,7 @@ export function AdminExpenseItem({
                 "bg-status-success-surface text-status-success-ink border-status-success-rule",
               status === "REJECTED" &&
                 "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
-              status === "PAID" &&
+              (status === "PAID" || status === "WITHDRAWN") &&
                 "bg-muted text-muted-foreground border-border",
             )}
           >
@@ -186,7 +186,9 @@ export function AdminExpenseItem({
                 ? "Approved"
                 : status === "PAID"
                   ? "Paid"
-                  : "Rejected"}
+                  : status === "WITHDRAWN"
+                    ? "Withdrawn"
+                    : "Rejected"}
           </span>
           <span className="text-micro font-medium text-muted-foreground tabular-nums">
             #EXP-{new Date(expense.expenseDate).getFullYear()}-

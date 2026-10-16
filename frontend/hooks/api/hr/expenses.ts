@@ -94,6 +94,20 @@ export function useCreateExpense() {
   });
 }
 
+/** Withdraws the caller's own PENDING or DRAFT claim (`POST /me/expenses/:expenseId/withdraw`). */
+export function useWithdrawExpense() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("self:expenses", {
+    mutationKey: ["hr", "expenses", "withdraw"],
+    mutationFn: ({ expenseId, config }: { expenseId: number; config?: RequestConfig }) =>
+      apiClient.post(`/me/expenses/${expenseId}/withdraw`, undefined, config, _successContract),
+    onSuccess: () => {
+      // The list totals and status counts are server aggregates, so the page is re-read.
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.expenses() });
+    },
+  });
+}
+
 export function useUpdateExpenseStatus() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:expenses:approve", {

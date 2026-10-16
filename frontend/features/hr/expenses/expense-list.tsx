@@ -144,6 +144,7 @@ interface MemberExpenseListProps {
   activeFilterCount: number;
   onEdit: (expense: ExpenseToEdit) => void;
   onResubmit: (expense: ExpenseWithRelations) => void;
+  onWithdraw: (expense: ExpenseWithRelations) => void;
   onShowAll: () => void;
   onCreateNew: () => void;
   onPageChange: (page: number) => void;
@@ -156,6 +157,7 @@ export function MemberExpenseList({
   activeFilterCount,
   onEdit,
   onResubmit,
+  onWithdraw,
   onShowAll,
   onCreateNew,
   onPageChange,
@@ -293,6 +295,9 @@ export function MemberExpenseList({
         function handleEdit() {
           onEdit(toEditPayload());
         }
+        function handleWithdraw() {
+          onWithdraw(expense);
+        }
         function handleView() {
           const receipts = parseExpenseReceipts(expense.receiptUrl, expense.receiptFileName);
           if (receipts[0]) {
@@ -316,15 +321,26 @@ export function MemberExpenseList({
         }
         if (canEdit) {
           return (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="w-8 text-primary hover:text-primary/80 hover:bg-primary/10"
-              onClick={handleEdit}
-              aria-label="Edit"
-            >
-              <Pencil className="h-3.5 w-3.5" />
-            </Button>
+            <div className="flex items-center justify-end gap-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="w-8 text-primary hover:text-primary/80 hover:bg-primary/10"
+                onClick={handleEdit}
+                aria-label="Edit"
+              >
+                <Pencil className="h-3.5 w-3.5" />
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="text-xs text-destructive hover:bg-destructive/10"
+                onClick={handleWithdraw}
+              >
+                Withdraw
+              </Button>
+            </div>
           );
         }
         return (
@@ -340,7 +356,7 @@ export function MemberExpenseList({
         );
       },
     },
-  ], [onEdit, onResubmit]);
+  ], [onEdit, onResubmit, onWithdraw]);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col" aria-live="polite">
