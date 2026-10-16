@@ -186,13 +186,8 @@ export function SupportQueuesPage() {
     void query.refetch();
   }
 
-  function handleOpenSettings() {
-    setSettingsOpen(true);
-  }
-
-  function handleOpenCreate() {
-    setCreateOpen(true);
-  }
+  const handleOpenSettings = () => setSettingsOpen(true);
+  const handleOpenCreate = () => setCreateOpen(true);
 
   function canWork(target: SupportQueue): boolean {
     return membership[target];
@@ -220,16 +215,16 @@ export function SupportQueuesPage() {
       actions={
         canManage || canRaise ? (
           <div className="flex flex-wrap items-center gap-2">
-            {canManage ? (
+            {canManage && (
               <AnimatedIconButton icon={SettingsIcon} iconSize={16} iconClassName="mr-1.5" size="sm" variant="outline" onClick={handleOpenSettings}>
                 Queue settings
               </AnimatedIconButton>
-            ) : null}
-            {canRaise ? (
+            )}
+            {canRaise && (
               <AnimatedIconButton icon={PlusIcon} iconSize={16} iconClassName="mr-1.5" size="sm" onClick={handleOpenCreate}>
                 New request
               </AnimatedIconButton>
-            ) : null}
+            )}
           </div>
         ) : undefined
       }
