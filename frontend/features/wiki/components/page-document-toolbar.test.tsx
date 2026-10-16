@@ -33,8 +33,10 @@ jest.mock("./page-share-popover", () => ({
   ),
 }));
 
+const mockExportMutate = jest.fn();
+let mockExportPending = false;
 jest.mock("@/hooks/api/kb/export-page", () => ({
-  useExportKbPage: () => ({ mutate: jest.fn() }),
+  useExportKbPage: () => ({ mutate: mockExportMutate, isPending: mockExportPending }),
 }));
 
 const page = {
@@ -68,6 +70,8 @@ function renderToolbar(overrides: Partial<KbPageDetail> = {}, onOpenLinkedRecord
 
 beforeEach(() => {
   mockUseCan.mockReturnValue(true);
+  mockExportPending = false;
+  mockExportMutate.mockClear();
 });
 
 describe("PageDocumentToolbar", () => {
@@ -125,6 +129,35 @@ describe("PageDocumentToolbar", () => {
     await user.click(screen.getByRole("button", { name: "More options" }));
 
     expect(screen.queryByRole("menuitem", { name: /export html/i })).toBeNull();
+  });
+
+  it("disables Export HTML while an export request is pending", async () => {
+    mockExportPending = true;
+    renderToolbar();
+    await userEvent.setup().click(screen.getByRole("button", { name: "More options" }));
+
+    const exportItem = screen.getByRole("menuitem", { name: /export html/i });
+    expect(exportItem).toHaveAttribute("data-disabled");
+    expect(mockExportMutate).not.toHaveBeenCalled();
+  });
+
+  it("submits one export until its attempt settles, then allows a retry", async () => {
+    const user = userEvent.setup();
+    renderToolbar();
+
+    await user.click(screen.getByRole("button", { name: "More options" }));
+    await user.click(screen.getByRole("menuitem", { name: /export html/i }));
+    await user.click(screen.getByRole("button", { name: "More options" }));
+    await user.click(screen.getByRole("menuitem", { name: /export html/i }));
+
+    expect(mockExportMutate).toHaveBeenCalledTimes(1);
+    const callbacks = mockExportMutate.mock.calls[0]?.[1];
+    callbacks.onError(new Error("Export failed"));
+
+    await user.click(screen.getByRole("button", { name: "More options" }));
+    await user.click(screen.getByRole("menuitem", { name: /export html/i }));
+
+    expect(mockExportMutate).toHaveBeenCalledTimes(2);
   });
 
   it("hides Move when the user lacks kb:pages:update", async () => {
