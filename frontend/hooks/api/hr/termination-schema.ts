@@ -32,6 +32,22 @@ export const terminationItemContract = z.object({
   employee: terminationEmployeeContract,
 });
 
+export const terminationRowContract = terminationItemContract.omit({ employee: true }).extend({
+  userMembershipId: z.number().int().nullable(),
+  terminationLetterUrl: z.string().nullable(),
+  supportingDocUrls: z.array(z.string()),
+  rowVersion: z.number().int(),
+});
+
+export const terminationCandidateContract = z.object({
+  id: z.string(),
+  name: z.string().nullable(),
+  firstName: z.string().nullable(),
+  lastName: z.string().nullable(),
+  email: z.string(),
+  designation: z.string().nullable(),
+});
+
 export const terminationListContract = z.object({
   data: z.array(terminationItemContract),
   pagination: z.object({
@@ -47,4 +63,5 @@ export const terminationSuccessContract = z.object({ success: z.literal(true) })
 export const terminationLetterContract = z.object({ html: z.string() });
 
 export type TerminationItem = z.infer<typeof terminationItemContract>;
+export type TerminationCandidate = z.infer<typeof terminationCandidateContract>;
 export type TerminationListResponse = z.infer<typeof terminationListContract>;

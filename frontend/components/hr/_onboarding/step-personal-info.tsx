@@ -66,7 +66,7 @@ export function StepPersonalInfo({ form }: StepPersonalInfoProps) {
           <FormItem>
             <FormLabel>First Name <span className="text-destructive">*</span></FormLabel>
             <FormControl>
-              <Input placeholder="John" {...field} />
+              <Input placeholder="John" maxLength={80} {...field} />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -79,7 +79,7 @@ export function StepPersonalInfo({ form }: StepPersonalInfoProps) {
           <FormItem>
             <FormLabel>Last Name <span className="text-destructive">*</span></FormLabel>
             <FormControl>
-              <Input placeholder="Doe" {...field} />
+              <Input placeholder="Doe" maxLength={80} {...field} />
             </FormControl>
             <FormMessage />
           </FormItem>

@@ -3,8 +3,15 @@ import { render, screen } from "@testing-library/react";
 const mockUseCan = jest.fn();
 const mockUsePayrollPolicyCurrent = jest.fn();
 
+const mockAccessFailed = { current: false };
+const mockRefetchAccess = jest.fn();
 jest.mock("@/hooks/api/access", () => ({
-  useCan: (key: string) => mockUseCan(key),
+  usePermissionGate: (key: string) => {
+    const resolved = !mockAccessFailed.current && mockUseCan(key) !== undefined;
+    const allowed = resolved && mockUseCan(key) === true;
+    return { permission: key, allowed, denied: resolved && !allowed, pending: false, unavailable: mockAccessFailed.current };
+  },
+  useAccess: () => ({ refetch: mockRefetchAccess }),
 }));
 
 jest.mock("@/hooks/api/payroll", () => ({
@@ -31,6 +38,7 @@ import { SettingsPageContent } from "./settings-page";
 describe("payroll settings distinguishes a policy it cannot read from a policy that does not exist", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockAccessFailed.current = false;
     mockUsePayrollPolicyCurrent.mockReturnValue({
       data: undefined,
       isLoading: false,
@@ -80,5 +88,14 @@ describe("payroll settings distinguishes a policy it cannot read from a policy t
     mockUseCan.mockReturnValue(true);
     render(<SettingsPageContent />);
     expect(mockUseCan).toHaveBeenCalledWith("payroll:policies:view");
+  });
+
+  it("BUG-027: a failed access read is an error with a retry, not a permanent 'cannot view' panel", () => {
+    mockAccessFailed.current = true;
+    render(<SettingsPageContent />);
+    expect(screen.queryByText("You cannot view the payroll policy")).not.toBeInTheDocument();
+    expect(screen.getByText("Failed to load settings")).toBeInTheDocument();
+    screen.getByRole("button", { name: /try again/i }).click();
+    expect(mockRefetchAccess).toHaveBeenCalled();
   });
 });

@@ -51,6 +51,7 @@ interface LeaveRequestFormFieldsProps {
   onStartDateChange: (value: string) => void;
   onAttachmentUpload: (key: string) => void;
   validation: LeaveRequestValidation;
+  pastDatesBlocked: boolean;
 }
 
 export function LeaveRequestFormFields({
@@ -62,8 +63,10 @@ export function LeaveRequestFormFields({
   onStartDateChange,
   onAttachmentUpload,
   validation,
+  pastDatesBlocked,
 }: LeaveRequestFormFieldsProps) {
   const noApproverAction = useNoApproverFix(approvalRoute);
+  const halfDay = form.watch("halfDay");
 
   return (
     <div className="space-y-5">
@@ -140,30 +143,37 @@ export function LeaveRequestFormFields({
               </FormItem>
             )}
           />
-          <FormField
-            control={form.control}
-            name="endDate"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-xs font-medium text-muted-foreground">
-                  To
-                </FormLabel>
-                <FormControl>
-                  <DatePicker
-                    value={field.value}
-                    onChange={field.onChange}
-                    fromDate={leaveEndBounds.fromDate}
-                    fromYear={leaveEndBounds.fromYear}
-                    toYear={leaveEndBounds.toYear}
-                    placeholder="End date"
-                    disabledDays={isWeekend}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          {halfDay ? null : (
+            <FormField
+              control={form.control}
+              name="endDate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs font-medium text-muted-foreground">
+                    To
+                  </FormLabel>
+                  <FormControl>
+                    <DatePicker
+                      value={field.value}
+                      onChange={field.onChange}
+                      fromDate={leaveEndBounds.fromDate}
+                      fromYear={leaveEndBounds.fromYear}
+                      toYear={leaveEndBounds.toYear}
+                      placeholder="End date"
+                      disabledDays={isWeekend}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
         </div>
+        {pastDatesBlocked ? (
+          <p className="text-xs text-muted-foreground">
+            Past dates can&apos;t be requested — ask HR to record it.
+          </p>
+        ) : null}
       </div>
 
       {validation.overlapMessage ? (

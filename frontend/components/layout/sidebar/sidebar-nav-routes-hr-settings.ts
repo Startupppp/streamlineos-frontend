@@ -45,6 +45,7 @@ export const HR_SETTINGS_ROUTES: NavRoute[] = [
             label: "Policies",
             icon: FileText,
             href: "/hr/settings/policies",
+            searchTerms: ["hr policies", "leave policy", "policy activation"],
             requiredPermission: "hr:policies:view",
           },
           {

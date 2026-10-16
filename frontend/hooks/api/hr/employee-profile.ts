@@ -96,10 +96,10 @@ export function useOnboardEmployee() {
         _onboardEmployeeContract,
       ),
     onSuccess: (result) => {
+      operation.settle();
       void invalidateHrWorkforceQueries(qc, result.userId);
       invalidateCalendarProjectionWindows(qc);
     },
-    onSettled: operation.settle,
   });
 }
 

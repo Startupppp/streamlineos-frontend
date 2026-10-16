@@ -246,9 +246,14 @@ export const useCancelInvitation = () => {
           undefined,
           userSuccessContract,
         ),
-      onSuccess: () => {
+      onSuccess: (_result, invitationId) => {
+        queryClient.setQueriesData<InvitationsResponse>(
+          { queryKey: usersAndCommerceQueryKeys.users.invitations() },
+          (page) => markInvitationRevoked(page, invitationId, new Date().toISOString()),
+        );
         void queryClient.invalidateQueries({
           queryKey: usersAndCommerceQueryKeys.users.invitations(),
+          refetchType: "none",
         });
         void queryClient.invalidateQueries({
           queryKey: usersAndCommerceQueryKeys.users.stats(),
@@ -258,3 +263,17 @@ export const useCancelInvitation = () => {
     },
   );
 };
+
+function markInvitationRevoked(
+  page: InvitationsResponse | undefined,
+  invitationId: string,
+  revokedAt: string,
+): InvitationsResponse | undefined {
+  if (!page?.data.some((row) => row.id === invitationId)) return page;
+  return {
+    ...page,
+    data: page.data.map((row) =>
+      row.id === invitationId ? { ...row, status: "REVOKED", revokedAt } : row,
+    ),
+  };
+}

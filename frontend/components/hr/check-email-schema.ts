@@ -5,6 +5,7 @@ export const EMPLOYEE_ADMISSION_STATUSES = [
   "member-without-employment",
   "employee",
   "archived-member",
+  "invite",
 ] as const;
 
 export const checkEmailContract = z.object({

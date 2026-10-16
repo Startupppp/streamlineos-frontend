@@ -22,6 +22,14 @@ jest.mock("@/hooks/api/hr/salary-structures", () => ({
   useDeleteSalaryTemplate: () => idleMutation,
 }));
 
+const allowed = { permission: "hr:salary:view", allowed: true, denied: false, pending: false, unavailable: false };
+const gate = jest.fn(() => allowed);
+const refetchAccess = jest.fn();
+jest.mock("@/hooks/api/access", () => ({
+  usePermissionGate: () => gate(),
+  useAccess: () => ({ refetch: refetchAccess }),
+}));
+
 jest.mock("@/features/payroll/salary-structures/salary-structure-template-sheet", () => ({
   SalaryStructureTemplateSheet: (props: { nameError?: string }) => {
     sheetProps(props);
@@ -43,6 +51,7 @@ import { SalaryStructuresPageContent } from "./salary-structures-page";
 beforeEach(() => {
   jest.clearAllMocks();
   createMutation.mockReturnValue(idleMutation);
+  gate.mockReturnValue(allowed);
   templates.mockReturnValue({
     data: { data: [] },
     isLoading: false,
@@ -141,5 +150,33 @@ describe("PAY-B-010 a duplicate template name is reported on the name field", ()
     render(<SalaryStructuresPageContent />);
 
     expect(sheetProps).toHaveBeenLastCalledWith(expect.objectContaining({ nameError: undefined }));
+  });
+});
+
+describe("BUG-022 salary structures never claim emptiness before access is known", () => {
+  const disabledRead = { data: undefined, isLoading: false, isError: false, error: null, refetch };
+
+  it("shows the loading shell, not the empty state, while access resolves", () => {
+    gate.mockReturnValue({ ...allowed, allowed: false, pending: true });
+    templates.mockReturnValue(disabledRead);
+    render(<SalaryStructuresPageContent />);
+    expect(screen.queryByText(/no salary structure templates yet/i)).toBeNull();
+  });
+
+  it("a failed access read is an error with a retry that re-reads access", () => {
+    gate.mockReturnValue({ ...allowed, allowed: false, unavailable: true });
+    templates.mockReturnValue(disabledRead);
+    render(<SalaryStructuresPageContent />);
+    expect(screen.queryByText(/no salary structure templates yet/i)).toBeNull();
+    screen.getByRole("button", { name: /try again/i }).click();
+    expect(refetchAccess).toHaveBeenCalled();
+  });
+
+  it("a denied reader sees a permission state, not an empty catalogue", () => {
+    gate.mockReturnValue({ ...allowed, allowed: false, denied: true });
+    templates.mockReturnValue(disabledRead);
+    render(<SalaryStructuresPageContent />);
+    expect(screen.queryByText(/no salary structure templates yet/i)).toBeNull();
+    expect(screen.queryByRole("button", { name: /add template/i })).toBeNull();
   });
 });

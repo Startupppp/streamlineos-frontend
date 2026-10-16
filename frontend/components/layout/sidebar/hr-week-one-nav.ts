@@ -10,8 +10,6 @@ export const HR_NAV_CHROME_KILLS: readonly string[] = [
 const CHROME_KILLS = new Set(HR_NAV_CHROME_KILLS);
 
 export const HR_NAV_ADVANCED_HREFS: readonly string[] = [
-  "/hr/employees/skills-matrix",
-  "/hr/employees/find-expert",
   "/hr/employees/manager-coverage",
   "/hr/employees/reporting-requests",
   "/hr/employees/reporting-changes",

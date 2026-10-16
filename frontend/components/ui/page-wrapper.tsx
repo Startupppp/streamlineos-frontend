@@ -131,7 +131,7 @@ export function PageWrapper({
     state.kind !== "ready" &&
     state.kind !== "empty" &&
     state.kind !== "filtered-empty";
-  const visibleActions = isInterrupted ? undefined : actions;
+  const visibleActions = isInterrupted && state?.kind !== "loading" ? undefined : actions;
   const visibleFilters =
     state?.kind === "loading"
       ? loadingFilters

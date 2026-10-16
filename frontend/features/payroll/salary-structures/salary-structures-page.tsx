@@ -34,6 +34,8 @@ import {
   type SalaryStructureTemplate,
   type CreateSalaryTemplateInput,
 } from "@/hooks/api/hr/salary-structures";
+import { useAccess, usePermissionGate } from "@/hooks/api/access";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { SalaryStructureTemplateSheet } from "@/features/payroll/salary-structures/salary-structure-template-sheet";
 
 
@@ -137,6 +139,8 @@ const TemplateCard = memo(function TemplateCard({ template, index, onEdit, onDel
 
 export function SalaryStructuresPageContent() {
   const shouldReduceMotion = useReducedMotion();
+  const viewGate = usePermissionGate("hr:salary:view");
+  const { refetch: refetchAccess } = useAccess();
   const { data: page, isLoading, isError, error, refetch } = useSalaryStructureTemplates();
   const templates = page?.data;
   const createMutation = useCreateSalaryTemplate();
@@ -224,6 +228,7 @@ export function SalaryStructuresPageContent() {
   }
 
   function handleRetry() {
+    if (viewGate.unavailable) void refetchAccess();
     void refetch();
   }
 
@@ -231,7 +236,15 @@ export function SalaryStructuresPageContent() {
   const submitError = editingTemplate ? updateMutation.error : createMutation.error;
   const nameConflict = isApiError(submitError) && submitError.status === 409 ? getErrorMessage(submitError) : undefined;
 
-  if (isLoading) {
+  if (viewGate.denied) {
+    return (
+      <PageWrapper title="Salary Structure Templates">
+        <NoPermissionState permission="hr:salary:view" className="flex-1" />
+      </PageWrapper>
+    );
+  }
+
+  if (viewGate.pending || isLoading) {
     return (
       <PageWrapper title="Salary Structure Templates" subtitle="Loading…">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -276,11 +289,11 @@ export function SalaryStructuresPageContent() {
         </span>
       </div>
 
-      {isError ? (
+      {isError || viewGate.unavailable ? (
         <ErrorState
           className="flex-1"
           title="Failed to load templates"
-          description={getErrorMessage(error)}
+          description={viewGate.unavailable ? "Your access could not be checked, so templates cannot be listed." : getErrorMessage(error)}
           error={error}
           onRetry={handleRetry}
         />

@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import {
   ALUMNI_NOT_AVAILABLE_COPY,
   EXIT_PATH_STEPS,
@@ -57,6 +57,21 @@ describe("HRMS-UX-014 — the exit path is continuous to the payroll link", () =
     expect(
       screen.getByRole("link", { name: "Reassign reports" }),
     ).toHaveAttribute("href", "/hr/employees/reporting-changes");
+  });
+});
+
+describe("QA-2026-10-14 — the Resignation step opens the resignation flow", () => {
+  it("is a button that starts a resignation when the page can start one", () => {
+    const onStartResignation = jest.fn();
+    render(<ExitPathStrip onStartResignation={onStartResignation} />);
+    fireEvent.click(screen.getByRole("button", { name: /Resignation/ }));
+    expect(onStartResignation).toHaveBeenCalledTimes(1);
+  });
+
+  it("stays an inert card when the caller can start no resignation", () => {
+    render(<ExitPathStrip />);
+    expect(screen.queryByRole("button", { name: /Resignation/ })).not.toBeInTheDocument();
+    expect(screen.getByText("Resignation")).toBeInTheDocument();
   });
 });
 

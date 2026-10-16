@@ -18,8 +18,8 @@ import {
   useHrEmployees,
   type TerminationStatus,
 } from "@/hooks/api/hr";
-import { useHrEmployee } from "@/hooks/api/hr/employee-list";
 import { statusToneClasses } from "@/lib/design-tokens";
+import { useTerminationCandidate } from "@/hooks/api/hr/termination";
 import { useTerminationActions } from "./use-termination-actions";
 
 type StatusFilter = "ALL" | TerminationStatus;
@@ -46,34 +46,12 @@ export function TerminationPage() {
     status: statusFilter === "ALL" ? undefined : statusFilter,
   });
   const terminations = useMemo(() => terminationsData?.data ?? [], [terminationsData]);
-  const { data: employeesData } = useHrEmployees({ limit: 100 });
-  const paramEmployee = useHrEmployee(employeeUserIdParam);
-  const prefillMissing = employeeUserIdParam !== null && paramEmployee.isError;
+  const { data: employeesData } = useHrEmployees({ limit: 100, isActive: "current" });
 
-  const employees = useMemo(() => {
-    const listed = employeesData?.data ?? [];
-    const linked = paramEmployee.data;
-    if (!linked || listed.some((employee) => employee.id === linked.id)) return listed;
-    return [
-      ...listed,
-      {
-        id: linked.id,
-        name: linked.name,
-        firstName: linked.firstName,
-        lastName: linked.lastName,
-        email: linked.email,
-        role: linked.role ?? "",
-        designation: linked.designation,
-        employeeId: linked.employeeId,
-        image: linked.image,
-        isActive: linked.isActive ?? false,
-        joiningDate: linked.joiningDate,
-        reportingTo: linked.reportingTo,
-        department: null,
-        hasAccepted: linked.hasAccepted,
-      },
-    ];
-  }, [employeesData, paramEmployee.data]);
+  const employees = useMemo(() => employeesData?.data ?? [], [employeesData]);
+  const candidate = useTerminationCandidate(employeeUserIdParam);
+  const prefilledEmployee = candidate.data;
+  const prefillMissing = employeeUserIdParam !== null && candidate.isError;
 
   const actions = useTerminationActions({
     terminations,
@@ -181,6 +159,7 @@ export function TerminationPage() {
         submitDisabled={!actions.canSubmitCreate}
         onSubmit={actions.handleCreateSubmit}
         employees={employees}
+        prefilledEmployee={prefilledEmployee ?? null}
         selectedEmployeeUserId={actions.selectedEmployeeUserId}
         onSelectedEmployeeUserIdChange={actions.setSelectedEmployeeUserId}
         selectedReason={actions.selectedReason}

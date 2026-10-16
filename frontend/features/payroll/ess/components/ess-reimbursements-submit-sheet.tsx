@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MonthPicker } from "@/features/payroll/shared/month-picker";
 import { useSubmitReimbursement } from "@/hooks/api/payroll/ess";
+import { useCreateReimbursement } from "@/hooks/api/hr/reimbursements";
 import { useUploadFile } from "@/hooks/api/use-upload-file";
 import {
   CLAIM_CATEGORIES,
@@ -25,8 +26,16 @@ import {
   type ReimbursementFormValues,
 } from "./ess-reimbursements-schema";
 
-export function SubmitSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const mutation = useSubmitReimbursement();
+interface SubmitSheetProps {
+  open: boolean;
+  onClose: () => void;
+  channel?: "self-service" | "payroll";
+}
+
+export function SubmitSheet({ open, onClose, channel = "self-service" }: SubmitSheetProps) {
+  const essSubmit = useSubmitReimbursement();
+  const payrollSubmit = useCreateReimbursement();
+  const mutation = channel === "payroll" ? payrollSubmit : essSubmit;
   const uploadFile = useUploadFile();
   const [receiptUrl, setReceiptUrl] = useState<string | null>(null);
   const [receiptName, setReceiptName] = useState<string | null>(null);

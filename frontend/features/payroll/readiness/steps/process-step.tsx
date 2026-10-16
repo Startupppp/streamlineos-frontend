@@ -9,11 +9,20 @@ import { StepNote, StepPanel } from "./step-panel";
 
 interface ProcessStepProps {
   run: PayrollRun | null;
+  failed: boolean;
   isCurrent: boolean;
 }
 
-export function ProcessStep({ run, isCurrent }: ProcessStepProps) {
+export function ProcessStep({ run, failed, isCurrent }: ProcessStepProps) {
   const canManage = useCan("payroll:runs:manage");
+
+  if (run === null && failed) {
+    return (
+      <StepPanel title="Process">
+        <StepNote>This run could not be loaded. Open it from Runs to retry.</StepNote>
+      </StepPanel>
+    );
+  }
 
   if (run === null) {
     return (

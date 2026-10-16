@@ -178,25 +178,25 @@ export default function PageMetadataSheet({
 
   function handlePublish() {
     if (!isEditable) return;
-    publishPage.mutate(pageId, {
+    publishPage.mutate({ pageId, expectedContentRevision: page.contentRevision }, {
       onSuccess: () => toast.success("Page published"),
-      onError: () => toast.error("Failed to publish page"),
+      onError: (error) => toast.error(isApiError(error) && error.status === 409 ? "Page changed before publication. Refresh before trying again." : "Failed to publish page"),
     });
   }
 
   function handleArchive() {
     if (!isEditable) return;
-    archivePage.mutate(pageId, {
+    archivePage.mutate({ pageId, expectedContentRevision: page.contentRevision }, {
       onSuccess: () => toast.success("Page archived"),
-      onError: () => toast.error("Failed to archive page"),
+      onError: (error) => toast.error(isApiError(error) && error.status === 409 ? "Page changed before archiving. Refresh before trying again." : "Failed to archive page"),
     });
   }
 
   function handleUnarchive() {
     if (!isEditable) return;
-    unarchivePage.mutate(pageId, {
+    unarchivePage.mutate({ pageId, expectedContentRevision: page.contentRevision }, {
       onSuccess: () => toast.success("Page unarchived"),
-      onError: () => toast.error("Failed to unarchive page"),
+      onError: (error) => toast.error(isApiError(error) && error.status === 409 ? "Page changed before unarchiving. Refresh before trying again." : "Failed to unarchive page"),
     });
   }
 

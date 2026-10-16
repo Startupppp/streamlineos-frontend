@@ -5,16 +5,23 @@ import { ApiError } from "@/lib/api-envelope";
 import { kbSpacesQueryStub } from "@/test-utils/kb-spaces-fixture";
 
 const mockReplace = jest.fn();
+const mockPush = jest.fn();
+const mockExportMutate = jest.fn();
+let mockExportPending = false;
 let mockSearchParams = new URLSearchParams();
 
 jest.mock("next/navigation", () => ({
-  useRouter: () => ({ push: jest.fn(), replace: mockReplace }),
+  useRouter: () => ({ push: mockPush, replace: mockReplace }),
   usePathname: () => "/knowledge/wiki/private",
   useSearchParams: () => mockSearchParams,
 }));
 
 jest.mock("@/hooks/api/kb/page-collection", () => ({
   useKbPageCollection: jest.fn(),
+}));
+
+jest.mock("@/hooks/api/kb/export-page", () => ({
+  useExportKbPage: () => ({ mutate: mockExportMutate, isPending: mockExportPending }),
 }));
 
 jest.mock("@/hooks/api/kb", () => ({
@@ -173,6 +180,9 @@ function makeResponse(
 }
 
 beforeEach(() => {
+  mockPush.mockClear();
+  mockExportMutate.mockClear();
+  mockExportPending = false;
   mockReplace.mockClear();
   mockSearchParams = new URLSearchParams();
   useKbPageCollection.mockReturnValue({
@@ -183,6 +193,51 @@ beforeEach(() => {
     refetch: jest.fn(),
   });
   usePageState.mockReturnValue({ kind: "ready" });
+});
+
+it("opens the page's version history from its collection action menu", async () => {
+  mockSearchParams = new URLSearchParams("view=card");
+  const user = userEvent.setup();
+  render(<WikiPageCollectionTable fixedParams={{ owner: "me" }} emptyTitle="No pages" />);
+
+  await user.click(screen.getByRole("button", { name: "Page actions" }));
+  await user.click(screen.getByRole("menuitem", { name: "Version history" }));
+
+  expect(mockPush).toHaveBeenCalledWith("/knowledge/wiki/doc/1/history");
+});
+
+it("copies the selected page URL without navigating away", async () => {
+  mockSearchParams = new URLSearchParams("view=card");
+  const writeText = jest.fn().mockResolvedValue(undefined);
+  Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText } });
+  const user = userEvent.setup();
+  render(<WikiPageCollectionTable fixedParams={{ owner: "me" }} emptyTitle="No pages" />);
+
+  await user.click(screen.getByRole("button", { name: "Page actions" }));
+  await user.click(screen.getByRole("menuitem", { name: "Copy link" }));
+
+  expect(writeText).toHaveBeenCalledWith(`${window.location.origin}/knowledge/wiki/doc/1`);
+  expect(mockPush).not.toHaveBeenCalled();
+});
+
+it("starts one HTML export and disables the action while it is pending", async () => {
+  mockSearchParams = new URLSearchParams("view=card");
+  const user = userEvent.setup();
+  const view = render(<WikiPageCollectionTable fixedParams={{ owner: "me" }} emptyTitle="No pages" />);
+
+  await user.click(screen.getByRole("button", { name: "Page actions" }));
+  await user.click(screen.getByRole("menuitem", { name: "Export HTML" }));
+  expect(mockExportMutate).toHaveBeenCalledWith(
+    { pageId: 1, format: "html" },
+    expect.objectContaining({ onError: expect.any(Function) }),
+  );
+  expect(mockPush).not.toHaveBeenCalled();
+
+  mockExportPending = true;
+  view.rerender(<WikiPageCollectionTable fixedParams={{ owner: "me" }} emptyTitle="No pages" />);
+  await user.click(screen.getByRole("button", { name: "Page actions" }));
+  expect(screen.getByRole("menuitem", { name: "Export HTML" })).toHaveAttribute("data-disabled");
+  expect(mockExportMutate).toHaveBeenCalledTimes(1);
 });
 
 describe("WikiPageCollectionTable — filter and empty states", () => {

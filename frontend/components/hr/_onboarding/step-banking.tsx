@@ -15,7 +15,7 @@ import {
   FormLabel,
   FormMessage,
 } from "../../ui/form";
-import { digitsOnlyFieldChange } from "./restricted-field-change";
+import { personNameFieldChange, digitsOnlyFieldChange } from "./restricted-field-change";
 
 type FormValues = z.infer<typeof onboardEmployeeInputSchema>;
 
@@ -50,7 +50,7 @@ export function StepBanking({ form }: StepBankingProps) {
             <FormItem>
               <FormLabel>Account Holder Name</FormLabel>
               <FormControl>
-                <Input placeholder="Name as per bank records" {...field} />
+                <Input placeholder="Name as per bank records" {...field} onChange={personNameFieldChange(field.onChange)} />
               </FormControl>
               <FormMessage />
             </FormItem>

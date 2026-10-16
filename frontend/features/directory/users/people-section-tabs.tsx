@@ -1,25 +1,44 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { useCallback } from "react";
+import { useSearchParams } from "next/navigation";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCanManageOrganizationMembership } from "@/hooks/api/access";
 
+type PeopleView = "members" | "invitations";
+
+const LEGACY_INVITATION_TABS = new Set(["invites", "invitations"]);
+
+export function resolvePeopleView(params: Pick<URLSearchParams, "get">): PeopleView {
+  if (params.get("view") === "invitations") return "invitations";
+  return LEGACY_INVITATION_TABS.has(params.get("tab") ?? "")
+    ? "invitations"
+    : "members";
+}
+
+function peopleViewHref(view: PeopleView): string {
+  return view === "invitations"
+    ? "/settings/users?view=invitations"
+    : "/settings/users";
+}
+
+export function useSwitchPeopleView(): (view: PeopleView) => void {
+  return useCallback((view: PeopleView) => {
+    window.history.pushState(null, "", peopleViewHref(view));
+  }, []);
+}
+
 export function PeopleSectionTabs() {
   const searchParams = useSearchParams();
-  const router = useRouter();
   const canManageInvitations = useCanManageOrganizationMembership();
-  const active =
-    canManageInvitations && searchParams.get("view") === "invitations"
-      ? "invitations"
-      : "members";
+  const switchView = useSwitchPeopleView();
+  const active = resolvePeopleView(searchParams);
 
-  function handleValueChange(value: string) {
-    router.push(
-      value === "invitations"
-        ? "/settings/users?view=invitations"
-        : "/settings/users",
-    );
-  }
+  const handleValueChange = useCallback(
+    (value: string) =>
+      switchView(value === "invitations" ? "invitations" : "members"),
+    [switchView],
+  );
 
   return (
     <Tabs value={active} onValueChange={handleValueChange}>

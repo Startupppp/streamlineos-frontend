@@ -433,7 +433,6 @@
     "post /hr/recruitment/reports/scheduled lastRunAt",
     "post /hr/recruitment/reports/scheduled recipients",
     "post /hr/recruitment/reports/scheduled reportConfig",
-    "post /hr/termination employee",
     "post /invoices client",
     "post /invoices creator",
     "post /invoices project",

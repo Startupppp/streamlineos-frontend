@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/select";
 import { HrSheet } from "@/components/shared/hr-sheet";
 import { FileUpload } from "@/components/storage/file-upload";
-import { useCreateResignation } from "@/hooks/api/hr";
+import { useSubmitMyResignation } from "@/hooks/api/hr/exit";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { RESIGNATION_REASONS, RESIGNATION_REASON_OTHER } from "@/lib/constants/hr-separation";
 
@@ -29,7 +29,7 @@ interface ResignationFormSheetProps {
 }
 
 export function ResignationFormSheet({ open, onOpenChange }: ResignationFormSheetProps) {
-  const createResignation = useCreateResignation();
+  const submitMyResignation = useSubmitMyResignation();
 
   const [reason, setReason] = useState("");
   const [reasonCategory, setReasonCategory] = useState("");
@@ -150,25 +150,24 @@ export function ResignationFormSheet({ open, onOpenChange }: ResignationFormShee
       reasonCategory === RESIGNATION_REASON_OTHER
         ? otherReasonCategory.trim()
         : reasonCategory;
-    createResignation.mutate(
-      {
-        reason: trimmedReason,
-        lastWorkingDate: autoLwd,
-        noticePeriodDays: NOTICE_PERIOD_DAYS,
-        reasonCategory: resolvedCategory || undefined,
-        willingForExitInterview,
-        companyFeedback: companyFeedback.trim() || undefined,
-        resignationLetterUrl: resignationLetterUrl ?? undefined,
+    const submission = {
+      reason: trimmedReason,
+      lastWorkingDate: autoLwd,
+      noticePeriodDays: NOTICE_PERIOD_DAYS,
+      reasonCategory: resolvedCategory || undefined,
+      willingForExitInterview,
+      companyFeedback: companyFeedback.trim() || undefined,
+      resignationLetterUrl: resignationLetterUrl ?? undefined,
+    };
+    const callbacks = {
+      onSuccess: () => {
+        toast.success("Resignation submitted");
+        onOpenChange(false);
+        resetForm();
       },
-      {
-        onSuccess: () => {
-          toast.success("Resignation submitted");
-          onOpenChange(false);
-          resetForm();
-        },
-        onError: (e) => toast.error(getErrorMessage(e)),
-      },
-    );
+      onError: (e: Error) => toast.error(getErrorMessage(e)),
+    };
+    submitMyResignation.mutate(submission, callbacks);
   }, [
     reason,
     reasonCategory,
@@ -177,7 +176,7 @@ export function ResignationFormSheet({ open, onOpenChange }: ResignationFormShee
     companyFeedback,
     autoLwd,
     resignationLetterUrl,
-    createResignation,
+    submitMyResignation,
     resetForm,
     onOpenChange,
   ]);
@@ -194,13 +193,13 @@ export function ResignationFormSheet({ open, onOpenChange }: ResignationFormShee
           Submit Resignation
         </span>
       }
-      isPending={createResignation.isPending}
+      isPending={submitMyResignation.isPending}
     >
       <div className="rounded-lg border border-primary/20 bg-primary/5 px-3 py-2.5 flex items-start gap-2.5 text-xs text-foreground">
         <FileText className="h-3.5 w-3.5 mt-0.5 shrink-0" />
         <span>
-          Notice period is <strong>60 days</strong> as per company policy. Your last working date
-          will be{" "}
+          Notice period is <strong>60 days</strong> as per company policy.{" "}
+          Your last working date will be{" "}
           <strong>{format(addDays(new Date(), NOTICE_PERIOD_DAYS), "dd MMM yyyy")}</strong>.
         </span>
       </div>

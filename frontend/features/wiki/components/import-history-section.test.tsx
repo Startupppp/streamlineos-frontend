@@ -39,7 +39,7 @@ jest.mock("@/hooks/api/kb", () => ({
 }));
 
 jest.mock("@/hooks/api/access", () => ({
-  usePermissionGate: jest.fn(() => ({ allowed: true, state: "granted" })),
+  usePermissionGate: jest.fn(() => ({ permission: "kb:pages:import", allowed: true, denied: false, pending: false, unavailable: false })),
 }));
 
 jest.mock("@/features/wiki/lib/kb-icons", () => ({
@@ -54,6 +54,7 @@ const { useKbImportJobs, useRetryImportJob } = jest.requireMock("@/hooks/api/kb"
   useKbImportJobs: jest.Mock;
   useRetryImportJob: jest.Mock;
 };
+const { usePermissionGate } = jest.requireMock("@/hooks/api/access") as { usePermissionGate: jest.Mock };
 const mockRetryMutate = jest.fn();
 
 const mockJob = {
@@ -79,6 +80,7 @@ beforeEach(() => {
   Reflect.set(globalThis, "IntersectionObserver", FakeIntersectionObserver);
   jest.clearAllMocks();
   useRetryImportJob.mockReturnValue({ mutate: mockRetryMutate, isPending: false, variables: undefined });
+  usePermissionGate.mockReturnValue({ permission: "kb:pages:import", allowed: true, denied: false, pending: false, unavailable: false });
 });
 
 afterEach(() => {
@@ -87,6 +89,48 @@ afterEach(() => {
 });
 
 describe("ImportHistorySection sentinel", () => {
+  it("hides cached jobs and Retry when import permission is denied before the jobs query fails", () => {
+    usePermissionGate.mockReturnValue({ permission: "kb:pages:import", allowed: false, denied: true, pending: false, unavailable: false });
+    useKbImportJobs.mockReturnValue({
+      data: [{ ...mockJob, status: "failed", canRetry: true }],
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+      hasNextPage: false,
+      isFetchingNextPage: false,
+      fetchNextPage: jest.fn(),
+    });
+
+    render(<ImportHistorySection />);
+
+    expect(screen.getByText("Access Restricted")).toBeInTheDocument();
+    expect(screen.queryByText("3/3 pages")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Retry failed pages" })).not.toBeInTheDocument();
+  });
+
+  it("keeps cached Retry hidden while import permission is unresolved", () => {
+    usePermissionGate.mockReturnValue({ permission: "kb:pages:import", allowed: false, denied: false, pending: true, unavailable: false });
+    useKbImportJobs.mockReturnValue({ data: [{ ...mockJob, status: "failed", canRetry: true }], isLoading: false, isError: false, error: null, refetch: jest.fn(), hasNextPage: false, isFetchingNextPage: false, fetchNextPage: jest.fn() });
+
+    render(<ImportHistorySection />);
+
+    expect(screen.queryByText("3/3 pages")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Retry failed pages" })).not.toBeInTheDocument();
+    expect(screen.queryByText("Access Restricted")).not.toBeInTheDocument();
+  });
+
+  it("shows an access-read error instead of cached Retry when permission lookup fails", () => {
+    usePermissionGate.mockReturnValue({ permission: "kb:pages:import", allowed: false, denied: false, pending: false, unavailable: true });
+    useKbImportJobs.mockReturnValue({ data: [{ ...mockJob, status: "failed", canRetry: true }], isLoading: false, isError: false, error: null, refetch: jest.fn(), hasNextPage: false, isFetchingNextPage: false, fetchNextPage: jest.fn() });
+
+    render(<ImportHistorySection />);
+
+    expect(screen.getByText("Couldn't check import access")).toBeInTheDocument();
+    expect(screen.queryByText("3/3 pages")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Retry failed pages" })).not.toBeInTheDocument();
+  });
+
   it.each([401, 403, 404])("hides cached import jobs and retry actions after a %i access failure", (status) => {
     useKbImportJobs.mockReturnValue({
       data: [{ ...mockJob, status: "failed", canRetry: true }],

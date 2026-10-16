@@ -2,8 +2,12 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import PageSharePopover from "./page-share-popover";
 import type { KbPageDetail } from "@/hooks/api/kb/page-types";
+import { ApiError } from "@/lib/api-envelope";
+import { toast } from "sonner";
 
 const setVisibilityMutate = jest.fn();
+
+jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn() } }));
 
 jest.mock("@/hooks/api/kb/pages", () => ({
   useSetKbPageVisibility: () => ({
@@ -26,6 +30,7 @@ const page = {
   coverImage: null,
   visibility: "org",
   publicToken: null,
+  contentRevision: 7,
 } as KbPageDetail;
 
 function renderPopover(overrides: Partial<KbPageDetail> = {}) {
@@ -80,7 +85,20 @@ describe("PageSharePopover — the privileged share controls live behind the Sha
     expect(setVisibilityMutate.mock.calls[0]?.[0]).toEqual({
       pageId: 5,
       visibility: "public",
+      expectedContentRevision: 7,
     });
+  });
+
+  it("reports a stale visibility conflict without retrying against another revision", async () => {
+    const user = userEvent.setup();
+    renderPopover();
+
+    await user.click(screen.getByRole("button", { name: "Share page" }));
+    await user.click(screen.getByText("Public"));
+    setVisibilityMutate.mock.calls[0]?.[1].onError(new ApiError("Stale", 409, "STALE_REVISION"));
+
+    expect(toast.error).toHaveBeenCalledWith("Page changed before visibility was saved. Refresh before trying again.");
+    expect(setVisibilityMutate).toHaveBeenCalledTimes(1);
   });
 
   it("does not re-issue the visibility mutation when the already-current option is chosen", async () => {

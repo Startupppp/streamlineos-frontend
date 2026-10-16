@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { motion } from "framer-motion";
 import { format } from "date-fns";
 import { Check, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -110,11 +109,7 @@ export function EquityPage() {
         ) : undefined
       }
     >
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.22, ease: "easeOut" }}
-      >
+      <div>
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
           <div className={selectedGrant ? "lg:col-span-3" : "lg:col-span-5"}>
             <PageState
@@ -182,7 +177,7 @@ export function EquityPage() {
             </div>
           )}
         </div>
-      </motion.div>
+      </div>
 
       <EquityGrantSheet open={grantSheetOpen} onOpenChange={setGrantSheetOpen} />
       {selectedGrant && (

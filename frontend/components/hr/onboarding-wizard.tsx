@@ -127,13 +127,7 @@ export function OnboardingWizard() {
       const valid = await form.trigger(fields);
       if (!valid) {
         const firstInvalid = fields.find((field) => form.getFieldState(field).error);
-        if (firstInvalid) {
-          form.setFocus(firstInvalid);
-          toast.error(
-            form.getFieldState(firstInvalid).error?.message ??
-              "Fill in the highlighted fields to continue.",
-          );
-        }
+        if (firstInvalid) form.setFocus(firstInvalid);
         return;
       }
     }
@@ -264,6 +258,11 @@ export function OnboardingWizard() {
               </div>
             )}
             {currentStep === 4 && <StepReview form={form} departments={departments ?? []} locations={locations?.data ?? []} />}
+            {onboardEmployee.isError && (
+              <p role="alert" className="mt-4 text-sm text-destructive">
+                {getErrorMessage(onboardEmployee.error)} Your entries are kept; submit again to retry.
+              </p>
+            )}
           </div>
 
           <div

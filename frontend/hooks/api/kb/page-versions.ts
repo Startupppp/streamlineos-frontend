@@ -8,6 +8,7 @@ import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
+import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
 import type { KbPage, KbPageVersion } from "./page-types";
 
 type CursorPage<T> = {
@@ -77,16 +78,18 @@ export function useKbPageVersionDetail(pageId: number, versionNumber: number) {
 
 export function useRestoreKbVersion() {
   const qc = useQueryClient();
+  const operation = useIdempotentOperation();
   return useAuthorizedMutation("kb:pages:update", {
     mutationKey: ["kb", "pages", "versions", "restore"],
-    mutationFn: ({ pageId, versionNumber }: { pageId: number; versionNumber: number }) =>
+    mutationFn: ({ pageId, versionNumber, expectedContentRevision }: { pageId: number; versionNumber: number; expectedContentRevision: number }) =>
       apiClient.post<KbPage>(
         `/kb/pages/${pageId}/versions/${versionNumber}/restore`,
-        undefined,
-        undefined,
+        { expectedContentRevision },
+        operation.configFor({ pageId, versionNumber, expectedContentRevision }),
         kbPageContract,
       ),
     onSuccess: (_, variables) => {
+      operation.settle();
       qc.invalidateQueries({
         queryKey: knowledgeAndSurveysQueryKeys.kb.page(variables.pageId),
       });

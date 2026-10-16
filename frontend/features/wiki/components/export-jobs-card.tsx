@@ -7,6 +7,7 @@ import { ErrorState } from "@/components/shared/error-state";
 import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { useKbExportJobs } from "@/hooks/api/kb";
+import { usePermissionGate } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { isApiError } from "@/lib/api-envelope";
 import {
@@ -45,6 +46,7 @@ function JobRow({ job }: { job: KbExportJob }) {
 }
 
 export function ExportJobsCard() {
+  const exportGate = usePermissionGate("kb:pages:export");
   const {
     data: jobs = [],
     isLoading,
@@ -56,7 +58,8 @@ export function ExportJobsCard() {
     isFetchingNextPage,
     fetchNextPage,
   } = useKbExportJobs();
-  const accessLost = isError && isApiError(error) && (error.status === 401 || error.status === 403 || error.status === 404);
+  const accessLost = exportGate.denied || (isError && isApiError(error) && (error.status === 401 || error.status === 403 || error.status === 404));
+  const accessReady = exportGate.allowed && !accessLost;
 
   function handleRetry() {
     if (isFetchNextPageError) {
@@ -73,7 +76,10 @@ export function ExportJobsCard() {
   return (
     <>
       {accessLost && <NoPermissionState permission="kb:pages:export" compact />}
-      {!accessLost && isLoading && (
+      {!accessLost && exportGate.unavailable && (
+        <ErrorState compact title="Couldn't check export access" description="Refresh the page and try again." />
+      )}
+      {!accessLost && (exportGate.pending || (exportGate.allowed && isLoading)) && (
         <div className="space-y-1.5">
           {Array.from({ length: 3 }).map((_, index) => (
             <Skeleton key={index} className="h-9 w-full rounded-lg" />
@@ -81,7 +87,7 @@ export function ExportJobsCard() {
         </div>
       )}
 
-      {!accessLost && !isLoading && isError && jobs.length === 0 && (
+      {accessReady && !isLoading && isError && jobs.length === 0 && (
         <ErrorState
           compact
           title="Couldn't load export history"
@@ -91,7 +97,7 @@ export function ExportJobsCard() {
         />
       )}
 
-      {!accessLost && !isLoading && !isError && jobs.length === 0 && (
+      {accessReady && !isLoading && !isError && jobs.length === 0 && (
         <EmptyState
           compact
           illustration={
@@ -102,7 +108,7 @@ export function ExportJobsCard() {
         />
       )}
 
-      {!accessLost && !isLoading && jobs.length > 0 && (
+      {accessReady && !isLoading && jobs.length > 0 && (
         <div className="space-y-1.5">
           {jobs.map((job) => (
             <JobRow key={job.id} job={job} />

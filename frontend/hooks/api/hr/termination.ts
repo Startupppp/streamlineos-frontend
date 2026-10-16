@@ -9,24 +9,20 @@ import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { invalidateHrWorkforceQueries } from "@/lib/hr-workforce-cache";
+import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
 
 const terminationListContract = lazyContract(() =>
   import("@/hooks/api/hr/termination-schema").then((m) => m.terminationListContract),
 );
-const terminationItemContract = lazyContract(() =>
-  import("@/hooks/api/hr/termination-schema").then((m) => m.terminationItemContract),
+const terminationRowContract = lazyContract(() =>
+  import("@/hooks/api/hr/termination-schema").then((m) => m.terminationRowContract),
+);
+const terminationCandidateContract = lazyContract(() =>
+  import("@/hooks/api/hr/termination-schema").then((m) => m.terminationCandidateContract),
 );
 const terminationSuccessContract = lazyContract(() =>
   import("@/hooks/api/hr/termination-schema").then((m) => m.terminationSuccessContract),
 );
-
-interface TerminationEmployee {
-  id: string;
-  name: string | null;
-  email: string;
-  designation: string | null;
-  employeeId: string | null;
-}
 
 export type TerminationStatus =
   | "DRAFT"
@@ -75,6 +71,8 @@ const terminationKeys = {
   ) => [...terminationKeys.all, "list", params] as const,
   detail: (terminationId: number) =>
     [...terminationKeys.all, "detail", terminationId] as const,
+  candidate: (employeeUserId: string) =>
+    [...terminationKeys.all, "candidate", employeeUserId] as const,
 };
 
 export function useTerminations(params: UseTerminationsParams = {}) {
@@ -100,16 +98,52 @@ export function useTerminations(params: UseTerminationsParams = {}) {
   });
 }
 
+export function useTerminationCandidate(employeeUserId: string | null) {
+  const canView = useCan("hr:employees:view");
+  const hrEnabled = useModuleEnabled("hr");
+  return useQuery({
+    queryKey: terminationKeys.candidate(employeeUserId ?? ""),
+    queryFn: ({ signal }) =>
+      apiClient.get(`/hr/employees/${employeeUserId ?? ""}`, undefined, signal, terminationCandidateContract),
+    enabled: hrEnabled && canView && !!employeeUserId,
+    staleTime: 60_000,
+  });
+}
+
 export function useCreateTermination() {
   const qc = useQueryClient();
+  const operation = useIdempotentOperation();
   return useAuthorizedMutation("hr:exit:manage", {
     mutationKey: [...terminationKeys.all, "create"],
-    mutationFn: ({ employeeUserId, ...terminationInput }: CreateTerminationInput) =>
-      apiClient.post("/hr/termination", {
-        ...terminationInput,
-        userId: employeeUserId,
-      }, undefined, terminationItemContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: terminationKeys.all }),
+    mutationFn: ({ employeeUserId, ...terminationInput }: CreateTerminationInput) => {
+      const body = { ...terminationInput, userId: employeeUserId };
+      return apiClient.post("/hr/termination", body, operation.configFor(body), terminationRowContract);
+    },
+    onSuccess: (created) => {
+      operation.settle();
+      void qc.invalidateQueries({ queryKey: terminationKeys.all });
+      if (created.status === "COMPLETED") void invalidateHrWorkforceQueries(qc, created.userId);
+    },
+  });
+}
+
+export function useRehireEmployee() {
+  const qc = useQueryClient();
+  const operation = useIdempotentOperation();
+  return useAuthorizedMutation("hr:exit:manage", {
+    mutationKey: [...terminationKeys.all, "rehire"],
+    mutationFn: ({ employeeUserId, joiningDate }: { employeeUserId: string; joiningDate: string }) =>
+      apiClient.post(
+        `/hr/employees/${employeeUserId}/rehire`,
+        { joiningDate },
+        operation.configFor({ employeeUserId, joiningDate }),
+        terminationSuccessContract,
+      ),
+    onSuccess: (_, { employeeUserId }) => {
+      operation.settle();
+      void qc.invalidateQueries({ queryKey: terminationKeys.all });
+      void invalidateHrWorkforceQueries(qc, employeeUserId);
+    },
   });
 }
 

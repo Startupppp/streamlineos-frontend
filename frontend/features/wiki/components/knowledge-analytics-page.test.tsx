@@ -669,6 +669,23 @@ describe("KnowledgeAnalyticsPage — the failing query is the one whose request 
     expect(screen.getByText("No zero-result searches")).toBeInTheDocument();
   });
 
+  it("links an analytics row to the canonical KB document route", () => {
+    usePageAnalytics.mockReturnValue(settledPages([{
+      id: 17,
+      title: "Policy",
+      status: "published",
+      trustState: "verified",
+      updatedAt: "2026-10-15T00:00:00.000Z",
+      uniqueViewers: 4,
+      commentCount: 1,
+      versionCount: 2,
+    }]));
+
+    render(<KnowledgeAnalyticsPage />);
+
+    expect(screen.getByRole("link", { name: "Policy" })).toHaveAttribute("href", "/knowledge/wiki/doc/17");
+  });
+
   it("quotes the overview request id when the overview query is the one that failed", () => {
     useKbAnalyticsOverview.mockReturnValue({
       ...settled(undefined),

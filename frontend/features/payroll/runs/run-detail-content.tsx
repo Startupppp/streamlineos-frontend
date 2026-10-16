@@ -4,6 +4,8 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
+import { Button } from "@/components/ui/button";
 import {
   Tabs,
   TabsContent,
@@ -23,7 +25,9 @@ import { VarianceTab } from "@/features/payroll/runs/variance-tab";
 import { formatMoney, formatMonth } from "@/features/payroll/shared/payroll-format";
 import { ReadinessRail } from "@/features/payroll/shared/readiness-rail";
 import { usePayrollRun } from "@/hooks/api/payroll/runs";
+import { useAccess, usePermissionGate } from "@/hooks/api/access";
 import { ErrorState } from "@/components/shared";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 
 const LOCKED_STATUSES = new Set(["APPROVED", "LOCKED", "PAID", "PAYSLIPS_PUBLISHED", "CLOSED"]);
 
@@ -36,7 +40,9 @@ export function RunDetailContent({ runId }: RunDetailContentProps) {
   const router = useRouter();
   const activeTab = searchParams.get("tab") ?? "employees";
 
-  const { data, isLoading, error, refetch } = usePayrollRun(runId);
+  const viewGate = usePermissionGate("payroll:runs:view");
+  const { refetch: refetchAccess } = useAccess();
+  const { data, isLoading, error, refetch, isRefetching } = usePayrollRun(runId);
   const run = data?.run;
 
   const isLocked = run ? LOCKED_STATUSES.has(run.status) : false;
@@ -49,19 +55,27 @@ export function RunDetailContent({ runId }: RunDetailContentProps) {
 
   const openExceptions = run?.exceptionCount ?? 0;
 
-  if (isLoading) {
+  if (viewGate.denied) {
     return (
       <PageWrapper title="Payroll Run" backHref="/payroll/runs">
-        <div className="space-y-4">
-          <Skeleton className="h-24 rounded-xl" />
-          <StatCardGridSkeleton cols={4} count={4} />
-          <Skeleton className="h-64 rounded-xl" />
-        </div>
+        <NoPermissionState permission="payroll:runs:view" className="flex-1" />
       </PageWrapper>
     );
   }
 
-  if (error) {
+  if (viewGate.unavailable) {
+    return (
+      <PageWrapper title="Payroll Run" backHref="/payroll/runs">
+        <ErrorState
+          title="Failed to load run"
+          description="Your access could not be checked, so this run cannot be shown."
+          onRetry={refetchAccess}
+        />
+      </PageWrapper>
+    );
+  }
+
+  if (error && !run) {
     return (
       <PageWrapper title="Payroll Run" backHref="/payroll/runs">
         <ErrorState
@@ -69,6 +83,24 @@ export function RunDetailContent({ runId }: RunDetailContentProps) {
           description="This payroll run could not be loaded. You may not have access or it may not exist."
           onRetry={refetch}
         />
+      </PageWrapper>
+    );
+  }
+
+  if (viewGate.pending || isLoading) {
+    return (
+      <PageWrapper title="Payroll Run" subtitle="Loading run…" backHref="/payroll/runs">
+        <div className="flex flex-1 min-h-0 flex-col gap-4">
+          <Skeleton className="h-24 rounded-xl" />
+          <StatCardGridSkeleton cols={4} count={4} />
+          <div className="flex gap-1 border-b border-border pb-0">
+            <Skeleton className="h-9 w-28 rounded-t-md" />
+            <Skeleton className="h-9 w-28 rounded-t-md" />
+            <Skeleton className="h-9 w-24 rounded-t-md" />
+            <Skeleton className="h-9 w-24 rounded-t-md" />
+          </div>
+          <DataTableSkeleton rows={8} headers={["Employee", "Type", "Gross", "Deductions", "Net", "Status"]} />
+        </div>
       </PageWrapper>
     );
   }
@@ -100,10 +132,21 @@ export function RunDetailContent({ runId }: RunDetailContentProps) {
       }
     >
       <div className="flex flex-1 min-h-0 flex-col gap-4 pb-20 sm:pb-0">
+        {error && (
+          <div
+            role="alert"
+            className="flex items-center gap-2 px-3 py-2 rounded-lg border border-status-danger-rule bg-status-danger-surface text-dense text-status-danger-ink"
+          >
+            <span className="flex-1">Couldn&apos;t refresh this run. Showing the last loaded figures.</span>
+            <Button size="sm" variant="outline" onClick={() => void refetch()} disabled={isRefetching}>
+              Retry
+            </Button>
+          </div>
+        )}
         <ReadinessRail
           canPay={
             openExceptions === 0 &&
-            (run.status === "LOCKED" || run.status === "APPROVED" || run.status === "PAID")
+            (run.status === "LOCKED" || run.status === "PAID")
           }
           totals={{
             gross: formatMoney(run.grossTotal),

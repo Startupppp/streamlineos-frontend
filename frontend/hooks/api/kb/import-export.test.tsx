@@ -211,6 +211,37 @@ describe("KB import and export hooks through the HTTP parser", () => {
     }
   });
 
+  it("reuses an export key after a failed same-input retry and creates a new key after success", async () => {
+    const originalCreate = Object.getOwnPropertyDescriptor(URL, "createObjectURL");
+    const originalRevoke = Object.getOwnPropertyDescriptor(URL, "revokeObjectURL");
+    const click = jest.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => undefined);
+    Object.defineProperty(URL, "createObjectURL", { configurable: true, value: jest.fn(() => "blob:kb-export") });
+    Object.defineProperty(URL, "revokeObjectURL", { configurable: true, value: jest.fn() });
+    fetchMock.mockRejectedValueOnce(new Error("Connection lost"));
+    fetchMock.mockResolvedValue(response({ jobId: 8, format: "html", content: "<p>Policy</p>" }));
+    try {
+      const { result } = renderHook(() => useExportKbPage(), { wrapper });
+      const input = { pageId: 12, format: "html" as const };
+      await act(async () => {
+        await expect(result.current.mutateAsync(input)).rejects.toThrow("Network error");
+        resetOutageCircuit();
+        await result.current.mutateAsync(input);
+        await result.current.mutateAsync(input);
+      });
+      const keys = fetchMock.mock.calls.map((call) => new Headers(call[1]?.headers).get("Idempotency-Key"));
+      expect(keys[0]).toBeTruthy();
+      expect(keys[1]).toBe(keys[0]);
+      expect(keys[2]).toBeTruthy();
+      expect(keys[2]).not.toBe(keys[1]);
+    } finally {
+      click.mockRestore();
+      if (originalCreate) Object.defineProperty(URL, "createObjectURL", originalCreate);
+      else Reflect.deleteProperty(URL, "createObjectURL");
+      if (originalRevoke) Object.defineProperty(URL, "revokeObjectURL", originalRevoke);
+      else Reflect.deleteProperty(URL, "revokeObjectURL");
+    }
+  });
+
   it("reuses the retry key until the accepted result settles the operation", async () => {
     fetchMock.mockResolvedValue(response({ jobId: 5, status: "pending" }));
     const { result } = renderHook(() => useRetryImportJob(), { wrapper });

@@ -6,7 +6,7 @@ import { ErrorState } from "@/components/shared/error-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { EmptyPayroll } from "@/components/illustrations";
 import { usePayrollPolicyCurrent } from "@/hooks/api/payroll";
-import { useCan } from "@/hooks/api/access";
+import { useAccess, usePermissionGate } from "@/hooks/api/access";
 import { PolicyProfileSection } from "./policy-profile-section";
 import { ToggleSettingsSection } from "./toggle-settings-section";
 import { VersionHistorySection } from "./version-history-section";
@@ -25,9 +25,10 @@ export function SettingsPageContent() {
    * withdrawn grant rather than a missing row. The two stock templates grant
    * both keys, so this is latent, not live.
    */
-  const canViewPolicy = useCan("payroll:policies:view");
+  const policyGate = usePermissionGate("payroll:policies:view");
+  const { refetch: refetchAccess } = useAccess();
 
-  if (isLoading) {
+  if (policyGate.pending || isLoading) {
     return (
       <PageWrapper title="Payroll Settings">
         <div className="flex flex-1 min-h-0 flex-col gap-3">
@@ -35,6 +36,19 @@ export function SettingsPageContent() {
             <div key={i} className="h-20 rounded-lg border border-border bg-card animate-pulse" />
           ))}
         </div>
+      </PageWrapper>
+    );
+  }
+
+  if (policyGate.unavailable) {
+    return (
+      <PageWrapper title="Payroll Settings">
+        <ErrorState
+          className="flex-1"
+          title="Failed to load settings"
+          description="Your access could not be checked, so payroll settings cannot be shown."
+          onRetry={refetchAccess}
+        />
       </PageWrapper>
     );
   }
@@ -53,7 +67,7 @@ export function SettingsPageContent() {
     );
   }
 
-  if (!canViewPolicy) {
+  if (policyGate.denied) {
     return (
       <PageWrapper title="Payroll Settings">
         <EmptyState
