@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { Input } from "@/components/ui/input";
 import { UserCombobox } from "@/components/ui/user-combobox";
 import {
@@ -289,6 +290,9 @@ function MembersRead({
     isError,
     error,
     refetch,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
   } = useKbSpaceMembers(spaceId, { enabled: open });
   const membersState = usePageState({
     permission: "kb:spaces:manage",
@@ -301,6 +305,10 @@ function MembersRead({
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
+
+  const handleLoadMore = useCallback(() => {
+    void fetchNextPage();
+  }, [fetchNextPage]);
 
   return (
     <div className="space-y-4">
@@ -334,6 +342,12 @@ function MembersRead({
             />
           ))}
         </div>
+        <InfiniteScrollSentinel
+          hasNextPage={hasNextPage}
+          isFetchingNextPage={isFetchingNextPage}
+          onLoadMore={handleLoadMore}
+          label="Load more members"
+        />
       </PageState>
     </div>
   );
