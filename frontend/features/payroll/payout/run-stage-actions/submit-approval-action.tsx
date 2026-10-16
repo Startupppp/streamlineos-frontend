@@ -21,11 +21,12 @@ import { getErrorMessage } from "@/lib/get-error-message";
 interface Props {
   runId: number;
   status: string;
+  openBlockers?: number;
 }
 
 const SUBMIT_STATUSES = new Set(["PREVIEW_READY", "EXCEPTIONS_FOUND"]);
 
-export function SubmitApprovalAction({ runId, status }: Props) {
+export function SubmitApprovalAction({ runId, status, openBlockers = 0 }: Props) {
   const canUpdate = useCan("payroll:runs:update");
   const [open, setOpen] = useState(false);
   const { mutate, isPending } = useSubmitApproval();
@@ -61,11 +62,30 @@ export function SubmitApprovalAction({ runId, status }: Props) {
     );
   }
 
+  const blockedReason =
+    openBlockers > 0
+      ? `Resolve ${openBlockers} open ${openBlockers === 1 ? "blocker" : "blockers"} before submitting`
+      : null;
+
   return (
     <>
-      <AnimatedIconButton icon={SendIcon} iconSize={16} iconClassName="mr-1.5" size="sm" className="h-9" onClick={handleOpen}>
+      <AnimatedIconButton
+        icon={SendIcon}
+        iconSize={16}
+        iconClassName="mr-1.5"
+        size="sm"
+        className="h-9"
+        onClick={handleOpen}
+        disabled={blockedReason !== null}
+        aria-describedby={blockedReason ? `submit-blocked-${runId}` : undefined}
+      >
         Submit for Approval
       </AnimatedIconButton>
+      {blockedReason ? (
+        <span id={`submit-blocked-${runId}`} className="text-dense text-muted-foreground">
+          {blockedReason}
+        </span>
+      ) : null}
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>

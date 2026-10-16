@@ -43,6 +43,8 @@ const OPPORTUNITY_FILTER_DEFS = [
   { param: "oppEvidenceAge", options: OPPORTUNITY_EVIDENCE_AGE_VALUES },
   { param: "oppScoreMin", options: OPPORTUNITY_SCORE_MIN_VALUES },
   { param: "oppScoreMax", options: OPPORTUNITY_SCORE_MAX_VALUES },
+  { param: OPP_CURSOR_PARAM },
+  { param: OPP_PREV_PARAM },
 ] as const;
 
 export function useOpportunityDiscoveryFilters(managedProductId: number) {
@@ -94,9 +96,12 @@ export function useOpportunityDiscoveryFilters(managedProductId: number) {
     [searchParams, pathname, router],
   );
 
-  const resetCursorInUrl = useCallback(() => {
-    writeCursorParams({ [OPP_CURSOR_PARAM]: null, [OPP_PREV_PARAM]: null }, false);
-  }, [writeCursorParams]);
+  const setFilterFromFirstPage = useCallback(
+    (param: string, value: string) => {
+      filters.setValues({ [param]: value, [OPP_CURSOR_PARAM]: "", [OPP_PREV_PARAM]: "" });
+    },
+    [filters],
+  );
 
   const facetsQuery = useFeedbucketSubmissionFacets({ managedProductId });
   const membersQuery = useOrgMembers(1, 100, undefined, INLINE_READ_ERROR);
@@ -212,17 +217,15 @@ export function useOpportunityDiscoveryFilters(managedProductId: number) {
 
   const handleStateValuesChange = useCallback(
     (values: string[]) => {
-      filters.setValue("oppState", values.length > 0 ? values.join(",") : BUILD_FILTER_ALL);
-      resetCursorInUrl();
+      setFilterFromFirstPage("oppState", values.length > 0 ? values.join(",") : BUILD_FILTER_ALL);
     },
-    [filters, resetCursorInUrl],
+    [setFilterFromFirstPage],
   );
   const handleSortChange = useCallback(
     (v: string) => {
-      filters.setValue("oppSort", v);
-      resetCursorInUrl();
+      setFilterFromFirstPage("oppSort", v);
     },
-    [filters, resetCursorInUrl],
+    [setFilterFromFirstPage],
   );
   const handleThemePeriodChange = useCallback(
     (v: string) => filters.setValue("oppThemePeriod", v),
@@ -230,58 +233,48 @@ export function useOpportunityDiscoveryFilters(managedProductId: number) {
   );
   const handleSegmentValuesChange = useCallback(
     (values: string[]) => {
-      filters.setValue("oppSegment", values.length > 0 ? values.join(",") : BUILD_FILTER_ALL);
-      resetCursorInUrl();
+      setFilterFromFirstPage("oppSegment", values.length > 0 ? values.join(",") : BUILD_FILTER_ALL);
     },
-    [filters, resetCursorInUrl],
+    [setFilterFromFirstPage],
   );
   const handleOwnerValuesChange = useCallback(
     (values: string[]) => {
-      filters.setValue("oppOwner", values.length > 0 ? values.join(",") : BUILD_FILTER_ALL);
-      resetCursorInUrl();
+      setFilterFromFirstPage("oppOwner", values.length > 0 ? values.join(",") : BUILD_FILTER_ALL);
     },
-    [filters, resetCursorInUrl],
+    [setFilterFromFirstPage],
   );
   const handleThemeValuesChange = useCallback(
     (values: string[]) => {
-      filters.setValue("oppTheme", values.length > 0 ? values.join(",") : BUILD_FILTER_ALL);
-      resetCursorInUrl();
+      setFilterFromFirstPage("oppTheme", values.length > 0 ? values.join(",") : BUILD_FILTER_ALL);
     },
-    [filters, resetCursorInUrl],
+    [setFilterFromFirstPage],
   );
   const handleConfidenceValuesChange = useCallback(
     (values: string[]) => {
-      filters.setValue("oppConfidence", values.length > 0 ? values.join(",") : BUILD_FILTER_ALL);
-      resetCursorInUrl();
+      setFilterFromFirstPage("oppConfidence", values.length > 0 ? values.join(",") : BUILD_FILTER_ALL);
     },
-    [filters, resetCursorInUrl],
+    [setFilterFromFirstPage],
   );
   const handleEvidenceAgeChange = useCallback(
     (v: string) => {
-      filters.setValue("oppEvidenceAge", v);
-      resetCursorInUrl();
+      setFilterFromFirstPage("oppEvidenceAge", v);
     },
-    [filters, resetCursorInUrl],
+    [setFilterFromFirstPage],
   );
   const handleScoreMinChange = useCallback(
     (v: string) => {
-      filters.setValue("oppScoreMin", v);
-      resetCursorInUrl();
+      setFilterFromFirstPage("oppScoreMin", v);
     },
-    [filters, resetCursorInUrl],
+    [setFilterFromFirstPage],
   );
   const handleScoreMaxChange = useCallback(
     (v: string) => {
-      filters.setValue("oppScoreMax", v);
-      resetCursorInUrl();
+      setFilterFromFirstPage("oppScoreMax", v);
     },
-    [filters, resetCursorInUrl],
+    [setFilterFromFirstPage],
   );
 
-  const clearAll = useCallback(() => {
-    filters.clearAll();
-    resetCursorInUrl();
-  }, [filters, resetCursorInUrl]);
+  const clearAll = useCallback(() => filters.clearAll(), [filters]);
 
   return {
     pageNumber,

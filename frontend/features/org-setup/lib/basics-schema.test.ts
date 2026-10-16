@@ -16,6 +16,12 @@ function issueFor(
 }
 
 describe("workspaceStepSchema", () => {
+  it("rejects a two-digit phone with an inline message and accepts a real or blank one", () => {
+    expect(issueFor("phone", { displayName: "Acme", phone: "12" })).toMatch(/valid phone number/);
+    expect(issueFor("phone", { displayName: "Acme", phone: "+91 98765 43210" })).toBeNull();
+    expect(issueFor("phone", { displayName: "Acme", phone: "" })).toBeNull();
+  });
+
   it("requires the fields the completion API requires", () => {
     expect(issueFor("teamSize", { displayName: "Acme", teamSize: "", industry: "Agency" })).toBe("Select a team size.");
     expect(issueFor("industry", { displayName: "Acme", teamSize: "1-10", industry: "" })).toBe("Select an industry.");

@@ -35,9 +35,14 @@ export const changelogSchema = z.object({
 
 export type ChangelogFormValues = z.infer<typeof changelogSchema>;
 
+export const ROADMAP_TITLE_MAX = 200;
+
 export const roadmapItemSchema = z
   .object({
-    title: z.string().min(1, "Title is required"),
+    title: z
+      .string()
+      .min(1, "Title is required")
+      .max(ROADMAP_TITLE_MAX, `Keep under ${String(ROADMAP_TITLE_MAX)} characters`),
     description: z.string(),
     outcome: z.string(),
     status: z.enum(["planned", "in_progress", "completed", "cancelled"]),

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
+import { QaStateBadge } from "./release-list-parts";
 import type { ManagedProductRelationsGetReleaseResponse } from "@/contracts/build-contracts.generated";
 
 type Evidence = NonNullable<ManagedProductRelationsGetReleaseResponse["evidence"]>;
@@ -164,19 +165,27 @@ export function EvidenceIncidentList({ evidence, owner }: EvidenceSectionProps) 
   );
 }
 
-export function EvidenceApprovalState({ evidence, owner }: EvidenceSectionProps) {
+interface EvidenceApprovalStateProps extends EvidenceSectionProps {
+  qaState: string | null;
+}
+
+export function EvidenceApprovalState({ evidence, owner, qaState }: EvidenceApprovalStateProps) {
   const href = ownerHref(owner, "approvals");
   return (
     <section aria-labelledby="evidence-approval-heading" className="flex flex-col gap-2">
       <h3 id="evidence-approval-heading" className="text-sm font-semibold text-foreground">
-        Approval state
+        Project release approval
       </h3>
+      <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+        Product release QA state:
+        {qaState ? <QaStateBadge qaState={qaState} /> : <span>Not set</span>}
+      </p>
       {evidence.restricted ? (
         <p className="text-sm text-muted-foreground">
           Hidden — you do not have access to the owning project.
         </p>
       ) : evidence.approvalState === null ? (
-        <p className="text-sm text-muted-foreground">Not set</p>
+        <p className="text-sm text-muted-foreground">No approval requested on the project release</p>
       ) : href === null ? (
         <p className="text-sm text-foreground">{evidence.approvalState}</p>
       ) : (

@@ -1,6 +1,6 @@
 "use client";
 
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { RoadmapItemSheet } from "./roadmap-item-sheet";
 import { useCreateRoadmapItem, useUpdateRoadmapItem } from "@/hooks/api/build/roadmap";
@@ -297,6 +297,35 @@ describe("RoadmapItemSheet — product association", () => {
       expect.objectContaining({ title: "Product initiative", managedProductId: 39 }),
       expect.any(Object),
     ));
+  });
+});
+
+describe("RoadmapItemSheet — duplicate submits", () => {
+  it("creates one item when Create Item is double-clicked before the first save settles", async () => {
+    const mutate = jest.fn();
+    mockUseCreateRoadmapItem.mockReturnValue({ mutate, isPending: false });
+    mockUseUpdateRoadmapItem.mockReturnValue({ mutate: jest.fn(), isPending: false });
+
+    render(<RoadmapItemSheet managedProductId={39} onClose={jest.fn()} />);
+    await userEvent.type(screen.getByPlaceholderText("e.g. Dark mode support"), "Only once");
+    await userEvent.dblClick(screen.getByText("Create Item"));
+
+    await waitFor(() => expect(mutate).toHaveBeenCalledTimes(1));
+    await userEvent.click(screen.getByText("Create Item"));
+    expect(mutate).toHaveBeenCalledTimes(1);
+  });
+
+  it("rejects a title over 200 characters with a field message instead of sending it", async () => {
+    const mutate = jest.fn();
+    mockUseCreateRoadmapItem.mockReturnValue({ mutate, isPending: false });
+    mockUseUpdateRoadmapItem.mockReturnValue({ mutate: jest.fn(), isPending: false });
+
+    render(<RoadmapItemSheet managedProductId={39} onClose={jest.fn()} />);
+    fireEvent.change(screen.getByPlaceholderText("e.g. Dark mode support"), { target: { value: "x".repeat(201) } });
+    await userEvent.click(screen.getByText("Create Item"));
+
+    expect(await screen.findByText("Keep under 200 characters")).toBeInTheDocument();
+    expect(mutate).not.toHaveBeenCalled();
   });
 });
 

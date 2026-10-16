@@ -15,6 +15,7 @@ type MonthPickerProps = {
   className?: string;
   disabled?: boolean;
   yearRange?: [number, number];
+  minMonth?: string;
 };
 
 const MONTHS = [
@@ -42,14 +43,23 @@ function generateOptions(yearRange: [number, number]): { value: string; label: s
   return options;
 }
 
+export function monthFromToday(offsetMonths: number): string {
+  const now = new Date();
+  const d = new Date(now.getFullYear(), now.getMonth() + offsetMonths, 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+
 export function MonthPicker({
   value,
   onChange,
   className,
   disabled,
   yearRange = [0, 1],
+  minMonth,
 }: MonthPickerProps) {
-  const options = generateOptions(yearRange);
+  const options = generateOptions(yearRange).filter(
+    (opt) => !minMonth || opt.value >= minMonth || opt.value === value,
+  );
 
   return (
     <Select value={value} onValueChange={onChange} disabled={disabled}>

@@ -17,6 +17,9 @@ import {
 const runCreateC = lazyContract(() =>
   import("@/hooks/api/payroll/runs-schema").then((m) => m.runCreateResponseContract),
 );
+const runNoContentC = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
 const runOperationC = lazyContract(() =>
   import("@/hooks/api/payroll/runs-schema").then((m) => m.runOperationResponseContract),
 );
@@ -109,6 +112,20 @@ export function useRecalculateRun() {
       void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.runEmployeesAll(runId) });
       void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.runExceptionsAll(runId) });
       void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.runVariance(runId) });
+      void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.commandCenterAll });
+    },
+  });
+}
+
+export function useDiscardRun() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("payroll:runs:manage", {
+    mutationKey: ["payroll", "runs", "discard"],
+    mutationFn: (runId: number) =>
+      apiClient.delete<void>(`/payroll/runs/${runId}`, undefined, undefined, runNoContentC),
+    onSuccess: (_, runId) => {
+      qc.removeQueries({ queryKey: payrollQueryKeys.payroll.run(runId) });
+      void qc.invalidateQueries({ queryKey: [...payrollQueryKeys.payroll.all, "runs"] });
       void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.commandCenterAll });
     },
   });

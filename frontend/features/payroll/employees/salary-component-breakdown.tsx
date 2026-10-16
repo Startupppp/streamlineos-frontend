@@ -23,6 +23,9 @@ const COMPONENT_TYPE_ORDER: SalaryComponentType[] = [
   "ADJUSTMENT",
 ];
 
+const AMOUNT_METHODS: ReadonlySet<string> = new Set(["FIXED", "ATTENDANCE_BASED", "TIMESHEET_BASED"]);
+const PERCENT_METHODS: ReadonlySet<string> = new Set(["PERCENT_OF_BASIC", "PERCENT_OF_GROSS"]);
+
 const COMPONENT_COLUMNS: DataTableColumn<ProfileComponent>[] = [
   {
     key: "name",
@@ -53,7 +56,7 @@ const COMPONENT_COLUMNS: DataTableColumn<ProfileComponent>[] = [
     header: "Amount",
     cell: (comp) => (
       <span className="font-mono tabular-nums">
-        {comp.amount !== null ? formatMoney(comp.amount) : "—"}
+        {comp.amount !== null && AMOUNT_METHODS.has(comp.calcMethodOverride ?? comp.calcMethod) ? formatMoney(comp.amount) : "—"}
       </span>
     ),
     className: "w-[20%] py-1 pr-2 text-right",
@@ -64,7 +67,7 @@ const COMPONENT_COLUMNS: DataTableColumn<ProfileComponent>[] = [
     header: "Percent",
     cell: (comp) => (
       <span className="font-mono tabular-nums text-muted-foreground">
-        {comp.percent !== null ? `${comp.percent}%` : "—"}
+        {comp.percent !== null && PERCENT_METHODS.has(comp.calcMethodOverride ?? comp.calcMethod) ? `${Number(comp.percent)}%` : "—"}
       </span>
     ),
     className: "w-[20%] py-1 text-right",

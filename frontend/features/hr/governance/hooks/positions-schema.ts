@@ -41,6 +41,11 @@ export const positionStatusContract = z.object({
 
 export const positionStatusListContract = z.array(positionStatusContract);
 
+export const positionStatusSeedContract = z.object({
+  seeded: z.number().int(),
+  skipped: z.number().int(),
+});
+
 export const reorgScenarioContract = z.object({
   id: z.number().int(),
   orgId: z.string(),

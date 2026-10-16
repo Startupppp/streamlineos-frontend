@@ -18,6 +18,7 @@ import {
   useHrEmployees,
   type TerminationStatus,
 } from "@/hooks/api/hr";
+import { statusToneClasses } from "@/lib/design-tokens";
 import { useTerminationCandidate } from "@/hooks/api/hr/termination";
 import { useTerminationActions } from "./use-termination-actions";
 
@@ -48,9 +49,17 @@ export function TerminationPage() {
   const { data: employeesData } = useHrEmployees({ limit: 100, isActive: "current" });
 
   const employees = useMemo(() => employeesData?.data ?? [], [employeesData]);
-  const { data: prefilledEmployee } = useTerminationCandidate(employeeUserIdParam);
+  const candidate = useTerminationCandidate(employeeUserIdParam);
+  const prefilledEmployee = candidate.data;
+  const prefillMissing = employeeUserIdParam !== null && candidate.isError;
 
-  const actions = useTerminationActions({ terminations, employees, employeeUserIdParam });
+  const actions = useTerminationActions({
+    terminations,
+    employees,
+    employeeUserIdParam,
+    prefillMissing,
+  });
+  const missingTone = statusToneClasses("warning");
 
   const handleRetry = useCallback(() => {
     void refetch();
@@ -112,6 +121,14 @@ export function TerminationPage() {
         ) : undefined
       }
     >
+      {prefillMissing ? (
+        <div
+          role="alert"
+          className={`mb-3 rounded-lg border px-3 py-2 text-dense ${missingTone.surface} ${missingTone.rule} ${missingTone.ink}`}
+        >
+          Employee not found. The link you followed names an employee who does not exist or whom you cannot access, so no termination was started.
+        </div>
+      ) : null}
       <TerminationList
         terminations={terminations}
         statusCounts={terminationsData?.statusCounts}

@@ -70,6 +70,7 @@ export function TicketDetailPane({
   return (
     <Sheet open onOpenChange={handleOpenChange}>
       <SheetContent
+        aria-describedby={undefined}
         side="right"
         className="flex w-full max-w-xl flex-col p-0 sm:max-w-xl"
       >

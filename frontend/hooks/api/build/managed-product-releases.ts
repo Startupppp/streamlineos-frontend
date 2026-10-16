@@ -9,6 +9,7 @@ import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
+import { readErrorExceptNotFoundReachesBoundary } from "@/lib/query-error-policy";
 import type {
   ManagedProductRelationsListReleasesResponse,
   ManagedProductRelationsCreateReleaseResponse,
@@ -142,6 +143,7 @@ export function useInfiniteManagedProductReleases(
     getNextPageParam: (last) => (last.pagination.hasMore ? (last.pagination.nextCursor ?? undefined) : undefined),
     enabled: canView && managedProductId > 0,
     staleTime: 30_000,
+    throwOnError: readErrorExceptNotFoundReachesBoundary,
   });
 }
 

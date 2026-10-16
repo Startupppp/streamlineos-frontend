@@ -14,6 +14,7 @@ export const employeeListItemContract = z.object({
   isActive: z.boolean(),
   joiningDate: z.string().nullable(),
   reportingTo: z.string().nullable(),
+  reportingToName: z.string().nullable(),
   hasAccepted: z.boolean().optional(),
 });
 

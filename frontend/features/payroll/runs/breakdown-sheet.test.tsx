@@ -13,6 +13,7 @@ jest.mock("@/hooks/api/payroll/run-employees", () => ({
   useAddAdjustment: () => idleMutation,
   useSetEmployeeHold: () => idleMutation,
   useReleaseEmployeeHold: () => idleMutation,
+  useVoidAdjustment: () => idleMutation,
 }));
 
 const mockPayrollRun = jest.fn();
@@ -47,5 +48,39 @@ describe("BreakdownSheet hold actions", () => {
   it("HO-05 still offers Hold Salary on a locked run", () => {
     renderSheet("LOCKED", null);
     expect(screen.getByRole("button", { name: "Hold Salary" })).toBeInTheDocument();
+  });
+});
+
+function line(code: string, name: string, category: "EARNING" | "DEDUCTION") {
+  return { code, name, category, amount: "500.00", calcMethod: "MANUAL", taxable: false, sortOrder: 1, explain: { method: "MANUAL", inputs: {}, steps: [] } };
+}
+
+function renderWithLines(status: string) {
+  mockPayrollRun.mockReturnValue({ data: { run: { status } } });
+  mockRunEmployee.mockReturnValue({
+    data: {
+      holdReason: null,
+      calculationSnapshot: {
+        lines: [line("BASIC", "Basic", "EARNING"), line("ADJ-EARNING-7", "Meal correction", "EARNING")],
+        lopDays: "0",
+        totals: { gross: "1000.00", deductions: "0.00", net: "1000.00", employerContributions: "0.00" },
+        variance: null,
+      },
+    },
+    isLoading: false,
+  });
+  return render(<BreakdownSheet runId={1} runEmployeeId={2} onClose={jest.fn()} isLocked={status === "LOCKED"} />);
+}
+
+describe("UX-R2-3 a manual adjustment can be removed from the breakdown", () => {
+  it("offers Remove on the manual adjustment line only", () => {
+    renderWithLines("PREVIEW_READY");
+    expect(screen.getAllByRole("button", { name: "Remove" })).toHaveLength(1);
+    expect(screen.getByText("Meal correction")).toBeInTheDocument();
+  });
+
+  it("offers no Remove on a locked run", () => {
+    renderWithLines("LOCKED");
+    expect(screen.queryByRole("button", { name: "Remove" })).toBeNull();
   });
 });

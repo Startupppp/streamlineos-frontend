@@ -44,6 +44,7 @@ export const InlineType = memo(function InlineType({
   showLabel = false,
 }: InlineTypeProps) {
   const [open, setOpen] = useState(false);
+  const typeLabel = typeConfig[currentType ?? "TASK"]?.label ?? currentType ?? "Task";
   const updateTicket = useUpdateTicket(projectId, {
     onError: (e) => toast.error(getErrorMessage(e)),
   });
@@ -69,10 +70,11 @@ export const InlineType = memo(function InlineType({
                   TYPE_PILL_CLASS[currentType ?? "TASK"] ?? TYPE_PILL_CLASS.TASK,
                 ),
             )}
-            aria-label="Change type"
+            aria-label={`Change type: ${typeLabel}`}
+            title={typeLabel}
           >
             {showLabel ? (
-              typeConfig[currentType ?? "TASK"]?.label ?? currentType ?? "Task"
+              typeLabel
             ) : (
               <TicketTypeIcon type={currentType ?? "TASK"} size="sm" />
             )}

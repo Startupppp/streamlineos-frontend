@@ -56,14 +56,16 @@ function SetupWizardForOrg({ orgId }: { orgId: string }) {
   const [direction, setDirection] = useState(1);
   const [draft, setDraft] = useState<SetupDraft>(() => loadDraft(orgId));
 
+  const [activatedHere, setActivatedHere] = useState(false);
+
   const { data: current, isLoading: policyLoading } = usePayrollPolicyCurrent();
 
   useEffect(() => {
-    if (!policyLoading && current?.policy?.status === "ACTIVE") {
+    if (!activatedHere && !policyLoading && current?.policy?.status === "ACTIVE") {
       toast.info("Payroll is already active. Redirecting to settings…");
       router.replace("/payroll/settings");
     }
-  }, [current, policyLoading, router]);
+  }, [activatedHere, current, policyLoading, router]);
 
   function updateDraft(partial: Partial<SetupDraft>) {
     const next = { ...draft, ...partial };
@@ -71,10 +73,9 @@ function SetupWizardForOrg({ orgId }: { orgId: string }) {
     saveDraft(orgId, next);
   }
 
-  function handleClearAll() {
+  function handleActivated() {
     clearAll(orgId);
-    setDraft({});
-    setStep(1);
+    setActivatedHere(true);
   }
 
   function goNext() {
@@ -133,7 +134,7 @@ function SetupWizardForOrg({ orgId }: { orgId: string }) {
             />
           )}
           {step === 5 && (
-            <StepActivate draft={draft} clearAll={handleClearAll} />
+            <StepActivate draft={draft} onActivated={handleActivated} />
           )}
         </WizardShell>
       </div>

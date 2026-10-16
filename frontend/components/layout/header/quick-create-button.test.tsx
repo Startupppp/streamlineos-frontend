@@ -67,7 +67,6 @@ describe("QuickCreatePanel", () => {
     expect(scrollport).toHaveClass("min-h-0", "flex-1")
   })
 })
-
 describe("the Create menu's Payroll group", () => {
   afterEach(() => {
     granted = () => true
@@ -96,4 +95,3 @@ describe("the Create menu's Payroll group", () => {
     expect(payrollItems()).toEqual([])
   })
 })
-

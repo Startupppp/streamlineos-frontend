@@ -10,6 +10,11 @@ jest.mock("@/hooks/api/subscription", () => ({
   }),
 }));
 
+const mockToastSuccess = jest.fn();
+jest.mock("sonner", () => ({
+  toast: { success: (...args: unknown[]) => mockToastSuccess(...args), error: jest.fn() },
+}));
+
 jest.mock("./step-generation", () => ({
   StepGeneration: ({ onBackToProducts }: { onBackToProducts: () => void }) => (
     <div data-testid="generation">
@@ -239,5 +244,26 @@ describe("People step product access", () => {
 
     expect(onBack).toHaveBeenCalledTimes(1);
     expect(onChangeInvitees).not.toHaveBeenCalled();
+  });
+
+  it("Skip for now clears the invite list and offers an undo", () => {
+    const onChangeInvitees = jest.fn<void, [Invitee[]]>();
+    const invitees: Invitee[] = [{ email: "teammate@example.com", role: "MEMBER" }];
+    render(
+      <StepInviteLaunch data={wizard(invitees)} onBack={jest.fn()} onChangeInvitees={onChangeInvitees} />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Skip for now" }));
+
+    expect(onChangeInvitees).toHaveBeenLastCalledWith([]);
+    const [message, options] = mockToastSuccess.mock.calls[0] ?? [];
+    expect(message).toMatch(/Invites skipped/);
+    options.action.onClick();
+    expect(onChangeInvitees).toHaveBeenLastCalledWith(invitees);
+  });
+
+  it("hides Skip for now when nobody has been added", () => {
+    render(<StepInviteLaunch data={wizard()} onBack={jest.fn()} onChangeInvitees={jest.fn()} />);
+    expect(screen.queryByRole("button", { name: "Skip for now" })).not.toBeInTheDocument();
   });
 });

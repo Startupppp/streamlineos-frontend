@@ -8,6 +8,7 @@ import {
   FormItem,
   FormLabel,
   FormControl,
+  FormDescription,
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -18,6 +19,12 @@ import type { CreateManagedProductFormValues } from "./managed-product-schema";
 import { LIFECYCLE_OPTIONS, HEALTH_OPTIONS } from "./managed-product-schema";
 import { upperCaseFieldChange } from "@/lib/case-field";
 import { ChipInput } from "@/features/recruitment/jobs/create-job-form/chip-input";
+
+const DERIVED_KEY_LENGTH = 10;
+
+function deriveProductKey(name: string): string {
+  return name.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, DERIVED_KEY_LENGTH);
+}
 
 interface ManagedProductCreateFieldsProps {
   form: UseFormReturn<CreateManagedProductFormValues>;
@@ -32,6 +39,13 @@ export function ManagedProductCreateFields({ form, formId, onSubmit }: ManagedPr
   );
   const handleTagsChange = useCallback(
     (value: string[]) => form.setValue("tags", value, { shouldDirty: true }),
+    [form],
+  );
+  const handleNameChange = useCallback(
+    (name: string) => {
+      if (form.getFieldState("key").isDirty) return;
+      form.setValue("key", deriveProductKey(name), { shouldValidate: form.formState.isSubmitted });
+    },
     [form],
   );
 
@@ -50,7 +64,14 @@ export function ManagedProductCreateFields({ form, formId, onSubmit }: ManagedPr
             <FormItem>
               <FormLabel>Name <span aria-hidden="true" className="text-destructive">*</span></FormLabel>
               <FormControl>
-                <Input {...field} placeholder="Product name" />
+                <Input
+                  {...field}
+                  placeholder="Product name"
+                  onChange={(e) => {
+                    field.onChange(e);
+                    handleNameChange(e.target.value);
+                  }}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -69,6 +90,9 @@ export function ManagedProductCreateFields({ form, formId, onSubmit }: ManagedPr
                   onChange={upperCaseFieldChange(field.onChange)}
                 />
               </FormControl>
+              <FormDescription>
+                Up to 50 characters: uppercase letters, digits, hyphens or underscores. Suggested from the name until you edit it.
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}

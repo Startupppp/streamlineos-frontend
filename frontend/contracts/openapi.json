@@ -136125,7 +136125,7 @@
                   "title": {
                     "type": "string",
                     "minLength": 1,
-                    "maxLength": 500
+                    "maxLength": 200
                   },
                   "problem": {
                     "type": "string",
@@ -136161,10 +136161,12 @@
                     "maxLength": 100
                   },
                   "outcomeBaseline": {
-                    "type": "string"
+                    "type": "string",
+                    "pattern": "^-?\\d{1,14}(\\.\\d+)?$"
                   },
                   "outcomeTarget": {
-                    "type": "string"
+                    "type": "string",
+                    "pattern": "^-?\\d{1,14}(\\.\\d+)?$"
                   },
                   "goalId": {
                     "type": "integer",
@@ -137634,7 +137636,7 @@
                   "title": {
                     "type": "string",
                     "minLength": 1,
-                    "maxLength": 500
+                    "maxLength": 200
                   },
                   "problem": {
                     "anyOf": [
@@ -137728,7 +137730,8 @@
                   "outcomeBaseline": {
                     "anyOf": [
                       {
-                        "type": "string"
+                        "type": "string",
+                        "pattern": "^-?\\d{1,14}(\\.\\d+)?$"
                       },
                       {
                         "type": "null"
@@ -137738,7 +137741,8 @@
                   "outcomeTarget": {
                     "anyOf": [
                       {
-                        "type": "string"
+                        "type": "string",
+                        "pattern": "^-?\\d{1,14}(\\.\\d+)?$"
                       },
                       {
                         "type": "null"
@@ -139092,7 +139096,7 @@
                   "title": {
                     "type": "string",
                     "minLength": 1,
-                    "maxLength": 500
+                    "maxLength": 200
                   },
                   "projectId": {
                     "type": "integer",
@@ -142989,10 +142993,12 @@
                     "maxLength": 100
                   },
                   "baseline": {
-                    "type": "string"
+                    "type": "string",
+                    "pattern": "^-?\\d{1,14}(\\.\\d+)?$"
                   },
                   "target": {
-                    "type": "string"
+                    "type": "string",
+                    "pattern": "^-?\\d{1,14}(\\.\\d+)?$"
                   },
                   "scheduledFor": {
                     "type": "string"
@@ -143482,7 +143488,8 @@
                   "baseline": {
                     "anyOf": [
                       {
-                        "type": "string"
+                        "type": "string",
+                        "pattern": "^-?\\d{1,14}(\\.\\d+)?$"
                       },
                       {
                         "type": "null"
@@ -143492,7 +143499,8 @@
                   "target": {
                     "anyOf": [
                       {
-                        "type": "string"
+                        "type": "string",
+                        "pattern": "^-?\\d{1,14}(\\.\\d+)?$"
                       },
                       {
                         "type": "null"
@@ -143502,7 +143510,8 @@
                   "actual": {
                     "anyOf": [
                       {
-                        "type": "string"
+                        "type": "string",
+                        "pattern": "^-?\\d{1,14}(\\.\\d+)?$"
                       },
                       {
                         "type": "null"
@@ -883430,6 +883439,16 @@
                                     "type": "null"
                                   }
                                 ]
+                              },
+                              "reportingToName": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
                               }
                             },
                             "required": [
@@ -883446,7 +883465,8 @@
                               "isActive",
                               "hasAccepted",
                               "joiningDate",
-                              "reportingTo"
+                              "reportingTo",
+                              "reportingToName"
                             ]
                           }
                         },
@@ -883629,6 +883649,9 @@
                           ]
                         },
                         "isActive": {
+                          "type": "boolean"
+                        },
+                        "hasAccepted": {
                           "type": "boolean"
                         },
                         "joiningDate": {
@@ -883911,6 +883934,7 @@
                         "orgDepartmentId",
                         "image",
                         "isActive",
+                        "hasAccepted",
                         "joiningDate",
                         "reportingTo",
                         "bio",
@@ -915617,7 +915641,8 @@
                         "enum": [
                           "true",
                           "false",
-                          "all"
+                          "all",
+                          "pending"
                         ]
                       },
                       "role": {
@@ -932708,6 +932733,84 @@
         "x-exposure": "permissioned",
         "x-permission": "hr:positions:manage",
         "description": "Exposure: permission — hr:positions:manage"
+      }
+    },
+    "/hr/governance/position-taxonomy/statuses/seed-defaults": {
+      "post": {
+        "operationId": "PositionsTaxonomyController_seedDefaultStatuses",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "seeded": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "skipped": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "seeded",
+                        "skipped"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "tags": [
+          "PositionsTaxonomy"
+        ],
+        "x-exposure": "permissioned",
+        "x-permission": "hr:positions:manage",
+        "description": "Exposure: permission — hr:positions:manage",
+        "x-bodyless": true
       }
     },
     "/hr/governance/position-taxonomy/transitions": {
@@ -1189165,6 +1189268,20 @@
                             "type": "boolean"
                           }
                         },
+                        "moduleReasons": {
+                          "type": "object",
+                          "propertyNames": {
+                            "type": "string"
+                          },
+                          "additionalProperties": {
+                            "type": "string",
+                            "enum": [
+                              "not-in-plan",
+                              "org-disabled",
+                              "user-denied"
+                            ]
+                          }
+                        },
                         "isOrgOwner": {
                           "type": "boolean"
                         },
@@ -1189196,6 +1189313,7 @@
                         "membershipId",
                         "scopes",
                         "modules",
+                        "moduleReasons",
                         "isOrgOwner",
                         "canManageOrganizationMembership",
                         "mfa",
@@ -1227557,7 +1227675,7 @@
                   },
                   "phone": {
                     "type": "string",
-                    "maxLength": 32
+                    "maxLength": 30
                   },
                   "enabledModules": {
                     "minItems": 1,
@@ -1231905,7 +1232023,8 @@
                     "anyOf": [
                       {
                         "type": "string",
-                        "minLength": 1
+                        "minLength": 1,
+                        "maxLength": 30
                       },
                       {
                         "type": "null"
@@ -1246865,6 +1246984,11 @@
                               "updatedAt": {
                                 "type": "string",
                                 "format": "date-time"
+                              },
+                              "profileCount": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
                               }
                             },
                             "required": [
@@ -1246887,7 +1247011,8 @@
                               "effectiveFrom",
                               "effectiveTo",
                               "createdAt",
-                              "updatedAt"
+                              "updatedAt",
+                              "profileCount"
                             ]
                           }
                         },
@@ -1247181,7 +1247306,8 @@
                   "name": {
                     "type": "string",
                     "minLength": 1,
-                    "maxLength": 100
+                    "maxLength": 100,
+                    "pattern": "^[^<>]*$"
                   },
                   "type": {
                     "type": "string",
@@ -1247496,7 +1247622,8 @@
                   "name": {
                     "type": "string",
                     "minLength": 1,
-                    "maxLength": 100
+                    "maxLength": 100,
+                    "pattern": "^[^<>]*$"
                   },
                   "type": {
                     "type": "string",
@@ -1248231,12 +1248358,36 @@
                               "effectiveFrom"
                             ]
                           }
+                        },
+                        "employee": {
+                          "type": "object",
+                          "properties": {
+                            "name": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "email": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "name",
+                            "email"
+                          ],
+                          "additionalProperties": false
                         }
                       },
                       "required": [
                         "active",
                         "components",
-                        "history"
+                        "history",
+                        "employee"
                       ]
                     }
                   },
@@ -1268131,6 +1268282,57 @@
         "x-exposure": "permissioned",
         "x-permission": "payroll:runs:view",
         "description": "Exposure: permission — payroll:runs:view"
+      },
+      "delete": {
+        "operationId": "RunsController_discard",
+        "parameters": [
+          {
+            "name": "runId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content",
+            "x-no-content": true
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "tags": [
+          "Runs"
+        ],
+        "x-exposure": "permissioned",
+        "x-permission": "payroll:runs:manage",
+        "description": "Exposure: permission — payroll:runs:manage"
       }
     },
     "/payroll/runs/{runId}/approvals": {
@@ -1269137,6 +1269339,79 @@
             }
           }
         }
+      }
+    },
+    "/payroll/runs/{runId}/employees/{runEmployeeId}/adjustments/{adjustmentId}": {
+      "delete": {
+        "operationId": "RunsController_voidAdjustment",
+        "parameters": [
+          {
+            "name": "runId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          {
+            "name": "runEmployeeId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          {
+            "name": "adjustmentId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content",
+            "x-no-content": true
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "tags": [
+          "Runs"
+        ],
+        "x-exposure": "permissioned",
+        "x-permission": "payroll:runs:manage",
+        "description": "Exposure: permission — payroll:runs:manage"
       }
     },
     "/payroll/runs/{runId}/employees/{runEmployeeId}/hold": {
@@ -1282974,7 +1283249,7 @@
                         "id": {
                           "type": "string"
                         },
-                        "orgId": {
+                        "name": {
                           "type": "string"
                         },
                         "kind": {
@@ -1282990,26 +1283265,29 @@
                             }
                           ]
                         },
-                        "name": {
-                          "type": "string"
-                        },
                         "createdAt": {
                           "type": "string",
                           "format": "date-time"
                         },
-                        "updatedAt": {
-                          "type": "string",
-                          "format": "date-time"
+                        "memberCount": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "roleCount": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
                         }
                       },
                       "required": [
                         "id",
-                        "orgId",
+                        "name",
                         "kind",
                         "orgUnitId",
-                        "name",
                         "createdAt",
-                        "updatedAt"
+                        "memberCount",
+                        "roleCount"
                       ]
                     }
                   },
@@ -1283161,6 +1283439,71 @@
             }
           }
         }
+      },
+      "delete": {
+        "operationId": "PrincipalGroupsController_remove",
+        "parameters": [
+          {
+            "name": "groupId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "const": true
+                    }
+                  },
+                  "required": [
+                    "success"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "tags": [
+          "PrincipalGroups"
+        ],
+        "x-exposure": "permissioned",
+        "x-permission": "settings:rbac:manage",
+        "description": "Exposure: permission — settings:rbac:manage"
       }
     },
     "/principal-groups/{groupId}/members": {
@@ -1302290,6 +1302633,22 @@
                             "type": "boolean"
                           }
                         },
+                        "moduleReasons": {
+                          "type": "object",
+                          "propertyNames": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 80
+                          },
+                          "additionalProperties": {
+                            "type": "string",
+                            "enum": [
+                              "not-in-plan",
+                              "org-disabled",
+                              "user-denied"
+                            ]
+                          }
+                        },
                         "isOrgOwner": {
                           "type": "boolean"
                         },
@@ -1302321,6 +1302680,7 @@
                       "required": [
                         "scopes",
                         "modules",
+                        "moduleReasons",
                         "isOrgOwner",
                         "canManageOrganizationMembership",
                         "mfa",

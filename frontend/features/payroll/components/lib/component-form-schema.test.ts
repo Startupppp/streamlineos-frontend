@@ -103,3 +103,29 @@ describe("PAY-B-003 PAY-B-027 componentFormSchema percent-of rejects > 100", () 
     expect(paths).toContain("percent");
   });
 });
+
+describe("PAY-B-004 / PAY-B-029 / PAY-B-030 component form rules", () => {
+  const fixed = {
+    name: "Basic", code: "BASIC", type: "EARNING", calcMethod: "FIXED",
+    taxable: true, showOnPayslip: true, includeInCtc: true,
+  };
+
+  it("rejects a negative or malformed amount inline and accepts a plain one", () => {
+    const negative = componentFormSchema.safeParse({ ...fixed, amount: "-500" });
+    expect(negative.success).toBe(false);
+    expect(negative.error?.issues[0]?.message).toBe("Enter an amount like 5000 or 5000.50");
+    expect(componentFormSchema.safeParse({ ...fixed, amount: "5000.50" }).success).toBe(true);
+  });
+
+  it("rejects a code with spaces or symbols and markup in the name", () => {
+    expect(componentFormSchema.safeParse({ ...fixed, amount: "1", code: "MY CODE" }).success).toBe(false);
+    expect(componentFormSchema.safeParse({ ...fixed, amount: "1", name: "<b>Basic</b>" }).success).toBe(false);
+    expect(componentFormSchema.safeParse({ ...fixed, amount: "1", code: "my_code_2" }).success).toBe(true);
+  });
+
+  it("does not send a stale percent for a fixed component", () => {
+    expect(toCalcPayload({ calcMethod: "FIXED", percent: "150", percentBase: "", formula: "" })).toEqual({
+      calcMethod: "FIXED",
+    });
+  });
+});

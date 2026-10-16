@@ -48,7 +48,9 @@ export function PlanCard({
   onSelect,
 }: PlanCardProps) {
   const canManageSubscription = useCan("billing:subscription:manage");
-  const isCurrentPlan = currentPlan === plan && currentStatus === "ACTIVE";
+  const isTrialPlan = currentPlan === plan && currentStatus === "TRIAL";
+  const isCurrentPlan = currentPlan === plan && (currentStatus === "ACTIVE" || isTrialPlan);
+  const isLocked = isCurrentPlan && !isTrialPlan;
   const isEnterprise = plan === "ENTERPRISE";
   const tone = PLAN_TONE[plan];
   const isUpgrading = upgradingPlan === plan && isBusy;
@@ -58,12 +60,12 @@ export function PlanCard({
   const annualTotal = Math.round(config.annualTotalPaise / 100);
 
   function handleCardClick() {
-    if (!isCurrentPlan) onSelect(plan);
+    if (!isLocked) onSelect(plan);
   }
 
   function handleCardKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
     if (e.key !== "Enter" && e.key !== " ") return;
-    if (isCurrentPlan) return;
+    if (isLocked) return;
     e.preventDefault();
     onSelect(plan);
   }
@@ -76,7 +78,7 @@ export function PlanCard({
   return (
     <div
       role="button"
-      tabIndex={isCurrentPlan ? -1 : 0}
+      tabIndex={isLocked ? -1 : 0}
       aria-label={`Select ${config.label} plan`}
       aria-pressed={isSelected}
       className={cn(
@@ -94,7 +96,7 @@ export function PlanCard({
     >
       {isCurrentPlan && (
         <span className="absolute -top-px left-4 inline-flex items-center rounded-b-md bg-primary px-2 py-0.5 text-micro font-semibold uppercase tracking-wide text-primary-foreground">
-          Current
+          {isTrialPlan ? "Current · Trial" : "Current"}
         </span>
       )}
       <div className="mb-4">
@@ -126,14 +128,14 @@ export function PlanCard({
         <LoadingButton
           type="button"
           size="sm"
-          variant={isCurrentPlan ? "secondary" : "default"}
-          disabled={isCurrentPlan || !isConfigured || isBusy}
+          variant={isLocked ? "secondary" : "default"}
+          disabled={isLocked || !isConfigured || isBusy}
           isPending={isUpgrading}
           loadingText="Processing…"
           onClick={handleUpgrade}
           className="w-full"
         >
-          {isCurrentPlan ? "Current Plan" : "Upgrade"}
+          {isLocked ? "Current Plan" : isTrialPlan ? "Subscribe" : "Upgrade"}
         </LoadingButton>
       ) : (
         <p className="text-xs text-muted-foreground">

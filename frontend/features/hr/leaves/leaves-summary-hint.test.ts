@@ -33,6 +33,19 @@ describe("the available-days hint distinguishes an unconfigured organisation fro
     expect(hint).toContain("Sick Leave");
     expect(hint).not.toContain("No leave policy is set up yet");
   });
+
+  it("shows how the available figure is calculated from the prorated entitlement", () => {
+    const joinedThisYear = `${new Date().getFullYear()}-10-15`;
+    const hint = buildAvailableHint(
+      [{ id: 1, leaveTypeId: 1, typeName: "Casual Leave", balance: "2", daysPerYear: 12 }],
+      joinedThisYear,
+      false,
+    );
+
+    expect(hint).toContain("Casual Leave: 3 entitled − 1 used = 2");
+    expect(hint).toContain("3 of 12 months");
+    expect(hint).toContain("Pending requests are deducted when approved");
+  });
 });
 
 describe('V-045. "Approved (YTD)" counts days, not requests', () => {

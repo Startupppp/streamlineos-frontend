@@ -23,6 +23,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { isApiError } from "@/lib/api-envelope";
 import { formatINR } from "@/lib/format-utils";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import {
@@ -119,16 +120,18 @@ const TemplateCard = memo(function TemplateCard({ template, index, onEdit, onDel
           <Pencil className="mr-1.5 h-3.5 w-3.5" />
           Edit
         </Button>
-        <AnimatedIconButton
-          icon={Trash2Icon}
-          iconClassName="mr-1.5"
-          size="sm"
-          variant="ghost"
-          className="px-3 text-xs text-destructive hover:text-destructive"
-          onClick={handleDelete}
-        >
-          Delete
-        </AnimatedIconButton>
+        {template.isActive ? (
+          <AnimatedIconButton
+            icon={Trash2Icon}
+            iconClassName="mr-1.5"
+            size="sm"
+            variant="ghost"
+            className="px-3 text-xs text-destructive hover:text-destructive"
+            onClick={handleDelete}
+          >
+            Deactivate
+          </AnimatedIconButton>
+        ) : null}
       </div>
     </motion.div>
   );
@@ -148,15 +151,25 @@ export function SalaryStructuresPageContent() {
   const [editingTemplate, setEditingTemplate] = useState<SalaryStructureTemplate | undefined>();
   const [deletingTemplate, setDeletingTemplate] = useState<SalaryStructureTemplate | undefined>();
 
+  const resetCreate = createMutation.reset;
+  const resetUpdate = updateMutation.reset;
+
+  const resetSubmitErrors = useCallback(() => {
+    resetCreate();
+    resetUpdate();
+  }, [resetCreate, resetUpdate]);
+
   function handleOpenCreate() {
+    resetSubmitErrors();
     setEditingTemplate(undefined);
     setSheetOpen(true);
   }
 
   const handleOpenEdit = useCallback((template: SalaryStructureTemplate) => {
+    resetSubmitErrors();
     setEditingTemplate(template);
     setSheetOpen(true);
-  }, []);
+  }, [resetSubmitErrors]);
 
   const handleOpenDelete = useCallback((template: SalaryStructureTemplate) => {
     setDeletingTemplate(template);
@@ -165,6 +178,11 @@ export function SalaryStructuresPageContent() {
   function handleSheetOpenChange(open: boolean) {
     setSheetOpen(open);
     if (!open) setEditingTemplate(undefined);
+  }
+
+  function handleSubmitError(err: unknown) {
+    if (isApiError(err) && err.status === 409) return;
+    toast.error(getErrorMessage(err));
   }
 
   function handleFormSubmit(data: CreateSalaryTemplateInput) {
@@ -177,7 +195,7 @@ export function SalaryStructuresPageContent() {
             setSheetOpen(false);
             setEditingTemplate(undefined);
           },
-          onError: (err) => toast.error(getErrorMessage(err)),
+          onError: handleSubmitError,
         },
       );
     } else {
@@ -186,7 +204,7 @@ export function SalaryStructuresPageContent() {
           toast.success("Template created successfully");
           setSheetOpen(false);
         },
-        onError: (err) => toast.error(getErrorMessage(err)),
+        onError: handleSubmitError,
       });
     }
   }
@@ -215,6 +233,8 @@ export function SalaryStructuresPageContent() {
   }
 
   const isPending = createMutation.isPending || updateMutation.isPending;
+  const submitError = editingTemplate ? updateMutation.error : createMutation.error;
+  const nameConflict = isApiError(submitError) && submitError.status === 409 ? getErrorMessage(submitError) : undefined;
 
   if (viewGate.denied) {
     return (
@@ -314,6 +334,7 @@ export function SalaryStructuresPageContent() {
         template={editingTemplate}
         onSubmit={handleFormSubmit}
         isPending={isPending}
+        nameError={nameConflict}
       />
 
       <AlertDialog open={!!deletingTemplate} onOpenChange={handleCancelDelete}>

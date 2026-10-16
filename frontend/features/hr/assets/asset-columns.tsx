@@ -1,8 +1,16 @@
 "use client";
 
+import { forwardRef, type MouseEvent } from "react";
 import { format } from "date-fns";
-import { Pencil } from "lucide-react";
-import { Trash2Icon, UserPlusIcon, UserMinusIcon } from "@animateicons/react/lucide";
+import { Pencil, Trash2 } from "lucide-react";
+import { EllipsisIcon, UserPlusIcon, UserMinusIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -11,6 +19,43 @@ import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
 import { fmtCost, STATUS_META } from "./asset-constants";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import type { Asset, EmployeeListItem } from "@/types/hr";
+
+interface AssetOverflowMenuProps {
+  asset: Asset;
+  onRetire: (id: number) => void;
+}
+
+const AssetOverflowMenu = forwardRef<HTMLDivElement, AssetOverflowMenuProps>(
+  function AssetOverflowMenu({ asset, onRetire }, ref) {
+    function handleTriggerClick(event: MouseEvent) {
+      event.stopPropagation();
+    }
+    function handleRetire() {
+      onRetire(asset.id);
+    }
+    return (
+      <div ref={ref}>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild onClick={handleTriggerClick}>
+            <AnimatedIconButton
+              icon={EllipsisIcon}
+              variant="ghost"
+              size="icon"
+              className="w-7 text-muted-foreground hover:text-foreground"
+              aria-label={`More actions for ${asset.name}`}
+            />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem variant="destructive" onClick={handleRetire}>
+              <Trash2 className="h-3.5 w-3.5" />
+              Retire asset
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    );
+  },
+);
 
 export function buildAssetColumns(
   employees: EmployeeListItem[],
@@ -129,14 +174,7 @@ export function buildAssetColumns(
           >
             <Pencil className="h-3.5 w-3.5" />
           </TooltipIconButton>
-          <TooltipIconButton
-            icon={Trash2Icon}
-            iconSize={14}
-            variant="ghost"
-            className="w-7 text-destructive hover:text-destructive"
-            label="Retire asset"
-            onClick={(e) => { e.stopPropagation(); onRetire(asset.id); }}
-          />
+          <AssetOverflowMenu asset={asset} onRetire={onRetire} />
         </div>
       ),
     }] as DataTableColumn<Asset>[] : []),

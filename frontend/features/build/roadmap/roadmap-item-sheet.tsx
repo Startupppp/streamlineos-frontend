@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/sheet";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useSubmitGuard } from "@/hooks/common/use-submit-guard";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { isApiError, getApiErrorCode } from "@/lib/api-envelope";
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
@@ -127,7 +128,7 @@ export function RoadmapItemSheet({ item, managedProductId, defaultHorizon, onClo
   });
   useRegisterDirtyState(form.formState.isDirty);
 
-  function handleSave(values: RoadmapItemFormValues) {
+  function handleSave(values: RoadmapItemFormValues, settle: () => void) {
     const rice = {
       reach: parseRiceField(values.reach),
       impact: parseRiceField(values.impact),
@@ -187,6 +188,7 @@ export function RoadmapItemSheet({ item, managedProductId, defaultHorizon, onClo
             }
             toast.error(getErrorMessage(e));
           },
+          onSettled: settle,
         },
       );
     } else {
@@ -216,10 +218,15 @@ export function RoadmapItemSheet({ item, managedProductId, defaultHorizon, onClo
         {
           onSuccess: () => { toast.success("Roadmap item created"); onClose(); },
           onError: (e) => toast.error(getErrorMessage(e)),
+          onSettled: settle,
         },
       );
     }
   }
+
+  const submitGuard = useSubmitGuard(
+    (values: RoadmapItemFormValues) => new Promise<void>((settle) => { handleSave(values, settle); }),
+  );
 
   return (
     <>
@@ -234,7 +241,7 @@ export function RoadmapItemSheet({ item, managedProductId, defaultHorizon, onClo
           </SheetDescription>
         </SheetHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSave)} className="flex flex-col flex-1 min-h-0">
+          <form onSubmit={form.handleSubmit(submitGuard.submit)} className="flex flex-col flex-1 min-h-0">
             <SheetBody className="px-6 py-5 space-y-4">
               <RoadmapItemFormFields control={form.control} isEdit={isEdit} item={item} managedProductId={managedProductId} />
             </SheetBody>

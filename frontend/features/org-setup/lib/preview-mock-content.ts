@@ -64,7 +64,6 @@ function isOrgModuleKey(value: string): value is OrgModuleKey {
 export function resolvePreviewModules(
   snapshot: WorkspacePreviewSnapshot,
 ): OrgModuleKey[] {
-  if (snapshot.goals.length === 0) return [];
   if (snapshot.modules.length > 0) return [...snapshot.modules];
   return snapshot.installedApps.filter(isOrgModuleKey);
 }
@@ -150,8 +149,8 @@ export function buildWidgets(
 }
 
 export function emptyPreviewCopy(snapshot: WorkspacePreviewSnapshot): string {
-  if (snapshot.goals.length === 0) {
-    return "Pick goals to preview your organization";
+  if (snapshot.modules.length === 0) {
+    return "Pick products to preview your organization";
   }
   return "Your organization preview updates as you go";
 }

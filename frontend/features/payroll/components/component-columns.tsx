@@ -6,17 +6,21 @@ import { Button } from "@/components/ui/button";
 import { Trash2Icon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { PayrollStatusBadge, formatMoney } from "@/features/payroll/shared";
-import type { SalaryComponent } from "@/types/payroll/setup";
+import type { SalaryComponentListItem } from "@/hooks/api/payroll/components-schema";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { ComponentTypeBadge } from "./component-type-badge";
+import { componentRole } from "./lib/component-role";
+import { fromComponentCalc, PERCENT_BASE_BASIC, PERCENT_BASE_GROSS } from "./lib/component-form-schema";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
-const ValueCell = memo(function ValueCell({ row }: { row: SalaryComponent }) {
-  if (row.amount) {
+const ValueCell = memo(function ValueCell({ row }: { row: SalaryComponentListItem }) {
+  const calc = fromComponentCalc(row);
+  if ((row.calcMethod === "FIXED" || row.calcMethod === "ATTENDANCE_BASED" || row.calcMethod === "TIMESHEET_BASED") && row.amount) {
     return <span className="font-mono tabular-nums text-xs">{formatMoney(row.amount, "INR")}</span>;
   }
-  if (row.percent) {
-    return <span className="font-mono tabular-nums text-xs">{row.percent}%</span>;
+  if (calc.calcMethod === "PERCENT_OF" && calc.percent) {
+    const base = calc.percentBase === PERCENT_BASE_BASIC ? "Basic" : calc.percentBase === PERCENT_BASE_GROSS ? "Gross" : calc.percentBase;
+    return <span className="font-mono tabular-nums text-xs">{calc.percent}% of {base}</span>;
   }
   if (row.formula) {
     return <span className="text-xs text-muted-foreground italic">Formula</span>;
@@ -24,12 +28,29 @@ const ValueCell = memo(function ValueCell({ row }: { row: SalaryComponent }) {
   return <span className="text-xs text-muted-foreground">—</span>;
 });
 
+const RoleCell = memo(function RoleCell({ row, duplicates }: { row: SalaryComponentListItem; duplicates: ReadonlySet<string> }) {
+  const role = componentRole(row);
+  if (!role) return <span className="text-xs text-muted-foreground">—</span>;
+  if (row.isActive && duplicates.has(role)) {
+    return (
+      <span
+        className="text-micro px-1 py-0.5 rounded bg-status-warning-surface text-status-warning-ink border border-status-warning-rule"
+        title={`More than one active component is a ${role} line. Payroll counts each one.`}
+      >
+        {role} · duplicate
+      </span>
+    );
+  }
+  return <span className="text-xs text-muted-foreground">{role}</span>;
+});
+
 export function buildComponentColumns(
-  onEdit: (row: SalaryComponent) => void,
-  onDelete: (row: SalaryComponent) => void,
+  onEdit: (row: SalaryComponentListItem) => void,
+  onDelete: (row: SalaryComponentListItem) => void,
   canManage: boolean,
-): DataTableColumn<SalaryComponent>[] {
-  const columns: DataTableColumn<SalaryComponent>[] = [
+  duplicates: ReadonlySet<string>,
+): DataTableColumn<SalaryComponentListItem>[] {
+  const columns: DataTableColumn<SalaryComponentListItem>[] = [
   ];
 
   if (canManage) {
@@ -47,6 +68,11 @@ export function buildComponentColumns(
       key: "type",
       header: "Type",
       cell: (row) => <ComponentTypeBadge type={row.type} />,
+    },
+    {
+      key: "role",
+      header: "Role",
+      cell: (row) => <RoleCell row={row} duplicates={duplicates} />,
     },
     {
       key: "calcMethod",

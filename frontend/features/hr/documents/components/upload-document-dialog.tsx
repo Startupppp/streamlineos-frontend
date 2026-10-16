@@ -18,6 +18,7 @@ import {
   formSchema, type DocumentFormData, DocumentFormFields,
 } from "@/features/hr/documents/document-form-fields";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { formatFileSize } from "@/lib/format-utils";
 import { cn } from "@/lib/utils";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 
@@ -426,7 +427,7 @@ export function UploadDocumentDialog({
                           )}>
                             {config.badge}
                           </span>
-                          <span className="text-micro text-muted-foreground">{formatBytes(f.size)}</span>
+                          <span className="text-micro text-muted-foreground">{formatFileSize(f.size)}</span>
                         </div>
                         {fileErrors.get(f) && (
                           <p role="alert" className="text-micro text-status-danger-ink mt-0.5">{fileErrors.get(f)}</p>

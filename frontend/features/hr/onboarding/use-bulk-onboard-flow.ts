@@ -14,7 +14,7 @@ import type {
   BulkOnboardSeats,
 } from "@/types/hr";
 import { MAX_ROWS, sourceRowOf } from "./bulk-onboard-columns";
-import { parseFile, ParseStructuralError } from "./bulk-onboard-parse";
+import { missingRequiredHeaders, parseFile, ParseStructuralError } from "./bulk-onboard-parse";
 import { validateAndMap, type PreviewRow } from "./bulk-onboard-template";
 import {
   fetchEmployeeAdmissionCheck,
@@ -177,6 +177,13 @@ export function useBulkOnboardFlow(
       if (parsed.length === 0) {
         toast.error(
           "No data rows found. Keep the header row and add employees below it.",
+        );
+        return;
+      }
+      const missingHeaders = missingRequiredHeaders(parsed);
+      if (missingHeaders.length > 0) {
+        toast.error(
+          `This file is missing required columns: ${missingHeaders.join(", ")}. Download the template and keep its header row.`,
         );
         return;
       }

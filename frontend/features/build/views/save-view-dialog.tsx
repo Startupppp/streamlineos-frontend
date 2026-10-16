@@ -71,7 +71,7 @@ export function SaveViewDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="gap-3 p-4 sm:max-w-sm">
+      <DialogContent aria-describedby={undefined} className="gap-3 p-4 sm:max-w-sm">
         <DialogHeader>
           <DialogTitle>Save current view</DialogTitle>
         </DialogHeader>

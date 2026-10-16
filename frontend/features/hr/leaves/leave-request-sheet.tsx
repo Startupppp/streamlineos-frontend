@@ -146,6 +146,10 @@ export function LeaveRequestSheet({
         toast.error(validation.dayLimitError);
         return;
       }
+      if (validation.balanceError) {
+        toast.error(validation.balanceError);
+        return;
+      }
       try {
         await requestLeaveMutation.mutateAsync({
           leaveTypeId: parseInt(data.leaveTypeId),
@@ -179,7 +183,9 @@ export function LeaveRequestSheet({
         ? "No approver available"
         : validation.overlapMessage
           ? "Dates overlap approved leave"
-          : "Submit leave request";
+          : validation.balanceError
+            ? "Not enough leave balance"
+            : "Submit leave request";
 
   return (
     <HrSheet
@@ -193,7 +199,8 @@ export function LeaveRequestSheet({
       submitDisabled={
         leaveTypes.length === 0 ||
         !approverAvailable ||
-        validation.overlapMessage !== null
+        validation.overlapMessage !== null ||
+        validation.balanceError !== null
       }
       isDirty={isDirty}
       onDiscard={form.reset}

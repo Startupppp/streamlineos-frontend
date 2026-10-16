@@ -196,6 +196,10 @@ const REMOVED_ROUTES: RemovedRoute[] = [
 
 const OTHER_BUILD_COMPATIBILITY_REDIRECTS: BuildRedirect[] = [
   {
+    source: "/build/products",
+    destination: "/build/managed-products",
+  },
+  {
     source: "/build/:projectId(\\\\d+)",
     destination: "/build/:projectId/workload",
   },
@@ -278,7 +282,7 @@ describe("removed Build redirect routes keep their deep link in next.config.ts",
     ].sort((a, b) => a.source.localeCompare(b.source));
 
     expect(actual).toEqual(expected);
-    expect(actual).toHaveLength(35);
+    expect(actual).toHaveLength(36);
   });
 
   it("keeps every declarative Build compatibility redirect temporary", () => {
@@ -286,7 +290,7 @@ describe("removed Build redirect routes keep their deep link in next.config.ts",
       source.startsWith("/build"),
     );
 
-    expect(buildRedirects).toHaveLength(35);
+    expect(buildRedirects).toHaveLength(36);
     expect(buildRedirects.every(({ permanent }) => !permanent)).toBe(true);
   });
 

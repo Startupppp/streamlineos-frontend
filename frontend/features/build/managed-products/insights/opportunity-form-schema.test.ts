@@ -30,6 +30,18 @@ describe("Manage Product opportunity form validation parity", () => {
     expect(acceptSchema.safeParse({ horizon: "next", expectedVersion: 0 }).success).toBe(false);
   });
 
+  it("rejects a non-numeric baseline or target the API cannot store, and accepts decimals", () => {
+    expect(createOpportunityFormSchema.safeParse({ title: "t", outcomeBaseline: "abc" }).success).toBe(false);
+    expect(createOpportunityFormSchema.safeParse({ title: "t", outcomeTarget: "12%" }).success).toBe(false);
+    expect(createOpportunityFormSchema.safeParse({ title: "t", outcomeBaseline: "-3.5", outcomeTarget: "45" }).success).toBe(true);
+  });
+
+  it("caps opportunity and accepted roadmap titles at the roadmap limit of 200", () => {
+    expect(createOpportunityFormSchema.safeParse({ title: "x".repeat(201) }).success).toBe(false);
+    expect(createOpportunityFormSchema.safeParse({ title: "x".repeat(200) }).success).toBe(true);
+    expect(acceptSchema.safeParse({ horizon: "next", expectedVersion: 1, title: "x".repeat(201) }).success).toBe(false);
+  });
+
   it("trims opportunity text before submission validation", () => {
     const parsed = createOpportunityFormSchema.parse({ title: "  Checkout friction  ", theme: "  onboarding  " });
     expect(parsed).toEqual({ title: "Checkout friction", theme: "onboarding" });

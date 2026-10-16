@@ -29,12 +29,16 @@ export const PERCENT_BASE_BASIC = "basic";
 export const PERCENT_BASE_GROSS = "gross";
 
 const PERCENT_VALUE = /^\d+(\.\d{1,4})?$/;
-const NON_NEGATIVE_AMOUNT = /^\d+(\.\d{1,2})?$/;
+const AMOUNT_VALUE = /^\d+(\.\d{1,2})?$/;
 const PERCENT_OF_COMPONENT_FORMULA = /^([A-Z][A-Z0-9_]*) \* (\d+(?:\.\d{1,4})?) \/ 100$/;
 
 export const componentFormSchema = z.object({
-  name: z.string().min(1, "Name is required").max(100),
-  code: z.string().min(1, "Code is required").max(20),
+  name: z.string().min(1, "Name is required").max(100).regex(/^[^<>]*$/, "Name cannot contain < or >"),
+  code: z
+    .string()
+    .min(1, "Code is required")
+    .max(20)
+    .regex(/^[A-Za-z0-9_]+$/, "Use letters, digits or underscores only"),
   type: z.enum([
     "EARNING",
     "DEDUCTION",
@@ -53,6 +57,7 @@ export const componentFormSchema = z.object({
   ]),
   amount: z
     .string()
+    .refine((v) => !v || AMOUNT_VALUE.test(v), "Enter an amount like 5000 or 5000.50")
     .refine(
       (v) => !v || parseFloat(v) <= PAYROLL_AMOUNT_MAX,
       `Cannot exceed ₹${PAYROLL_AMOUNT_MAX.toLocaleString("en-IN")}`,
@@ -66,9 +71,6 @@ export const componentFormSchema = z.object({
   includeInCtc: z.boolean(),
   sortOrder: z.string().optional(),
 }).superRefine((form, ctx) => {
-  if (form.calcMethod === "FIXED" && form.amount && !NON_NEGATIVE_AMOUNT.test(form.amount)) {
-    ctx.addIssue({ code: "custom", path: ["amount"], message: "Enter an amount of zero or more, with at most 2 decimals" });
-  }
   if (form.calcMethod !== "PERCENT_OF") return;
   if (!form.percentBase) ctx.addIssue({ code: "custom", path: ["percentBase"], message: "Pick what this is a percent of" });
   const percentStr = form.percent ?? "";
@@ -92,7 +94,7 @@ function trimPercent(percent: string): string {
 
 export function toCalcPayload(form: CalcFields): CalcPayload {
   if (form.calcMethod !== "PERCENT_OF") {
-    return { calcMethod: form.calcMethod, percent: form.percent || undefined, formula: form.formula || undefined };
+    return { calcMethod: form.calcMethod, formula: form.formula || undefined };
   }
   const percent = form.percent ?? "";
   if (form.percentBase === PERCENT_BASE_BASIC) return { calcMethod: "PERCENT_OF_BASIC", percent };

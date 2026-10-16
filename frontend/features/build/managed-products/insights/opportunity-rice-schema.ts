@@ -47,8 +47,16 @@ export const declineFormSchema = z.object({
 
 export type DeclineFormValues = z.infer<typeof declineFormSchema>;
 
+const DECIMAL_PATTERN = /^-?\d{1,14}(\.\d+)?$/;
+
+export const optionalDecimalField = z
+  .string()
+  .trim()
+  .refine((value) => value === "" || DECIMAL_PATTERN.test(value), "Enter a number")
+  .optional();
+
 export const createOpportunityFormSchema = z.object({
-  title: z.string().trim().min(1, "Title is required").max(500),
+  title: z.string().trim().min(1, "Title is required").max(200, "Keep under 200 characters"),
   problem: z.string().trim().max(5000).optional(),
   hypothesis: z.string().trim().max(5000).optional(),
   affectedSegment: z.string().trim().max(200).optional(),
@@ -56,8 +64,8 @@ export const createOpportunityFormSchema = z.object({
   desiredOutcome: z.string().trim().max(2000).optional(),
   outcomeMetric: z.string().trim().max(500).optional(),
   outcomeUnit: z.string().trim().max(100).optional(),
-  outcomeBaseline: z.string().trim().optional(),
-  outcomeTarget: z.string().trim().optional(),
+  outcomeBaseline: optionalDecimalField,
+  outcomeTarget: optionalDecimalField,
 });
 
 export type CreateOpportunityFormValues = z.infer<typeof createOpportunityFormSchema>;

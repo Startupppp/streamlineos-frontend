@@ -188,7 +188,9 @@ it("names the rejected file instead of uploading a type the server refuses", asy
   const installer = new File(["MZ"], "setup.exe", { type: "application/x-msdownload" });
   fireEvent.change(input, { target: { files: [installer] } });
   await waitFor(() =>
-    expect(mockToastError).toHaveBeenCalledWith("setup.exe is not an allowed file type."),
+    expect(mockToastError).toHaveBeenCalledWith(
+      "setup.exe is not an accepted file type. Accepted: PDF, JPG, PNG, GIF, WEBP, TXT, CSV, DOC, DOCX, XLS, XLSX.",
+    ),
   );
   expect(mockUploadFile).not.toHaveBeenCalled();
 });

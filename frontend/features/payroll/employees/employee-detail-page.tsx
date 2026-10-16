@@ -17,14 +17,14 @@ import {
   useEmployeeProfileHistory,
 } from "@/hooks/api/payroll/employees";
 import { useCan } from "@/hooks/api/access";
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { ComponentsBreakdown } from "./salary-component-breakdown";
 import type {
   ProfileDetail,
   SalaryProfileStatus,
   ProfileComponent,
-  SalaryComponentType,
 } from "@/hooks/api/payroll/employees-schema";
 import { cn } from "@/lib/utils";
+import { useSalaryPreview } from "@/hooks/api/payroll/salary-preview";
 
 const STATUS_CONFIG: Record<SalaryProfileStatus, { className: string; label: string }> = {
   ACTIVE: { className: "bg-status-success-surface text-status-success-ink border-status-success-rule", label: "Active" },
@@ -32,106 +32,46 @@ const STATUS_CONFIG: Record<SalaryProfileStatus, { className: string; label: str
   SUPERSEDED: { className: "bg-muted text-muted-foreground border-border", label: "Superseded" },
 };
 
-const COMPONENT_TYPE_LABELS: Record<SalaryComponentType, string> = {
-  EARNING: "Earnings",
-  DEDUCTION: "Deductions",
-  EMPLOYER_CONTRIBUTION: "Employer Contributions",
-  REIMBURSEMENT: "Reimbursements",
-  TAX: "Tax",
-  ADJUSTMENT: "Adjustments",
-};
-
-const COMPONENT_TYPE_ORDER: SalaryComponentType[] = [
-  "EARNING",
-  "DEDUCTION",
-  "EMPLOYER_CONTRIBUTION",
-  "REIMBURSEMENT",
-  "TAX",
-  "ADJUSTMENT",
-];
-
-const COMPONENT_COLUMNS: DataTableColumn<ProfileComponent>[] = [
-  {
-    key: "name",
-    header: "Component",
-    cell: (comp) => (
-      <div>
-        <div className="flex items-center gap-1.5">
-          <span className="font-medium text-foreground">{comp.name}</span>
-          {(comp.calcMethodOverride !== null || comp.formulaOverride !== null) && (
-            <span className="text-micro px-1 rounded bg-status-warning-surface text-status-warning-ink border border-status-warning-rule font-medium">
-              override
-            </span>
-          )}
-        </div>
-        <span className="text-micro text-muted-foreground font-mono">{comp.code}</span>
-      </div>
-    ),
-    className: "w-[40%] py-1 pr-2",
-  },
-  {
-    key: "calcMethod",
-    header: "Method",
-    cell: (comp) => <span className="text-muted-foreground">{comp.calcMethod}</span>,
-    className: "w-[20%] py-1 pr-2",
-  },
-  {
-    key: "amount",
-    header: "Amount",
-    cell: (comp) => (
-      <span className="font-mono tabular-nums">
-        {comp.amount !== null ? formatMoney(comp.amount) : "—"}
-      </span>
-    ),
-    className: "w-[20%] py-1 pr-2 text-right",
-    headerClassName: "text-right",
-  },
-  {
-    key: "percent",
-    header: "Percent",
-    cell: (comp) => (
-      <span className="font-mono tabular-nums text-muted-foreground">
-        {comp.percent !== null ? `${comp.percent}%` : "—"}
-      </span>
-    ),
-    className: "w-[20%] py-1 text-right",
-    headerClassName: "text-right",
-  },
-];
-
-function ComponentsBreakdown({ components }: { components: ProfileComponent[] }) {
-  const grouped = useMemo(
-    () =>
-      COMPONENT_TYPE_ORDER.reduce<Record<SalaryComponentType, ProfileComponent[]>>(
-        (acc, type) => {
-          acc[type] = components.filter((c) => c.type === type);
-          return acc;
-        },
-        { EARNING: [], DEDUCTION: [], EMPLOYER_CONTRIBUTION: [], REIMBURSEMENT: [], TAX: [], ADJUSTMENT: [] },
-      ),
-    [components],
+function ProfileEstimate({ profile, components }: { profile: ProfileDetail; components: ProfileComponent[] }) {
+  const componentIds = useMemo(() => components.map((c) => c.componentId), [components]);
+  const { data, isLoading, isError, error } = useSalaryPreview(
+    {
+      annualCtc: profile.annualCtc,
+      workerType: profile.workerType,
+      regime: profile.taxRegime ?? undefined,
+      componentIds,
+    },
+    { enabled: componentIds.length > 0 },
   );
 
-  if (components.length === 0) {
+  if (componentIds.length === 0) {
     return (
-      <p className="text-dense text-muted-foreground">No components configured for this profile, so payroll computes gross ₹0. Edit the profile and save it to attach your organisation&apos;s salary components.</p>
+      <p className="text-dense text-muted-foreground">
+        No salary components are assigned, so a payroll run will stop on this profile. Edit the profile to assign components.
+      </p>
     );
   }
-
+  if (isLoading) return <StatCardGridSkeleton cols={2} count={2} />;
+  if (isError || !data) {
+    return <p className="text-dense text-muted-foreground">Estimate unavailable: {getErrorMessage(error)}</p>;
+  }
   return (
-    <div className="divide-y divide-border">
-      {COMPONENT_TYPE_ORDER.filter((type) => grouped[type].length > 0).map((type) => (
-        <div key={type} className="pt-3 first:pt-0">
-          <p className="text-micro font-bold uppercase tracking-wider text-muted-foreground mb-1.5">
-            {COMPONENT_TYPE_LABELS[type]}
-          </p>
-          <DataTable
-            data={grouped[type]}
-            columns={COMPONENT_COLUMNS}
-            getRowKey={(comp) => comp.id}
-            className="border-0 rounded-none text-dense"
-          />
-        </div>
+    <div className="space-y-2">
+      <StatCardGrid cols={2}>
+        <StatCard
+          label="Est. Monthly Gross"
+          value={formatMoney(data.monthly.gross, profile.currency)}
+          hint="Payroll engine, full-attendance month"
+        />
+        <StatCard
+          label="Est. Monthly Net"
+          value={formatMoney(data.monthly.net, profile.currency)}
+          hint={`After ${formatMoney(data.monthly.deductions, profile.currency)} deductions`}
+          tone="emerald"
+        />
+      </StatCardGrid>
+      {data.warnings.map((warning) => (
+        <p key={warning} className="text-dense text-destructive">{warning}</p>
       ))}
     </div>
   );
@@ -176,7 +116,8 @@ export function EmployeeDetailPage({ employeeUserId }: EmployeeDetailPageProps) 
   const { data: historyData } = useEmployeeProfileHistory(employeeUserId);
 
   const activeProfile = profileData?.active ?? null;
-  const components = profileData?.components ?? [];
+  const employeeName = profileData?.employee.name ?? profileData?.employee.email ?? null;
+  const components = useMemo(() => profileData?.components ?? [], [profileData]);
   const history = historyData ?? [];
   const upcomingProfiles = history.filter((p) => p.status === "UPCOMING");
   const supersededProfiles = history.filter((p) => p.status === "SUPERSEDED");
@@ -230,15 +171,14 @@ export function EmployeeDetailPage({ employeeUserId }: EmployeeDetailPageProps) 
     );
   }
 
-  const userName = activeProfile?.userId ?? employeeUserId;
-
   return (
     <PageWrapper
-      title={userName}
+      title="Salary Profile"
       backHref="/payroll/employees"
       subtitle={
         activeProfile ? (
           <span className="flex items-center gap-2">
+            {employeeName ? <span>{employeeName}</span> : null}
             <span>{formatMoney(activeProfile.annualCtc)} / year</span>
             <span
               className={cn(
@@ -249,6 +189,8 @@ export function EmployeeDetailPage({ employeeUserId }: EmployeeDetailPageProps) 
               {STATUS_CONFIG[activeProfile.status].label}
             </span>
           </span>
+        ) : employeeName ? (
+          <span>{employeeName} — no active salary profile</span>
         ) : "No active salary profile"
       }
       actions={
@@ -279,32 +221,7 @@ export function EmployeeDetailPage({ employeeUserId }: EmployeeDetailPageProps) 
               />
             </StatCardGrid>
 
-            {(() => {
-              const earningSum = components
-                .filter((c) => c.type === "EARNING" && c.amount !== null)
-                .reduce((acc, c) => acc + parseFloat(c.amount ?? "0"), 0);
-              const deductionSum = components
-                .filter((c) => c.type === "DEDUCTION" && c.amount !== null)
-                .reduce((acc, c) => acc + parseFloat(c.amount ?? "0"), 0);
-              const monthlyGross =
-                earningSum > 0 ? earningSum : parseFloat(activeProfile.annualCtc) / 12;
-              const estimatedNet = monthlyGross - deductionSum;
-              return (
-                <StatCardGrid cols={2}>
-                  <StatCard
-                    label="Est. Monthly Gross"
-                    value={formatMoney(monthlyGross.toFixed(2), activeProfile.currency)}
-                    hint={earningSum === 0 ? "Derived from annual CTC" : undefined}
-                  />
-                  <StatCard
-                    label="Est. Monthly Net"
-                    value={formatMoney(estimatedNet.toFixed(2), activeProfile.currency)}
-                    hint={deductionSum > 0 ? `After ${formatMoney(deductionSum.toFixed(2), activeProfile.currency)} deductions` : undefined}
-                    tone="emerald"
-                  />
-                </StatCardGrid>
-              );
-            })()}
+            <ProfileEstimate profile={activeProfile} components={components} />
 
             <div className="rounded-xl border border-border bg-card p-4 space-y-3">
               <h3 className="text-sm font-semibold text-foreground">Profile Details</h3>
@@ -378,6 +295,7 @@ export function EmployeeDetailPage({ employeeUserId }: EmployeeDetailPageProps) 
         open={sheetOpen}
         onClose={handleEditClose}
         existingProfile={activeProfile}
+        existingComponents={components}
       />
     </PageWrapper>
   );

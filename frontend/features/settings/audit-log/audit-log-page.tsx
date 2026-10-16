@@ -285,33 +285,19 @@ export function AuditLogPage() {
             onRowClick={handleRowClick}
             minWidth="700px"
             pagination={{
+              mode: "cursor",
               pageSize: pageSizeOption,
+              pageSizeOptions: PAGE_SIZE_OPTIONS,
+              pageNumber: currentPage,
+              hasMore,
+              hasPrevious: cursorStack.length > 0,
+              onNext: handleNextPage,
+              onPrevious: handlePrevPage,
               onPageSizeChange: handlePageSizeChange,
             }}
             emptyState={emptyState}
           />
         )}
-        <div className="flex shrink-0 items-center justify-between gap-2 py-1 text-sm text-muted-foreground">
-          <span>Page {currentPage}</span>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handlePrevPage}
-              disabled={cursorStack.length === 0 || isLoading}
-            >
-              Previous
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleNextPage}
-              disabled={!hasMore || isLoading}
-            >
-              Next
-            </Button>
-          </div>
-        </div>
       </div>
 
       {selectedLog && <LogDetailSheet log={selectedLog} onClose={handleCloseSheet} />}

@@ -155,13 +155,14 @@ export function RunDetailContent({ runId }: RunDetailContentProps) {
             employees: run.employeeCount ?? undefined,
           }}
           ruleVersion={run.statutoryRuleVersion ?? "IN-2025.04"}
+          blockerCount={openExceptions > 0 ? openExceptions : undefined}
           payDate={run.payDate ?? null}
           blockers={
             openExceptions > 0
               ? [
                   {
                     id: "exc",
-                    label: `${openExceptions} open exception(s)`,
+                    label: `${openExceptions} open ${openExceptions === 1 ? "blocker" : "blockers"} to resolve`,
                     href: `/payroll/runs/${runId}?tab=exceptions`,
                   },
                 ]

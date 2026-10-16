@@ -79,6 +79,7 @@ export type EmployeeListItem = Pick<
    * Optional so an older payload degrades to the previous behaviour.
    */
   hasAccepted?: boolean;
+  reportingToName?: string | null;
 };
 
 export interface EmployeeCursorPage {

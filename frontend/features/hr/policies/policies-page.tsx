@@ -45,8 +45,51 @@ const STATUS_BADGE: Record<string, string> = {
   archived: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
 };
 
+export interface PolicyLineage {
+  latest: HrPolicy;
+  versions: HrPolicy[];
+}
+
+export function groupPolicyVersions(policies: readonly HrPolicy[]): PolicyLineage[] {
+  const byLineage = new Map<string, HrPolicy[]>();
+  for (const policy of policies) {
+    const key = `${policy.policyType}\u0000${policy.name}`;
+    const group = byLineage.get(key);
+    if (group) group.push(policy);
+    else byLineage.set(key, [policy]);
+  }
+  return Array.from(byLineage.values(), (group) => {
+    const versions = [...group].sort((a, b) => a.version - b.version);
+    return { latest: versions[versions.length - 1], versions };
+  });
+}
+
+interface PolicyVersionChipProps {
+  policy: HrPolicy;
+  isLatest: boolean;
+  onPreview: (id: number) => void;
+}
+
+function PolicyVersionChip({ policy, isLatest, onPreview }: PolicyVersionChipProps) {
+  function handleClick() { onPreview(policy.id); }
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      aria-label={`Preview version ${policy.version} (${policy.status})`}
+      className={cn(
+        "rounded border px-1.5 py-0.5 text-xs font-mono",
+        STATUS_BADGE[policy.status] ?? "",
+        isLatest && "font-semibold",
+      )}
+    >
+      v{policy.version} {policy.status}
+    </button>
+  );
+}
+
 interface PolicyRowActionsProps {
-  row: HrPolicy;
+  row: PolicyLineage;
   canManage: boolean;
   onPreview: (id: number) => void;
   onEdit: (policy: HrPolicy) => void;
@@ -55,17 +98,17 @@ interface PolicyRowActionsProps {
 }
 
 function PolicyRowActions({ row, canManage, onPreview, onEdit, onActivate, activatingId }: PolicyRowActionsProps) {
-  function handlePreview() { onPreview(row.id); }
-  function handleEdit() { onEdit(row); }
-  function handleActivate() { onActivate(row.id); }
+  function handlePreview() { onPreview(row.latest.id); }
+  function handleEdit() { onEdit(row.latest); }
+  function handleActivate() { onActivate(row.latest.id); }
   return (
     <div className="flex items-center gap-1 justify-end">
-      {canManage && row.status === "draft" && (
+      {canManage && row.latest.status === "draft" && (
         <LoadingButton
           variant="outline"
           size="sm"
           className="h-7 text-xs"
-          isPending={activatingId === row.id}
+          isPending={activatingId === row.latest.id}
           onClick={handleActivate}
         >
           Activate
@@ -195,11 +238,11 @@ export function HrPoliciesPage() {
     {
       key: "name",
       header: "Name",
-      cell: (row: HrPolicy) => (
+      cell: (row: PolicyLineage) => (
         <div className="min-w-0">
-          <TruncatedText text={row.name} className="text-sm font-medium" />
-          {row.description && (
-            <TruncatedText text={row.description} className="text-xs text-muted-foreground" />
+          <TruncatedText text={row.latest.name} className="text-sm font-medium" />
+          {row.latest.description && (
+            <TruncatedText text={row.latest.description} className="text-xs text-muted-foreground" />
           )}
         </div>
       ),
@@ -207,47 +250,60 @@ export function HrPoliciesPage() {
     {
       key: "type",
       header: "Type",
-      cell: (row: HrPolicy) => (
-        <span className="text-xs text-muted-foreground">{POLICY_TYPE_LABELS[row.policyType]}</span>
+      cell: (row: PolicyLineage) => (
+        <span className="text-xs text-muted-foreground">{POLICY_TYPE_LABELS[row.latest.policyType]}</span>
       ),
     },
     {
       key: "status",
       header: "Status",
-      cell: (row: HrPolicy) => (
-        <Badge variant="outline" className={`text-xs px-2 py-0.5 ${STATUS_BADGE[row.status] ?? ""}`}>
-          {row.status}
+      cell: (row: PolicyLineage) => (
+        <Badge variant="outline" className={`text-xs px-2 py-0.5 ${STATUS_BADGE[row.latest.status] ?? ""}`}>
+          {row.latest.status}
         </Badge>
       ),
     },
     {
       key: "version",
-      header: "Version",
-      cell: (row: HrPolicy) => (
-        <span className="text-xs font-mono text-muted-foreground">v{row.version}</span>
+      header: "Versions",
+      cell: (row: PolicyLineage) => (
+        row.versions.length === 1 ? (
+          <span className="text-xs font-mono text-muted-foreground">v{row.latest.version}</span>
+        ) : (
+          <div className="flex flex-wrap gap-1">
+            {row.versions.map((version) => (
+              <PolicyVersionChip
+                key={version.id}
+                policy={version}
+                isLatest={version.id === row.latest.id}
+                onPreview={handlePreview}
+              />
+            ))}
+          </div>
+        )
       ),
     },
     {
       key: "effective",
       header: "Effective",
-      cell: (row: HrPolicy) => (
+      cell: (row: PolicyLineage) => (
         <span className="text-xs text-muted-foreground">
-          {row.effectiveFrom}
-          {row.effectiveTo ? ` → ${row.effectiveTo}` : ""}
+          {row.latest.effectiveFrom}
+          {row.latest.effectiveTo ? ` → ${row.latest.effectiveTo}` : ""}
         </span>
       ),
     },
     {
       key: "scopes",
       header: "Scopes",
-      cell: (row: HrPolicy) => (
-        <span className="text-xs text-muted-foreground">{row.scopes.length}</span>
+      cell: (row: PolicyLineage) => (
+        <span className="text-xs text-muted-foreground">{row.latest.scopes.length}</span>
       ),
     },
     {
       key: "actions",
       header: "",
-      cell: (row: HrPolicy) => (
+      cell: (row: PolicyLineage) => (
         <PolicyRowActions
           row={row}
           canManage={canManage}
@@ -259,6 +315,8 @@ export function HrPoliciesPage() {
       ),
     },
   ];
+
+  const lineages = groupPolicyVersions(data?.data ?? []);
 
   return (
     <PageWrapper
@@ -348,9 +406,9 @@ export function HrPoliciesPage() {
         ) : (
           <DataTable
             className="flex-1 min-h-0"
-            data={data?.data ?? []}
+            data={lineages}
             columns={columns}
-            getRowKey={(row) => String(row.id)}
+            getRowKey={(row) => String(row.latest.id)}
             pagination={{
               mode: "cursor",
               pageSize: 20,

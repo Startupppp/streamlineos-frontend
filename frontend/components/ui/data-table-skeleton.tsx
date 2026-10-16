@@ -4,7 +4,9 @@ import { WifiOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PAUSED_LABEL, PAUSED_MESSAGE } from "@/components/shared/loading-state";
+import { StalledReadNotice } from "@/components/shared/stalled-read-notice";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
+import { PANEL_STALLED_AFTER_MS, useStalledAfter } from "@/hooks/common/use-stalled-after";
 import {
   Table,
   TableBody,
@@ -25,15 +27,18 @@ type DataTableSkeletonProps = {
   rows?: number;
   className?: string;
   mobileCards?: boolean;
+  onStalledRetry?: () => void;
 } & ({ headers: readonly string[]; columns?: never } | { headers?: never; columns?: number });
 
 export function DataTableSkeleton({
   rows = 12,
   className,
   mobileCards = false,
+  onStalledRetry,
   ...shape
 }: DataTableSkeletonProps) {
   const isOnline = useOnlineStatus();
+  const stalled = useStalledAfter(isOnline && !!onStalledRetry, PANEL_STALLED_AFTER_MS);
   const headers = shape.headers ?? null;
   const columns = headers ? headers.length : (shape.columns ?? 4);
 
@@ -51,6 +56,9 @@ export function DataTableSkeleton({
           {PAUSED_MESSAGE}
         </p>
       )}
+      {stalled && onStalledRetry ? (
+        <StalledReadNotice subject="results" onRetry={onStalledRetry} className="m-2" />
+      ) : null}
       {mobileCards ? (
         <div className="flex flex-col gap-2 p-2 sm:hidden">
           {Array.from({ length: 6 }).map((_, cardIdx) => (

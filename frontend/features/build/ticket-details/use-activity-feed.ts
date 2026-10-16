@@ -28,6 +28,7 @@ import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
 import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
 import {
   MAX_PROJECT_FILE_BYTES,
+  PROJECT_FILE_TYPES_LABEL,
   isAllowedProjectFileType,
   useDeleteProjectFile,
   useUploadProjectFile,
@@ -301,7 +302,7 @@ export function useActivityFeed({
   const handleAttachFiles = useCallback(
     async (files: File[]) => {
       for (const file of files) {
-        const error = validatePreUpload(file, (f) => isAllowedProjectFileType(f.type));
+        const error = validatePreUpload(file, (f) => isAllowedProjectFileType(f.type), PROJECT_FILE_TYPES_LABEL);
         if (error) {
           toast.error(error);
           return;

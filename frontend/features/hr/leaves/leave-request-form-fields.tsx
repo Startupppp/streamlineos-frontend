@@ -240,6 +240,10 @@ export function LeaveRequestFormFields({
       {validation.dayLimitError ? (
         <LeaveLimitError message={validation.dayLimitError} />
       ) : null}
+
+      {validation.balanceError ? (
+        <LeaveLimitError message={validation.balanceError} />
+      ) : null}
     </div>
   );
 }

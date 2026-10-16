@@ -2,9 +2,11 @@ import { render, screen } from "@testing-library/react";
 import type { PayslipTemplate } from "@/types/payroll";
 import { PayslipPreviewSheet } from "./template-preview-sheet";
 
+const mutate = jest.fn();
+
 jest.mock("@/hooks/api/payroll", () => ({
   usePreviewPayslipTemplate: () => ({
-    mutate: jest.fn(),
+    mutate,
     isPending: false,
     isError: false,
     data: { html: "<p>Payslip for <b>Ada</b></p>" },
@@ -28,4 +30,19 @@ it("renders the backend's payslip HTML in a fully sandboxed frame, with no scrip
   // allow-scripts together with allow-same-origin would let the frame lift its
   // own sandbox and run the backend-interpolated HTML as the app.
   expect(screen.getByTitle("Payslip Preview")).toHaveAttribute("sandbox", "");
+});
+
+it("requests the preview when the sheet is mounted already open, so the drawer is never left empty", () => {
+  mutate.mockClear();
+  render(<PayslipPreviewSheet template={template} open onOpenChange={jest.fn()} />);
+
+  expect(mutate).toHaveBeenCalledTimes(1);
+  expect(mutate).toHaveBeenCalledWith({ layout: "CLASSIC", config: template.config });
+});
+
+it("sends no preview request while the sheet is closed", () => {
+  mutate.mockClear();
+  render(<PayslipPreviewSheet template={template} open={false} onOpenChange={jest.fn()} />);
+
+  expect(mutate).not.toHaveBeenCalled();
 });

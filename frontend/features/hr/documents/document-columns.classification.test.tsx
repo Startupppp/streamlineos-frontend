@@ -50,3 +50,14 @@ describe("document columns — Sharing", () => {
     expect(columns.map((column) => column.key)).toEqual(["name", "type", "date", "size", "actions"]);
   });
 });
+
+describe("document columns — Name", () => {
+  it("leads with the document name and shows the file name beneath it", () => {
+    const name = createDocumentColumns(noop, noop, noop).find((column) => column.key === "name");
+
+    render(<>{name?.cell(doc)}</>);
+    const title = screen.getByText("Handbook");
+    const file = screen.getByText("handbook.pdf");
+    expect(title.compareDocumentPosition(file) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+});

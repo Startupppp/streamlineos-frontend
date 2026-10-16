@@ -123,8 +123,13 @@ export function ReportJournal({ month }: ReportJournalProps) {
         Total Debit:{" "}
         <span className="font-mono">{formatMoney(totalDebit)}</span> · Total Credit:{" "}
         <span className="font-mono">{formatMoney(totalCredit)}</span>
-        {balanced && (
+        {balanced && unmappedCodes.length === 0 && (
           <span className="ml-2 text-status-success-ink font-medium">✓ Balanced</span>
+        )}
+        {unmappedCodes.length > 0 && (
+          <span className="ml-2 text-status-warning-ink font-medium">
+            Not ready to post — map {unmappedCodes.length} {unmappedCodes.length === 1 ? "code" : "codes"}
+          </span>
         )}
         {provisional && (
           <span className="ml-2 text-status-warning-ink font-medium">
@@ -229,8 +234,8 @@ export function ReportJournal({ month }: ReportJournalProps) {
           <div>
             <p className="text-xs font-semibold">Unmapped component codes</p>
             <p className="text-dense mt-1">
-              <span className="font-mono">{unmappedCodes.join(", ")}</span> — these codes have no
-              accounting mapping and were excluded from the journal.
+              <span className="font-mono">{unmappedCodes.join(", ")}</span> — these codes are in the
+              journal under a placeholder account because they have no accounting mapping.
               <Button
                 variant="link"
                 size="sm"

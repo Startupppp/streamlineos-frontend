@@ -1,6 +1,5 @@
 "use client";
 
-import { format } from "date-fns";
 import { Activity } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -13,6 +12,8 @@ import {
 } from "@/components/ui/sheet";
 import { resolveImageUrl } from "@/lib/utils";
 import { getInitials } from "@/lib/format-utils";
+import { formatDateTimeInOrgTz } from "@/lib/date-utils";
+import { useOrgTimeZone } from "@/hooks/api/org-display";
 import { actionBadgeClass } from "./audit-log-constants";
 import type { AuditLogRow } from "@/hooks/api/audit-log";
 
@@ -27,7 +28,31 @@ function DetailField({ label, children }: { label: string; children: React.React
   );
 }
 
+interface SettingChange {
+  field: string;
+  from: string;
+  to: string;
+}
+
+function displayValue(value: unknown): string {
+  if (value === null || value === undefined || value === "") return "—";
+  return typeof value === "string" ? value : JSON.stringify(value);
+}
+
+function readChanges(metadata: AuditLogRow["metadata"]): SettingChange[] {
+  const changes = metadata?.changes;
+  if (typeof changes !== "object" || changes === null) return [];
+  const rows: SettingChange[] = [];
+  for (const [field, change] of Object.entries(changes)) {
+    if (typeof change !== "object" || change === null || !("from" in change) || !("to" in change)) continue;
+    rows.push({ field, from: displayValue(change.from), to: displayValue(change.to) });
+  }
+  return rows;
+}
+
 export function LogDetailSheet({ log, onClose }: { log: AuditLogRow; onClose: () => void }) {
+  const orgTz = useOrgTimeZone();
+  const changes = readChanges(log.metadata);
   return (
     <Sheet open onOpenChange={(v) => !v && onClose()}>
       <SheetContent className="flex flex-col p-0 sm:max-w-[420px]">
@@ -61,11 +86,27 @@ export function LogDetailSheet({ log, onClose }: { log: AuditLogRow; onClose: ()
             </DetailField>
           )}
           <DetailField label="Timestamp">
-            <p className="text-sm">{format(new Date(log.createdAt), "PPpp")}</p>
+            <p className="text-sm">{formatDateTimeInOrgTz(log.createdAt, orgTz)}</p>
           </DetailField>
           {log.ipAddress && (
             <DetailField label="IP Address">
               <p className="text-sm font-mono">{log.ipAddress}</p>
+            </DetailField>
+          )}
+          {changes.length > 0 && (
+            <DetailField label="Changes">
+              <ul className="space-y-1.5 text-sm">
+                {changes.map((change) => (
+                  <li key={change.field} className="wrap-break-word">
+                    <span className="font-mono text-xs text-muted-foreground">{change.field}</span>
+                    <span className="block">
+                      <span className="text-muted-foreground line-through">{change.from}</span>
+                      {" → "}
+                      <span className="font-medium">{change.to}</span>
+                    </span>
+                  </li>
+                ))}
+              </ul>
             </DetailField>
           )}
           {log.metadata && Object.keys(log.metadata).length > 0 && (

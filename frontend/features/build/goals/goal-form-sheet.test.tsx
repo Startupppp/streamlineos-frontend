@@ -150,6 +150,19 @@ describe("GoalFormSheet conflict UX (Task C)", () => {
       );
     });
   });
+  it("sends one create when the form is submitted twice before the first save settles", async () => {
+    const mutate = buildMutate();
+    mockUseCreateGoal.mockReturnValue({ mutate, isPending: false });
+
+    render(<GoalFormSheet open onOpenChange={jest.fn()} />);
+    fireEvent.change(screen.getByTestId("objective-fields"), { target: { value: "Once only" } });
+    fireEvent.submit(document.querySelector("form")!);
+    fireEvent.submit(document.querySelector("form")!);
+
+    await waitFor(() => expect(mutate).toHaveBeenCalledTimes(1));
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(mutate).toHaveBeenCalledTimes(1);
+  });
   it("shows the conflict alert when the update returns a 409 ApiError", async () => {
     const conflictError = new ApiError("Conflict", 409, "PROJECTS_TICKET_CONFLICT", { currentVersion: 4 });
     const mutate = buildMutate((_, opts) => opts.onError?.(conflictError));

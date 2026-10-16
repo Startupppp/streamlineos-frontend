@@ -180,6 +180,7 @@ export function WorkerDetailPage({ workerId }: WorkerDetailPageProps) {
         open={sheetOpen}
         onClose={handleEditClose}
         existingProfile={activeProfile}
+        existingComponents={profileData?.components}
       />
     </PageWrapper>
   );
