@@ -7,6 +7,7 @@ import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { usePermissionGate } from "@/hooks/api/access";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { gated } from "@/lib/rbac/permission-gate";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import type {
   CalendarWorkflowAction,
   CalendarWorkflowChannel,
@@ -70,6 +71,7 @@ export function useCalendarWorkflowPolicy() {
     queryKey: workflowKeys.policy,
     queryFn: ({ signal }) => apiClient.get<CalendarWorkflowPolicy>("/calendar/admin/workflows/policy", undefined, signal, policyContract),
     staleTime: 30_000,
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -78,6 +80,7 @@ export function useCalendarWorkflowRules() {
     queryKey: workflowKeys.rules,
     queryFn: ({ signal }) => apiClient.get<CalendarWorkflowRule[]>("/calendar/admin/workflows/rules", undefined, signal, rulesContract),
     staleTime: 30_000,
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -108,6 +111,7 @@ export function useCalendarWorkflowEffects(status?: CalendarWorkflowEffect["stat
     getNextPageParam: (page) => page.nextCursor ?? undefined,
     refetchInterval: 30_000,
     enabled: access.allowed,
+    ...INLINE_READ_ERROR,
   });
   return gated(query, access);
 }

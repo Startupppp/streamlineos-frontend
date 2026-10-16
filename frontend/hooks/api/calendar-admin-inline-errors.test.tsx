@@ -3,6 +3,8 @@ import { renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { readErrorReachesBoundary } from "@/lib/query-error-policy";
 import { useCalendarAdminPolicy, useCalendarAnalytics } from "./calendar-admin";
+import { useCalendarWorkflowEffects, useCalendarWorkflowPolicy, useCalendarWorkflowRules } from "./calendar-workflows";
+import { useCalendarDeveloperCredentials } from "./calendar-developer";
 
 const get = jest.fn();
 
@@ -12,6 +14,7 @@ jest.mock("@/hooks/api/access", () => ({
 
 jest.mock("@/lib/api-client", () => ({
   apiClient: { get: (...args: unknown[]) => get(...args) },
+  isApiError: () => false,
 }));
 
 function wrapper({ children }: { children: ReactNode }) {
@@ -22,6 +25,10 @@ function wrapper({ children }: { children: ReactNode }) {
 it.each([
   ["governance", () => useCalendarAdminPolicy()],
   ["analytics", () => useCalendarAnalytics("2026-09-01", "2026-10-01")],
+  ["workflow policy", () => useCalendarWorkflowPolicy()],
+  ["workflow rules", () => useCalendarWorkflowRules()],
+  ["workflow effects", () => useCalendarWorkflowEffects()],
+  ["developer credentials", () => useCalendarDeveloperCredentials()],
 ])("keeps a failed Calendar %s read in its own retry state", async (_name, useRead) => {
   get.mockReset().mockRejectedValue(new Error("Calendar read unavailable"));
   const { result } = renderHook(useRead, { wrapper });

@@ -6,6 +6,7 @@ import { isApiError, lazyContract } from "@/lib/api-envelope";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import type {
   CalendarApiScope,
   CalendarDeveloperCredentialPage,
@@ -26,6 +27,7 @@ export function useCalendarDeveloperCredentials(cursor?: string) {
     queryKey: [...keys.all, cursor ?? null],
     queryFn: ({ signal }) => apiClient.get<CalendarDeveloperCredentialPage>("/calendar/admin/developer/credentials", { limit: 20, cursor }, signal, pageContract),
     staleTime: 30_000,
+    ...INLINE_READ_ERROR,
   });
 }
 
