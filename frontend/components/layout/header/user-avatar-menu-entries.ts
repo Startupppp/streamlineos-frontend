@@ -27,7 +27,8 @@ export type MenuLink = {
 export type MenuEntry =
   | { kind: "links"; links: MenuLink[] }
   | { kind: "separator" }
-  | { kind: "theme" };
+  | { kind: "theme" }
+  | { kind: "signout" };
 
 export function buildMenuEntries(opts: {
   canManageSettings: boolean;
@@ -128,5 +129,7 @@ export function buildMenuEntries(opts: {
   if (prefsLinks.length > 1) {
     entries.push({ kind: "links", links: prefsLinks.slice(1) });
   }
+  entries.push({ kind: "separator" }, { kind: "signout" });
+
   return entries;
 }

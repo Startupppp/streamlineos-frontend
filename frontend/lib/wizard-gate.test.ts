@@ -1,7 +1,6 @@
 import type { Session } from "next-auth";
-import type { AccessResponse } from "@/types/access";
 import { gateCookieName, GATE_COOKIE_MAX_AGE, ONBOARDING_DEFERRED_MAX_AGE } from "./onboarding-gate";
-import { onboardingGateYieldsToDenial, resolveWizardGate } from "./wizard-gate";
+import { resolveWizardGate } from "./wizard-gate";
 
 function session(overrides: Partial<Session> = {}): Session {
   return {
@@ -596,30 +595,5 @@ describe("resolveWizardGate", () => {
         ),
       ).toBeNull();
     });
-  });
-});
-
-describe("onboardingGateYieldsToDenial (QA 2026-10-13: denial wins over the onboarding detour)", () => {
-  const employee: Pick<AccessResponse, "isOrgOwner" | "scopes"> = {
-    isOrgOwner: false,
-    scopes: { "hr:leaves:view": "own" },
-  };
-
-  it("lets the denial win on a route whose permission the user lacks", () => {
-    expect(onboardingGateYieldsToDenial("/hr/employees", employee)).toBe(true);
-  });
-
-  it("keeps the onboarding gate on a route the user may open", () => {
-    expect(
-      onboardingGateYieldsToDenial("/hr/employees", {
-        isOrgOwner: false,
-        scopes: { "hr:employees:view": "all" },
-      }),
-    ).toBe(false);
-  });
-
-  it("keeps the onboarding gate for an owner and for routes with no permission", () => {
-    expect(onboardingGateYieldsToDenial("/hr/employees", { isOrgOwner: true, scopes: {} })).toBe(false);
-    expect(onboardingGateYieldsToDenial("/dashboard", employee)).toBe(false);
   });
 });

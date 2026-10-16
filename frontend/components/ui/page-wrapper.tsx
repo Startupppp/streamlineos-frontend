@@ -122,7 +122,7 @@ export function PageWrapper({
   }, [onBack, requestLeave]);
 
   const isInterrupted = state !== undefined && state.kind !== "ready" && state.kind !== "empty";
-  const visibleActions = isInterrupted && state?.kind !== "loading" ? undefined : actions;
+  const visibleActions = isInterrupted ? undefined : actions;
   const visibleFilters = isInterrupted ? undefined : filters;
   const titleClass =
     variant === "display"

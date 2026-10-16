@@ -22,13 +22,16 @@ import { toast } from "sonner";
 import { resolveImageUrl } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import { SettingsEditNameForm } from "./settings-edit-name-form";
 
 const AvatarCropDialog = dynamic(
   () => import("@/components/ui/avatar-crop-dialog").then((m) => ({ default: m.AvatarCropDialog })),
   { ssr: false },
 );
 
+const SettingsEditNameForm = dynamic(
+  () => import("./settings-edit-name-form").then((m) => ({ default: m.SettingsEditNameForm })),
+  { ssr: false },
+);
 
 export function SettingsProfile() {
   const { data: session } = useSession();

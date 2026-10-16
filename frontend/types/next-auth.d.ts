@@ -58,6 +58,5 @@ declare module "next-auth/jwt" {
     suspendedOrganizationName?: SessionClaims["suspendedOrganizationName"];
     isPlatformAdmin?: SessionClaims["isPlatformAdmin"];
     authProvider?: string;
-    claimsRefreshedAt?: number;
   }
 }

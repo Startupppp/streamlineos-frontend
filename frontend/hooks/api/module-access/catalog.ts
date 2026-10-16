@@ -2,7 +2,6 @@
 
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { directoryAndOwnershipQueryKeys } from "@/lib/query-keys/directory-and-ownership";
 import { useCan } from "@/hooks/api/access";
 import type { AuditCursorPage, AuditLogEntry, ModuleMyPermissions, ModulePermission } from "./types";
@@ -32,7 +31,6 @@ export function useModuleAccessCatalog(
 ) {
   const canView = useCan(viewKey(moduleKey));
   return useQuery<ModulePermission[], Error>({
-    ...INLINE_READ_ERROR,
     queryKey: directoryAndOwnershipQueryKeys.moduleAccess.catalog(moduleKey),
     queryFn: ({ signal }) =>
       apiClient.get(
@@ -49,7 +47,6 @@ export function useModuleAccessCatalog(
 export function useModuleMyPermissions(moduleKey: string) {
   const canView = useCan(viewKey(moduleKey));
   return useQuery<ModuleMyPermissions, Error>({
-    ...INLINE_READ_ERROR,
     queryKey: directoryAndOwnershipQueryKeys.moduleAccess.myPermissions(moduleKey),
     queryFn: ({ signal }) =>
       apiClient.get(
@@ -70,7 +67,6 @@ export function useModuleAuditLog(
 ) {
   const canView = useCan(viewKey(moduleKey));
   return useInfiniteQuery<AuditCursorPage<AuditLogEntry>, Error>({
-    ...INLINE_READ_ERROR,
     queryKey: directoryAndOwnershipQueryKeys.moduleAccess.auditLog(moduleKey, { limit }),
     queryFn: ({ pageParam, signal }) => {
       const params = new URLSearchParams({ limit: String(limit) });

@@ -8,7 +8,7 @@ import { apiClient } from "@/lib/api-client";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { accessAndCrmQueryKeys } from "@/lib/query-keys/access-and-crm";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
-import { ApiError, lazyContract } from "@/lib/api-envelope";
+import { lazyContract } from "@/lib/api-envelope";
 import type {
   AccessResponse,
   DataScope,
@@ -27,9 +27,6 @@ import {
 } from "@/lib/rbac/permission-gate";
 
 export type { PermissionGate };
-
-const NO_ORGANIZATION_MESSAGE =
-  "Your session has no active organization. Switch to an organization or sign in again.";
 
 export const ACCESS_INVALIDATION_KEY_PREFIX = "access:invalidated";
 
@@ -70,10 +67,9 @@ export const useAccess = (
     "queryKey" | "queryFn"
   >,
 ) => {
-  const { data: session, status } = useSession();
+  const { data: session } = useSession();
   const orgId = session?.orgId;
   const userId = session?.user?.id;
-  const missingOrgContext = status === "authenticated" && !(orgId && userId);
   const { enabled: enabledOption, ...restOptions } = options ?? {};
   const queryClient = useQueryClient();
 
@@ -98,11 +94,9 @@ export const useAccess = (
     refetchOnReconnect: true,
     queryKey: platformCoreQueryKeys.access.me(),
     queryFn: ({ signal }) =>
-      missingOrgContext
-        ? Promise.reject(new ApiError(NO_ORGANIZATION_MESSAGE, undefined, "NO_ORGANIZATION_CONTEXT"))
-        : apiClient.get("/me/access", undefined, signal, accessContract),
+      apiClient.get("/me/access", undefined, signal, accessContract),
     ...restOptions,
-    enabled: (missingOrgContext || (!!orgId && !!userId)) && (enabledOption ?? true),
+    enabled: !!orgId && !!userId && (enabledOption ?? true),
   });
 };
 

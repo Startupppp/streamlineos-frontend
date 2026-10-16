@@ -12,15 +12,12 @@ import {
 import { newCorrelationId, noteCorrelationId } from "./observability";
 import { IDEMPOTENCY_HEADER, newIdempotencyKey } from "@/lib/idempotency-key";
 import { assertRequestIdentity, type ExpectedRequestIdentity } from "./api-request-identity";
-import { noteOriginOutage, outageCircuitRemainingMs, resetOutageCircuit } from "./api-outage-circuit";
 
 if (!process.env.NEXT_PUBLIC_API_URL)
   throw new Error("NEXT_PUBLIC_API_URL is not set");
 
 const BACKEND_API_URL = process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, "");
 const REQUEST_TIMEOUT_MS = 30_000;
-const MUTATION_TIMEOUT_MS = 15_000;
-const MODEL_BACKED_PATH = /(^|\/)ai[/-]|summar/i;
 
 function linkAbortSignals(sources: readonly AbortSignal[]): AbortSignal {
   const controller = new AbortController();
@@ -37,29 +34,14 @@ function linkAbortSignals(sources: readonly AbortSignal[]): AbortSignal {
 }
 
 function makeRequestSignal(
-  external: AbortSignal | undefined,
-  timeoutMs: number,
+  external?: AbortSignal,
+  timeoutMs?: number,
 ): AbortSignal {
-  const timeout = AbortSignal.timeout(timeoutMs);
+  const timeout = AbortSignal.timeout(timeoutMs ?? REQUEST_TIMEOUT_MS);
   if (!external) return timeout;
   if (typeof AbortSignal.any === "function")
     return AbortSignal.any([timeout, external]);
   return linkAbortSignals([timeout, external]);
-}
-
-function abortedError(signal: AbortSignal): ApiError {
-  return signal.reason instanceof DOMException && signal.reason.name === "TimeoutError"
-    ? new ApiError("Request timed out. Please try again.", undefined, "TIMEOUT")
-    : new ApiError("Request was cancelled.", undefined, "ABORTED");
-}
-
-function untilAborted<T>(work: Promise<T>, signal: AbortSignal): Promise<T> {
-  if (signal.aborted) return Promise.reject(abortedError(signal));
-  return new Promise<T>((resolve, reject) => {
-    const onAbort = () => reject(abortedError(signal));
-    signal.addEventListener("abort", onAbort, { once: true });
-    work.then(resolve, reject).finally(() => signal.removeEventListener("abort", onAbort));
-  });
 }
 
 export interface AuthedFetchOptions {
@@ -330,13 +312,9 @@ export async function authedFetch(
   const { signal: initSignal, ...requestInit } = init;
   const headers = new Headers(init.headers);
   const isPublic = isPublicPath(path);
-  const isMutating = MUTATING_METHODS.has((init.method ?? "GET").toUpperCase());
   const combinedSignal = makeRequestSignal(
     signal ?? initSignal ?? undefined,
-    options?.timeoutMs ??
-      (isMutating && !(init.body instanceof FormData) && !MODEL_BACKED_PATH.test(path)
-        ? MUTATION_TIMEOUT_MS
-        : REQUEST_TIMEOUT_MS),
+    options?.timeoutMs,
   );
 
   if (!headers.has("x-correlation-id")) {
@@ -345,7 +323,7 @@ export async function authedFetch(
     noteCorrelationId(correlationId);
   }
 
-  if (!isPublic && isMutating) {
+  if (!isPublic && MUTATING_METHODS.has((init.method ?? "GET").toUpperCase())) {
     if (!headers.has(IDEMPOTENCY_HEADER))
       headers.set(IDEMPOTENCY_HEADER, newIdempotencyKey());
   }
@@ -355,7 +333,7 @@ export async function authedFetch(
 
   let sentToken: string | null = null;
   if (!isPublic) {
-    sentToken = await untilAborted(getBackendToken(tokenOptions), combinedSignal);
+    sentToken = await getBackendToken(tokenOptions);
     if (sentToken) headers.set("Authorization", `Bearer ${sentToken}`);
   }
 
@@ -364,7 +342,7 @@ export async function authedFetch(
 
   let finalToken = sentToken;
   if (!isPublic && res.status === 401) {
-    const token = await untilAborted(refreshAfterUnauthorized(sentToken, tokenOptions), combinedSignal);
+    const token = await refreshAfterUnauthorized(sentToken, tokenOptions);
     assertRequestIdentity(token, options?.expectedIdentity, combinedSignal, isImpersonating());
     if (token) {
       finalToken = token;
@@ -379,7 +357,22 @@ export async function authedFetch(
   return res;
 }
 
+const OUTAGE_BASE_MS = 5_000;
+const OUTAGE_CEILING_MS = 60_000;
 const OUTAGE_STATUSES = new Set([502, 503, 504]);
+let outageUntil = 0;
+let outageBackoffMs = OUTAGE_BASE_MS;
+
+function noteOriginOutage(): void {
+  if (Date.now() < outageUntil) return;
+  outageUntil = Date.now() + outageBackoffMs;
+  outageBackoffMs = Math.min(OUTAGE_CEILING_MS, outageBackoffMs * 2);
+}
+
+export function resetOutageCircuit(): void {
+  outageUntil = 0;
+  outageBackoffMs = OUTAGE_BASE_MS;
+}
 
 function networkError(
   url: string,
@@ -406,7 +399,7 @@ async function fetchOrThrowTransportError(
   signal: AbortSignal,
   path: string,
 ): Promise<Response> {
-  if (outageCircuitRemainingMs() > 0)
+  if (Date.now() < outageUntil)
     throw networkError(url, requestInit, path, "Server unavailable; retrying shortly.");
   try {
     const res = await fetch(url, { ...requestInit, headers, credentials: "omit", signal });
@@ -640,9 +633,7 @@ async function download(
     init.headers = { "Content-Type": "application/json" };
     init.body = JSON.stringify(config.body);
   }
-  const res = await authedFetch(buildUrl(url, params), init, url, undefined, {
-    timeoutMs: REQUEST_TIMEOUT_MS,
-  });
+  const res = await authedFetch(buildUrl(url, params), init, url);
   if (!res.ok) throw await apiErrorFromResponse(res);
   config?.onResponseHeaders?.(res.headers);
   return res.blob();

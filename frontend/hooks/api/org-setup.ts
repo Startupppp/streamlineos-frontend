@@ -147,7 +147,7 @@ export function useOrgSetupPreviewMutation() {
   return useMutation({
     mutationKey: ["org", "setup", "preview"],
     mutationFn: (payload: OrgSetupPreviewPayload) =>
-      apiClient.post("/org/setup/selection/preview", payload, { timeoutMs: 10_000 }, orgSetupPreviewContract),
+      apiClient.post("/org/setup/selection/preview", payload, undefined, orgSetupPreviewContract),
     retry: false,
   });
 }

@@ -3,7 +3,7 @@ import { QUICK_CREATE_GROUPS, orderGroupsForProduct } from "./quick-create-group
 describe("the Create menu leads with the product the viewer is in", () => {
   it("moves the People group first inside HR and keeps the rest in catalogue order", () => {
     const ordered = orderGroupsForProduct(QUICK_CREATE_GROUPS, "hrms").map((group) => group.id)
-    expect(ordered).toEqual(["people", "comms", "work", "crm", "payroll", "docs"])
+    expect(ordered).toEqual(["people", "comms", "work", "crm", "docs"])
   })
 
   it("keeps the catalogue order on a product no group claims", () => {
@@ -18,10 +18,5 @@ describe("the Create menu leads with the product the viewer is in", () => {
         expect(seen.get(product)).toBeUndefined()
         seen.set(product, group.id)
       }
-  })
-
-  it("leads with the Payroll group inside Payroll", () => {
-    const ordered = orderGroupsForProduct(QUICK_CREATE_GROUPS, "payroll").map((group) => group.id)
-    expect(ordered[0]).toBe("payroll")
   })
 })

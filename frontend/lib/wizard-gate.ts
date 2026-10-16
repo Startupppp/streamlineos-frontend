@@ -1,9 +1,6 @@
 import "server-only";
 import type { Session } from "next-auth";
 import { gateCookieName, mayDeferOwnOnboarding } from "@/lib/onboarding-gate";
-import { grantsPermission } from "@/lib/rbac/permission-gate";
-import { resolveRouteAccess } from "@/lib/rbac/route-access/route-access";
-import type { AccessResponse } from "@/types/access";
 
 export type WizardGate =
   | "/access-suspended"
@@ -62,14 +59,4 @@ export function resolveWizardGate(
   }
 
   return null;
-}
-
-export function onboardingGateYieldsToDenial(
-  destination: string,
-  access: Pick<AccessResponse, "isOrgOwner" | "scopes">,
-): boolean {
-  const decision = resolveRouteAccess(destination);
-  if (decision.kind !== "permission" || decision.permission === null) return false;
-  const keys = Array.isArray(decision.permission) ? decision.permission : [decision.permission];
-  return !keys.some((key) => grantsPermission(access, key));
 }

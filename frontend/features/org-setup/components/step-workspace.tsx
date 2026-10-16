@@ -182,7 +182,7 @@ export function StepWorkspace({
 
         <div className="min-w-0 space-y-1">
           <Label className="text-label font-semibold text-foreground">Team size *</Label>
-          <Select onValueChange={handleTeamSizeChange} value={data.teamSize ?? ""}>
+          <Select onValueChange={handleTeamSizeChange} value={data.teamSize || undefined}>
             <SelectTrigger className="w-full text-sm">
               <SelectValue placeholder="Select team size" />
             </SelectTrigger>
@@ -199,7 +199,7 @@ export function StepWorkspace({
 
         <div className="min-w-0 space-y-1">
           <Label htmlFor="workspace-industry" className="text-label font-semibold text-foreground">Industry *</Label>
-          <Select onValueChange={handleIndustrySelect} value={INDUSTRIES.includes(data.industry) ? data.industry : ""}>
+          <Select onValueChange={handleIndustrySelect} value={INDUSTRIES.includes(data.industry) ? data.industry : undefined}>
             <SelectTrigger id="workspace-industry" className="w-full text-sm" aria-invalid={!!errors.industry} aria-describedby={errors.industry ? "industry-error" : undefined}>
               <SelectValue placeholder="Select industry" />
             </SelectTrigger>

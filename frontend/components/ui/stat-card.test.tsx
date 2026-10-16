@@ -126,11 +126,3 @@ describe("StatCard tones", () => {
   });
 });
 
-describe("StatCard label", () => {
-  it("wraps to two lines instead of cutting a label at one (QA 2026-10-13, 768px)", () => {
-    const { getByText } = render(<StatCard label="Total Employees" value={4} />);
-    const label = getByText("Total Employees");
-    expect(label).toHaveClass("line-clamp-2", "break-words");
-    expect(label).not.toHaveClass("truncate");
-  });
-});

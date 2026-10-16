@@ -46,7 +46,7 @@ export default function DashboardNotFound() {
           size="lg"
           className="min-w-[200px]"
         >
-          <Link href="/contact">
+          <Link href="/settings">
             <HeadphonesIcon className="mr-2 h-4 w-4" />
             Contact Support
           </Link>
@@ -57,14 +57,23 @@ export default function DashboardNotFound() {
         variants={fadeUp}
         className="mt-16 pt-8 border-t border-border w-full max-w-2xl flex justify-center gap-8 text-xs text-muted-foreground font-medium"
       >
-        <Link href="/legal/privacy" className="hover:text-primary transition-colors">
+        <Link
+          href="/dashboard"
+          className="hover:text-primary transition-colors"
+        >
+          System Status
+        </Link>
+        <Link
+          href="/settings"
+          className="hover:text-primary transition-colors"
+        >
           Privacy Policy
         </Link>
-        <Link href="/legal/terms" className="hover:text-primary transition-colors">
-          Terms of Service
-        </Link>
-        <Link href="/legal/security" className="hover:text-primary transition-colors">
-          Security
+        <Link
+          href="/settings"
+          className="hover:text-primary transition-colors"
+        >
+          Documentation
         </Link>
       </motion.div>
     </motion.div>

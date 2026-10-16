@@ -149,56 +149,6 @@ const nextConfig: NextConfig = {
       permanent: false,
     },
     {
-      source: "/hr/directory",
-      destination: "/hr/employees",
-      permanent: false,
-    },
-    {
-      source: "/hr/policies",
-      destination: "/hr/settings/policies",
-      permanent: false,
-    },
-    {
-      source: "/pay",
-      destination: "/me/pay",
-      permanent: false,
-    },
-    {
-      source: "/expenses",
-      destination: "/me/expenses",
-      permanent: false,
-    },
-    {
-      source: "/hr/people",
-      destination: "/hr/employees",
-      permanent: false,
-    },
-    {
-      source: "/hr/time-clocks",
-      destination: "/hr/devices",
-      permanent: false,
-    },
-    {
-      source: "/hr/support",
-      destination: "/hr/helpdesk",
-      permanent: false,
-    },
-    {
-      source: "/hr/compensation",
-      destination: "/hr/compensation-planning",
-      permanent: false,
-    },
-    {
-      source: "/hr/doc-types",
-      destination: "/hr/document-types",
-      permanent: false,
-    },
-    {
-      source: "/hr/doc-review",
-      destination: "/hr/document-review",
-      permanent: false,
-    },
-    {
       source: "/hr/payroll/salary-structures",
       destination: "/payroll/salary-structures",
       permanent: false,
@@ -229,6 +179,16 @@ const nextConfig: NextConfig = {
       source: "/hr/settings/company",
       destination: "/settings/organization",
       permanent: false,
+    },
+    {
+      source: "/hr/leave-policies",
+      destination: "/hr/settings/policies",
+      permanent: true,
+    },
+    {
+      source: "/hr/leave-policies/:path*",
+      destination: "/hr/settings/policies",
+      permanent: true,
     },
     {
       source: "/hr/settings/managers",

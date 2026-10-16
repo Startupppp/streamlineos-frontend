@@ -72,9 +72,6 @@ export function useQuickCreateGroups(): CreateGroup[] {
   const canSign = useCan("sign:envelope:create")
   const canAccounting = useCan("accounting:manage")
   const canProduct = useCan("inventory:products:create")
-  const canPayrollRun = useCan("payroll:runs:manage")
-  const canBonus = useCan("hr:bonuses:manage")
-  const canPayrollView = useCan("hr:payroll:view")
 
   return useMemo(() => {
     const granted = new Map<PermissionKey, boolean>([
@@ -97,9 +94,6 @@ export function useQuickCreateGroups(): CreateGroup[] {
       ["sign:envelope:create", canSign],
       ["accounting:manage", canAccounting],
       ["inventory:products:create", canProduct],
-      ["payroll:runs:manage", canPayrollRun],
-      ["hr:bonuses:manage", canBonus],
-      ["hr:payroll:view", canPayrollView],
     ])
 
     function hasPermission(permission?: PermissionKey | readonly PermissionKey[]): boolean {
@@ -139,9 +133,6 @@ export function useQuickCreateGroups(): CreateGroup[] {
     canSign,
     canAccounting,
     canProduct,
-    canPayrollRun,
-    canBonus,
-    canPayrollView,
   ])
 }
 

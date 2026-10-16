@@ -5,7 +5,6 @@ import {
 import { fromModuleDenial } from "@/lib/page-state/resolve-page-state";
 import { moduleDenialReasonContract } from "@/lib/page-state/page-state-schema";
 import { isPermissionKey } from "@/contracts/permission-key.generated";
-import { NoPermissionState } from "@/components/shared/no-permission-state";
 
 const MODULE_REQUIRED_PREFIX = "module:";
 
@@ -42,7 +41,5 @@ function resolveAccessDeniedState(
 
 export default async function AccessDeniedPage({ searchParams }: AccessDeniedPageProps) {
   const { required, reason } = await searchParams;
-  const anyOf = required?.includes(",") ? required.split(",").filter(isPermissionKey) : [];
-  if (anyOf.length > 0) return <NoPermissionState permission={anyOf} />;
   return <DeniedView resolution={resolveAccessDeniedState(required, reason)} />;
 }

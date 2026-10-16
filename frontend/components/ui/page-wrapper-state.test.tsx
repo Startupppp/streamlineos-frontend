@@ -52,23 +52,4 @@ describe("PageWrapper state", () => {
     expect(screen.getByRole("button", { name: "Add" })).toBeInTheDocument();
     expect(screen.getByText("table")).toBeInTheDocument();
   });
-
-  it("keeps the actions while the body loads, so a slow read does not hide the primary action (QA 2026-10-13)", () => {
-    render(
-      <TooltipProvider>
-        <PageWrapper
-          title="Employees"
-          actions={<button type="button">Add</button>}
-          filters={<input aria-label="Search" />}
-          state={{ kind: "loading" }}
-          loading={<div data-testid="skeleton" />}
-        >
-          <div>table</div>
-        </PageWrapper>
-      </TooltipProvider>,
-    );
-    expect(screen.getByRole("button", { name: "Add" })).toBeInTheDocument();
-    expect(screen.getByTestId("skeleton")).toBeInTheDocument();
-    expect(screen.queryByText("table")).toBeNull();
-  });
 });

@@ -103,7 +103,7 @@ export function useVerifyOtp(
   return useMutation<VerifyOtpResult, Error, { email: string; code: string }>({
     mutationKey: ["auth", "verify-otp"],
     mutationFn: (variables: { email: string; code: string }) =>
-      apiClient.post<VerifyOtpResult>("/auth/email-otp/verify", variables, { timeoutMs: 15_000 }, verifyOtpContract),
+      apiClient.post<VerifyOtpResult>("/auth/email-otp/verify", variables, undefined, verifyOtpContract),
     ...options,
   });
 }

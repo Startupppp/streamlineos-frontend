@@ -17,35 +17,11 @@ jest.mock("@/hooks/api/chat-core-mutations-b", () => ({
   useCreatePrivateChannel: () => ({ mutateAsync: jest.fn(), isPending: false }),
 }));
 
-interface MockChatUsers {
-  data: { id: string; name: string | null; email: string | null; image: string | null; role: string | null }[] | undefined;
-  isLoading: boolean;
-  isError: boolean;
-  error: Error | null;
-}
-let mockChatUsers: MockChatUsers;
-const mockUseChatOrgUsers = jest.fn((_enabled: boolean) => mockChatUsers);
-jest.mock("@/hooks/api/chat-core-read", () => ({
-  useChatOrgUsers: (enabled: boolean) => mockUseChatOrgUsers(enabled),
-}));
-
 jest.mock("@/components/shared", () => ({
-  MemberPicker: ({
-    onToggle,
-    candidates,
-    placeholder,
-  }: {
-    onToggle: (id: string) => void;
-    candidates?: { id: string; name: string | null }[];
-    placeholder?: string;
-  }) => (
-    <div>
-      <span>{placeholder}</span>
-      {candidates?.map((c) => <span key={c.id}>{c.name}</span>)}
-      <button data-testid="add-member" onClick={() => onToggle("user-1")}>
-        Add member
-      </button>
-    </div>
+  MemberPicker: ({ onToggle }: { onToggle: (id: string) => void }) => (
+    <button data-testid="add-member" onClick={() => onToggle("user-1")}>
+      Add member
+    </button>
   ),
 }));
 
@@ -114,42 +90,6 @@ import { NewGroupDialog } from "./new-group-dialog";
 beforeEach(() => {
   jest.clearAllMocks();
   mockGroupMutateAsync.mockResolvedValue({ id: 99 });
-  mockChatUsers = { data: [], isLoading: false, isError: false, error: null };
-});
-
-describe("NewGroupDialog — BUG-009 member picker reads the chat directory", () => {
-  function openMembersStep() {
-    render(<NewGroupDialog open onOpenChange={jest.fn()} onCreated={jest.fn()} hideTrigger />);
-    fireEvent.change(screen.getByPlaceholderText("e.g. design-team"), { target: { value: "dev-team" } });
-    fireEvent.click(screen.getByText("Next: Add Members"));
-  }
-
-  it("lists GET /chat/users as the picker's candidates, fetched only on the members step", () => {
-    mockChatUsers = {
-      data: [{ id: "u-2", name: "Asha Rao", email: "asha@example.com", image: null, role: "MEMBER" }],
-      isLoading: false,
-      isError: false,
-      error: null,
-    };
-    render(<NewGroupDialog open onOpenChange={jest.fn()} onCreated={jest.fn()} hideTrigger />);
-    expect(mockUseChatOrgUsers).toHaveBeenLastCalledWith(false);
-    fireEvent.change(screen.getByPlaceholderText("e.g. design-team"), { target: { value: "dev-team" } });
-    fireEvent.click(screen.getByText("Next: Add Members"));
-    expect(mockUseChatOrgUsers).toHaveBeenLastCalledWith(true);
-    expect(screen.getByText("Asha Rao")).toBeInTheDocument();
-  });
-
-  it("says it is loading while the directory read is pending", () => {
-    mockChatUsers = { data: undefined, isLoading: true, isError: false, error: null };
-    openMembersStep();
-    expect(screen.getByText("Loading members…")).toBeInTheDocument();
-  });
-
-  it("shows the read error instead of an empty picker", () => {
-    mockChatUsers = { data: undefined, isLoading: false, isError: true, error: new Error("Directory unavailable") };
-    openMembersStep();
-    expect(screen.getByRole("alert")).toHaveTextContent("Directory unavailable");
-  });
 });
 
 describe("NewGroupDialog — STRE-142 success toast on create", () => {

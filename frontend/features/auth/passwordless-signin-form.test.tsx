@@ -110,18 +110,6 @@ describe("PasswordlessSigninForm", () => {
       expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
       expect(screen.getByRole("button", { name: /continue/i })).toBeInTheDocument();
     });
-
-    it("shows a failed or timed-out send inline under the email, not only in a toast (BUG-003)", async () => {
-      setupMocks();
-      render(<PasswordlessSigninForm getCallbackUrl={() => "/dashboard"} />);
-
-      await act(async () => {
-        requestOtpOnError?.(new Error("Request timed out. Please try again."));
-      });
-
-      expect(screen.getByRole("alert")).toHaveTextContent("Request timed out. Please try again.");
-      expect(screen.getByLabelText(/email/i)).toHaveAttribute("aria-invalid", "true");
-    });
   });
 
   describe("Resend while pending", () => {

@@ -3,7 +3,6 @@
 import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
-import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { directoryAndOwnershipQueryKeys } from "@/lib/query-keys/directory-and-ownership";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import { signalAccessInvalidation, useCan } from "@/hooks/api/access";
@@ -39,7 +38,6 @@ export function useModuleMembersInfinite(
   const canView = useCan(viewKey(moduleKey));
   const userId = options?.userId;
   return useInfiniteQuery<CursorPaginatedResult<ModuleMember>, Error>({
-    ...INLINE_READ_ERROR,
     queryKey: directoryAndOwnershipQueryKeys.moduleAccess.members(moduleKey, { pageSize, userId }),
     queryFn: ({ pageParam, signal }) => {
       const params = new URLSearchParams({ pageSize: String(pageSize) });

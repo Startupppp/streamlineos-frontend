@@ -20,24 +20,10 @@ function succeed() {
   options.onSuccess();
 }
 
-const realLocation = window.location;
-const mockAssign = jest.fn();
-
-function landOn(search: string) {
-  Object.defineProperty(window, "location", {
-    configurable: true,
-    value: { search, assign: mockAssign },
-  });
-}
-
 describe("EnableModuleButton", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     window.history.replaceState(null, "", "/");
-  });
-
-  afterEach(() => {
-    Object.defineProperty(window, "location", { configurable: true, value: realLocation });
   });
 
   it("offers nothing to someone who cannot manage modules", () => {
@@ -50,15 +36,14 @@ describe("EnableModuleButton", () => {
 
   it("turns the module on and returns to the page that was refused", () => {
     mockCan.mockReturnValue(true);
-    landOn("?required=module:payroll&from=%2Fpayroll%2Freadiness");
+    window.history.replaceState(null, "", "/access-denied?required=module:payroll&from=%2Fpayroll%2Freadiness");
     render(<EnableModuleButton moduleKey="payroll" moduleName="Payroll" />);
 
     fireEvent.click(screen.getByRole("button", { name: "Enable Payroll" }));
     expect(mockMutate).toHaveBeenCalledWith({ moduleKey: "payroll", enabled: true }, expect.any(Object));
     succeed();
 
-    expect(mockAssign).toHaveBeenCalledWith("/payroll/readiness");
-    expect(mockReplace).not.toHaveBeenCalled();
+    expect(mockReplace).toHaveBeenCalledWith("/payroll/readiness");
     expect(screen.getByText(/switching it off keeps its data/i)).toBeInTheDocument();
     expect(screen.getByText(/does not change your bill/i)).toBeInTheDocument();
   });

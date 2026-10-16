@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback, useMemo } from "react";
+import { useState, useRef, useCallback } from "react";
 import Image from "next/image";
 import {
   Dialog,
@@ -21,7 +21,6 @@ import {
   useCreatePublicChannel,
   useCreatePrivateChannel,
 } from "@/hooks/api/chat-core-mutations-b";
-import { useChatOrgUsers } from "@/hooks/api/chat-core-read";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
@@ -140,17 +139,6 @@ export function NewGroupDialog({
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [step, setStep] = useState<"info" | "members">("info");
-  const chatUsers = useChatOrgUsers(open && step === "members");
-  const candidates = useMemo(
-    () =>
-      (chatUsers.data ?? []).map((u) => ({
-        id: u.id,
-        name: u.name,
-        email: u.email ?? "",
-        image: u.image,
-      })),
-    [chatUsers.data],
-  );
 
   const handleOpenAvatarInput = useCallback(() => {
     avatarInputRef.current?.click();
@@ -384,20 +372,12 @@ export function NewGroupDialog({
               <Label className="text-xs font-medium text-muted-foreground">
                 Members
               </Label>
-              {chatUsers.isError ? (
-                <p role="alert" className="text-micro text-destructive">
-                  {getErrorMessage(chatUsers.error)}
-                </p>
-              ) : (
-                <MemberPicker
-                  mode="multi"
-                  candidates={candidates}
-                  values={selectedIds}
-                  onToggle={handleToggleMember}
-                  disabled={chatUsers.isLoading}
-                  placeholder={chatUsers.isLoading ? "Loading members…" : "Search and add people…"}
-                />
-              )}
+              <MemberPicker
+                mode="multi"
+                values={selectedIds}
+                onToggle={handleToggleMember}
+                placeholder="Search and add people…"
+              />
               {selectedIds.length === 0 && (
                 <p className="text-micro text-muted-foreground">
                   A channel needs at least one other person besides you. If nobody is
