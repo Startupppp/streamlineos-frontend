@@ -28,6 +28,7 @@ import {
 } from "@/hooks/api/kb/page-versions";
 import type { KbPageVersion } from "@/hooks/api/kb/page-types";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { isApiError } from "@/lib/api-envelope";
 import { computeVersionDiff } from "@/features/wiki/lib/version-diff";
 import {
   pageHref,
@@ -355,18 +356,20 @@ export default function PageHistoryPage({
   }
 
   const handleConfirmRestore = useCallback(() => {
-    if (!selectedA) return;
+    if (!selectedA || !currentPage) return;
     restoreVersion.mutate(
-      { pageId, versionNumber: selectedA },
+      { pageId, versionNumber: selectedA, expectedContentRevision: currentPage.contentRevision },
       {
         onSuccess: () => {
           toast.success("Version restored");
           router.push(documentHref);
         },
-        onError: (err) => toast.error(getErrorMessage(err)),
+        onError: (err) => toast.error(isApiError(err) && err.status === 409
+          ? "Page changed before this restore. Refresh and review the latest version before trying again."
+          : getErrorMessage(err)),
       },
     );
-  }, [selectedA, pageId, restoreVersion, router, documentHref]);
+  }, [selectedA, currentPage, pageId, restoreVersion, router, documentHref]);
 
   const backHref = pageLoading || pageError ? unresolvedHref : documentHref;
 
