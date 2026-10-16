@@ -137,7 +137,7 @@ export function WorkspacePreviewMain({
                 transition={transition}
                 className="whitespace-normal text-dense leading-snug text-muted-foreground"
               >
-                {metaLine || "Choose goals — this updates live"}
+                {metaLine || "Choose products — this updates live"}
               </motion.p>
             </AnimatePresence>
             <GoalChipsMarquee chips={goalChips} />
