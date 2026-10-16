@@ -35,6 +35,7 @@ const dealMeetingLazy = lazyContract(() => import("@/hooks/api/crm/deals-schema"
 const dealActivityLazy = lazyContract(() => import("@/hooks/api/crm/deals-schema").then((m) => m.dealActivityContract));
 const dealStageTransitionsLazy = lazyContract(() => import("@/hooks/api/crm/deals-schema").then((m) => m.dealStageTransitionsContract));
 const dealUpdateResultLazy = lazyContract(() => import("@/hooks/api/crm/deals-schema").then((m) => m.dealUpdateResultContract));
+const dealCustomDataLazy = lazyContract(() => import("@/hooks/api/crm/deals-schema").then((m) => m.dealCustomDataContract));
 const dealDeleteLazy = lazyContract(() => import("@/hooks/api/crm/deals-schema").then((m) => m.dealDeleteContract));
 
 export type {
@@ -234,6 +235,21 @@ export function useDealHealth(dealId: number) {
     queryFn: ({ signal }) => apiClient.get<DealHealth>(`/deals/${dealId}/health`, undefined, signal, dealHealthLazy),
     staleTime: 5 * 60_000,
     enabled: dealId > 0,
+  });
+}
+
+/** Replaces the deal's whole `customData`; the caller merges before sending. */
+export function useUpdateDealCustomData(dealId: number) {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("crm:deals:update", {
+    mutationKey: ["deals", "customData"] as const,
+    mutationFn: (customData: Record<string, unknown>) =>
+      apiClient.patch<{ customData: Record<string, unknown> | null }>(`/deals/${dealId}/custom-data`, { customData }, undefined, dealCustomDataLazy),
+    onSuccess: (result) => {
+      qc.setQueryData<Deal>(customerWorkQueryKeys.deals.detail(dealId), (prev) =>
+        prev ? { ...prev, customData: result.customData } : prev,
+      );
+    },
   });
 }
 

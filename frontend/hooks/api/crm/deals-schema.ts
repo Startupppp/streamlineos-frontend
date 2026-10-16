@@ -31,6 +31,7 @@ const dealSchema = z.object({
   nextStep: z.string().nullable(),
   healthScore: z.number().nullable(),
   followUpNotes: z.string().nullable(),
+  customData: z.record(z.string(), z.unknown()).nullable().optional(),
   createdAt: z.string().nullable(),
   updatedAt: z.string().nullable(),
   assignedTo: dealUserRefSchema.nullable().optional(),
@@ -284,3 +285,7 @@ export const dealDeleteContract = z.object({ success: z.boolean() });
 export const stakeholderDeleteContract = z.object({ deleted: z.boolean() });
 export const dealBulkResultContract = z.object({ updated: z.number().int() });
 export const dealBulkDeleteContract = z.object({ deleted: z.number().int() });
+
+export const dealCustomDataContract = z.object({
+  customData: z.record(z.string(), z.unknown()).nullable(),
+});
