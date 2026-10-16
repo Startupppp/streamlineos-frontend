@@ -10,6 +10,7 @@ export const BUILD_COMPAT_REDIRECTS: readonly CompatRedirect[] = [
   { source: "/build/drafts", destination: "/build/my-work?section=drafts", permanent: false },
   { source: "/build/budget", destination: "/build/all-work?view=budgets", permanent: false },
   { source: "/build/reports", destination: "/build/all-work?view=reports", permanent: false },
+  { source: "/build/products", destination: "/build/managed-products", permanent: false },
   {
     source: "/build/:projectId(\\d+)/agile-reports",
     destination: "/build/:projectId/reports",
