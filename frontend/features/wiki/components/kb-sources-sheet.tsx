@@ -382,7 +382,7 @@ function OwnerMembershipSelect({
         onChange={handleChange}
         placeholder="Any owner"
         searchPlaceholder="Search members…"
-        emptyText={ownersAreLoading ? "Loading members…" : ownersError ? "Could not load members." : "No members found."}
+        emptyText={ownersAreLoading ? "Loading members…" : ownersError ? "Use Retry members below." : "No members found."}
         onSearchChange={onOwnerSearchChange}
         aria-label="Restrict answer to pages owned by a member"
         footer={ownersError ? (
