@@ -10,5 +10,5 @@
 - [ ] Over-capacity explanations identify only constraints the viewer may inspect.
 - [ ] Tentative holds and proposals are visually distinct from confirmed resource allocations.
 - [ ] Rescheduling or assignment changes go through the relevant resource owner and return receipts.
-- [ ] Tests cover simultaneous resource demand, maintenance change, skill mismatch, partial allocation, hidden HR input, and stale inventory state.
+- [x] Tests cover simultaneous resource demand, maintenance change, skill mismatch, partial allocation, hidden HR input, and stale inventory state.
 
