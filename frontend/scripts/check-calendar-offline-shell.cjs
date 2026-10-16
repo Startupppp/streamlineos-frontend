@@ -25,7 +25,10 @@ async function writeSnapshot(page, identity, version, fetchedAt = Date.now()) {
         coverage: "complete",
         policyVersion: version,
         maxAgeDays: 1,
-        sources: [{ sourceKey: "event", state: "complete" }],
+        sources: [
+          { sourceKey: "event", state: "complete", asOf: new Date(fetchedAt - 2 * 3_600_000).toISOString() },
+          { sourceKey: "outlook", state: "partial", asOf: null },
+        ],
         windows: [{ start: new Date(Date.now() + 60_000).toISOString(), end: new Date(Date.now() + 3_660_000).toISOString(), allDay: false, availability: "busy", title: "Sensitive meeting title" }],
       }, "latest");
       transaction.oncomplete = resolve;
@@ -47,6 +50,8 @@ async function main() {
     await page.reload();
     await page.waitForFunction(() => document.getElementById("status").textContent.includes("Saved"));
     assert.match(await page.locator("#windows").innerText(), /Busy/);
+    assert.match(await page.locator("#coverage").innerText(), /event: complete, source data \d+ minutes old/);
+    assert.match(await page.locator("#coverage").innerText(), /outlook: partial, last successful source refresh unknown/);
     assert.doesNotMatch(await page.locator("body").innerText(), /Sensitive meeting title/);
     await page.evaluate(() => {
       const key = "streamline-calendar-offline-policy-revocation:org-1:user-1";
@@ -97,6 +102,7 @@ async function main() {
         await offlinePage.goto(`${baseUrl}/calendar`);
         await offlinePage.waitForFunction(() => document.title === "Calendar offline" && document.getElementById("status").textContent.includes("Saved"));
         assert.match(await offlinePage.locator("#windows").innerText(), /Busy/);
+        assert.match(await offlinePage.locator("#coverage").innerText(), /event: complete, source data \d+ minutes old/);
         await offlinePage.evaluate(() => {
           const key = "streamline-calendar-offline-policy-revocation:org-3:user-1";
           localStorage.setItem(key, JSON.stringify({ version: 2, enabled: false }));

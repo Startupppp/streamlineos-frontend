@@ -90,7 +90,14 @@
         heading.textContent = "Source coverage at last refresh";
         coverage.append(heading);
         for (const source of snapshot.sources.slice(0, 100)) {
-          if (typeof source.sourceKey === "string" && typeof source.state === "string") line(coverage, `${source.sourceKey}: ${source.state}`, "muted");
+          if (typeof source.sourceKey === "string" && typeof source.state === "string") {
+            const refreshedAt = typeof source.asOf === "string" ? Date.parse(source.asOf) : NaN;
+            const sourceAge = Date.now() - refreshedAt;
+            const freshness = Number.isFinite(sourceAge) && sourceAge >= 0
+              ? `source data ${Math.max(1, Math.floor(sourceAge / 60000))} minutes old`
+              : "last successful source refresh unknown";
+            line(coverage, `${source.sourceKey}: ${source.state}, ${freshness}`, "muted");
+          }
         }
         const busyHeading = document.createElement("h2");
         busyHeading.textContent = "Saved busy windows";
