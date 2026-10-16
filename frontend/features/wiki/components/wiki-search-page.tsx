@@ -6,6 +6,7 @@ import Link from "next/link";
 import { LayoutList, LayoutGrid, X } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { PageState } from "@/components/shared/page-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
@@ -32,6 +33,8 @@ import {
   StatusBadge,
 } from "@/features/wiki/components/kb-collection-badges";
 import { cn } from "@/lib/utils";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { isApiError } from "@/lib/api-envelope";
 import type { KbPageFullSearchItem } from "@/hooks/api/kb/kb-search-schema";
 
 const STATUS_OPTIONS = [
@@ -184,6 +187,7 @@ export default function WikiSearchPage() {
     data,
     isLoading,
     isError,
+    isFetchNextPageError,
     error,
     refetch,
     fetchNextPage,
@@ -202,6 +206,8 @@ export default function WikiSearchPage() {
   );
 
   const items = data?.pages.flatMap((page) => page.items) ?? [];
+  const accessLost = isError && isApiError(error) && [401, 403, 404].includes(error.status);
+  const showPageError = isError && (!isFetchNextPageError || accessLost || items.length === 0);
   const hasFilters = !!status || !!type || verified !== undefined || spaceId !== undefined;
   const queryActive = q.trim().length > 0;
 
@@ -209,7 +215,7 @@ export default function WikiSearchPage() {
 
   useEffect(() => {
     const sentinel = bottomSentinelRef.current;
-    if (!sentinel || !hasNextPage || isFetchingNextPage) return;
+    if (!sentinel || !hasNextPage || isFetchingNextPage || isFetchNextPageError) return;
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0]?.isIntersecting) void fetchNextPage();
@@ -218,14 +224,14 @@ export default function WikiSearchPage() {
     );
     observer.observe(sentinel);
     return () => observer.disconnect();
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+  }, [hasNextPage, isFetchingNextPage, isFetchNextPageError, fetchNextPage]);
 
   const pageState = usePageState({
     permission: "kb:pages:view",
     isLoading: isLoading && queryActive,
-    isError: isError && queryActive,
+    isError: showPageError && queryActive,
     error,
-    isEmpty: !isLoading && !isError && queryActive && items.length === 0,
+    isEmpty: !isLoading && !showPageError && queryActive && items.length === 0,
   });
 
   useEffect(() => {
@@ -545,7 +551,16 @@ export default function WikiSearchPage() {
                   />
                 ),
               )}
-              {hasNextPage && <div ref={bottomSentinelRef} className="h-1" />}
+              {isFetchNextPageError && !accessLost && (
+                <ErrorState
+                  compact
+                  title="Couldn't load more results"
+                  description={getErrorMessage(error)}
+                  error={error}
+                  onRetry={() => { void fetchNextPage(); }}
+                />
+              )}
+              {hasNextPage && !isFetchNextPageError && <div ref={bottomSentinelRef} className="h-1" />}
             </div>
           )}
         </PageState>
