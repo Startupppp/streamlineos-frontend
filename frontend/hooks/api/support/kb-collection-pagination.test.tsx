@@ -1,10 +1,12 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider, type QueryClient } from "@tanstack/react-query";
+import { createAppQueryClient } from "@/components/providers/query-provider";
 import type { ReactNode } from "react";
 import { clearBackendTokenCache, resetOutageCircuit, seedBackendToken } from "@/lib/api-client";
 import { permissionGate } from "@/lib/rbac/permission-gate";
+import { ApiContractError } from "@/lib/api-envelope";
 import { installAbortSignalPolyfill } from "@/test-utils/abort-signal-polyfill";
-import { useSupportKbCategories } from "./kb";
+import { useSupportKbArticles, useSupportKbCategories } from "./kb";
 import { useSupportKbComments } from "./kb-comments";
 
 let mockGate = permissionGate("support:kb:view", true, true);
@@ -64,7 +66,12 @@ beforeEach(() => {
   fetchMock.mockReset();
   globalThis.fetch = fetchMock;
   mockGate = permissionGate("support:kb:view", true, true);
-  client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  client = createAppQueryClient("support-kb-collections-test");
+  const defaults = client.getDefaultOptions();
+  client.setDefaultOptions({
+    ...defaults,
+    queries: { ...defaults.queries, retry: false },
+  });
 });
 
 afterEach(() => {
@@ -129,5 +136,38 @@ describe("Support Knowledge Base collection HTTP contracts", () => {
     expect(categories.result.current.access.denied).toBe(true);
     expect(comments.result.current.access.denied).toBe(true);
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("keeps a deployed legacy category array as an inline contract error without claiming the collection ended", async () => {
+    fetchMock.mockResolvedValueOnce(response([category]));
+
+    const { result } = renderHook(() => useSupportKbCategories(), { wrapper });
+    await waitFor(() => expect(result.current.isError).toBe(true));
+
+    expect(result.current.error).toBeInstanceOf(ApiContractError);
+    expect(result.current.data).toBeUndefined();
+    expect(result.current.hasNextPage).toBe(false);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps a deployed legacy comment array as an inline contract error", async () => {
+    fetchMock.mockResolvedValueOnce(response([comment]));
+
+    const { result } = renderHook(() => useSupportKbComments(4), { wrapper });
+    await waitFor(() => expect(result.current.isError).toBe(true));
+
+    expect(result.current.error).toBeInstanceOf(ApiContractError);
+    expect(result.current.data).toBeUndefined();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps an article list contract error inline for the manager retry state", async () => {
+    fetchMock.mockResolvedValueOnce(response({ unexpected: true }));
+
+    const { result } = renderHook(() => useSupportKbArticles(), { wrapper });
+    await waitFor(() => expect(result.current.isError).toBe(true));
+
+    expect(result.current.error).toBeInstanceOf(ApiContractError);
+    expect(result.current.data).toBeUndefined();
   });
 });

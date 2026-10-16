@@ -6,6 +6,7 @@ import { gated } from "@/lib/rbac/permission-gate";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import { selectFlatPages, type Page } from "@/lib/api/select-flat-pages";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
@@ -49,6 +50,7 @@ export function useSupportKbComments(articleId: number) {
     select: selectFlatPages,
     enabled: access.allowed && Number.isFinite(articleId) && articleId > 0,
     staleTime: 30_000,
+    ...INLINE_READ_ERROR,
   });
   const refetch: typeof query.refetch = async (refetchOptions) => {
     if (access.unavailable) {

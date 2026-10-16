@@ -131,6 +131,7 @@ export function useSupportKbCategories(options?: { enabled?: boolean }) {
     select: selectFlatPages,
     staleTime: 60_000,
     enabled: access.allowed && (options?.enabled ?? true),
+    ...INLINE_READ_ERROR,
   });
   const refetch: typeof query.refetch = async (refetchOptions) => {
     if (access.unavailable) {
@@ -182,6 +183,7 @@ export function useSupportKbArticles(params?: KbArticlesParams, options?: { enab
     staleTime: 30_000,
     enabled: options?.enabled ?? true,
     placeholderData: keepPreviousData,
+    ...INLINE_READ_ERROR,
   });
 }
 
