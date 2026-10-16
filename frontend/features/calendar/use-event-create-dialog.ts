@@ -2,7 +2,6 @@
 
 import { useState, useCallback, useEffect, useMemo, type ChangeEvent } from "react";
 import { addHours, endOfDay, format, parseISO, startOfDay } from "date-fns";
-import { useIsMobile } from "@/hooks/common/use-mobile";
 import {
   useCreateCalendarEvent,
   useUpdateCalendarEvent,
@@ -286,12 +285,11 @@ export function useEventCreateDialog({
   );
 
   const isPending = isEdit ? updateEvent.isPending : createEvent.isPending;
-  const isMobile = useIsMobile();
 
   return {
     form, titleError, dateTimeError, showEndDate, members, connections,
     linkedTicket, existingEntityId, ticketPickerOpen, setTicketPickerOpen,
-    isPending, isMobile, isEdit,
+    isPending, isEdit,
     handleClose, handleTitleChange, handleDescriptionChange, handleLocationChange,
     handleAllDayChange, handleStartDateChange, handleStartTimeChange,
     handleEndDateChange, handleEndTimeChange, handleShowEndDate,

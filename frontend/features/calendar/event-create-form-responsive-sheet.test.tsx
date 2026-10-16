@@ -1,29 +1,20 @@
-import { render } from "@testing-library/react";
+import { fireEvent, render } from "@testing-library/react";
 import { EventCreateForm } from "./event-create-form";
 import type { FormState, RecurrenceState } from "./event-form-state";
 import { defaultRecurrenceState } from "./event-recurrence-schema";
 
-jest.mock("@/components/ui/drawer", () => ({
-  Drawer: ({ children, open }: { children: React.ReactNode; open: boolean }) =>
-    open ? <div data-testid="drawer">{children}</div> : null,
-  DrawerContent: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="drawer-content">{children}</div>
-  ),
-  DrawerHeader: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  DrawerTitle: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+jest.mock("@/components/shared/app-sheet", () => ({
+  AppSheet: ({ children, footer, open }: { children: React.ReactNode; footer: React.ReactNode; open: boolean }) =>
+    open ? <div data-testid="app-sheet"><div data-testid="sheet-body">{children}</div>{footer}</div> : null,
 }));
 
 jest.mock("./ticket-picker-dialog", () => ({
-  TicketPickerDialog: ({ open }: { open: boolean }) =>
-    open ? <div data-testid="ticket-picker" /> : null,
+  TicketPickerDialog: ({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) =>
+    open ? <div data-testid="ticket-picker"><button type="button" onClick={() => onOpenChange(false)}>Close ticket picker</button></div> : null,
 }));
 
 jest.mock("./event-form-fields", () => ({
   EventFormFields: () => <div data-testid="event-form-fields" />,
-}));
-
-jest.mock("@/components/ui/scroll-area", () => ({
-  ScrollArea: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
 
 jest.mock("@/hooks/common/use-animated-icon", () => ({
@@ -39,7 +30,7 @@ jest.mock("@/components/ui/truncated-text", () => ({
 }));
 
 jest.mock("@/components/ui/loading-button", () => ({
-  LoadingButton: ({ children }: { children: React.ReactNode }) => <button type="button">{children}</button>,
+  LoadingButton: ({ children, form, type }: { children: React.ReactNode; form: string; type: "submit" }) => <button form={form} type={type}>{children}</button>,
 }));
 
 const recurrence: RecurrenceState = defaultRecurrenceState();
@@ -101,17 +92,27 @@ const baseProps = {
   onRecurrenceChange: jest.fn(),
 };
 
-describe("EventCreateForm — TicketPickerDialog nesting (#189)", () => {
-  it("TicketPickerDialog is rendered inside DrawerContent so its dismiss does not escape to the parent Drawer", () => {
+describe("EventCreateForm responsive sheet", () => {
+  it("keeps the ticket picker inside the sheet body", () => {
     const { getByTestId } = render(<EventCreateForm {...baseProps} />);
-    const drawerContent = getByTestId("drawer-content");
+    const sheetBody = getByTestId("sheet-body");
     const ticketPicker = getByTestId("ticket-picker");
-    expect(drawerContent.contains(ticketPicker)).toBe(true);
+    expect(sheetBody.contains(ticketPicker)).toBe(true);
   });
 
-  it("calling onTicketPickerChange(false) does not trigger the outer onOpenChange with false", () => {
-    render(<EventCreateForm {...baseProps} />);
-    baseProps.onTicketPickerChange(false);
-    expect(baseProps.onOpenChange).not.toHaveBeenCalledWith(false);
+  it("closing the ticket picker leaves the event sheet open", () => {
+    const onOpenChange = jest.fn();
+    const onTicketPickerChange = jest.fn();
+    const { getByRole } = render(<EventCreateForm {...baseProps} onOpenChange={onOpenChange} onTicketPickerChange={onTicketPickerChange} />);
+    fireEvent.click(getByRole("button", { name: "Close ticket picker" }));
+    expect(onTicketPickerChange).toHaveBeenCalledWith(false);
+    expect(onOpenChange).not.toHaveBeenCalled();
+  });
+
+  it("submits the body form from the shared sheet footer", () => {
+    const onSave = jest.fn();
+    const { getByRole } = render(<EventCreateForm {...baseProps} onSave={onSave} />);
+    fireEvent.click(getByRole("button", { name: "Save" }));
+    expect(onSave).toHaveBeenCalledTimes(1);
   });
 });

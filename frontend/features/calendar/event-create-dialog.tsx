@@ -32,7 +32,6 @@ export function EventCreateDialog({
     ticketPickerOpen,
     setTicketPickerOpen,
     isPending,
-    isMobile,
     isEdit,
     seriesScopeOpen,
     seriesPending,
@@ -65,7 +64,6 @@ export function EventCreateDialog({
       <EventCreateForm
         open={open}
         onOpenChange={onOpenChange}
-        isMobile={isMobile}
         isEdit={isEdit}
         form={form}
         titleError={titleError}

@@ -1,6 +1,6 @@
 "use client";
 
-import { render, act, screen, waitFor } from "@testing-library/react";
+import { render, act, fireEvent, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { CalendarView } from "./calendar-view";
 import { calendarProjectionFields } from "./calendar-projection-fixtures";
@@ -136,6 +136,7 @@ beforeEach(() => {
     Promise.resolve(routeGet(path)),
   );
   window.localStorage.clear();
+  window.history.replaceState(null, "", "/calendar");
 });
 
 async function renderCalendar() {
@@ -151,10 +152,37 @@ async function renderCalendar() {
     await act(async () => {
       await Promise.resolve();
     });
-  return utils;
+  return {
+    ...utils,
+    rerenderCalendar: () =>
+      utils.rerender(
+        <QueryClientProvider client={queryClient}>
+          <CalendarView />
+        </QueryClientProvider>,
+      ),
+  };
 }
 
 describe("/calendar render stability", () => {
+  it("opens an event directly in one detail sheet without a loading overlay", async () => {
+    mockShellVariant = "mobile";
+    mockSearchParams = new URLSearchParams("mode=list&date=2026-09-15");
+    window.history.replaceState(null, "", `/calendar?${mockSearchParams.toString()}`);
+    const { rerenderCalendar } = await renderCalendar();
+
+    fireEvent.click(await screen.findByRole("button", { name: "Standup" }));
+    mockSearchParams = new URLSearchParams(window.location.search);
+    rerenderCalendar();
+
+    expect(await screen.findByRole("dialog", { name: "Standup" })).toHaveAttribute(
+      "data-slot",
+      "sheet-content",
+    );
+    expect(document.querySelectorAll("[data-slot='sheet-content']")).toHaveLength(1);
+    expect(document.querySelector("[data-slot='dialog-content']")).toBeNull();
+    expect(document.querySelector("[data-slot='skeleton']")).toBeNull();
+  });
+
   it("keeps a non-viewable event disabled in the primary mobile list", async () => {
     mockShellVariant = "mobile";
     mockSearchParams = new URLSearchParams("mode=list&date=2026-09-15");
@@ -304,6 +332,7 @@ describe("/calendar render stability", () => {
 
   it("removes an inaccessible real event ID from the URL without opening detail", async () => {
     mockSearchParams = new URLSearchParams("event=event-42&eventSource=calendar");
+    window.history.replaceState(null, "", `/calendar?${mockSearchParams.toString()}`);
     mockApiGet.mockImplementation((path: unknown) => Promise.resolve(
       typeof path === "string" && path.startsWith("/calendar/events")
         ? { ...CALENDAR_EVENTS, events: [] }
@@ -312,7 +341,10 @@ describe("/calendar render stability", () => {
 
     await renderCalendar();
 
-    expect(mockReplace).toHaveBeenCalledWith("/calendar");
+    await waitFor(() =>
+      expect(window.location.pathname + window.location.search).toBe("/calendar"),
+    );
+    expect(mockReplace).not.toHaveBeenCalled();
   });
 
   it("announces the range at the granularity of the active view, not month-only", async () => {
