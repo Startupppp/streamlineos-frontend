@@ -137,7 +137,7 @@ describe("useKbNoResults", () => {
     const { result } = renderHook(() => useKbNoResults(), { wrapper });
 
     await waitFor(() => expect(result.current.isError).toBe(true));
-    expect(client.getQueryCache().getAll()[0]?.options.throwOnError).toBe(false);
+    expect(result.current.error).toEqual(new Error("No-results unavailable"));
   });
 
   it("flattens pages while preserving scope coverage and the next cursor", async () => {
