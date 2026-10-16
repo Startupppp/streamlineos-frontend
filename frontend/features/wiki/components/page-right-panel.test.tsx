@@ -4,6 +4,12 @@ import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import PageRightPanel from "./page-right-panel";
 import type { KbPageDetail } from "@/hooks/api/kb/page-types";
+import { ApiError } from "@/lib/api-envelope";
+
+jest.mock("@/hooks/api/use-page-state", () => ({
+  usePageState: ({ isLoading, isError, isEmpty, error }: { isLoading: boolean; isError: boolean; isEmpty?: boolean; error?: unknown }) =>
+    isLoading ? { kind: "loading" } : isError ? { kind: "error", error } : isEmpty ? { kind: "empty" } : { kind: "ready" },
+}));
 
 jest.mock("@/hooks/api/kb", () => ({
   useKbPageBacklinks: jest.fn(),
@@ -24,7 +30,7 @@ const mockUseKbPageBacklinks = useKbPageBacklinks as jest.Mock;
 const mockUseKbPageRecordLinks = useKbPageRecordLinks as jest.Mock;
 
 beforeEach(() => {
-  mockUseKbPageBacklinks.mockReturnValue({ data: [] });
+  mockUseKbPageBacklinks.mockReturnValue({ data: [], isLoading: false, isError: false, error: null, refetch: jest.fn() });
   mockUseKbPageRecordLinks.mockReturnValue({ data: [] });
 });
 
@@ -113,6 +119,54 @@ describe("PageRightPanel — mobile path for linked records", () => {
 });
 
 describe("PageRightPanel — backlinks section", () => {
+  it("shows loading instead of a false empty state while backlinks are pending", async () => {
+    mockUseKbPageBacklinks.mockReturnValue({ data: undefined, isLoading: true, isError: false, error: null, refetch: jest.fn() });
+    const user = userEvent.setup();
+    renderPanel();
+    await user.click(screen.getByRole("button", { name: "Open details panel" }));
+
+    const dialog = screen.getByRole("dialog");
+    expect(within(dialog).queryByText("No pages link here.")).not.toBeInTheDocument();
+  });
+
+  it("shows a first-read failure with retry rather than no backlinks", async () => {
+    const refetch = jest.fn();
+    mockUseKbPageBacklinks.mockReturnValue({ data: undefined, isLoading: false, isError: true, error: new ApiError("Offline", 503, "UNAVAILABLE", { correlationId: "kb-backlinks-1" }), refetch });
+    const user = userEvent.setup();
+    renderPanel();
+    await user.click(screen.getByRole("button", { name: "Open details panel" }));
+
+    const dialog = screen.getByRole("dialog");
+    expect(within(dialog).queryByText("No pages link here.")).not.toBeInTheDocument();
+    expect(within(dialog).getByText("kb-backlinks-1")).toBeInTheDocument();
+    await user.click(within(dialog).getByRole("button", { name: "Try again" }));
+    expect(refetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("retains loaded backlinks on a transient refresh error and offers retry", async () => {
+    const refetch = jest.fn();
+    mockUseKbPageBacklinks.mockReturnValue({ data: [{ id: 2, title: "Related runbook", icon: null }], isLoading: false, isError: true, error: new Error("offline"), refetch });
+    const user = userEvent.setup();
+    renderPanel();
+    await user.click(screen.getByRole("button", { name: "Open details panel" }));
+
+    const dialog = screen.getByRole("dialog");
+    expect(within(dialog).getByRole("button", { name: /Related runbook/ })).toBeInTheDocument();
+    await user.click(within(dialog).getByRole("button", { name: "Retry backlinks" }));
+    expect(refetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("hides cached backlinks when the read reports revoked access", async () => {
+    mockUseKbPageBacklinks.mockReturnValue({ data: [{ id: 2, title: "Private runbook", icon: null }], isLoading: false, isError: true, error: new ApiError("Denied", 403), refetch: jest.fn() });
+    const user = userEvent.setup();
+    renderPanel();
+    await user.click(screen.getByRole("button", { name: "Open details panel" }));
+
+    const dialog = screen.getByRole("dialog");
+    expect(within(dialog).queryByRole("button", { name: /Private runbook/ })).not.toBeInTheDocument();
+    expect(within(dialog).queryByText("No pages link here.")).not.toBeInTheDocument();
+  });
+
   it("shows backlinks section heading inside the sheet", async () => {
     const user = userEvent.setup();
     renderPanel();
