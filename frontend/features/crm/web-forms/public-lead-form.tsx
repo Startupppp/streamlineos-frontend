@@ -1,39 +1,15 @@
 "use client";
 
 import { useMemo } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { CheckCircle2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import { FIELD_SELECT_CONTENT_CLASS } from "@/components/ui/field-control";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { LoadingButton } from "@/components/ui/loading-button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Textarea } from "@/components/ui/textarea";
+import { RecordForm, type RecordFormValues } from "@/components/renderer/record-form";
 import { usePublicLeadForm, useSubmitLeadForm } from "@/hooks/api/crm/web-forms";
-import type { PublicLeadForm, WebFormField } from "@/hooks/api/crm/web-forms-schema";
+import type { PublicLeadForm } from "@/hooks/api/crm/web-forms-schema";
 import { getErrorMessage } from "@/lib/get-error-message";
-import {
-  buildLeadFormSchema,
-  emptyLeadFormValues,
-  safeRedirect,
-  toLeadSubmission,
-} from "./lead-form-schema";
+import { webFormLeadLayout } from "@/lib/renderer/crm/settings/web-form-lead-layout";
+import { safeRedirect, toLeadSubmission } from "./lead-form-schema";
 
 interface PublicLeadFormProps {
   leadFormToken: string;
@@ -76,18 +52,15 @@ function LeadFormBody({
   definition: PublicLeadForm;
 }) {
   const submit = useSubmitLeadForm(leadFormToken);
-  const schema = useMemo(() => buildLeadFormSchema(definition.fields), [definition.fields]);
-  const defaults = useMemo(() => emptyLeadFormValues(definition.fields), [definition.fields]);
-  const rhf = useForm<Record<string, string>>({ resolver: zodResolver(schema), defaultValues: defaults });
+  const layout = useMemo(() => webFormLeadLayout(definition), [definition]);
 
-  const handleSubmit = rhf.handleSubmit((values) =>
+  const handleSubmit = (values: RecordFormValues) =>
     submit.mutate(toLeadSubmission(values), {
       onSuccess: (result) => {
         const target = safeRedirect(result.redirectUrl);
         if (target) window.location.assign(target);
       },
-    }),
-  );
+    });
 
   if (submit.isSuccess)
     return (
@@ -98,78 +71,20 @@ function LeadFormBody({
     );
 
   return (
-    <Form {...rhf}>
-      <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
-        <h1 className="text-lg font-semibold">{definition.name}</h1>
-        {definition.fields.map((field) => (
-          <FormField
-            key={field.name}
-            control={rhf.control}
-            name={field.name}
-            render={({ field: control }) => (
-              <FormItem>
-                <FormLabel>{field.required ? `${field.label} *` : field.label}</FormLabel>
-                <LeadFormControl field={field} value={control.value} onChange={control.onChange} onBlur={control.onBlur} />
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        ))}
-        {submit.error ? (
-          <p role="alert" className="text-sm text-status-danger-ink">
-            {getErrorMessage(submit.error)}
-          </p>
-        ) : null}
-        <LoadingButton type="submit" isPending={submit.isPending}>
-          Submit
-        </LoadingButton>
-      </form>
-    </Form>
-  );
-}
-
-interface LeadFormControlProps {
-  field: WebFormField;
-  value: string;
-  onChange: (value: string) => void;
-  onBlur: () => void;
-}
-
-function LeadFormControl({ field, value, onChange, onBlur }: LeadFormControlProps) {
-  if (field.type === "select")
-    return (
-      <Select value={value} onValueChange={onChange}>
-        <FormControl>
-          <SelectTrigger aria-label={field.label} onBlur={onBlur}>
-            <SelectValue placeholder="Choose…" />
-          </SelectTrigger>
-        </FormControl>
-        <SelectContent className={FIELD_SELECT_CONTENT_CLASS}>
-          {(field.options ?? []).map((option) => (
-            <SelectItem key={option} value={option}>
-              {option}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    );
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
-    onChange(event.target.value);
-  if (field.type === "textarea")
-    return (
-      <FormControl>
-        <Textarea value={value} onChange={handleChange} onBlur={onBlur} rows={4} />
-      </FormControl>
-    );
-  return (
-    <FormControl>
-      <Input
-        value={value}
-        onChange={handleChange}
-        onBlur={onBlur}
-        inputMode={field.type === "email" ? "email" : field.type === "phone" ? "tel" : undefined}
-        autoComplete={field.type === "email" ? "email" : field.type === "phone" ? "tel" : undefined}
+    <div className="flex flex-col gap-4">
+      <h1 className="text-lg font-semibold">{definition.name}</h1>
+      <RecordForm
+        layout={layout}
+        mode="create"
+        onSubmit={handleSubmit}
+        isSubmitting={submit.isPending}
+        submitLabel="Submit"
       />
-    </FormControl>
+      {submit.error ? (
+        <p role="alert" className="text-sm text-status-danger-ink">
+          {getErrorMessage(submit.error)}
+        </p>
+      ) : null}
+    </div>
   );
 }

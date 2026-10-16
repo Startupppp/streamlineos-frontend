@@ -241,6 +241,9 @@ export function RecordForm<T extends Record<string, unknown> = Record<string, un
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(handleSubmit)}
+        // The generated resolver checks every kind; a native `type="email"` check
+        // would cancel the submit first and the inline message would never show.
+        noValidate
         className={cn("flex min-w-0 flex-col gap-gap-section", className)}
       >
         {layout.form.sections.map((section) => {

@@ -1,4 +1,7 @@
-import { buildLeadFormSchema, safeRedirect, toLeadSubmission } from "./lead-form-schema";
+import { safeRedirect, toLeadSubmission } from "./lead-form-schema";
+import { schemaForLayout } from "@/lib/renderer/layout-schema";
+import { validateLayout } from "@/lib/renderer/layout-validation";
+import { webFormLeadLayout } from "@/lib/renderer/crm/settings/web-form-lead-layout";
 import { toWebFormInput, toWebFormValues, webFormSchema } from "./web-form-schema";
 
 const fields = [
@@ -36,10 +39,28 @@ describe("web form editor", () => {
 });
 
 describe("public lead form", () => {
+  const layout = webFormLeadLayout({ name: "Contact", fields });
+
+  it("describes the form's own fields to the renderer", () => {
+    expect(validateLayout(layout)).toEqual([]);
+    expect(layout.fields.map((field) => [field.name, field.kind])).toEqual([
+      ["email", "email"],
+      ["size", "select"],
+    ]);
+    expect(layout.fields[1].options).toEqual([
+      { value: "S", label: "S" },
+      { value: "M", label: "M" },
+    ]);
+  });
+
   it("requires required fields with the backend's wording", () => {
-    const result = buildLeadFormSchema(fields).safeParse({ email: "", size: "" });
+    const schema = schemaForLayout(layout, "create");
+    const result = schema.safeParse({ email: "", size: "" });
     expect(result.error?.issues[0].message).toBe("Email is required");
-    expect(buildLeadFormSchema(fields).safeParse({ email: "a@b.co", size: "" }).success).toBe(true);
+    expect(schema.safeParse({ email: "not-an-email", size: "" }).error?.issues[0].message).toBe(
+      "Enter a valid email address",
+    );
+    expect(schema.safeParse({ email: "a@b.co", size: "" }).success).toBe(true);
   });
 
   it("drops blank answers and follows only http(s) redirects", () => {
