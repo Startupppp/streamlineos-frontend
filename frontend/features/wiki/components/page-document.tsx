@@ -96,6 +96,12 @@ function nextReload(current: number): number {
 export default function PageDocument({ pageId, onNavigateToPage, projectId }: PageDocumentProps) {
   const router = useRouter();
   const { data: page, isLoading, isError, error, refetch } = useKbPage(pageId);
+  // Pages imported before content was written on import carry only
+  // contentText; show it as plain paragraphs instead of an empty document.
+  const storedContent = useMemo(
+    () => page?.content ?? (page?.contentText ? plainTextToPlateValue(page.contentText) : null),
+    [page?.content, page?.contentText],
+  );
   const updatePage = useUpdateKbPage();
   const recordVisit = useRecordKbPageVisit();
   const canUpdate = useCan("kb:pages:update");
@@ -225,7 +231,7 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
     const content = withoutPendingUploads(value);
     const snapshot = `${plainText}\u0000${JSON.stringify(content)}`;
     if (editorSnapshotRef.current === null) {
-      const loaded = normalizePlateValue(page?.content);
+      const loaded = normalizePlateValue(storedContent);
       editorSnapshotRef.current = `${getPlainText(loaded)}\u0000${JSON.stringify(withoutPendingUploads(loaded))}`;
     }
     if (snapshot === editorSnapshotRef.current) return;
@@ -247,8 +253,8 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
   }
 
   const currentContentText = useMemo(
-    () => getPlainText(normalizePlateValue(editorDraft ?? page?.content)),
-    [editorDraft, page?.content],
+    () => getPlainText(normalizePlateValue(editorDraft ?? storedContent)),
+    [editorDraft, storedContent],
   );
 
   const handleCompareVersions = useCallback(async () => {
@@ -270,7 +276,7 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
 
   function handleInsertSummary(text: string) {
     const summary = plainTextToPlateValue(text);
-    const body = normalizePlateValue(editorDraft ?? page?.content);
+    const body = normalizePlateValue(editorDraft ?? storedContent);
     const next = prependPlateValue(summary, body);
     applyEditorValue(next, getPlainText(next));
   }
@@ -434,13 +440,13 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
             </div>
 
             <PageDocumentOutline
-              content={editorDraft ?? page.content}
+              content={editorDraft ?? storedContent}
               containerRef={editorContainerRef}
             />
 
             <div ref={editorContainerRef} className="min-w-0">
               <PlateDocumentEditor
-                value={editorDraft ?? page.content ?? undefined}
+                value={editorDraft ?? storedContent ?? undefined}
                 contentKey={`${pageId}:${reloadNonce}`}
                 editable={isEditable}
                 placeholder="Start writing…"
