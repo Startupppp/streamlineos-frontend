@@ -12,6 +12,7 @@ import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { KbAlertCircleIcon } from "@/features/wiki/lib/kb-icons";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { apiClient } from "@/lib/api-client";
 import {
@@ -23,6 +24,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { KbPageNotFound } from "./kb-page-not-found";
 import PageEditConflict from "./page-edit-conflict";
 import { usePageAutosave, type PageAutosavePatch } from "./use-page-autosave";
+import { usePagePresentationUpdate } from "./use-page-presentation-update";
 import { uploadKbMedia } from "@/features/wiki/lib/upload-kb-media";
 import { withoutPendingUploads } from "@/components/editor/plate/upload-media";
 import {
@@ -135,6 +137,14 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
     onConflict: handleConflict,
     onSaveError: handleSaveFailure,
   });
+  const {
+    pendingPresentation,
+    isRetryingPresentation,
+    handleCoverChange,
+    handleIconChange,
+    handleRetryPresentation,
+    discardPresentation,
+  } = usePagePresentationUpdate({ pageId, page, canManage, updatePage, refetch });
 
   const localTitle =
     titleDraft?.pageId === pageId ? titleDraft.value : (page?.title ?? "");
@@ -273,26 +283,8 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
     setCoverPickerOpen(open);
   }
 
-  function handleCoverChange(coverImage: string | null) {
-    updatePage.mutate(
-      { pageId, coverImage },
-      {
-        onSuccess: () =>
-          toast.success(coverImage ? "Cover updated" : "Cover removed"),
-        onError: () => toast.error("Failed to update cover"),
-      },
-    );
-  }
-
   function handleToolbarHost(node: HTMLDivElement | null) {
     setToolbarHost(node);
-  }
-
-  function handleIconChange(icon: string | null) {
-    updatePage.mutate(
-      { pageId, icon },
-      { onError: () => toast.error("Failed to update icon") }
-    );
   }
 
   if (viewAccess === "loading" || isLoading) {
@@ -362,6 +354,19 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
           </div>
 
           <div className="wiki-document-body mx-auto mb-8 w-full min-w-0 max-w-[46rem] flex-1 px-4 py-4 sm:px-8">
+            {pendingPresentation && (
+              <div role="alert" className="mb-5 flex flex-wrap items-center gap-2 rounded-lg border border-status-warning-rule bg-status-warning-surface p-3 text-sm text-status-warning-ink">
+                <span className="min-w-0 flex-1">
+                  The page changed before your {pendingPresentation.field === "icon" ? "icon" : "cover"} change was saved. Your choice is ready to retry.
+                </span>
+                <Button size="sm" onClick={handleRetryPresentation} disabled={isRetryingPresentation || !isEditable}>
+                  {isRetryingPresentation ? "Retrying…" : `Retry ${pendingPresentation.field === "icon" ? "icon" : "cover"} change`}
+                </Button>
+                <Button size="sm" variant="outline" onClick={discardPresentation} disabled={isRetryingPresentation}>
+                  Discard choice
+                </Button>
+              </div>
+            )}
             {conflict ? (
               <div className="mb-5">
                 <PageEditConflict
