@@ -1,9 +1,104 @@
 import {
   RESEARCH_BRIEF_POLL_MS,
   researchBriefPollInterval,
+  useCreateResearchBrief,
+  useRetryResearchBrief,
 } from "./research-briefs";
 import type { KbResearchBrief } from "@/types/kb";
 import { kbResearchBriefListContract } from "./kb-research-schema";
+import { act, renderHook } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { createElement, type ReactNode } from "react";
+import { clearBackendTokenCache, resetOutageCircuit, seedBackendToken } from "@/lib/api-client";
+import { installAbortSignalPolyfill } from "@/test-utils/abort-signal-polyfill";
+
+jest.mock("@/hooks/api/authorized-mutation", () => ({
+  useAuthorizedMutation: (
+    _key: string,
+    options: { mutationFn: (input: unknown) => Promise<unknown> },
+  ) => {
+    const { useMutation } = jest.requireActual("@tanstack/react-query");
+    return useMutation(options);
+  },
+}));
+
+installAbortSignalPolyfill();
+
+const fetchMock = jest.fn();
+const originalFetch = globalThis.fetch;
+
+function response(briefId: number, jobId: number) {
+  return {
+    ok: true,
+    status: 201,
+    statusText: "Created",
+    headers: new Headers({ "content-type": "application/json" }),
+    json: async () => ({ success: true, data: { briefId, jobId } }),
+  };
+}
+
+function wrapper({ children }: { children: ReactNode }) {
+  const client = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
+  return createElement(QueryClientProvider, { client }, children);
+}
+
+beforeEach(() => {
+  resetOutageCircuit();
+  clearBackendTokenCache();
+  const token = "header." + Buffer.from(JSON.stringify({ exp: Math.floor(Date.now() / 1000) + 600 })).toString("base64url") + ".signature";
+  seedBackendToken(token);
+  fetchMock.mockReset();
+  globalThis.fetch = fetchMock;
+});
+
+afterEach(() => {
+  globalThis.fetch = originalFetch;
+  clearBackendTokenCache();
+});
+
+describe("research brief replay keys", () => {
+  it("reuses a create key after a lost response and rotates it after success", async () => {
+    fetchMock.mockRejectedValueOnce(new Error("network interrupted"));
+    fetchMock.mockResolvedValue(response(5, 9));
+    const { result } = renderHook(() => useCreateResearchBrief(), { wrapper });
+    const input = { topic: "Process overview" };
+
+    await act(async () => {
+      await expect(result.current.mutateAsync(input)).rejects.toThrow("Network error");
+    });
+    resetOutageCircuit();
+    await act(async () => {
+      await expect(result.current.mutateAsync(input)).resolves.toEqual({ briefId: 5, jobId: 9 });
+      await result.current.mutateAsync(input);
+    });
+
+    const keys = fetchMock.mock.calls.map((call) => new Headers(call[1]?.headers).get("Idempotency-Key"));
+    expect(keys[0]).toBeTruthy();
+    expect(keys[0]).toEqual(keys[1]);
+    expect(keys[2]).not.toEqual(keys[1]);
+  });
+
+  it("reuses a job retry key after a lost response and rotates it after success", async () => {
+    fetchMock.mockRejectedValueOnce(new Error("network interrupted"));
+    fetchMock.mockResolvedValue(response(5, 10));
+    const { result } = renderHook(() => useRetryResearchBrief(), { wrapper });
+
+    await act(async () => {
+      await expect(result.current.mutateAsync(5)).rejects.toThrow("Network error");
+    });
+    resetOutageCircuit();
+    await act(async () => {
+      await expect(result.current.mutateAsync(5)).resolves.toEqual({ briefId: 5, jobId: 10 });
+      await result.current.mutateAsync(5);
+    });
+
+    const keys = fetchMock.mock.calls.map((call) => new Headers(call[1]?.headers).get("Idempotency-Key"));
+    expect(keys[0]).toBeTruthy();
+    expect(keys[0]).toEqual(keys[1]);
+    expect(keys[2]).not.toEqual(keys[1]);
+    expect(fetchMock.mock.calls.every((call) => String(call[0]).includes("/kb/research-briefs/5/retry"))).toBe(true);
+  });
+});
 
 describe("Research Brief list response contract", () => {
   it("retains hasMore and nextCursor for an unfinished page", () => {
