@@ -4,17 +4,29 @@ import type { CalendarEventsResponse } from "@/hooks/api/calendar-types";
 function fakeIndexedDb() {
   const opens: Array<{ result: unknown; onsuccess?: () => void }> = [];
   const puts: unknown[] = [];
+  let stored: unknown;
   const database = {
     close: jest.fn(),
     transaction: jest.fn(() => {
       let requested = false;
       const transaction: { oncomplete?: () => void; onerror?: () => void; onabort?: () => void; objectStore: () => unknown } = {
         objectStore: () => ({
+          get: () => {
+            requested = true;
+            const request: { result?: unknown; onsuccess?: () => void } = {};
+            queueMicrotask(() => {
+              request.result = stored;
+              request.onsuccess?.();
+              queueMicrotask(() => transaction.oncomplete?.());
+            });
+            return request;
+          },
           put: (value: unknown) => {
             requested = true;
             const request: { onsuccess?: () => void } = {};
             queueMicrotask(() => {
               puts.push(value);
+              stored = value;
               request.onsuccess?.();
               transaction.oncomplete?.();
             });
@@ -24,6 +36,7 @@ function fakeIndexedDb() {
             requested = true;
             const request: { onsuccess?: () => void } = {};
             queueMicrotask(() => {
+              stored = undefined;
               request.onsuccess?.();
               transaction.oncomplete?.();
             });
@@ -174,6 +187,28 @@ describe("Calendar offline cache identity", () => {
     db.openNext();
     await pending;
     expect(db.puts).toEqual([expect.objectContaining({ identity: "org-1:user-1", timeZone: "Asia/Kolkata" })]);
+  });
+
+  it("does not replace a newer offline snapshot with an older completed response", async () => {
+    const db = fakeIndexedDb();
+    const identity = "org-1:user-1";
+    sessionStorage.setItem("streamline-calendar-offline-session-identity", identity);
+    localStorage.setItem("streamline-calendar-offline-identity", identity);
+    allowOfflineCalendarPolicy(identity, 1);
+    const start = new Date("2026-10-13T09:00:00.000Z");
+    const end = new Date("2026-10-13T10:00:00.000Z");
+    const newerAt = Date.now();
+    const newer = saveOfflineCalendarSnapshot(identity, start, end, {
+      events: [], coverageState: "complete", coverage: [],
+    } as never, { version: 1, maxAgeDays: 1 }, "Asia/Kolkata", newerAt);
+    db.openNext();
+    await newer;
+    const older = saveOfflineCalendarSnapshot(identity, start, end, {
+      events: [], coverageState: "partial", coverage: [],
+    } as never, { version: 1, maxAgeDays: 1 }, "Asia/Kolkata", newerAt - 60_000);
+    db.openNext();
+    await older;
+    expect(db.puts).toEqual([expect.objectContaining({ fetchedAt: newerAt, coverage: "complete" })]);
   });
 
   it("marks offline coverage partial when the busy-window cache limit is reached", async () => {

@@ -265,8 +265,22 @@ export async function saveOfflineCalendarSnapshot(
       !allowOfflineCalendarPolicy(identity, policy.version)
     )
       return resolve();
-    const request = store.put(snapshot, KEY);
-    request.onsuccess = () => resolve();
+    const currentRequest = store.get(KEY);
+    currentRequest.onsuccess = () => {
+      const current: unknown = currentRequest.result;
+      if (
+        writeEpoch !== cacheEpoch ||
+        !offlineCalendarIdentityIsCurrent(identity) ||
+        !allowOfflineCalendarPolicy(identity, policy.version) ||
+        (current !== null && typeof current === "object" &&
+          "identity" in current && current.identity === identity &&
+          "fetchedAt" in current && typeof current.fetchedAt === "number" &&
+          Number.isFinite(current.fetchedAt) && current.fetchedAt > fetchedAt)
+      )
+        return resolve();
+      const request = store.put(snapshot, KEY);
+      request.onsuccess = () => resolve();
+    };
   });
 }
 
