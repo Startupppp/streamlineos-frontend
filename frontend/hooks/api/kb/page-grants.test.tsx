@@ -5,6 +5,7 @@ import { clearBackendTokenCache, resetOutageCircuit, seedBackendToken } from "@/
 import { ApiContractError } from "@/lib/api-envelope";
 import { installAbortSignalPolyfill } from "@/test-utils/abort-signal-polyfill";
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
+import { readErrorReachesBoundary } from "@/lib/query-error-policy";
 
 jest.mock("@/hooks/api/access", () => ({ useCan: () => true }));
 jest.mock("@/hooks/api/authorized-mutation", () => ({
@@ -60,7 +61,7 @@ beforeEach(() => {
   seedBackendToken("header." + Buffer.from(JSON.stringify({ exp: Math.floor(Date.now() / 1000) + 600 })).toString("base64url") + ".signature");
   fetchMock.mockReset();
   globalThis.fetch = fetchMock;
-  client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
+  client = new QueryClient({ defaultOptions: { queries: { retry: false, throwOnError: readErrorReachesBoundary }, mutations: { retry: false } } });
 });
 
 afterEach(() => {
@@ -145,6 +146,18 @@ describe("KB page grants through the HTTP parser", () => {
     const { result } = renderHook(() => useKbPageGrants(12), { wrapper });
     await waitFor(() => expect(result.current.isError).toBe(true));
     expect(result.current.error).toBeInstanceOf(ApiContractError);
+  });
+
+  it("keeps a first-read grants projection error inline and recovers after retry", async () => {
+    const incomplete = Object.fromEntries(Object.entries(grant).filter(([key]) => key !== "granteeEmail"));
+    fetchMock.mockResolvedValueOnce(response({ data: [incomplete], pagination }));
+    fetchMock.mockResolvedValueOnce(response({ data: [grant], pagination }));
+    const { result } = renderHook(() => useKbPageGrants(12), { wrapper });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(result.current.error).toBeInstanceOf(ApiContractError);
+    await act(async () => { await result.current.refetch(); });
+    await waitFor(() => expect(result.current.data).toEqual([grant]));
   });
 
   it("rejects an unknown access level instead of weakening the grant contract", async () => {
