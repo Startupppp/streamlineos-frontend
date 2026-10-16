@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
@@ -113,6 +113,25 @@ export function useRenameGroup(groupId: string) {
       apiClient.patch<{ success: true }>(`/principal-groups/${groupId}`, data, undefined, principalGroupSuccessContract),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: accessAndCrmQueryKeys.principalGroups.all });
+    },
+  });
+}
+
+export function useDeleteGroup() {
+  const queryClient = useQueryClient();
+  const { data: session } = useSession();
+  const orgId = session?.orgId;
+  return useAuthorizedMutation<{ success: true }, Error, { groupId: string }>("settings:rbac:manage", {
+    mutationKey: ["principalGroups", "delete"],
+    mutationFn: ({ groupId }) =>
+      apiClient.delete<{ success: true }>(
+        `/principal-groups/${groupId}`,
+        undefined, undefined, principalGroupSuccessContract,
+      ),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: accessAndCrmQueryKeys.principalGroups.all });
+      void queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.access.me() });
+      if (orgId) signalAccessInvalidation(orgId);
     },
   });
 }

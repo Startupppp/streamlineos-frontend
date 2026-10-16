@@ -11,6 +11,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { useMotionVariants } from "@/lib/motion-variants";
+import { formatEventDate } from "@/lib/date-utils";
+import { useOrgTimeZone } from "@/hooks/api/org-display";
 import type { WebhookEndpoint } from "@/hooks/api/webhooks";
 
 export interface WebhookCardProps {
@@ -46,6 +48,7 @@ export function WebhookCard({
   canManage,
 }: WebhookCardProps) {
   const { fadeUp } = useMotionVariants();
+  const orgTz = useOrgTimeZone();
   const handleCopy = useCallback(() => onCopyUrl(wh.url), [wh.url, onCopyUrl]);
   const handleRotateClick = useCallback(
     () => onRotateSecret(wh.id),
@@ -154,7 +157,7 @@ export function WebhookCard({
             )}
           </div>
           <p className="text-xs text-muted-foreground mt-3">
-            Created {new Date(wh.createdAt).toLocaleDateString("en-IN")}
+            Created {formatEventDate(wh.createdAt, orgTz)}
           </p>
         </CardContent>
       </Card>

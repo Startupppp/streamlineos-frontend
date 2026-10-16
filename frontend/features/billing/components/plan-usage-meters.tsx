@@ -20,6 +20,8 @@ const LIMIT_LABELS: Record<string, string> = {
   signEnvelopes: "Sign Envelopes",
   surveys: "Surveys",
   acctInvoices: "Accounting Invoices",
+  hrCandidates: "HR Candidates",
+  hrJobPostings: "HR Job Postings",
 };
 
 function UsageMeter({ label, entry }: { label: string; entry: EntitlementLimit }) {

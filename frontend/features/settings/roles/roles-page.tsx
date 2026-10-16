@@ -4,7 +4,6 @@ import { useState, useCallback, useEffect } from "react";
 import Link from "next/link";
 import {
   ClipboardList,
-  ShieldCheck,
   Users,
   KeyRound,
   Layers,
@@ -214,11 +213,10 @@ export function RolesPage() {
         >
         <div className="shrink-0">
           {analyticsLoading ? (
-            <StatCardGridSkeleton cols={5} count={5} stackOnMobile={2} />
+            <StatCardGridSkeleton cols={4} count={4} stackOnMobile={2} />
           ) : (
-            <StatCardGrid cols={5} stackOnMobile={2}>
+            <StatCardGrid cols={4} stackOnMobile={2}>
               <StatCard label="Total Roles" value={analytics?.totalRoles ?? 0} icon={Layers} />
-              <StatCard label="Custom Roles" value={analytics?.customRoles ?? 0} icon={ShieldCheck} tone="blue" />
               <StatCard label="Users Assigned" value={analytics?.usersAssigned ?? 0} icon={Users} tone="emerald" />
               <StatCard label="Total Permissions" value={analytics?.totalPermissions ?? 0} icon={KeyRound} tone="amber" />
               <StatCard label="Recent Changes" value={analytics?.recentChanges ?? 0} icon={TrendingUp} />

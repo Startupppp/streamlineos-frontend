@@ -1,6 +1,5 @@
 "use client";
 
-import { format } from "date-fns";
 import { InfoIcon } from "@animateicons/react/lucide";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -8,18 +7,25 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { type DataTableColumn } from "@/components/ui/data-table";
 import { resolveImageUrl } from "@/lib/utils";
 import { getInitials } from "@/lib/format-utils";
+import { formatDateTimeInOrgTz } from "@/lib/date-utils";
+import { useOrgTimeZone } from "@/hooks/api/org-display";
 import { actionBadgeClass, formatActionLabel } from "./audit-log-constants";
 import type { AuditLogRow } from "@/hooks/api/audit-log";
+
+function AuditTimestampCell({ createdAt }: { createdAt: string }) {
+  const orgTz = useOrgTimeZone();
+  return (
+    <span className="text-xs text-muted-foreground font-mono whitespace-nowrap">
+      {formatDateTimeInOrgTz(createdAt, orgTz)}
+    </span>
+  );
+}
 
 export const AUDIT_LOG_COLUMNS: DataTableColumn<AuditLogRow>[] = [
   {
     key: "createdAt",
     header: "Timestamp",
-    cell: (log) => (
-      <span className="text-xs text-muted-foreground font-mono whitespace-nowrap">
-        {format(new Date(log.createdAt), "dd MMM, HH:mm:ss")}
-      </span>
-    ),
+    cell: (log) => <AuditTimestampCell createdAt={log.createdAt} />,
     className: "w-[170px]",
   },
   {
