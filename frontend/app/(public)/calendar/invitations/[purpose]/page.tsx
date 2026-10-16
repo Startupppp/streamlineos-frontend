@@ -5,7 +5,9 @@ import { format, isSameDay } from "date-fns";
 import { CalendarDays, Check, Clock3, ExternalLink, Loader2, MapPin, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { usePublicCalendarMeetingWorkspace } from "@/hooks/api/calendar-meeting-workspace";
 import {
   usePublicCalendarInvitation,
   usePublicCalendarInvitationRsvp,
@@ -36,6 +38,8 @@ export default function CalendarInvitationPage() {
   const invitationQuery = usePublicCalendarInvitation(purpose, token);
   const rsvp = usePublicCalendarInvitationRsvp(token);
   const invitation = invitationQuery.isError ? undefined : invitationQuery.data;
+  const workspaceQuery = usePublicCalendarMeetingWorkspace(token, purpose === "join" && Boolean(invitation));
+  const workspace = workspaceQuery.isError ? undefined : workspaceQuery.data;
 
   function respond(status: PublicCalendarInvitationRsvp) {
     rsvp.mutate(status);
@@ -148,6 +152,44 @@ export default function CalendarInvitationPage() {
                     The organizer has not added an online meeting link. Check the latest invitation update.
                   </p>
                 </div>
+              )}
+
+              {purpose === "join" && workspace && (workspace.sharedContexts.length > 0 || workspace.sharedNotes.length > 0 || workspace.sharedDrafts.length > 0) && (
+                <section className="space-y-4 border-t border-border pt-5" aria-label="Shared meeting workspace">
+                  <div>
+                    <h3 className="font-semibold text-foreground">Shared meeting workspace</h3>
+                    <p className="text-sm text-muted-foreground">Content the organizer shared with invited guests.</p>
+                  </div>
+                  {workspace.sharedContexts.map((context) => (
+                    <div key={context.id} className="rounded-lg border border-border bg-muted/30 p-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-sm font-medium">{context.contextType.toLowerCase()} context</p>
+                        <Badge variant="outline">{context.state.replaceAll("_", " ").toLowerCase()}</Badge>
+                      </div>
+                      <p className="mt-1 text-xs text-muted-foreground">Source content is available to authorized members only.</p>
+                    </div>
+                  ))}
+                  {workspace.sharedNotes.map((note) => (
+                    <article key={note.id} className="rounded-lg border border-border p-3">
+                      <p className="text-xs font-medium text-muted-foreground">{note.kind.toLowerCase()}</p>
+                      <p className="mt-1 whitespace-pre-wrap text-sm">{note.content}</p>
+                    </article>
+                  ))}
+                  {workspace.sharedDrafts.map((draft) => (
+                    <article key={draft.id} className="rounded-lg border border-border p-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-xs font-medium text-muted-foreground">{draft.kind.replaceAll("_", " ").toLowerCase()}</p>
+                        <Badge variant="outline">{draft.status.toLowerCase()}</Badge>
+                      </div>
+                      <p className="mt-1 whitespace-pre-wrap text-sm">{draft.content}</p>
+                      {draft.sourceOutcomeUnavailable && <p className="mt-2 text-xs text-status-warning-foreground">Source action status is temporarily unavailable.</p>}
+                    </article>
+                  ))}
+                </section>
+              )}
+
+              {purpose === "join" && workspaceQuery.isError && (
+                <p role="status" className="text-sm text-muted-foreground">Shared meeting content is unavailable right now.</p>
               )}
             </div>
           )}

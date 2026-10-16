@@ -83,7 +83,18 @@ export const calendarMeetingWorkspaceContract = z.object({
 
 export const calendarMeetingWorkspaceOptionalContract = calendarMeetingWorkspaceContract.nullable();
 
+export const publicCalendarMeetingWorkspaceContract = z.object({
+  eventId: z.number().int().positive(),
+  eventTitle: z.string(),
+  eventStartAt: z.string().datetime(),
+  eventEndAt: z.string().datetime(),
+  sharedContexts: z.array(calendarMeetingContextContract),
+  sharedNotes: z.array(calendarMeetingNoteContract),
+  sharedDrafts: z.array(calendarMeetingDraftContract),
+});
+
 export type CalendarMeetingWorkspace = z.infer<typeof calendarMeetingWorkspaceContract>;
 export type CalendarMeetingContext = z.infer<typeof calendarMeetingContextContract>;
 export type CalendarMeetingNote = z.infer<typeof calendarMeetingNoteContract>;
 export type CalendarMeetingDraft = z.infer<typeof calendarMeetingDraftContract>;
+export type PublicCalendarMeetingWorkspace = z.infer<typeof publicCalendarMeetingWorkspaceContract>;

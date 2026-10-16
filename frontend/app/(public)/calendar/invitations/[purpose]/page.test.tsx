@@ -82,6 +82,55 @@ describe("public calendar invitation page", () => {
     );
   });
 
+  it("shows only reviewed and explicitly shared meeting content to a join-link guest", async () => {
+    purpose = "join";
+    mockedGet.mockImplementation((path: string) => path === "/public/calendar/meeting-workspace"
+      ? Promise.resolve({
+        eventId: 7,
+        eventTitle: "Quarterly planning",
+        eventStartAt: invitation.startAt,
+        eventEndAt: invitation.endAt,
+        sharedContexts: [],
+        sharedNotes: [{ id: "601e5240-3120-4c31-86cb-d10442ccae58", kind: "NOTE", content: "Guest agenda", sharedWithGuests: true, authorMembershipId: null, version: 1, retentionUntil: null, createdAt: invitation.startAt, updatedAt: invitation.startAt }],
+        sharedDrafts: [{ id: "93241195-a367-4d2e-94a5-63ff4d489ef0", kind: "FOLLOW_UP", content: "Send approved recap", ownerMembershipId: null, sharedWithGuests: true, status: "APPLIED", sourceActionProposalId: null, sourceProposal: null, sourceOutcome: null, sourceOutcomeUnavailable: false, version: 2, reviewedAt: invitation.startAt, createdAt: invitation.startAt, updatedAt: invitation.startAt }],
+      })
+      : Promise.resolve(invitation));
+
+    renderPage();
+
+    expect(await screen.findByText("Guest agenda")).toBeInTheDocument();
+    expect(screen.getByText("Send approved recap")).toBeInTheDocument();
+    expect(mockedGet).toHaveBeenCalledWith(
+      "/public/calendar/meeting-workspace",
+      { token: "signed-token" },
+      expect.anything(),
+      expect.anything(),
+    );
+  });
+
+  it("removes shared workspace content when the join link is revoked", async () => {
+    purpose = "join";
+    mockedGet.mockImplementation((path: string) => path === "/public/calendar/meeting-workspace"
+      ? Promise.resolve({
+        eventId: 7,
+        eventTitle: "Quarterly planning",
+        eventStartAt: invitation.startAt,
+        eventEndAt: invitation.endAt,
+        sharedContexts: [],
+        sharedNotes: [{ id: "601e5240-3120-4c31-86cb-d10442ccae58", kind: "NOTE", content: "Guest agenda", sharedWithGuests: true, authorMembershipId: null, version: 1, retentionUntil: null, createdAt: invitation.startAt, updatedAt: invitation.startAt }],
+        sharedDrafts: [],
+      })
+      : Promise.resolve(invitation));
+    const { client } = renderPage();
+    expect(await screen.findByText("Guest agenda")).toBeInTheDocument();
+
+    mockedGet.mockRejectedValue(new Error("Invitation link is invalid or expired"));
+    await client.invalidateQueries({ queryKey: ["public", "calendar", "invitation", "join", "signed-token"] });
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("This link is no longer available");
+    expect(screen.queryByText("Guest agenda")).not.toBeInTheDocument();
+  });
+
   it("renders an obsolete-link state without exposing event details", async () => {
     mockedGet.mockRejectedValue(new Error("Invitation link is invalid or expired"));
     renderPage();

@@ -1,12 +1,12 @@
 "use client";
 
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { platformHierarchyQueryKeys } from "@/lib/query-keys/platform-hierarchy";
-import type { CalendarMeetingWorkspace } from "./calendar-meeting-workspace-schema";
+import type { CalendarMeetingWorkspace, PublicCalendarMeetingWorkspace } from "./calendar-meeting-workspace-schema";
 
 const workspaceContract = lazyContract(() =>
   import("./calendar-meeting-workspace-schema").then((module) => module.calendarMeetingWorkspaceContract),
@@ -14,6 +14,24 @@ const workspaceContract = lazyContract(() =>
 const optionalWorkspaceContract = lazyContract(() =>
   import("./calendar-meeting-workspace-schema").then((module) => module.calendarMeetingWorkspaceOptionalContract),
 );
+const publicWorkspaceContract = lazyContract(() =>
+  import("./calendar-meeting-workspace-schema").then((module) => module.publicCalendarMeetingWorkspaceContract),
+);
+
+export function usePublicCalendarMeetingWorkspace(token: string, enabled: boolean) {
+  return useQuery({
+    queryKey: ["public", "calendar", "meeting-workspace", token],
+    queryFn: ({ signal }) => apiClient.get<PublicCalendarMeetingWorkspace>(
+      "/public/calendar/meeting-workspace",
+      { token },
+      signal,
+      publicWorkspaceContract,
+    ),
+    enabled: enabled && Boolean(token),
+    retry: false,
+    staleTime: 0,
+  });
+}
 
 export interface CalendarMeetingSourceCommand {
   sourceKey: string;
