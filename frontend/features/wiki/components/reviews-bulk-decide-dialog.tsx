@@ -23,6 +23,7 @@ import {
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useBulkDecidePageReviews } from "@/hooks/api/kb/page-reviews";
+import { useCan, useCanState } from "@/hooks/api/access";
 import type { BulkDecideResultItem } from "@/hooks/api/kb/page-reviews";
 
 export interface BulkDecideDialogProps {
@@ -39,6 +40,9 @@ export function BulkDecideDialog({
   const [decision, setDecision] = useState<"approved" | "rejected">("approved");
   const [note, setNote] = useState("");
   const bulkDecide = useBulkDecidePageReviews();
+  const canManageReviews = useCan("kb:reviews:manage");
+  const decisionAccess = useCanState("kb:reviews:manage");
+  const canDecide = canManageReviews && decisionAccess === "granted";
 
   function handleDecisionChange(val: string) {
     if (val === "approved" || val === "rejected") setDecision(val);
@@ -49,7 +53,7 @@ export function BulkDecideDialog({
   }
 
   function handleSubmit() {
-    if (decision === "rejected" && !note.trim()) return;
+    if (!canDecide || ids.length === 0 || bulkDecide.isPending || (decision === "rejected" && !note.trim())) return;
 
     const input =
       decision === "approved"
@@ -90,11 +94,18 @@ export function BulkDecideDialog({
             Approve or reject every selected review in one action.
           </DialogDescription>
         </DialogHeader>
+        {!canDecide && (
+          <p role="status" className="text-sm text-muted-foreground">
+            {decisionAccess === "loading"
+              ? "Checking review decision access…"
+              : "You no longer have permission to decide reviews."}
+          </p>
+        )}
         <div className="space-y-3 px-0 py-2">
           <div className="space-y-1.5">
-            <Label className="text-xs">Decision</Label>
-            <Select value={decision} onValueChange={handleDecisionChange}>
-              <SelectTrigger className="w-full">
+            <Label htmlFor="kb-bulk-review-decision" className="text-xs">Decision</Label>
+            <Select value={decision} onValueChange={handleDecisionChange} disabled={!canDecide || bulkDecide.isPending}>
+              <SelectTrigger id="kb-bulk-review-decision" className="w-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -104,7 +115,7 @@ export function BulkDecideDialog({
             </Select>
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs">
+            <Label htmlFor="kb-bulk-review-note" className="text-xs">
               Note
               {decision === "rejected" ? (
                 <span className="text-destructive"> *</span>
@@ -113,8 +124,10 @@ export function BulkDecideDialog({
               )}
             </Label>
             <Textarea
+              id="kb-bulk-review-note"
               value={note}
               onChange={handleNoteChange}
+              disabled={!canDecide || bulkDecide.isPending}
               placeholder={
                 decision === "rejected" ? "Explain the rejection…" : "Add a note…"
               }
@@ -132,7 +145,7 @@ export function BulkDecideDialog({
             size="sm"
             variant={decision === "rejected" ? "destructive" : "default"}
             isPending={bulkDecide.isPending}
-            disabled={decision === "rejected" && !note.trim()}
+            disabled={!canDecide || ids.length === 0 || (decision === "rejected" && !note.trim())}
             onClick={handleSubmit}
           >
             {decision === "approved" ? "Approve all" : "Reject all"}

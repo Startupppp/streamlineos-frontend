@@ -47,6 +47,7 @@ export function ExportJobsCard() {
     data: jobs = [],
     isLoading,
     isError,
+    isFetchNextPageError,
     error,
     refetch,
     hasNextPage,
@@ -55,6 +56,10 @@ export function ExportJobsCard() {
   } = useKbExportJobs();
 
   function handleRetry() {
+    if (isFetchNextPageError) {
+      void fetchNextPage();
+      return;
+    }
     void refetch();
   }
 
@@ -72,7 +77,7 @@ export function ExportJobsCard() {
         </div>
       )}
 
-      {!isLoading && isError && (
+      {!isLoading && isError && jobs.length === 0 && (
         <ErrorState
           compact
           title="Couldn't load export history"
@@ -93,17 +98,27 @@ export function ExportJobsCard() {
         />
       )}
 
-      {!isLoading && !isError && jobs.length > 0 && (
+      {!isLoading && jobs.length > 0 && (
         <div className="space-y-1.5">
           {jobs.map((job) => (
             <JobRow key={job.id} job={job} />
           ))}
-          <InfiniteScrollSentinel
-            hasNextPage={hasNextPage ?? false}
-            isFetchingNextPage={isFetchingNextPage}
-            onLoadMore={handleLoadMore}
-            label="Load more export jobs"
-          />
+          {isError ? (
+            <ErrorState
+              compact
+              title={isFetchNextPageError ? "Couldn't load more export jobs" : "Couldn't refresh export history"}
+              description={getErrorMessage(error)}
+              error={error}
+              onRetry={handleRetry}
+            />
+          ) : (
+            <InfiniteScrollSentinel
+              hasNextPage={hasNextPage ?? false}
+              isFetchingNextPage={isFetchingNextPage}
+              onLoadMore={handleLoadMore}
+              label="Load more export jobs"
+            />
+          )}
         </div>
       )}
     </>

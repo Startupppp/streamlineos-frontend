@@ -94,17 +94,21 @@ export function useKbAsk() {
 }
 
 export function useKbAiAnswerFeedback() {
+  const operation = useIdempotentOperation();
   return useAuthorizedMutation("kb:pages:view", {
     mutationKey: ["kb", "ai-feedback"],
     mutationFn: (input: KbAiFeedbackInput) =>
-      apiClient.post<{ success: boolean }>("/kb/ai/feedback", input, undefined, kbAiFeedbackContract),
+      apiClient.post<{ success: boolean }>("/kb/ai/feedback", input, operation.configFor(input), kbAiFeedbackContract),
+    onSuccess: () => operation.settle(),
   });
 }
 
 export function useCreateKbKnowledgeGap() {
+  const operation = useIdempotentOperation();
   return useAuthorizedMutation("kb:pages:view", {
     mutationKey: ["kb", "ask", "knowledge-gap"],
     mutationFn: (input: { question: string; spaceId?: number }) =>
-      apiClient.post<{ success: boolean }>("/kb/ask/knowledge-gap", input, undefined, kbAiFeedbackContract),
+      apiClient.post<{ success: boolean }>("/kb/ask/knowledge-gap", input, operation.configFor(input), kbAiFeedbackContract),
+    onSuccess: () => operation.settle(),
   });
 }

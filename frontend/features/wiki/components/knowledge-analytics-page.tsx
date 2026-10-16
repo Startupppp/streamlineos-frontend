@@ -483,6 +483,10 @@ export default function KnowledgeAnalyticsPage() {
   const {
     pages: relatedPages = [],
     isLoading: relatedPagesLoading,
+    isError: relatedPagesError,
+    error: relatedPagesReadError,
+    isFetchNextPageError: relatedPagesNextError,
+    refetch: refetchRelatedPages,
     fetchNextPage: fetchNextRelated,
     hasNextPage: hasNextRelated,
     isFetchingNextPage: isFetchingNextRelated,
@@ -504,6 +508,14 @@ export default function KnowledgeAnalyticsPage() {
 
   function handleLoadMoreRelated() {
     void fetchNextRelated();
+  }
+
+  function handleRetryRelatedPages() {
+    if (relatedPagesNextError) {
+      void fetchNextRelated();
+      return;
+    }
+    void refetchRelatedPages();
   }
 
   function handleGapRowSelect(query: string) {
@@ -930,6 +942,13 @@ export default function KnowledgeAnalyticsPage() {
                               />
                             ))}
                           </div>
+                        ) : relatedPagesError && relatedPages.length === 0 ? (
+                          <ErrorState
+                            compact
+                            title="Could not load related pages"
+                            error={relatedPagesReadError}
+                            onRetry={handleRetryRelatedPages}
+                          />
                         ) : relatedPages.length === 0 ? (
                           <p className="text-xs text-muted-foreground italic">
                             No existing pages mention this query.
@@ -946,12 +965,21 @@ export default function KnowledgeAnalyticsPage() {
                                 {page.title || "Untitled"}
                               </Link>
                             ))}
-                            <InfiniteScrollSentinel
-                              hasNextPage={!!hasNextRelated}
-                              isFetchingNextPage={isFetchingNextRelated}
-                              onLoadMore={handleLoadMoreRelated}
-                              label="Load more related pages"
-                            />
+                            {relatedPagesError ? (
+                              <ErrorState
+                                compact
+                                title="Could not load more related pages"
+                                error={relatedPagesReadError}
+                                onRetry={handleRetryRelatedPages}
+                              />
+                            ) : (
+                              <InfiniteScrollSentinel
+                                hasNextPage={!!hasNextRelated}
+                                isFetchingNextPage={isFetchingNextRelated}
+                                onLoadMore={handleLoadMoreRelated}
+                                label="Load more related pages"
+                              />
+                            )}
                           </div>
                         )}
                       </div>

@@ -26,10 +26,12 @@ const mockUseAssignHealthItem = jest.fn();
 const mockUseBulkRepairHealthItems = jest.fn();
 const mockUseOrgMembersByIds = jest.fn();
 const mockDismissMutateAsync = jest.fn();
+const mockReplace = jest.fn();
+let mockSearchParams = new URLSearchParams("signal=unowned");
 
 jest.mock("next/navigation", () => ({
-  useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
-  useSearchParams: () => new URLSearchParams("signal=unowned"),
+  useRouter: () => ({ push: jest.fn(), replace: mockReplace }),
+  useSearchParams: () => mockSearchParams,
   usePathname: () => "/knowledge/wiki/manage",
 }));
 
@@ -44,7 +46,7 @@ jest.mock("@/hooks/api/entitlements", () => ({
 
 jest.mock("@/hooks/api/kb/content-health", () => ({
   useContentHealthCounts: () => useContentHealthCounts(),
-  useContentHealthSignals: () => useContentHealthSignals(),
+  useContentHealthSignals: (...args: unknown[]) => useContentHealthSignals(...args),
   useDismissHealthItem: () => ({ mutateAsync: mockDismissMutateAsync, isPending: false }),
   useContentHealthTrend: () => useContentHealthTrend(),
   useAssignHealthItem: () => mockUseAssignHealthItem(),
@@ -134,6 +136,8 @@ const IDLE = {
 };
 
 beforeEach(() => {
+  mockReplace.mockClear();
+  mockSearchParams = new URLSearchParams("signal=unowned");
   mockDismissMutateAsync.mockResolvedValue({});
   useAccess.mockReturnValue(accessGranted);
   useContentHealthCounts.mockReturnValue({ ...IDLE, data: MIXED_COUNTS });
@@ -215,6 +219,40 @@ describe("ContentHealthDismissDialog snooze contract", () => {
 });
 
 describe("ContentHealthPage — populated state", () => {
+  it("restores the cursor from the URL and keeps previous navigation in the same signal", async () => {
+    useContentHealthSignals.mockReturnValue({
+      ...IDLE,
+      data: { ...SIGNAL_PAGE_WITH_ROWS, hasMore: true, nextCursor: 42 },
+    });
+    const view = render(<ContentHealthPage />);
+
+    await userEvent.click(screen.getByRole("button", { name: "Next" }));
+    const nextUrl = new URL(mockReplace.mock.lastCall?.[0], "http://localhost");
+    expect(nextUrl.searchParams.get("signal")).toBe("unowned");
+    expect(nextUrl.searchParams.get("cursor")).toBe("42");
+    expect(nextUrl.searchParams.get("cursorTrail")).toBe("~");
+
+    mockSearchParams = nextUrl.searchParams;
+    view.rerender(<TooltipProvider><ContentHealthPage /></TooltipProvider>);
+    expect(useContentHealthSignals).toHaveBeenLastCalledWith({ signalType: "unowned", afterId: 42 });
+    expect(screen.getByText("Page 2")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Previous" }));
+    const previousUrl = new URL(mockReplace.mock.lastCall?.[0], "http://localhost");
+    expect(previousUrl.searchParams.get("cursor")).toBeNull();
+    expect(previousUrl.searchParams.get("cursorTrail")).toBeNull();
+  });
+
+  it("clears the cursor and its trail with a signal filter change", async () => {
+    mockSearchParams = new URLSearchParams("signal=unowned&cursor=42&cursorTrail=~");
+    render(<ContentHealthPage />);
+
+    await userEvent.click(screen.getByRole("button", { name: /Stale/i }));
+    const filteredUrl = new URL(mockReplace.mock.lastCall?.[0], "http://localhost");
+    expect(filteredUrl.searchParams.get("signal")).toBe("stale");
+    expect(filteredUrl.searchParams.get("cursor")).toBeNull();
+    expect(filteredUrl.searchParams.get("cursorTrail")).toBeNull();
+  });
+
   it("renders count chips for all eight signals including overexposed and duplicate_candidate", () => {
     render(<ContentHealthPage />);
     expect(screen.getAllByText("Overexposed").length).toBeGreaterThanOrEqual(1);

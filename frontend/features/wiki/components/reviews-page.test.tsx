@@ -351,6 +351,30 @@ describe("ReviewsPage — empty states distinguish first-empty from filtered-emp
 });
 
 describe("ReviewsPage — cursor pagination preserves URL filter state", () => {
+  it.each(["", "&cursorTrail=broken"])("recovers a bookmarked cursor page without a valid trail%s", (trail) => {
+    useSearchParams.mockReturnValue(new URLSearchParams(`status=overdue&cursor=bookmarked-page${trail}`));
+    useKbPageReviews.mockReturnValue({
+      data: makePage([]),
+      isLoading: false,
+      isError: false,
+      error: undefined,
+      refetch: jest.fn(),
+    });
+    usePageState.mockReturnValue({ kind: "empty" });
+
+    render(<ReviewsPage />);
+
+    expect(useKbPageReviews).toHaveBeenCalledWith(
+      expect.objectContaining({ status: "overdue", cursor: "bookmarked-page" }),
+    );
+    expect(screen.getByText("No reviews on this page.")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Previous page" }));
+    const previousParams = new URL(replace.mock.lastCall?.[0], "https://example.test").searchParams;
+    expect(previousParams.get("status")).toBe("overdue");
+    expect(previousParams.has("cursor")).toBe(false);
+    expect(previousParams.has("cursorTrail")).toBe(false);
+  });
+
   it("offers the previous page when a later cursor page becomes empty", () => {
     useKbPageReviews.mockReturnValue({
       data: makePage(

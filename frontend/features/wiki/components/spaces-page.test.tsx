@@ -249,7 +249,7 @@ describe("SpacesPage", () => {
     expect(screen.getByText("Members — Engineering")).toBeInTheDocument();
   });
 
-  it("drops the cursor when a filter changes, because a cursor issued under the old filter set decodes to a different position and silently skips pages", async () => {
+  it("restores the cursor from the URL after navigation and clears it with the old trail when a filter changes", async () => {
     mockSpaces.mockReturnValue({
       data: { data: [space()], pagination: { limit: 30, hasMore: true, nextCursor: "c2" } },
       isLoading: false,
@@ -258,18 +258,51 @@ describe("SpacesPage", () => {
       refetch: jest.fn(),
     });
 
-    renderPage();
-    await userEvent.click(screen.getByRole("button", { name: /next/i }));
+    const { rerenderPage } = renderPage();
+    await userEvent.click(screen.getByRole("button", { name: "Next page" }));
+    const nextUrl = new URL(mockReplace.mock.lastCall?.[0], "http://localhost");
+    expect(nextUrl.searchParams.get("cursor")).toBe("c2");
+    expect(JSON.parse(nextUrl.searchParams.get("cursorTrail") ?? "")).toEqual([null]);
+
+    mockSearchParams = nextUrl.searchParams;
+    rerenderPage();
 
     expect(mockSpaces).toHaveBeenLastCalledWith(
       expect.objectContaining({ cursor: "c2" }),
     );
 
     await userEvent.type(screen.getByPlaceholderText("Search spaces…"), "eng");
+    const filteredUrl = new URL(mockReplace.mock.lastCall?.[0], "http://localhost");
+    expect(filteredUrl.searchParams.get("cursor")).toBeNull();
+    expect(filteredUrl.searchParams.get("cursorTrail")).toBeNull();
+  });
+
+  it("keeps cursor navigation in the URL and preserves it when changing the view", async () => {
+    mockSpaces.mockReturnValue(listing([space()], {
+      data: { data: [space()], pagination: { limit: 30, hasMore: true, nextCursor: "c2" } },
+    }));
+    mockSearchParams = new URLSearchParams("audience=internal&cursor=c2&cursorTrail=%5Bnull%5D");
+    const { rerenderPage } = renderPage();
 
     expect(mockSpaces).toHaveBeenLastCalledWith(
-      expect.objectContaining({ cursor: undefined }),
+      expect.objectContaining({ audience: "internal", cursor: "c2" }),
     );
+    expect(screen.getByRole("button", { name: "Previous page" })).toBeEnabled();
+
+    await userEvent.click(screen.getByRole("button", { name: "List view" }));
+    const listUrl = new URL(mockReplace.mock.lastCall?.[0], "http://localhost");
+    expect(listUrl.searchParams.get("view")).toBe("list");
+    expect(listUrl.searchParams.get("cursor")).toBe("c2");
+    expect(listUrl.searchParams.get("cursorTrail")).toBe("[null]");
+
+    mockSearchParams = listUrl.searchParams;
+    rerenderPage();
+    await userEvent.click(screen.getByRole("button", { name: "Previous page" }));
+    const previousUrl = new URL(mockReplace.mock.lastCall?.[0], "http://localhost");
+    expect(previousUrl.searchParams.get("view")).toBe("list");
+    expect(previousUrl.searchParams.get("audience")).toBe("internal");
+    expect(previousUrl.searchParams.get("cursor")).toBeNull();
+    expect(previousUrl.searchParams.get("cursorTrail")).toBeNull();
   });
 
   it("shows the next-page button when the server signals there are more results", () => {

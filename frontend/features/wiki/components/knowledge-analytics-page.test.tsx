@@ -1,6 +1,7 @@
 import { render as rtlRender, screen, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactElement } from "react";
+import { ApiError } from "@/lib/api-envelope";
 
 import { TooltipProvider } from "@/components/ui/tooltip";
 
@@ -540,6 +541,63 @@ describe("KnowledgeAnalyticsPage — gap rows render without crashing and suppor
 
     expect(screen.getByText("Password Reset Guide")).toBeInTheDocument();
     expect(useGapRelatedPages).toHaveBeenCalledWith("reset password");
+  });
+
+  it("shows a request reference and retries a failed first related-pages read", () => {
+    const refetch = jest.fn();
+    useKnowledgeGaps.mockReturnValue(
+      settledGaps([{ query: "reset password", count: 5, lastOccurredAt: "2024-03-01T00:00:00Z" }]),
+    );
+    useGapRelatedPages.mockReturnValue({
+      pages: [],
+      isLoading: false,
+      isError: true,
+      error: new ApiError("Unavailable", 503, "BACKEND_UNREACHABLE", { correlationId: "related-first-1" }),
+      isFetchNextPageError: false,
+      refetch,
+      fetchNextPage: jest.fn(),
+      hasNextPage: false,
+      isFetchingNextPage: false,
+    });
+
+    render(<KnowledgeAnalyticsPage />);
+    fireEvent.click(screen.getByRole("button", { name: "Gap: reset password" }));
+
+    expect(screen.getByText("Could not load related pages")).toBeInTheDocument();
+    expect(screen.getByText("related-first-1")).toBeInTheDocument();
+    expect(screen.queryByText("No existing pages mention this query.")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+    expect(refetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("retains loaded related pages and retries only a failed later page", () => {
+    const refetch = jest.fn();
+    const fetchNextPage = jest.fn();
+    useKnowledgeGaps.mockReturnValue(
+      settledGaps([{ query: "reset password", count: 5, lastOccurredAt: "2024-03-01T00:00:00Z" }]),
+    );
+    useGapRelatedPages.mockReturnValue({
+      pages: [{ id: 1, title: "Password Reset Guide", status: "published", updatedAt: "2024-01-01T00:00:00Z" }],
+      isLoading: false,
+      isError: true,
+      error: new ApiError("Unavailable", 503, "BACKEND_UNREACHABLE", { correlationId: "related-later-2" }),
+      isFetchNextPageError: true,
+      refetch,
+      fetchNextPage,
+      hasNextPage: true,
+      isFetchingNextPage: false,
+    });
+
+    render(<KnowledgeAnalyticsPage />);
+    fireEvent.click(screen.getByRole("button", { name: "Gap: reset password" }));
+
+    expect(screen.getByText("Password Reset Guide")).toBeInTheDocument();
+    expect(screen.getByText("Could not load more related pages")).toBeInTheDocument();
+    expect(screen.getByText("related-later-2")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Load more related pages" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+    expect(fetchNextPage).toHaveBeenCalledTimes(1);
+    expect(refetch).not.toHaveBeenCalled();
   });
 
   it("keeps keyboard action activation separate from gap selection", async () => {

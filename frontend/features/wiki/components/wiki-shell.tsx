@@ -8,7 +8,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useKbPagesFavorites, useCreateKbPage } from "@/hooks/api/kb";
-import { useCan } from "@/hooks/api/access";
+import { useCan, useCanState } from "@/hooks/api/access";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { useShellSidebarCollapse } from "@/components/layout/shell-sidebar-collapse-context";
 import PageTree from "./page-tree";
@@ -22,6 +22,9 @@ import {
 import { useHrKbLinkFlags } from "@/hooks/api/kb/hr-link-config";
 import { KbStarIcon } from "@/features/wiki/lib/kb-icons";
 import { Button } from "@/components/ui/button";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { isApiError } from "@/lib/api-envelope";
 
 export default function WikiShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -31,15 +34,30 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
     fetchNextPage: fetchNextFavorites,
     hasNextPage: hasNextFavorites,
     isFetchingNextPage: isFetchingNextFavorites,
+    isError: favoritesError,
+    isFetchNextPageError: favoritesNextError,
+    error: favoritesReadError,
+    refetch: refetchFavorites,
   } = useKbPagesFavorites();
   const createPage = useCreateKbPage();
   const canViewAnalytics = useCan("kb:analytics:view");
   const canViewReviews = useCan("kb:reviews:view");
   const canManageContent = useCan("kb:pages:manage");
+  const canViewFavorites = useCanState("kb:pages:view") === "granted";
   const hrKbLink = useHrKbLinkFlags();
   const [quickFindOpen, setQuickFindOpen] = useState(false);
   const createParamConsumedRef = useRef(false);
   const { isCollapsed: collapsed } = useShellSidebarCollapse();
+  const favoritesAccessLost = isApiError(favoritesReadError) && [401, 403, 404].includes(favoritesReadError.status);
+  const visibleFavorites = favoritesAccessLost ? [] : favorites;
+
+  function handleRetryFavorites() {
+    if (favoritesNextError && !favoritesAccessLost) {
+      void fetchNextFavorites();
+      return;
+    }
+    void refetchFavorites();
+  }
 
   const handleNewPage = useCallback(() => {
     createPage.mutate(
@@ -99,12 +117,12 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
         <ScrollArea className="flex-1 min-h-0 min-w-0">
           <div className={isCollapsedView ? "min-w-0 overflow-hidden pb-2" : "min-w-0 overflow-hidden px-0 pb-2"}>
             <WikiSidebarNav isCollapsed={isCollapsedView} {...navProps} />
-            {!isCollapsedView && favorites.length > 0 && (
+            {!isCollapsedView && canViewFavorites && (visibleFavorites.length > 0 || favoritesError) && (
               <div className="mb-2 px-2">
                 <p className="px-2 py-1 text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Favorites
                 </p>
-                {favorites.map((page) => (
+                {visibleFavorites.map((page) => (
                   <Link
                     key={page.id}
                     href={pageHref(page.id)}
@@ -114,7 +132,15 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
                     <TruncatedText text={`${page.icon ? `${page.icon} ` : ""}${page.title || "Untitled"}`} />
                   </Link>
                 ))}
-                {hasNextFavorites ? (
+                {favoritesError ? (
+                  <ErrorState
+                    compact
+                    title={favoritesNextError && visibleFavorites.length > 0 ? "Couldn't load more favorites" : "Couldn't load favorites"}
+                    description={getErrorMessage(favoritesReadError)}
+                    error={favoritesReadError}
+                    onRetry={handleRetryFavorites}
+                  />
+                ) : hasNextFavorites ? (
                   <Button
                     type="button"
                     variant="ghost"

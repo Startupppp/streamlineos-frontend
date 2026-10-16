@@ -207,4 +207,30 @@ describe("ExportJobsCard read error", () => {
     await userEvent.click(screen.getByRole("button", { name: "Try again" }));
     expect(refetch).toHaveBeenCalledTimes(1);
   });
+
+  it("keeps loaded exports and retries only a failed later cursor page", async () => {
+    const refetch = jest.fn();
+    const fetchNextPage = jest.fn();
+    useKbExportJobs.mockReturnValue({
+      data: [mockJob],
+      isLoading: false,
+      isError: true,
+      isFetchNextPageError: true,
+      error: new ApiContractError("GET /kb/export-jobs", 200, [], "export-page-2"),
+      refetch,
+      hasNextPage: true,
+      isFetchingNextPage: false,
+      fetchNextPage,
+    });
+
+    render(<ExportJobsCard />);
+
+    expect(screen.getByText("markdown export")).toBeInTheDocument();
+    expect(screen.getByText("Couldn't load more export jobs")).toBeInTheDocument();
+    expect(screen.getByText("export-page-2")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Load more export jobs" })).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Try again" }));
+    expect(fetchNextPage).toHaveBeenCalledTimes(1);
+    expect(refetch).not.toHaveBeenCalled();
+  });
 });

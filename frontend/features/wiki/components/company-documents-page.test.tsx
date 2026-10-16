@@ -90,11 +90,11 @@ describe("CompanyDocumentsPage", () => {
   });
 
   it("asks only for live entries when the reader is not a publisher, whatever the URL says", () => {
-    mockSearchParams = new URLSearchParams("status=all");
+    mockSearchParams = new URLSearchParams("status=all&cursor=publisher-page");
 
     render(<CompanyDocumentsPage />);
 
-    expect(mockList).toHaveBeenCalledWith(expect.objectContaining({ status: "active" }), ON);
+    expect(mockList).toHaveBeenCalledWith(expect.objectContaining({ status: "active", cursor: undefined }), ON);
     expect(screen.queryByRole("combobox", { name: "Show entries" })).not.toBeInTheDocument();
   });
 
@@ -131,7 +131,7 @@ describe("CompanyDocumentsPage", () => {
 
   it("offers to clear the status filter when a publisher's filter finds nothing, instead of claiming nothing was ever shared", async () => {
     mockCan.mockImplementation((key) => key === "hr:documents:publish");
-    mockSearchParams = new URLSearchParams("status=source_removed");
+    mockSearchParams = new URLSearchParams("status=source_removed&cursor=old-page&cursorTrail=%5Bnull%5D");
     mockList.mockReturnValue(listing([]));
 
     render(<CompanyDocumentsPage />);
@@ -140,6 +140,9 @@ describe("CompanyDocumentsPage", () => {
     expect(screen.queryByText("No company documents yet")).not.toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "Clear filters" }));
     expect(mockReplace).toHaveBeenCalledWith(expect.not.stringContaining("status="), expect.anything());
+    const clearedUrl = new URL(mockReplace.mock.lastCall?.[0], "http://localhost");
+    expect(clearedUrl.searchParams.get("cursor")).toBeNull();
+    expect(clearedUrl.searchParams.get("cursorTrail")).toBeNull();
   });
 
   it("titles a withdrawn entry whose document can no longer be shared as hidden, not as removed", () => {
@@ -163,13 +166,32 @@ describe("CompanyDocumentsPage", () => {
     expect(screen.queryByText("No company documents yet")).not.toBeInTheDocument();
   });
 
-  it("passes the keyset cursor to the next page", async () => {
+  it("restores the keyset cursor from the URL and returns to the previous page", async () => {
     mockList.mockReturnValue(listing([item()], { data: { data: [item()], pagination: { limit: 30, hasMore: true, nextCursor: "cur-2" } } }));
 
-    render(<CompanyDocumentsPage />);
-    await userEvent.click(screen.getByRole("button", { name: /next/i }));
+    const view = render(<CompanyDocumentsPage />);
+    await userEvent.click(screen.getByRole("button", { name: "Next page" }));
+    const nextUrl = new URL(mockReplace.mock.lastCall?.[0], "http://localhost");
+    expect(nextUrl.searchParams.get("cursor")).toBe("cur-2");
+    expect(JSON.parse(nextUrl.searchParams.get("cursorTrail") ?? "")).toEqual([null]);
 
+    mockSearchParams = nextUrl.searchParams;
+    view.rerender(<CompanyDocumentsPage />);
     expect(mockList).toHaveBeenLastCalledWith(expect.objectContaining({ cursor: "cur-2" }), ON);
+    await userEvent.click(screen.getByRole("button", { name: "Previous page" }));
+    const previousUrl = new URL(mockReplace.mock.lastCall?.[0], "http://localhost");
+    expect(previousUrl.searchParams.get("cursor")).toBeNull();
+    expect(previousUrl.searchParams.get("cursorTrail")).toBeNull();
+  });
+
+  it("uses a bookmarked publisher status and cursor together", () => {
+    mockCan.mockImplementation((key) => key === "hr:documents:publish");
+    mockSearchParams = new URLSearchParams("status=unpublished&cursor=cur-2&cursorTrail=%5Bnull%5D");
+
+    render(<CompanyDocumentsPage />);
+
+    expect(mockList).toHaveBeenCalledWith(expect.objectContaining({ status: "unpublished", cursor: "cur-2" }), ON);
+    expect(screen.getByRole("button", { name: "Previous page" })).toBeEnabled();
   });
 
   it("says company documents are not turned on, and does not ask for the list, while the switch is off", () => {

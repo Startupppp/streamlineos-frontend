@@ -73,11 +73,12 @@ export default function ReviewsPage() {
   const cursor = searchParams.get("cursor") || undefined;
   const cursorTrailValue = searchParams.get("cursorTrail");
   const cursorTrail = useMemo(() => {
-    if (!cursor || !cursorTrailValue) return [];
+    if (!cursor) return [];
+    if (!cursorTrailValue) return ["~"];
     const entries = cursorTrailValue.split(".");
-    return entries.length <= 100 && entries.every((entry) => entry === "~" || /^[A-Za-z0-9_-]{1,1024}$/.test(entry))
+    return entries.length <= 100 && entries[0] === "~" && entries.slice(1).every((entry) => /^[A-Za-z0-9_-]{1,1024}$/.test(entry))
       ? entries
-      : [];
+      : ["~"];
   }, [cursor, cursorTrailValue]);
 
   const hasFilters =

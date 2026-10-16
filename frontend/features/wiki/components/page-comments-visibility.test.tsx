@@ -1,5 +1,6 @@
 import { act, fireEvent, render } from "@testing-library/react";
 import { expectNoAxeViolations } from "@/test-utils/axe";
+import { ApiError } from "@/lib/api-client";
 import PageCommentsSheet from "./page-comments-sheet";
 
 jest.mock("next-auth/react", () => ({
@@ -43,6 +44,21 @@ const { useKbPageComments, useCreateKbPageComment } = jest.requireMock<{
 
 beforeEach(() => {
   jest.clearAllMocks();
+  useKbPageComments.mockReturnValue({
+    data: [{
+      id: 10,
+      orgId: "org-1",
+      pageId: 1,
+      authorId: "user-author",
+      authorName: "Alice",
+      parentId: null,
+      content: "This is a test comment",
+      resolvedAt: null,
+      createdAt: "2026-09-01T10:00:00.000Z",
+      updatedAt: "2026-09-01T10:00:00.000Z",
+    }],
+    isLoading: false,
+  });
 });
 
 describe("PageCommentsSheet — comment action visibility", () => {
@@ -238,6 +254,7 @@ describe("PageCommentsSheet — bounded comments", () => {
 
   it("keeps loaded comments and offers retry after a later page fails", () => {
     const fetchNextPage = jest.fn();
+    const failure = new ApiError("Connection lost", 503, "UNAVAILABLE", { correlationId: "req-comments-next" }, "/kb/pages/1/comments");
     useKbPageComments.mockReturnValue({
       data: [{
         id: 10,
@@ -254,7 +271,7 @@ describe("PageCommentsSheet — bounded comments", () => {
       isLoading: false,
       isError: true,
       isFetchNextPageError: true,
-      error: new Error("Connection lost"),
+      error: failure,
       hasNextPage: true,
       isFetchingNextPage: false,
       fetchNextPage,
@@ -263,8 +280,80 @@ describe("PageCommentsSheet — bounded comments", () => {
     const view = render(<PageCommentsSheet pageId={1} open onOpenChange={jest.fn()} />);
     expect(view.getByText("First page comment")).toBeInTheDocument();
     expect(view.getByRole("alert")).toHaveTextContent("Connection lost");
+    expect(view.getByText("req-comments-next")).toBeInTheDocument();
     fireEvent.click(view.getByRole("button", { name: "Retry loading comments" }));
     expect(fetchNextPage).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows the request reference for a failed first read", () => {
+    const failure = new ApiError("Unavailable", 503, "UNAVAILABLE", { correlationId: "req-comments-first" }, "/kb/pages/1/comments");
+    useKbPageComments.mockReturnValue({ data: [], isLoading: false, isError: true, error: failure, refetch: jest.fn() });
+
+    const view = render(<PageCommentsSheet pageId={1} open onOpenChange={jest.fn()} />);
+
+    expect(view.getByRole("alert")).toHaveTextContent("Unavailable");
+    expect(view.getByText("req-comments-first")).toBeInTheDocument();
+  });
+
+  it("reports a failed refresh while retaining comments and permits retry", () => {
+    const refetch = jest.fn();
+    const failure = new ApiError("Unavailable", 503, "UNAVAILABLE", { correlationId: "req-comments-refresh" }, "/kb/pages/1/comments");
+    useKbPageComments.mockReturnValue({
+      data: [{
+        id: 10,
+        orgId: "org-1",
+        pageId: 1,
+        authorId: "user-author",
+        authorName: "Alice",
+        parentId: null,
+        content: "Cached comment",
+        resolvedAt: null,
+        createdAt: "2026-09-01T10:00:00.000Z",
+        updatedAt: "2026-09-01T10:00:00.000Z",
+      }],
+      isLoading: false,
+      isError: true,
+      isFetchNextPageError: false,
+      error: failure,
+      refetch,
+    });
+
+    const view = render(<PageCommentsSheet pageId={1} open onOpenChange={jest.fn()} />);
+
+    expect(view.getByText("Cached comment")).toBeInTheDocument();
+    expect(view.getByRole("alert")).toHaveTextContent("Could not refresh comments");
+    expect(view.getByText("req-comments-refresh")).toBeInTheDocument();
+    fireEvent.click(view.getByRole("button", { name: "Retry loading comments" }));
+    expect(refetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("hides cached comments and write actions when access is revoked", () => {
+    useCan.mockReturnValue(true);
+    const failure = new ApiError("Access denied", 403, "FORBIDDEN", { correlationId: "req-comments-denied" }, "/kb/pages/1/comments");
+    useKbPageComments.mockReturnValue({
+      data: [{
+        id: 10,
+        orgId: "org-1",
+        pageId: 1,
+        authorId: "user-author",
+        authorName: "Alice",
+        parentId: null,
+        content: "Formerly visible comment",
+        resolvedAt: null,
+        createdAt: "2026-09-01T10:00:00.000Z",
+        updatedAt: "2026-09-01T10:00:00.000Z",
+      }],
+      isLoading: false,
+      isError: true,
+      error: failure,
+      refetch: jest.fn(),
+    });
+
+    const view = render(<PageCommentsSheet pageId={1} open onOpenChange={jest.fn()} />);
+
+    expect(view.queryByText("Formerly visible comment")).not.toBeInTheDocument();
+    expect(view.queryByRole("textbox", { name: "Write a comment" })).not.toBeInTheDocument();
+    expect(view.getByText("req-comments-denied")).toBeInTheDocument();
   });
 });
 

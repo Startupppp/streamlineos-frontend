@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import { ErrorState } from "@/components/shared";
+import { ErrorReference } from "@/components/shared/error-reference";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -31,6 +32,7 @@ import {
   type PageAnchorContent,
 } from "@/features/wiki/lib/page-comment-anchors";
 import { PageCommentThread } from "./page-comment-thread";
+import { isApiError } from "@/lib/api-envelope";
 
 const ANCHOR_CHIP_CLASS =
   "rounded-full border border-border px-2 py-0.5 text-xs text-muted-foreground transition-colors hover:text-foreground";
@@ -70,6 +72,9 @@ export default function PageCommentsSheet({ pageId, open, onOpenChange, content 
 
   const topLevel = comments.filter((c) => c.parentId === null && !c.resolvedAt);
   const resolved = comments.filter((c) => c.parentId === null && !!c.resolvedAt);
+  const accessLost = isError && isApiError(error) && (error.status === 401 || error.status === 403 || error.status === 404);
+  const showReadError = isError && (accessLost || (!isFetchNextPageError && comments.length === 0));
+  const showCachedReadError = isError && !isFetchNextPageError && comments.length > 0 && !accessLost;
 
   function handlePost() {
     if (!canUpdate || !newContent.trim()) return;
@@ -139,10 +144,11 @@ export default function PageCommentsSheet({ pageId, open, onOpenChange, content 
         </SheetHeader>
         <ScrollArea className="flex-1 min-h-0">
           <div className="px-6 py-4">
-            {isError && comments.length === 0 && (
+            {showReadError && (
               <ErrorState
                 title="Couldn't load comments"
                 description={getErrorMessage(error)}
+                error={error}
                 onRetry={handleRetryComments}
                 compact
               />
@@ -168,7 +174,16 @@ export default function PageCommentsSheet({ pageId, open, onOpenChange, content 
                 className="flex-1 min-h-[40dvh]"
               />
             )}
-            <div className="space-y-5">
+            {!accessLost && <div className="space-y-5">
+              {showCachedReadError && (
+                <div role="alert" className="space-y-2 text-sm text-destructive">
+                  <p>Could not refresh comments. {getErrorMessage(error)}</p>
+                  <ErrorReference error={error} />
+                  <Button type="button" variant="outline" size="sm" onClick={handleRetryComments}>
+                    Retry loading comments
+                  </Button>
+                </div>
+              )}
               <ul className="space-y-5">
                 {topLevel.map((comment) => (
                   <li key={comment.id}>
@@ -208,9 +223,10 @@ export default function PageCommentsSheet({ pageId, open, onOpenChange, content 
                 </>
               )}
               {isFetchNextPageError && (
-                <p role="alert" className="text-sm text-destructive">
-                  Could not load more comments. {getErrorMessage(error)}
-                </p>
+                <div role="alert" className="space-y-2 text-sm text-destructive">
+                  <p>Could not load more comments. {getErrorMessage(error)}</p>
+                  <ErrorReference error={error} />
+                </div>
               )}
               {hasNextPage && (
                 <Button
@@ -223,10 +239,10 @@ export default function PageCommentsSheet({ pageId, open, onOpenChange, content 
                   {isFetchingNextPage ? "Loading comments…" : isFetchNextPageError ? "Retry loading comments" : "Load more comments"}
                 </Button>
               )}
-            </div>
+            </div>}
           </div>
         </ScrollArea>
-        {canUpdate && <div className="shrink-0 border-t px-6 py-4 space-y-2">
+        {canUpdate && !accessLost && <div className="shrink-0 border-t px-6 py-4 space-y-2">
           {replyingTo && (
             <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
               <span>Replying to comment…</span>
