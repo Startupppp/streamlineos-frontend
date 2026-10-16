@@ -14,6 +14,8 @@ The stable base path is `/v1/calendar`. Send the tenant credential in `X-API-Key
 
 Administrators with `calendar:admin:manage` create and revoke credentials through `/calendar/admin/developer/credentials`. The secret is returned once and responses carrying it disable compression. A credential cannot access another tenant because tenant identity comes from the credential record and every resource query includes that tenant.
 
+Credential creation and revocation require an `Idempotency-Key`. Keep the same key and request body when retrying an uncertain create response. A repeated successful create returns `409` because its secret cannot be shown again; it does not issue another credential. Review the credential list and revoke the new credential if its secret was lost before starting a replacement with a new key. A reused key with different input or actor returns `422`.
+
 ## Endpoints
 
 ### Availability
@@ -56,7 +58,7 @@ Required scope: `calendar:embeds:read`. The response reports rule and distributi
 
 ## Rate and error behavior
 
-Each credential has a 300 request per minute limit shared across Calendar API routes. Excess returns `429` with retry timing. Missing, expired, revoked, or unknown credentials return `401`. Missing scope returns `403`. A disabled Calendar module returns the module-disabled response. Wrong-tenant identifiers return `404`. Stale versions and concurrent commands return `409`. Invalid bodies and cursors return `400`.
+Each credential has a 300 request per minute limit shared across Calendar API routes. Excess returns `429` with a `Retry-After` header in seconds. Missing, expired, revoked, or unknown credentials return `401`. Missing scope returns `403`. A disabled Calendar module returns the module-disabled response. Wrong-tenant identifiers return `404`. Stale versions and concurrent commands return `409`. Invalid bodies and cursors return `400`.
 
 Clients should retry `429` and transient `5xx` responses with bounded exponential backoff and jitter. Retry writes with the original idempotency key and identical request. Never retry a `4xx` response except `409` caused by an in-flight identical command or `429` after its retry window.
 
