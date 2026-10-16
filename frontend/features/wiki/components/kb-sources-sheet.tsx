@@ -746,7 +746,7 @@ function SourcePagination({
   if (!hasMore && !error) return null;
   return (
     <div className="space-y-2">
-      {error && (
+      {Boolean(error) && (
         <div role="alert" className="text-sm text-destructive">
           Could not load the full source list. <ErrorReference error={error} />
         </div>
@@ -756,7 +756,7 @@ function SourcePagination({
           {isFetchingMore ? "Loading sources…" : error ? "Retry loading sources" : "Load more sources"}
         </Button>
       )}
-      {error && !hasMore && (
+      {Boolean(error) && !hasMore && (
         <Button type="button" variant="outline" size="sm" onClick={onRetry}>Retry sources</Button>
       )}
     </div>
