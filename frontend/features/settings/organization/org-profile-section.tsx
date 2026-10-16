@@ -136,7 +136,7 @@ export function OrgProfileSection({ org, canEdit }: OrgProfileSectionProps) {
                   <FormItem className="gap-1.5">
                     <FormLabel className="text-xs">Legal name</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="Acme Inc. Pvt. Ltd." />
+                      <Input {...field} placeholder="Acme Inc. Pvt. Ltd." maxLength={200} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -193,7 +193,7 @@ export function OrgProfileSection({ org, canEdit }: OrgProfileSectionProps) {
                   <FormItem className="gap-1.5">
                     <FormLabel className="text-xs">Registration number</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="CIN / Company reg. no." />
+                      <Input {...field} placeholder="CIN / Company reg. no." maxLength={100} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

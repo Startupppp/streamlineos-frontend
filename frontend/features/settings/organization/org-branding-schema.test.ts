@@ -70,6 +70,32 @@ describe("organization branding form", () => {
     ).toBe(true);
   });
 
+  it.each(["logo", "favicon", "loginBgUrl"] as const)(
+    "rejects a javascript: URL in the %s field",
+    (field) => {
+      expect(
+        brandingSchema.safeParse({
+          primaryColor: "",
+          secondaryColor: "",
+          [field]: "javascript:alert(1)",
+        }).success,
+      ).toBe(false);
+    },
+  );
+
+  it.each(["logo", "favicon", "loginBgUrl"] as const)(
+    "rejects a data: URL in the %s field",
+    (field) => {
+      expect(
+        brandingSchema.safeParse({
+          primaryColor: "",
+          secondaryColor: "",
+          [field]: "data:text/html,<script>alert(1)</script>",
+        }).success,
+      ).toBe(false);
+    },
+  );
+
   it("HEX_COLOR regex matches only 6-digit hex values", () => {
     expect(HEX_COLOR.test("#ffffff")).toBe(true);
     expect(HEX_COLOR.test("#FFFFFF")).toBe(true);

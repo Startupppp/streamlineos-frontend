@@ -43,12 +43,13 @@ jest.mock("@/hooks/api/payroll/people", () => ({
 
 const createUser = jest.fn();
 const createWorker = jest.fn();
+const patchUser = jest.fn();
 const mockUseCreateProfile = jest.fn();
 const mockUseCreateWorkerProfile = jest.fn();
 jest.mock("@/hooks/api/payroll/employees", () => ({
   useCreateProfile: (id: string) => mockUseCreateProfile(id),
   useCreateWorkerProfile: (id: string) => mockUseCreateWorkerProfile(id),
-  usePatchProfile: () => ({ mutate: jest.fn(), isPending: false }),
+  usePatchProfile: () => ({ mutate: patchUser, isPending: false }),
   usePatchWorkerProfile: () => ({ mutate: jest.fn(), isPending: false }),
 }));
 
@@ -223,5 +224,42 @@ describe("SalaryProfileSheet person picker", () => {
     expect(screen.queryByText("Breakup for 1200000")).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "See monthly breakup" }));
     expect(screen.getByText("Breakup for 1200000")).toBeInTheDocument();
+  });
+});
+
+describe("PAY-B-014 patch payload excludes effectiveFrom", () => {
+  it("does not send effectiveFrom in the patch body when editing an existing profile", async () => {
+    const existingProfile = {
+      id: 42,
+      userId: "u-asha",
+      workerId: null,
+      workerType: "EMPLOYEE" as const,
+      currency: "INR",
+      payoutCurrency: null,
+      annualCtc: "1200000",
+      taxRegime: null,
+      costCenter: null,
+      status: "ACTIVE" as const,
+      effectiveFrom: "2025-01-01",
+    };
+
+    render(
+      <SalaryProfileSheet
+        employeeUserId="u-asha"
+        open
+        onClose={jest.fn()}
+        existingProfile={existingProfile}
+      />,
+    );
+
+    fireEvent.change(screen.getByPlaceholderText("e.g. 1200000.00"), {
+      target: { value: "1300000" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Update" }));
+
+    await waitFor(() => expect(patchUser).toHaveBeenCalled());
+    const [callArgs] = patchUser.mock.calls;
+    const body = callArgs[0]?.body ?? callArgs[0];
+    expect(body).not.toHaveProperty("effectiveFrom");
   });
 });

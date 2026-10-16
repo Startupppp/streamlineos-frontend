@@ -119,9 +119,10 @@ export function useReplaceSchedulingPollGuest() {
       undefined,
       replacedGuestContract,
     ),
-    onSuccess: (result, input) => {
+    onSuccess: async (result, input) => {
+      const pollKey = calendarBookingQueryKeys.poll(scope.orgId, scope.userId, scope.membershipId, scope.accessVersion, scope.canRead, input.pollId);
       queryClient.setQueryData<SchedulingPoll>(
-        calendarBookingQueryKeys.poll(scope.orgId, scope.userId, scope.membershipId, scope.accessVersion, scope.canRead, input.pollId),
+        pollKey,
         (current) => current ? {
           ...current,
           guestVoters: current.guestVoters?.map((voter) => voter.voterId === result.voterId
@@ -129,6 +130,7 @@ export function useReplaceSchedulingPollGuest() {
             : voter),
         } : current,
       );
+      await queryClient.invalidateQueries({ queryKey: pollKey, exact: true });
     },
   });
 }

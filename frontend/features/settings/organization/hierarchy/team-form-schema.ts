@@ -19,7 +19,18 @@ export const teamFormSchema = z.object({
   departmentId: z.string().min(1, "Department is required"),
   leadUserId: z.string().optional(),
   description: z.string().trim().max(500, "Description must be at most 500 characters").optional(),
-  capacity: z.string().optional(),
+  capacity: z
+    .string()
+    .optional()
+    .refine(
+      (v) => {
+        if (v === undefined || v === "") return true;
+        if (!/^\d+$/.test(v)) return false;
+        const n = parseInt(v, 10);
+        return n >= 1 && n <= 9999;
+      },
+      "Must be a whole number between 1 and 9,999",
+    ),
 });
 
 export type TeamFormValues = z.infer<typeof teamFormSchema>;

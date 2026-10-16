@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isValidPhoneNumber } from "react-phone-number-input";
 
 export const branchFormSchema = z.object({
   name: z
@@ -23,7 +24,12 @@ export const branchFormSchema = z.object({
   country: z.string().trim().max(100, "Country must be at most 100 characters").optional(),
   postalCode: z.string().trim().max(20, "Postal code must be at most 20 characters").optional(),
   address: z.string().trim().max(500, "Address must be at most 500 characters").optional(),
-  phone: z.string().trim().max(30, "Phone must be at most 30 characters").optional(),
+  phone: z
+    .string()
+    .trim()
+    .max(30, "Phone must be at most 30 characters")
+    .refine((val) => !val || isValidPhoneNumber(val), "Enter a valid phone number")
+    .optional(),
   email: z.string().email("Invalid email").or(z.literal("")).optional(),
 });
 

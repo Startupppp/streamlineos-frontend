@@ -87,10 +87,11 @@ interface ColorFieldProps {
   label: string;
   value: string;
   onChange: (v: string) => void;
+  pickerFallback?: string;
   error?: string;
 }
 
-export function ColorField({ label, value, onChange, error }: ColorFieldProps) {
+export function ColorField({ label, value, onChange, pickerFallback = "#0b1220", error }: ColorFieldProps) {
   function handleColorInput(e: React.ChangeEvent<HTMLInputElement>) {
     onChange(e.target.value);
   }
@@ -106,7 +107,7 @@ export function ColorField({ label, value, onChange, error }: ColorFieldProps) {
         <input
           type="color"
           aria-label={`${label} colour picker`}
-          value={HEX_COLOR.test(value) ? value : "#0b1220"}
+          value={HEX_COLOR.test(value) ? value : pickerFallback}
           onChange={handleColorInput}
           className="h-8 w-8 rounded border border-border cursor-pointer p-0.5 bg-card"
         />

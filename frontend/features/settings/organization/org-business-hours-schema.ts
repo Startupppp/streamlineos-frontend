@@ -19,15 +19,28 @@ const dayHoursSchema = z.object({
   enabled: z.boolean(),
 });
 
-export const businessHoursSchema = z.object({
-  monday: dayHoursSchema,
-  tuesday: dayHoursSchema,
-  wednesday: dayHoursSchema,
-  thursday: dayHoursSchema,
-  friday: dayHoursSchema,
-  saturday: dayHoursSchema,
-  sunday: dayHoursSchema,
-});
+export const businessHoursSchema = z
+  .object({
+    monday: dayHoursSchema,
+    tuesday: dayHoursSchema,
+    wednesday: dayHoursSchema,
+    thursday: dayHoursSchema,
+    friday: dayHoursSchema,
+    saturday: dayHoursSchema,
+    sunday: dayHoursSchema,
+  })
+  .superRefine((hours, ctx) => {
+    for (const { key } of BUSINESS_DAYS) {
+      const day = hours[key];
+      if (day.enabled && day.open >= day.close) {
+        ctx.addIssue({
+          code: "custom",
+          path: [key, "close"],
+          message: "Closing time must be after opening time",
+        });
+      }
+    }
+  });
 
 export type BusinessHoursValues = z.infer<typeof businessHoursSchema>;
 export type BusinessDayKey = keyof BusinessHoursValues;

@@ -4,11 +4,10 @@ import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { AppSheet } from "@/components/shared/app-sheet";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCalendarCommitmentChain, useCreateCalendarCommitmentEdge, useRemoveCalendarCommitmentEdge } from "@/hooks/api/calendar-commitments";
@@ -93,10 +92,8 @@ export function CommitmentRadarSheet({ root, open, onClose }: {
     }
   };
   return (
-    <Sheet open={open} onOpenChange={(next) => { if (!next) onClose(); }}>
-      <SheetContent overlayClassName="z-[110]" className="z-[110] flex w-full flex-col p-0 sm:max-w-xl">
-        <SheetHeader className="border-b px-5 py-4"><SheetTitle>Commitment radar</SheetTitle></SheetHeader>
-        <ScrollArea className="min-h-0 flex-1"><div className="space-y-4 px-5 py-4">
+    <AppSheet open={open} onOpenChange={(next) => { if (!next) onClose(); }} title="Commitment radar" className="z-[110] md:max-w-xl">
+        <div className="space-y-4">
           {chain.isLoading ? <p className="text-sm text-muted-foreground">Loading commitment chain</p> : null}
           {chain.isError ? <div className="space-y-2"><p className="text-sm text-destructive">{getErrorMessage(chain.error)}</p><Button variant="outline" onClick={() => { void chain.refetch(); }}>Retry</Button></div> : null}
           {chain.data ? <>
@@ -151,8 +148,7 @@ export function CommitmentRadarSheet({ root, open, onClose }: {
               </form> : null}
             </div> : null}
           </> : null}
-        </div></ScrollArea>
-      </SheetContent>
-    </Sheet>
+        </div>
+    </AppSheet>
   );
 }
