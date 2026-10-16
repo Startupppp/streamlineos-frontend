@@ -13,6 +13,7 @@ import {
   useCreateKbPage,
 } from "@/hooks/api/kb";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import { KB_SEARCH, pageHref, projectPageHref } from "@/lib/knowledge-routes";
@@ -69,7 +70,8 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
   }, [isProjectScoped, debouncedSearch, urlQuery]);
 
   const { data: recentPages = [] } = useKbPagesRecent();
-  const { data: favoritePages = [] } = useKbPagesFavorites();
+  const favoritesQuery = useKbPagesFavorites();
+  const favoritePages = favoritesQuery.data ?? [];
   const createPage = useCreateKbPage();
   const canCreate = useCan("kb:pages:create");
 
@@ -105,6 +107,10 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
         onError: (err) => toast.error(getErrorMessage(err)),
       },
     );
+  }
+
+  function handleLoadMoreFavorites() {
+    void favoritesQuery.fetchNextPage();
   }
 
   const handleShortcutHelp = useCallback(() => setShortcutHelpOpen(true), []);
@@ -219,6 +225,19 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
                 />
               ))}
             </div>
+            {favoritesQuery.hasNextPage && (
+              <LoadingButton
+                type="button"
+                variant="outline"
+                size="sm"
+                className="mt-3"
+                onClick={handleLoadMoreFavorites}
+                isPending={favoritesQuery.isFetchingNextPage}
+                loadingText="Loading favorites…"
+              >
+                Load more favorites
+              </LoadingButton>
+            )}
           </section>
         )}
 

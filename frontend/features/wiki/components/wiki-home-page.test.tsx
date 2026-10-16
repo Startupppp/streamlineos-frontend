@@ -236,6 +236,9 @@ beforeEach(() => {
     data: [],
     isLoading: false,
     isError: false,
+    hasNextPage: false,
+    isFetchingNextPage: false,
+    fetchNextPage: jest.fn(),
   });
   useCreateKbPage.mockReturnValue({ mutate: jest.fn(), isPending: false });
   useKbSpaces.mockReturnValue(kbSpacesQueryStub());
@@ -248,6 +251,65 @@ beforeEach(() => {
     refetch: jest.fn(),
   });
   usePageState.mockReturnValue({ kind: "ready" });
+});
+
+describe("WikiHomePage — favorites pagination", () => {
+  it("loads the next page of favorites without replacing visible cards", async () => {
+    const user = userEvent.setup();
+    const fetchNextPage = jest.fn();
+    useKbPagesFavorites.mockReturnValue({
+      data: [makeItem(7)],
+      hasNextPage: true,
+      isFetchingNextPage: false,
+      fetchNextPage,
+    });
+
+    const { rerender } = render(<WikiHomePage />);
+
+    expect(screen.getByText("Page 7")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Load more favorites" }));
+    expect(fetchNextPage).toHaveBeenCalledTimes(1);
+
+    useKbPagesFavorites.mockReturnValue({
+      data: [makeItem(7), makeItem(8)],
+      hasNextPage: false,
+      isFetchingNextPage: false,
+      fetchNextPage,
+    });
+    rerender(<WikiHomePage />);
+
+    expect(screen.getByText("Page 7")).toBeInTheDocument();
+    expect(screen.getByText("Page 8")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Load more favorites" })).not.toBeInTheDocument();
+  });
+
+  it("disables the favorites action while the next page is loading", () => {
+    useKbPagesFavorites.mockReturnValue({
+      data: [makeItem(7)],
+      hasNextPage: true,
+      isFetchingNextPage: true,
+      fetchNextPage: jest.fn(),
+    });
+
+    render(<WikiHomePage />);
+
+    expect(screen.getByRole("button", { name: "Loading favorites…" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Loading favorites…" })).toHaveAttribute("aria-busy", "true");
+  });
+
+  it("does not show organization favorites in a project-scoped wiki", () => {
+    useKbPagesFavorites.mockReturnValue({
+      data: [makeItem(7)],
+      hasNextPage: true,
+      isFetchingNextPage: false,
+      fetchNextPage: jest.fn(),
+    });
+
+    render(<WikiHomePage projectId={7} />);
+
+    expect(screen.queryByText("Favorites")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Load more favorites" })).not.toBeInTheDocument();
+  });
 });
 
 describe("WikiHomePage — page tree mounting", () => {
