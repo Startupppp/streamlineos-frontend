@@ -168249,8 +168249,15 @@
                                 ]
                               },
                               "expiresAt": {
-                                "type": "string",
-                                "format": "date-time"
+                                "anyOf": [
+                                  {
+                                    "type": "string",
+                                    "format": "date-time"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
                               },
                               "createdAt": {
                                 "type": "string",
@@ -168412,8 +168419,15 @@
                               ]
                             },
                             "expiresAt": {
-                              "type": "string",
-                              "format": "date-time"
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "format": "date-time"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
                             },
                             "createdAt": {
                               "type": "string",
@@ -186107,9 +186121,16 @@
                     ]
                   },
                   "modifiedStart": {
-                    "type": "string",
-                    "format": "date-time",
-                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "format": "date-time",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
                   },
                   "modifiedEnd": {
                     "type": "string",
@@ -1293798,10 +1293819,66 @@
                       "properties": {
                         "form": {
                           "type": "object",
-                          "propertyNames": {
-                            "type": "string"
+                          "properties": {
+                            "name": {
+                              "type": "string"
+                            },
+                            "fields": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "name": {
+                                    "type": "string"
+                                  },
+                                  "label": {
+                                    "type": "string"
+                                  },
+                                  "type": {
+                                    "type": "string"
+                                  },
+                                  "required": {
+                                    "type": "boolean"
+                                  },
+                                  "options": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string"
+                                    }
+                                  }
+                                },
+                                "required": [
+                                  "name",
+                                  "label",
+                                  "type",
+                                  "required"
+                                ]
+                              }
+                            },
+                            "submitMessage": {
+                              "type": "string"
+                            },
+                            "redirectUrl": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "isActive": {
+                              "type": "boolean"
+                            }
                           },
-                          "additionalProperties": {}
+                          "required": [
+                            "name",
+                            "fields",
+                            "submitMessage",
+                            "redirectUrl",
+                            "isActive"
+                          ]
                         }
                       },
                       "required": [
@@ -1293859,38 +1293936,27 @@
                   "type": "object",
                   "properties": {
                     "success": {
-                      "type": "boolean",
-                      "enum": [
-                        true
-                      ]
+                      "type": "boolean"
                     },
-                    "data": {
-                      "type": "object",
-                      "properties": {
-                        "id": {
-                          "type": "integer",
-                          "minimum": -9007199254740991,
-                          "maximum": 9007199254740991
-                        },
-                        "partyId": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "redirectUrl": {
+                      "anyOf": [
+                        {
                           "type": "string"
                         },
-                        "leadId": {
-                          "type": "integer",
-                          "minimum": -9007199254740991,
-                          "maximum": 9007199254740991
-                        },
-                        "message": {
-                          "type": "string"
+                        {
+                          "type": "null"
                         }
-                      }
+                      ]
                     }
                   },
                   "required": [
                     "success",
-                    "data"
-                  ],
-                  "additionalProperties": false
+                    "message",
+                    "redirectUrl"
+                  ]
                 }
               }
             }
@@ -1293926,9 +1293992,27 @@
               "schema": {
                 "type": "object",
                 "propertyNames": {
-                  "type": "string"
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 100
                 },
-                "additionalProperties": {}
+                "additionalProperties": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "maxLength": 5000
+                    },
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
               }
             }
           }
@@ -1381902,6 +1381986,107 @@
         "x-exposure": "permissioned",
         "x-permission": "timesheets:settings:view",
         "description": "Exposure: permission — timesheets:settings:view"
+      }
+    },
+    "/timesheets/team/remind": {
+      "post": {
+        "operationId": "TeamController_remind",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "sent": {
+                          "type": "boolean",
+                          "const": true
+                        }
+                      },
+                      "required": [
+                        "sent"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "tags": [
+          "Team"
+        ],
+        "x-exposure": "permissioned",
+        "x-permission": "timesheets:team:view",
+        "description": "Exposure: permission — timesheets:team:view",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "userId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  },
+                  "weekStart": {
+                    "type": "string",
+                    "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                  },
+                  "weekEnd": {
+                    "type": "string",
+                    "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                  }
+                },
+                "required": [
+                  "userId",
+                  "weekStart",
+                  "weekEnd"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
       }
     },
     "/timesheets/team/week-summary": {

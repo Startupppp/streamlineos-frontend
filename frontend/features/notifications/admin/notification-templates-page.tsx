@@ -83,6 +83,7 @@ import type {
 import { TemplateSheet } from "@/features/notifications/components/template-editor";
 import { PreviewDialog } from "@/features/notifications/components/template-preview";
 import { TemplateRow } from "@/features/notifications/components/template-row";
+import { TemplateTestSendDialog } from "@/features/notifications/components/template-test-send-dialog";
 
 export function NotificationTemplatesPage() {
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -96,6 +97,10 @@ export function NotificationTemplatesPage() {
   );
   const [approvalTarget, setApprovalTarget] =
     useState<NotificationTemplate | null>(null);
+  const [testSendTarget, setTestSendTarget] =
+    useState<NotificationTemplate | null>(null);
+
+  const handleTestSendClose = useCallback(() => setTestSendTarget(null), []);
 
   const handleApprovalOpenChange = useCallback((open: boolean) => {
     if (!open) setApprovalTarget(null);
@@ -197,6 +202,7 @@ export function NotificationTemplatesPage() {
                 onEdit={handleEdit}
                 onDelete={handleSetDeleteTarget}
                 onApproval={setApprovalTarget}
+                onTestSend={setTestSendTarget}
               />
             ))}
           </div>
@@ -214,6 +220,13 @@ export function NotificationTemplatesPage() {
         template={previewTarget}
         onClose={() => setPreviewTarget(null)}
       />
+
+      {testSendTarget && (
+        <TemplateTestSendDialog
+          template={testSendTarget}
+          onClose={handleTestSendClose}
+        />
+      )}
 
       {approvalTarget && (
         <TemplateApprovalDialog

@@ -26,6 +26,9 @@ import {
 import { usePartyNames } from "../parties/use-party-names";
 import type { AllocationLineInput } from "@/types/accounting/accounting-ar-receipts";
 import { AllocationEditorDialog } from "./allocation-editor-dialog";
+import { DocumentAttachmentsCard } from "../documents/document-attachments-card";
+import { DocumentComplianceCard } from "../documents/document-compliance-card";
+import { DocumentPdfButton } from "../documents/document-pdf-button";
 import { ArStatusBadge } from "./ar-labels";
 import { ArDraftEditor } from "./ar-draft-editor";
 import { readArRejection } from "./ar-document-errors";
@@ -185,15 +188,20 @@ export function CreditNoteDetailClient({
       backHref="/accounting/credit-notes"
       backLabel="Back to credit notes"
       actions={
-        canApply ? (
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => setApplyOpen(true)}
-          >
-            Apply to invoices
-          </Button>
-        ) : null
+        isDraft ? null : (
+          <div className="flex w-full items-center gap-2 sm:w-auto">
+            <DocumentPdfButton
+              kind="credit-note"
+              documentId={creditNote.id}
+              fallbackName={`${creditNote.documentNumber ?? "credit-note"}.pdf`}
+            />
+            {canApply ? (
+              <Button size="sm" variant="outline" onClick={() => setApplyOpen(true)}>
+                Apply to invoices
+              </Button>
+            ) : null}
+          </div>
+        )
       }
     >
       {isDraft && canManage ? (
@@ -236,11 +244,12 @@ export function CreditNoteDetailClient({
           <div className="min-w-0 flex-1">
             <ArDocumentLinesCard arDocument={creditNote} />
           </div>
-          <div className="w-full lg:max-w-sm">
-            <ArDocumentTotalsCard
-              arDocument={creditNote}
-              partyName={partyName}
-            />
+          <div className="flex w-full flex-col gap-4 lg:max-w-sm">
+            <ArDocumentTotalsCard arDocument={creditNote} partyName={partyName} />
+            {isDraft ? null : (
+              <DocumentComplianceCard documentType="credit_note" documentId={creditNote.id} />
+            )}
+            <DocumentAttachmentsCard documentType="credit_note" documentId={creditNote.id} />
           </div>
         </div>
       )}

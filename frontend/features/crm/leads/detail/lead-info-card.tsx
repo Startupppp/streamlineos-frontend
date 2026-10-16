@@ -7,7 +7,8 @@ import { CustomFieldsSection } from "@/features/crm/shared/custom-fields-section
 import { MessagingPanel } from "@/features/crm/shared/messaging-panel";
 import { RecordDetail, RecordForm, type RecordFormValues } from "@/components/renderer";
 import { useLeadLayout } from "../use-lead-layout";
-import { useUpdateLead } from "@/hooks/api/leads";
+import { useUpdateLead, useUpdateLeadCustomData } from "@/hooks/api/leads";
+import { useCan } from "@/hooks/api/access";
 import { useOrgDisplay } from "@/hooks/api/org-display";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { Lead, LeadPriority, LeadSource, UpdateLeadInput } from "@/types/leads";
@@ -64,6 +65,8 @@ export function LeadInfoCard({ lead, entityId, isEditing, onEditingDone }: LeadI
   const layout = useLeadLayout();
   const money = useOrgDisplay();
   const updateLead = useUpdateLead();
+  const updateCustomData = useUpdateLeadCustomData();
+  const canUpdate = useCan("crm:leads:update");
   const record = useMemo(() => toLeadRecord(lead), [lead]);
 
   function handleSubmit(values: RecordFormValues) {
@@ -115,6 +118,19 @@ export function LeadInfoCard({ lead, entityId, isEditing, onEditingDone }: LeadI
 
   const messagingNumber = lead.phone ?? lead.whatsappNumber;
 
+  function handleSaveCustomData(customData: Record<string, unknown>, onDone: () => void) {
+    updateCustomData.mutate(
+      { leadId: entityId, customData },
+      {
+        onSuccess: () => {
+          toast.success("Custom fields saved");
+          onDone();
+        },
+        onError: (error) => toast.error(getErrorMessage(error)),
+      },
+    );
+  }
+
   return (
     <div className="flex min-w-0 flex-col gap-4">
       <RecordDetail layout={layout} record={record} money={money} showTitle={false} />
@@ -126,7 +142,11 @@ export function LeadInfoCard({ lead, entityId, isEditing, onEditingDone }: LeadI
         </section>
       ) : null}
 
-      <CustomFieldsSection entityType="lead" values={lead.customData ?? {}} />
+      <CustomFieldsSection
+        entityType="lead"
+        values={lead.customData ?? {}}
+        edit={{ canEdit: canUpdate, isPending: updateCustomData.isPending, onSave: handleSaveCustomData }}
+      />
     </div>
   );
 }

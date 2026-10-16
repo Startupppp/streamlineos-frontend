@@ -7,6 +7,7 @@ import { serverGet } from "@/lib/server-fetch";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import {
   broadcastListContract,
+  emailTemplatePreviewsContract,
   notificationEventsListContract,
   notificationPoliciesListContract,
   notificationPreferenceContract,
@@ -92,5 +93,17 @@ export async function prefetchMyNotificationPreferences() {
       staleTime: 60_000,
     }),
   ]);
+  return dehydrate(queryClient);
+}
+
+export async function prefetchEmailTemplatePreviews() {
+  const queryClient = await createServerQueryClient();
+  const gate = await resolvePrefetchGate();
+  if (gate.can("settings:email-templates:manage"))
+    await queryClient.prefetchQuery({
+      queryKey: platformCoreQueryKeys.notifications.emailTemplatePreviews(),
+      queryFn: () => serverGet("/settings/email-templates/preview", emailTemplatePreviewsContract),
+      staleTime: 30 * 60_000,
+    });
   return dehydrate(queryClient);
 }

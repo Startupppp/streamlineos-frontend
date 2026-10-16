@@ -1,6 +1,6 @@
 # PAGES.md — StreamlineOS Frontend Route Catalog
 
-**What this is:** one row per `page.tsx` under `frontend/app/`. It records what each route is and what it calls. **Total routes: 634.**
+**What this is:** one row per `page.tsx` under `frontend/app/`. It records what each route is and what it calls. **Total routes: 635.**
 
 **This is an inventory, not a task list.** It carries no checkboxes and no per-route audit state. A row is a fact about a route, never a to-do. Anything written here as `OPEN:` is a known unverified gap, not an assignment — do not infer work from a row.
 
@@ -82,6 +82,7 @@
 - `/settings/notifications/providers` · **Platform** · hooks: `→ features/notifications` — gated `notifications:providers:view`
 - `/settings/notifications/events` · **Platform** · hooks: `→ features/notifications` — gated `notifications:events:view`
 - `/settings/notifications/policy` · **Platform** · hooks: `→ features/notifications` — gated `notifications:policy:view`
+- `/settings/notifications/email-templates` · **Platform** · hooks: `requirePermission("settings:email-templates:manage")` (server), `useEmailTemplatePreviews` → `GET /settings/email-templates/preview`, `useSendEmailTemplateTest` → `POST /settings/email-templates/test`, `usePageState` + `PageState`, `→ features/notifications/admin` — 2026-10-17: the built-in transactional emails with a sandboxed (`sandbox=""`) HTML preview and a rate-limited test send; tab, sidebar and route-access entry on the same key
 - `/notifications` · [RETIRED — redirects to `/inbox` via `next.config.ts`; kept as compatibility redirect]
 - `/notifications/preferences` · [RETIRED — redirects to `/settings/notifications/my-preferences` via `next.config.ts`]
 - `/notifications/providers` · [RETIRED — redirects to `/settings/notifications/providers` via `next.config.ts`]
@@ -153,9 +154,9 @@
 - `/crm/import` · **CRM** · hooks: `→ feature/crm/import`
 
 ### Revenue & Lifecycle
-- `/crm/commissions` · **CRM** · hooks: `usePageState`, `→ features/crm/commissions` — commission tracking; `useOrgDisplay` for period
+- `/crm/commissions` · **CRM** · hooks: `usePageState`, `→ features/crm/commissions` — commission tracking; `useOrgDisplay` for period; Plans tab: New plan, Open → versions/assignments sheet (edit plan, new/edit unsealed version, assign, end) on `crm:commission-plans:manage`; Earnings: Calculate for a deal (`crm:commission-earnings:calculate`); Rebuild accrual (`crm:commission-accruals:rebuild`)
 - `/crm/health` · **CRM** · hooks: `→ features/crm/lifecycle`
-- `/crm/renewals` · **CRM** · hooks: `→ features/crm/lifecycle`
+- `/crm/renewals` · **CRM** · hooks: `→ features/crm/lifecycle` — renewal book; row Details sheet (signals, record signal / renew / close on `crm:lifecycle:manage`, consider now on `crm:lifecycle-triggers:run`); header "Run renewal sweep" on `crm:lifecycle-triggers:run`
 - `/crm/segments` · **CRM** · hooks: `→ features/crm/segments` — gated by `RequireModule module="crm"`
 
 ### Call Intelligence
@@ -184,7 +185,9 @@
 - `/crm/settings/automations/[automationId]` · **CRM** · hooks: `→ feature/crm/settings`
 - `/crm/settings/blueprints` · **CRM** · hooks: `→ feature/crm/settings`
 - `/crm/settings/custom-fields` · **CRM** · hooks: `→ feature/crm/settings`
+- `/crm/settings/web-forms` · **CRM** · hooks: `useWebForms`, `usePageState`, `→ features/crm/web-forms` — lead-capture form CRUD, copy public link; plan feature `crm.web-forms` + `crm:web-forms:manage`
 - `/crm/settings/data-quality` · **CRM** · hooks: `→ feature/crm/settings`
+- `/crm/settings/data-quality/findings` · **CRM** · hooks: `→ feature/crm/settings`
 - `/crm/settings/email-templates` · **CRM** · hooks: `→ feature/crm/settings`
 - `/crm/settings/import-export` · **CRM** · hooks: `→ feature/crm/settings`
 - `/crm/settings/layouts` · **CRM** · hooks: `→ feature/crm/settings`
@@ -565,12 +568,12 @@ PM Workspace is removed from Build entirely (not renamed, not consolidated into 
 ### Invoices & Receivables
 - `/accounting/invoices` · **Accounting** · hooks: `useInvoices`, `useInvoiceStats`, `useVoidInvoice`, `useCan("accounting:receivables:manage")`
 - `/accounting/invoices/new` · **Accounting** · hooks: `→ features/accounting/sales` — invoice composer; gated `accounting:receivables:manage`
-- `/accounting/invoices/[invoiceId]` · **Accounting** · hooks: `→ features/accounting/sales`
+- `/accounting/invoices/[invoiceId]` · **Accounting** · hooks: `→ features/accounting/sales` — posted: Download PDF, e-invoicing card (status + submit, `accounting:receivables:manage`), attachments card (`accounting:attachments:read`/`:manage`)
 - `/accounting/recurring-invoices` · **Accounting** [RETIRED: no page.tsx found 2026-09-21; ARs may have been consolidated]
 - `/accounting/payments-received` · **Accounting** · hooks: `→ features/accounting`
 - `/accounting/credit-notes` · **Accounting** · hooks: `→ features/accounting/sales`
 - `/accounting/credit-notes/new` · **Accounting** · hooks: `→ features/accounting/sales` — credit note composer; gated `accounting:credit-notes:create`
-- `/accounting/credit-notes/[creditNoteId]` · **Accounting** · hooks: `→ features/accounting/sales` — credit note detail; gated `accounting:credit-notes:read`
+- `/accounting/credit-notes/[creditNoteId]` · **Accounting** · hooks: `→ features/accounting/sales` — credit note detail; gated `accounting:credit-notes:read`; posted: Download PDF, e-invoicing card, attachments card
 - `/accounting/customers/[partyId]` · **Accounting** · hooks: `→ features/accounting`
 - `/accounting/customers` · **Accounting** · hooks: `→ features/accounting`
 - `/accounting/payment-reminders` · **Accounting** [RETIRED: no page.tsx found 2026-09-21]
@@ -579,7 +582,7 @@ PM Workspace is removed from Build entirely (not renamed, not consolidated into 
 ### Purchase & Payables
 - `/accounting/purchase-bills` · **Accounting** · hooks: `usePurchaseBills`, `useCreatePurchaseBill`, `useCan("accounting:payables:approve")`, `useCan("accounting:payables:manage")` — cursor pagination; search + status filters URL-synced; `EmptyState` with `EmptyExpensesIllustration` ✓; minor: empty state action shows "New bill" without checking `canManage`
 - `/accounting/purchase-bills/new` · **Accounting** · hooks: `→ features/accounting/purchase-bills`
-- `/accounting/purchase-bills/[apDocumentId]` · **Accounting** · hooks: `→ features/accounting/purchase-bills`
+- `/accounting/purchase-bills/[apDocumentId]` · **Accounting** · hooks: `→ features/accounting/purchase-bills` — posted: Download PDF; attachments card in every state
 - `/accounting/vendor-payments` · **Accounting** · hooks: `useVendorPayments`, `useCreateVendorPayment`, `useCan("accounting:payables:manage")` — dual cursor queries (paid + partial) merged; vendor filter URL-synced; `EmptyState` with `illustrationPreset="tasks"` ✓
 - `/accounting/vendor-credits` · **Accounting** · hooks: `→ features/accounting`
 - `/accounting/vendor-credits/new` · **Accounting** · hooks: `→ features/accounting/purchases` — vendor credit composer (DEBIT_NOTE type); `ApDocumentNewPage`
@@ -646,6 +649,7 @@ PM Workspace is removed from Build entirely (not renamed, not consolidated into 
 ### Sub-reports
 - `/accounting/reports` · **Accounting** · hooks: `→ features/accounting/reports`
 - `/accounting/reports/aging` · **Accounting** · hooks: `→ features/accounting/reports` — AR/AP aging report
+- `/accounting/reports/stock-reconciliation` · **Accounting** · hooks: `useStockGlReconciliation`, `useUnpostedMovements` `→ features/accounting/reports` — stock ledger vs GL inventory accounts, plus the unposted-movements sample (`accounting:reports:read`)
 - `/accounting/reports/burn-rate` · **Accounting** [RETIRED: no page.tsx found 2026-09-21]
 - `/accounting/reports/customer-statement` · **Accounting** [RETIRED: no page.tsx found 2026-09-21]
 - `/accounting/reports/department-profitability` · **Accounting** [RETIRED: no page.tsx found 2026-09-21]
@@ -919,14 +923,14 @@ PM Workspace is removed from Build entirely (not renamed, not consolidated into 
 
 - `/timesheets` · **Timesheets** · hooks: `→ features/timesheets` (2026-09-21: the week grid scroller fades its hidden edge and, below `sm`, says "Swipe sideways to reach every day of the week" whenever it overflows — FE#79; header wrapping at 768 landed earlier in 08f6406e2 — FE#80)
 - `/timesheets` · **Timesheets** · hooks: `→ features/timesheets` (2026-09-21: My Time shows the shared `ApprovalRoutePanel` from `GET /timesheets/periods/{periodId}/approver` before submit — who approves, why, SLA, escalation — and disables Submit when nobody can own the period)
-- `/timesheets/approvals` · **Timesheets** · hooks: `→ features/timesheets` (2026-09-21: the queue lists periods routed to the viewer, an Approver column names the rung, escalation and deadline (`approvalRoute`/`approvalDueAt`), the detail sheet spells out the routing explanation; `?period=<periodId>` — the link notifications and the payroll readiness ledger use — opens that period's detail sheet directly) (2026-09-21: `loading.tsx` shows the table's real column headers under the page title while the rows load)
+- `/timesheets/approvals` · **Timesheets** · hooks: `→ features/timesheets` (2026-09-21: the queue lists periods routed to the viewer, an Approver column names the rung, escalation and deadline (`approvalRoute`/`approvalDueAt`), the detail sheet spells out the routing explanation; `?period=<periodId>` — the link notifications and the payroll readiness ledger use — opens that period's detail sheet directly) (2026-10-17: the detail sheet of an Approved or Locked period offers Lock / Unlock / Reopen behind `timesheets:approvals:manage`, each confirmed) (2026-09-21: `loading.tsx` shows the table's real column headers under the page title while the rows load)
 - `/timesheets/billing` · **Timesheets** · hooks: `→ features/timesheets`
 - `/timesheets/exceptions` · **Timesheets** · hooks: `→ features/timesheets` (2026-09-21: `loading.tsx` shows the table's real column headers under the page title while the rows load (open exceptions with the actions column))
 - `/timesheets/overdue` · **Timesheets** · hooks: `→ features/timesheets` — overdue timesheets list; `enforceRouteAccess`
 - `/timesheets/payroll` · **Timesheets** · hooks: `→ features/timesheets`
-- `/timesheets/reports` · **Timesheets** · hooks: `→ features/timesheets/reports` (2026-09-21: the utilization, compliance, client-profitability and approval-SLA tab skeletons derive their headers from their column definitions)
+- `/timesheets/reports` · **Timesheets** · hooks: `→ features/timesheets/reports` (2026-09-21: the utilization, compliance, client-profitability and approval-SLA tab skeletons derive their headers from their column definitions) (2026-10-17: `?tab=project-hours&projectId=<id>` — Project Hours tab reads `GET /timesheets/reports/project-hours`; org-wide reports scope only, project list needs `build:view`)
 - `/timesheets/settings` · **Timesheets** · hooks: `→ features/timesheets/settings` (2026-09-21: approval mode offers Manager or Auto only — multi-level is not configurable until it exists — and "Who approves" picks the reporting manager (default) or the dominant project's manager)
-- `/timesheets/team` · **Timesheets** · hooks: `→ features/timesheets` (2026-09-21: `loading.tsx` shows the table's real column headers under the page title while the rows load (Member, the seven weekdays, Total, Status))
+- `/timesheets/team` · **Timesheets** · hooks: `→ features/timesheets` (2026-09-21: `loading.tsx` shows the table's real column headers under the page title while the rows load (Member, the seven weekdays, Total, Status)) (2026-10-17: the member sheet's Remind calls `POST /timesheets/team/remind`, gated on `timesheets:team:view`, throttled per member and week)
 - `/timesheets/access` · **Timesheets** · hooks: `→ features/timesheets`
 
 ---
@@ -946,6 +950,7 @@ PM Workspace is removed from Build entirely (not renamed, not consolidated into 
 
 - `/settings` · **Settings** · hooks: `→ features/settings` — universal route, gate stays `enforceRouteAccess`; server-prefetched via `prefetchAccountSettings`.
 - `/settings` · **Settings** · hooks: `→ features/settings` (2026-09-26, HRM-15: "Reporting line" section — `useMyReportingLine` → `GET /me/reporting-line` (hidden when HR is off or `hasEmployment === false`), "Report an issue" → `POST /me/reporting-manager-requests`, history `GET /me/reporting-manager-requests` with cancel / respond; no reasons of others are shown)
+- `/settings` · **Settings** · hooks: `→ features/settings/privacy` (2026-10-17, GDPR self-service: "Your data" section — `POST /gdpr/export/me` saves JSON, `POST /gdpr/export-async/me` starts an archive whose id is kept per org in localStorage and polled via `GET /gdpr/export-async/:jobId/status` until terminal, then `…/download`; `POST /gdpr/rectification/me` for the string-valued fields. All universal — the subject is the token. The archive needs `GDPR_EXPORT_WORKER_ENABLED` not `false` on the backend)
 - `/settings/users` · **Settings** · hooks: `→ features/settings/users` — C8 (2026-09-10): server-prefetched + `HydrationBoundary` via `prefetchSettingsUsers` (`/v2/users`, `/users/stats`); the initial key is derived from server `searchParams` through `readUsersListState`, shared with the page
 - `/settings/roles` · **Settings** · hooks: `→ features/settings/roles`
 - `/settings/roles/[roleId]` · **Settings** · hooks: `→ features/settings/roles`
@@ -965,7 +970,10 @@ PM Workspace is removed from Build entirely (not renamed, not consolidated into 
 - `/settings/billing/ai-credits` · **Settings** · hooks: `→ features/settings/billing` — platform billing page 2 of 2; C8 (2026-09-10): server-prefetched + `HydrationBoundary` via `prefetchAiCreditsSettings` (wallet, transactions, usage)
 - `/settings/api-tokens` · **Settings** · hooks: `→ features/settings/api-tokens`
 - `/settings/webhooks` · **Settings** · hooks: `→ features/settings/webhooks` — C8 (2026-09-10): server-prefetched + `HydrationBoundary` via `prefetchSettingsWebhooks`; the `?size` param feeds the initial key
+- `/settings/privacy` · **Settings** · hooks: `requirePermission(["hr:retention:manage", "compliance:subject-requests:view"])` (server), `→ features/settings/privacy` — 2026-10-17 (GDPR): Member data panel (`hr:retention:manage`: `POST /gdpr/export/:personId`, `export-async/:personId` + status/download, `erasure/:subjectId` with dry-run preview) and the Subject requests queue (`GET /compliance/subject-requests` on `compliance:subject-requests:view`, run on `compliance:subject-requests:execute`; the service additionally requires a declared operator). Each panel shows only for its own key. Every erasure is a destructive confirm that stays shut until the subject's email is typed
+- `/settings/storage-quarantine` · **Settings** · hooks: `requirePermission("storage:quarantine:view")` (server), `useQuarantine` → `GET /storage/quarantine` (cursor, `?status` in the URL), release/reject/delete on `storage:quarantine:manage`, `usePageState` + `PageState`, `→ features/settings/storage-quarantine` — 2026-10-17: uploads held for malware scanning; release only while `pending_scan`, reject unless released, each behind a confirm; mutations patch every loaded page
 - `/settings/audit-log` · **Settings** · hooks: `→ features/settings/audit-log` — C8 (2026-09-10): server-prefetched + `HydrationBoundary` via `prefetchSettingsAuditLog` (list + actions + target types); the initial key comes from `readAuditLogFilters(searchParams)`, shared with the page
+- `/settings/chat` · **Settings** · hooks: `→ features/chat/chat-org-settings-page` (2026-10-17: new. Org-wide chat defaults — default notification preference, max attachment MB (1–1000), max huddle participants (2–500) — over `GET`/`PATCH /chat/settings`; page gated on `chat:org-settings:manage`, nav entry under Administration › Workspace; server-prefetched via `prefetchChatOrgSettings`. OPEN: denied state and 375/768/1280 not browser-verified)
 - `/settings/delegations` · **Settings** · hooks: `→ features/settings/delegations` — C8 (2026-09-10): server-prefetched + `HydrationBoundary` via `prefetchSettingsDelegations` (received, given, discovery members); each list keys off its own `received*`/`granted*` params. S01 (2026-09-02): neither side bounded the delegation window, so a delegation could be granted for a century — a permanent shadow role. Capped at 90 days in `delegation-policy.ts` and mirrored in the form schema.
 - `/settings/incoming-transfer` · **Settings** · hooks: `→ features/settings/incoming-transfer` — C8 (2026-09-10): classified NO PREFETCH NEEDED. `useIncomingOrgTransfers` declares `staleTime: 0` + `refetchOnMount: "always"`, so a hydrated offer is re-read on first mount anyway; a stale accept/decline offer is the one thing this page must not show. Pinned by `lib/prefetch/settings-prefetch-census.test.ts`
 
@@ -1024,7 +1032,7 @@ PM Workspace is removed from Build entirely (not renamed, not consolidated into 
 - `/waitlist` · **Marketing** [RETIRED path: no page.tsx found on disk]
 - `/waitlist/claim/[claimToken]` · **Marketing** · hooks: none — retired: "Waitlist sign-up has closed" with Sign in / Contact us links (backend `POST /waitlist/claim` answers 410); not indexed
 - `/design-system` · **Dev** · hooks: none — dev-only gallery
-- `/legal/privacy` · **Marketing** · hooks: none
+- `/legal/privacy` · **Marketing** · hooks: `useSubprocessorNotices` → public `POST /compliance/subprocessors/subscribe|unsubscribe` (2026-10-17: email notice of subprocessor changes, in the Subprocessors section)
 - `/legal/security` · **Marketing** · hooks: none
 - `/legal/terms` · **Marketing** · hooks: none
 - `/blogs` · **Marketing** · hooks: `→ features/blog` — disk path: `(public)/blogs/(site)/page.tsx`; `(site)` is a route group, not a URL segment
@@ -1037,6 +1045,7 @@ PM Workspace is removed from Build entirely (not renamed, not consolidated into 
 - `/interview-booking/[bookingToken]` · **HR (public)** · hooks: `→ features/careers`
 - `/offer/[offerToken]` · **HR (public)** · hooks: `→ features/careers`
 - `/nps/[npsToken]` · **Support (public)** · hooks: `→ features/support`
+- `/lead-form/[leadFormToken]` · **CRM (public)** · hooks: `usePublicLeadForm`, `useSubmitLeadForm`, `→ features/crm/web-forms` — renders a web form and submits it as a lead
 - `/ticket-feedback/[csatToken]` · **Support (public)** · hooks: `→ features/support`
 - `/help/[orgId]` · **Support (public KB)** · hooks: `→ features/support/kb`
 - `/help/[orgId]/[articleSlug]` · **Support (public KB)** · hooks: `→ features/support/kb`

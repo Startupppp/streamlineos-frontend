@@ -283,3 +283,7 @@ export const leadsAnalyticsContract = z.object({
 
 export const leadsDeleteContract = z.object({ success: z.boolean() });
 
+
+export const leadCustomDataContract = z.object({
+  customData: z.record(z.string(), z.unknown()).nullable(),
+});

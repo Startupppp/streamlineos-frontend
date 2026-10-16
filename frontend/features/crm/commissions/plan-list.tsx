@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
@@ -10,7 +11,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
 import type { CommissionPlanSummary } from "@/types/crm/commission";
+import { CommissionPlanDetailSheet } from "./commission-plan-detail-sheet";
+import { CommissionPlanSheet, type CommissionPlanSheetTarget } from "./commission-plan-sheet";
 
 interface PlanListProps {
   plans: CommissionPlanSummary[];
@@ -18,7 +22,8 @@ interface PlanListProps {
 }
 
 /**
- * The plan catalogue, read-only.
+ * The plan catalogue. "Open" shows a plan's versions and assignments, where
+ * the manage writes live.
  *
  * Retirement is shown rather than hidden: a retired plan is not assignable, but
  * earnings calculated under it keep the rules that were in force when they were
@@ -26,6 +31,19 @@ interface PlanListProps {
  * unexplainable.
  */
 export function PlanList({ plans, locale }: PlanListProps) {
+  const [openPlanId, setOpenPlanId] = useState<string | null>(null);
+  const [versionTarget, setVersionTarget] = useState<CommissionPlanSheetTarget | null>(null);
+  const handleOpen = useCallback(
+    (event: React.MouseEvent<HTMLButtonElement>) => setOpenPlanId(event.currentTarget.dataset.planId ?? null),
+    [],
+  );
+  const handleDetailOpenChange = useCallback((open: boolean) => {
+    if (!open) setOpenPlanId(null);
+  }, []);
+  const handleVersionOpenChange = useCallback((open: boolean) => {
+    if (!open) setVersionTarget(null);
+  }, []);
+
   if (plans.length === 0)
     return (
       <EmptyState
@@ -43,6 +61,7 @@ export function PlanList({ plans, locale }: PlanListProps) {
             <TableHead>Plan</TableHead>
             <TableHead>Currency</TableHead>
             <TableHead>Status</TableHead>
+            <TableHead className="w-24" />
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -79,10 +98,22 @@ export function PlanList({ plans, locale }: PlanListProps) {
                   </Badge>
                 )}
               </TableCell>
+              <TableCell>
+                <Button variant="outline" size="sm" data-plan-id={plan.planId} onClick={handleOpen}>
+                  Open
+                </Button>
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>
       </Table>
+      <CommissionPlanDetailSheet
+        planId={openPlanId}
+        locale={locale}
+        onOpenChange={handleDetailOpenChange}
+        onEditVersion={setVersionTarget}
+      />
+      <CommissionPlanSheet target={versionTarget} onOpenChange={handleVersionOpenChange} />
     </div>
   );
 }

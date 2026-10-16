@@ -3,6 +3,7 @@
 import Link from "next/link";
 import {
   BarChart3,
+  Boxes,
   Coins,
   Landmark,
   Percent,
@@ -66,6 +67,13 @@ const REPORTS: readonly ReportLink[] = [
     accountant: "Tax summary",
     description: "Every tax line on invoices and bills, grouped by component and rate.",
     icon: Percent,
+  },
+  {
+    href: "/accounting/reports/stock-reconciliation",
+    founder: "Does the ledger match the stock?",
+    accountant: "Inventory to GL reconciliation",
+    description: "Stock movement value against the inventory accounts, and every movement that never posted.",
+    icon: Boxes,
   },
 ];
 

@@ -36,6 +36,8 @@ export function ChannelMemberRow({
   isMultiMemberChannel,
   isRemoving,
   onRemove,
+  isChangingRole,
+  onChangeRole,
 }: {
   member: ChannelMember;
   isOnline: boolean;
@@ -44,9 +46,15 @@ export function ChannelMemberRow({
   isMultiMemberChannel: boolean;
   isRemoving: boolean;
   onRemove: (userId: string, userName: string | null | undefined, isYou: boolean) => void;
+  isChangingRole: boolean;
+  onChangeRole: (userId: string, role: ChannelMember["role"], userName: string | null | undefined) => void;
 }) {
   const isYou = member.user?.id === currentUserId;
   const canRemove = isMultiMemberChannel && ((isAdmin && !isYou) || isYou);
+  // Self-demotion is left out: it can strand a channel with no admin.
+  const canChangeRole = Boolean(isAdmin) && isMultiMemberChannel && !isYou && Boolean(member.user?.id);
+  const nextRole: ChannelMember["role"] = member.role === "ADMIN" ? "MEMBER" : "ADMIN";
+  const handleChangeRole = () => onChangeRole(member.user?.id ?? "", nextRole, member.user?.name);
 
   return (
     <div className="flex min-w-0 items-center gap-2.5 overflow-hidden px-2 py-1.5 rounded-lg hover:bg-muted/30 transition-colors group">
@@ -82,6 +90,21 @@ export function ChannelMemberRow({
         <Badge variant="outline" className="shrink-0 text-micro px-1.5 py-0 h-4 border-primary/30 text-primary">
           Admin
         </Badge>
+      )}
+      {canChangeRole && (
+        <button
+          type="button"
+          onClick={handleChangeRole}
+          disabled={isChangingRole}
+          className="shrink-0 rounded-md px-1.5 py-0.5 text-micro font-medium text-muted-foreground opacity-0 transition-opacity hover:bg-muted hover:text-foreground focus-visible:opacity-100 group-hover:opacity-100 disabled:opacity-50"
+          aria-label={
+            nextRole === "ADMIN"
+              ? `Make ${member.user?.name ?? "member"} an admin`
+              : `Remove admin from ${member.user?.name ?? "member"}`
+          }
+        >
+          {nextRole === "ADMIN" ? "Make admin" : "Remove admin"}
+        </button>
       )}
       {canRemove && (
         <RemoveMemberButton

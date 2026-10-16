@@ -1,3 +1,4 @@
+import userEvent from "@testing-library/user-event";
 import { render, screen } from "@testing-library/react";
 import { resolveDirectPartner, findOwnMember } from "../channel-member-lookup";
 import { ChannelMemberRow } from "../channel-member-row";
@@ -141,10 +142,52 @@ describe("the member row renders the identity it is given", () => {
           isMultiMemberChannel={false}
           isRemoving={false}
           onRemove={jest.fn()}
+          isChangingRole={false}
+          onChangeRole={jest.fn()}
         />
       </TooltipProvider>,
     );
     expect(screen.getByText("Ada Lovelace")).not.toBeNull();
     expect(screen.getByText("ada@test.com")).not.toBeNull();
+  });
+});
+
+describe("the member row offers a role change to channel admins only", () => {
+  function renderRow(isAdmin: boolean, currentUserId: string, onChangeRole = jest.fn()) {
+    render(
+      <TooltipProvider>
+        <ChannelMemberRow
+          member={DETAIL_MEMBER}
+          currentUserId={currentUserId}
+          isOnline={false}
+          isAdmin={isAdmin}
+          isMultiMemberChannel
+          isRemoving={false}
+          onRemove={jest.fn()}
+          isChangingRole={false}
+          onChangeRole={onChangeRole}
+        />
+      </TooltipProvider>,
+    );
+    return onChangeRole;
+  }
+
+  it("an admin toggles another member's role", async () => {
+    const onChangeRole = renderRow(true, ME);
+    const next = DETAIL_MEMBER.role === "ADMIN" ? "MEMBER" : "ADMIN";
+    await userEvent.click(
+      screen.getByRole("button", { name: next === "ADMIN" ? /make .* an admin/i : /remove admin from/i }),
+    );
+    expect(onChangeRole).toHaveBeenCalledWith(DETAIL_MEMBER.user?.id, next, DETAIL_MEMBER.user?.name);
+  });
+
+  it("a non-admin sees no role control", () => {
+    renderRow(false, ME);
+    expect(screen.queryByRole("button", { name: /admin/i })).toBeNull();
+  });
+
+  it("an admin cannot change their own role from the row", () => {
+    renderRow(true, DETAIL_MEMBER.user?.id ?? "");
+    expect(screen.queryByRole("button", { name: /admin/i })).toBeNull();
   });
 });

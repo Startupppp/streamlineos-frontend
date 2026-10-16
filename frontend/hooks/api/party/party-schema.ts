@@ -178,3 +178,25 @@ export const partySubjectsContract = z.object({
     subjectPartyLinkId: z.string(),
   })),
 });
+
+export const partyRolesContract = z.object({ roles: z.array(z.string()) });
+
+export const partyContactContract = z.object({
+  partyContactId: z.string(),
+  organizationId: z.string(),
+  partyId: z.string(),
+  firstName: z.string(),
+  lastName: z.string().nullable(),
+  email: z.string().nullable(),
+  phone: z.string().nullable(),
+  title: z.string().nullable(),
+  isPrimary: z.boolean(),
+  customFields: z.record(z.string(), z.unknown()).nullable(),
+  deletedAt: z.string().nullable(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+
+export const partyContactListContract = z.array(partyContactContract);
+
+export type PartyContact = z.infer<typeof partyContactContract>;

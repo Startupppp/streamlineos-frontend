@@ -113,3 +113,12 @@ export const billingLeakageResponseContract = z.object({
   missingRateHours: z.number(),
   voidedHours: z.number(),
 });
+
+export const projectHoursResponseContract = z.object({
+  projectId: z.number().int(),
+  startDate: z.string(),
+  endDate: z.string(),
+  totalHours: z.number(),
+  billableHours: z.number(),
+  nonBillableHours: z.number(),
+});

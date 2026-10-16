@@ -21,6 +21,10 @@ import {
   Megaphone,
   FileText,
   Plug,
+  ShieldAlert,
+  FileWarning,
+  Mail,
+  MessageSquare,
 } from "lucide-react";
 import type { NavGroup } from "./sidebar-nav-types";
 
@@ -45,7 +49,7 @@ export const ADMINISTRATION_NAV_GROUPS: NavGroup[] = [
   {
     label: "Workspace",
     product: "administration",
-    requiredPermission: ["settings:manage", "ownership:transfer:respond"],
+    requiredPermission: ["settings:manage", "ownership:transfer:respond", "chat:org-settings:manage"],
     routes: [
       {
         label: "Organization Settings",
@@ -59,6 +63,12 @@ export const ADMINISTRATION_NAV_GROUPS: NavGroup[] = [
         icon: ArrowLeftRight,
         href: "/settings/incoming-transfer",
         requiredPermission: "ownership:transfer:respond",
+      },
+      {
+        label: "Chat Settings",
+        icon: MessageSquare,
+        href: "/settings/chat",
+        requiredPermission: "chat:org-settings:manage",
       },
     ],
   },
@@ -219,6 +229,25 @@ export const ADMINISTRATION_NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
+    label: "Privacy",
+    product: "administration",
+    requiredPermission: ["hr:retention:manage", "compliance:subject-requests:view", "storage:quarantine:view"],
+    routes: [
+      {
+        label: "Privacy Requests",
+        icon: ShieldAlert,
+        href: "/settings/privacy",
+        requiredPermission: ["hr:retention:manage", "compliance:subject-requests:view"],
+      },
+      {
+        label: "Upload Quarantine",
+        icon: FileWarning,
+        href: "/settings/storage-quarantine",
+        requiredPermission: "storage:quarantine:view",
+      },
+    ],
+  },
+  {
     label: "Developer",
     product: "administration",
     requiredPermission: [
@@ -250,6 +279,7 @@ export const ADMINISTRATION_NAV_GROUPS: NavGroup[] = [
       "notifications:events:view",
       "notifications:policy:view",
       "notifications:broadcasts:view",
+      "settings:email-templates:manage",
     ],
     routes: [
       {
@@ -257,6 +287,12 @@ export const ADMINISTRATION_NAV_GROUPS: NavGroup[] = [
         icon: FileText,
         href: "/settings/notifications/templates",
         requiredPermission: "notifications:templates:view",
+      },
+      {
+        label: "Email Templates",
+        icon: Mail,
+        href: "/settings/notifications/email-templates",
+        requiredPermission: "settings:email-templates:manage",
       },
       {
         label: "Broadcasts",

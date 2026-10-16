@@ -16,6 +16,8 @@ import { PARTY_LAYOUT } from "@/lib/renderer/party-layout";
 import { useParty } from "@/hooks/api/party/parties";
 import { usePartySubjects } from "@/hooks/api/party/subjects";
 import { ActivityTimeline } from "@/components/timeline/activity-timeline";
+import { PartyRolesSection } from "./party-roles-section";
+import { PartyContactsSection } from "./party-contacts-section";
 
 export interface PartyDetailSheetProps {
   partyId: string | null;
@@ -68,6 +70,9 @@ export function PartyDetailSheet({ partyId, onOpenChange, onOpenSubject }: Party
                 layout={PARTY_LAYOUT}
                 record={party.data}
               />
+
+              <PartyRolesSection partyId={party.data.partyId} />
+              <PartyContactsSection partyId={party.data.partyId} />
 
               <section className="flex flex-col gap-2">
                 <h2 className="text-label font-medium text-muted-foreground">Linked records</h2>

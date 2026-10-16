@@ -202,6 +202,10 @@ export const growthAndSignQueryKeys = {
   crmDataQuality: {
     all: [...base, "crm", "data-quality"] as const,
     report: () => [...base, "crm", "data-quality", "report"] as const,
+    findings: (params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "crm", "data-quality", "findings"] as const)
+        : ([...base, "crm", "data-quality", "findings", params] as const),
   },
 
   meetingsAi: {

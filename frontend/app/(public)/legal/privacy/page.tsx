@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LegalShell, LegalSection, PlainEnglish } from "@/features/landing/legal-shell";
+import { SubprocessorNoticeForm } from "@/features/landing/subprocessor-notice-form";
 import { BRAND_NAME, BRAND_DOMAIN, BRAND_SUPPORT_EMAIL } from "@/lib/branding";
 
 export const metadata: Metadata = {
@@ -192,9 +193,10 @@ export default function PrivacyPage() {
         </div>
         <p>
           We notify customers at least 30 days before adding a new subprocessor with access to
-          customer data. Enterprise customers receive the notice via email; everyone else gets
-          it from the changelog of this page.
+          customer data. Enterprise customers receive the notice via email; anyone can subscribe
+          below, and everyone else gets it from the changelog of this page.
         </p>
+        <SubprocessorNoticeForm />
       </LegalSection>
 
       <LegalSection id="retention" title="How long we keep it">
