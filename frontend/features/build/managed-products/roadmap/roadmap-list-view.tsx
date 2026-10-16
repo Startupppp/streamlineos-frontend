@@ -36,7 +36,7 @@ export function RoadmapListView({ items, onEdit, onView, pagination }: RoadmapLi
         key: "title",
         header: "Title",
         cell: (item: ScorableRoadmapItem) => (
-          <span className="font-medium">{item.title}</span>
+          <span className="block max-w-md truncate font-medium" title={item.title}>{item.title}</span>
         ),
       },
       {

@@ -239,7 +239,7 @@ export function useProductGoalsPage({ managedProductId }: UseProductGoalsPagePro
     itemCount: flatGoals.length,
     onOpen: canManage ? handleEditGoalByIndex : () => undefined,
     onEdit: canManage ? handleEditGoalByIndex : undefined,
-    onCreate: handleOpenCreate,
+    onCreate: canManage ? handleOpenCreate : undefined,
     onClearSelection: () => undefined,
     onShortcutHelp: handleShortcutHelp,
     searchInputRef,
@@ -248,14 +248,13 @@ export function useProductGoalsPage({ managedProductId }: UseProductGoalsPagePro
 
   const createActions = useMemo(
     () => {
-      if (resolution.kind === "denied" || !isOnline) return [];
-      const base = [{ ...CREATE_ACTION, onSelect: handleOpenCreate }];
-      if (canManage) {
-        return [...base, { ...LINK_GOAL_ACTION, onSelect: () => setLinkGoalOpen(true) }];
-      }
-      return base;
+      if (!canManage || resolution.kind === "denied" || resolution.kind === "not-found") return [];
+      return [
+        { ...CREATE_ACTION, onSelect: handleOpenCreate },
+        { ...LINK_GOAL_ACTION, onSelect: () => setLinkGoalOpen(true) },
+      ];
     },
-    [resolution.kind, handleOpenCreate, isOnline, canManage],
+    [resolution.kind, handleOpenCreate, canManage],
   );
 
   return {

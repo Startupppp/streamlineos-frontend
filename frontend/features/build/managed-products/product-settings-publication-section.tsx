@@ -88,6 +88,8 @@ export function ProductSettingsPublicationSection({
             description="The public link will stop working immediately. You can publish again to get a new link."
             confirmLabel="Unpublish"
             destructive
+            keepOpenOnConfirm
+            isPending={controls.isUnpublishing}
             onConfirm={controls.handleUnpublish}
           />
 
@@ -98,6 +100,8 @@ export function ProductSettingsPublicationSection({
             description="The current link will stop working immediately. A new unique link will be generated."
             confirmLabel="Rotate link"
             destructive
+            keepOpenOnConfirm
+            isPending={controls.isPublishing}
             onConfirm={controls.handleRotate}
           />
         </>

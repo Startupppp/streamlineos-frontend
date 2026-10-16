@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, type MouseEvent } from "react";
 import { format, formatDistanceToNow } from "date-fns";
 import { Calendar, Map, RefreshCw, Unlink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -176,7 +176,7 @@ export function ProductProjectMobileCard({
 }: ProductProjectMobileCardProps) {
   const canUnlink = row.allowedActions.includes("unlink");
   const handleUnlinkClick = useCallback(
-    (e: React.MouseEvent) => {
+    (e: MouseEvent) => {
       e.stopPropagation();
       onUnlink(row);
     },
@@ -186,7 +186,10 @@ export function ProductProjectMobileCard({
     <div className="flex flex-col gap-2 rounded-xl border border-border bg-card p-4">
       <div className="flex min-w-0 items-center justify-between gap-2">
         <div className="min-w-0">
-          <p className="truncate text-sm font-medium">{row.name}</p>
+          <p className="flex min-w-0 items-center gap-1.5 text-sm font-medium">
+            <span className="truncate">{row.name}</span>
+            {row.isPrimary ? <PrimaryBadge /> : null}
+          </p>
           <p className="font-mono tabular-nums text-xs text-muted-foreground">
             {row.key}
           </p>
@@ -217,10 +220,66 @@ export function ProductProjectMobileCard({
 
 interface BuildProductProjectsColumnsProps {
   onUnlinkClick: (row: LinkedProjectRow) => void;
+  onSetPrimaryClick: (row: LinkedProjectRow) => void;
+}
+
+function PrimaryBadge() {
+  return (
+    <Badge variant="secondary" className="text-micro" title="This product is the project's primary product">
+      Primary
+    </Badge>
+  );
+}
+
+interface ProjectRowActionsProps {
+  row: LinkedProjectRow;
+  onUnlinkClick: (row: LinkedProjectRow) => void;
+  onSetPrimaryClick: (row: LinkedProjectRow) => void;
+}
+
+function ProjectRowActions({ row, onUnlinkClick, onSetPrimaryClick }: ProjectRowActionsProps) {
+  function handleSetPrimary(e: MouseEvent) {
+    e.stopPropagation();
+    onSetPrimaryClick(row);
+  }
+  function handleUnlink(e: MouseEvent) {
+    e.stopPropagation();
+    onUnlinkClick(row);
+  }
+  return (
+    <div className="flex items-center justify-end gap-1">
+      {row.allowedActions.includes("setPrimary") ? (
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          aria-label={`Make this the primary product for ${row.name}`}
+          className="h-7 px-2 text-xs text-muted-foreground"
+          onClick={handleSetPrimary}
+        >
+          Set primary
+        </Button>
+      ) : null}
+      {row.allowedActions.includes("unlink") ? (
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          aria-label={`Unlink ${row.name} from product`}
+          className="h-7 gap-1.5 px-2 text-xs text-muted-foreground hover:text-destructive"
+          onClick={handleUnlink}
+        >
+          <Unlink className="h-3.5 w-3.5" aria-hidden="true" />
+          Unlink
+        </Button>
+      ) : null}
+    </div>
+  );
 }
 
 export function buildProductProjectsColumns({
   onUnlinkClick,
+  onSetPrimaryClick,
 }: BuildProductProjectsColumnsProps): DataTableColumn<LinkedProjectRow>[] {
   return [
     {
@@ -228,8 +287,11 @@ export function buildProductProjectsColumns({
       header: "Project",
       cell: (row) => (
         <div className="flex flex-col gap-0.5">
-          <span className="max-w-[200px] truncate font-medium text-sm">
-            {row.name}
+          <span className="flex items-center gap-1.5">
+            <span className="max-w-[200px] truncate font-medium text-sm">
+              {row.name}
+            </span>
+            {row.isPrimary ? <PrimaryBadge /> : null}
           </span>
           <span className="font-mono tabular-nums text-xs text-muted-foreground">
             {row.key}
@@ -323,23 +385,13 @@ export function buildProductProjectsColumns({
     {
       key: "actions",
       header: "",
-      cell: (row: LinkedProjectRow) =>
-        row.allowedActions.includes("unlink") ? (
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            aria-label={`Unlink ${row.name} from product`}
-            className="h-7 gap-1.5 px-2 text-xs text-muted-foreground hover:text-destructive"
-            onClick={(e) => {
-              e.stopPropagation();
-              onUnlinkClick(row);
-            }}
-          >
-            <Unlink className="h-3.5 w-3.5" aria-hidden="true" />
-            Unlink
-          </Button>
-        ) : null,
+      cell: (row: LinkedProjectRow) => (
+        <ProjectRowActions
+          row={row}
+          onUnlinkClick={onUnlinkClick}
+          onSetPrimaryClick={onSetPrimaryClick}
+        />
+      ),
     },
   ];
 }

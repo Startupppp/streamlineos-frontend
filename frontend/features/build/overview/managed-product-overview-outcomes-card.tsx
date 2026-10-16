@@ -50,7 +50,7 @@ export function ManagedProductOverviewOutcomesCard({
       ) : null}
       <dl className="grid grid-cols-1">
         <OverviewFact label="Goals linked" href={`/build/managed-products/${managedProductId}/goals`}>{goalsLinked}</OverviewFact>
-        <OverviewFact label="Reviews scheduled">{outcomeReviews.scheduled}</OverviewFact>
+        <OverviewFact label="Reviews scheduled" href={`/build/managed-products/${managedProductId}/insights?view=discovery`}>{outcomeReviews.scheduled}</OverviewFact>
         <OverviewFact label="Completed">{outcomeReviews.completed}</OverviewFact>
         <OverviewFact label="Met / not met">
           {hasReviews ? `${outcomeReviews.met} / ${outcomeReviews.notMet}` : "Not measured yet"}

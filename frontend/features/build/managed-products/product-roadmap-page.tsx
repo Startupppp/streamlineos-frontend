@@ -36,6 +36,7 @@ import {
   MANAGED_PRODUCT_DETAIL_CONTENT_CLASS,
   ManagedProductDetailPrimarySection,
   ManagedProductDetailShell,
+  ManagedProductNotFound,
 } from "./managed-product-detail-layout";
 import {
   ProductRoadmapBoardSkeleton,
@@ -248,6 +249,8 @@ export function ProductRoadmapPage({
       onPrevious={handlePrev}
     />
   );
+
+  if (resolution.kind === "not-found") return <ManagedProductNotFound />;
 
   return (
     <PageWrapper

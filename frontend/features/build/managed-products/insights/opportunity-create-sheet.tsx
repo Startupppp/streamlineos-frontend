@@ -26,6 +26,7 @@ interface TextFieldConfig {
   label: string;
   placeholder: string;
   multiline?: boolean;
+  inputMode?: "decimal";
 }
 
 const TEXT_FIELDS: ReadonlyArray<TextFieldConfig> = [
@@ -36,8 +37,8 @@ const TEXT_FIELDS: ReadonlyArray<TextFieldConfig> = [
   { name: "desiredOutcome", label: "Desired outcome", placeholder: "What changes for customers when this ships?", multiline: true },
   { name: "outcomeMetric", label: "Outcome metric", placeholder: "e.g. Activation rate" },
   { name: "outcomeUnit", label: "Unit", placeholder: "e.g. %" },
-  { name: "outcomeBaseline", label: "Baseline", placeholder: "e.g. 32" },
-  { name: "outcomeTarget", label: "Target", placeholder: "e.g. 45" },
+  { name: "outcomeBaseline", label: "Baseline", placeholder: "e.g. 32", inputMode: "decimal" },
+  { name: "outcomeTarget", label: "Target", placeholder: "e.g. 45", inputMode: "decimal" },
 ];
 
 const DEFAULT_VALUES: CreateOpportunityFormValues = { title: "" };
@@ -165,7 +166,7 @@ function renderOptionalField(
         {config.multiline ? (
           <Textarea {...field} value={field.value ?? ""} rows={3} placeholder={config.placeholder} />
         ) : (
-          <Input {...field} value={field.value ?? ""} className={FIELD_CONTROL_CLASS} placeholder={config.placeholder} />
+          <Input {...field} value={field.value ?? ""} className={FIELD_CONTROL_CLASS} placeholder={config.placeholder} inputMode={config.inputMode} />
         )}
       </FormControl>
       <FormMessage />

@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const acceptSchema = z.object({
   horizon: z.enum(["now", "next", "later"]),
-  title: z.string().trim().min(1).max(500).optional(),
+  title: z.string().trim().min(1).max(200, "Keep under 200 characters").optional(),
   projectId: z.number().int().positive().optional(),
   goalId: z.number().int().positive().optional(),
   releaseId: z.number().int().positive().optional(),

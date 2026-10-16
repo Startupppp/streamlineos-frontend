@@ -12,7 +12,9 @@ import {
   useFeedbucketSubmissionFacets,
 } from "@/hooks/api/feedbucket";
 import { useCrmOrganizationsForPicker } from "@/hooks/api/crm/organizations";
-import { useCan } from "@/hooks/api/access";
+import { useCan, useModuleEnabled } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { PageState } from "@/components/shared/page-state";
 import { SubmissionBulkToolbar } from "@/components/shared/submission-bulk-toolbar";
 import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
 import { Button } from "@/components/ui/button";
@@ -56,7 +58,9 @@ export function ProductFeedbackPage({
   const canUpdateSubmission = useCan("feedbucket:submissions:update");
   const canDeleteSubmission = useCan("feedbucket:submissions:delete");
   const canRouteToIntake = useCan("feedbucket:submissions:manage");
-  const canCapture = useCan("feedbucket:submissions:manage");
+  const feedbucketEnabled = useModuleEnabled("feedbucket");
+  const feedbucketGate = usePageState({ module: "feedbucket", isLoading: false, isError: false });
+  const canCapture = useCan("feedbucket:submissions:manage") && feedbucketEnabled;
   const intakeRouting = useRouteToIntake();
 
   const [captureOpen, setCaptureOpen] = useState(false);
@@ -78,8 +82,11 @@ export function ProductFeedbackPage({
   } = filterState;
 
   const { data, isLoading, isError, error, refetch } =
-    useFeedbucketSubmissions(queryParams);
-  const { data: facetsData } = useFeedbucketSubmissionFacets({ managedProductId });
+    useFeedbucketSubmissions(queryParams, { enabled: feedbucketEnabled });
+  const { data: facetsData } = useFeedbucketSubmissionFacets(
+    { managedProductId },
+    { enabled: feedbucketEnabled },
+  );
   const { data: crmOrgsData } = useCrmOrganizationsForPicker();
 
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
@@ -195,44 +202,50 @@ export function ProductFeedbackPage({
         <ManagedProductDetailShell>
           <CustomerImpactPanel managedProductId={managedProductId} />
           <ManagedProductDetailPrimarySection>
-            <BuildListSurface<SubmissionRow>
-              permission="feedbucket:submissions:view"
-              rows={visibleRows}
-              columns={feedbackColumns}
-              isLoading={isLoading}
-              isError={isError}
-              error={error}
-              getRowKey={getSubmissionRowKey}
-              onRowClick={openSubmissionPane}
-              mobileCard={renderMobileCard}
-              pagination={{
-                mode: "server",
-                page,
-                pageSize: PAGE_SIZE,
-                total: data?.total ?? 0,
-                onPageChange: handlePageChange,
-              }}
-              tableClassName="flex flex-1 min-h-0 h-full border-0 rounded-none"
-              loading={
-                <DataTableSkeleton
-                  rows={10}
-                  headers={FEEDBACK_SKELETON_HEADERS}
-                  mobileCards
-                />
-              }
-              empty={feedbackEmptyState}
-              rowClassName={resolveRowClassName}
-              selection={
-                selectionEnabled
-                  ? {
-                      selected,
-                      onChange: setSelected,
-                      getRowLabel: getSubmissionRowLabel,
-                    }
-                  : undefined
-              }
-              onRetry={handleRetry}
-            />
+            {feedbucketEnabled ? (
+              <BuildListSurface<SubmissionRow>
+                permission="feedbucket:submissions:view"
+                rows={visibleRows}
+                columns={feedbackColumns}
+                isLoading={isLoading}
+                isError={isError}
+                error={error}
+                getRowKey={getSubmissionRowKey}
+                onRowClick={openSubmissionPane}
+                mobileCard={renderMobileCard}
+                pagination={{
+                  mode: "server",
+                  page,
+                  pageSize: PAGE_SIZE,
+                  total: data?.total ?? 0,
+                  onPageChange: handlePageChange,
+                }}
+                tableClassName="flex flex-1 min-h-0 h-full border-0 rounded-none"
+                loading={
+                  <DataTableSkeleton
+                    rows={10}
+                    headers={FEEDBACK_SKELETON_HEADERS}
+                    mobileCards
+                  />
+                }
+                empty={feedbackEmptyState}
+                rowClassName={resolveRowClassName}
+                selection={
+                  selectionEnabled
+                    ? {
+                        selected,
+                        onChange: setSelected,
+                        getRowLabel: getSubmissionRowLabel,
+                      }
+                    : undefined
+                }
+                onRetry={handleRetry}
+              />
+            ) : (
+              <PageState resolution={feedbucketGate} loading={null}>
+                {null}
+              </PageState>
+            )}
           </ManagedProductDetailPrimarySection>
         </ManagedProductDetailShell>
       </PageWrapper>

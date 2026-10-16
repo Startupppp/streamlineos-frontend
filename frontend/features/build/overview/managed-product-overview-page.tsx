@@ -20,6 +20,7 @@ import { ManagedProductOverviewEvidenceCard } from "./managed-product-overview-e
 import { ManagedProductOverviewDeliveryCard } from "./managed-product-overview-delivery-card";
 import { ManagedProductOverviewOutcomesCard } from "./managed-product-overview-outcomes-card";
 import { ManagedProductOverviewDecisionsCard } from "./managed-product-overview-decisions-card";
+import { ManagedProductOverviewUpdatesCard } from "./managed-product-overview-updates-card";
 import { ManagedProductOverviewHero } from "./managed-product-overview-hero";
 import { ManagedProductOverviewAttention } from "./managed-product-overview-attention";
 import { ManagedProductOverviewPulse } from "./managed-product-overview-pulse";
@@ -170,6 +171,9 @@ export function ManagedProductOverviewPage({
                 managedProductId={managedProductId}
                 product={summaryData.product}
               />
+              <motion.div variants={fadeUp} className="min-w-0">
+                <ManagedProductOverviewUpdatesCard managedProductId={managedProductId} />
+              </motion.div>
               <motion.div variants={fadeUp} className="min-w-0">
                 <ManagedProductOverviewFlow
                   managedProductId={managedProductId}

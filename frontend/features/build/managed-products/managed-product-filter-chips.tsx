@@ -4,7 +4,7 @@ import { useCallback } from "react";
 import { FilterChip } from "@/features/build/shared/filter-chip";
 import { BUILD_FILTER_ALL } from "@/features/build/shared/use-build-list-filters";
 import type { BuildListFiltersState } from "@/features/build/shared/use-build-list-filters";
-import { LIFECYCLE_FILTER_OPTIONS, HEALTH_FILTER_OPTIONS } from "./managed-products-filter-constants";
+import { LIFECYCLE_FILTER_OPTIONS, HEALTH_FILTER_OPTIONS, STATUS_OPTIONS } from "./managed-products-filter-constants";
 
 interface ActiveFilter {
   id: string;
@@ -72,7 +72,7 @@ export function ManagedProductFilterChips({
     chips.push({
       id: "status",
       label: "Status",
-      value: statusValue,
+      value: STATUS_OPTIONS.find((o) => o.value === statusValue)?.label ?? statusValue,
       onRemove: () => onClearStatus(BUILD_FILTER_ALL),
     });
   }

@@ -39,10 +39,15 @@ jest.mock("@/hooks/api/build/managed-product-projects", () => ({
   useManagedProductProjects: (...args: unknown[]) => mockUseManagedProductProjects(...args),
 }));
 
+const mockSetPrimaryMutate = jest.fn();
 const mockUnlinkMutate = jest.fn();
 jest.mock("@/hooks/api/build/use-link-project-managed-product", () => ({
   useUnlinkProjectManagedProduct: jest.fn(() => ({
     mutate: mockUnlinkMutate,
+    isPending: false,
+  })),
+  useSetPrimaryProject: jest.fn(() => ({
+    mutate: mockSetPrimaryMutate,
     isPending: false,
   })),
   useLinkProjectManagedProduct: jest.fn(() => ({
@@ -299,6 +304,7 @@ function makeRow(overrides: Partial<{
   status: string;
   contribution: { totalTickets: number; doneTickets: number; percent: number | null };
   allowedActions: string[];
+  isPrimary: boolean;
 }> = {}) {
   return {
     id: 1,
@@ -412,6 +418,27 @@ describe("ProductProjectsPage — unlink project confirm (BSN-PROJ-UNLINK)", () 
       "@/hooks/api/build/use-link-project-managed-product",
     ) as { useUnlinkProjectManagedProduct: jest.Mock };
     expect(useUnlinkProjectManagedProduct).toHaveBeenCalled();
+  });
+});
+
+describe("ProductProjectsPage — primary project", () => {
+  it("marks the project whose primary product this is, and offers Set primary only on the others", () => {
+    mockUseManagedProductProjects.mockReturnValue({
+      ...EMPTY_RESULT,
+      data: {
+        data: [
+          makeRow({ id: 1, name: "Alpha Project", isPrimary: true, allowedActions: ["view", "unlink"] }),
+          makeRow({ id: 2, name: "Beta Project", key: "BP" }),
+        ],
+        pagination: { hasMore: false, nextCursor: null, limit: 20 },
+      },
+    });
+    render(<ProductProjectsPage managedProductId={5} />);
+
+    expect(screen.getAllByText("Primary").length).toBeGreaterThan(0);
+    expect(screen.queryByRole("button", { name: "Make this the primary product for Alpha Project" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Make this the primary product for Beta Project" }));
+    expect(mockSetPrimaryMutate).toHaveBeenCalledWith({ projectId: 2, managedProductId: 5 }, expect.any(Object));
   });
 });
 

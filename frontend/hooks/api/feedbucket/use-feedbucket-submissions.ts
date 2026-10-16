@@ -134,6 +134,7 @@ function shiftDuplicateCount(
 
 export function useFeedbucketSubmissions(
   params?: ListFeedbucketSubmissionsQuery,
+  options?: { enabled?: boolean },
 ) {
   return useGatedQuery("feedbucket:submissions:view", {
     queryKey: growthAndSignQueryKeys.feedbucket.submissions(params),
@@ -144,6 +145,7 @@ export function useFeedbucketSubmissions(
         signal,
         feedbucketSubmissionListC,
       ),
+    enabled: options?.enabled ?? true,
     staleTime: 30_000,
     ...INLINE_READ_ERROR,
   });
@@ -310,10 +312,13 @@ export function useConvertFeedbucketToTicket() {
   });
 }
 
-export function useFeedbucketSubmissionFacets(params?: {
-  managedProductId?: number;
-  widgetId?: number;
-}) {
+export function useFeedbucketSubmissionFacets(
+  params?: {
+    managedProductId?: number;
+    widgetId?: number;
+  },
+  options?: { enabled?: boolean },
+) {
   return useGatedQuery("feedbucket:submissions:view", {
     queryKey: growthAndSignQueryKeys.feedbucket.submissionFacets(params),
     queryFn: ({ signal }) =>
@@ -323,6 +328,7 @@ export function useFeedbucketSubmissionFacets(params?: {
         signal,
         feedbucketSubmissionFacetsC,
       ),
+    enabled: options?.enabled ?? true,
     staleTime: 30_000,
     ...INLINE_READ_ERROR,
   });

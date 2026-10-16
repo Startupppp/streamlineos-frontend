@@ -239,6 +239,7 @@ export const RoadmapItemCard = memo(function RoadmapItemCard({
           <RoadmapPriorityScore
             prioritization={item.prioritization}
             tierWeighting={item.tierWeighting}
+            decisionSnapshot={item.decisionSnapshot}
           />
           {item.release ? (
             <Badge variant="secondary" className={cn(TEXT_ONE_LINE, "max-w-[8rem] text-micro")}>

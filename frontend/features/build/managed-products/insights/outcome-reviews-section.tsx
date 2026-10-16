@@ -35,6 +35,7 @@ import type {
   UpdateOutcomeReviewInput,
 } from "@/hooks/api/build/outcome-review-mutations";
 import { MEASURE_KIND_OPTIONS } from "./outcome-review-form-schema";
+import { optionalDecimalField } from "./opportunity-rice-schema";
 import { OutcomeReviewScheduleSheet } from "./outcome-review-schedule-sheet";
 
 type OutcomeReviewRow =
@@ -49,7 +50,7 @@ const RESULT_OPTIONS = [
 
 const completeSchema = z
   .object({
-    actual: z.string().optional(),
+    actual: optionalDecimalField,
     result: z.enum(["met", "partially_met", "not_met", "inconclusive"], {
       error: "Result is required to complete a review",
     }),
@@ -137,7 +138,7 @@ function CompleteReviewDialog({
       onSubmit={(values) =>
         onComplete({
           state: "completed",
-          actual: values.actual,
+          actual: values.actual?.trim() || undefined,
           result: values.result,
           notes: values.notes,
           version: values.version,

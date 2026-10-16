@@ -94,6 +94,21 @@ describe("AddProductMemberDialog", () => {
     expect(screen.getByRole("option", { name: /Carol Webb/ })).toBeInTheDocument();
   });
 
+  it("leaves people who are already product members out of the picker", () => {
+    render(
+      <AddProductMemberDialog
+        managedProductId={5}
+        open
+        onOpenChange={jest.fn()}
+        existingMembershipIds={new Set([11])}
+      />,
+    );
+    fireEvent.click(screen.getByRole("combobox", { name: "Select a member" }));
+
+    expect(screen.queryByRole("option", { name: /Alice Smith/ })).not.toBeInTheDocument();
+    expect(screen.getByRole("option", { name: /Bob Jones/ })).toBeInTheDocument();
+  });
+
   it("typed search is sent to the server rather than filtering one local page", () => {
     let lastParams: { search?: string; enabled?: boolean } | undefined;
     useAddProductMemberCandidates.mockImplementation((params) => {

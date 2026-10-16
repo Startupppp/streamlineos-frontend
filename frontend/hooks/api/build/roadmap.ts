@@ -12,6 +12,7 @@ import type { RoadmapStatus, RoadmapHorizon } from "@/types/projects";
 import { lazyContract, isApiError } from "@/lib/api-envelope";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
+import { readErrorExceptNotFoundReachesBoundary } from "@/lib/query-error-policy";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type {
   RoadmapOwner,
@@ -192,6 +193,7 @@ export function useRoadmapItems(filters: RoadmapItemFilters = {}) {
     enabled: canView,
     staleTime: 30_000,
     placeholderData: keepPreviousData,
+    throwOnError: readErrorExceptNotFoundReachesBoundary,
   });
 }
 

@@ -30,6 +30,7 @@ import {
   useGoalStats,
   useUnlinkGoalProduct,
   usePageState,
+  useCan,
 } from "./product-scope-pages.test-harness";
 
 function goalsPageResult(total: number, page: number) {
@@ -77,6 +78,28 @@ describe("ProductGoalsPage — usePageState integration (BSN-01-027)", () => {
     render(<ProductGoalsPage managedProductId={7} />);
     expect(screen.getByTestId("no-permission")).toBeInTheDocument();
     expect(screen.queryByTestId("empty-state")).not.toBeInTheDocument();
+  });
+
+  it("offers New Goal only to someone who can manage goals", () => {
+    usePageState.mockReturnValue({ kind: "empty" });
+    useCan.mockImplementation((key: string) => key !== "build:goals:manage");
+    render(<ProductGoalsPage managedProductId={7} />);
+    expect(screen.queryByRole("button", { name: /New Goal/ })).not.toBeInTheDocument();
+    useCan.mockImplementation(() => true);
+  });
+
+  it("shows New Goal to a goal manager", () => {
+    usePageState.mockReturnValue({ kind: "empty" });
+    render(<ProductGoalsPage managedProductId={7} />);
+    expect(screen.getAllByRole("button", { name: /New Goal/ }).length).toBeGreaterThan(0);
+  });
+
+  it("renders only the product-not-found page, with no actions or tiles, when the product is not reachable", () => {
+    usePageState.mockReturnValue({ kind: "not-found" });
+    render(<ProductGoalsPage managedProductId={7} />);
+    expect(screen.getByTestId("page-state-not-found")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /New Goal/ })).not.toBeInTheDocument();
+    expect(screen.queryByText("Total Goals")).not.toBeInTheDocument();
   });
 
   it("passes build:goals:view as the permission key in denied resolution (BSN-01-027)", () => {

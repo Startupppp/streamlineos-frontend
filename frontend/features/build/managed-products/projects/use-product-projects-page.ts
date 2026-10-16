@@ -5,7 +5,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Link2 } from "lucide-react";
 import { toast } from "sonner";
 import { useManagedProductProjects, type LinkedProjectRow } from "@/hooks/api/build/managed-product-projects";
-import { useUnlinkProjectManagedProduct } from "@/hooks/api/build/use-link-project-managed-product";
+import { useSetPrimaryProject, useUnlinkProjectManagedProduct } from "@/hooks/api/build/use-link-project-managed-product";
 import { useProjectTeams } from "@/hooks/api/build/teams";
 import { useSimpleClientsList } from "@/hooks/api/crm/clients";
 import { useCan } from "@/hooks/api/access";
@@ -279,6 +279,22 @@ export function useProductProjectsPage({ managedProductId }: UseProductProjectsP
     );
   }, [unlinkProjectId, unlinkMutation, managedProductId]);
 
+  const setPrimaryMutation = useSetPrimaryProject();
+
+  const handleSetPrimaryClick = useCallback(
+    (row: LinkedProjectRow) => {
+      if (!canManage) return;
+      setPrimaryMutation.mutate(
+        { projectId: row.id, managedProductId },
+        {
+          onSuccess: () => toast.success(`This product is now the primary product for ${row.name}`),
+          onError: (e) => toast.error(getErrorMessage(e)),
+        },
+      );
+    },
+    [canManage, setPrimaryMutation, managedProductId],
+  );
+
   const handleUnlinkDialogOpenChange = useCallback((open: boolean) => {
     if (!open) setUnlinkProjectId(null);
   }, []);
@@ -287,10 +303,10 @@ export function useProductProjectsPage({ managedProductId }: UseProductProjectsP
 
   const headerActions = useMemo(
     () =>
-      canManage
+      canManage && resolution.kind !== "denied" && resolution.kind !== "not-found"
         ? [{ ...LINK_PROJECT_ACTION, onSelect: () => setLinkDialogOpen(true) }]
         : [],
-    [canManage],
+    [canManage, resolution.kind],
   );
 
   return {
@@ -332,6 +348,7 @@ export function useProductProjectsPage({ managedProductId }: UseProductProjectsP
     handleNextPage,
     handlePreviousPage,
     handleUnlinkClick,
+    handleSetPrimaryClick,
     handleUnlinkConfirm,
     handleUnlinkDialogOpenChange,
     handleRetry,

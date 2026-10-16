@@ -17,6 +17,7 @@ import {
   MANAGED_PRODUCT_DETAIL_CONTENT_CLASS,
   ManagedProductDetailPrimarySection,
   ManagedProductDetailShell,
+  ManagedProductNotFound,
 } from "../managed-product-detail-layout";
 import { releaseCountdown, releaseCountValue, releasesSubtitle } from "./product-releases-model";
 import { ProductReleaseFormSheet } from "./product-release-form-sheet";
@@ -54,6 +55,8 @@ export function ProductReleasesPage({ managedProductId }: ProductReleasesPagePro
 
   const nextPlanned = groups.nextPlanned?.releaseDate ?? null;
   const isArchive = lifecycleTarget?.action === "archive";
+
+  if (page.resolution.kind === "not-found") return <ManagedProductNotFound />;
 
   return (
     <DirtyStateProvider>

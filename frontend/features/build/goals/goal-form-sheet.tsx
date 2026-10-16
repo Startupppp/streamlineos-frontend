@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Target } from "lucide-react";
 import { toast } from "sonner";
+import { useSubmitGuard } from "@/hooks/common/use-submit-guard";
 import {
   useCreateGoal,
   useGoals,
@@ -111,7 +112,7 @@ export function GoalFormSheet({
     [],
   );
 
-  function handleSubmit(values: ProjectGoalFormValues) {
+  function handleSubmit(values: ProjectGoalFormValues, settle: () => void) {
     const resolvedOwner =
       values.ownerId === "unassigned" ? null : values.ownerId;
     const resolvedParent =
@@ -143,6 +144,7 @@ export function GoalFormSheet({
             }
             toast.error(getErrorMessage(e));
           },
+          onSettled: settle,
         },
       );
       return;
@@ -167,9 +169,14 @@ export function GoalFormSheet({
           handleOpenChange(false);
         },
         onError: (e) => toast.error(getErrorMessage(e)),
+        onSettled: settle,
       },
     );
   }
+
+  const submitGuard = useSubmitGuard(
+    (values: ProjectGoalFormValues) => new Promise<void>((settle) => { handleSubmit(values, settle); }),
+  );
 
   return (
     <Sheet open={open} onOpenChange={handleOpenChange}>
@@ -194,7 +201,7 @@ export function GoalFormSheet({
 
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit(handleSubmit)}
+            onSubmit={form.handleSubmit(submitGuard.submit)}
             className="flex flex-col flex-1 min-h-0"
           >
             <SheetBody>

@@ -15,6 +15,7 @@ import {
   MANAGED_PRODUCT_DETAIL_CONTENT_CLASS,
   ManagedProductDetailPrimarySection,
   ManagedProductDetailShell,
+  ManagedProductNotFound,
 } from "@/features/build/managed-products/managed-product-detail-layout";
 import { PRODUCT_PROJECT_SKELETON_HEADERS } from "@/features/build/managed-products/managed-product-page-skeletons";
 import { useProductProjectsPage, type LinkedProjectRow } from "./use-product-projects-page";
@@ -76,6 +77,7 @@ export function ProductProjectsPage({ managedProductId }: ProductProjectsPagePro
     handleNextPage,
     handlePreviousPage,
     handleUnlinkClick,
+    handleSetPrimaryClick,
     handleUnlinkConfirm,
     handleUnlinkDialogOpenChange,
     handleRetry,
@@ -88,8 +90,12 @@ export function ProductProjectsPage({ managedProductId }: ProductProjectsPagePro
   );
 
   const columns = useMemo(
-    () => buildProductProjectsColumns({ onUnlinkClick: handleUnlinkClick }),
-    [handleUnlinkClick],
+    () =>
+      buildProductProjectsColumns({
+        onUnlinkClick: handleUnlinkClick,
+        onSetPrimaryClick: handleSetPrimaryClick,
+      }),
+    [handleUnlinkClick, handleSetPrimaryClick],
   );
 
   const mobileCard = useCallback(
@@ -98,6 +104,8 @@ export function ProductProjectsPage({ managedProductId }: ProductProjectsPagePro
     ),
     [handleUnlinkClick],
   );
+
+  if (resolution.kind === "not-found") return <ManagedProductNotFound />;
 
   return (
     <PageWrapper
