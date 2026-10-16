@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback } from "react";
-import { formatRelative } from "date-fns";
+import { formatDateTimeInOrgTz } from "@/lib/date-utils";
+import { useOrgTimeZone } from "@/hooks/api/org-display";
 import { Loader2 } from "lucide-react";
 import { XIcon } from "@animateicons/react/lucide";
 import { Badge } from "@/components/ui/badge";
@@ -42,6 +43,7 @@ export function DelegationRow({
   onRevoke,
   isRevoking,
 }: DelegationRowProps) {
+  const orgTz = useOrgTimeZone();
   const handleRevoke = useCallback(
     () => onRevoke?.(delegation),
     [delegation, onRevoke],
@@ -95,7 +97,7 @@ export function DelegationRow({
           ) : null}
         </div>
         <p className="text-xs text-muted-foreground mt-0.5 truncate">
-          {lifecycleLabel} {lifecycleDate ? formatRelative(new Date(lifecycleDate), new Date()) : ""}
+          {lifecycleLabel} {formatDateTimeInOrgTz(lifecycleDate, orgTz)}
           {delegation.reason && (
             <span className="text-muted-foreground">
               {" "}

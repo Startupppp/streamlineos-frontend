@@ -18,6 +18,8 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { RichPanel, RichSectionHeader } from "@/components/shared/rich-surface";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { formatDateTimeInOrgTz } from "@/lib/date-utils";
+import { useOrgTimeZone } from "@/hooks/api/org-display";
 import {
   useWebhookLogs,
   useRetryDelivery,
@@ -58,6 +60,7 @@ function LogRowSkeleton() {
 
 function LogRow({ log, endpointId, canManage }: LogRowProps) {
   const retry = useRetryDelivery(endpointId);
+  const orgTz = useOrgTimeZone();
 
   const handleRetry = useCallback(() => {
     retry.mutate(log.id, {
@@ -106,10 +109,7 @@ function LogRow({ log, endpointId, canManage }: LogRowProps) {
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <span className="text-xs text-muted-foreground whitespace-nowrap">
-            {new Date(log.createdAt).toLocaleString("en-IN", {
-              dateStyle: "short",
-              timeStyle: "short",
-            })}
+            {formatDateTimeInOrgTz(log.createdAt, orgTz)}
           </span>
           {canManage && !log.success && (
             <LoadingButton
