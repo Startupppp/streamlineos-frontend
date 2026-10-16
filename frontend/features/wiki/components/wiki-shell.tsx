@@ -1,13 +1,13 @@
 "use client";
 
+import { useGuardedCreateKbPage } from "@/features/wiki/hooks/use-guarded-create-kb-page";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { toast } from "sonner";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { useKbPagesFavorites, useCreateKbPage } from "@/hooks/api/kb";
+import { useKbPagesFavorites } from "@/hooks/api/kb";
 import { useCan, useCanState } from "@/hooks/api/access";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { useShellSidebarCollapse } from "@/components/layout/shell-sidebar-collapse-context";
@@ -39,7 +39,7 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
     error: favoritesReadError,
     refetch: refetchFavorites,
   } = useKbPagesFavorites();
-  const createPage = useCreateKbPage();
+  const createPage = useGuardedCreateKbPage((page) => router.push(pageHref(page.id)));
   const canViewAnalytics = useCan("kb:analytics:view");
   const canViewReviews = useCan("kb:reviews:view");
   const canManageContent = useCan("kb:pages:manage");
@@ -62,19 +62,10 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
     void refetchFavorites();
   }
 
+  const submitNewPage = createPage.submit;
   const handleNewPage = useCallback(() => {
-    createPage.mutate(
-      {},
-      {
-        onSuccess: (page) => {
-          router.push(pageHref(page.id));
-        },
-        onError: () => {
-          toast.error("Failed to create page");
-        },
-      }
-    );
-  }, [createPage, router]);
+    void submitNewPage({});
+  }, [submitNewPage]);
 
   useEffect(() => {
     if (createParamConsumedRef.current) return;
@@ -187,7 +178,7 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
           <div className="flex h-full min-w-0 flex-col overflow-hidden">
             {collapsed ? (
               <WikiCollapsedSidebarChrome
-                createPending={createPage.isPending}
+                createPending={createPage.isSubmitting}
                 onNewPage={handleNewPage}
               />
             ) : null}

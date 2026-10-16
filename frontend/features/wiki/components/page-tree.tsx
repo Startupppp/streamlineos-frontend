@@ -1,13 +1,13 @@
 "use client";
 
+import { useGuardedCreateKbPage } from "@/features/wiki/hooks/use-guarded-create-kb-page";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { ErrorState } from "@/components/shared/error-state";
 import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { useCan } from "@/hooks/api/access";
-import { useCreateKbPage, useKbPageTreeInfinite } from "@/hooks/api/kb";
+import { useKbPageTreeInfinite } from "@/hooks/api/kb";
 import { pageHref } from "@/lib/knowledge-routes";
 import { KbPlusIcon } from "@/features/wiki/lib/kb-icons";
 import PageTreeItem from "./page-tree-item";
@@ -29,7 +29,10 @@ export default function PageTree({
   baseHref,
 }: PageTreeProps) {
   const router = useRouter();
-  const createPage = useCreateKbPage();
+  const createPage = useGuardedCreateKbPage((page) => {
+    router.push(baseHref ? `${baseHref}/${page.id}` : pageHref(page.id));
+    onCloseMobile?.();
+  });
   const canCreate = useCan("kb:pages:create");
 
   const {
@@ -49,18 +52,7 @@ export default function PageTree({
 
   function handleNewPage() {
     if (!canCreate) return;
-    createPage.mutate(
-      { spaceId, projectId },
-      {
-        onSuccess: (page) => {
-          router.push(baseHref ? `${baseHref}/${page.id}` : pageHref(page.id));
-          onCloseMobile?.();
-        },
-        onError: () => {
-          toast.error("Failed to create page");
-        },
-      }
-    );
+    void createPage.submit({ spaceId, projectId });
   }
 
   function handleRetry() {
@@ -107,7 +99,7 @@ export default function PageTree({
             variant="outline"
             className="h-7 text-xs"
             onClick={handleNewPage}
-            isPending={createPage.isPending}
+            isPending={createPage.isSubmitting}
             loadingText="Creating…"
           >
             <KbPlusIcon className="h-3.5 w-3.5" />
