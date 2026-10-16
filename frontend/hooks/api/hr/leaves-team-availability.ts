@@ -4,6 +4,7 @@ import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import type { TeamAvailabilityRow } from "@/hooks/api/hr/leaves-team-availability-schema";
 
 const teamAvailabilityC = lazyContract(() =>
@@ -38,5 +39,7 @@ export function useHrTeamAvailability(
     staleTime: 2 * 60_000,
     enabled:
       Boolean(window.startDate && window.endDate) && (options?.enabled ?? true),
+    // A side panel of the approvals tab: its failure shows in its own card, never as the whole page's boundary (NEW-1).
+    ...INLINE_READ_ERROR,
   });
 }
