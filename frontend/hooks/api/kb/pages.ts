@@ -758,10 +758,11 @@ export function useSetKbPageVisibility() {
         undefined,
         kbPageContract,
       ),
-    onSuccess: (_, variables) => {
-      qc.invalidateQueries({
-        queryKey: knowledgeAndSurveysQueryKeys.kb.page(variables.pageId),
-      });
+    onSuccess: (updated, variables) => {
+      qc.setQueryData<KbPageDetail>(
+        knowledgeAndSurveysQueryKeys.kb.page(variables.pageId),
+        applyUpdatedKbPage(updated),
+      );
       qc.invalidateQueries({
         queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTree(),
       });
