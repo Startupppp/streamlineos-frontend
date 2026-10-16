@@ -75,6 +75,8 @@ export const directoryAndOwnershipQueryKeys = {
     party: (partyId: string) => [...base, "party", "parties", partyId] as const,
     contacts: (partyId: string) =>
       [...base, "party", "parties", partyId, "contacts"] as const,
+    roles: (partyId: string) =>
+      [...base, "party", "parties", partyId, "roles"] as const,
     duplicates: (params?: Record<string, unknown>) =>
       params === undefined
         ? ([...base, "party", "duplicates"] as const)
