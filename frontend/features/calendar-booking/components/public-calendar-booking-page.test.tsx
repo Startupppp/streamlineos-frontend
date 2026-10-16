@@ -159,20 +159,23 @@ describe("public calendar booking page", () => {
     expect(screen.getByText("I agree to scheduling contact")).toBeInTheDocument();
   });
 
-  it("uses the approved session language for the page, slots, and payment amount", async () => {
+  it("keeps owner-authored French copy while rendering unsupported UI chrome in English", async () => {
     mockedPost.mockImplementation(async (path) => {
       if (String(path).endsWith("/sessions")) return {
         ...session,
         locale: "fr-FR",
-        copy: { ...session.copy, locale: "fr-FR" },
+        copy: { ...session.copy, locale: "fr-FR", title: "Réserver avec Northwind", fieldLabels: { company: "Organisation" } },
         payment: { amountMinor: 2500, currency: "INR" },
       };
       throw new Error("Unexpected request");
     });
     renderPage();
-    const title = await screen.findByRole("heading", { name: "Meet Northwind" });
-    expect(title.closest("main")).toHaveAttribute("lang", "fr-FR");
-    const formattedTime = new Intl.DateTimeFormat("fr-FR", {
+    const title = await screen.findByRole("heading", { name: "Réserver avec Northwind" });
+    expect(title).toHaveAttribute("lang", "fr-FR");
+    expect(title.closest("main")).toHaveAttribute("lang", "en-US");
+    expect(screen.getByText("Organisation")).toHaveAttribute("lang", "fr-FR");
+    expect(screen.getByRole("heading", { name: "Choose a time" })).toBeInTheDocument();
+    const formattedTime = new Intl.DateTimeFormat("en-US", {
       weekday: "short",
       month: "short",
       day: "numeric",
@@ -181,7 +184,7 @@ describe("public calendar booking page", () => {
       timeZone: offering.timeZone,
     }).format(new Date(offering.slots[0].start));
     expect(screen.getByRole("radio")).toHaveAccessibleName(formattedTime);
-    const formattedPrice = new Intl.NumberFormat("fr-FR", {
+    const formattedPrice = new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: "INR",
     }).format(25);
@@ -215,6 +218,32 @@ describe("public calendar booking page", () => {
     expect(await screen.findByRole("heading", { name: "आपकी बुकिंग की पुष्टि हो गई है" })).toBeInTheDocument();
     expect(screen.getByText("बुक किया गया समय")).toBeInTheDocument();
     expect(screen.getByText("कैलेंडर से मिलान जारी है।")).toBeInTheDocument();
+  });
+
+  it("uses Telugu for booking controls, validation, and the confirmed receipt", async () => {
+    mockedPost.mockImplementation(async (path) => {
+      if (String(path).endsWith("/sessions")) return {
+        ...session,
+        locale: "te-IN",
+        copy: { ...session.copy, locale: "te-IN", title: "సమయాన్ని బుక్ చేయండి", consentLabel: null },
+      };
+      if (String(path).endsWith("/holds")) return hold;
+      return receipt;
+    });
+    const user = userEvent.setup();
+    renderPage();
+    const title = await screen.findByRole("heading", { name: "సమయాన్ని బుక్ చేయండి" });
+    expect(title.closest("main")).toHaveAttribute("lang", "te-IN");
+    expect(screen.getByRole("heading", { name: "సమయాన్ని ఎంచుకోండి" })).toBeInTheDocument();
+    await user.click(screen.getByRole("checkbox"));
+    await user.click(screen.getByRole("button", { name: "బుకింగ్‌ను నిర్ధారించండి" }));
+    expect(await screen.findByText("మీ పేరును నమోదు చేయండి")).toBeInTheDocument();
+    await user.click(screen.getByRole("radio"));
+    await user.type(screen.getByLabelText("పేరు"), "Guest User");
+    await user.type(screen.getByLabelText("ఇమెయిల్"), "guest@example.test");
+    await user.type(screen.getByLabelText("Organization"), "Example");
+    await user.click(screen.getByRole("button", { name: "బుకింగ్‌ను నిర్ధారించండి" }));
+    expect(await screen.findByRole("heading", { name: "మీ బుకింగ్ నిర్ధారించబడింది" })).toBeInTheDocument();
   });
 
   it("has no automated accessibility violations", async () => {

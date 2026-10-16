@@ -11,7 +11,7 @@ import {
   usePublicCalendarBookingSession,
 } from "@/hooks/api/calendar-booking-public";
 import { PublicCalendarBookingForm } from "./public-calendar-booking-form";
-import { publicBookingCopy } from "../lib/public-booking-copy";
+import { publicBookingCopy, publicBookingUiLocale } from "../lib/public-booking-copy";
 
 function queryValue(params: URLSearchParams, key: string): string | null {
   const value = params.get(key)?.trim();
@@ -48,14 +48,15 @@ export function PublicCalendarBookingPage() {
   const sessionQuery = usePublicCalendarBookingSession(token, sessionInput);
   const offering = offeringQuery.data;
   const session = sessionQuery.data;
-  const copy = publicBookingCopy(session?.locale ?? locale);
+  const uiLocale = publicBookingUiLocale(session?.locale ?? locale);
+  const copy = publicBookingCopy(uiLocale);
   const loading = offeringQuery.isPending || sessionQuery.isPending;
   const unavailable = offeringQuery.isError || sessionQuery.isError;
   const title = session?.copy.title ?? offering?.title ?? copy.defaultTitle;
   const description = session?.copy.description ?? offering?.description;
 
   return (
-    <main lang={session?.locale} className="flex min-h-dvh justify-center bg-background px-4 py-6 text-foreground sm:px-6 sm:py-12">
+    <main lang={uiLocale} className="flex min-h-dvh justify-center bg-background px-4 py-6 text-foreground sm:px-6 sm:py-12">
       <Card className="h-fit w-full max-w-2xl gap-0 overflow-hidden rounded-xl border-border bg-card py-0 shadow-sm">
         <div
           aria-hidden="true"
@@ -79,10 +80,10 @@ export function PublicCalendarBookingPage() {
           )}
           <div className="min-w-0 space-y-1">
             <p className="text-xs font-medium text-muted-foreground">
-              {session?.branding.displayName ? `${copy.brand} ${session.branding.displayName}` : copy.platform}
+              {session?.branding.displayName ? <>{copy.brand} <span lang={session.locale}>{session.branding.displayName}</span></> : copy.platform}
             </p>
-            <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">{title}</h1>
-            {description && <p className="text-sm text-muted-foreground">{description}</p>}
+            <h1 lang={session?.copy.title ? session.locale : undefined} className="text-xl font-semibold tracking-tight sm:text-2xl">{title}</h1>
+            {description && <p lang={session?.copy.description ? session.locale : undefined} className="text-sm text-muted-foreground">{description}</p>}
           </div>
         </header>
 

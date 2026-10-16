@@ -171,3 +171,8 @@ export function publicBookingCopy(locale: string | null | undefined): BookingCop
   if (language === "te") return telugu;
   return english;
 }
+
+export function publicBookingUiLocale(locale: string | null | undefined): string {
+  const language = locale?.split("-")[0]?.toLowerCase();
+  return language === "en" || language === "hi" || language === "te" ? locale ?? "en-US" : "en-US";
+}

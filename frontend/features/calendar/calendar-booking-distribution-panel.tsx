@@ -26,6 +26,17 @@ import type { BookingDistribution } from "@/hooks/api/calendar/booking-distribut
 import { calendarBookingEmbedCode } from "./calendar-booking-embed-code";
 import { CalendarDateTimePicker } from "./calendar-date-time-picker";
 
+const supportedLocales = [
+  { value: "en-US", label: "English (United States)" },
+  { value: "hi-IN", label: "Hindi (India)" },
+  { value: "te-IN", label: "Telugu (India)" },
+];
+
+function supportedLocale(value: string): string {
+  const language = value.split("-")[0]?.toLowerCase();
+  return supportedLocales.find((locale) => locale.value.slice(0, 2) === language)?.value ?? "";
+}
+
 function initialDistribution(rule: CalendarBookingRule, current: BookingDistribution | null): BookingDistributionInput {
   if (current) return {
     expectedVersion: current.version,
@@ -84,6 +95,10 @@ export function CalendarBookingDistributionPanel({ rule, onBack }: { rule: Calen
   }
 
   async function save() {
+    if (!supportedLocale(form.defaultLocale) || form.localizedCopy.some((copy) => !supportedLocale(copy.locale))) {
+      setError("Choose a supported language for the page and each translation.");
+      return;
+    }
     if (!form.localizedCopy.some((copy) => copy.locale.toLowerCase() === form.defaultLocale.toLowerCase())) {
       setError("Add copy for the default language.");
       return;
@@ -106,6 +121,11 @@ export function CalendarBookingDistributionPanel({ rule, onBack }: { rule: Calen
     } catch (cause) {
       setError(getErrorMessage(cause));
     }
+  }
+
+  function addLanguage() {
+    const next = supportedLocales.find((locale) => !form.localizedCopy.some((copy) => supportedLocale(copy.locale) === locale.value));
+    if (next) change({ ...form, localizedCopy: [...form.localizedCopy, { locale: next.value, title: null, description: null, consentLabel: null, fieldLabels: {} }] });
   }
 
   async function issueLink() {
@@ -148,15 +168,16 @@ export function CalendarBookingDistributionPanel({ rule, onBack }: { rule: Calen
     {error ? <p role="alert" className="rounded-md border border-destructive p-3 text-sm text-destructive">{error}</p> : null}
     {distribution.access.denied ? <p>You do not have access to this booking page.</p> : distribution.access.unavailable ? <ErrorState title="Distribution unavailable" onRetry={() => void distribution.refetch()} /> : distribution.access.pending || distribution.isPending ? <p role="status">Loading distribution…</p> : distribution.isError ? <ErrorState error={distribution.error} onRetry={() => void distribution.refetch()} /> : <>
       <section className="space-y-3 rounded-md border p-3" aria-label="Page and embed settings">
-        <div className="space-y-1"><Label htmlFor="distribution-locale">Default language</Label><Input id="distribution-locale" value={form.defaultLocale} onChange={(event) => change({ ...form, defaultLocale: event.target.value })} /></div>
+        <div className="space-y-1"><Label htmlFor="distribution-locale">Default language</Label><Select value={supportedLocale(form.defaultLocale)} onValueChange={(value) => change({ ...form, defaultLocale: value })}><SelectTrigger id="distribution-locale"><SelectValue placeholder="Choose a supported language" /></SelectTrigger><SelectContent>{supportedLocales.map((locale) => <SelectItem key={locale.value} value={locale.value}>{locale.label}</SelectItem>)}</SelectContent></Select></div>
         {form.localizedCopy.map((copy, index) => <div key={index} className="space-y-2 rounded-md border p-2">
-          <div className="flex gap-2"><Input aria-label={`Language ${index + 1}`} value={copy.locale} onChange={(event) => change({ ...form, localizedCopy: form.localizedCopy.map((item, position) => position === index ? { ...item, locale: event.target.value } : item) })} /><Button type="button" variant="outline" disabled={form.localizedCopy.length === 1} onClick={() => change({ ...form, localizedCopy: form.localizedCopy.filter((_, position) => position !== index) })}>Remove</Button></div>
+          <div className="flex gap-2"><Select value={supportedLocale(copy.locale)} onValueChange={(value) => change({ ...form, localizedCopy: form.localizedCopy.map((item, position) => position === index ? { ...item, locale: value } : item) })}><SelectTrigger aria-label={`Language ${index + 1}`}><SelectValue placeholder="Choose a supported language" /></SelectTrigger><SelectContent>{supportedLocales.map((locale) => <SelectItem key={locale.value} value={locale.value} disabled={form.localizedCopy.some((item, position) => position !== index && supportedLocale(item.locale) === locale.value)}>{locale.label}</SelectItem>)}</SelectContent></Select><Button type="button" variant="outline" disabled={form.localizedCopy.length === 1} onClick={() => change({ ...form, localizedCopy: form.localizedCopy.filter((_, position) => position !== index) })}>Remove</Button></div>
+          {!supportedLocale(copy.locale) && <p className="text-xs text-destructive">This language has English booking controls. Choose a supported language to save.</p>}
           <Input aria-label={`Page title ${copy.locale}`} placeholder="Page title" value={copy.title ?? ""} onChange={(event) => change({ ...form, localizedCopy: form.localizedCopy.map((item, position) => position === index ? { ...item, title: event.target.value || null } : item) })} />
           <Textarea aria-label={`Page description ${copy.locale}`} placeholder="Page description" value={copy.description ?? ""} onChange={(event) => change({ ...form, localizedCopy: form.localizedCopy.map((item, position) => position === index ? { ...item, description: event.target.value || null } : item) })} />
           <Input aria-label={`Consent label ${copy.locale}`} placeholder="Consent label" value={copy.consentLabel ?? ""} onChange={(event) => change({ ...form, localizedCopy: form.localizedCopy.map((item, position) => position === index ? { ...item, consentLabel: event.target.value || null } : item) })} />
           {rule.intakeFields.filter((field) => form.intakeKeys.includes(field.key)).map((field) => <Input key={field.key} aria-label={`${field.label} label ${copy.locale}`} placeholder={`${field.label} label`} value={copy.fieldLabels[field.key] ?? ""} onChange={(event) => change({ ...form, localizedCopy: form.localizedCopy.map((item, position) => position === index ? { ...item, fieldLabels: { ...item.fieldLabels, [field.key]: event.target.value } } : item) })} />)}
         </div>)}
-        <Button type="button" variant="outline" disabled={form.localizedCopy.length >= 20} onClick={() => change({ ...form, localizedCopy: [...form.localizedCopy, { locale: "", title: null, description: null, consentLabel: null, fieldLabels: {} }] })}>Add language</Button>
+        <Button type="button" variant="outline" disabled={supportedLocales.every((locale) => form.localizedCopy.some((copy) => supportedLocale(copy.locale) === locale.value))} onClick={addLanguage}>Add language</Button>
         <div className="space-y-1"><Label htmlFor="distribution-display-name">Brand name</Label><Input id="distribution-display-name" value={form.branding.displayName ?? ""} onChange={(event) => change({ ...form, branding: { ...form.branding, displayName: event.target.value || null } })} /></div>
         <div className="space-y-1"><Label htmlFor="distribution-logo">HTTPS logo URL</Label><Input id="distribution-logo" type="url" value={form.branding.logoUrl ?? ""} onChange={(event) => change({ ...form, branding: { ...form.branding, logoUrl: event.target.value || null } })} /></div>
         <div className="space-y-1"><Label htmlFor="distribution-color">Brand color</Label><Input id="distribution-color" type="color" value={form.branding.primaryColor ?? "#2563eb"} onChange={(event) => change({ ...form, branding: { ...form.branding, primaryColor: event.target.value } })} /></div>

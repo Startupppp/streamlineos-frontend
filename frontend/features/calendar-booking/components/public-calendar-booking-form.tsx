@@ -32,7 +32,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import { usePaidCalendarBooking } from "../hooks/use-paid-calendar-booking";
 import { PublicCalendarBookingPaymentStatus } from "./public-calendar-booking-payment-status";
-import { publicBookingCopy } from "../lib/public-booking-copy";
+import { publicBookingCopy, publicBookingUiLocale } from "../lib/public-booking-copy";
 
 function bookingFormSchemaFor(locale: string) {
   const copy = publicBookingCopy(locale);
@@ -106,8 +106,9 @@ export function PublicCalendarBookingForm({
   const queryClient = useQueryClient();
   const paidBooking = usePaidCalendarBooking(token, offering, session);
   const paymentResult = paidBooking.result;
-  const copy = publicBookingCopy(session.locale);
-  const bookingFormSchema = useMemo(() => bookingFormSchemaFor(session.locale), [session.locale]);
+  const uiLocale = publicBookingUiLocale(session.locale);
+  const copy = publicBookingCopy(uiLocale);
+  const bookingFormSchema = useMemo(() => bookingFormSchemaFor(uiLocale), [uiLocale]);
   const [lastReceipt, setLastReceipt] = useState<PublicCalendarBookingReceipt | null>(null);
   const [replayPayload, setReplayPayload] = useState<Parameters<typeof confirmBooking.mutateAsync>[0] | null>(null);
   const initialReceipt = paymentResult?.receipt ?? confirmBooking.data ?? lastReceipt;
@@ -253,7 +254,7 @@ export function PublicCalendarBookingForm({
       (paymentResult.bookingState === "confirmed" || receipt?.outcome === "pending")
     )
   ) {
-    return <PublicCalendarBookingPaymentStatus payment={paymentResult} locale={session.locale} />;
+    return <PublicCalendarBookingPaymentStatus payment={paymentResult} locale={uiLocale} />;
   }
 
   if (receipt) {
@@ -272,7 +273,7 @@ export function PublicCalendarBookingForm({
             <ReceiptIcon className="size-6" aria-hidden="true" />
           </span>
           <h2 className="text-xl font-semibold tracking-tight text-foreground">
-            {outcomeTitle(receipt.outcome, session.locale)}
+            {outcomeTitle(receipt.outcome, uiLocale)}
           </h2>
           {receipt.reasonCode && (
             <p className="text-sm text-muted-foreground">
@@ -286,7 +287,7 @@ export function PublicCalendarBookingForm({
             {receipt.outcome === "confirmed" ? copy.bookedTime : copy.requestedTime}
           </p>
           <p className="mt-1 font-semibold text-foreground">
-            {bookingTime(receipt.startAt, offering.timeZone, session.locale)}
+            {bookingTime(receipt.startAt, offering.timeZone, uiLocale)}
           </p>
           <p className="mt-1 text-sm text-muted-foreground">{offering.timeZone}</p>
         </div>
@@ -329,7 +330,7 @@ export function PublicCalendarBookingForm({
             <h3 className="text-sm font-semibold text-foreground">{copy.otherTimes}</h3>
             {receipt.alternatives.map((alternative) => (
               <Button key={alternative.start} type="button" variant="outline" data-start={alternative.start} className="w-full justify-start" onClick={handleAlternativeClick}>
-                {copy.review(slotTime(alternative.start, offering.timeZone, session.locale))}
+                {copy.review(slotTime(alternative.start, offering.timeZone, uiLocale))}
               </Button>
             ))}
           </div>
@@ -395,7 +396,7 @@ export function PublicCalendarBookingForm({
                     onBlur={field.onBlur}
                   />
                   <span className="text-sm font-medium text-foreground">
-                    {slotTime(slot.start, offering.timeZone, session.locale)}
+                    {slotTime(slot.start, offering.timeZone, uiLocale)}
                   </span>
                 </Label>
               ))}
@@ -430,7 +431,7 @@ export function PublicCalendarBookingForm({
         <section className="grid gap-4" aria-label={copy.additionalInformation}>
           {visibleIntakeFields.map((field) => (
             <div key={field.key} className="space-y-2">
-              <Label htmlFor={`intake-${field.key}`}>
+              <Label htmlFor={`intake-${field.key}`} lang={session.copy.fieldLabels[field.key] ? session.locale : undefined}>
                 {session.copy.fieldLabels[field.key] ?? field.label}
               </Label>
               {field.type === "textarea" ? (
@@ -495,7 +496,7 @@ export function PublicCalendarBookingForm({
             onCheckedChange={handleConsentChange}
             aria-required="true"
           />
-          <Label htmlFor="booking-consent" className="font-normal leading-5">
+          <Label htmlFor="booking-consent" lang={session.copy.consentLabel ? session.locale : undefined} className="font-normal leading-5">
             {session.copy.consentLabel ??
               copy.consent}
           </Label>
@@ -517,7 +518,7 @@ export function PublicCalendarBookingForm({
           (session.consentRequired && !form.watch("consentAccepted"))}
       >
         {session.payment
-          ? copy.payAndBook(new Intl.NumberFormat(session.locale, { style: "currency", currency: session.payment.currency }).format(session.payment.amountMinor / 100))
+          ? copy.payAndBook(new Intl.NumberFormat(uiLocale, { style: "currency", currency: session.payment.currency }).format(session.payment.amountMinor / 100))
           : copy.confirmBooking}
       </LoadingButton>
     </form>
