@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, useCallback } from "react";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, useWatch, Controller } from "react-hook-form";
 import { Trash2Icon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Input } from "@/components/ui/input";
@@ -21,7 +21,6 @@ interface LineRowProps {
   index: number;
   control: ReturnType<typeof useForm<FormValues>>["control"];
   register: ReturnType<typeof useForm<FormValues>>["register"];
-  watch: ReturnType<typeof useForm<FormValues>>["watch"];
   setValue: ReturnType<typeof useForm<FormValues>>["setValue"];
   errors: ReturnType<typeof useForm<FormValues>>["formState"]["errors"];
   onRemove: (index: number) => void;
@@ -33,14 +32,13 @@ export const LineRow = memo(function LineRow({
   index,
   control,
   register,
-  watch,
   setValue,
   errors,
   onRemove,
   canRemove,
   warehouses,
 }: LineRowProps) {
-  const warehouseId = watch(`lines.${index}.warehouseId`);
+  const warehouseId = useWatch({ control, name: `lines.${index}.warehouseId` });
   const { data: locations = [] } = useLocations(Number(warehouseId) || 0);
 
   const lineErrors = errors.lines?.[index];

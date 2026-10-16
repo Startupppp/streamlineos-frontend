@@ -10,7 +10,6 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { AppSheet } from "@/components/shared/app-sheet";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useOpeningStock } from "@/hooks/api/inventory/stock";
@@ -168,7 +167,6 @@ export function OpeningStockSheet({ open, onOpenChange }: OpeningStockSheetProps
               index={index}
               control={form.control}
               register={form.register}
-              watch={form.watch}
               setValue={form.setValue}
               errors={form.formState.errors}
               onRemove={handleRemoveLine}
