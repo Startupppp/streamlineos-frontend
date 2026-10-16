@@ -10,5 +10,5 @@
 - [ ] Locked blocks, breaks, leave, nonworking days, maximum daily load, priorities, estimates, and deadlines are respected.
 - [ ] Move budgets and hysteresis prevent blocks from thrashing after every schedule change.
 - [ ] Every move explains why it happened, records its prior slot, and offers a safe version-checked undo.
-- [ ] Tests cover impossible workload, stale availability, repeated meeting churn, permission loss, deadline change, and undo collision.
+- [x] Tests cover impossible workload, stale availability, repeated meeting churn, permission loss, deadline change, and undo collision.
 
