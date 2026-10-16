@@ -8,7 +8,7 @@ import type { ExpenseWithRelations } from "@/types/hr/expenses";
  * claim stayed in the approval queue forever.
  */
 
-function claim(id: number, status: ExpenseWithRelations["status"]): ExpenseWithRelations {
+function claim(id: number, status: string): ExpenseWithRelations {
   return {
     id,
     orgId: "org-1",
@@ -21,17 +21,28 @@ function claim(id: number, status: ExpenseWithRelations["status"]): ExpenseWithR
     receiptUrl: null,
     receiptFileName: null,
     merchant: null,
+    receiptNumber: null,
+    receiptHash: null,
+    taxAmount: null,
     paymentMethod: null,
     projectId: null,
     status,
+    userMembershipId: null,
     approverId: null,
+    approverMembershipId: null,
     approvedAt: null,
     rejectionReason: null,
     paidAt: null,
     transactionRef: null,
+    reimbursementBatchId: null,
+    postedJournalEntryId: null,
+    policyFlag: null,
     expenseDate: "2026-10-01",
-    createdAt: null,
-    updatedAt: null,
+    createdAt: "2026-10-01T00:00:00.000Z",
+    updatedAt: "2026-10-01T00:00:00.000Z",
+    user: null,
+    approver: null,
+    expenseCategory: null,
   };
 }
 
