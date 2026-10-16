@@ -13,7 +13,7 @@ import type {
   BulkOnboardResult,
   BulkOnboardSeats,
 } from "@/types/hr";
-import { MAX_ROWS, sourceRowOf } from "./bulk-onboard-columns";
+import { BULK_ONBOARD_COLUMNS, MAX_ROWS, sourceRowOf } from "./bulk-onboard-columns";
 import { parseFile, ParseStructuralError } from "./bulk-onboard-parse";
 import { validateAndMap, type PreviewRow } from "./bulk-onboard-template";
 import {
@@ -177,6 +177,15 @@ export function useBulkOnboardFlow(
       if (parsed.length === 0) {
         toast.error(
           "No data rows found. Keep the header row and add employees below it.",
+        );
+        return;
+      }
+      const missingHeaders = BULK_ONBOARD_COLUMNS.filter(
+        (column) => column.required && !(column.key in parsed[0]),
+      ).map((column) => column.header);
+      if (missingHeaders.length > 0) {
+        toast.error(
+          `This file is missing required columns: ${missingHeaders.join(", ")}. Download the template and keep its header row.`,
         );
         return;
       }

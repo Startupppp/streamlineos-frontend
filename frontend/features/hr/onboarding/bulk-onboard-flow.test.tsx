@@ -1,5 +1,6 @@
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { toast } from "sonner";
 import type { BulkOnboardPreviewRow, BulkOnboardResult } from "@/types/hr";
 import { buildBulkOnboardErrorReportRows } from "./bulk-onboard-error-report";
 import { BulkOnboardPreviewTable } from "./bulk-onboard-preview-table";
@@ -287,5 +288,25 @@ describe("BulkOnboardPanel — rows keep their file number through preview and r
 
     expect(await screen.findByText("Row 3")).toBeInTheDocument();
     expect(screen.queryByText("Row 2")).not.toBeInTheDocument();
+  });
+});
+
+describe("BulkOnboardPanel — a file on the wrong template", () => {
+  it("reports the missing columns once and does not preview any row", async () => {
+    const user = userEvent.setup();
+    previewMutateAsync.mockClear();
+    const toastError = jest.spyOn(toast, "error").mockReturnValue("");
+    const csv = ["Name,Mail", "Ann One,ann@example.com", "Bob Two,bob@example.com"].join("\n");
+    const file = new File([csv], "people.csv", { type: "text/csv" });
+    Object.defineProperty(file, "text", { value: () => Promise.resolve(csv) });
+
+    render(<BulkOnboardPanel />);
+    await user.upload(screen.getByLabelText("Choose employee onboard file"), file);
+
+    await waitFor(() => expect(toastError).toHaveBeenCalledTimes(1));
+    expect(toastError.mock.calls[0]?.[0]).toMatch(/missing required columns: firstName, lastName, email, designation, department/);
+    expect(previewMutateAsync).not.toHaveBeenCalled();
+    expect(screen.queryByRole("region", { name: "Preview rows" })).not.toBeInTheDocument();
+    toastError.mockRestore();
   });
 });
