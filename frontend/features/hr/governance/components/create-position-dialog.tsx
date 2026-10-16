@@ -22,7 +22,13 @@ import {
 import { FIELD_SELECT_CONTENT_CLASS } from "@/components/ui/field-control";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useHrDepartments } from "@/hooks/api/hr/employee-departments";
-import { useCreatePosition, usePositionStatuses } from "@/features/hr/governance/hooks/use-positions";
+import { LoadingButton } from "@/components/ui/loading-button";
+import { statusToneClasses } from "@/lib/design-tokens";
+import {
+  useCreatePosition,
+  usePositionStatuses,
+  useSeedPositionStatuses,
+} from "@/features/hr/governance/hooks/use-positions";
 import {
   CREATE_POSITION_DEFAULTS,
   budgetedCostCentsOf,
@@ -41,7 +47,17 @@ export function CreatePositionDialog({ open, onOpenChange }: CreatePositionDialo
   const createPosition = useCreatePosition();
   const { data: statuses } = usePositionStatuses({ enabled: open });
   const { data: departments } = useHrDepartments({ enabled: open });
+  const seedStatuses = useSeedPositionStatuses();
   const activeStatuses = (statuses ?? []).filter((status) => status.isActive);
+  const noStatuses = statuses !== undefined && activeStatuses.length === 0;
+  const tone = statusToneClasses("neutral");
+
+  function handleSeedStatuses() {
+    seedStatuses.mutate(undefined, {
+      onSuccess: () => toast.success("Default position statuses added"),
+      onError: (error) => toast.error(getErrorMessage(error)),
+    });
+  }
 
   function handleSubmit(values: CreatePositionFormValues) {
     createPosition.mutate(
@@ -96,20 +112,37 @@ export function CreatePositionDialog({ open, onOpenChange }: CreatePositionDialo
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Status</FormLabel>
-                <Select value={field.value} onValueChange={field.onChange}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a status" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent className={FIELD_SELECT_CONTENT_CLASS}>
-                    {activeStatuses.map((status) => (
-                      <SelectItem key={status.id} value={status.name}>
-                        {status.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                {noStatuses ? (
+                  <div className={`flex flex-col gap-2 rounded-lg border p-3 ${tone.surface} ${tone.rule} ${tone.ink}`}>
+                    <p className="text-dense">
+                      No position statuses are set up yet. Add the defaults (draft, open, filled, closed) to continue.
+                    </p>
+                    <LoadingButton
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      isPending={seedStatuses.isPending}
+                      onClick={handleSeedStatuses}
+                    >
+                      Add default statuses
+                    </LoadingButton>
+                  </div>
+                ) : (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a status" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent className={FIELD_SELECT_CONTENT_CLASS}>
+                      {activeStatuses.map((status) => (
+                        <SelectItem key={status.id} value={status.name}>
+                          {status.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
                 <FormMessage />
               </FormItem>
             )}
