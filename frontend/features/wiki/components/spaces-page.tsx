@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -19,7 +19,6 @@ import {
 } from "@/components/ui/select";
 import { SearchInput } from "@/components/ui/search-input";
 import { TablePagination } from "@/components/ui/table-pagination";
-import { useCursorPagination } from "@/hooks/common/use-cursor-pagination";
 import { useUrlFilters, parseEnum } from "@/lib/url-state/use-url-filters";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useCan } from "@/hooks/api/access";
@@ -62,7 +61,7 @@ function SpacesGrid({ children }: { children: React.ReactNode }) {
 export default function SpacesPage() {
   const canManage = useCan("kb:spaces:manage");
   const searchParams = useSearchParams();
-  const { update: updateFilters } = useUrlFilters();
+  const { update: updateFilters } = useUrlFilters({ pageParam: "cursor" });
 
   const rawSearch = searchParams.get("q") ?? "";
   const audienceFilter: AudienceFilter = parseEnum(
@@ -77,8 +76,27 @@ export default function SpacesPage() {
   );
   const view = parseEnum(searchParams.get("view"), VIEW_VALUES, "card");
   const debouncedSearch = useDebouncedValue(rawSearch, 300);
-
-  const cursorState = useCursorPagination();
+  const cursor = searchParams.get("cursor") || undefined;
+  const trailValue = searchParams.get("cursorTrail");
+  const cursorTrail = useMemo<(string | null)[]>(() => {
+    if (!cursor) return [];
+    if (!trailValue) return [null];
+    try {
+      const parsed: unknown = JSON.parse(trailValue);
+      if (
+        Array.isArray(parsed) &&
+        parsed.length > 0 &&
+        parsed.length <= 100 &&
+        parsed[0] === null &&
+        parsed.every((entry: unknown) => entry === null || typeof entry === "string")
+      ) {
+        return parsed;
+      }
+    } catch {
+      return [null];
+    }
+    return [null];
+  }, [cursor, trailValue]);
 
   const queryParams = {
     q: debouncedSearch || undefined,
@@ -90,7 +108,7 @@ export default function SpacesPage() {
         : archivedFilter === "archived"
           ? true
           : false,
-    cursor: cursorState.cursor,
+    cursor,
     limit: LIST_LIMIT,
   };
 
@@ -192,35 +210,47 @@ export default function SpacesPage() {
   }
 
   function handleAudienceChange(value: string) {
-    updateFilters({ audience: value === "all" ? null : value });
-    cursorState.reset();
+    updateFilters({ audience: value === "all" ? null : value, cursorTrail: null });
   }
 
   function handleStatusChange(value: string) {
-    updateFilters({ status: value === "active" ? null : value });
-    cursorState.reset();
+    updateFilters({ status: value === "active" ? null : value, cursorTrail: null });
   }
 
   function handleSearchChange(value: string) {
-    updateFilters({ q: value || null });
-    cursorState.reset();
+    updateFilters({ q: value || null, cursorTrail: null });
   }
 
   function handleClearFilters() {
-    updateFilters({ q: null, audience: null, status: null });
-    cursorState.reset();
+    updateFilters({ q: null, audience: null, status: null, cursorTrail: null });
   }
 
   function handleGoNext() {
-    cursorState.goNext(pagination?.nextCursor);
+    if (!pagination?.nextCursor) return;
+    updateFilters({
+      cursor: pagination.nextCursor,
+      cursorTrail: JSON.stringify([...cursorTrail, cursor ?? null]),
+    });
+  }
+
+  function handleGoPrevious() {
+    if (!cursor) return;
+    const previousCursor = cursorTrail[cursorTrail.length - 1];
+    updateFilters({
+      cursor: previousCursor ?? null,
+      cursorTrail:
+        cursorTrail.length > 1
+          ? JSON.stringify(cursorTrail.slice(0, -1))
+          : null,
+    });
   }
 
   function handleViewCard() {
-    updateFilters({ view: null });
+    updateFilters({ view: null, cursor: cursor ?? null });
   }
 
   function handleViewList() {
-    updateFilters({ view: "list" });
+    updateFilters({ view: "list", cursor: cursor ?? null });
   }
 
   const hasActiveFilters =
@@ -336,9 +366,9 @@ export default function SpacesPage() {
               canManage={canManage}
               pageSize={LIST_LIMIT}
               hasMore={pagination?.hasMore ?? false}
-              hasPrevious={cursorState.hasPrevious}
+              hasPrevious={Boolean(cursor)}
               onNext={handleGoNext}
-              onPrevious={cursorState.goPrevious}
+              onPrevious={handleGoPrevious}
               onEdit={handleEdit}
               onArchiveToggle={handleArchiveToggle}
               onViewMembers={handleViewMembers}
@@ -360,14 +390,14 @@ export default function SpacesPage() {
                 ))}
               </SpacesGrid>
               {pagination &&
-                (pagination.hasMore || cursorState.hasPrevious) && (
+                (pagination.hasMore || Boolean(cursor)) && (
                   <TablePagination
                     mode="cursor"
                     rowCount={spaces.length}
-                    hasPrevious={cursorState.hasPrevious}
+                    hasPrevious={Boolean(cursor)}
                     hasMore={pagination.hasMore}
                     onNext={handleGoNext}
-                    onPrevious={cursorState.goPrevious}
+                    onPrevious={handleGoPrevious}
                   />
                 )}
             </div>
