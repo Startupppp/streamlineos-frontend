@@ -144,8 +144,27 @@ describe("ProductReleaseEvidenceSheet", () => {
     expect(screen.getByText("Checkout latency spike")).toBeInTheDocument();
     expect(screen.getByText("2 more not shown here.")).toBeInTheDocument();
 
-    expect(screen.getByRole("heading", { name: "Approval state" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Project release approval" })).toBeInTheDocument();
     expect(screen.getByText("approved")).toBeInTheDocument();
+  });
+
+  it("shows the product release QA state beside the separate project release approval, and says when no approval was requested", () => {
+    mockUseManagedProductRelease.mockReturnValue({
+      data: {
+        ...DETAIL_WITH_EVIDENCE,
+        qaState: "approved",
+        evidence: { ...DETAIL_WITH_EVIDENCE.evidence, approvalState: null },
+      },
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: mockRefetch,
+    });
+    renderSheet();
+
+    expect(screen.getByText("Approved")).toBeInTheDocument();
+    expect(screen.getByText("No approval requested on the project release")).toBeInTheDocument();
+    expect(screen.queryByText("Not set")).not.toBeInTheDocument();
   });
 
   it("says no canonical release is linked when evidence is null, instead of showing zeros that read as proven-empty evidence", () => {
@@ -213,7 +232,7 @@ describe("ProductReleaseEvidenceSheet", () => {
     expect(screen.getByRole("heading", { name: "Incidents (3)" })).toBeInTheDocument();
     expect(screen.queryByText("No tickets linked.")).not.toBeInTheDocument();
     expect(screen.queryByText("No incidents recorded.")).not.toBeInTheDocument();
-    expect(screen.queryByText("Not set")).not.toBeInTheDocument();
+    expect(screen.queryByText("No approval requested on the project release")).not.toBeInTheDocument();
     expect(
       screen.getByText("Hidden — you do not have access to the owning project."),
     ).toBeInTheDocument();
