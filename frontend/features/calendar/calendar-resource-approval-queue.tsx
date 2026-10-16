@@ -16,14 +16,19 @@ function ApprovalRow({ allocation }: { allocation: PendingBookingAllocation }) {
   const resolve = useResolveCalendarBookingAllocation(allocation.bookingId);
   const [error, setError] = useState<string | null>(null);
   const [rejectOpen, setRejectOpen] = useState(false);
+  const hasReceipt = Boolean(allocation.approvalReceiptId?.trim());
+  const canReject = hasReceipt || allocation.sourceKey === "hr.asset";
 
   async function decide(outcome: "approved" | "rejected") {
+    const ownerReceiptId = allocation.approvalReceiptId ||
+      (allocation.sourceKey === "hr.asset" ? `resource:${allocation.resourceId}:${allocation.version}` : null);
+    if (!ownerReceiptId) return;
     try {
       await resolve.mutateAsync({
         resourceId: allocation.resourceId,
         expectedVersion: allocation.version,
         outcome,
-        ownerReceiptId: allocation.approvalReceiptId ?? `resource:${allocation.resourceId}:${allocation.version}`,
+        ownerReceiptId,
         ...(outcome === "rejected" ? { reasonCode: "resource_owner_rejected" } : {}),
       });
       setError(null);
@@ -34,7 +39,7 @@ function ApprovalRow({ allocation }: { allocation: PendingBookingAllocation }) {
     }
   }
 
-  return <div className="space-y-2 rounded-md border p-3 text-sm"><div className="flex items-center justify-between gap-2"><span className="font-medium">{allocation.resourceName}</span><span className="capitalize">{allocation.state}</span></div><p className="text-muted-foreground">{new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(new Date(allocation.startAt))}</p>{allocation.reasonCode ? <p className="text-muted-foreground">{allocation.reasonCode.replaceAll("_", " ")}</p> : null}{error && !rejectOpen ? <p role="alert" className="text-destructive">{error}</p> : null}<div className="flex gap-2"><Button size="sm" disabled={resolve.isPending || !allocation.canApprove || !allocation.approvalReceiptId} onClick={() => void decide("approved")}>Approve</Button><Button size="sm" variant="outline" disabled={resolve.isPending} onClick={() => { setError(null); setRejectOpen(true); }}>Reject</Button><ConfirmDialog title="Reject resource request?" description="This declines the booking that requires this resource." confirmLabel="Reject booking" destructive isPending={resolve.isPending} keepOpenOnConfirm open={rejectOpen} onOpenChange={setRejectOpen} onConfirm={() => void decide("rejected")} content={error ? <p role="alert" className="text-sm text-destructive">{error}</p> : undefined} /></div></div>;
+  return <div className="space-y-2 rounded-md border p-3 text-sm"><div className="flex items-center justify-between gap-2"><span className="font-medium">{allocation.resourceName}</span><span className="capitalize">{allocation.state}</span></div><p className="text-muted-foreground">{new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(new Date(allocation.startAt))}</p>{allocation.reasonCode ? <p className="text-muted-foreground">{allocation.reasonCode.replaceAll("_", " ")}</p> : null}{error && !rejectOpen ? <p role="alert" className="text-destructive">{error}</p> : null}<div className="flex gap-2"><Button size="sm" disabled={resolve.isPending || !allocation.canApprove || !hasReceipt} onClick={() => void decide("approved")}>Approve</Button><Button size="sm" variant="outline" disabled={resolve.isPending || !canReject} onClick={() => { setError(null); setRejectOpen(true); }}>Reject</Button><ConfirmDialog title="Reject resource request?" description="This declines the booking that requires this resource." confirmLabel="Reject booking" destructive isPending={resolve.isPending} keepOpenOnConfirm open={rejectOpen} onOpenChange={setRejectOpen} onConfirm={() => void decide("rejected")} content={error ? <p role="alert" className="text-sm text-destructive">{error}</p> : undefined} /></div></div>;
 }
 
 export function CalendarResourceApprovalQueue({ onBack }: { onBack?: () => void }) {

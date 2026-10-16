@@ -77,6 +77,7 @@ it("reloads an empty approval queue when an owner returns after an external book
     resourceId: 1,
     resourceName: "Calendar QA room",
     ownership: "calendar",
+    sourceKey: null,
     startAt: "2026-10-22T05:30:00.000Z",
     endAt: "2026-10-22T06:00:00.000Z",
     state: "pending",
