@@ -18,6 +18,17 @@ function queryValue(params: URLSearchParams, key: string): string | null {
   return value ? value.slice(0, 160) : null;
 }
 
+function referringDomain(referrer: string): string | null {
+  if (!referrer) return null;
+  try {
+    const url = new URL(referrer);
+    if (url.protocol !== "https:" && url.protocol !== "http:") return null;
+    return url.hostname.length <= 253 ? url.hostname : null;
+  } catch {
+    return null;
+  }
+}
+
 export function PublicCalendarBookingPage() {
   const params = useParams<{ token: string }>();
   const searchParams = useSearchParams();
@@ -35,7 +46,7 @@ export function PublicCalendarBookingPage() {
     campaign: queryValue(searchParams, "utm_campaign"),
     content: queryValue(searchParams, "utm_content"),
     term: queryValue(searchParams, "utm_term"),
-    referrerDomain: null,
+    referrerDomain: typeof document === "undefined" ? null : referringDomain(document.referrer),
   }), [searchParams]);
   const sessionInput = useMemo(() => ({
     locale,

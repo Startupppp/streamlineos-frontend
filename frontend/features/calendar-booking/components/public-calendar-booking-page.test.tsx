@@ -159,6 +159,26 @@ describe("public calendar booking page", () => {
     expect(screen.getByText("I agree to scheduling contact")).toBeInTheDocument();
   });
 
+  it("sends only the referring host with booking attribution", async () => {
+    const original = Object.getOwnPropertyDescriptor(document, "referrer");
+    Object.defineProperty(document, "referrer", {
+      configurable: true,
+      value: "https://PARTNER.example:443/private/path?customer=secret",
+    });
+    try {
+      renderPage();
+      await screen.findByRole("heading", { name: "Meet Northwind" });
+      expect(mockedPost).toHaveBeenCalledWith(
+        "/public/calendar/booking/booking-token-value-long-enough/sessions",
+        expect.objectContaining({ attribution: expect.objectContaining({ source: "partner", referrerDomain: "partner.example" }) }),
+        undefined,
+        expect.anything(),
+      );
+    } finally {
+      if (original) Object.defineProperty(document, "referrer", original);
+    }
+  });
+
   it("associates guest validation errors with the invalid name and email fields", async () => {
     const user = userEvent.setup();
     renderPage();
