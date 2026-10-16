@@ -88,6 +88,7 @@ export default function PageMetadataSheet({
   const canManage = useCan("kb:pages:manage");
   const canManageReviews = useCan("kb:reviews:manage");
   const isEditable = canUpdate && page.canEdit === true && (!page.isLocked || canManage);
+  const canChangeOwner = isEditable && canManage;
   const [intervalDays, setIntervalDays] = useState<string>("");
   const [verifyFormOpen, setVerifyFormOpen] = useState(false);
   const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
@@ -106,7 +107,7 @@ export default function PageMetadataSheet({
   const spaces = spacesPage?.data ?? [];
 
   function changeScope(change: ScopeChange) {
-    if (!isEditable) return;
+    if (!isEditable || (change.field === "ownerUserId" && !canChangeOwner)) return;
     updatePage.mutate(
       { pageId, [change.field]: change.value, expectedContentRevision: page.contentRevision },
       {
@@ -153,7 +154,7 @@ export default function PageMetadataSheet({
 
   async function retryScopeChange() {
     const pending = pendingScope?.pageId === pageId ? pendingScope : null;
-    if (!pending || isRetryingScope || !isEditable) return;
+    if (!pending || isRetryingScope || !isEditable || (pending.field === "ownerUserId" && !canChangeOwner)) return;
     setIsRetryingScope(true);
     try {
       const latest = await refetch();
@@ -267,7 +268,7 @@ export default function PageMetadataSheet({
               <div role="alert" className="space-y-2 rounded-lg border border-status-warning-rule bg-status-warning-surface p-3 text-sm text-status-warning-ink">
                 <p>The page changed before your {pendingScope.field === "spaceId" ? "space" : "owner"} choice was saved. Your choice is ready to retry.</p>
                 <div className="flex flex-wrap gap-2">
-                  <Button size="sm" onClick={retryScopeChange} disabled={isRetryingScope || !isEditable}>
+                  <Button size="sm" onClick={retryScopeChange} disabled={isRetryingScope || !isEditable || (pendingScope.field === "ownerUserId" && !canChangeOwner)}>
                     {isRetryingScope ? "Retrying…" : `Retry ${pendingScope.field === "spaceId" ? "space" : "owner"} change`}
                   </Button>
                   <Button size="sm" variant="outline" onClick={() => setPendingScope(null)} disabled={isRetryingScope}>Discard choice</Button>
@@ -372,7 +373,7 @@ export default function PageMetadataSheet({
                 onChange={handleOwnerChange}
                 placeholder="Select owner…"
                 allowUnassigned
-                disabled={!isEditable}
+                disabled={!canChangeOwner}
                 className={FIELD_CLASS}
               />
             </div>

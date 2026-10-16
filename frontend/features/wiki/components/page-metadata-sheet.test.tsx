@@ -45,18 +45,22 @@ function page(overrides: Partial<KbPageDetail> = {}): KbPageDetail {
 }
 
 function renderSheet(currentPage: KbPageDetail) {
-  render(<PageMetadataSheet page={currentPage} pageId={42} open onOpenChange={jest.fn()} />);
+  return render(<PageMetadataSheet page={currentPage} pageId={42} open onOpenChange={jest.fn()} />);
 }
+
+let canManage = false;
 
 beforeEach(() => {
   jest.clearAllMocks();
-  useCan.mockImplementation((key: string) => key === "kb:pages:update");
+  canManage = false;
+  useCan.mockImplementation((key: string) => key === "kb:pages:update" || (key === "kb:pages:manage" && canManage));
   useUpdateKbPage.mockReturnValue({ mutate: jest.fn(), mutateAsync: jest.fn(), isPending: false });
   useKbPage.mockReturnValue({ refetch: jest.fn() });
   useKbSpaces.mockReturnValue({ data: { data: [] } });
 });
 
 it("sends the current content revision when assigning a page owner", async () => {
+  canManage = true;
   const mutate = jest.fn();
   useUpdateKbPage.mockReturnValue({ mutate, mutateAsync: jest.fn(), isPending: false });
   renderSheet(page({ contentRevision: 7 }));
@@ -85,6 +89,7 @@ it("sends the current content revision when moving a page into a space", async (
 });
 
 it("retains a stale owner choice and retries only after a fresh page read", async () => {
+  canManage = true;
   const mutate = jest.fn((_payload, options) => options.onError(new ApiError("Stale", 409, "STALE_REVISION", {
     currentContentRevision: 8,
     lastEditedByName: null,
@@ -114,7 +119,37 @@ it("retains a stale owner choice and retries only after a fresh page read", asyn
   expect(screen.queryByRole("button", { name: "Retry owner change" })).toBeNull();
 });
 
+it("keeps Owner unavailable to an editor without page manage permission while Space remains editable", async () => {
+  const mutate = jest.fn();
+  useUpdateKbPage.mockReturnValue({ mutate, mutateAsync: jest.fn(), isPending: false });
+  renderSheet(page());
+
+  expect(screen.getByRole("button", { name: "Owner" })).toBeDisabled();
+  expect(screen.getByRole("combobox", { name: "Space" })).toBeEnabled();
+  await userEvent.setup().click(screen.getByRole("button", { name: "Owner" }));
+  expect(mutate).not.toHaveBeenCalled();
+});
+
+it("disables a pending Owner retry when manage permission is revoked", async () => {
+  canManage = true;
+  const mutate = jest.fn((_payload, options) => options.onError(new ApiError("Stale", 409, "STALE_REVISION")));
+  const mutateAsync = jest.fn();
+  useUpdateKbPage.mockReturnValue({ mutate, mutateAsync, isPending: false });
+  const currentPage = page();
+  const view = renderSheet(currentPage);
+  await userEvent.setup().click(screen.getByRole("button", { name: "Owner" }));
+  expect(screen.getByRole("button", { name: "Retry owner change" })).toBeEnabled();
+
+  canManage = false;
+  view.rerender(<PageMetadataSheet page={currentPage} pageId={42} open onOpenChange={jest.fn()} />);
+
+  expect(screen.getByRole("button", { name: "Owner" })).toBeDisabled();
+  expect(screen.getByRole("button", { name: "Retry owner change" })).toBeDisabled();
+  expect(mutateAsync).not.toHaveBeenCalled();
+});
+
 it("shows named metadata controls and allows an editor to publish", () => {
+  canManage = true;
   const mutate = jest.fn();
   usePublishKbPage.mockReturnValue({ mutate, isPending: false });
   renderSheet(page());
