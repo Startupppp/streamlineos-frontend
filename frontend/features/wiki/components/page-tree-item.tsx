@@ -245,7 +245,7 @@ const PageTreeItem = memo(function PageTreeItemInner({
           {showChevron ? (
             <button
               type="button"
-              className="shrink-0 h-4 w-4 flex items-center justify-center text-muted-foreground hover:text-foreground"
+              className="shrink-0 h-8 w-8 lg:h-5 lg:w-5 flex items-center justify-center text-muted-foreground hover:text-foreground"
               onClick={handleToggleExpand}
               aria-label={isExpanded ? "Collapse" : "Expand"}
               aria-expanded={isExpanded}
@@ -307,12 +307,12 @@ const PageTreeItem = memo(function PageTreeItemInner({
 
           {!renaming && (
             <span
-              className={`${menuOpen ? "flex" : "hidden group-hover:flex group-focus-within:flex"} items-center gap-0.5 shrink-0`}
+              className={`${menuOpen ? "flex" : "flex lg:hidden lg:group-hover:flex lg:group-focus-within:flex"} items-center gap-0.5 shrink-0`}
             >
               {canCreate && (
                 <button
                   type="button"
-                  className="h-5 w-5 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted"
+                  className="h-8 w-8 lg:h-6 lg:w-6 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted"
                   onClick={handleAddChild}
                   aria-label="Add child page"
                 >
@@ -323,7 +323,7 @@ const PageTreeItem = memo(function PageTreeItemInner({
                 <DropdownMenuTrigger asChild>
                   <button
                     type="button"
-                    className="h-5 w-5 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted"
+                    className="h-8 w-8 lg:h-6 lg:w-6 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted"
                     onClick={handleMoreClick}
                     aria-label="Page options"
                   >

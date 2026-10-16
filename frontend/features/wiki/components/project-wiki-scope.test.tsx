@@ -233,6 +233,27 @@ describe("project wiki history path stays inside the project", () => {
 });
 
 describe("project wiki page tree links stay inside the project", () => {
+  it("keeps page actions discoverable at touch widths and reachable by keyboard on desktop", async () => {
+    rootNode = { ...ROOT_NODE, spaceId: 5, projectId: null };
+    const user = userEvent.setup();
+    render(<PageTree spaceId={5} />);
+
+    const addChild = screen.getByRole("button", { name: "Add child page" });
+    const pageOptions = screen.getByRole("button", { name: "Page options" });
+    expect(addChild).toHaveClass("h-8", "w-8");
+    expect(pageOptions).toHaveClass("h-8", "w-8");
+    expect(pageOptions.parentElement).toHaveClass("flex", "lg:hidden", "lg:group-focus-within:flex");
+    expect(pageOptions.parentElement).not.toHaveClass("hidden");
+
+    screen.getByRole("link", { name: "Deployment runbook" }).focus();
+    await user.tab();
+    expect(addChild).toHaveFocus();
+    await user.tab();
+    expect(pageOptions).toHaveFocus();
+    await user.keyboard("{Enter}");
+    expect(await screen.findByRole("menuitem", { name: "Rename" })).toBeInTheDocument();
+  });
+
   it("creates a child with the parent page's project scope", async () => {
     const user = userEvent.setup();
     render(<PageTree projectId={7} baseHref="/build/7/wiki" />);
