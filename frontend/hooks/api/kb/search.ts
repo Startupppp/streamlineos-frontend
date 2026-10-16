@@ -6,6 +6,7 @@ import { lazyContract } from "@/lib/api-envelope";
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { useCan } from "@/hooks/api/access";
 import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { useKbSpaces } from "./spaces";
 import { ACL_VERSION_SPACE_LIMIT, deriveAclVersion } from "./pages";
 import type { KbSearchParams } from "@/types/kb";
@@ -87,6 +88,7 @@ export function useKbPageFullSearch(
   };
 
   return useInfiniteQuery({
+    ...INLINE_READ_ERROR,
     queryKey: knowledgeAndSurveysQueryKeys.kb.search(cacheParams),
     queryFn: ({ pageParam, signal }) =>
       apiClient.get<KbPageFullSearchResponse>(
