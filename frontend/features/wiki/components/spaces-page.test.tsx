@@ -96,7 +96,6 @@ function renderPage() {
 }
 
 const accessGranted = { data: { isOrgOwner: true, scopes: {}, modules: {} }, isLoading: false };
-const accessDenied = { data: { isOrgOwner: false, scopes: {}, modules: {} }, isLoading: false };
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -200,6 +199,26 @@ describe("SpacesPage", () => {
     expect(screen.getByRole("button", { name: /Members/i })).toBeInTheDocument();
   });
 
+  it("keeps card actions outside the space link and reachable in keyboard order", async () => {
+    mockCan.mockImplementation((key) => key === "kb:spaces:manage");
+    const user = userEvent.setup();
+    renderPage();
+
+    const link = screen.getByRole("link", { name: "Open Engineering" });
+    const members = screen.getByRole("button", { name: "Members" });
+    const edit = screen.getByRole("button", { name: "Edit" });
+    expect(link).toHaveAttribute("href", "/knowledge/wiki/spaces/1");
+    expect(link).not.toContainElement(members);
+    expect(link).not.toContainElement(edit);
+    expect(members.parentElement).toHaveClass("flex-wrap");
+
+    link.focus();
+    await user.tab();
+    expect(members).toHaveFocus();
+    await user.keyboard("{Enter}");
+    expect(screen.getByText("Members — Engineering")).toBeInTheDocument();
+  });
+
   it("BITE: shows the owner and last-updated line on each card", () => {
     mockSpaces.mockReturnValue(listing([space({ ownerName: "Priya Shah" })]));
 
@@ -279,6 +298,16 @@ describe("SpacesPage", () => {
 });
 
 describe("SpacesPage — card/list view", () => {
+  it("keeps list view's 375px mobile card actions separate from its link", () => {
+    mockCan.mockImplementation((key) => key === "kb:spaces:manage");
+    mockSearchParams = new URLSearchParams("view=list");
+    renderPage();
+
+    const mobileLink = screen.getByRole("link", { name: "Open Engineering" });
+    expect(mobileLink).not.toContainElement(screen.getByRole("button", { name: "Members" }));
+    expect(within(screen.getByRole("table")).getByRole("button", { name: "Members of Engineering" })).toBeInTheDocument();
+  });
+
   it("BITE: renders the spaces as a table when the URL asks for the list view", () => {
     mockSearchParams = new URLSearchParams("view=list");
 
