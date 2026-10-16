@@ -12,6 +12,12 @@ jest.mock("./edit-template-dialog", () => ({
   EditTemplateDialog: () => null,
 }));
 
+jest.mock("./public-page-content-loader", () => ({
+  PublicPageContentLoader: ({ content }: { content: unknown }) => (
+    <pre data-testid="saved-template-content">{JSON.stringify(content)}</pre>
+  ),
+}));
+
 function makeTemplate(over: Partial<KbPageTemplate> = {}): KbPageTemplate {
   return {
     id: 1,
@@ -68,6 +74,33 @@ describe("TemplateCard usage metadata", () => {
 
     expect(screen.getByText(/never used/i)).toBeInTheDocument();
     expect(screen.queryByText(/last used/i)).not.toBeInTheDocument();
+  });
+});
+
+describe("TemplateCard preview", () => {
+  it.each([
+    [[{ type: "p", children: [{ text: "Plate checklist" }] }]],
+    [{ type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: "TipTap checklist" }] }] }],
+  ])("opens a read-only preview of saved content without using the template", (content) => {
+    const onUse = jest.fn();
+    render(
+      <TemplateCard
+        template={makeTemplate({ content })}
+        canDelete={false}
+        onUse={onUse}
+        isPending={false}
+        isDisabled={false}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Preview Runbook" }));
+
+    expect(screen.getByRole("dialog", { name: /Runbook/ })).toBeInTheDocument();
+    expect(screen.getByTestId("saved-template-content")).toHaveTextContent(JSON.stringify(content));
+    expect(onUse).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getAllByRole("button", { name: "Close" })[0]);
+    expect(screen.queryByRole("dialog", { name: /Runbook/ })).not.toBeInTheDocument();
   });
 });
 

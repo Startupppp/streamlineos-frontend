@@ -4,6 +4,8 @@ import { AppDialog } from "@/components/shared/app-dialog";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Button } from "@/components/ui/button";
 import type { StarterTemplate } from "@/features/wiki/lib/starter-templates";
+import type { KbPageTemplate } from "@/hooks/api/kb/page-templates";
+import { PublicPageContentLoader } from "./public-page-content-loader";
 
 interface TemplatePreviewDialogProps {
   template: StarterTemplate;
@@ -78,6 +80,39 @@ export function TemplatePreviewDialog({
             ) : null;
           })}
         </div>
+      </div>
+    </AppDialog>
+  );
+}
+
+interface SavedTemplatePreviewDialogProps {
+  template: KbPageTemplate;
+  onOpenChange: (open: boolean) => void;
+}
+
+export function SavedTemplatePreviewDialog({
+  template,
+  onOpenChange,
+}: SavedTemplatePreviewDialogProps) {
+  function handleClose() {
+    onOpenChange(false);
+  }
+
+  return (
+    <AppDialog
+      open
+      onOpenChange={onOpenChange}
+      title={`${template.icon ?? "📄"} ${template.name}`}
+      description={template.description ?? "Saved template preview"}
+      className="max-w-2xl"
+      footer={
+        <Button type="button" variant="outline" onClick={handleClose}>
+          Close
+        </Button>
+      }
+    >
+      <div className="max-h-[60vh] overflow-y-auto rounded-lg border border-border bg-muted/20 p-4">
+        <PublicPageContentLoader content={template.content} />
       </div>
     </AppDialog>
   );
