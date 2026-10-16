@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, type MouseEvent } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -18,6 +18,7 @@ import {
 import { PublicFormField } from "./components/public-form-field";
 import { withCorrelation } from "@/lib/observability/with-correlation";
 import { contactErrorBodySchema } from "./contact-api-schema";
+import { EASE_OUT } from "./components/motion/variants";
 
 type ContactTopic = "sales" | "support" | "partnership" | "press" | "other";
 
@@ -96,8 +97,9 @@ export function ContactForm() {
   const watchedName = form.watch("name");
   const watchedEmail = form.watch("email");
 
-  function handleTopicSelect(value: ContactTopic) {
-    form.setValue("topic", value, { shouldValidate: true });
+  function handleTopicSelect(event: MouseEvent<HTMLButtonElement>) {
+    const topic = TOPICS.find((t) => t.value === event.currentTarget.dataset.topic);
+    if (topic) form.setValue("topic", topic.value, { shouldValidate: true });
   }
 
   function handleSubmit(values: FormValues) {
@@ -131,7 +133,7 @@ export function ContactForm() {
   }
 
   return (
-    <div className="relative rounded-2xl border border-border bg-white/85 backdrop-blur-sm p-3 lg:p-6 shadow-[0_18px_44px_-18px_rgba(30,64,175,0.18)]">
+    <div className="lp-card relative rounded-3xl p-5 sm:p-8">
       <AnimatePresence mode="wait">
         {submitted ? (
           <motion.div
@@ -139,13 +141,13 @@ export function ContactForm() {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 0.45, ease: EASE_OUT }}
             className="py-10 text-center"
           >
-            <div className="mx-auto mb-5 h-14 w-14 rounded-full bg-gradient-to-br from-gradient-info-from to-gradient-info-to inline-flex items-center justify-center shadow-[0_18px_40px_-12px_rgba(59,130,246,0.45)]">
+            <div className="mx-auto mb-5 inline-flex size-14 items-center justify-center rounded-full bg-(--lp-accent)">
               <CheckCircle2 className="w-7 text-white" strokeWidth={2.5} />
             </div>
-            <h3 className="font-display text-2xl font-bold text-foreground mb-2">
+            <h3 className="lp-display mb-2 text-4xl text-foreground">
               Message received.
             </h3>
             <p className="text-muted-foreground text-sm leading-relaxed max-w-md mx-auto">
@@ -187,12 +189,14 @@ export function ContactForm() {
                     <button
                       key={t.value}
                       type="button"
-                      onClick={() => handleTopicSelect(t.value)}
+                      data-topic={t.value}
+                      aria-pressed={selected}
+                      onClick={handleTopicSelect}
                       className={cn(
-                        "text-xs font-medium rounded-lg border px-2.5 py-2 transition-all",
+                        "rounded-full border px-3 py-2 text-xs font-medium transition-colors",
                         selected
-                          ? "bg-status-neutral-fill text-white border-border shadow-sm"
-                          : "bg-white text-foreground border-border hover:border-status-info-rule hover:text-muted-foreground",
+                          ? "border-foreground bg-foreground text-white"
+                          : "border-border bg-card text-foreground hover:border-(--lp-ink)/40",
                       )}
                     >
                       {t.label}
@@ -256,7 +260,7 @@ export function ContactForm() {
               <textarea
                 rows={5}
                 placeholder="Team size, what you're trying to solve, when you'd like to start…"
-                className="w-full rounded-md border border-border bg-white px-3 py-2.5 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-status-info-rule focus-visible:border-status-info-rule resize-y min-h-[120px]"
+                className="w-full rounded-md border border-border bg-card px-3 py-2.5 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-status-info-rule focus-visible:border-status-info-rule resize-y min-h-[120px]"
                 {...form.register("message")}
               />
             </PublicFormField>
@@ -276,7 +280,7 @@ export function ContactForm() {
               disabled={turnstileRequired && !turnstileToken}
               isPending={pending}
               loadingText="Sending…"
-              className="w-full h-11"
+              className="h-11 w-full rounded-full font-semibold"
             >
               Send message
               <ArrowRight className="ml-2 h-4 w-4" />

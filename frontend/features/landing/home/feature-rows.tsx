@@ -1,11 +1,32 @@
-import type { ReactNode } from "react";
-import { ArrowRight, Check } from "lucide-react";
-import { MotionReveal } from "../components/motion/motion-reveal";
+"use client";
+
+import { useState, type MouseEvent, type ReactNode } from "react";
+import Image from "next/image";
+import { AnimatePresence, motion } from "framer-motion";
+import {
+  ArrowRight,
+  BookOpen,
+  Briefcase,
+  Check,
+  Headphones,
+  HeartHandshake,
+  LayoutGrid,
+  Receipt,
+  TrendingUp,
+  Users,
+  type LucideIcon,
+} from "lucide-react";
+import { EASE_OUT } from "../components/motion/variants";
 import { HireToPayroll, PaidAndBooks, SupportWithContext, WinToDeliver } from "./handoffs";
+import { InView } from "./in-view";
+import { REVEAL } from "./motion";
 import { Section, SectionHeading } from "./section";
+import teamImage from "@/public/landing/team.webp";
+
+type Team = { icon: LucideIcon; label: string };
 
 type Story = {
-  path: [string, string];
+  path: [Team, Team];
   title: string;
   body: string;
   bullets: string[];
@@ -14,89 +35,142 @@ type Story = {
 
 const STORIES: Story[] = [
   {
-    path: ["Sales", "Delivery"],
+    path: [{ icon: TrendingUp, label: "Sales" }, { icon: LayoutGrid, label: "Delivery" }],
     title: "Win the deal, then start the work",
-    body: "The customer, the scope and the value move from the quote into the project. Nobody rebuilds the brief from an email thread.",
-    bullets: [
-      "Quote from the deal record",
-      "Create the project when the deal is won",
-      "Delivery sees what was sold",
-    ],
+    body: "When a deal is won, the customer, the agreed work and the price carry straight into a new project.",
+    bullets: ["Send the quote from the deal", "Create the project when the deal is won"],
     visual: <WinToDeliver />,
   },
   {
-    path: ["Recruitment", "Payroll"],
-    title: "Hire someone, then run payroll for them",
-    body: "A candidate who accepts becomes an employee record. Onboarding, attendance, leave and payroll all read that one record.",
-    bullets: [
-      "Post roles, score candidates, schedule interviews",
-      "Collect documents and bank details during onboarding",
-      "Attendance, leave and payroll on one roster",
-    ],
+    path: [{ icon: Briefcase, label: "Hiring" }, { icon: Users, label: "Payroll" }],
+    title: "Hire someone, then pay them",
+    body: "When a candidate accepts, their details carry into onboarding, attendance and payroll.",
+    bullets: ["Collect documents and bank details", "Attendance, leave and payroll from one staff list"],
     visual: <HireToPayroll />,
   },
   {
-    path: ["Billing", "Accounting"],
+    path: [{ icon: Receipt, label: "Billing" }, { icon: BookOpen, label: "Accounts" }],
     title: "Get paid, and keep the books",
-    body: "Invoices go to the customers sales already knows, for the projects delivery already runs. The ledger sits in the same workspace.",
-    bullets: [
-      "Invoice from the customer record",
-      "Compare hours logged with hours budgeted",
-      "Invoices, expenses and journals together",
-    ],
+    body: "Invoice the customers your sales team already added, for work your project team already tracks.",
+    bullets: ["Invoice straight from the customer’s page", "Invoices, expenses and accounts in one place"],
     visual: <PaidAndBooks />,
   },
   {
-    path: ["Helpdesk", "Customer Success"],
+    path: [{ icon: Headphones, label: "Support" }, { icon: HeartHandshake, label: "Customer care" }],
     title: "Support with the whole account in view",
-    body: "A ticket opens next to the customer's deal, project and last invoice, so the first reply already knows the history.",
-    bullets: [
-      "Tickets linked to the customer record",
-      "Deal, project and invoice beside the conversation",
-      "Account health tracked after the sale",
-    ],
+    body: "A ticket opens beside the customer’s deal, project and last invoice.",
+    bullets: ["Tickets linked to the customer", "See how each customer is doing after the sale"],
     visual: <SupportWithContext />,
   },
 ];
 
-function FeatureRow({ story, flip }: { story: Story; flip: boolean }) {
-  return (
-    <div className="grid items-center gap-10 lg:grid-cols-12 lg:gap-16">
-      <div className={`lg:col-span-5 ${flip ? "lg:order-2" : ""}`}>
-        <p className="flex items-center gap-2 text-sm font-medium text-status-info-ink">
-          {story.path[0]}
-          <ArrowRight className="size-3.5" aria-label="to" />
-          {story.path[1]}
-        </p>
-        <h3 className="mt-4 text-balance text-[clamp(1.6rem,2.6vw,2.25rem)] font-semibold leading-[1.1] tracking-[-0.03em] text-foreground">
-          {story.title}
-        </h3>
-        <p className="mt-4 text-pretty text-lg leading-relaxed text-muted-foreground">{story.body}</p>
-        <ul className="mt-7 space-y-3">
-          {story.bullets.map((bullet) => (
-            <li key={bullet} className="flex gap-3 text-foreground">
-              <Check className="mt-1 size-4 shrink-0 text-status-info-ink" aria-hidden />
-              {bullet}
-            </li>
-          ))}
-        </ul>
-      </div>
-      <MotionReveal className="lg:col-span-7">{story.visual}</MotionReveal>
-    </div>
-  );
-}
-
 export function FeatureRows() {
+  const [active, setActive] = useState(0);
+  const current = STORIES[active];
+
+  function handleSelect(event: MouseEvent<HTMLButtonElement>) {
+    setActive(Number(event.currentTarget.dataset.index));
+  }
+
+  // The progress bar's CSS animation is the timer: when it finishes, the next
+  // story opens. It only runs while the list is on screen; hover or focus
+  // pauses it, and reduced motion removes it.
+  function handleAdvance() {
+    setActive((value) => (value + 1) % STORIES.length);
+  }
+
   return (
     <Section id="features">
       <SectionHeading
         title="Follow one customer through the company"
-        lede="The same record moves from sales to delivery to finance to support. Watch for the highlighted name."
+        lede="Follow one customer from sales to delivery, billing and support. Their details are typed in once and every team sees them."
       />
-      <div className="mt-16 space-y-24 sm:mt-24 sm:space-y-36">
-        {STORIES.map((story, i) => (
-          <FeatureRow key={story.title} story={story} flip={i % 2 === 1} />
-        ))}
+
+      <div className="mt-14 grid items-start gap-10 lg:grid-cols-12">
+        <InView className="lg:col-span-5">
+          <ul className="space-y-2">
+            {STORIES.map((story, i) => {
+              const open = i === active;
+              const [from, to] = story.path;
+              return (
+                <li
+                  key={story.title}
+                  className={`rounded-3xl transition-colors duration-300 ${open ? "lp-card" : "hover:bg-(--lp-surface)/60"}`}
+                >
+                  <button
+                    type="button"
+                    data-index={i}
+                    aria-expanded={open}
+                    aria-controls="lp-story-panel"
+                    onClick={handleSelect}
+                    className="w-full px-5 pt-5 pb-4 text-left sm:px-6"
+                  >
+                    <span className="flex items-center gap-2 text-xs font-medium">
+                      <span className="flex items-center gap-1.5 rounded-full bg-(--lp-mist) px-2.5 py-1 text-muted-foreground">
+                        <from.icon className="size-3.5" aria-hidden />
+                        {from.label}
+                      </span>
+                      <ArrowRight className="size-3.5 text-(--lp-accent)" aria-label="to" />
+                      <span className="flex items-center gap-1.5 rounded-full bg-(--lp-accent-soft) px-2.5 py-1 text-(--lp-accent)">
+                        <to.icon className="size-3.5" aria-hidden />
+                        {to.label}
+                      </span>
+                    </span>
+                    <span
+                      className={`lp-display mt-3 block text-2xl transition-colors sm:text-3xl ${open ? "text-foreground" : "text-(--lp-dim) hover:text-foreground"}`}
+                    >
+                      {story.title}
+                    </span>
+                  </button>
+                  <AnimatePresence initial={false}>
+                    {open ? (
+                      <motion.div
+                        key="body"
+                        initial={{ opacity: 0, y: -6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.3, ease: EASE_OUT }}
+                        className="px-5 pb-5 sm:px-6"
+                      >
+                        <p className="max-w-md text-pretty leading-relaxed text-muted-foreground">{story.body}</p>
+                        <ul className="mt-4 space-y-2">
+                          {story.bullets.map((bullet) => (
+                            <li key={bullet} className="flex gap-2.5 text-sm text-foreground">
+                              <Check className="mt-0.5 size-4 shrink-0 text-(--lp-accent)" aria-hidden />
+                              {bullet}
+                            </li>
+                          ))}
+                        </ul>
+                        <span aria-hidden className="mt-5 block h-1 overflow-hidden rounded-full bg-(--lp-rule)">
+                          <span
+                            onAnimationEnd={handleAdvance}
+                            className="lp-story-progress block h-full origin-left rounded-full bg-(--lp-accent)"
+                          />
+                        </span>
+                      </motion.div>
+                    ) : null}
+                  </AnimatePresence>
+                </li>
+              );
+            })}
+          </ul>
+        </InView>
+
+        <div id="lp-story-panel" className="relative isolate overflow-hidden rounded-3xl p-3 sm:p-8 lg:sticky lg:top-28 lg:col-span-7 lg:flex lg:h-[560px] lg:items-center">
+          <Image src={teamImage} alt="" fill sizes="(min-width: 1024px) 58vw, 100vw" className="-z-10 object-cover" />
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={current.title}
+              initial={{ opacity: 0, y: 16, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={REVEAL}
+              className="w-full"
+            >
+              {current.visual}
+            </motion.div>
+          </AnimatePresence>
+        </div>
       </div>
     </Section>
   );
