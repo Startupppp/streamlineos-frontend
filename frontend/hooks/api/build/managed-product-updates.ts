@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useCan } from "@/hooks/api/access";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
 import type {
   ManagedProductRelationsCreateProductUpdateResponse,
@@ -26,7 +27,7 @@ const productUpdatesPageContract = lazyContract(() =>
 type ProductUpdateRow = ManagedProductRelationsCreateProductUpdateResponse;
 type ProductUpdatesPage = ManagedProductRelationsListProductUpdatesResponse;
 
-export function useProductUpdates(managedProductId: number, enabled = true) {
+export function useProductUpdates(managedProductId: number) {
   const canView = useCan("build:managed-products:view");
   return useQuery<ProductUpdatesPage>({
     queryKey:
@@ -40,8 +41,9 @@ export function useProductUpdates(managedProductId: number, enabled = true) {
         signal,
         productUpdatesPageContract,
       ),
-    enabled: canView && managedProductId > 0 && enabled,
+    enabled: canView && managedProductId > 0,
     staleTime: 30_000,
+    ...INLINE_READ_ERROR,
   });
 }
 

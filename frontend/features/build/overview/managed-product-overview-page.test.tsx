@@ -67,6 +67,10 @@ jest.mock("@/features/build/managed-products/link-existing-goal-dialog", () => (
     open ? <div data-testid="link-goal-dialog" /> : null,
 }));
 
+jest.mock("./managed-product-overview-updates-card", () => ({
+  ManagedProductOverviewUpdatesCard: () => null,
+}));
+
 jest.mock("./managed-product-update-dialog", () => ({
   ManagedProductUpdateDialog: ({ open }: { open: boolean }) =>
     open ? <div data-testid="post-update-dialog" /> : null,
