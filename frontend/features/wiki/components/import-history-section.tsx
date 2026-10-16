@@ -139,6 +139,7 @@ export function ImportHistorySection() {
           compact
           title="Couldn't load import history"
           description={getErrorMessage(error)}
+          error={error}
           onRetry={handleRetryLoad}
         />
       )}

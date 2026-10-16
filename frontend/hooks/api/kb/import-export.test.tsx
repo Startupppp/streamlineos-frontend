@@ -2,7 +2,8 @@ import { act, renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { clearBackendTokenCache, resetOutageCircuit, seedBackendToken } from "@/lib/api-client";
-import { ApiContractError } from "@/lib/api-envelope";
+import { ApiContractError, getCorrelationId } from "@/lib/api-envelope";
+import { readErrorReachesBoundary } from "@/lib/query-error-policy";
 import { installAbortSignalPolyfill } from "@/test-utils/abort-signal-polyfill";
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 
@@ -59,12 +60,12 @@ const exportJob = {
 
 let client: QueryClient;
 
-function response(data: unknown) {
+function response(data: unknown, correlationId?: string) {
   return {
     ok: true,
     status: 200,
     statusText: "OK",
-    headers: new Headers({ "content-type": "application/json" }),
+    headers: new Headers({ "content-type": "application/json", ...(correlationId ? { "x-correlation-id": correlationId } : {}) }),
     json: async () => ({ success: true, data }),
   };
 }
@@ -80,7 +81,7 @@ beforeEach(() => {
   seedBackendToken("header." + Buffer.from(JSON.stringify({ exp: Math.floor(Date.now() / 1000) + 600 })).toString("base64url") + ".signature");
   fetchMock.mockReset();
   globalThis.fetch = fetchMock;
-  client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
+  client = new QueryClient({ defaultOptions: { queries: { retry: false, throwOnError: readErrorReachesBoundary }, mutations: { retry: false } } });
 });
 
 afterEach(() => {
@@ -110,7 +111,7 @@ describe("KB import and export hooks through the HTTP parser", () => {
     fetchMock.mockResolvedValueOnce(response({ data: [{ ...exportJob, id: 3 }], pagination }));
     const { result } = renderHook(() => useKbExportJobs(), { wrapper });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(result.current.data).toEqual([exportJob]);
+    await waitFor(() => expect(result.current.data).toEqual([exportJob]));
     expect(result.current.hasNextPage).toBe(true);
     await act(async () => {
       await result.current.fetchNextPage();
@@ -126,11 +127,30 @@ describe("KB import and export hooks through the HTTP parser", () => {
     });
   });
 
-  it("rejects an export history envelope with items instead of data", async () => {
-    fetchMock.mockResolvedValue(response({ items: [exportJob], pagination }));
+  it("keeps a first-read export contract error inline and recovers after retry", async () => {
+    fetchMock.mockResolvedValueOnce(response({ items: [exportJob], pagination }, "export-history-123"));
+    fetchMock.mockResolvedValueOnce(response({ data: [exportJob], pagination }));
     const { result } = renderHook(() => useKbExportJobs(), { wrapper });
     await waitFor(() => expect(result.current.isError).toBe(true));
     expect(result.current.error).toBeInstanceOf(ApiContractError);
+    expect(getCorrelationId(result.current.error)).toBe("export-history-123");
+    await act(async () => {
+      await result.current.refetch();
+    });
+    await waitFor(() => expect(result.current.data).toEqual([exportJob]));
+  });
+
+  it("keeps a first-read import contract error inline and recovers after retry", async () => {
+    fetchMock.mockResolvedValueOnce(response({ items: [importJob], pagination }, "import-history-123"));
+    fetchMock.mockResolvedValueOnce(response({ data: [importJob], pagination }));
+    const { result } = renderHook(() => useKbImportJobs(), { wrapper });
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(result.current.error).toBeInstanceOf(ApiContractError);
+    expect(getCorrelationId(result.current.error)).toBe("import-history-123");
+    await act(async () => {
+      await result.current.refetch();
+    });
+    await waitFor(() => expect(result.current.data).toEqual([importJob]));
   });
 
   it("preserves a denied import read as pending without fetching", () => {

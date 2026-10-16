@@ -9,6 +9,7 @@ import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
 import { selectFlatPages, type Page } from "@/lib/api/select-flat-pages";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
 export type KbImportItem = {
   title: string;
@@ -184,6 +185,7 @@ export function useDryRunImport() {
 export function useKbImportJobs() {
   const canImport = useCan("kb:pages:import");
   return useInfiniteQuery({
+    ...INLINE_READ_ERROR,
     queryKey: knowledgeAndSurveysQueryKeys.kb.importJobs(),
     initialPageParam: NO_CURSOR_YET,
     queryFn: ({ signal, pageParam }) =>
@@ -203,6 +205,7 @@ export function useKbImportJobs() {
 export function useKbExportJobs() {
   const canExport = useCan("kb:pages:export");
   return useInfiniteQuery({
+    ...INLINE_READ_ERROR,
     queryKey: knowledgeAndSurveysQueryKeys.kb.exportJobs(),
     initialPageParam: NO_CURSOR_YET,
     queryFn: ({ signal, pageParam }) =>

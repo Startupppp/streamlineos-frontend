@@ -1,5 +1,6 @@
 import { render, screen, cleanup } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { ApiContractError } from "@/lib/api-envelope";
 import { ImportHistorySection } from "./import-history-section";
 
 type IntersectionCallback = (entries: IntersectionObserverEntry[]) => void;
@@ -122,6 +123,29 @@ describe("ImportHistorySection sentinel", () => {
     render(<ImportHistorySection />);
 
     expect(screen.getByRole("button", { name: "Load more import jobs" })).toBeInTheDocument();
+  });
+});
+
+describe("ImportHistorySection read error", () => {
+  it("shows the request reference and retries inside the history section", async () => {
+    const refetch = jest.fn();
+    useKbImportJobs.mockReturnValue({
+      data: [],
+      isLoading: false,
+      isError: true,
+      error: new ApiContractError("GET /kb/import-jobs", 200, [], "import-request-123"),
+      refetch,
+      hasNextPage: false,
+      isFetchingNextPage: false,
+      fetchNextPage: jest.fn(),
+    });
+
+    render(<ImportHistorySection />);
+
+    expect(screen.getByRole("alert")).toHaveTextContent("Couldn't load import history");
+    expect(screen.getByText("import-request-123")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Try again" }));
+    expect(refetch).toHaveBeenCalledTimes(1);
   });
 });
 
