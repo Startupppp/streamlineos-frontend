@@ -35,6 +35,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 import { ApprovalRouteCell } from "./approval-route-cell";
+import { PeriodLifecycleActions } from "./period-lifecycle-actions";
 
 interface ApprovalDetailSheetProps {
   period: TimesheetPeriod | null;
@@ -67,6 +68,7 @@ export function ApprovalDetailSheet({
   const rejectMutation = useRejectPeriod();
 
   const handleApproveOpen = useCallback(() => setApproveOpen(true), []);
+  const handleClose = useCallback(() => onOpenChange(false), [onOpenChange]);
 
   const handleApprove = useCallback(() => {
     if (!period) return;
@@ -385,6 +387,7 @@ export function ApprovalDetailSheet({
               )}
             </SheetFooter>
           )}
+          {period && <PeriodLifecycleActions period={period} onDone={handleClose} />}
         </SheetContent>
       </Sheet>
       <ConfirmDialog
