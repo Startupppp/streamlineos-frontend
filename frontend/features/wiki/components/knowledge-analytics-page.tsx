@@ -479,7 +479,7 @@ export default function KnowledgeAnalyticsPage() {
     hasNextPage: hasNextCitationReuse,
     isFetchingNextPage: isFetchingNextCitationReuse,
   } = useCitationReuse(spaceId !== undefined ? { ...range, spaceId } : range);
-  const { data: reviewSla } = useReviewSla(range);
+  const { data: reviewSla } = useReviewSla(spaceId !== undefined ? { ...range, spaceId } : range);
   const {
     pages: relatedPages = [],
     isLoading: relatedPagesLoading,

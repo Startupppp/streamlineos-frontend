@@ -367,6 +367,9 @@ describe("KnowledgeAnalyticsPage — the reader can narrow the figures to one sp
       expect.objectContaining({ spaceId: 42 }),
       "wiki",
     );
+    expect(useReviewSla).toHaveBeenCalledWith(
+      expect.objectContaining({ spaceId: 42 }),
+    );
   });
 
   it("scopes nothing to a space when the reader has not chosen one", () => {
@@ -378,6 +381,9 @@ describe("KnowledgeAnalyticsPage — the reader can narrow the figures to one sp
     expect(useKbAnalyticsOverview).toHaveBeenCalledWith(
       expect.not.objectContaining({ spaceId: expect.anything() }),
       "wiki",
+    );
+    expect(useReviewSla).toHaveBeenCalledWith(
+      expect.not.objectContaining({ spaceId: expect.anything() }),
     );
   });
 
