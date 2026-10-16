@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
 
 export type KbExportFormat = "markdown" | "html";
 
@@ -37,16 +38,18 @@ function triggerDownload(content: string, filename: string, mimeType: string): v
 
 export function useExportKbPage() {
   const qc = useQueryClient();
+  const operation = useIdempotentOperation();
   return useAuthorizedMutation("kb:pages:export", {
     mutationKey: ["kb", "pages", "export"],
     mutationFn: ({ pageId, format }: ExportKbPageInput) =>
       apiClient.post<KbExportResult>(
         `/kb/pages/${pageId}/export`,
         { format },
-        undefined,
+        operation.configFor({ pageId, format }),
         kbExportResultContract,
       ),
     onSuccess: (result, variables) => {
+      operation.settle();
       const isHtml = result.format === "html";
       triggerDownload(
         result.content,

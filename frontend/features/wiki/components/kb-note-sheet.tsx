@@ -34,11 +34,13 @@ export function KbNoteSheet({ open, onOpenChange }: KbNoteSheetProps) {
   });
 
   function handleOpenChange(next: boolean) {
+    if (!next && createNote.isPending) return;
     if (!next) form.reset();
     onOpenChange(next);
   }
 
   function handleClose() {
+    if (createNote.isPending) return;
     form.reset();
     onOpenChange(false);
   }
@@ -65,7 +67,7 @@ export function KbNoteSheet({ open, onOpenChange }: KbNoteSheetProps) {
       description="Paste or type content for the AI to learn from."
       footer={
         <div className="grid w-full grid-cols-2 gap-2">
-          <Button type="button" variant="outline" size="sm" onClick={handleClose}>
+          <Button type="button" variant="outline" size="sm" onClick={handleClose} disabled={createNote.isPending}>
             Cancel
           </Button>
           <LoadingButton

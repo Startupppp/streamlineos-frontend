@@ -45,7 +45,7 @@ export default function PageTree({
   } = useKbPageTreeInfinite({ spaceId, projectId });
 
   const rootNodes: KbPageTreeNode[] = data?.pages.flatMap((p) => p.data) ?? [];
-  const accessLost = isApiError(error) && [401, 403, 404].includes(error.status);
+  const accessLost = isApiError(error) && (error.status === 401 || error.status === 403 || error.status === 404);
 
   function handleNewPage() {
     if (!canCreate) return;

@@ -112,7 +112,7 @@ const PageTreeItem = memo(function PageTreeItemInner({
   } = useKbPageChildrenLevel(node.id, isExpanded, spaceId, projectId);
 
   const children: KbPageTreeNode[] = childrenData?.pages.flatMap((p) => p.data) ?? [];
-  const childrenAccessLost = childrenError && isApiError(childrenReadError) && [401, 403, 404].includes(childrenReadError.status);
+  const childrenAccessLost = childrenError && isApiError(childrenReadError) && (childrenReadError.status === 401 || childrenReadError.status === 403 || childrenReadError.status === 404);
   const visibleChildren = childrenAccessLost ? [] : children;
 
   const showChevron = node.hasChildren || visibleChildren.length > 0;
