@@ -48,7 +48,7 @@ function renderPage() {
   function Wrapper({ children }: { children: ReactNode }) {
     return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
   }
-  return render(<CalendarPollPage />, { wrapper: Wrapper });
+  return { ...render(<CalendarPollPage />, { wrapper: Wrapper }), client };
 }
 
 describe("public scheduling poll page", () => {
@@ -94,5 +94,15 @@ describe("public scheduling poll page", () => {
     renderPage();
     expect(await screen.findByRole("alert")).toHaveTextContent("This poll is unavailable");
     expect(screen.queryByText("Quarterly planning")).not.toBeInTheDocument();
+  });
+
+  it("hides cached poll details and voting after the link is revoked", async () => {
+    const { client } = renderPage();
+    expect(await screen.findByRole("heading", { name: "Quarterly planning" })).toBeInTheDocument();
+    mockedGet.mockRejectedValue(new Error("Scheduling poll not found"));
+    await client.invalidateQueries({ queryKey: ["public", "calendar", "poll", "signed.poll.token"] });
+    expect(await screen.findByRole("alert")).toHaveTextContent("This poll is unavailable");
+    expect(screen.queryByRole("heading", { name: "Quarterly planning" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^Yes for/ })).not.toBeInTheDocument();
   });
 });

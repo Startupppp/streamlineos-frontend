@@ -35,7 +35,7 @@ export default function CalendarInvitationPage() {
   const token = searchParams.get("token") ?? "";
   const invitationQuery = usePublicCalendarInvitation(purpose, token);
   const rsvp = usePublicCalendarInvitationRsvp(token);
-  const invitation = invitationQuery.data;
+  const invitation = invitationQuery.isError ? undefined : invitationQuery.data;
 
   function respond(status: PublicCalendarInvitationRsvp) {
     rsvp.mutate(status);

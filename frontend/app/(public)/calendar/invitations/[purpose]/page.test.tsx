@@ -34,7 +34,7 @@ function renderPage() {
   function Wrapper({ children }: { children: ReactNode }) {
     return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
   }
-  return render(<CalendarInvitationPage />, { wrapper: Wrapper });
+  return { ...render(<CalendarInvitationPage />, { wrapper: Wrapper }), client };
 }
 
 describe("public calendar invitation page", () => {
@@ -77,5 +77,17 @@ describe("public calendar invitation page", () => {
     renderPage();
     expect(await screen.findByRole("alert")).toHaveTextContent("This link is no longer available");
     expect(screen.queryByText("Quarterly planning")).not.toBeInTheDocument();
+  });
+
+  it("hides cached meeting access after the join link is revoked", async () => {
+    purpose = "join";
+    mockedGet.mockResolvedValue({ ...invitation, meetingUrl: "https://meet.example.com/room" });
+    const { client } = renderPage();
+    expect(await screen.findByRole("link", { name: "Join meeting" })).toBeInTheDocument();
+    mockedGet.mockRejectedValue(new Error("Invitation link is invalid or expired"));
+    await client.invalidateQueries({ queryKey: ["public", "calendar", "invitation", "join", "signed-token"] });
+    expect(await screen.findByRole("alert")).toHaveTextContent("This link is no longer available");
+    expect(screen.queryByRole("heading", { name: "Quarterly planning" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Join meeting" })).not.toBeInTheDocument();
   });
 });

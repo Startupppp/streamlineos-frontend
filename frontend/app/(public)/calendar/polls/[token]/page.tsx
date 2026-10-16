@@ -27,7 +27,7 @@ export default function CalendarPollPage() {
   const token = params.token ?? "";
   const pollQuery = usePublicCalendarPoll(token);
   const vote = usePublicCalendarPollVote(token);
-  const poll = pollQuery.data;
+  const poll = pollQuery.isError ? undefined : pollQuery.data;
 
   return (
     <main className="min-h-dvh bg-background px-4 py-6 text-foreground sm:px-6 sm:py-12">
