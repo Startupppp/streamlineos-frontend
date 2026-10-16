@@ -267,7 +267,9 @@ export function TiptapEditor({
   return (
     <div
       className={cn(
-        "flex min-h-0 flex-col",
+        // min-w-0: the static toolbar's one-line width must never size the
+        // editor (or a grid/flex parent) wider than its container (B-059).
+        "flex min-h-0 min-w-0 max-w-full flex-col",
         embedded ? minHeightClassName : "rounded-md border bg-background",
       )}
     >
