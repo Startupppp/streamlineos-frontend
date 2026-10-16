@@ -7,6 +7,7 @@ import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-sur
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
 export type KbReviewType = "approval" | "freshness";
 export type KbReviewStatus = "pending" | "approved" | "rejected";
@@ -103,6 +104,7 @@ export function useKbPageReviews(params?: KbPageReviewsParams) {
   const canViewReviews = useCan("kb:reviews:view");
   const queryParams: Record<string, unknown> = { ...params };
   return useQuery({
+    ...INLINE_READ_ERROR,
     queryKey: knowledgeAndSurveysQueryKeys.kb.pageReviews(queryParams),
     queryFn: ({ signal }) =>
       apiClient.get<KbPageReviewPage>(

@@ -1,12 +1,16 @@
-import { act, renderHook } from "@testing-library/react";
+import { act, renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { apiClient } from "@/lib/api-client";
-import { useCreatePageReview, type CreatePageReviewInput, type KbPageReview } from "./page-reviews";
+import { ApiError, getCorrelationId } from "@/lib/api-envelope";
+import { readErrorReachesBoundary } from "@/lib/query-error-policy";
+import { useCreatePageReview, useKbPageReviews, type CreatePageReviewInput, type KbPageReview } from "./page-reviews";
 
 jest.mock("@/lib/api-client", () => ({
-  apiClient: { post: jest.fn() },
+  apiClient: { get: jest.fn(), post: jest.fn() },
 }));
+
+jest.mock("@/hooks/api/access", () => ({ useCan: () => true }));
 
 jest.mock("@/hooks/api/authorized-mutation", () => ({
   useAuthorizedMutation: (
@@ -46,9 +50,31 @@ function wrapper({ children }: { children: ReactNode }) {
 }
 
 const postMock = jest.mocked(apiClient.post);
+const getMock = jest.mocked(apiClient.get);
 
 beforeEach(() => {
   postMock.mockReset();
+  getMock.mockReset();
+});
+
+it("keeps a first-read Reviews failure inline with its request ID and recovers on retry", async () => {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false, throwOnError: readErrorReachesBoundary } } });
+  const readWrapper = ({ children }: { children: ReactNode }) => <QueryClientProvider client={client}>{children}</QueryClientProvider>;
+  getMock.mockRejectedValueOnce(new ApiError("Review list failed", 500, "INTERNAL", { correlationId: "reviews-read-123" }, "/kb/page-reviews"));
+  getMock.mockResolvedValueOnce({ data: [review], pagination: { limit: 50, hasMore: false, nextCursor: null } });
+
+  const { result } = renderHook(() => useKbPageReviews({ status: "pending" }), { wrapper: readWrapper });
+
+  await waitFor(() => expect(result.current.isError).toBe(true));
+  expect(getCorrelationId(result.current.error)).toBe("reviews-read-123");
+  await act(async () => { await result.current.refetch(); });
+  await waitFor(() => expect(result.current.data?.data).toEqual([review]));
+  expect(getMock).toHaveBeenCalledWith(
+    "/kb/page-reviews",
+    { status: "pending" },
+    expect.any(AbortSignal),
+    expect.any(Function),
+  );
 });
 
 it("reuses a review-create key across failure and retry, then settles after success", async () => {
