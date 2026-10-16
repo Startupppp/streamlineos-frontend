@@ -32,11 +32,12 @@ function nextAction(event: CalendarListItem): string {
   if (event.actions.complete) return "Complete";
   if (event.actions.rsvp) return "Respond";
   if (event.actions.edit) return "Edit";
+  if (event.actions.delete) return "Manage";
   return "View";
 }
 
 function kind(event: CalendarListItem, now: number): "action" | "preparation" | "information" {
-  if (event.actions.complete || event.actions.rsvp) return "action";
+  if (event.actions.complete || event.actions.rsvp || event.actions.edit || event.actions.delete) return "action";
   if (event.timeKind === "timed" && new Date(event.start).getTime() > now)
     return "preparation";
   return "information";

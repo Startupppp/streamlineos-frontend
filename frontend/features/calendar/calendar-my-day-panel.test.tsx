@@ -64,6 +64,36 @@ describe("CalendarMyDayPanel", () => {
     ]);
   });
 
+  it("keeps search-actionable edit and delete items in Action needed", () => {
+    const editable = {
+      ...event("editable", "2999-01-01T09:00:00.000Z"),
+      actions: { view: true, edit: true, delete: false, rsvp: false, complete: false },
+    };
+    const deletable = {
+      ...event("deletable", "2999-01-01T10:00:00.000Z"),
+      actions: { view: true, edit: false, delete: true, rsvp: false, complete: false },
+    };
+    render(
+      <CalendarMyDayPanel
+        events={[editable, deletable]}
+        pages={[]}
+        search=""
+        onSearchChange={jest.fn()}
+        onSelectEvent={jest.fn()}
+        onLoadMore={jest.fn()}
+        hasMore={false}
+        isLoadingMore={false}
+      />,
+    );
+
+    expect((List as unknown as jest.Mock).mock.lastCall?.[0].rowProps.rows).toEqual([
+      { type: "header", title: "Action needed" },
+      { type: "event", event: editable },
+      { type: "event", event: deletable },
+    ]);
+    expect(screen.getByRole("button", { name: /Open Event deletable, .*event to manage/ })).toBeTruthy();
+  });
+
   it("virtualizes grouped items and requests the next page at the last row", () => {
     const onLoadMore = jest.fn();
     render(
