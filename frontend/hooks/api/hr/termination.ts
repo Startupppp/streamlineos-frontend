@@ -149,6 +149,26 @@ export function useRehireEmployee() {
   });
 }
 
+/** Archives an employee without a termination: exits the employment and archives the membership. */
+export function useArchiveEmployee() {
+  const qc = useQueryClient();
+  const operation = useIdempotentOperation();
+  return useAuthorizedMutation("hr:exit:manage", {
+    mutationKey: [...terminationKeys.all, "archive"],
+    mutationFn: ({ employeeUserId, reason }: { employeeUserId: string; reason?: string }) =>
+      apiClient.post(
+        `/hr/employees/${employeeUserId}/archive`,
+        { reason },
+        operation.configFor({ employeeUserId, reason }),
+        terminationSuccessContract,
+      ),
+    onSuccess: (_, { employeeUserId }) => {
+      operation.settle();
+      void invalidateHrWorkforceQueries(qc, employeeUserId);
+    },
+  });
+}
+
 export function useSubmitTermination() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:exit:manage", {
