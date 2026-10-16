@@ -22,6 +22,7 @@ import {
   FileText,
   Plug,
   ShieldAlert,
+  FileWarning,
 } from "lucide-react";
 import type { NavGroup } from "./sidebar-nav-types";
 
@@ -222,13 +223,19 @@ export const ADMINISTRATION_NAV_GROUPS: NavGroup[] = [
   {
     label: "Privacy",
     product: "administration",
-    requiredPermission: ["hr:retention:manage", "compliance:subject-requests:view"],
+    requiredPermission: ["hr:retention:manage", "compliance:subject-requests:view", "storage:quarantine:view"],
     routes: [
       {
         label: "Privacy Requests",
         icon: ShieldAlert,
         href: "/settings/privacy",
         requiredPermission: ["hr:retention:manage", "compliance:subject-requests:view"],
+      },
+      {
+        label: "Upload Quarantine",
+        icon: FileWarning,
+        href: "/settings/storage-quarantine",
+        requiredPermission: "storage:quarantine:view",
       },
     ],
   },

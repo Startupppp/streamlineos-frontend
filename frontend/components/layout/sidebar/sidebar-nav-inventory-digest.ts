@@ -1,4 +1,4 @@
 // 2026-10-17 (w2-privacy): Administration gained the Privacy group (Privacy
 // Requests, Upload Quarantine) and Notifications gained Email Templates.
 export const EXPECTED_NAVIGATION_INVENTORY_DIGEST =
-  "b6212806c94150cec93419cf4fe048925013b8bcdef7b0296e70c0774362e87e";
+  "fb1fad75b78f8e142b35282edc848fa2f46853de55ec3e02d7d3f2e5ea42e68f";
