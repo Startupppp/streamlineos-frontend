@@ -81,6 +81,7 @@ export function useKbNoResults(range?: KbAnalyticsRange) {
     ...(range?.spaceId !== undefined ? { spaceId: range.spaceId } : {}),
   };
   return useInfiniteQuery({
+    ...INLINE_READ_ERROR,
     queryKey: knowledgeAndSurveysQueryKeys.kb.noResults(queryParams),
     initialPageParam: NO_CURSOR_YET,
     queryFn: ({ signal, pageParam }) => apiClient.get<Page<KbNoResultRow> & { scopeComplete: boolean }>(

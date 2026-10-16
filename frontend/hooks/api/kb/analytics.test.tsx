@@ -140,6 +140,16 @@ describe("useKbContentGaps", () => {
 });
 
 describe("useKbNoResults", () => {
+  it("keeps a first-read failure inline for the Analytics page retry state", async () => {
+    client.setDefaultOptions({ queries: { retry: false, throwOnError: true } });
+    mockGet.mockRejectedValueOnce(new Error("No-results unavailable"));
+
+    const { result } = renderHook(() => useKbNoResults(), { wrapper });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(client.getQueryCache().getAll()[0]?.options.throwOnError).toBe(false);
+  });
+
   it("flattens pages while preserving scope coverage and the next cursor", async () => {
     const row = { query: "billing", count: 4 };
     expect(kbAnalyticsNoResultsContract.safeParse({
