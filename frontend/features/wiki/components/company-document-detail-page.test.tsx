@@ -269,6 +269,29 @@ describe("CompanyDocumentDetailPage", () => {
     expect(screen.queryByRole("button", { name: "Open file" })).not.toBeInTheDocument();
   });
 
+  it("hides a cached document title and open action after access is denied", () => {
+    loaded(detail(), { isError: true, error: new ApiError("Forbidden", 403, "FORBIDDEN", {}, "/kb/linked-documents/31") });
+
+    render(<CompanyDocumentDetailPage linkedDocumentId={31} />);
+
+    expect(screen.getByRole("heading", { level: 1, name: "Company document" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Code of Conduct" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Open file" })).not.toBeInTheDocument();
+    expect(screen.queryByText("How we work together.")).not.toBeInTheDocument();
+  });
+
+  it("hides a cached document title and open action while link configuration fails", () => {
+    linkSwitch(true, { isError: true, error: new ApiError("Unavailable", 500, "INTERNAL", {}, "/kb/hr-link/config") });
+    loaded(detail());
+
+    render(<CompanyDocumentDetailPage linkedDocumentId={31} />);
+
+    expect(screen.getByRole("heading", { level: 1, name: "Company document" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Code of Conduct" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Open file" })).not.toBeInTheDocument();
+    expect(screen.queryByText("How we work together.")).not.toBeInTheDocument();
+  });
+
   it("still reports any other failure as an error, with a way to try again, and not as a missing document", async () => {
     const refetch = jest.fn();
     loaded(undefined, { isError: true, error: new ApiError("Boom", 500, "INTERNAL", {}, "/kb/linked-documents/31"), refetch });

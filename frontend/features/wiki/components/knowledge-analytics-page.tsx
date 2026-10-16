@@ -1,25 +1,15 @@
 "use client";
 
-import { memo } from "react";
-import Link from "next/link";
+import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
-import { getErrorMessage } from "@/lib/get-error-message";
 import { isApiError } from "@/lib/api-envelope";
 import {
   StatCard,
   StatCardGrid,
-  StatCardGridSkeleton,
 } from "@/components/ui/stat-card";
-import { TruncatedText } from "@/components/ui/truncated-text";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
-import { Input } from "@/components/ui/input";
-import { UserCombobox } from "@/components/ui/user-combobox";
 import {
   useKbAnalyticsOverview,
   useKbNoResults,
@@ -33,7 +23,6 @@ import {
   useDismissGap,
   useCreateGapFix,
 } from "@/hooks/api/kb";
-import { useState } from "react";
 import { useKbSpaces } from "@/hooks/api/kb/spaces";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { useCan } from "@/hooks/api/access";
@@ -54,322 +43,17 @@ import {
   analyticsSpaceIdFrom,
 } from "@/features/wiki/lib/analytics-range";
 import { pageHref } from "@/lib/knowledge-routes";
-import { propagationShield } from "@/lib/keyboard-activation";
+import { AnalyticsSkeleton, KnowledgeAnalyticsLists } from "./knowledge-analytics-lists";
+import { KnowledgeAnalyticsGapsList } from "./knowledge-analytics-gaps-list";
 import {
   KbBarChart2Icon,
   KbSearchIcon,
   KbThumbsUpIcon,
-  KbFileTextIcon,
   KbEyeIcon,
-  KbPlusIcon,
   KbClockIcon,
   KbCheckCircleIcon,
   KbLink2Icon,
 } from "@/features/wiki/lib/kb-icons";
-import type { KbNoResultRow, KbPageAnalyticsRow, KbGapRow } from "@/types/kb";
-
-const STATUS_VARIANT: Record<
-  string,
-  "default" | "secondary" | "destructive" | "outline"
-> = {
-  draft: "outline",
-  in_review: "secondary",
-  published: "default",
-  archived: "secondary",
-};
-
-const TRUST_VARIANT: Record<
-  string,
-  "default" | "secondary" | "destructive" | "outline"
-> = {
-  unverified: "outline",
-  verified: "default",
-  verification_expired: "destructive",
-};
-
-const NoResultsRow = memo(function NoResultsRow({
-  row,
-  rank,
-}: {
-  row: KbNoResultRow;
-  rank: number;
-}) {
-  return (
-    <div className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-muted/40 transition-colors">
-      <span className="text-xs text-muted-foreground w-5 shrink-0 tabular-nums">
-        {rank}
-      </span>
-      <TruncatedText text={row.query ?? "(empty)"} className="flex-1 text-sm" />
-      <span className="text-xs font-medium tabular-nums text-muted-foreground">
-        {row.count}
-      </span>
-    </div>
-  );
-});
-
-const PageAnalyticsTableRow = memo(function PageAnalyticsTableRow({
-  row,
-}: {
-  row: KbPageAnalyticsRow;
-}) {
-  return (
-    <div className="grid grid-cols-[1fr_3rem_3rem_3rem_auto_auto_5rem] items-center gap-3 px-3 py-2 hover:bg-muted/40 transition-colors">
-      <Link
-        href={pageHref(row.id)}
-        className="text-sm truncate hover:underline text-foreground"
-      >
-        {row.title || "Untitled"}
-      </Link>
-      <span className="text-xs tabular-nums text-muted-foreground text-right">
-        {row.uniqueViewers}
-      </span>
-      <span className="text-xs tabular-nums text-muted-foreground text-right">
-        {row.commentCount}
-      </span>
-      <span className="text-xs tabular-nums text-muted-foreground text-right">
-        {row.versionCount}
-      </span>
-      <Badge
-        variant={STATUS_VARIANT[row.status] ?? "outline"}
-        className="text-xs capitalize"
-      >
-        {row.status.replace("_", " ")}
-      </Badge>
-      <Badge
-        variant={TRUST_VARIANT[row.trustState] ?? "outline"}
-        className="text-xs capitalize"
-      >
-        {row.trustState.replace("_", " ")}
-      </Badge>
-      <span className="text-xs text-muted-foreground text-right">
-        {new Date(row.updatedAt).toLocaleDateString("en", {
-          month: "short",
-          day: "numeric",
-        })}
-      </span>
-    </div>
-  );
-});
-
-const GapTableRow = memo(function GapTableRow({
-  row,
-  onCreatePage,
-  isCreating,
-  isSelected,
-  onSelect,
-  onAssign,
-  isAssigning,
-  onDismiss,
-  isDismissing,
-  onCreateFix,
-  isCreatingFix,
-  canCreatePage,
-}: {
-  row: KbGapRow;
-  onCreatePage: (q: string) => void;
-  isCreating: boolean;
-  isSelected: boolean;
-  onSelect: (query: string) => void;
-  onAssign: (query: string, assigneeUserId: string) => void;
-  isAssigning: boolean;
-  onDismiss: (query: string, reason: string) => void;
-  isDismissing: boolean;
-  onCreateFix: (query: string) => void;
-  isCreatingFix: boolean;
-  canCreatePage: boolean;
-}) {
-  const [assignOpen, setAssignOpen] = useState(false);
-  const [assignValue, setAssignValue] = useState("");
-  const [dismissOpen, setDismissOpen] = useState(false);
-  const [dismissValue, setDismissValue] = useState("");
-
-  function handleSelectClick() {
-    if (row.query) onSelect(row.query);
-  }
-  function handleCreatePageClick(e: React.MouseEvent) {
-    e.stopPropagation();
-    if (row.query) onCreatePage(row.query);
-  }
-  function handleCreateFixClick(e: React.MouseEvent) {
-    e.stopPropagation();
-    if (row.query) onCreateFix(row.query);
-  }
-  function handleAssignSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    e.stopPropagation();
-    if (row.query && assignValue.trim()) {
-      onAssign(row.query, assignValue.trim());
-      setAssignOpen(false);
-      setAssignValue("");
-    }
-  }
-  function handleDismissSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    e.stopPropagation();
-    if (row.query && dismissValue.trim()) {
-      onDismiss(row.query, dismissValue.trim());
-      setDismissOpen(false);
-      setDismissValue("");
-    }
-  }
-  function handleAssignToggle(e: React.MouseEvent) {
-    e.stopPropagation();
-    setAssignOpen((o) => !o);
-    setDismissOpen(false);
-  }
-  function handleDismissToggle(e: React.MouseEvent) {
-    e.stopPropagation();
-    setDismissOpen((o) => !o);
-    setAssignOpen(false);
-  }
-  return (
-    <div>
-      <div className={`flex items-center gap-3 px-3 py-2 transition-colors ${isSelected ? "bg-muted/60" : "hover:bg-muted/40"}`}>
-        <button
-          type="button"
-          className="flex min-w-0 flex-1 items-center gap-3 rounded-sm text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          onClick={handleSelectClick}
-          disabled={!row.query}
-          aria-expanded={isSelected}
-          aria-label={`Gap: ${row.query ?? "(empty)"}`}
-        >
-          <TruncatedText
-            text={row.query ?? "(empty)"}
-            className="min-w-0 flex-1 text-sm"
-          />
-          <span className="text-xs tabular-nums text-muted-foreground shrink-0">
-            {row.count}
-          </span>
-          <span className="text-xs text-muted-foreground shrink-0 w-28 text-right">
-            {new Date(row.lastOccurredAt).toLocaleDateString("en", {
-              month: "short",
-              day: "numeric",
-              year: "numeric",
-            })}
-          </span>
-        </button>
-        <Button
-          size="sm"
-          variant="ghost"
-          className="px-2 text-xs gap-1 shrink-0"
-          onClick={handleAssignToggle}
-          disabled={!row.query}
-          type="button"
-          aria-label="Assign gap owner"
-        >
-          Assign
-        </Button>
-        <Button
-          size="sm"
-          variant="ghost"
-          className="px-2 text-xs gap-1 shrink-0"
-          onClick={handleDismissToggle}
-          disabled={!row.query}
-          type="button"
-          aria-label="Dismiss gap"
-        >
-          Dismiss
-        </Button>
-        {canCreatePage ? (
-          <>
-            <Button
-              size="sm"
-              variant="ghost"
-              className="px-2 text-xs gap-1 shrink-0"
-              onClick={handleCreateFixClick}
-              disabled={isCreatingFix || !row.query}
-              type="button"
-              aria-label="Create fix page for gap"
-            >
-              <KbPlusIcon className="h-3 w-3" />
-              Fix
-            </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              className="px-2 text-xs gap-1 shrink-0"
-              onClick={handleCreatePageClick}
-              disabled={isCreating || !row.query}
-              type="button"
-            >
-              <KbPlusIcon className="h-3 w-3" />
-              Page
-            </Button>
-          </>
-        ) : null}
-      </div>
-      {assignOpen && (
-        <form
-          onSubmit={handleAssignSubmit}
-          {...propagationShield}
-          className="flex items-center gap-2 px-3 py-2 bg-muted/20 border-t border-border/40"
-        >
-          <UserCombobox
-            value={assignValue}
-            onChange={setAssignValue}
-            placeholder="Select member…"
-            className="flex-1"
-          />
-          <Button
-            size="sm"
-            type="submit"
-            disabled={isAssigning || !assignValue.trim()}
-            className="h-7 px-2 text-xs"
-          >
-            Assign
-          </Button>
-          <Button
-            size="sm"
-            type="button"
-            variant="ghost"
-            className="h-7 px-2 text-xs"
-            onClick={() => {
-              setAssignOpen(false);
-              setAssignValue("");
-            }}
-          >
-            Cancel
-          </Button>
-        </form>
-      )}
-      {dismissOpen && (
-        <form
-          onSubmit={handleDismissSubmit}
-          {...propagationShield}
-          className="flex items-center gap-2 px-3 py-2 bg-muted/20 border-t border-border/40"
-        >
-          <Input
-            className="h-7 text-xs flex-1"
-            placeholder="Reason for dismissal"
-            value={dismissValue}
-            onChange={(e) => setDismissValue(e.target.value)}
-            autoFocus
-          />
-          <Button
-            size="sm"
-            type="submit"
-            disabled={isDismissing || !dismissValue.trim()}
-            className="h-7 px-2 text-xs"
-          >
-            Dismiss
-          </Button>
-          <Button
-            size="sm"
-            type="button"
-            variant="ghost"
-            className="h-7 px-2 text-xs"
-            onClick={() => {
-              setDismissOpen(false);
-              setDismissValue("");
-            }}
-          >
-            Cancel
-          </Button>
-        </form>
-      )}
-    </div>
-  );
-});
 
 const ALL_SPACES_VALUE = "all";
 
@@ -389,22 +73,6 @@ function overviewHint(reason?: string): string | undefined {
   if (reason === "minimum_cohort") return "Fewer than 3 records in this cohort";
   if (reason === "incomplete_scope") return "Historical space attribution is incomplete";
   return undefined;
-}
-
-function AnalyticsSkeleton() {
-  return (
-    <div className="space-y-4">
-      <StatCardGridSkeleton cols={6} count={6} />
-      {Array.from({ length: 3 }).map((_, s) => (
-        <div key={s} className="space-y-2">
-          <Skeleton className="h-4 w-36" />
-          {Array.from({ length: 5 }).map((_, i) => (
-            <Skeleton key={i} className="h-9 w-full rounded-md" />
-          ))}
-        </div>
-      ))}
-    </div>
-  );
 }
 
 export default function KnowledgeAnalyticsPage() {
@@ -735,279 +403,51 @@ export default function KnowledgeAnalyticsPage() {
         ) : null}
 
         <div className="space-y-4">
-          <section className="space-y-2">
-            <div className="flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-foreground">
-                No-result searches
-              </h2>
-              {noResults.length > 0 && (
-                <span className="text-xs text-muted-foreground">
-                  {noResults.length}{hasNextNoResults ? "+" : ""} queries
-                </span>
-              )}
-            </div>
-            {spaceId !== undefined && noResultsResponse && !noResultsResponse.scopeComplete ? (
-              <p role="status" className="text-sm text-muted-foreground">
-                Zero-result searches for this space are unavailable because older events lack space information.
-              </p>
-            ) : noResults.length === 0 ? (
-              <EmptyState
-                illustration={
-                  <KbSearchIcon className="h-6 w-6 text-muted-foreground" />
-                }
-                title={
-                  isFiltered
-                    ? "No searches match these filters"
-                    : "No zero-result searches"
-                }
-                description={
-                  isFiltered
-                    ? "Widen the window or clear the filters to see zero-result searches."
-                    : "All recent searches returned at least one result."
-                }
-                compact
-              />
-            ) : (
-              <div className="rounded-lg border border-border bg-card divide-y divide-border/60">
-                <div className="flex items-center gap-3 px-3 py-2 border-b border-border">
-                  <span className="text-xs font-medium text-muted-foreground w-5">
-                    #
-                  </span>
-                  <span className="flex-1 text-xs font-medium text-muted-foreground">
-                    Query
-                  </span>
-                  <span className="text-xs font-medium text-muted-foreground">
-                    Count
-                  </span>
-                </div>
-                {noResults.map((row, i) => (
-                  <NoResultsRow key={i} row={row} rank={i + 1} />
-                ))}
-                {noResultsNextError && !noResultsAccessLost ? (
-                  <ErrorState
-                    compact
-                    title="Couldn't load more searches"
-                    description={getErrorMessage(noResultsQueryError)}
-                    error={noResultsQueryError}
-                    onRetry={() => { void fetchNextNoResults(); }}
-                  />
-                ) : hasNextNoResults ? (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => void fetchNextNoResults()}
-                    disabled={isFetchingNextNoResults}
-                  >
-                    {isFetchingNextNoResults ? "Loading searches..." : "Load more searches"}
-                  </Button>
-                ) : null}
-              </div>
-            )}
-          </section>
-
-          <section className="space-y-2">
-            <div className="flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-foreground">
-                Top pages
-              </h2>
-              {pageAnalytics.length > 0 && (
-                <span className="text-xs text-muted-foreground">
-                  {pageAnalytics.length} pages
-                </span>
-              )}
-            </div>
-            {pageAnalytics.length === 0 ? (
-              <EmptyState
-                illustration={
-                  <KbFileTextIcon className="h-6 w-6 text-muted-foreground" />
-                }
-                title={
-                  isFiltered
-                    ? "No pages match these filters"
-                    : "No page data yet"
-                }
-                description={
-                  isFiltered
-                    ? "Widen the window, pick another space, or clear the filters."
-                    : "Page view data will appear here once users start reading pages."
-                }
-                compact
-              />
-            ) : (
-              <div className="rounded-lg border border-border bg-card divide-y divide-border/60">
-                <div className="grid grid-cols-[1fr_3rem_3rem_3rem_auto_auto_5rem] items-center gap-3 px-3 py-2 border-b border-border">
-                  <span className="text-xs font-medium text-muted-foreground">
-                    Title
-                  </span>
-                  <span className="text-xs font-medium text-muted-foreground text-right">
-                    Views
-                  </span>
-                  <span className="text-xs font-medium text-muted-foreground text-right">
-                    Cmts
-                  </span>
-                  <span className="text-xs font-medium text-muted-foreground text-right">
-                    Vers
-                  </span>
-                  <span className="text-xs font-medium text-muted-foreground">
-                    Status
-                  </span>
-                  <span className="text-xs font-medium text-muted-foreground">
-                    Trust
-                  </span>
-                  <span className="text-xs font-medium text-muted-foreground text-right">
-                    Updated
-                  </span>
-                </div>
-                {pageAnalytics.map((row) => (
-                  <PageAnalyticsTableRow key={row.id} row={row} />
-                ))}
-                <InfiniteScrollSentinel
-                  hasNextPage={!!hasNextPage}
-                  isFetchingNextPage={isFetchingNextPage}
-                  onLoadMore={handleLoadMorePages}
-                  label="Load more pages"
-                />
-              </div>
-            )}
-          </section>
-
-          <section className="space-y-2">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-sm font-semibold text-foreground">
-                  Knowledge gaps
-                </h2>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Searches that returned no results — write pages to close these
-                  gaps.
-                </p>
-              </div>
-              {gaps.length > 0 && (
-                <span className="text-xs text-muted-foreground">
-                  {gaps.length} gaps
-                </span>
-              )}
-            </div>
-            {spaceId !== undefined && !gapsScopeComplete && !gapsLoading ? (
-              <p role="status" className="text-sm text-muted-foreground">
-                Knowledge gaps for this space are unavailable because older events lack space information.
-              </p>
-            ) : gaps.length === 0 ? (
-              <EmptyState
-                illustration={
-                  <KbSearchIcon className="h-6 w-6 text-muted-foreground" />
-                }
-                title={
-                  isFiltered
-                    ? "No gaps match these filters"
-                    : "No knowledge gaps"
-                }
-                description={
-                  isFiltered
-                    ? "Widen the window or clear the filters to see knowledge gaps."
-                    : "All searches are finding relevant content."
-                }
-                compact
-              />
-            ) : (
-              <div className="rounded-lg border border-border bg-card divide-y divide-border/60">
-                <div className="flex items-center gap-3 px-3 py-2 border-b border-border">
-                  <span className="flex-1 text-xs font-medium text-muted-foreground">
-                    Query
-                  </span>
-                  <span className="text-xs font-medium text-muted-foreground shrink-0">
-                    Count
-                  </span>
-                  <span className="text-xs font-medium text-muted-foreground shrink-0 w-28 text-right">
-                    Last searched
-                  </span>
-                  <span className="text-xs font-medium text-muted-foreground shrink-0 w-24 text-right">
-                    Action
-                  </span>
-                </div>
-                {gaps.map((row, i) => (
-                  <div key={i}>
-                    <GapTableRow
-                      row={row}
-                      onCreatePage={handleCreatePageFromGap}
-                      isCreating={createPage.isPending}
-                      isSelected={selectedGapQuery === row.query}
-                      onSelect={handleGapRowSelect}
-                      onAssign={handleAssignGap}
-                      isAssigning={assignGap.isPending}
-                      onDismiss={handleDismissGap}
-                      isDismissing={dismissGap.isPending}
-                      onCreateFix={handleCreateGapFix}
-                      isCreatingFix={createGapFix.isPending}
-                      canCreatePage={canCreatePage}
-                    />
-                    {selectedGapQuery === row.query && (
-                      <div className="px-3 py-2 bg-muted/30 border-t border-border/40">
-                        <p className="text-xs font-medium text-muted-foreground mb-2">
-                          Pages containing this query
-                        </p>
-                        {relatedPagesLoading ? (
-                          <div className="space-y-1">
-                            {Array.from({ length: 3 }).map((_, s) => (
-                              <Skeleton
-                                key={s}
-                                className="h-7 w-full rounded"
-                              />
-                            ))}
-                          </div>
-                        ) : relatedPagesError && relatedPages.length === 0 ? (
-                          <ErrorState
-                            compact
-                            title="Could not load related pages"
-                            error={relatedPagesReadError}
-                            onRetry={handleRetryRelatedPages}
-                          />
-                        ) : relatedPages.length === 0 ? (
-                          <p className="text-xs text-muted-foreground italic">
-                            No existing pages mention this query.
-                          </p>
-                        ) : (
-                          <div className="space-y-1">
-                            {relatedPages.map((page) => (
-                              <Link
-                                key={page.id}
-                                href={pageHref(page.id)}
-                                className="flex items-center gap-2 text-xs text-foreground hover:underline py-0.5"
-                              >
-                                <KbFileTextIcon className="h-3 w-3 text-muted-foreground shrink-0" />
-                                {page.title || "Untitled"}
-                              </Link>
-                            ))}
-                            {relatedPagesError ? (
-                              <ErrorState
-                                compact
-                                title="Could not load more related pages"
-                                error={relatedPagesReadError}
-                                onRetry={handleRetryRelatedPages}
-                              />
-                            ) : (
-                              <InfiniteScrollSentinel
-                                hasNextPage={!!hasNextRelated}
-                                isFetchingNextPage={isFetchingNextRelated}
-                                onLoadMore={handleLoadMoreRelated}
-                                label="Load more related pages"
-                              />
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                ))}
-                <InfiniteScrollSentinel
-                  hasNextPage={!!hasNextGaps}
-                  isFetchingNextPage={isFetchingNextGaps}
-                  onLoadMore={handleLoadMoreGaps}
-                  label="Load more gaps"
-                />
-              </div>
-            )}
-          </section>
+        <KnowledgeAnalyticsLists
+          noResults={noResults}
+          noResultsScopeComplete={noResultsResponse?.scopeComplete}
+          noResultsNextError={noResultsNextError}
+          noResultsAccessLost={noResultsAccessLost}
+          noResultsQueryError={noResultsQueryError}
+          hasNextNoResults={!!hasNextNoResults}
+          isFetchingNextNoResults={isFetchingNextNoResults}
+          fetchNextNoResults={fetchNextNoResults}
+          pageAnalytics={pageAnalytics}
+          hasNextPage={!!hasNextPage}
+          isFetchingNextPage={isFetchingNextPage}
+          handleLoadMorePages={handleLoadMorePages}
+          spaceId={spaceId}
+          isFiltered={isFiltered}
+        />
+        <KnowledgeAnalyticsGapsList
+          gaps={gaps}
+          gapsScopeComplete={gapsScopeComplete}
+          gapsLoading={gapsLoading}
+          hasNextGaps={!!hasNextGaps}
+          isFetchingNextGaps={isFetchingNextGaps}
+          handleLoadMoreGaps={handleLoadMoreGaps}
+          selectedGapQuery={selectedGapQuery}
+          handleCreatePageFromGap={handleCreatePageFromGap}
+          createPagePending={createPage.isPending}
+          handleGapRowSelect={handleGapRowSelect}
+          handleAssignGap={handleAssignGap}
+          assignGapPending={assignGap.isPending}
+          handleDismissGap={handleDismissGap}
+          dismissGapPending={dismissGap.isPending}
+          handleCreateGapFix={handleCreateGapFix}
+          createGapFixPending={createGapFix.isPending}
+          canCreatePage={canCreatePage}
+          relatedPages={relatedPages}
+          relatedPagesLoading={relatedPagesLoading}
+          relatedPagesError={relatedPagesError}
+          relatedPagesReadError={relatedPagesReadError}
+          handleRetryRelatedPages={handleRetryRelatedPages}
+          hasNextRelated={!!hasNextRelated}
+          isFetchingNextRelated={isFetchingNextRelated}
+          handleLoadMoreRelated={handleLoadMoreRelated}
+          spaceId={spaceId}
+          isFiltered={isFiltered}
+        />
         </div>
       </PageState>
     </PageWrapper>

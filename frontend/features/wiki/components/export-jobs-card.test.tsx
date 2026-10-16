@@ -1,6 +1,6 @@
 import { render, screen, cleanup } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { ApiContractError } from "@/lib/api-envelope";
+import { ApiContractError, ApiError } from "@/lib/api-envelope";
 import { ExportJobsCard } from "./export-jobs-card";
 
 type IntersectionCallback = (entries: IntersectionObserverEntry[]) => void;
@@ -72,6 +72,26 @@ afterEach(() => {
 });
 
 describe("ExportJobsCard — expiring download indicator", () => {
+  it.each([401, 403, 404])("hides cached export jobs after a %i access failure", (status) => {
+    useKbExportJobs.mockReturnValue({
+      data: [mockJob],
+      isLoading: false,
+      isError: true,
+      isFetchNextPageError: true,
+      error: new ApiError("Access lost", status),
+      refetch: jest.fn(),
+      hasNextPage: true,
+      isFetchingNextPage: false,
+      fetchNextPage: jest.fn(),
+    });
+
+    render(<ExportJobsCard />);
+
+    expect(screen.getByText("Access Restricted")).toBeInTheDocument();
+    expect(screen.queryByText("markdown export")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Load more export jobs" })).not.toBeInTheDocument();
+  });
+
   const futureIso = new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString();
   const pastIso = new Date(Date.now() - 60 * 1000).toISOString();
 

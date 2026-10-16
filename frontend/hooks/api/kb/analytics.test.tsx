@@ -34,8 +34,8 @@ import {
 const PAGINATION = { limit: 50, hasMore: false, nextCursor: null };
 
 describe("kbAnalyticsGapsContract", () => {
-  it("normalizes the legacy bare-array response into one cursor page", () => {
-    const parsed = kbAnalyticsGapsContract.parse([
+  it("rejects a bare array that has no continuation or scope-completeness signal", () => {
+    const parsed = kbAnalyticsGapsContract.safeParse([
       {
         query: "reset password",
         count: 3,
@@ -43,17 +43,7 @@ describe("kbAnalyticsGapsContract", () => {
       },
     ]);
 
-    expect(parsed).toEqual({
-      data: [
-        {
-          query: "reset password",
-          count: 3,
-          lastOccurredAt: "2026-09-25T00:00:00.000Z",
-        },
-      ],
-      pagination: { limit: 1, hasMore: false, nextCursor: null },
-      scopeComplete: false,
-    });
+    expect(parsed.success).toBe(false);
   });
 
   it("the GAP_ROW test fixture matches the wire shape the backend sends", () => {
