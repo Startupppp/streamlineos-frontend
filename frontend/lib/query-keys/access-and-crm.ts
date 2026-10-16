@@ -234,6 +234,9 @@ export const accessAndCrmQueryKeys = {
       params === undefined
         ? ([...base, "crmLifecycle", "healthRoster"] as const)
         : ([...base, "crmLifecycle", "healthRoster", params] as const),
+    /** One contract with its signal history. */
+    detail: (customerLifecycleId: string) =>
+      [...base, "crmLifecycle", "detail", customerLifecycleId] as const,
   },
 
   crmOrganizations: {

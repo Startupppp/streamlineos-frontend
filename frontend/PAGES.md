@@ -155,7 +155,7 @@
 ### Revenue & Lifecycle
 - `/crm/commissions` · **CRM** · hooks: `usePageState`, `→ features/crm/commissions` — commission tracking; `useOrgDisplay` for period
 - `/crm/health` · **CRM** · hooks: `→ features/crm/lifecycle`
-- `/crm/renewals` · **CRM** · hooks: `→ features/crm/lifecycle`
+- `/crm/renewals` · **CRM** · hooks: `→ features/crm/lifecycle` — renewal book; row Details sheet (signals, record signal / renew / close on `crm:lifecycle:manage`, consider now on `crm:lifecycle-triggers:run`); header "Run renewal sweep" on `crm:lifecycle-triggers:run`
 - `/crm/segments` · **CRM** · hooks: `→ features/crm/segments` — gated by `RequireModule module="crm"`
 
 ### Call Intelligence
