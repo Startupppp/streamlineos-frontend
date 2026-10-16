@@ -361,10 +361,14 @@ export function StepGeneration({ data, onBackToProducts, idempotencyKey }: StepG
     };
   }, []);
 
+  const invitesSettled =
+    !wantsInvites ||
+    (provisioning.background === "completed" && provisioning.issue === null);
+
   useEffect(() => {
-    if (!provisioning.isReady || !effectiveOrgId) return;
+    if (!provisioning.isReady || !effectiveOrgId || !invitesSettled) return;
     finishSetupRef.current(effectiveAutoLoginToken, effectiveOrgId);
-  }, [provisioning.isReady, effectiveAutoLoginToken, effectiveOrgId]);
+  }, [provisioning.isReady, invitesSettled, effectiveAutoLoginToken, effectiveOrgId]);
 
   const progress = Math.round((completedSteps / total) * 100);
   const companyName = data.companyName?.trim();

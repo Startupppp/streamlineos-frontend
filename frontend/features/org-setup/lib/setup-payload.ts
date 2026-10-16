@@ -61,6 +61,10 @@ export function getInviteAccessError(data: WizardData): string | null {
     if (!parsed.success)
       return `${invitee.email} has invalid module access. Select at most ${MAX_INVITEE_MODULE_ACCESS} different products with Member or Admin access.`;
 
+    const alwaysOn = moduleAccess.find((item) => ALWAYS_ENABLED_SET.has(item.moduleKey));
+    if (alwaysOn)
+      return `${invitee.email} has ${alwaysOn.moduleKey} access, but that product is on for everyone and takes no per-person access. Remove and add this person again.`;
+
     const unavailable = moduleAccess.find((item) => !enabled.has(item.moduleKey));
     if (unavailable)
       return `${invitee.email} still has ${unavailable.moduleKey} access, but that product is no longer selected. Remove the assignment or select the product again.`;

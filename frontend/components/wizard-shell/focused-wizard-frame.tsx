@@ -64,7 +64,7 @@ export function FocusedWizardFrame({
 
         <div
           className={cn(
-            "absolute right-0 top-0 z-10 hidden md:flex",
+            "absolute right-0 top-0 z-30 hidden md:flex",
             WIZARD_COL_PAD_X,
             "py-4",
           )}

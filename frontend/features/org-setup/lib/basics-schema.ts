@@ -1,3 +1,4 @@
+import { isValidPhoneNumber } from "react-phone-number-input";
 import { z } from "zod";
 import type { WizardData } from "./wizard-data-schema";
 
@@ -34,7 +35,14 @@ export const workspaceStepSchema = z.object({
       INDUSTRY_MAX_LENGTH,
       `Industry must be ${INDUSTRY_MAX_LENGTH} characters or fewer.`,
     ),
-  phone: z.string().optional(),
+  phone: z
+    .string()
+    .trim()
+    .refine(
+      (value) => !value || isValidPhoneNumber(value),
+      "Enter a valid phone number with its country code, such as +91 98765 43210.",
+    )
+    .optional(),
   goals: z.array(z.string()).optional(),
 });
 
