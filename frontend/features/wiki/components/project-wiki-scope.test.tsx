@@ -46,7 +46,14 @@ const CHILD_NODE: KbPageTreeNode = {
 
 let rootNode = ROOT_NODE;
 let childLevelOverride: Record<string, unknown> | null = null;
+let historyListOverride: Record<string, unknown> | null = null;
+let historyDetailOverride: Record<string, unknown> | null = null;
 const mockChildLevelRequest = jest.fn();
+
+jest.mock("@/hooks/api/use-page-state", () => ({
+  usePageState: ({ isLoading, isError, isEmpty, error }: { isLoading: boolean; isError: boolean; isEmpty?: boolean; error?: unknown }) =>
+    isLoading ? { kind: "loading" } : isError ? { kind: "error", error } : isEmpty ? { kind: "empty" } : { kind: "ready" },
+}));
 
 function treeLevel(nodes: KbPageTreeNode[]) {
   return {
@@ -80,7 +87,7 @@ jest.mock("@/hooks/api/kb", () => ({
       ? childLevelOverride ?? treeLevel([CHILD_NODE])
       : { ...treeLevel([]), data: undefined };
   },
-  useKbPageVersionsInfinite: () => ({
+  useKbPageVersionsInfinite: () => historyListOverride ?? ({
     data: {
       pages: [
         {
@@ -107,11 +114,15 @@ jest.mock("@/hooks/api/kb", () => ({
       ],
     },
     isLoading: false,
+    isError: false,
+    isFetchNextPageError: false,
+    error: null,
+    refetch: jest.fn(),
     hasNextPage: false,
     fetchNextPage: jest.fn(),
     isFetchingNextPage: false,
   }),
-  useKbPageVersionDetail: () => ({
+  useKbPageVersionDetail: () => historyDetailOverride ?? ({
     data: {
       title: "Earlier runbook",
       content: { type: "doc", content: [] },
@@ -119,6 +130,9 @@ jest.mock("@/hooks/api/kb", () => ({
       createdAt: "2026-08-01T10:00:00.000Z",
     },
     isLoading: false,
+    isError: false,
+    error: null,
+    refetch: jest.fn(),
   }),
   useRestoreKbVersion: () => ({ mutate: jest.fn(), isPending: false }),
 }));
@@ -175,6 +189,8 @@ beforeEach(() => {
   jest.clearAllMocks();
   rootNode = ROOT_NODE;
   childLevelOverride = null;
+  historyListOverride = null;
+  historyDetailOverride = null;
 });
 
 describe("project wiki read path stays inside the project", () => {
@@ -196,6 +212,56 @@ describe("project wiki read path stays inside the project", () => {
 });
 
 describe("project wiki history path stays inside the project", () => {
+  it("shows a first-read versions failure with retry instead of a false empty state", async () => {
+    const refetch = jest.fn();
+    historyListOverride = { data: undefined, isLoading: false, isError: true, isFetchNextPageError: false, error: new Error("offline"), refetch, hasNextPage: false, fetchNextPage: jest.fn(), isFetchingNextPage: false };
+    const user = userEvent.setup();
+    render(<PageHistorySheet pageId={5} open onOpenChange={jest.fn()} />);
+
+    expect(screen.queryByText("No versions yet")).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Try again" }));
+    expect(refetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps loaded versions and pauses automatic paging after a later-page failure", async () => {
+    const fetchNextPage = jest.fn();
+    historyListOverride = {
+      data: { pages: [{ data: [{ id: 1, versionNumber: 3, title: "Runbook", authorName: "Alice", changeSummary: null, createdAt: "2026-09-01T10:00:00.000Z" }], pagination: { limit: 50, nextCursor: "later", hasMore: true } }] },
+      isLoading: false, isError: true, isFetchNextPageError: true, error: new Error("offline"), refetch: jest.fn(), hasNextPage: true, fetchNextPage, isFetchingNextPage: false,
+    };
+    const user = userEvent.setup();
+    render(<PageHistorySheet pageId={5} open onOpenChange={jest.fn()} />);
+
+    expect(screen.getByRole("button", { name: /Version 3/ })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Load more versions" })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Retry loading versions" }));
+    expect(fetchNextPage).toHaveBeenCalledTimes(1);
+  });
+
+  it("hides cached versions when access is revoked during a refresh", () => {
+    historyListOverride = {
+      data: { pages: [{ data: [{ id: 1, versionNumber: 3, title: "Runbook", authorName: "Alice", changeSummary: null, createdAt: "2026-09-01T10:00:00.000Z" }], pagination: { limit: 50, nextCursor: null, hasMore: false } }] },
+      isLoading: false, isError: true, isFetchNextPageError: false, error: new ApiError("Access denied", 403), refetch: jest.fn(), hasNextPage: false, fetchNextPage: jest.fn(), isFetchingNextPage: false,
+    };
+    render(<PageHistorySheet pageId={5} open onOpenChange={jest.fn()} />);
+
+    expect(screen.queryByRole("button", { name: /Version 3/ })).not.toBeInTheDocument();
+    expect(screen.getByRole("alert")).toBeInTheDocument();
+  });
+
+  it("shows a selected-version read failure with retry instead of Empty version", async () => {
+    const refetch = jest.fn();
+    historyDetailOverride = { data: undefined, isLoading: false, isError: true, error: new Error("offline"), refetch };
+    const user = userEvent.setup();
+    render(<PageHistorySheet pageId={5} open onOpenChange={jest.fn()} />);
+    await user.click(screen.getByRole("button", { name: /Version 2/ }));
+
+    expect(screen.queryByText("Empty version")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "No content to restore" })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Try again" }));
+    expect(refetch).toHaveBeenCalledTimes(1);
+  });
+
   it("offers no link to the global knowledge history when the page is opened inside a project", () => {
     render(
       <PageHistorySheet pageId={5} open onOpenChange={jest.fn()} projectId={7} />,

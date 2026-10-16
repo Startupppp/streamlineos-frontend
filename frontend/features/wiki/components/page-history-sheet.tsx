@@ -15,10 +15,14 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PageState } from "@/components/shared/page-state";
+import { ErrorReference } from "@/components/shared/error-reference";
 import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { useKbPageVersionsInfinite, useKbPageVersionDetail } from "@/hooks/api/kb";
 import type { KbPageVersion } from "@/hooks/api/kb/page-types";
 import { pageHistoryHref } from "@/lib/knowledge-routes";
+import { isApiError } from "@/lib/api-envelope";
 
 const PlateDocumentEditor = dynamic(
   () => import("@/components/editor/plate/plate-document-editor"),
@@ -35,15 +39,29 @@ interface PageHistorySheetProps {
 export default function PageHistorySheet({ pageId, open, onOpenChange, projectId }: PageHistorySheetProps) {
   const isProjectScoped = projectId !== undefined && projectId > 0;
   const [selectedVersion, setSelectedVersion] = useState<number | null>(null);
-  const { data: versionsData, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } = useKbPageVersionsInfinite(pageId);
+  const { data: versionsData, isLoading, isError, isFetchNextPageError, error, refetch, hasNextPage, fetchNextPage, isFetchingNextPage } = useKbPageVersionsInfinite(pageId);
   const allVersions = versionsData?.pages.flatMap((p) => p.data) ?? [];
   const currentVersionNumber = allVersions[0]?.versionNumber ?? null;
   const versions = allVersions;
-  const { data: versionDetail, isLoading: detailLoading } = useKbPageVersionDetail(
+  const { data: versionDetail, isLoading: detailLoading, isError: detailError, error: detailReadError, refetch: refetchDetail } = useKbPageVersionDetail(
     pageId,
     selectedVersion ?? 0
   );
   const hasContent = Boolean(versionDetail?.content);
+  const listAccessLost = isApiError(error) && (error.status === 401 || error.status === 403 || error.status === 404);
+  const listState = usePageState({
+    permission: "kb:pages:view",
+    isLoading,
+    isError: isError && (versions.length === 0 || listAccessLost),
+    error,
+    isEmpty: !isLoading && !isError && versions.length === 0,
+  });
+  const detailState = usePageState({
+    permission: "kb:pages:view",
+    isLoading: detailLoading,
+    isError: detailError,
+    error: detailReadError,
+  });
   const historyHref = isProjectScoped
     ? `/build/${projectId}/wiki/${pageId}/history`
     : pageHistoryHref(pageId);
@@ -64,6 +82,14 @@ export default function PageHistorySheet({ pageId, open, onOpenChange, projectId
 
   function handleLoadMore() {
     void fetchNextPage();
+  }
+
+  function handleRetryList() {
+    void refetch();
+  }
+
+  function handleRetryDetail() {
+    void refetchDetail();
   }
 
   return (
@@ -89,21 +115,26 @@ export default function PageHistorySheet({ pageId, open, onOpenChange, projectId
         {!selectedVersion ? (
           <>
             <SheetBody className="px-6 py-4">
-                {isLoading && (
+              <PageState
+                resolution={listState}
+                compact
+                onRetry={handleRetryList}
+                loading={
                   <div className="space-y-3">
                     {Array.from({ length: 12 }).map((_, i) => (
                       <Skeleton key={i} className="h-16 w-full rounded-lg" />
                     ))}
                   </div>
-                )}
-                {!isLoading && versions.length === 0 && (
+                }
+                empty={
                   <EmptyState
                     title="No versions yet"
                     description="Content changes will be saved as versions automatically."
                     compact
                     className="flex-1 min-h-[40dvh]"
                   />
-                )}
+                }
+              >
                 <div className="space-y-2">
                   {versions.map((v: KbPageVersion) => (
                     <button
@@ -134,12 +165,20 @@ export default function PageHistorySheet({ pageId, open, onOpenChange, projectId
                     </button>
                   ))}
                   <InfiniteScrollSentinel
-                    hasNextPage={hasNextPage ?? false}
+                    hasNextPage={!isFetchNextPageError && (hasNextPage ?? false)}
                     isFetchingNextPage={isFetchingNextPage}
                     onLoadMore={handleLoadMore}
                     label="Load more versions"
                   />
+                  {isFetchNextPageError && (
+                    <div role="alert" className="space-y-2 text-sm text-destructive">
+                      <p>Could not load more versions.</p>
+                      <ErrorReference error={error} />
+                      <Button type="button" variant="outline" size="sm" onClick={handleLoadMore}>Retry loading versions</Button>
+                    </div>
+                  )}
                 </div>
+              </PageState>
             </SheetBody>
             {!isProjectScoped && (
               <SheetFooter className="border-t px-6 py-3 flex items-center justify-end">
@@ -172,24 +211,24 @@ export default function PageHistorySheet({ pageId, open, onOpenChange, projectId
               </div>
             )}
             <SheetBody className="px-6 py-4">
-              {detailLoading ? (
-                <Skeleton className="h-64 w-full" />
-              ) : hasContent && versionDetail ? (
-                <PlateDocumentEditor
-                  value={versionDetail.content}
-                  contentKey={`${pageId}-v${selectedVersion}`}
-                  editable={false}
-                />
-              ) : (
-                <EmptyState
-                  title="Empty version"
-                  description="No content was saved in this version."
-                  compact
-                  className="flex-1 min-h-[40dvh]"
-                />
-              )}
+              <PageState resolution={detailState} compact onRetry={handleRetryDetail} loading={<Skeleton className="h-64 w-full" />}>
+                {hasContent && versionDetail ? (
+                  <PlateDocumentEditor
+                    value={versionDetail.content}
+                    contentKey={`${pageId}-v${selectedVersion}`}
+                    editable={false}
+                  />
+                ) : (
+                  <EmptyState
+                    title="Empty version"
+                    description="No content was saved in this version."
+                    compact
+                    className="flex-1 min-h-[40dvh]"
+                  />
+                )}
+              </PageState>
             </SheetBody>
-            <SheetFooter className="border-t px-6 py-4">
+            {!detailError && <SheetFooter className="border-t px-6 py-4">
               {hasContent ? (
                 <Link
                   href={`${historyHref}?version=${selectedVersion}`}
@@ -206,7 +245,7 @@ export default function PageHistorySheet({ pageId, open, onOpenChange, projectId
                   No content to restore
                 </Button>
               )}
-            </SheetFooter>
+            </SheetFooter>}
           </div>
         )}
       </SheetContent>
