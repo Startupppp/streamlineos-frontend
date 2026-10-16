@@ -12,6 +12,13 @@ export function stripBidiControls(v: string): string {
   return v.replace(BIDI_STRIP_RE, "");
 }
 
+/** Same rule as the backend's create/PATCH/from-deal DTOs: trimmed, 2..100. */
+export const projectNameSchema = z
+  .string()
+  .trim()
+  .min(2, "Project name must be at least 2 characters")
+  .max(100, "Project name must be 100 characters or fewer");
+
 const projectStatusSchema = z.enum(["ACTIVE", "COMPLETED", "ARCHIVED"]);
 
 const ticketTypeSchema = z.enum(["EPIC", "STORY", "TASK", "BUG"]);
@@ -19,7 +26,7 @@ const ticketPrioritySchema = z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]);
 
 export const updateProjectSettingsInputSchema = z.object({
   projectId: z.number().int().positive(),
-  name: z.string().trim().min(1, "Project name is required").max(200),
+  name: projectNameSchema,
   description: z.string().max(2000).optional(),
   status: projectStatusSchema,
   managerId: z.string().optional(),
