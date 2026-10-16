@@ -41,7 +41,7 @@ import {
 } from "@/components/ui/select";
 import { SearchInput } from "@/components/ui/search-input";
 import { useUrlFilters, parseEnum } from "@/lib/url-state/use-url-filters";
-import { pageHref } from "@/lib/knowledge-routes";
+import { pageHref, pageHistoryHref } from "@/lib/knowledge-routes";
 import { kbTimeAgo } from "@/features/wiki/lib/kb-date-utils";
 import {
   WikiPageCard,
@@ -146,6 +146,8 @@ function CollectionItemMenu({ page }: CollectionItemMenuProps) {
       });
     } else if (actionId === "delete") {
       setDeleteOpen(true);
+    } else if (actionId === "history") {
+      router.push(pageHistoryHref(page.id));
     } else {
       router.push(pageHref(page.id));
     }

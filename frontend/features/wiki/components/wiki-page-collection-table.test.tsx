@@ -5,10 +5,11 @@ import { ApiError } from "@/lib/api-envelope";
 import { kbSpacesQueryStub } from "@/test-utils/kb-spaces-fixture";
 
 const mockReplace = jest.fn();
+const mockPush = jest.fn();
 let mockSearchParams = new URLSearchParams();
 
 jest.mock("next/navigation", () => ({
-  useRouter: () => ({ push: jest.fn(), replace: mockReplace }),
+  useRouter: () => ({ push: mockPush, replace: mockReplace }),
   usePathname: () => "/knowledge/wiki/private",
   useSearchParams: () => mockSearchParams,
 }));
@@ -173,6 +174,7 @@ function makeResponse(
 }
 
 beforeEach(() => {
+  mockPush.mockClear();
   mockReplace.mockClear();
   mockSearchParams = new URLSearchParams();
   useKbPageCollection.mockReturnValue({
@@ -183,6 +185,17 @@ beforeEach(() => {
     refetch: jest.fn(),
   });
   usePageState.mockReturnValue({ kind: "ready" });
+});
+
+it("opens the page's version history from its collection action menu", async () => {
+  mockSearchParams = new URLSearchParams("view=card");
+  const user = userEvent.setup();
+  render(<WikiPageCollectionTable fixedParams={{ owner: "me" }} emptyTitle="No pages" />);
+
+  await user.click(screen.getByRole("button", { name: "Page actions" }));
+  await user.click(screen.getByRole("menuitem", { name: "Version history" }));
+
+  expect(mockPush).toHaveBeenCalledWith("/knowledge/wiki/doc/1/history");
 });
 
 describe("WikiPageCollectionTable — filter and empty states", () => {
