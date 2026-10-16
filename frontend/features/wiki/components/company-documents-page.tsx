@@ -12,7 +12,6 @@ import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { SemanticBadge } from "@/components/ui/semantic-badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useCursorPager } from "@/components/ui/table-pagination";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { useHrKbLinkConfig } from "@/hooks/api/kb/hr-link-config";
@@ -68,17 +67,36 @@ const COLUMNS: DataTableColumn<LinkedDocumentItem>[] = [
 
 export default function CompanyDocumentsPage() {
   const searchParams = useSearchParams();
-  const { update } = useUrlFilters();
+  const { update } = useUrlFilters({ pageParam: "cursor" });
   const canPublish = useCan("hr:documents:publish");
   const status = parseEnum(searchParams.get("status"), STATUS_VALUES, "active");
   const requestedStatus = canPublish ? status : "active";
-
-  const pager = useCursorPager(requestedStatus);
+  const cursor = canPublish || status === "active" ? searchParams.get("cursor") || undefined : undefined;
+  const trailValue = searchParams.get("cursorTrail");
+  const cursorTrail = useMemo<(string | null)[]>(() => {
+    if (!cursor) return [];
+    if (!trailValue) return [null];
+    try {
+      const parsed: unknown = JSON.parse(trailValue);
+      if (
+        Array.isArray(parsed) &&
+        parsed.length > 0 &&
+        parsed.length <= 100 &&
+        parsed[0] === null &&
+        parsed.every((entry: unknown, index: number) => index === 0 || typeof entry === "string")
+      ) {
+        return parsed;
+      }
+    } catch {
+      return [null];
+    }
+    return [null];
+  }, [cursor, trailValue]);
   const { data: linkFlags, isLoading: configLoading, isError: configFailed, error: configError, refetch: refetchConfig } = useHrKbLinkConfig();
   const linkOn = linkFlags?.link === true;
   const linkOff = linkFlags?.link === false;
   const { data, isLoading, isError, error, refetch } = useLinkedDocuments(
-    { cursor: pager.cursor, limit: PAGE_LIMIT, status: requestedStatus },
+    { cursor, limit: PAGE_LIMIT, status: requestedStatus },
     { enabled: linkOn },
   );
   const rows = useMemo(() => data?.data ?? [], [data]);
@@ -91,14 +109,26 @@ export default function CompanyDocumentsPage() {
     isEmpty,
   });
 
-  const handleNext = useCallback(() => pager.goNext(data?.pagination.nextCursor), [pager, data?.pagination.nextCursor]);
-  const handlePrevious = useCallback(() => pager.goPrevious(), [pager]);
+  const handleNext = useCallback(() => {
+    if (!data?.pagination.nextCursor) return;
+    update({
+      cursor: data.pagination.nextCursor,
+      cursorTrail: JSON.stringify([...cursorTrail, cursor ?? null]),
+    });
+  }, [data?.pagination.nextCursor, update, cursorTrail, cursor]);
+  const handlePrevious = useCallback(() => {
+    if (!cursor) return;
+    update({
+      cursor: cursorTrail[cursorTrail.length - 1] ?? null,
+      cursorTrail: cursorTrail.length > 1 ? JSON.stringify(cursorTrail.slice(0, -1)) : null,
+    });
+  }, [cursor, cursorTrail, update]);
   const handleRetry = useCallback(() => {
     if (configFailed) void refetchConfig();
     else void refetch();
   }, [configFailed, refetchConfig, refetch]);
-  const handleStatusChange = useCallback((value: string) => update({ status: value === "active" ? null : value }), [update]);
-  const handleClearFilters = useCallback(() => update({ status: null }), [update]);
+  const handleStatusChange = useCallback((value: string) => update({ status: value === "active" ? null : value, cursorTrail: null }), [update]);
+  const handleClearFilters = useCallback(() => update({ status: null, cursorTrail: null }), [update]);
   const getRowKey = useCallback((row: LinkedDocumentItem) => row.id, []);
 
   const filters = canPublish && !linkOff ? (
@@ -147,7 +177,7 @@ export default function CompanyDocumentsPage() {
             mode: "cursor",
             pageSize: PAGE_LIMIT,
             hasMore: data?.pagination.hasMore ?? false,
-            hasPrevious: pager.hasPrevious,
+            hasPrevious: Boolean(cursor),
             onNext: handleNext,
             onPrevious: handlePrevious,
           }}
