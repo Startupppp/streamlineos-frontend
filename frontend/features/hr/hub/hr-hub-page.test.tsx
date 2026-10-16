@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import { EMPTY_HR_HUB_ACCESS, type HrHubAccess } from "@/hooks/api/hr/hub-types";
 import { HrHubPage } from "./hr-hub-page";
 
@@ -66,6 +66,22 @@ describe("HR hub loading state (BUG-HRMS-016)", () => {
     expect(screen.queryByText("No HR panels available to you")).not.toBeInTheDocument();
     expect(screen.queryByText("Today")).not.toBeInTheDocument();
     expect(screen.queryByText("Needs you")).not.toBeInTheDocument();
+  });
+
+  it("offers Still loading / Try again once the snapshot has been pending for 10s (UX-16)", () => {
+    jest.useFakeTimers();
+    try {
+      mockIsLoading = true;
+      render(<HrHubPage />);
+      expect(screen.queryByText(/still loading the HR overview/i)).not.toBeInTheDocument();
+      act(() => {
+        jest.advanceTimersByTime(10_000);
+      });
+      expect(screen.getByText(/still loading the HR overview/i)).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /try again/i })).toBeInTheDocument();
+    } finally {
+      jest.useRealTimers();
+    }
   });
 });
 

@@ -176,7 +176,7 @@ export function EmployeesListPage() {
       loading={
         <>
           <StatCardGridSkeleton cols={3} count={3} />
-          <EmployeesGridSkeleton />
+          <EmployeesGridSkeleton onStalledRetry={handleRetryEmployees} />
         </>
       }
       actions={

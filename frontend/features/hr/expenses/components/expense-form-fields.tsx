@@ -131,7 +131,7 @@ export function ExpenseFormFields({
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-xs font-medium">
-                  What is the other category? <span className="text-destructive">*</span>
+                  Category name <span className="text-destructive">*</span>
                 </FormLabel>
                 <FormControl>
                   <Input
@@ -205,7 +205,7 @@ export function ExpenseFormFields({
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-xs font-medium">
-                  What is the other payment method? <span className="text-destructive">*</span>
+                  Payment method name <span className="text-destructive">*</span>
                 </FormLabel>
                 <FormControl>
                   <Input

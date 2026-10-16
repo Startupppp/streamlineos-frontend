@@ -71,7 +71,9 @@ function TerminationCard({
   const isInEffect = effectiveDate <= format(new Date(), "yyyy-MM-dd");
   const canSendLetter =
     status === "APPROVED" || (status === "COMPLETED" && !record.emailSentAt);
-  const canCompleteNow = status === "SENT" || (status === "APPROVED" && isInEffect);
+  // The API separates only a SENT termination on/after its effective date
+  // (termination-separation.service); offering Complete earlier ends in a 400.
+  const canCompleteNow = status === "SENT" && isInEffect;
   const visibleReasons = reasonsList.slice(0, 2);
   const extraCount = reasonsList.length - 2;
 

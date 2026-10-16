@@ -43,6 +43,9 @@ const EmployeeTimelineTab = dynamic(
 const RehireEmployeeDialog = dynamic(() =>
   import("@/features/hr/employees/detail/rehire-employee-dialog").then((m) => ({ default: m.RehireEmployeeDialog })),
 );
+const ArchiveEmployeeAction = dynamic(() =>
+  import("@/features/hr/employees/detail/archive-employee-action").then((m) => ({ default: m.ArchiveEmployeeAction })),
+);
 const EmployeeSensitiveTab = dynamic(
   () => import("@/features/hr/employees/detail/sensitive-tab").then(m => ({ default: m.EmployeeSensitiveTab })),
   { loading: () => <div className="space-y-3">{Array.from({ length: 10 }).map((_, i) => <Skeleton key={i} className="h-14 w-full rounded-xl" />)}</div> }
@@ -151,7 +154,7 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
 
   const [rehireOpen, setRehireOpen] = useState(false);
   const handleRehireClick = useCallback(() => setRehireOpen(true), []);
-  const handleRehired = useCallback(() => router.refresh(), [router]);
+  const handleLifecycleChanged = useCallback(() => router.refresh(), [router]);
 
   const handleBack = useCallback(() => {
     requestLeaveIfNeeded(() => router.back());
@@ -294,6 +297,13 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
               <span className="hidden sm:inline">Terminate</span>
             </Button>
           )}
+          {canTerminate && (
+            <ArchiveEmployeeAction
+              employeeUserId={employee.id}
+              employeeName={employeeName}
+              onArchived={handleLifecycleChanged}
+            />
+          )}
           {canRehire && (
             <Button
               variant="outline"
@@ -416,7 +426,7 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
           onOpenChange={setRehireOpen}
           employeeUserId={employee.id}
           employeeName={employeeName}
-          onRehired={handleRehired}
+          onRehired={handleLifecycleChanged}
         />
       )}
     </PageWrapper>

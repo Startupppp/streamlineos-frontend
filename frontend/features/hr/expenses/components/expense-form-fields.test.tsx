@@ -131,4 +131,13 @@ describe("expense amount field", () => {
     expect(onValid.mock.calls[0][0].amount).toBe("250.50");
     expect(screen.queryByText(/Amount must/)).not.toBeInTheDocument();
   });
+
+  it("asks for the Other category name without repeating the field label (HR-U-030)", () => {
+    const result = expenseFormSchema.safeParse({ ...baseValues, amount: "10", category: "Other" });
+    expect(result.success).toBe(false);
+    const messages = result.success
+      ? []
+      : result.error.issues.filter((i) => i.path[0] === "customCategory").map((i) => i.message);
+    expect(messages).toEqual(["Enter a name for the category"]);
+  });
 });

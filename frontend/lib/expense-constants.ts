@@ -55,6 +55,7 @@ export const STATUS_STYLES: Record<string, { dot: string; bg: string; text: stri
   APPROVED: { dot: "bg-category-emerald-fill", bg: "bg-status-success-surface", text: "text-status-success-ink", border: "border-status-success-rule" },
   REJECTED: { dot: "bg-category-rose-fill",     bg: "bg-status-danger-surface",         text: "text-status-danger-ink",         border: "border-status-danger-rule" },
   PAID:     { dot: "bg-category-slate-fill",   bg: "bg-muted",    text: "text-muted-foreground",     border: "border-border" },
+  WITHDRAWN: { dot: "bg-category-slate-fill",  bg: "bg-muted",    text: "text-muted-foreground",     border: "border-border" },
 };
 
 export const STATUS_LABELS: Record<string, string> = {
@@ -62,6 +63,7 @@ export const STATUS_LABELS: Record<string, string> = {
   APPROVED: "Approved",
   REJECTED: "Rejected",
   PAID: "Paid",
+  WITHDRAWN: "Withdrawn",
 };
 
 export const EXPENSE_CATEGORIES = [
@@ -75,7 +77,7 @@ export const PAYMENT_METHODS = [
   "Debit Card", "Credit Card", "Wallet", "Demand Draft", "Other",
 ];
 
-export type StatusFilter = "ALL" | "PENDING" | "APPROVED" | "REJECTED";
+export type StatusFilter = "ALL" | "PENDING" | "APPROVED" | "REJECTED" | "WITHDRAWN";
 
 export {
   MAX_EXPENSE_RECEIPTS,

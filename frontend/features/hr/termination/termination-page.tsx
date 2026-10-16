@@ -24,6 +24,10 @@ import { useTerminationActions } from "./use-termination-actions";
 
 type StatusFilter = "ALL" | TerminationStatus;
 
+/** What `PATCH /hr/termination/:id/complete` does (termination-separation.service). */
+const COMPLETION_EFFECTS =
+  "removes the employee's access to this organization, ends their employment record, opens a draft final settlement, creates asset-return records for their assigned assets and starts the exit checklist.";
+
 export function TerminationPage() {
   const canApproveExit = useCan("hr:exit:approve");
   const searchParams = useSearchParams();
@@ -54,6 +58,7 @@ export function TerminationPage() {
   const prefillMissing = employeeUserIdParam !== null && candidate.isError;
 
   const actions = useTerminationActions({
+    canApproveExit,
     terminations,
     employees,
     employeeUserIdParam,
@@ -174,6 +179,19 @@ export function TerminationPage() {
         onSeveranceAmountChange={actions.handleSeveranceAmountChange}
         internalNotes={actions.internalNotes}
         onInternalNotesChange={actions.handleInternalNotesChange}
+        saveAsDraft={actions.saveAsDraft}
+        onSaveAsDraftChange={actions.setSaveAsDraft}
+      />
+
+      <ConfirmSheet
+        open={actions.confirmCreateOpen}
+        onOpenChange={actions.handleConfirmCreateOpenChange}
+        title="Approve this termination now?"
+        description={`It is approved immediately, with no second reviewer. You then send the termination letter; completing it on or after the effective date ${COMPLETION_EFFECTS} Turn on "Save as draft" to keep it for review instead.`}
+        confirmLabel="Create & Approve"
+        destructive
+        onConfirm={actions.performCreate}
+        isPending={actions.createIsPending}
       />
 
       <ConfirmSheet
@@ -208,7 +226,7 @@ export function TerminationPage() {
         open={actions.emailRecord !== null}
         onOpenChange={actions.handleEmailRecordClose}
         title="Send Termination Email"
-        description={`Send termination email to ${actions.emailRecord?.employee?.name ?? "this employee"}? The employee will be officially notified. Account deactivation will happen when you mark the termination as Complete.`}
+        description={`Send termination email to ${actions.emailRecord?.employee?.name ?? "this employee"}? The employee will be officially notified. If the effective date has arrived, sending it also completes the termination, which ${COMPLETION_EFFECTS}`}
         confirmLabel="Send Email"
         onConfirm={actions.handleSendEmailConfirm}
         isPending={actions.sendEmailIsPending}
@@ -218,7 +236,7 @@ export function TerminationPage() {
         open={actions.completeTerminationId !== null}
         onOpenChange={actions.handleCompleteSheetOpenChange}
         title="Complete Termination"
-        description="This will deactivate the employee's account, initiate the final settlement, and create asset return records. This action cannot be undone."
+        description={`Completing it ${COMPLETION_EFFECTS} Their sign-in to other organizations is not affected. This action cannot be undone.`}
         confirmLabel="Complete Termination"
         destructive
         onConfirm={actions.handleCompleteConfirm}

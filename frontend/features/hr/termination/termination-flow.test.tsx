@@ -81,6 +81,8 @@ describe("TerminationFormSheet prefill from a profile link", () => {
         onSeveranceAmountChange={noop}
         internalNotes=""
         onInternalNotesChange={noop}
+        saveAsDraft={false}
+        onSaveAsDraftChange={noop}
       />,
     );
   }
@@ -93,6 +95,11 @@ describe("TerminationFormSheet prefill from a profile link", () => {
   it("falls back to the placeholder when nothing resolved the id", () => {
     renderSheet(false);
     expect(screen.getByTestId("employee-combobox")).toHaveTextContent("Select an employee…");
+  });
+
+  it("lets an approver keep the termination as a draft (HR-U-026)", () => {
+    renderSheet(false);
+    expect(screen.getByRole("switch", { name: "Save as draft" })).toBeInTheDocument();
   });
 });
 
@@ -130,9 +137,20 @@ describe("TerminationList row actions", () => {
     expect(screen.queryByRole("button", { name: /Complete termination/ })).not.toBeInTheDocument();
   });
 
-  it("offers completion of an approved termination already in effect, without requiring the email first", () => {
+  it("asks for the letter before completion, because the API completes only a SENT termination (HR-U-027)", () => {
     renderRow({ status: "APPROVED", effectiveDate: "2020-01-01" });
+    expect(screen.queryByRole("button", { name: /Complete termination/ })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Send termination email/ })).toBeInTheDocument();
+  });
+
+  it("offers completion once the letter is sent and the date has arrived", () => {
+    renderRow({ status: "SENT", effectiveDate: "2020-01-01", emailSentAt: "2026-10-14T05:00:00.000Z" });
     expect(screen.getByRole("button", { name: /Complete termination/ })).toBeInTheDocument();
+  });
+
+  it("does not offer completion of a sent letter before its effective date", () => {
+    renderRow({ status: "SENT", effectiveDate: "2999-01-01", emailSentAt: "2026-10-14T05:00:00.000Z" });
+    expect(screen.queryByRole("button", { name: /Complete termination/ })).not.toBeInTheDocument();
   });
 
   it("hides completion of a future-dated approval", () => {
