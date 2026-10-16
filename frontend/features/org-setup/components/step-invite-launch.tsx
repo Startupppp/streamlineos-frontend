@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Plus } from "lucide-react";
+import { toast } from "sonner";
 import { RocketIcon } from "@animateicons/react/lucide";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -39,14 +40,12 @@ type StepInviteLaunchProps = {
   data: WizardData;
   onBack: () => void;
   onChangeInvitees: (invitees: Invitee[]) => void;
-  onSkip?: () => void;
 };
 
 export function StepInviteLaunch({
   data,
   onChangeInvitees,
   onBack,
-  onSkip,
 }: StepInviteLaunchProps) {
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<string>(DEFAULT_INVITE_ROLE);
@@ -95,6 +94,19 @@ export function StepInviteLaunch({
     if (e.key !== "Enter") return;
     e.preventDefault();
     handleAdd();
+  }
+
+  function handleSkip() {
+    const skipped = data.invitees;
+    onChangeInvitees([]);
+    setInviteError(null);
+    setAccessError(null);
+    function handleUndoSkip() {
+      onChangeInvitees(skipped);
+    }
+    toast.success("Invites skipped. Add people later from People → Invitations.", {
+      action: { label: "Undo", onClick: handleUndoSkip },
+    });
   }
 
   function handleRemove(target: string) {
@@ -265,11 +277,11 @@ export function StepInviteLaunch({
         </p>
       )}
 
-      {onSkip && (
+      {data.invitees.length > 0 && (
         <button
           type="button"
           className="text-xs text-muted-foreground underline-offset-2 hover:underline"
-          onClick={onSkip}
+          onClick={handleSkip}
           disabled={isPending}
         >
           Skip for now

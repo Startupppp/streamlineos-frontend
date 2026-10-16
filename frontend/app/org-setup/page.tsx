@@ -222,17 +222,23 @@ export default function OrgSetupPage() {
     markDraftSaved();
   }, [currentStepId, data, markDraftSaved, saveServerDraft, sequence, step, totalSteps]);
 
-  const goBack = useCallback(async () => {
+  const goBack = useCallback(() => {
     const nextStep = Math.max(step - 1, 1);
     const nextStepId = sequence[nextStep - 1] ?? currentStepId;
-    try {
-      await saveServerDraft(data, nextStepId);
-    } catch (error) {
-      toast.error(`We couldn't save your setup. ${getErrorMessage(error)}`);
-      return;
+    if (draftSaveTimerRef.current) {
+      clearTimeout(draftSaveTimerRef.current);
+      draftSaveTimerRef.current = null;
     }
     setDirection(-1);
     setStep(nextStep);
+    function persistDraft() {
+      saveServerDraft(data, nextStepId).catch((error: unknown) => {
+        toast.error(`We couldn't save your setup. ${getErrorMessage(error)}`, {
+          action: { label: "Retry", onClick: persistDraft },
+        });
+      });
+    }
+    persistDraft();
   }, [currentStepId, data, saveServerDraft, sequence, step]);
 
   const handleStepSelect = useCallback(async (index: number) => {
@@ -413,7 +419,6 @@ export default function OrgSetupPage() {
           data={data}
           onBack={goBack}
           onChangeInvitees={(invitees) => patch({ invitees })}
-          onSkip={goNext}
         />
       )}
     </OrgSetupShell>
