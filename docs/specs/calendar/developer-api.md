@@ -14,7 +14,7 @@ The stable base path is `/v1/calendar`. Send the tenant credential in `X-API-Key
 
 Administrators with `calendar:admin:manage` create and revoke credentials through `/calendar/admin/developer/credentials`. The secret is returned once and responses carrying it disable compression. A credential cannot access another tenant because tenant identity comes from the credential record and every resource query includes that tenant.
 
-Credential creation and revocation require an `Idempotency-Key`. Keep the same key and request body when retrying an uncertain create response. A repeated successful create returns `409` because its secret cannot be shown again; it does not issue another credential. Review the credential list and revoke the new credential if its secret was lost before starting a replacement with a new key. A reused key with different input or actor returns `422`.
+Credential creation and revocation require an `Idempotency-Key`. Keep the same key and request body when retrying an uncertain create response. A repeated successful create returns `409` with code `CALENDAR_CREDENTIAL_SECRET_UNAVAILABLE` because its secret cannot be shown again; it does not issue another credential. Review the credential list and revoke the new credential if its secret was lost before starting a replacement with a new key. An in-flight `409` keeps the original key for retry. A reused key with different input or actor returns `422`.
 
 ## Endpoints
 
