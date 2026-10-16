@@ -20,10 +20,10 @@ export function DataResidencySection({ residency }: { residency: DataResidency |
   if (!residency || residency.options.length === 0) return null;
 
   return (
-    <section className="mt-20 lg:mt-24 border-t border-border">
+    <section>
       <div className="container mx-auto px-4 lg:px-8 max-w-4xl py-16 lg:py-20">
         <div className="text-center mb-10">
-          <h2 className="font-display text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+          <h2 className="lp-display text-5xl text-foreground sm:text-6xl">
             Your data stays where you need it
           </h2>
           <p className="mt-3 text-muted-foreground text-sm sm:text-base max-w-2xl mx-auto">
@@ -36,7 +36,7 @@ export function DataResidencySection({ residency }: { residency: DataResidency |
           {residency.options.map((option) => (
             <div
               key={option.region}
-              className="rounded-xl border border-border bg-white p-5 shadow-sm"
+              className="rounded-3xl border border-border bg-card p-6 shadow-sm"
             >
               <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-status-info-surface text-status-info-ink">
                 <Globe2 className="h-4 w-4" aria-hidden />

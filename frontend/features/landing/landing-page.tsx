@@ -1,30 +1,49 @@
-import "./home/home.css";
-import { Navbar } from "./home/navbar";
+import Link from "next/link";
+import { ArrowRight, MessageCircle } from "lucide-react";
+import { MarketingShell } from "./home/marketing-shell";
 import { Hero } from "./home/hero";
-import { Problem } from "./home/problem";
+import { ProductReveal } from "./home/product-reveal";
+import { ModuleMarquee } from "./home/module-marquee";
+import { Replaces } from "./home/replaces";
 import { ModuleStage } from "./home/module-stage";
 import { FeatureRows } from "./home/feature-rows";
-import { Connected } from "./home/connected";
+import { Steps } from "./home/steps";
+import { Together } from "./home/together";
 import { Pricing } from "./home/pricing";
 import { FAQ } from "./home/faq";
 import { FinalCTA } from "./home/final-cta";
-import { LandingFooter } from "./landing-footer";
 
 export function LandingPage() {
   return (
-    <div className="lp relative flex min-h-dvh flex-col text-foreground selection:bg-brand-core/20">
-      <Navbar />
-      <main className="min-w-0 flex-1">
-        <Hero />
-        <Problem />
-        <ModuleStage />
-        <FeatureRows />
-        <Connected />
-        <Pricing />
-        <FAQ />
-        <FinalCTA />
-      </main>
-      <LandingFooter />
-    </div>
+    <MarketingShell>
+      <Hero />
+      <ProductReveal />
+      <ModuleMarquee />
+      <Replaces />
+      <ModuleStage />
+      <FeatureRows />
+      <Steps />
+      <Together />
+      <Pricing />
+      <FAQ>
+        <div className="lp-card mt-8 rounded-3xl p-6">
+          <span className="flex size-10 items-center justify-center rounded-full bg-(--lp-accent-soft) text-(--lp-accent)">
+            <MessageCircle className="size-5" aria-hidden />
+          </span>
+          <p className="mt-4 font-medium text-foreground">Still have a question?</p>
+          <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+            A person on our team replies within one business day.
+          </p>
+          <Link
+            href="/contact"
+            className="mt-5 inline-flex h-10 items-center gap-1.5 rounded-full bg-foreground px-5 text-sm font-medium text-white transition-transform duration-200 hover:-translate-y-0.5"
+          >
+            Talk to us
+            <ArrowRight className="size-4" aria-hidden />
+          </Link>
+        </div>
+      </FAQ>
+      <FinalCTA />
+    </MarketingShell>
   );
 }

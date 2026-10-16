@@ -90,7 +90,7 @@ export function HeroScreen() {
         <Panel title="Tickets" meta="5 open" className="md:col-span-4">
           <Row
             title={<Rec>Kestrel Foods</Rec>}
-            sub="#2281 Scanner sync failing at Pune DC"
+            sub="#2281 Pune warehouse scanners not updating"
             right={<Tag tone="warn">High</Tag>}
           />
           <Row title="Harbour Textiles" sub="#2279 Add a second approver" right={<Tag>Normal</Tag>} />

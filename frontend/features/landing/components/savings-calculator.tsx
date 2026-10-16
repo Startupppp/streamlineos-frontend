@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { Users } from "lucide-react";
+import { useState, type ChangeEvent } from "react";
+import { ChevronDown, Users } from "lucide-react";
 import {
   calculateSavingsVsAllInOne,
   calculateSavingsVsStack,
@@ -9,25 +9,21 @@ import {
   PRICING_TIERS,
 } from "@/lib/pricing";
 
-const INR = (n: number) =>
-  `₹${n.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
+const INR = (n: number) => `₹${n.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
 
 const MIN_SEATS = 3;
 const MAX_SEATS = 200;
 const SEAT_TICKS = [3, 50, 100, 200] as const;
 
-function seatTickPosition(value: number) {
-  return ((value - MIN_SEATS) / (MAX_SEATS - MIN_SEATS)) * 100;
-}
-
 export function SavingsCalculator() {
   const [seats, setSeats] = useState(20);
 
-  const vsAllInOne = useMemo(
-    () => calculateSavingsVsAllInOne(seats, "annual"),
-    [seats],
-  );
-  const vsStack = useMemo(() => calculateSavingsVsStack(seats), [seats]);
+  function handleSeatsChange(event: ChangeEvent<HTMLInputElement>) {
+    setSeats(Number(event.target.value));
+  }
+
+  const vsAllInOne = calculateSavingsVsAllInOne(seats, "annual");
+  const vsStack = calculateSavingsVsStack(seats);
 
   const starterAnnual =
     PRICING_TIERS.find((t) => t.id === "starter")?.annual ??
@@ -35,7 +31,7 @@ export function SavingsCalculator() {
     0;
 
   return (
-    <div className="rounded-2xl border border-border bg-white p-4 sm:p-6 md:p-8 shadow-sm min-w-0">
+    <div className="min-w-0 rounded-3xl border border-border bg-card p-5 shadow-sm sm:p-8 md:p-10">
       <div className="mb-6 sm:mb-8">
         <label
           htmlFor="seats-slider"
@@ -45,7 +41,7 @@ export function SavingsCalculator() {
             <Users className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden />
             Team size
           </span>
-          <span className="font-display text-xl sm:text-2xl font-bold tabular-nums text-foreground shrink-0">
+          <span className="shrink-0 text-3xl font-semibold tracking-tight tabular-nums text-foreground">
             {seats}
             <span className="ml-1.5 text-sm font-medium text-muted-foreground">users</span>
           </span>
@@ -57,35 +53,27 @@ export function SavingsCalculator() {
           max={MAX_SEATS}
           step={1}
           value={seats}
-          onChange={(e) => setSeats(Number(e.target.value))}
-          className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-muted accent-blue-600 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-status-info-fill [&::-webkit-slider-thumb]:shadow-sm"
+          onChange={handleSeatsChange}
+          className="h-6 w-full cursor-pointer appearance-none bg-transparent accent-(--lp-accent) [&::-moz-range-track]:h-1.5 [&::-moz-range-track]:rounded-full [&::-moz-range-track]:bg-muted [&::-webkit-slider-runnable-track]:h-1.5 [&::-webkit-slider-runnable-track]:rounded-full [&::-webkit-slider-runnable-track]:bg-muted [&::-webkit-slider-thumb]:-mt-1.75 [&::-webkit-slider-thumb]:size-5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-status-info-fill [&::-webkit-slider-thumb]:shadow-sm"
           aria-label="Number of users"
           aria-valuemin={MIN_SEATS}
           aria-valuemax={MAX_SEATS}
           aria-valuenow={seats}
         />
         <div className="relative mt-2 h-4">
-          {SEAT_TICKS.map((tick) => {
-            const pct = seatTickPosition(tick);
-            const isMin = tick === MIN_SEATS;
-            const isMax = tick === MAX_SEATS;
-            return (
-              <span
-                key={tick}
-                className="absolute text-xs text-muted-foreground"
-                style={{
-                  left: isMin ? "0%" : isMax ? "100%" : `${pct}%`,
-                  transform: isMin
-                    ? "none"
-                    : isMax
-                      ? "translateX(-100%)"
-                      : "translateX(-50%)",
-                }}
-              >
-                {tick}
-              </span>
-            );
-          })}
+          {SEAT_TICKS.map((tick) => (
+            <span
+              key={tick}
+              className="absolute text-xs text-muted-foreground"
+              style={{
+                left: `${((tick - MIN_SEATS) / (MAX_SEATS - MIN_SEATS)) * 100}%`,
+                transform:
+                  tick === MIN_SEATS ? "none" : tick === MAX_SEATS ? "translateX(-100%)" : "translateX(-50%)",
+              }}
+            >
+              {tick}
+            </span>
+          ))}
         </div>
       </div>
 
@@ -103,10 +91,10 @@ export function SavingsCalculator() {
         />
       </div>
 
-      <div className="mt-4 rounded-xl bg-status-info-fill px-5 py-4 text-white">
+      <div className="mt-4 rounded-2xl bg-status-info-fill px-6 py-5 text-white">
         <p className="text-xs font-medium text-white/80">Annual savings</p>
         <div className="mt-1 flex flex-wrap items-end justify-between gap-3">
-          <p className="font-display text-3xl font-extrabold tabular-nums">
+          <p className="text-4xl font-semibold tracking-tight tabular-nums">
             {INR(vsAllInOne.savings)}
             <span className="ml-2 text-sm font-medium text-white/80">/ year</span>
           </p>
@@ -117,8 +105,9 @@ export function SavingsCalculator() {
       </div>
 
       <details className="mt-5 group">
-        <summary className="cursor-pointer text-sm font-medium text-foreground transition-colors hover:text-muted-foreground">
+        <summary className="inline-flex cursor-pointer items-center gap-1.5 text-sm font-medium text-foreground transition-colors hover:text-(--lp-accent)">
           Compare against a per-tool stack
+          <ChevronDown className="size-4 transition-transform duration-200 group-open:rotate-180" aria-hidden />
         </summary>
         <div className="mt-4 space-y-3 rounded-xl border border-border bg-muted p-4">
           <p className="text-sm leading-relaxed text-muted-foreground">
@@ -133,7 +122,7 @@ export function SavingsCalculator() {
               compact
             />
             <ComparisonCard
-              label="StreamlineOS Startup"
+              label="StreamlineOS Starter"
               subtitle="One platform"
               amount={INR(vsStack.streamlineAnnual)}
               highlight
@@ -164,7 +153,7 @@ function ComparisonCard({
 }) {
   return (
     <div
-      className={`rounded-xl border p-4 ${
+      className={`rounded-2xl border p-4 ${
         highlight
           ? "border-status-info-rule bg-status-info-surface"
           : "border-border bg-muted"
@@ -176,7 +165,7 @@ function ComparisonCard({
         {label}
       </p>
       <p
-        className={`mt-1 font-display font-bold tabular-nums tracking-tight ${
+        className={`mt-1 font-semibold tracking-tight tabular-nums ${
           compact ? "text-xl" : "text-2xl"
         } ${highlight ? "text-status-info-ink" : "text-foreground"}`}
       >
