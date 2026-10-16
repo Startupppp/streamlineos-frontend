@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -40,6 +40,14 @@ export function PageCoverPickerDialog({
 }: PageCoverPickerDialogProps) {
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const uploadGenerationRef = useRef(0);
+
+  useEffect(() => {
+    if (!open) {
+      uploadGenerationRef.current += 1;
+      setUploading(false);
+    }
+  }, [open]);
 
   function handleOpenChange(next: boolean) {
     if (uploading) return;
@@ -47,6 +55,7 @@ export function PageCoverPickerDialog({
   }
 
   function handleGradientSelect(e: React.MouseEvent<HTMLButtonElement>) {
+    if (uploading) return;
     const key = e.currentTarget.dataset.gradientKey;
     if (!key) return;
     onCoverChange(`gradient:${key}`);
@@ -61,15 +70,18 @@ export function PageCoverPickerDialog({
     const file = e.target.files?.[0];
     e.target.value = "";
     if (!file) return;
+    const generation = ++uploadGenerationRef.current;
     setUploading(true);
     try {
       const result = await uploadKbMedia(file, pageId);
+      if (generation !== uploadGenerationRef.current) return;
       onCoverChange(result.key);
       onOpenChange(false);
     } catch (error) {
-      toast.error("Failed to upload cover", { description: getErrorMessage(error) });
+      if (generation === uploadGenerationRef.current)
+        toast.error("Failed to upload cover", { description: getErrorMessage(error) });
     } finally {
-      setUploading(false);
+      if (generation === uploadGenerationRef.current) setUploading(false);
     }
   }
 
@@ -96,6 +108,7 @@ export function PageCoverPickerDialog({
               key={preset.key}
               type="button"
               data-gradient-key={preset.key}
+              disabled={uploading}
               className="h-10 rounded-md border border-border hover:ring-2 hover:ring-ring"
               style={{ background: preset.css }}
               onClick={handleGradientSelect}
