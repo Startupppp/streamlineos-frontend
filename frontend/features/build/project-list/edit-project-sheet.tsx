@@ -184,6 +184,7 @@ export function EditProjectSheet({
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent
+          aria-describedby={undefined}
           side="right"
           className="w-full sm:max-w-[480px] p-0 flex flex-col overflow-hidden"
         >

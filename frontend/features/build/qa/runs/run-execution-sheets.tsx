@@ -53,7 +53,7 @@ export function NotesSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="flex w-full flex-col p-0 sm:max-w-md">
+      <SheetContent aria-describedby={undefined} className="flex w-full flex-col p-0 sm:max-w-md">
         <SheetHeader className="shrink-0 border-b px-5 py-4">
           <SheetTitle>
             {notesResult?.testCase
@@ -111,7 +111,7 @@ export function CreateBugSheet({
 }: CreateBugSheetProps) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="flex w-full flex-col p-0 sm:max-w-md">
+      <SheetContent aria-describedby={undefined} className="flex w-full flex-col p-0 sm:max-w-md">
         <SheetHeader className="shrink-0 border-b px-5 py-4">
           <SheetTitle>Create Bug from Result</SheetTitle>
         </SheetHeader>

@@ -20,4 +20,9 @@ describe("build compatibility redirect sources (BT-72df56ae5a79)", () => {
     const rule = BUILD_COMPAT_REDIRECTS.find((r) => r.source === "/build/drafts");
     expect(rule?.destination).toBe("/build/my-work?section=drafts");
   });
+
+  it("/build/products redirects to /build/managed-products, the route the sidebar links to", () => {
+    const rule = BUILD_COMPAT_REDIRECTS.find((r) => r.source === "/build/products");
+    expect(rule?.destination).toBe("/build/managed-products");
+  });
 });
