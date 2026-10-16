@@ -17,7 +17,7 @@ const policy = jest.requireMock<{ useCalendarOfflinePolicy: jest.Mock }>("@/hook
 const online = jest.requireMock<{ useOnlineStatus: jest.Mock }>("@/hooks/common/use-online-status").useOnlineStatus;
 const refetch = jest.fn();
 
-function setup(options: { moved?: boolean; isError?: boolean; stale?: boolean; online?: boolean; truncated?: boolean } = {}) {
+function setup(options: { moved?: boolean; isError?: boolean; stale?: boolean; staleOccurrence?: boolean; online?: boolean; truncated?: boolean } = {}) {
   const now = Date.now();
   const originalStart = new Date(now + 86_400_000);
   const originalEnd = new Date(originalStart.getTime() + 3_600_000);
@@ -34,6 +34,7 @@ function setup(options: { moved?: boolean; isError?: boolean; stale?: boolean; o
         sourceRecordId: "42",
         occurrenceId: "occ-1",
         actions: { edit: true },
+        freshness: { state: options.staleOccurrence ? "stale" : "fresh", asOf: new Date(now).toISOString() },
         sourceVersion: "3",
         start: new Date(originalStart.getTime() + (options.moved ? 30 * 60_000 : 0)).toISOString(),
         end: new Date(originalEnd.getTime() + (options.moved ? 30 * 60_000 : 0)).toISOString(),
@@ -91,6 +92,10 @@ describe("offline Calendar edit review", () => {
 
   it("rejects a truncated occurrence result even when coverage reports complete", () => {
     expect(setup({ truncated: true })).toBeDisabled();
+  });
+
+  it("rejects a stale occurrence even when version and overall coverage look current", () => {
+    expect(setup({ staleOccurrence: true })).toBeDisabled();
   });
 
   it("blocks a previously valid review after connectivity drops", () => {

@@ -67,7 +67,7 @@ export function CalendarOfflineEditReview({ intent, onDiscard, onContinue }: {
   const event = review.data?.event;
   const detail = review.data?.detail;
   const slot = review.data?.availability.slots[0];
-  const sourceCurrent = Boolean(event?.actions.edit && detail?.canManage && event.sourceVersion === intent.expectedSourceVersion && String(detail.localVersion) === intent.expectedSourceVersion &&
+  const sourceCurrent = Boolean(event?.actions.edit && event.freshness.state === "fresh" && detail?.canManage && event.sourceVersion === intent.expectedSourceVersion && String(detail.localVersion) === intent.expectedSourceVersion &&
     new Date(event.start).getTime() === originalStart.getTime() && new Date(event.end).getTime() === originalEnd.getTime() && review.data?.coverage === "complete" && review.data.truncated === false);
   const evaluationAge = review.data ? nowMs - new Date(review.data.availability.evaluatedAt).getTime() : NaN;
   const evaluationCurrent = review.isFetchedAfterMount && review.dataUpdatedAt >= intent.createdAt &&
