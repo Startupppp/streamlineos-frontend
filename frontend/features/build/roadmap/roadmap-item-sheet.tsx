@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -91,6 +91,7 @@ export function RoadmapItemSheet({ item, managedProductId, defaultHorizon, onClo
   const create = useCreateRoadmapItem();
   const update = useUpdateRoadmapItem();
   const isPending = create.isPending || update.isPending;
+  const savingRef = useRef(false);
   const [conflictFields, setConflictFields] = useState<TicketConflictFieldDiff[] | null>(null);
 
   function handleKeepMine() {
@@ -127,7 +128,13 @@ export function RoadmapItemSheet({ item, managedProductId, defaultHorizon, onClo
   });
   useRegisterDirtyState(form.formState.isDirty);
 
+  function releaseSave() {
+    savingRef.current = false;
+  }
+
   function handleSave(values: RoadmapItemFormValues) {
+    if (savingRef.current) return;
+    savingRef.current = true;
     const rice = {
       reach: parseRiceField(values.reach),
       impact: parseRiceField(values.impact),
@@ -187,6 +194,7 @@ export function RoadmapItemSheet({ item, managedProductId, defaultHorizon, onClo
             }
             toast.error(getErrorMessage(e));
           },
+          onSettled: releaseSave,
         },
       );
     } else {
@@ -216,6 +224,7 @@ export function RoadmapItemSheet({ item, managedProductId, defaultHorizon, onClo
         {
           onSuccess: () => { toast.success("Roadmap item created"); onClose(); },
           onError: (e) => toast.error(getErrorMessage(e)),
+          onSettled: releaseSave,
         },
       );
     }
