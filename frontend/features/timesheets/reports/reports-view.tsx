@@ -6,9 +6,6 @@ import { motion, useReducedMotion } from "framer-motion";
 import { format, subDays, parseISO, isValid } from "date-fns";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Tabs, TabsContent, TabsList, TabsTrigger, TABS_CONTENT_PAGE_BODY_CLASS } from "@/components/ui/tabs";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardContent } from "@/components/ui/card";
-import { StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
@@ -274,37 +271,6 @@ export function ReportsView() {
           </TabsContent>
         </Tabs>
       </motion.div>
-    </PageWrapper>
-  );
-}
-
-export function ReportsPageSkeleton() {
-  return (
-    <PageWrapper
-      title="Reports"
-      filters={
-        <div className="flex items-center gap-2">
-          <Skeleton className="h-9 w-48 rounded-md" />
-          <Skeleton className="h-9 w-36 rounded-md" />
-        </div>
-      }
-    >
-      <div className="flex flex-1 min-h-0 flex-col gap-4">
-        <StatCardGridSkeleton cols={4} count={4} />
-        <div className="grid gap-4 md:grid-cols-2">
-          <Card>
-            <CardContent className="pt-4">
-              <Skeleton className="h-[220px] w-full rounded-md" />
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-4">
-              <Skeleton className="h-[220px] w-full rounded-md" />
-            </CardContent>
-          </Card>
-        </div>
-        <Skeleton className="h-[120px] rounded-lg" />
-      </div>
     </PageWrapper>
   );
 }
