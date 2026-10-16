@@ -7,6 +7,7 @@ import { PlusIcon, XIcon } from "@animateicons/react/lucide";
 import { useCreateTicket } from "@/hooks/api/build/tickets";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
+import { TICKET_TITLE_MAX } from "@/lib/validation/projects";
 import type { InlineGroupCreateProps } from "./list-view-shared";
 import { useCan } from "@/hooks/api/access";
 
@@ -35,8 +36,8 @@ function InlineGroupCreateContent({ groupKey, projectId, status }: InlineGroupCr
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === "Enter" && title.trim()) {
-      if (title.trim().length > 200) {
-        toast.error("Title must be 200 characters or fewer");
+      if (title.trim().length > TICKET_TITLE_MAX) {
+        toast.error(`Title must be ${TICKET_TITLE_MAX} characters or fewer`);
         return;
       }
       createTicket.mutate({ projectId, title: title.trim(), status, type: "TASK" });
