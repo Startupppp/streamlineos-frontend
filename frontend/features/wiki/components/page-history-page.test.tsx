@@ -490,6 +490,33 @@ describe("PageHistoryPage — deep link", () => {
     expect(screen.getByText("Version 1 vs Version 2")).toBeInTheDocument();
   });
 
+  it("follows version and compare URL changes while the route remains mounted", () => {
+    linkParams({ version: "1", compare: "2" });
+    const view = render(<PageHistoryPage pageId={1} />);
+    expect(screen.getByText("Version 1 vs Version 2")).toBeInTheDocument();
+
+    linkParams({ version: "2" });
+    view.rerender(<PageHistoryPage pageId={1} />);
+    expect(screen.getByRole("button", { name: "Enter compare mode" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Select version 2 (current)" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.queryByText("Version 1 vs Version 2")).not.toBeInTheDocument();
+
+    linkParams({ version: "1", compare: "2" });
+    view.rerender(<PageHistoryPage pageId={1} />);
+    expect(screen.getByText("Version 1 vs Version 2")).toBeInTheDocument();
+  });
+
+  it("closes a restore confirmation when navigation changes the selected version", () => {
+    linkParams({ version: "1" });
+    const view = render(<PageHistoryPage pageId={1} />);
+    fireEvent.click(screen.getByRole("button", { name: /restore/i }));
+    expect(screen.getByRole("alertdialog")).toBeInTheDocument();
+
+    linkParams({ version: "2" });
+    view.rerender(<PageHistoryPage pageId={1} />);
+    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+  });
+
   it("writes both halves back as ?version=2&compare=1 when a compare version is picked", () => {
     linkParams({ version: "2" });
 

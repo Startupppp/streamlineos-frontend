@@ -246,15 +246,28 @@ export default function PageHistoryPage({
 
   const versionParam = searchParams.get("version");
   const compareParam = searchParams.get("compare");
-
-  const [selectedA, setSelectedA] = useState<number | null>(
-    versionParam ? parseInt(versionParam, 10) : (initialVersion ?? null),
-  );
-  const [selectedB, setSelectedB] = useState<number | null>(
-    compareParam ? parseInt(compareParam, 10) : (initialCompare ?? null),
-  );
-  const [compareMode, setCompareMode] = useState(Boolean(selectedB));
-  const [restoreAlertOpen, setRestoreAlertOpen] = useState(false);
+  const selectionSource = JSON.stringify([versionParam, compareParam, initialVersion, initialCompare]);
+  const parsedVersion = versionParam && /^[1-9]\d*$/.test(versionParam) ? Number(versionParam) : null;
+  const parsedCompare = compareParam && /^[1-9]\d*$/.test(compareParam) ? Number(compareParam) : null;
+  const initialA = parsedVersion !== null && Number.isSafeInteger(parsedVersion)
+    ? parsedVersion
+    : versionParam ? null : (initialVersion ?? null);
+  const initialB = parsedCompare !== null && Number.isSafeInteger(parsedCompare)
+    ? parsedCompare
+    : compareParam ? null : (initialCompare ?? null);
+  const initialSelection = {
+    source: selectionSource,
+    selectedA: initialA,
+    selectedB: initialB,
+    compareMode: initialB !== null,
+  };
+  const [selectionState, setSelectionState] = useState(initialSelection);
+  if (selectionState.source !== selectionSource) setSelectionState(initialSelection);
+  const { selectedA, selectedB, compareMode } = selectionState.source === selectionSource
+    ? selectionState
+    : initialSelection;
+  const [restoreAlert, setRestoreAlert] = useState({ source: selectionSource, open: false });
+  const restoreAlertOpen = restoreAlert.source === selectionSource && restoreAlert.open;
 
   const {
     data: currentPage,
@@ -299,11 +312,10 @@ export default function PageHistoryPage({
     const num = Number(vn);
     if (compareMode) {
       if (selectedA === num) return;
-      setSelectedB(num);
+      setSelectionState((previous) => ({ ...previous, selectedB: num }));
       syncUrl(selectedA, num);
     } else {
-      setSelectedA(num);
-      setSelectedB(null);
+      setSelectionState((previous) => ({ ...previous, selectedA: num, selectedB: null }));
       syncUrl(num, null);
     }
   }
@@ -316,19 +328,18 @@ export default function PageHistoryPage({
 
   function handleToggleCompare() {
     const next = !compareMode;
-    setCompareMode(next);
+    setSelectionState((previous) => ({ ...previous, compareMode: next, selectedB: next ? previous.selectedB : null }));
     if (!next) {
-      setSelectedB(null);
       syncUrl(selectedA, null);
     }
   }
 
   function handleRestoreClick() {
-    setRestoreAlertOpen(true);
+    setRestoreAlert({ source: selectionSource, open: true });
   }
 
   function handleRestoreAlertOpenChange(open: boolean) {
-    setRestoreAlertOpen(open);
+    setRestoreAlert({ source: selectionSource, open });
   }
 
   function handleLoadMore() {
