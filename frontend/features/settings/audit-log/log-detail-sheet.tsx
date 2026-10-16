@@ -1,6 +1,5 @@
 "use client";
 
-import { format } from "date-fns";
 import { Activity } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -13,6 +12,8 @@ import {
 } from "@/components/ui/sheet";
 import { resolveImageUrl } from "@/lib/utils";
 import { getInitials } from "@/lib/format-utils";
+import { formatDateTimeInOrgTz } from "@/lib/date-utils";
+import { useOrgTimeZone } from "@/hooks/api/org-display";
 import { actionBadgeClass } from "./audit-log-constants";
 import type { AuditLogRow } from "@/hooks/api/audit-log";
 
@@ -28,6 +29,7 @@ function DetailField({ label, children }: { label: string; children: React.React
 }
 
 export function LogDetailSheet({ log, onClose }: { log: AuditLogRow; onClose: () => void }) {
+  const orgTz = useOrgTimeZone();
   return (
     <Sheet open onOpenChange={(v) => !v && onClose()}>
       <SheetContent className="flex flex-col p-0 sm:max-w-[420px]">
@@ -61,7 +63,7 @@ export function LogDetailSheet({ log, onClose }: { log: AuditLogRow; onClose: ()
             </DetailField>
           )}
           <DetailField label="Timestamp">
-            <p className="text-sm">{format(new Date(log.createdAt), "PPpp")}</p>
+            <p className="text-sm">{formatDateTimeInOrgTz(log.createdAt, orgTz)}</p>
           </DetailField>
           {log.ipAddress && (
             <DetailField label="IP Address">
