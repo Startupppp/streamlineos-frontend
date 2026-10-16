@@ -8,6 +8,7 @@ import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useCan } from "@/hooks/api/access";
 import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { readFileAsBase64 } from "@/lib/read-file-as-base64";
 
 const filePageContract = lazyContract(() =>
   import("@/hooks/api/build/project-files-schema").then((m) => m.filePageContract),
@@ -60,22 +61,6 @@ export const PROJECT_FILE_TYPES_LABEL =
 
 export function isAllowedProjectFileType(mimeType: string): boolean {
   return PROJECT_FILE_MIME_TYPES.includes(mimeType);
-}
-
-function readFileAsBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const raw = reader.result;
-      if (typeof raw !== "string") {
-        reject(new Error(`Could not read ${file.name}`));
-        return;
-      }
-      resolve(raw.slice(raw.indexOf(",") + 1));
-    };
-    reader.onerror = () => reject(reader.error ?? new Error(`Could not read ${file.name}`));
-    reader.readAsDataURL(file);
-  });
 }
 
 interface ProjectFileSignedUrl {
