@@ -1,10 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useFormContext } from "react-hook-form";
 import { MemberPicker } from "@/components/members/member-picker";
 import type { MemberOption } from "@/components/members/member-picker-options";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -106,6 +105,23 @@ export function CalendarSavedViewFilterFields({ actorMembershipId }: { actorMemb
   const sources = useCalendarSources();
   const connections = useCalendarConnections();
   const projects = useInfiniteProjects({ limit: 100 });
+  const [projectOpen, setProjectOpen] = useState(false);
+  const nextProjectPageRef = useRef<HTMLDivElement | null>(null);
+  const lastRequestedUpdateRef = useRef<number | null>(null);
+  const { hasNextPage, isFetchingNextPage, dataUpdatedAt, fetchNextPage } = projects;
+  useEffect(() => {
+    if (!projectOpen || !hasNextPage || isFetchingNextPage || !dataUpdatedAt) return;
+    const sentinel = nextProjectPageRef.current;
+    if (!sentinel || typeof IntersectionObserver === "undefined") return;
+    const update = dataUpdatedAt;
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry?.isIntersecting || lastRequestedUpdateRef.current === update) return;
+      lastRequestedUpdateRef.current = update;
+      void fetchNextPage();
+    });
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [projectOpen, hasNextPage, isFetchingNextPage, dataUpdatedAt, fetchNextPage]);
   const projectRows = projects.data?.pages.flatMap((page) => page.data) ?? [];
   const sourceValue = form.watch("sourceKey");
   const projectValue = form.watch("projectId");
@@ -135,15 +151,15 @@ export function CalendarSavedViewFilterFields({ actorMembershipId }: { actorMemb
         <CalendarSavedViewOwnerField actorMembershipId={actorMembershipId} />
         <div className="space-y-1.5">
           <Label>Project</Label>
-          <Select value={projectValue} onValueChange={(value) => form.setValue("projectId", value, { shouldDirty: true })}>
+          <Select value={projectValue} onOpenChange={setProjectOpen} onValueChange={(value) => form.setValue("projectId", value, { shouldDirty: true })}>
             <SelectTrigger aria-label="Saved view project"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Any project</SelectItem>
               {projectRows.map((project) => <SelectItem key={project.id} value={String(project.id)}>{project.name}</SelectItem>)}
               {projectValue !== "all" && !projectRows.some((project) => String(project.id) === projectValue) ? <SelectItem value={projectValue}>Selected project</SelectItem> : null}
+              {hasNextPage ? <div ref={nextProjectPageRef} role="status" className="px-2 py-1 text-xs text-muted-foreground">{isFetchingNextPage ? "Loading more projects…" : "Scroll to see more projects"}</div> : null}
             </SelectContent>
           </Select>
-          {projects.hasNextPage ? <Button type="button" size="sm" variant="ghost" disabled={projects.isFetchingNextPage} onClick={() => void projects.fetchNextPage()}>More projects</Button> : null}
         </div>
         <div className="space-y-1.5">
           <Label>Action needed</Label>
