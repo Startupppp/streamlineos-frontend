@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment } from "react";
+import { Fragment, useRef } from "react";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { KbLink2Icon, KbMoreHorizontalIcon } from "@/features/wiki/lib/kb-icons";
@@ -79,6 +79,7 @@ export function PageDocumentToolbar({
   const duplicatePage = useDuplicateKbPage();
   const lockPage = useLockKbPage();
   const exportPage = useExportKbPage();
+  const exportInFlightRef = useRef(false);
   const { data: backlinks = [] } = useKbPageBacklinks(pageId);
 
   const actions = resolveKbPageActions(
@@ -129,9 +130,19 @@ export function PageDocumentToolbar({
   }
 
   function handleExport() {
+    if (!canExport || exportPage.isPending || exportInFlightRef.current) return;
+    exportInFlightRef.current = true;
     exportPage.mutate(
       { pageId, format: "html" },
-      { onError: (error) => toast.error(getErrorMessage(error)) },
+      {
+        onSuccess: () => {
+          exportInFlightRef.current = false;
+        },
+        onError: (error) => {
+          exportInFlightRef.current = false;
+          toast.error(getErrorMessage(error));
+        },
+      },
     );
   }
 
@@ -246,6 +257,7 @@ export function PageDocumentToolbar({
                   <DropdownMenuItem
                     key={action.id}
                     data-action-id={action.id}
+                    disabled={action.id === "export" && exportPage.isPending}
                     variant={action.destructive ? "destructive" : undefined}
                     onSelect={handleMenuSelect}
                   >

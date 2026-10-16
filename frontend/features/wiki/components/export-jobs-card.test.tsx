@@ -37,6 +37,10 @@ jest.mock("@/hooks/api/kb", () => ({
   useKbExportJobs: jest.fn(),
 }));
 
+jest.mock("@/hooks/api/access", () => ({
+  usePermissionGate: jest.fn(() => ({ permission: "kb:pages:export", allowed: true, denied: false, pending: false, unavailable: false })),
+}));
+
 jest.mock("@/features/wiki/lib/kb-icons", () => ({
   KbDownloadIcon: ({ className }: { className?: string }) => <span className={className} />,
   KbFileTextIcon: ({ className }: { className?: string }) => <span className={className} />,
@@ -45,6 +49,7 @@ jest.mock("@/features/wiki/lib/kb-icons", () => ({
 const { useKbExportJobs } = jest.requireMock("@/hooks/api/kb") as {
   useKbExportJobs: jest.Mock;
 };
+const { usePermissionGate } = jest.requireMock("@/hooks/api/access") as { usePermissionGate: jest.Mock };
 
 const mockJob = {
   id: 1,
@@ -64,6 +69,7 @@ beforeEach(() => {
   observers.length = 0;
   Reflect.set(globalThis, "IntersectionObserver", FakeIntersectionObserver);
   jest.clearAllMocks();
+  usePermissionGate.mockReturnValue({ permission: "kb:pages:export", allowed: true, denied: false, pending: false, unavailable: false });
 });
 
 afterEach(() => {
@@ -72,6 +78,39 @@ afterEach(() => {
 });
 
 describe("ExportJobsCard — expiring download indicator", () => {
+  it("hides cached export rows when export permission is denied before the jobs query fails", () => {
+    usePermissionGate.mockReturnValue({ permission: "kb:pages:export", allowed: false, denied: true, pending: false, unavailable: false });
+    useKbExportJobs.mockReturnValue({ data: [mockJob], isLoading: false, isError: false, error: null, refetch: jest.fn(), hasNextPage: true, isFetchingNextPage: false, fetchNextPage: jest.fn() });
+
+    render(<ExportJobsCard />);
+
+    expect(screen.getByText("Access Restricted")).toBeInTheDocument();
+    expect(screen.queryByText("markdown export")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Load more export jobs" })).not.toBeInTheDocument();
+  });
+
+  it("hides cached export rows while permission is pending", () => {
+    usePermissionGate.mockReturnValue({ permission: "kb:pages:export", allowed: false, denied: false, pending: true, unavailable: false });
+    useKbExportJobs.mockReturnValue({ data: [mockJob], isLoading: false, isError: false, error: null, refetch: jest.fn(), hasNextPage: true, isFetchingNextPage: false, fetchNextPage: jest.fn() });
+
+    render(<ExportJobsCard />);
+
+    expect(screen.queryByText("markdown export")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Load more export jobs" })).not.toBeInTheDocument();
+    expect(screen.queryByText("Access Restricted")).not.toBeInTheDocument();
+  });
+
+  it("shows an access-read error instead of cached rows when permission lookup fails", () => {
+    usePermissionGate.mockReturnValue({ permission: "kb:pages:export", allowed: false, denied: false, pending: false, unavailable: true });
+    useKbExportJobs.mockReturnValue({ data: [mockJob], isLoading: false, isError: false, error: null, refetch: jest.fn(), hasNextPage: true, isFetchingNextPage: false, fetchNextPage: jest.fn() });
+
+    render(<ExportJobsCard />);
+
+    expect(screen.getByText("Couldn't check export access")).toBeInTheDocument();
+    expect(screen.queryByText("markdown export")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Load more export jobs" })).not.toBeInTheDocument();
+  });
+
   it.each([401, 403, 404])("hides cached export jobs after a %i access failure", (status) => {
     useKbExportJobs.mockReturnValue({
       data: [mockJob],

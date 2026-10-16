@@ -16,6 +16,7 @@ interface ImportDryRunCardProps {
 }
 
 export function ImportDryRunCard({ result, duplicatePolicy, onDismiss }: ImportDryRunCardProps) {
+  const updateExisting = duplicatePolicy === "update";
   return (
     <div className="rounded-lg border border-border bg-muted/30 px-3 py-3 space-y-2">
       <div className="flex items-center justify-between">
@@ -24,22 +25,23 @@ export function ImportDryRunCard({ result, duplicatePolicy, onDismiss }: ImportD
           Dismiss
         </Button>
       </div>
-      <div className="grid grid-cols-3 gap-2 text-center text-xs">
+      <div className={`grid gap-2 text-center text-xs ${updateExisting ? "grid-cols-2" : "grid-cols-3"}`}>
         <div>
           <span className="block font-mono text-sm">{result.wouldSucceed}</span>
-          <span className="text-muted-foreground">would import</span>
+          <span className="text-muted-foreground">{updateExisting ? "would import or update" : "would import"}</span>
         </div>
-        <div>
-          <span className="block font-mono text-sm">{result.wouldSkip}</span>
-          <span className="text-muted-foreground">
-            {duplicatePolicy === "skip" ? "would skip" : "would update"}
-          </span>
-        </div>
+        {!updateExisting && (
+          <div>
+            <span className="block font-mono text-sm">{result.wouldSkip}</span>
+            <span className="text-muted-foreground">would skip</span>
+          </div>
+        )}
         <div>
           <span className="block font-mono text-sm">{result.invalidItems.length}</span>
           <span className="text-muted-foreground">invalid</span>
         </div>
       </div>
+      {updateExisting && <p className="text-xs text-muted-foreground">This preview cannot separate new pages from updates.</p>}
       {result.invalidItems.length > 0 ? (
         <div>
           <p className="text-xs text-muted-foreground font-medium mb-1">
