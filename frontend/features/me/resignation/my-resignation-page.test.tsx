@@ -20,7 +20,7 @@ jest.mock("@/hooks/api/use-page-state", () => ({ usePageState: () => ({ kind: "r
 let canResign = true;
 jest.mock("@/hooks/api/access", () => ({ useCan: () => canResign }));
 
-jest.mock("@/features/hr/exit/resignation-form-sheet", () => ({
+jest.mock("@/components/hr/resignation-form-sheet", () => ({
   ResignationFormSheet: ({ open }: { open: boolean }) => (open ? <div>resignation sheet</div> : null),
 }));
 

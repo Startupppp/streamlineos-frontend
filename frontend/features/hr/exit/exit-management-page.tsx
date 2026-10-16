@@ -28,7 +28,7 @@ import { EmptyPersonIllustration } from "@/components/illustrations";
 import { useSession } from "next-auth/react";
 import { useCan } from "@/hooks/api/access";
 import { ResignationCard } from "@/features/hr/exit/resignation-card";
-import { ResignationFormSheet } from "@/features/hr/exit/resignation-form-sheet";
+import { ResignationFormSheet } from "@/components/hr/resignation-form-sheet";
 import { AdminResignationFormSheet } from "@/features/hr/exit/admin-resignation-form-sheet";
 import { ResignationReviewSheets } from "@/features/hr/exit/resignation-review-sheets";
 import { useResignationReview } from "@/features/hr/exit/use-resignation-review";

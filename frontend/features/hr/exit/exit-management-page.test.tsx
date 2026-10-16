@@ -41,7 +41,7 @@ jest.mock("@/hooks/api/use-page-state", () => ({
 }));
 
 jest.mock("@/features/hr/exit/resignation-card", () => ({ ResignationCard: () => null }));
-jest.mock("@/features/hr/exit/resignation-form-sheet", () => ({ ResignationFormSheet: () => null }));
+jest.mock("@/components/hr/resignation-form-sheet", () => ({ ResignationFormSheet: () => null }));
 jest.mock("@/features/hr/exit/admin-resignation-form-sheet", () => ({ AdminResignationFormSheet: () => null }));
 jest.mock("@/features/hr/exit/resignation-review-sheets", () => ({ ResignationReviewSheets: () => null }));
 jest.mock("@/features/hr/exit/exit-path-strip", () => ({ ExitPathStrip: () => null }));

@@ -16,7 +16,7 @@ import { usePageState } from "@/hooks/api/use-page-state";
 import { useCan } from "@/hooks/api/access";
 import { useMyResignations, useWithdrawMyResignation, type Resignation } from "@/hooks/api/hr/exit";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { ResignationFormSheet } from "@/features/hr/exit/resignation-form-sheet";
+import { ResignationFormSheet } from "@/components/hr/resignation-form-sheet";
 
 const ACTIVE_STATUSES = new Set(["SUBMITTED", "PENDING_HR", "HR_APPROVED"]);
 
