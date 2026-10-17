@@ -60,6 +60,7 @@ export function ComponentFormSheet({ component, open, onOpenChange }: ComponentF
 
   const form = useForm<ComponentForm>({
     resolver: zodResolver(componentFormSchema),
+    mode: "onTouched",
     defaultValues: EMPTY_DEFAULTS,
   });
 
