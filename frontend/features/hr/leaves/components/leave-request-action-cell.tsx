@@ -41,6 +41,7 @@ export function RequestActionCell({ request, isCancelling = false, onCancel }: R
   const approverHint = !isSelfApprover && route
     ? (route.approver?.name ?? route.queue?.label ?? null)
     : null;
+  const showGenericPending = route !== undefined && !isSelfApprover && approverHint === null;
 
   function handleOpenConfirm() {
     setConfirmOpen(true);
@@ -60,6 +61,9 @@ export function RequestActionCell({ request, isCancelling = false, onCancel }: R
       )}
       {approverHint !== null && (
         <span className="text-xs text-muted-foreground">Awaiting approval from {approverHint}</span>
+      )}
+      {showGenericPending && (
+        <span className="text-xs text-muted-foreground">Awaiting approval</span>
       )}
       <Button
         type="button"

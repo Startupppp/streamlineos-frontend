@@ -76,9 +76,14 @@ export function AdminExpenseList({
     <Card className="rounded-lg border border-border overflow-hidden">
       <CardContent className="p-0 flex flex-col">
         <div className="flex items-center justify-between px-6 py-4 border-b bg-muted/40">
-          <h3 className="text-sm font-semibold text-foreground">
-            Expense Claims
-          </h3>
+          <div>
+            <h3 className="text-sm font-semibold text-foreground">
+              Expense Claims
+            </h3>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Your own claims are reviewed by another approver
+            </p>
+          </div>
           <span className="text-dense font-semibold text-muted-foreground uppercase tracking-wider">
             {startItem}–{endItem} of {pagination.total}{" "}
             {statusFilter === "PENDING" ? "pending" : "total"}
