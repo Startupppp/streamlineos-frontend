@@ -25,6 +25,7 @@ import {
   type PaymentEnvironment,
   type PaymentProviderCredentialPublic,
 } from "@/hooks/api/payments";
+import { credentialCopyFor } from "../lib/provider-copy";
 
 type CredentialsTabProps = {
   providerKey: string;
@@ -37,6 +38,7 @@ export function CredentialsTab({ providerKey, environment, credential }: Credent
   const [secret, setSecret] = useState("");
   const [webhookSecret, setWebhookSecret] = useState("");
 
+  const copy = credentialCopyFor(providerKey);
   const canManage = useCan("payments:credentials:manage");
   const save = useSavePaymentCredentials(providerKey);
   const disconnect = useDisconnectPaymentCredentials(providerKey);
@@ -122,42 +124,42 @@ export function CredentialsTab({ providerKey, environment, credential }: Credent
       {canManage ? (
         <>
       <div className="space-y-1.5">
-        <Label htmlFor={`${environment}-key-id`} className="text-label">Key ID</Label>
+        <Label htmlFor={`${environment}-key-id`} className="text-label">{copy.keyIdLabel}</Label>
         <Input
           id={`${environment}-key-id`}
           value={keyId}
           onChange={handleKeyIdChange}
-          placeholder={credential?.maskedKeyHint ? `Currently ****${credential.maskedKeyHint.slice(-4)}` : "rzp_test_..."}
+          placeholder={credential?.maskedKeyHint ? `Currently ****${credential.maskedKeyHint.slice(-4)}` : copy.keyIdPrefix[environment]}
           className="text-sm font-mono"
         />
       </div>
 
       <div className="space-y-1.5">
-        <Label htmlFor={`${environment}-secret`} className="text-label">Key secret</Label>
+        <Label htmlFor={`${environment}-secret`} className="text-label">{copy.secretLabel}</Label>
         <Input
           id={`${environment}-secret`}
           type="password"
           value={secret}
           onChange={handleSecretChange}
-          placeholder={credential?.hasSecret ? "Saved — enter a new value to replace" : "Enter key secret"}
+          placeholder={credential?.hasSecret ? "Saved — enter a new value to replace" : `Enter ${copy.secretLabel.toLowerCase()}`}
           className="text-sm font-mono"
         />
       </div>
 
       <div className="space-y-1.5">
-        <Label htmlFor={`${environment}-webhook-secret`} className="text-label">Webhook secret</Label>
+        <Label htmlFor={`${environment}-webhook-secret`} className="text-label">{copy.webhookSecretLabel}</Label>
         <Input
           id={`${environment}-webhook-secret`}
           type="password"
           value={webhookSecret}
           onChange={handleWebhookSecretChange}
-          placeholder={credential?.hasWebhookSecret ? "Saved — enter a new value to replace" : "Enter webhook secret"}
+          placeholder={credential?.hasWebhookSecret ? "Saved — enter a new value to replace" : `Enter ${copy.webhookSecretLabel.toLowerCase()}`}
           className="text-sm font-mono"
         />
       </div>
 
       <AnimatedIconButton icon={KeyRoundIcon} iconSize={14} iconClassName="mr-1.5" size="sm" className="text-xs" onClick={handleSave} disabled={save.isPending}>
-        Save {environment} credentials
+        {credential ? "Rotate" : "Save"} {environment} credentials
       </AnimatedIconButton>
         </>
       ) : null}

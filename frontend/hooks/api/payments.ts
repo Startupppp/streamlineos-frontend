@@ -106,6 +106,22 @@ export function useCreatePaymentProvider() {
   });
 }
 
+export function useDisablePaymentProvider(providerKey: string) {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("payments:providers:manage", {
+    mutationKey: ["disable", "payment", "provider"],
+    mutationFn: () =>
+      apiClient.post(`/payments/providers/${providerKey}/disable`, {}, undefined, paymentProviderRowContract),
+    onSuccess: (row) => {
+      // The response is the updated row: patch it in place rather than refetching the list.
+      qc.setQueryData<PaymentProvider[]>(platformCoreQueryKeys.payments.providers(), (list) =>
+        list?.map((p) => (p.providerKey === row.providerKey ? { ...p, ...row } : p)),
+      );
+      qc.invalidateQueries({ queryKey: platformCoreQueryKeys.payments.readiness(providerKey), exact: true, refetchType: "none" });
+    },
+  });
+}
+
 export type SaveCredentialsPayload = {
   environment: PaymentEnvironment;
   keyId?: string;
@@ -181,7 +197,7 @@ export function useVerifyTestTransaction(providerKey: string) {
   const qc = useQueryClient();
   return useAuthorizedMutation("payments:test:run", {
     mutationKey: ["verify", "test", "transaction"],
-    mutationFn: ({ id, providerPaymentId, signature }: { id: number; providerPaymentId: string; signature: string }) =>
+    mutationFn: ({ id, providerPaymentId, signature }: { id: number; providerPaymentId: string; signature?: string }) =>
       apiClient.patch(`/payments/providers/${providerKey}/test-transactions/${id}/verify`, {
         providerPaymentId,
         signature,

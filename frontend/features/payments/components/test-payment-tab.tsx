@@ -17,13 +17,18 @@ import {
   useTestTransactions,
 } from "@/hooks/api/payments";
 
-const TIMELINE_STEPS = ["order created", "checkout opened", "payment returned", "signature verified"] as const;
+const RAZORPAY_STEPS = ["order created", "checkout opened", "payment returned", "signature verified"] as const;
+// Stripe has no client signature: the backend charges Stripe's test card and reads the result back.
+const STRIPE_STEPS = ["payment intent created", "test card charged", "confirmed by Stripe"] as const;
 
 export function TestPaymentTab({ providerKey }: { providerKey: string }) {
   const [amount, setAmount] = useState("499.00");
   const [razorpayLoaded, setRazorpayLoaded] = useState(false);
   const [timelineStep, setTimelineStep] = useState(0);
   const [failed, setFailed] = useState(false);
+  const isStripe = providerKey === "stripe";
+  const currency = isStripe ? "USD" : "INR";
+  const timelineSteps = isStripe ? STRIPE_STEPS : RAZORPAY_STEPS;
 
   function handleAmountChange(e: React.ChangeEvent<HTMLInputElement>) {
     setAmount(e.target.value);
@@ -47,14 +52,45 @@ export function TestPaymentTab({ providerKey }: { providerKey: string }) {
     void refetchHistory();
   }
 
+  function verify(id: number, providerPaymentId: string, signature?: string) {
+    verifyTransaction.mutate(
+      { id, providerPaymentId, signature },
+      {
+        onSuccess: (verified) => {
+          if (verified.signatureVerified) {
+            setTimelineStep(timelineSteps.length);
+            toast.success("Test payment verified");
+          } else {
+            setFailed(true);
+            toast.error(isStripe ? "Stripe did not confirm the test payment" : "Signature verification failed");
+          }
+        },
+        onError: (err) => {
+          setFailed(true);
+          toast.error(getErrorMessage(err));
+        },
+      },
+    );
+  }
+
   function runTestPayment() {
     setFailed(false);
     setTimelineStep(0);
     createTransaction.mutate(
-      { amount, currency: "INR" },
+      { amount, currency },
       {
         onSuccess: (transaction) => {
           setTimelineStep(1);
+          if (isStripe) {
+            if (!transaction.providerOrderId) {
+              setFailed(true);
+              toast.error("Stripe did not return a payment intent");
+              return;
+            }
+            setTimelineStep(2);
+            verify(transaction.id, transaction.providerOrderId);
+            return;
+          }
           if (!razorpayLoaded || !transaction.providerOrderId || !transaction.keyId) {
             toast.error("Razorpay Checkout hasn't loaded yet — try again in a moment");
             return;
@@ -69,28 +105,7 @@ export function TestPaymentTab({ providerKey }: { providerKey: string }) {
             description: "Payment setup test — not a real charge in test mode",
             handler: (response: RazorpayPaymentResponse) => {
               setTimelineStep(3);
-              verifyTransaction.mutate(
-                {
-                  id: transaction.id,
-                  providerPaymentId: response.razorpay_payment_id,
-                  signature: response.razorpay_signature,
-                },
-                {
-                  onSuccess: (verified) => {
-                    if (verified.signatureVerified) {
-                      setTimelineStep(4);
-                      toast.success("Test payment verified!");
-                    } else {
-                      setFailed(true);
-                      toast.error("Signature verification failed");
-                    }
-                  },
-                  onError: (err) => {
-                    setFailed(true);
-                    toast.error(getErrorMessage(err));
-                  },
-                },
-              );
+              verify(transaction.id, response.razorpay_payment_id, response.razorpay_signature);
             },
           });
           rz.open();
@@ -105,7 +120,7 @@ export function TestPaymentTab({ providerKey }: { providerKey: string }) {
 
   return (
     <div className="space-y-4">
-      <Script src="https://checkout.razorpay.com/v1/checkout.js" onLoad={handleRazorpayLoad} />
+      {isStripe ? null : <Script src="https://checkout.razorpay.com/v1/checkout.js" onLoad={handleRazorpayLoad} />}
 
       <p className="text-label text-muted-foreground">
         Runs a real order against your test credentials — no money moves. Use this to prove the
@@ -114,7 +129,7 @@ export function TestPaymentTab({ providerKey }: { providerKey: string }) {
 
       <div className="flex items-end gap-2">
         <div className="space-y-1.5">
-          <Label htmlFor="test-amount" className="text-label">Amount (INR)</Label>
+          <Label htmlFor="test-amount" className="text-label">Amount ({currency})</Label>
           <Input
             id="test-amount"
             value={amount}
@@ -136,7 +151,7 @@ export function TestPaymentTab({ providerKey }: { providerKey: string }) {
 
       {(createTransaction.isPending || timelineStep > 0) && (
         <ol className="space-y-1.5">
-          {TIMELINE_STEPS.map((label, i) => {
+          {timelineSteps.map((label, i) => {
             const stepIndex = i + 1;
             const done = timelineStep >= stepIndex;
             const active = timelineStep === stepIndex - 1 && !failed;
