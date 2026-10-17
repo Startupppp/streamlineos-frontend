@@ -40,7 +40,7 @@ export function EventSyncStatus({ eventId }: EventSyncStatusProps) {
       <p className={tone.ink}>
         Sync to your external calendar failed after {attemptLabel}.
       </p>
-      {data.lastError ? (
+      {data.lastError && data.lastError !== "[object Object]" ? (
         <p className="text-xs text-muted-foreground line-clamp-2" title={data.lastError}>
           {data.lastError}
         </p>

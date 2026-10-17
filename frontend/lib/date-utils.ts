@@ -214,6 +214,23 @@ export function formatEventDate(value: string | Date, timezone?: string | null):
   return new Intl.DateTimeFormat("en-IN", { ...EVENT_DATE_PARTS, timeZone: zone }).format(date);
 }
 
+export function formatEventDateRange(
+  startDate: string,
+  endDate: string,
+  timezone?: string | null,
+): string {
+  if (startDate === endDate) return `${formatEventDate(startDate, timezone)} · All day`;
+  const start = new Date(`${startDate}T00:00:00Z`);
+  const end = new Date(`${endDate}T00:00:00Z`);
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()))
+    return `${formatEventDate(startDate, timezone)} · All day`;
+  const fmt = new Intl.DateTimeFormat("en-IN", { day: "numeric", month: "short", timeZone: "UTC" });
+  const startStr = fmt.format(start);
+  const endFmt = new Intl.DateTimeFormat("en-IN", { ...EVENT_DATE_PARTS, timeZone: "UTC" });
+  const endStr = endFmt.format(end);
+  return `${startStr} – ${endStr} · All day`;
+}
+
 export function formatTimeInOrgTz(
   value: string | Date | null | undefined,
   orgTz: string | null,

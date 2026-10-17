@@ -134,6 +134,12 @@ export function BigCalendarWrapper({
         selectable={!!onSelectSlot}
         onSelectSlot={onSelectSlot}
         onSelectEvent={onSelectEvent as ((event: object) => void) | undefined}
+        onKeyPressEvent={(evt, e) => {
+          if ((e.key === "Enter" || e.key === " ") && onSelectEvent) {
+            e.preventDefault();
+            onSelectEvent(evt as BigCalEvent);
+          }
+        }}
         eventPropGetter={eventPropGetter as EventPropGetter<object>}
         components={components}
         toolbar={false}

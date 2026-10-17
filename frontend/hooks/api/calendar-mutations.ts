@@ -140,7 +140,20 @@ export function useDeleteCalendarEvent() {
   return useMutation({
     mutationKey: ["calendar", "events", "delete"],
     mutationFn: (calendarEventId: number) => apiClient.delete<{ deleted: boolean }>(`/calendar/events/${calendarEventId}`, undefined, undefined, calendarDeleteEventContract),
-    onSuccess: () => {
+    onSuccess: (_result, calendarEventId) => {
+      const prefix = `event-${calendarEventId}`;
+      qc.setQueriesData<CalendarEventsResponse>(
+        { queryKey: platformHierarchyQueryKeys.calendar.eventsAll },
+        (window) =>
+          window && Array.isArray(window.events)
+            ? {
+                ...window,
+                events: window.events.filter(
+                  (ev) => ev.id !== prefix && !ev.id.startsWith(`${prefix}-`),
+                ),
+              }
+            : window,
+      );
       invalidateCalendarProjectionWindows(qc);
       void qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.calendar.all });
     },

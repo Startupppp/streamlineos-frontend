@@ -14,6 +14,9 @@ interface EventSeriesScopeDialogProps {
   onOpenChange: (open: boolean) => void;
   onConfirm: (scope: SeriesScope) => void;
   isPending: boolean;
+  title?: string;
+  description?: string;
+  confirmLabel?: string;
 }
 
 export function EventSeriesScopeDialog({
@@ -21,8 +24,11 @@ export function EventSeriesScopeDialog({
   onOpenChange,
   onConfirm,
   isPending,
+  title = "Edit recurring event",
+  description = "This is a recurring event. Which occurrences do you want to change?",
+  confirmLabel = "Save",
 }: EventSeriesScopeDialogProps) {
-  const [scope, setScope] = useState<SeriesScope>("series");
+  const [scope, setScope] = useState<SeriesScope>("occurrence");
 
   const handleScopeChange = useCallback((value: string) => {
     if (value === "occurrence" || value === "series") setScope(value);
@@ -45,8 +51,8 @@ export function EventSeriesScopeDialog({
     <AppDialog
       open={open}
       onOpenChange={handleOpenChange}
-      title="Edit recurring event"
-      description="This is a recurring event. Which occurrences do you want to change?"
+      title={title}
+      description={description}
       className="sm:max-w-xs"
       footer={
         <>
@@ -62,11 +68,11 @@ export function EventSeriesScopeDialog({
           <LoadingButton
             size="sm"
             isPending={isPending}
-            loadingText="Saving…"
+            loadingText={`${confirmLabel}…`}
             onClick={handleConfirm}
             className="text-xs"
           >
-            Save
+            {confirmLabel}
           </LoadingButton>
         </>
       }

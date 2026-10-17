@@ -66,7 +66,7 @@ function WeekDayToggle({ day, label, isSelected, onToggle }: WeekDayToggleProps)
   );
 }
 
-export function RecurrenceEditor({ state, onChange, startDate: _startDate }: RecurrenceEditorProps) {
+export function RecurrenceEditor({ state, onChange, startDate }: RecurrenceEditorProps) {
   const set = useCallback(
     <K extends keyof RecurrenceState>(key: K, value: RecurrenceState[K]) => {
       onChange({ ...state, [key]: value });
@@ -82,9 +82,13 @@ export function RecurrenceEditor({ state, onChange, startDate: _startDate }: Rec
       if (freq === "WEEKLY" && next.byDay.length === 0) {
         next.byDay = ["MO"];
       }
+      if (freq === "MONTHLY" && startDate) {
+        const day = parseInt(startDate.split("-")[2] ?? "1", 10);
+        next.byMonthDay = Number.isNaN(day) ? 1 : day;
+      }
       onChange(next);
     },
-    [state, onChange],
+    [state, onChange, startDate],
   );
 
   const handleIntervalChange = useCallback(

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, useMemo, type ChangeEvent } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef, type ChangeEvent } from "react";
 import { addHours, endOfDay, format, parseISO, startOfDay } from "date-fns";
 import {
   useCreateCalendarEvent,
@@ -171,7 +171,9 @@ export function useEventCreateDialog({
 
   const handleStartDateChange = useCallback((v: string) => {
     setForm((prev) => {
-      const next = { ...prev, startDate: v, endDate: showEndDate ? prev.endDate : v };
+      const dayOfMonth = parseInt(v.split("-")[2] ?? "1", 10);
+      const recurrence = { ...prev.recurrence, byMonthDay: Number.isNaN(dayOfMonth) ? 1 : dayOfMonth };
+      const next = { ...prev, startDate: v, endDate: showEndDate ? prev.endDate : v, recurrence };
       setDateTimeError(getDateTimeError(next, showEndDate));
       return next;
     });
@@ -234,6 +236,7 @@ export function useEventCreateDialog({
   );
 
   const handleSave = useCallback(async (times: { startTime?: string; endTime?: string } = {}) => {
+    if (submittingRef.current) return;
     const submittedForm = { ...effectiveForm, ...times };
     const titleErr = validateEventTitle(form.title);
     if (titleErr) { setTitleError(titleErr); return; }
@@ -251,6 +254,7 @@ export function useEventCreateDialog({
       return;
     }
 
+    submittingRef.current = true;
     try {
       if (isEdit && event) {
         const numericId = extractEventNumericId(event.id);
@@ -267,15 +271,14 @@ export function useEventCreateDialog({
         const res = await createEvent.mutateAsync(result.payload);
         if (res.syncQueued) toast.success("Event created — syncing to your calendar");
         else toast.success("Event created");
-        // The server scans for overlapping occurrences and approved leave on every
-        // create; before this the result was discarded and a double-booking read
-        // as plain success. A second toast so a sync failure is not displaced.
         const conflictNotice = describeEventConflicts(res);
         if (conflictNotice) toast.warning(`Event created, but ${conflictNotice}.`);
       }
       handleClose();
     } catch (error) {
       toast.error(getErrorMessage(error));
+    } finally {
+      submittingRef.current = false;
     }
   }, [form, effectiveForm, showEndDate, isEdit, event, rrule, createEvent, updateEvent, handleClose, existingEntityId, linkedTicket, seriesScope, editingDetail, descriptionTouched]);
 
@@ -296,6 +299,8 @@ export function useEventCreateDialog({
     (next: FormState["recurrence"]) => set("recurrence", next),
     [set],
   );
+
+  const submittingRef = useRef(false);
 
   const isPending = isEdit ? updateEvent.isPending : createEvent.isPending;
 

@@ -18,8 +18,9 @@ import {
 import { useCan } from "@/hooks/api/access";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { formatEventDate, formatEventTimeRange } from "@/lib/date-utils";
+import { formatEventDate, formatEventDateRange, formatEventTimeRange } from "@/lib/date-utils";
 import { downloadCalendarExport } from "./calendar-export";
+import { EventSeriesScopeDialog, type SeriesScope } from "./event-series-scope-dialog";
 import { EventDetailActions } from "./event-detail-actions";
 import { EventCreateDialog } from "./event-create-dialog";
 import {
@@ -62,6 +63,7 @@ interface EventDetailSheetProps {
 
 export function EventDetailSheet({ event, onClose, onQueueScenarioStep }: EventDetailSheetProps) {
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [deleteRecurringScopeOpen, setDeleteRecurringScopeOpen] = useState(false);
   const [cancelOccurrenceOpen, setCancelOccurrenceOpen] = useState(false);
   const [unlinkConfirmOpen, setUnlinkConfirmOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
@@ -94,7 +96,9 @@ export function EventDetailSheet({ event, onClose, onQueueScenarioStep }: EventD
   const when = !event
     ? ""
     : event.allDay
-      ? formatEventDate(event.start, event.timezone)
+      ? event.time.kind === "date" && event.time.startDate !== event.time.endDate
+        ? formatEventDateRange(event.time.startDate, event.time.endDate, event.timezone)
+        : `${formatEventDate(event.start, event.timezone)} · All day`
       : formatEventTimeRange(event.start, event.end, event.timezone);
 
   const handleUnlink = useCallback(async () => {
@@ -179,7 +183,36 @@ export function EventDetailSheet({ event, onClose, onQueueScenarioStep }: EventD
     [onClose],
   );
 
-  const handleRequestDelete = useCallback(() => setConfirmOpen(true), []);
+  const handleRequestDelete = useCallback(() => {
+    if (detail?.isRecurring) {
+      setDeleteRecurringScopeOpen(true);
+    } else {
+      setConfirmOpen(true);
+    }
+  }, [detail?.isRecurring]);
+  const handleDeleteScopeConfirm = useCallback(
+    async (scope: SeriesScope) => {
+      if (!event || numericEventId === null) return;
+      setDeleteRecurringScopeOpen(false);
+      if (scope === "occurrence") {
+        try {
+          await cancelOccurrence({
+            eventId: numericEventId,
+            occurrenceStart: parsedEventId?.occurrenceStart ?? event.start,
+            expectedVersion: detail?.localVersion,
+          });
+          toast.success("Occurrence cancelled");
+          onClose();
+        } catch (err) {
+          toast.error(getErrorMessage(err));
+        }
+      } else {
+        setConfirmOpen(true);
+      }
+    },
+    [event, numericEventId, parsedEventId, detail?.localVersion, cancelOccurrence, onClose],
+  );
+
   const handleRequestCancelOccurrence = useCallback(
     () => setCancelOccurrenceOpen(true),
     [],
@@ -240,6 +273,15 @@ export function EventDetailSheet({ event, onClose, onQueueScenarioStep }: EventD
           {detail && canMutateEvent && !detail.isRecurring && !detail.allDay && commitmentRoot && onQueueScenarioStep ?
             <CalendarNativeScenarioMove key={`${detail.id}:${detail.localVersion}`} detail={detail} root={commitmentRoot} onQueue={onQueueScenarioStep} /> : null}
       </AppSheet>
+      <EventSeriesScopeDialog
+        open={deleteRecurringScopeOpen}
+        onOpenChange={setDeleteRecurringScopeOpen}
+        onConfirm={handleDeleteScopeConfirm}
+        isPending={deleteEventIsPending || cancelOccurrenceIsPending}
+        title="Delete recurring event"
+        description="Which occurrences do you want to delete?"
+        confirmLabel="Delete"
+      />
       <ConfirmDialog
         open={confirmOpen}
         onOpenChange={setConfirmOpen}
