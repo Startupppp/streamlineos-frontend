@@ -38,6 +38,7 @@ import { useCan } from "@/hooks/api/access";
 import { PolicyRulesFields } from "./policy-rules-fields";
 import { policyFormSchema, withExplicitSwitches, type PolicyFormValues } from "./policy-form-types";
 import { numericFieldChangeOr } from "@/lib/numeric-field";
+import { useOrgToday } from "@/hooks/api/org-display";
 
 interface Props {
   open: boolean;
@@ -52,6 +53,7 @@ export function PolicyUpsertSheet({ open, onOpenChange, policy }: Props) {
   const canManage = useCan("hr:policies:manage");
   const create = useCreateHrPolicy();
   const update = useUpdateHrPolicy();
+  const today = useOrgToday();
   const isPending = create.isPending || update.isPending;
 
   const form = useForm<PolicyFormValues>({
@@ -60,7 +62,7 @@ export function PolicyUpsertSheet({ open, onOpenChange, policy }: Props) {
       policyType: "leave",
       name: "",
       description: "",
-      effectiveFrom: new Date().toISOString().split("T")[0],
+      effectiveFrom: today,
       effectiveTo: "",
       priority: 0,
       rules: {},
@@ -89,14 +91,14 @@ export function PolicyUpsertSheet({ open, onOpenChange, policy }: Props) {
         policyType: "leave",
         name: "",
         description: "",
-        effectiveFrom: new Date().toISOString().split("T")[0],
+        effectiveFrom: today,
         effectiveTo: "",
         priority: 0,
         rules: {},
         scopes: [{ scopeType: "organization", scopeValue: "" }],
       });
     }
-  }, [open, policy, form]);
+  }, [open, policy, form, today]);
 
   const onSubmit = useCallback(
     (data: PolicyFormValues) => {

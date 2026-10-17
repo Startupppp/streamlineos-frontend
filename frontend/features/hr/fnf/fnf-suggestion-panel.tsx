@@ -1,11 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { format } from "date-fns";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useOrgDisplay } from "@/hooks/api/org-display";
+import { useOrgDisplay, useOrgToday } from "@/hooks/api/org-display";
 import { formatMoney } from "@/lib/format-utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useFnfSuggestion } from "@/hooks/api/payroll/fnf";
@@ -18,7 +17,9 @@ interface FnfSuggestionPanelProps {
 
 export function FnfSuggestionPanel({ userId, onApply }: FnfSuggestionPanelProps) {
   const money = useOrgDisplay();
-  const [lastWorkingDay, setLastWorkingDay] = useState(() => format(new Date(), "yyyy-MM-dd"));
+  const today = useOrgToday();
+  const [pickedDay, setLastWorkingDay] = useState<string | null>(null);
+  const lastWorkingDay = pickedDay ?? today;
   const { data, isLoading, isError, error } = useFnfSuggestion(userId, lastWorkingDay);
 
   function handleDateChange(value: string) {

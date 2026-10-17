@@ -7,6 +7,7 @@ import { DEFAULT_MONEY_DISPLAY, type MoneyDisplay } from "@/lib/format-utils";
 import { lazyContract } from "@/lib/api-envelope";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import type { OrgDisplay } from "@/hooks/api/org-display-schema";
+import { todayInOrgTz } from "@/lib/date-utils";
 
 /** Deferred: every money-rendering surface imports this, and the schema pulls Zod. */
 const displayContract = lazyContract(() =>
@@ -30,6 +31,11 @@ export function useOrgDisplay(): MoneyDisplay {
 
 export function useOrgTimeZone(): string | null {
   return useOrgDisplayQuery().data?.timezone ?? null;
+}
+
+/** The organisation's business date (`YYYY-MM-DD`) — the "today" a date field defaults to, not the browser's. */
+export function useOrgToday(): string {
+  return todayInOrgTz(useOrgTimeZone());
 }
 
 function useOrgDisplayQuery() {

@@ -20,6 +20,7 @@ import { ExpenseFormFields } from "./expense-form-fields";
 import { type PendingReceipt } from "./receipt-manager";
 import { useSubmitGuard } from "@/hooks/common/use-submit-guard";
 import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
+import { useOrgToday } from "@/hooks/api/org-display";
 
 type FormData = ExpenseFormData;
 
@@ -73,6 +74,7 @@ export function CreateExpenseDialog({
   const updateExpenseMutation = useUpdateExpense({ selfService });
   const uploadFileMutation = useUploadFile();
   const idempotent = useIdempotentOperation();
+  const today = useOrgToday();
   const isEditMode = !!editExpense;
 
   const initialCategory = resolveSelectableLabel(editExpense?.category, categories);
@@ -90,7 +92,7 @@ export function CreateExpenseDialog({
       customPaymentMethod: initialPayment.custom,
       expenseDate: editExpense?.expenseDate
         ? format(new Date(editExpense.expenseDate), "yyyy-MM-dd")
-        : format(new Date(), "yyyy-MM-dd"),
+        : today,
     },
   });
 
@@ -122,14 +124,14 @@ export function CreateExpenseDialog({
         customPaymentMethod: pay.custom,
         expenseDate: editExpense?.expenseDate
           ? format(new Date(editExpense.expenseDate), "yyyy-MM-dd")
-          : format(new Date(), "yyyy-MM-dd"),
+          : today,
       });
       setExistingReceipts(
         parseExpenseReceipts(editExpense?.receiptUrl, editExpense?.receiptFileName),
       );
       clearPendingReceipts();
     }
-  }, [open, editExpense, form, clearPendingReceipts, categories, paymentMethods]);
+  }, [open, editExpense, form, clearPendingReceipts, categories, paymentMethods, today]);
 
   const handleAddPendingReceipts = useCallback((receipts: PendingReceipt[]) => {
     setPendingReceipts((prev) => [...prev, ...receipts]);

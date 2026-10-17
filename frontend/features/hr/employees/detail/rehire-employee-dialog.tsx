@@ -14,8 +14,8 @@ import {
 } from "@/components/ui/form";
 import { useRehireEmployee } from "@/hooks/api/hr/termination";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { getTodayString } from "@/lib/date-utils";
 import { rehireEmployeeFormSchema, type RehireEmployeeFormValues } from "./rehire-employee-schema";
+import { useOrgToday } from "@/hooks/api/org-display";
 
 interface RehireEmployeeDialogProps {
   open: boolean;
@@ -33,6 +33,7 @@ export function RehireEmployeeDialog({
   onRehired,
 }: RehireEmployeeDialogProps) {
   const rehire = useRehireEmployee();
+  const today = useOrgToday();
 
   const handleSubmit = useCallback(
     (values: RehireEmployeeFormValues) => {
@@ -58,7 +59,7 @@ export function RehireEmployeeDialog({
       title={`Rehire ${employeeName}`}
       description="Restores their membership (it takes a seat on your plan) and reopens their employment record from the date you pick."
       resolver={zodResolver(rehireEmployeeFormSchema)}
-      defaultValues={{ joiningDate: getTodayString() }}
+      defaultValues={{ joiningDate: today }}
       onSubmit={handleSubmit}
       isSubmitting={rehire.isPending}
       submitLabel="Rehire"

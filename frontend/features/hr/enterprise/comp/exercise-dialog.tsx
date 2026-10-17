@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useRecordExercise } from "@/hooks/api/hr/enterprise-comp";
 import { numericFieldChange } from "@/lib/numeric-field";
+import { useOrgToday } from "@/hooks/api/org-display";
 
 const schema = z.object({
   exerciseDate: z.string().min(1, "Required"),
@@ -30,10 +31,11 @@ interface Props {
 
 export function ExerciseDialog({ open, onOpenChange, grantId }: Props) {
   const exerciseMut = useRecordExercise();
+  const today = useOrgToday();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { exerciseDate: new Date().toISOString().slice(0, 10) },
+    defaultValues: { exerciseDate: today },
   });
 
   function onSubmit(values: FormValues) {

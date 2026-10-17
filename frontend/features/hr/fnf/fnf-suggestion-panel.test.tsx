@@ -22,7 +22,7 @@ const useFnfSuggestion = jest.fn();
 jest.mock("@/hooks/api/payroll/fnf", () => ({
   useFnfSuggestion: (...args: unknown[]) => useFnfSuggestion(...args),
 }));
-jest.mock("@/hooks/api/org-display", () => ({ useOrgDisplay: () => ({ currency: "INR", locale: "en-IN" }) }));
+jest.mock("@/hooks/api/org-display", () => ({ useOrgDisplay: () => ({ currency: "INR", locale: "en-IN" }), useOrgToday: () => "2026-10-18" }));
 
 import { FnfSuggestionPanel } from "./fnf-suggestion-panel";
 
@@ -32,6 +32,8 @@ describe("F&F suggested amounts", () => {
     const onApply = jest.fn();
     render(<FnfSuggestionPanel userId="user_1" onApply={onApply} />);
 
+    // Defaults to the org's business date, not the browser's.
+    expect(useFnfSuggestion).toHaveBeenCalledWith("user_1", "2026-10-18");
     expect(screen.getByText(/15\/26 × basic × 6 years/)).toBeInTheDocument();
     expect(screen.getByText(/12.50 days × basic\/26/)).toBeInTheDocument();
     expect(onApply).not.toHaveBeenCalled();

@@ -53,7 +53,7 @@ jest.mock("./fnf-suggestion-panel", () => ({
   ),
 }));
 jest.mock("@/hooks/api/access", () => ({ useCan: () => true }));
-jest.mock("@/hooks/api/org-display", () => ({ useOrgDisplay: () => ({ currency: "INR", locale: "en-IN" }) }));
+jest.mock("@/hooks/api/org-display", () => ({ useOrgDisplay: () => ({ currency: "INR", locale: "en-IN" }), useOrgToday: () => "2026-10-18" }));
 jest.mock("@/hooks/api/use-page-state", () => ({ usePageState: () => ({ kind: "ready" }) }));
 
 const createMutate = jest.fn();

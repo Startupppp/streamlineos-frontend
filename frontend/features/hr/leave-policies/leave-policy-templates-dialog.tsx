@@ -28,6 +28,7 @@ import {
   rowErrors,
   type DraftRow,
 } from "./leave-policy-template-row";
+import { useOrgToday } from "@/hooks/api/org-display";
 
 /**
  * Ticket 08. The first thing an administrator of a new organisation sees on
@@ -42,6 +43,7 @@ export function LeavePolicyTemplatesDialog() {
   const { data: offer } = useLeavePolicyTemplateOffer();
   const dismiss = useDismissLeavePolicyTemplates();
   const importTemplates = useImportLeavePolicyTemplates();
+  const today = useOrgToday();
   const [drafts, setDrafts] = useState<Record<string, DraftRow> | null>(null);
   const [closedInSession, setClosedInSession] = useState(false);
 
@@ -98,7 +100,7 @@ export function LeavePolicyTemplatesDialog() {
         carryForwardDays: row.carryForwardDays.trim(),
         encashable: template.encashable,
         probationRestricted: template.probationRestricted,
-        effectiveFrom: new Date().toISOString().slice(0, 10),
+        effectiveFrom: today,
       };
     });
 
@@ -120,7 +122,7 @@ export function LeavePolicyTemplatesDialog() {
       // rather than a re-type.
       onError: (error) => toast.error(getErrorMessage(error)),
     });
-  }, [importTemplates, rows, selected]);
+  }, [importTemplates, rows, selected, today]);
 
   const open =
     canManage &&

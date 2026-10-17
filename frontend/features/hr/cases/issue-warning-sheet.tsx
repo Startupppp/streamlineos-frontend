@@ -28,6 +28,7 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCreateDisciplinaryAction } from "@/hooks/api/hr/cases";
 import type { DisciplinaryActionType } from "@/hooks/api/hr/cases";
+import { useOrgToday } from "@/hooks/api/org-display";
 
 const schema = z.object({
   employeeId: z.string().min(1, "Employee is required"),
@@ -58,12 +59,13 @@ interface Props {
 
 export function IssueWarningSheet({ open, onOpenChange, caseId }: Props) {
   const create = useCreateDisciplinaryAction();
+  const today = useOrgToday();
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
       employeeId: "",
       actionType: "verbal_warning",
-      effectiveDate: new Date().toISOString().slice(0, 10),
+      effectiveDate: today,
       note: "",
       forceEscalate: false,
     },
