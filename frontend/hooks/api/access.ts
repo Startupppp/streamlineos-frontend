@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useContext, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions, UseQueryResult } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
@@ -18,6 +18,7 @@ import type {
 import type { Permission, PermissionKey } from "@/lib/rbac/permissions";
 import { normalizeOrgModuleKey } from "@/lib/org-module-keys";
 import { accessState, type AccessState } from "@/lib/rbac/gate";
+import { blockedForProjectViewer, ProjectReadOnlyContext } from "@/lib/rbac/project-read-only";
 import {
   gated,
   grantsPermission,
@@ -108,9 +109,11 @@ export const useAccess = (
 
 export function usePermissionGate(permission: PermissionKey): PermissionGate {
   const { data, isError } = useAccess();
+  const projectReadOnly = useContext(ProjectReadOnlyContext);
   return permissionGate(
     permission,
-    grantsPermission(data, permission),
+    grantsPermission(data, permission) &&
+      !(projectReadOnly && blockedForProjectViewer(permission)),
     data !== undefined,
     isError,
   );
