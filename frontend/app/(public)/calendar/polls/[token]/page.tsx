@@ -3,6 +3,7 @@
 import { format } from "date-fns";
 import { CalendarCheck2, Clock3, Loader2 } from "lucide-react";
 import { useParams } from "next/navigation";
+import { useSyncExternalStore } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -22,12 +23,25 @@ const choices: Array<{
   { response: "no", label: "No", variant: "destructive" },
 ];
 
+function subscribeTimeZone() {
+  return () => undefined;
+}
+
+function readTimeZone(): string | null {
+  return Intl.DateTimeFormat().resolvedOptions().timeZone;
+}
+
+function serverTimeZone(): string | null {
+  return null;
+}
+
 export default function CalendarPollPage() {
   const params = useParams<{ token: string }>();
   const token = params.token ?? "";
   const pollQuery = usePublicCalendarPoll(token);
   const vote = usePublicCalendarPollVote(token);
-  const poll = pollQuery.isError ? undefined : pollQuery.data;
+  const viewerTimeZone = useSyncExternalStore(subscribeTimeZone, readTimeZone, serverTimeZone);
+  const poll = viewerTimeZone && !pollQuery.isError ? pollQuery.data : undefined;
 
   return (
     <main className="min-h-dvh bg-background px-4 py-6 text-foreground sm:px-6 sm:py-12">
@@ -43,7 +57,7 @@ export default function CalendarPollPage() {
           </div>
         </header>
         <div className="px-5 py-6 sm:px-8 sm:py-8">
-          {pollQuery.isPending && (
+          {(pollQuery.isPending || (pollQuery.data && !viewerTimeZone && !pollQuery.isError)) && (
             <div className="flex min-h-56 items-center justify-center" aria-label="Loading poll">
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
@@ -76,6 +90,7 @@ export default function CalendarPollPage() {
                           ? "The organizer cancelled this poll."
                           : "The organizer is finalizing this poll."}
                 </p>
+                <p className="mt-2 text-sm font-medium text-muted-foreground">Times shown in {viewerTimeZone}</p>
               </div>
 
               <div className="space-y-3">

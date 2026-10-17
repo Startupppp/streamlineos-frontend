@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { renderToString } from "react-dom/server.node";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -79,6 +80,44 @@ describe("public scheduling poll page", () => {
       ),
     );
     expect(await screen.findByText("Your vote was saved.")).toBeInTheDocument();
+  });
+
+  it("identifies the viewer time zone used for poll options and expiry", async () => {
+    renderPage();
+    expect(await screen.findByRole("heading", { name: "Quarterly planning" })).toBeInTheDocument();
+    expect(screen.getByText(`Times shown in ${Intl.DateTimeFormat().resolvedOptions().timeZone}`)).toBeInTheDocument();
+  });
+
+  it("hydrates a cached poll when server and visitor time zones differ", async () => {
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    client.setQueryData(["public", "calendar", "poll", "signed.poll.token"], poll);
+    function Wrapper({ children }: { children: ReactNode }) {
+      return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
+    }
+    const resolvedOptions = Intl.DateTimeFormat.prototype.resolvedOptions;
+    let timeZone = "UTC";
+    const zone = jest.spyOn(Intl.DateTimeFormat.prototype, "resolvedOptions").mockImplementation(function (this: Intl.DateTimeFormat) {
+      return { ...resolvedOptions.call(this), timeZone };
+    });
+    try {
+      const serverHtml = renderToString(<Wrapper><CalendarPollPage /></Wrapper>);
+      expect(serverHtml).toContain("Loading poll");
+      expect(serverHtml).not.toContain("Quarterly planning");
+      const container = document.createElement("div");
+      container.innerHTML = serverHtml;
+      document.body.appendChild(container);
+      timeZone = "Asia/Kolkata";
+      const errors = jest.spyOn(console, "error").mockImplementation(() => undefined);
+      try {
+        render(<Wrapper><CalendarPollPage /></Wrapper>, { container, hydrate: true });
+        expect(await screen.findByText("Times shown in Asia/Kolkata")).toBeInTheDocument();
+        expect(errors.mock.calls.flat().join(" ")).not.toMatch(/Hydration failed|did not match|server rendered HTML/);
+      } finally {
+        errors.mockRestore();
+      }
+    } finally {
+      zone.mockRestore();
+    }
   });
 
   it("keeps results visible and removes voting controls after expiry", async () => {
