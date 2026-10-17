@@ -20,6 +20,7 @@ import { AIEmailDialog } from "../ai-email-dialog";
 import { AINextActionButton } from "../ai-next-action-button";
 import { AIEnrichLeadButton } from "../ai-enrich-lead-button";
 import { LeadReviewActions } from "./lead-review-actions";
+import { LeadMergeAction } from "./lead-merge-action";
 import {
   STATUS_PIPELINE,
   STATUS_STYLES,
@@ -276,6 +277,7 @@ export function LeadDetailHeader({
                 status={lead.status}
                 verifiedById={lead.verifiedById ?? null}
               />
+              <LeadMergeAction leadId={lead.id} leadName={lead.name} />
 
               <Button variant="outline" size="sm" onClick={onToggleEdit}>
                 <Edit2 className="h-3.5 w-3.5 mr-1" />

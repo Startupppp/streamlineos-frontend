@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useGatedQuery } from "@/hooks/api/gated-query";
@@ -55,11 +55,12 @@ export interface DuplicateGroup {
   score: number;
 }
 
-export function useDuplicateLeads() {
+export function useDuplicateLeads(options?: { enabled?: boolean }) {
   return useGatedQuery("crm:leads:view", {
     queryKey: queryKeys.leads.duplicates(),
     queryFn: ({ signal }) => apiClient.get<{ groups: DuplicateGroup[]; total: number }>("/leads/duplicates", undefined, signal, leadsDuplicateGroupsContract),
     staleTime: 2 * 60 * 1000,
+    enabled: options?.enabled ?? true,
   });
 }
 
