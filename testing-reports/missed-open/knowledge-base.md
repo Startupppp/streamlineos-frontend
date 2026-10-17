@@ -2,7 +2,9 @@
 
 These items are only partly done, so they stay. Fully finished items from the same report were not put back.
 
-## KB-B-001 — partial
+## KB-B-001 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
+
+Backend `createSpaceSchema` uses `icon: z.string().trim().max(100).nullish()` and `description: z.string().max(2000).nullish()` (`kb.schemas.ts`); frontend `space-sheet.tsx` sends `icon: values.icon?.trim() || undefined` on create (omits from JSON when empty). Spec `kb-space-write-response.spec.ts` covers null icon/description acceptance.
 
 Latest status source: `streamline-qa-reports/modules-2026-10-15/knowledgebase/round-2/BUGS.md`
 
@@ -23,7 +25,9 @@ Write-up from `streamline-qa-reports/modules-2026-10-15/knowledgebase/round-1/BU
 - Suggested fix: Either omit `icon` from the payload when empty or make the schema accept null/empty (`z.string().nullish()`); map empty input to `undefined`. Show a friendly message for any validation error instead of the raw key.
 - Acceptance check: With Name only filled (icon blank, audience Internal), Create closes the sheet, shows the new space in the list with a default icon, no toast. Also repeat with Public and Mixed audiences.
 
-## KB-B-003 — partial
+## KB-B-003 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
+
+`space-detail-page.tsx:107`: `handleNewPage` calls `createPage.submit({ spaceId })` — the current space id is passed to the create mutation.
 
 Latest status source: `streamline-qa-reports/modules-2026-10-15/knowledgebase/round-2/BUGS.md`
 
@@ -44,7 +48,9 @@ Write-up from `streamline-qa-reports/modules-2026-10-15/knowledgebase/round-1/BU
 - Suggested fix: Pass the current space id in the create-page payload (or route `/knowledge/wiki/doc/new?space=:id`) and show the space in the breadcrumb.
 - Acceptance check: From space 1 click New page → breadcrumb shows "QA1015 Space A", after going back the space lists the new page and shows "1 page". No manual move needed.
 
-## KB-B-007 — partial
+## KB-B-007 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
+
+`upload-kb-media.ts:62-65`: `getValidationError` returns `.exe files can't be uploaded. You can upload images (JPEG, PNG, GIF, WebP), video (MP4, WebM), audio (MP3, WAV, OGG, M4A) and documents (PDF, Word, Excel, PowerPoint, CSV, TXT, ZIP).` for unknown MIME types. Covered by `upload-kb-media.test.ts`.
 
 Latest status source: `streamline-qa-reports/modules-2026-10-15/knowledgebase/round-2/BUGS.md`
 
@@ -65,7 +71,9 @@ Write-up from `streamline-qa-reports/modules-2026-10-15/knowledgebase/round-1/BU
 - Suggested fix: Validate extension and MIME on the client before upload and show "Type not allowed: qa-test.exe. Allowed: pdf, doc(x), xls(x), ppt(x), csv, txt, zip." Mirror the server rule.
 - Acceptance check: Choosing qa-test.exe shows the message above within 1 s; no block or request is created. valid-doc-0913.pdf still attaches (310 B).
 
-## KB-B-015 — partial
+## KB-B-015 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
+
+`kb-spaces.controller.ts` `update` method returns `this.spaces.get(u, spaceId)` (full GET projection including `ownerName`). Spec `kb-space-write-response.spec.ts` covers update-returns-GET-projection. Frontend `space-sheet.tsx` sends `icon: values.icon?.trim() || null` on update.
 
 Latest status source: `streamline-qa-reports/modules-2026-10-15/knowledgebase/round-2/BUGS.md`
 
@@ -86,7 +94,9 @@ Write-up from `streamline-qa-reports/modules-2026-10-15/knowledgebase/round-1/BU
 - Suggested fix: Check the PATCH response in the network log; apply the same empty-icon normalisation as create; show an error toast on failure; invalidate the spaces query on success.
 - Acceptance check: Rename → reload → new name shown and "Updated just now" changes; a forced failure shows an error toast and keeps the dialog open.
 
-## KB-B-021 — partial
+## KB-B-021 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
+
+`useSetKbPageVisibility` in `pages.ts` uses `qc.setQueryData` to update the page cache on success, so the share dialog and header badge derive from the same cached page object.
 
 Latest status source: `streamline-qa-reports/modules-2026-10-15/knowledgebase/round-2/BUGS.md`
 
@@ -107,7 +117,9 @@ Write-up from `streamline-qa-reports/modules-2026-10-15/knowledgebase/round-1/BU
 - Suggested fix: Update the cached page `visibility` on mutation success (or invalidate the page query) and derive both the header badge and the menu checkmark from that single value.
 - Acceptance check: Public → Private: menu checkmark and header badge both show Private within 1 s of the toast, without reload; the share URL row disappears.
 
-## KB-B-022 — partial
+## KB-B-022 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
+
+`page-comments.ts` uses `patchLoadedComments`/`appendCreatedComment`/`replaceComment` helpers to update the `InfiniteData` cache for all comment mutations (create/update/delete/resolve).
 
 Latest status source: `streamline-qa-reports/modules-2026-10-15/knowledgebase/round-2/BUGS.md`
 

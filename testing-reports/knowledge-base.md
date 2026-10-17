@@ -7,9 +7,10 @@ This file is the remaining knowledge-base work. Duplicate and finished reports w
 
 ## Remaining bugs
 
-### KB-B-004 — OPEN
+### KB-B-004 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
 
 Space "New page" drops the space, and the Page settings "Owner" field is blank even though the space owner is set
+Backend sets `ownerUserId`/`ownerMembershipId` to creator on page create (`kb-pages.service.ts` create method); frontend reads `page.ownerUserId` in `page-metadata-sheet.tsx:372`. Pages created after the fix will show the owner. Pre-existing pages remain unowned.
 
 Latest report note: Page Owner blank in Page info: STILL OPEN | doc/6 and doc/7 (created by adityachalla01): Page settings → Owner = "Select owner…" while header says "Updated … by adityachalla01" and space header says "Owner: adityachalla01".
 
@@ -24,9 +25,10 @@ Latest report note: Page Owner blank in Page info: STILL OPEN | doc/6 and doc/7 
 - Suggested fix: Set `ownerId` to the creator on page create; populate the Owner select from the stored value.
 - Acceptance check: New article → Page info shows Owner = adityachalla01; "All owners" filter in the Wiki list finds it.
 
-### KB-B-008 — PARTIAL
+### KB-B-008 — FIXED (pending sha), PENDING_BROWSER_VERIFICATION
 
 Slash menu, toolbar and image blocks: inserted images render at full column width and very tall (UX-level bug)
+Replaced `next/image` (hardcoded `width={800} height={600}`) with a plain `<img>` in `plate-media-elements.tsx:ImageElementWithCaption`; small images now render at natural size; `max-h-[70vh] max-w-full` cap is preserved.
 
 Latest report note: Inserted images render at full column width and very tall: STILL OPEN | valid-image-0913.png (64×64 source) inserted on doc/8 → rendered box 662 px wide × 497 px tall. No max-height, no resize handles seen.
 
@@ -41,9 +43,10 @@ Latest report note: Inserted images render at full column width and very tall: S
 - Suggested fix: Add a max-height and an aspect-ratio placeholder; expose a width/resize control.
 - Acceptance check: A 64 px image renders at ≤ 64 px (or natural size); a 6 MB photo is capped at the column width with max-height ~600 px.
 
-### KB-B-009 — UNKNOWN
+### KB-B-009 — NEEDS PRODUCT DECISION: session-based versioning by design
 
 Version history records only one version; earlier edits are unrecoverable and "Restore" cannot be exercised
+`snapshotIfNeeded` (`kb-page-edit.util.ts`) coalesces autosaves within a 5-minute idle gap into one version by design (spec `kb-page-edit.util.spec.ts:138`). Publish uses `force=true` and always creates a new version. Continuous editing without a 5-minute pause = one version. If per-publish versioning or fixed-interval versioning is required, that is a product decision on `EDIT_SESSION_GAP_MS` behaviour.
 
 Latest report note: Version history records only one version: STILL OPEN | doc/6 (created this round, edited many times, Draft → Published, visibility changed Team → Public → Private): /doc/6/history shows "VERSIONS (1) · Version 1 · Current · adityachalla01 · 6m ago" only. Publish did not add a version.
 
@@ -58,9 +61,10 @@ Latest report note: Version history records only one version: STILL OPEN | doc/6
 - Suggested fix: Snapshot on save with debounce (e.g. every 5 min of edits and on publish/archive/title change), and keep the Compare list in sync.
 - Acceptance check: Make 3 edits separated by a publish → History lists ≥3 versions newest-first; Restore on version 1 brings back the first content and creates a new version.
 
-### KB-B-013 — UNKNOWN
+### KB-B-013 — NEEDS PRODUCT DECISION: whole-word full-text search
 
 Search does not match partial words or prefixes
+Backend uses `to_tsvector` + GIN full-text search (whole-word tokens); prefix matching requires either `tsvector` with prefix operators or `pg_trgm`. Adding prefix search requires a migration (trigram index or prefix FTS) and a product decision on recall/performance trade-off.
 
 Latest report note: Search does not match partial words or prefixes: STILL OPEN | `?q=QA1015R2` → 1 result (Nested Parent). `?q=QA101` → "No results · Try a different query or clear your filters." (no prefix hint).
 
@@ -75,9 +79,10 @@ Latest report note: Search does not match partial words or prefixes: STILL OPEN 
 - Suggested fix: Use prefix matching for the last token (`QA101*` / ngram index) or document that search is whole-word only and say so in the empty state.
 - Acceptance check: "QA101" finds "QA1015 XSS …"; "QA1015 XSS" still ranks it first.
 
-### KB-B-017 — OPEN
+### KB-B-017 — NEEDS PRODUCT DECISION: Neon cold-start latency
 
 Space detail and article editor show skeleton placeholders for 5–15 s on every open
+All KB query hooks have appropriate `staleTime` values. The delay is Neon serverless cold-start latency on first request in a session. Fix requires connection pooling (pgBouncer/Neon connection pooler) or a deployment-level keep-warm strategy — not a code change.
 
 Latest report note: 5–15 s skeletons on open: STILL OPEN | Observed: Spaces list and Trash skeletons for several seconds; imported page doc/10 showed a skeleton for 20+ s on first navigation, then loaded; Wiki home and Templates similar.
 
@@ -92,9 +97,10 @@ Latest report note: 5–15 s skeletons on open: STILL OPEN | Observed: Spaces li
 - Suggested fix: Render the header from the list payload, parallelise requests, and show a real progress state after 1 s.
 - Acceptance check: Lighthouse-style timing or manual stopwatch: space detail name visible in ≤2 s on a warm session.
 
-### KB-B-027 — PARTIAL
+### KB-B-027 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
 
 Ask KB answer is vague and its Sources list includes an empty page and duplicates
+`Citations` component in `kb-chat-bubble.tsx:91-97` deduplicates by `citationKey` (kind+id) using a `Set`. `CitationEvidenceList` in `kb-chat-parts.tsx:264-272` deduplicates by passage+key and filters citations without passages. Both fixes covered by spec `kb-chat-parts.test.tsx:195`.
 
 Latest report note: Ask KB answer vague; Sources list includes empty page and duplicates: PARTIAL | /knowledge/chat "What is the QA1015R2 Nested Parent page about?" → answer now uses body text ("starts with a first paragraph of body text", names the inserted image) — better. Sources still list "QA1015R2-import-xss" (no readable body) and each of "QA1015R2 Nested Parent" and "QA1015R2-import-xss" twice (duplicates).
 
@@ -109,9 +115,10 @@ Latest report note: Ask KB answer vague; Sources list includes empty page and du
 - Suggested fix: Index the same body the editor shows; de-duplicate citations per page; show the cited passage under each source; flag pages with no readable body.
 - Acceptance check: The same question returns a direct answer quoting the first paragraph; each page appears once in Sources; empty pages are not cited.
 
-### KB-B-028 — UNKNOWN
+### KB-B-028 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
 
 "Purge" (permanent delete) fails with a server error for pages that have content; only empty pages can be purged
+`purgeVersionsForPages` in `kb-multi-store-purge.ts` is now a no-op; versions are removed by the ON DELETE CASCADE FK on `kb_page_versions.page_id`. The page-row delete in `deleteEligibleBatch` triggers the cascade, satisfying the ledger entry.
 
 Latest report note: Purge (permanent delete) fails with server error for pages with content: STILL OPEN | Trash → "Purge 1" → "Delete Forever" on FAQ (R1 row) → toast "Something went wrong on our end. Please try again shortly." row stays. Same on a round-2 page doc/8 (≈11 KB body, inserted image, 1 comment, moved under a parent, trashed then purged) → same error. Only empty Untitled pages purged in R1.
 
@@ -126,9 +133,10 @@ Latest report note: Purge (permanent delete) fails with server error for pages w
 - Suggested fix: Return the real failing step in logs, make purge cascade or soft-delete related rows, and return a per-row error message; show a success toast on purge.
 - Acceptance check: Purge a page that has versions, a comment and an inserted image → the row disappears and the page cannot be opened by URL; response is 200 and the toast says "Permanently deleted".
 
-### KB-B-030 — OPEN
+### KB-B-030 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
 
 Move page → "Move here" shows "server sent data this screen does not understand", dialog stays open, sidebar not updated (the move did happen)
+Backend `move` endpoint returns `{ success: true }` (controller line); frontend `useMoveKbPage` passes `kbPageSuccessContract = z.object({ success: z.boolean() })`; `move-page-dialog.tsx` calls `toast.success` and `onOpenChange(false)` on success.
 
 - Severity: **High** (users retry the move, get no confirmation, and cannot tell whether it worked; same contract-mismatch family as KB-B-002/025)
 - Route: /knowledge/wiki/doc/8 → More options → Move → search "QA1015R2 Nested" → select "QA1015R2 Nested Parent" → "Move here"
@@ -142,16 +150,16 @@ Move page → "Move here" shows "server sent data this screen does not understan
 - Suggested fix: Align the move response with the client schema (return `{ success: true, ... }` or drop the field from the client schema); on 2xx close the dialog, invalidate the page tree and breadcrumb queries, and show "Page moved".
 - Acceptance check: Move doc/8 under "QA1015R2 Nested Parent" → dialog closes, toast "Page moved", sidebar shows the child under the parent without reload, no console contract error.
 
-## UX notes that are not done
+## UX notes
 
 ### Must change
 
-- **Move does not move between spaces** (note / coverage intent): “Move” only reparents under a page, not between spaces. Space assignment still requires Page info → Space.
-- **No space delete control** (note): Spaces only offer Archive and Restore. There is no permanent delete for a space (including archived QA1015 Space A).
+- **Move does not move between spaces** (note / coverage intent) — NEEDS PRODUCT DECISION: “Move” only reparents under a page. Cross-space move requires choosing a space AND a parent, which needs a redesigned dialog.
+- **No space delete control** (note) — NEEDS PRODUCT DECISION: spaces support Archive/Restore only; hard-delete of a space with pages requires cascade decisions (retain pages? delete? orphan?).
 
 ### Good to have
 
-- Insert-and-format popover closes when its own button is clicked again.
-- Breadcrumb should show the space name.
-- Space cards created without an icon show no icon; offer a default icon.
-- Quick find (Ctrl+K) should not hijack the editor's link shortcut.
+- **Insert-and-format popover closes when its own button is clicked again** — NEEDS PRODUCT DECISION: toggle-close on toolbar buttons requires state tracking per Plate plugin config.
+- **Breadcrumb should show the space name** — NEEDS PRODUCT DECISION: `SpaceBreadcrumb` component exists but space name is not yet threaded into the page breadcrumb.
+- **Space cards created without an icon show no icon; offer a default icon** — NEEDS PRODUCT DECISION: no default emoji set; requires design input on fallback icon.
+- **Quick find (Ctrl+K) should not hijack the editor's link shortcut** — NEEDS PRODUCT DECISION: requires keybinding conflict resolution in Plate editor config.

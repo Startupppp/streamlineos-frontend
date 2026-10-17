@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import Image from 'next/image';
 import { FileIcon } from 'lucide-react';
 import { PlateElement } from 'platejs/react';
 import type { PlateElementProps } from 'platejs/react';
@@ -127,12 +126,10 @@ export function ImageElementWithCaption({ element, children, ...props }: PlateEl
     <PlateElement {...props} element={element} as="figure" className="my-3">
       <div contentEditable={false}>
         {url ? (
-          <Image
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
             src={url}
             alt=""
-            unoptimized
-            width={800}
-            height={600}
             className="mx-auto h-auto max-h-[70vh] w-auto max-w-full rounded-md border border-border object-contain"
           />
         ) : (
