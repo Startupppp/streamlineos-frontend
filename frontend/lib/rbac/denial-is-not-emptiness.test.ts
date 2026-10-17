@@ -59,6 +59,12 @@ const ROOT = path.join(__dirname, "..", "..");
  * `kb-content-gaps` into `features/help-centre/`. Twenty entries here are those
  * same surfaces at their new paths -- the debt did not grow, it moved. Two came
  * off because they genuinely no longer have the problem.
+ *
+ * Updated 2026-10-17: the hook scan matched only `useQuery`, so every read that
+ * had moved to `useInfiniteQuery` dropped out of view and its surfaces read as
+ * fixed. Ten entries here were already broken and merely unmeasured -- the debt
+ * did not grow, the detector was blind to it. Two came off because they now
+ * render through PageState.
  */
 const NOT_YET_CONVERTED: readonly string[] = KNOWN_SURFACES;
 
@@ -97,7 +103,7 @@ function gatedReadHooks(): Set<string> {
       const from = match.index ?? 0;
       const to = index + 1 < starts.length ? (starts[index + 1]?.index ?? source.length) : source.length;
       const body = source.slice(from, to);
-      if (!body.includes("useQuery")) return;
+      if (!/\buse(?:Infinite|Suspense)?Query\b/.test(body)) return;
       if (!/useCan\(\s*["'][^"']+["']/.test(body)) return;
       if (!/enabled:\s*[^,\n]*can/i.test(body)) return;
       hooks.add(match[1] as string);
