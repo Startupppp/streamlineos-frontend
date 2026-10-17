@@ -250,20 +250,10 @@ Plan usage shows raw internal keys; the current plan card still offers "Upgrade"
 ## UX notes that are not done
 
 ### Must change
-2. **Duplicate code 409 is silent.** Cost-centre (and likely other hierarchy) create returns 409 with no toast and no inline "Code already in use" (ORG-B-013). Surface the conflict on the Code field (and a generic error toast for other failures) so the user is not left staring at an open dialog.
-
-3. **Creates and archives take 10–25 s with only a spinner.** Org-hierarchy and access writes (locations, cost centres, archives, delegations) show a long spinner and sometimes a generic "Network error" while the server may still finish (ORG-B-014). Add optimistic or "still saving…" feedback, reconcile with a list refetch before erroring, and avoid looking like a hard network failure on slow dependency checks.
-
-4. **No Send-test control for webhooks.** After create there is no way to fire a test delivery from the UI. Add a "Send test" action so operators can verify the URL without waiting for a real event.
-
-6. **No delete for permission groups.** Groups only expose Rename / Manage; leftover "QA1015 role" and "QA1015R2 group" cannot be removed from the UI (ORG-B-009). Provide Archive or Delete (with confirm) for custom groups.
+1. **No Send-test control for webhooks.** After create there is no way to fire a test delivery from the UI. Add a "Send test" action so operators can verify the URL without waiting for a real event.
 
 ### Good to have
-1. **Timestamps in the org timezone.** Delegations and webhooks show UTC dates/times while Localization is Asia/Calcutta (ORG-B-016). Format org-facing timestamps with the org timezone (or label the zone).
-
-2. **Inline validation for session-policy fields.** Validate max sessions (e.g. −5), bad domain, and bad IP inline in the form before Save, even when the policy is not persisted in this round (lockout risk).
-
-3. **Confirm before PAT revoke and remove the row immediately.** Revoke already has a confirm path; after confirm, drop or mark the row without requiring a full page reload (ORG-B-015).
+1. **Inline validation for session-policy fields.** Validate max sessions (e.g. −5), bad domain, and bad IP inline in the form before Save, even when the policy is not persisted in this round (lockout risk).
 
 ### Must change
 1. **Audit trail is not trustworthy as an audit trail.** Group create and token create/revoke are missing (ORG-B-017); archives read "Updated" (ORG-B-018); settings rows do not say what changed (ORG-B-020); the footer total is wrong (ORG-B-019). Fix these before anything else on this page.

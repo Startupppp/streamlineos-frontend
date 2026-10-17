@@ -714,9 +714,3 @@ Latest report note: Keyboard sequence navigated to /settings/billing: Low | BLOC
 2. **Names reject digits (e.g. "QA1015") — clarify the rule in the hint.** Person/department-style name fields reject digits (test name patterns like QA1015). The rule may be intentional, but the field should show a **hint at rest or on reject** ("Letters, spaces, apostrophes and hyphens only — numbers are not allowed") instead of silent strip or a generic required error. Align with holiday-name copy where the allowed set is already spelled out.
 
 3. **Linking an employee to an existing member email is blocked without a how-to.** Creating/linking an employee with an email that already belongs to an org member fails with **"This email belongs to a member of your organization"**. The message is correct as a block, but it should briefly explain **how to link an existing member** (e.g. choose from members, or use "Link existing member" on the profile) so HR is not stuck recreating people who already have accounts.
-
-### Must change
-1. Leave form copy contradicts the rest: form says "adityachalla01 approves their own leave as the organisation owner", and the pending card says "You are the approver — decide in Action Center" on the same owner's own request. Pick one rule (see HRM-B-010).
-3. Silent failures on overlap and file uploads (HRM-B-009, HRM-B-015, HRM-B-016, HRM-B-018): a visible message is required for every rejected submit.
-4. Asset row: "Retire asset" still sits directly next to "Edit asset" and "Assign Employee" (round-1 UX #2 still open).
-5. Joining date default is yesterday (HRM-B-012).

@@ -145,52 +145,13 @@ Move page → "Move here" shows "server sent data this screen does not understan
 ## UX notes that are not done
 
 ### Must change
-- **Version history does not keep history; restore has no success toast** (KB-B-009 + note): Only “Version 1 · Current” appears after many autosaves/publish, so Restore cannot be exercised. After a real restore, show a success toast.
-- **No space delete control** (note): Spaces only offer Archive and Restore. There is no permanent delete for a space (including archived QA1015 Space A).
-- **Trash Purge fails for pages with content** (KB-B-028): Bulk and single purge 500 for FAQ, QA1015-import-xss, QA1015 Article One; only empty Untitled pages purge. No success toast on the ones that do succeed.
+
 - **Move does not move between spaces** (note / coverage intent): “Move” only reparents under a page, not between spaces. Space assignment still requires Page info → Space.
-- **Skeleton / load times of 5–15 s** (KB-B-017 + note): Space detail, editor, history, trash, search, and comments show long skeletons or empty states; users re-click and create duplicates.
+- **No space delete control** (note): Spaces only offer Archive and Restore. There is no permanent delete for a space (including archived QA1015 Space A).
 
 ### Good to have
-- **Page Owner blank in Page info** (KB-B-004): Combobox shows “Select owner…” while header/space show the creator.
-- **Inserted images render huge with no resize** (KB-B-008): 64×64 PNG becomes ~662×662; tall empty placeholder before load; no resize/align controls.
-- **Search is whole-word only** (KB-B-013): “QA101” misses “QA1015…”; empty state does not explain prefix behaviour.
-- **Ask KB answer quality and Sources** (KB-B-027): Vague answer; Sources include empty import/template pages and duplicate the target page.
 
-### Must change
-- Wiki-level crash: Templates and Space detail replace the whole Wiki view with "Something went wrong" and remove the sidebar (KB-B-030, KB-B-031, KB-B-025). Scope error boundaries to the content pane.
-- Trash purge: content pages fail with a generic "Something went wrong on our end" and the row stays (KB-B-028). Show the reason and a retry path.
-- Version history: only one version after many saves and a publish (KB-B-009).
-
-### Good to have
-- Space cards created without an icon show no icon; offer a default icon.
-- Breadcrumb should show the space name.
 - Insert-and-format popover closes when its own button is clicked again.
-- Inserted images cap at column width with max height (KB-B-008 still 662 px wide).
-- Ask KB Sources: de-duplicate, hide pages with no readable body (KB-B-027).
-- Search empty state: suggest prefix/whole-word hint (KB-B-013).
-- Skeleton waits of 5–20 s on Space detail, Trash and imported pages (KB-B-017).
-
-### Must change
-- **Slash menu loses typing and leaves a "/" behind** (KB-B-005, KB-B-030): fix the keyboard flow and strip the `slash_input` node.
-- **Version history keeps one version** (KB-B-009): add snapshots on save/publish so Restore is usable.
-
-### Good to have
-- **Owner blank in Page settings** (KB-B-004): default to the creator.
-- **Inserted images render at 662 px square** (KB-B-008): cap width/height and add resize.
-- **Long loading skeletons** (KB-B-017): space detail and history show placeholders for seconds; show a header from the list payload.
-
-### Must change
-- **False "server sent data this screen does not understand" after Create/Save/Move** (KB-B-002 intermittent, KB-B-015 PARTIAL, KB-B-030): the sheet/dialog stays open after the record is saved; users re-submit. Close the sheet/dialog and refetch on 2xx; align response schemas.
-- **Trash purge of content pages** (KB-B-028): fails with a generic "Something went wrong on our end" and the row stays. Show the reason and a retry path.
-- **Version history keeps one version** (KB-B-009): add snapshots on save/publish so Restore is usable.
-
-### Good to have
-- **Owner blank in Page settings** (KB-B-004): default to the creator.
-- **Space cards created without an icon show no icon**: offer a default icon.
-- **Inserted images render huge (~662 px)** (KB-B-008): cap width/height and add resize handles.
-- **Ask KB Sources**: de-duplicate, hide pages with no readable body (KB-B-027 PARTIAL).
-- **Search empty state**: suggest prefix/whole-word hint (KB-B-013).
-- **Quick find (Ctrl+K)** should not hijack the editor's link shortcut (observation, to verify in round 3).
-- **Insert-and-format popover** closes when its own button is clicked again.
-- **Long loading skeletons** (KB-B-017): Space detail, Trash, history and imported pages show placeholders for seconds; show a header from the list payload where possible.
+- Breadcrumb should show the space name.
+- Space cards created without an icon show no icon; offer a default icon.
+- Quick find (Ctrl+K) should not hijack the editor's link shortcut.

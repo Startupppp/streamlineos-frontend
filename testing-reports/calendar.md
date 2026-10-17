@@ -9,33 +9,7 @@ This file is the remaining calendar work. Duplicate and finished reports were re
 
 ### CAL-B-001 — OPEN
 
-1. Recheck of round-1 and round-2 bugs (CAL-B-001..023)
-
-Latest report note: Week grid shows UTC times: STILL OPEN | Grid shows "12:46 PM – 1:46 PM" for "Calendar past-event regression check 2026-10-14"; List shows "6:16 pm – 7:16 pm · Asia/Calcutta".
-
-| ID | Title (short) | R3 status | Evidence (this run) |
-|---|---|---|---|
-| CAL-B-001 | Week grid + now-line + new-event default use UTC, not Asia/Calcutta | STILL OPEN | Week grid (14 Oct) shows "12:46 PM – 1:46 PM" for "Calendar past-event regression check 2026-10-14"; List shows "6:16 pm – 7:16 pm · Asia/Calcutta". New Event opened with time "03:58" (UTC clock, IST was 9:28 PM). |
-| CAL-B-002 | New event saved as UTC (no timezone control) | STILL OPEN | "QA1015R3 TZ probe", 21 Oct 10:00–11:00 entered in the form → List "21 Oct 2026, 10:00 am – 11:00 am · UTC". Same for "QA1015R3 Clash after allday" (28 Oct 14:00) → "2:00 pm – 2:30 pm · UTC". |
-| CAL-B-003 | Double-click Save creates duplicates | STILL OPEN | One Playwright double-click on Save of "QA1015R3 dblclick probe" (22 Oct 10:00–10:30) → two identical rows in Week grid. |
-| CAL-B-004 | External invitee cannot be added | STILL OPEN | Add attendees → typed qa1015r3@sharklasers.com + Enter → "No members found."; no chip. Discarded, nothing saved. |
-| CAL-B-005 | Clash toast does not name the clashing event | STILL OPEN | "QA1015R3 Clash overlap probe" (21 Oct 10:30–11:30) overlapping "QA1015R3 TZ probe" (10:00–11:00) → "Event created, but it clashes with 1 event already on your calendar." (no name, no time). |
-| CAL-B-006 | Local event and its Google mirror both shown | NOT RE-RUN | No synced event was created this round (would add a new Google write). Round-2 mirrors still listed as External (e.g. "QA1015R2 Google sync probe", Fri 23 Oct 10:00–11:00 Etc/UTC), so R2 evidence stands. |
-| CAL-B-007 | Edit of a synced event → "[object Object]" error | NOT RE-RUN | No synced event edited this round. R2 evidence stands (re-confirmed in R2 on two events). |
-| CAL-B-008 | CORS preflight failures / whole-page replacement | PARTIAL (CORS not seen; whole-page replacement reproduced) | Captured console: no CORS messages in the calendar sessions. Whole-page "Calendar error" (see CAL-B-016) recurred 6+ times. Treat as STILL OPEN under the page-replacement half. |
-| CAL-B-009 | "All occurrences" edit deletes an earlier "This occurrence only" override | STILL OPEN | Monthly series "QA1015R3 Monthly series probe". Nov 15 → "This occurrence only" → "QA1015R3 Monthly ONE edited" (visible). Dec 15 → "All occurrences" → "QA1015R3 Monthly ALL edited". Nov 15 no longer shows the ONE override. |
-| CAL-B-010 | Drag/resize of an event opens New Event instead of moving it | STILL OPEN | Mouse-drag of "QA1015R3 TZ probe" (21 Oct) body → New Event opened prefilled 10:30 → 1:30 PM. Event not moved. Draft discarded. |
-| CAL-B-012 | Mail "Account 2" connector error shows tool slug; inbox empty | STILL OPEN | /mail: "Account 2 — Unable to retrieve tool with slug OUTLOOK_OUTLOOK_LIST_MESSAGES — Reconnect"; "No messages in inbox / Inbox is clear". |
-| CAL-B-014 | Delete on a recurring event has no scope choice | STILL OPEN | Delete on Dec 15 occurrence of "QA1015R3 Monthly" → "Delete Event — This will permanently delete the event…" with Cancel/Delete only (0 radio buttons). Cancelled, nothing deleted. Series later deleted as cleanup (see TEST-DATA). |
-| CAL-B-015 | Deleting a synced event leaves the provider mirror | STILL OPEN (not re-run; mirror seen) | Round-2 mirror "QA1015R2 Google sync probe" still listed as External in Week (Fri 23 Oct). Not deleted (not my data). |
-| CAL-B-016 | Full-page "Calendar error – Failed to load the calendar" replaces calendar | STILL OPEN — REPRODUCED (≥6×) | Fresh loads of /calendar?mode=calendar (and list) on 21, 23, 24, 27, 28 Oct returned the full-page "Calendar error — Failed to load the calendar. Please try again." + "Try Again". Console: React minified error #185 (ids 1a673968-30b2-4ec3-b7fa-bc49f3b2328c, b0bdbbeb-2d8c-41a5-b8fc-3f09bb435020, b31e2856-9f40-464e-86e6-bb08cda905dc). "Try Again" recovered each time. Sheet and header are lost. |
-| CAL-B-017 | RSVP "no longer current"; choice reverts on reload | STILL OPEN | Owner event "QA1015R3 Clash after allday" (28 Oct): Accept → toast "You're going" (no error toast this time). Reload → "Your RSVP … No response yet". Not persisted. |
-| CAL-B-018 | All-day multi-day shows only its start date in List and sheet | STILL OPEN | "QA1015R3 All-day 27-29 probe" (saved 27 Oct–29 Oct, All day). List row: "All day" only under 27 Oct (no end date, no range). Grid bar spans 3 days (correct). |
-| CAL-B-019 | Sync conflict on first edit of a just-created synced event | NOT RE-RUN | No new synced event (avoids another Google write). R2 evidence stands; R2 orphan "QA1015R2 Sync conflict first-edit probe" still shows as External. |
-| CAL-B-020 | Clash toast fires for a timed event beside an all-day item | STILL OPEN | "QA1015R3 All-day 27-29 probe" (27–29 Oct, all day). Then "QA1015R3 Clash after allday" 28 Oct 14:00–14:30 (no timed overlap) → "Event created, but it clashes with 1 event already on your calendar." (false). Control on 21 Oct 14:00 beside the leave item "adityachalla01 - OOO" gave plain "Event created" — so the false clash needs a multi-day all-day event. |
-| CAL-B-021 | Time segments show "00 PM/00 AM/11:00" for PM/AM times | STILL OPEN (worse) | Start 10:00 → time field shows "00 AM"; end 10:30 → "30 AM"; default 15:48 → "03:48" with no PM marker; List later shows the correct value. Mobile sheet shows "03:58" with no AM/PM. |
-| CAL-B-022 | Event blocks cannot be opened with Enter/Space | STILL OPEN | Focused "QA1015R3 TZ probe" block: Enter → URL unchanged, no sheet. Mouse click opens the sheet. |
-| CAL-B-023 | Deleted events stay on screen until reload | NOT REPRODUCED for single delete (intermittent — see note) | "QA1015R3 TZ probe" deleted from Week: block count 0 immediately after "Event deleted", and absent after reload. Note: in the earlier double-click pair, one row was still visible after the first delete (read ~5 s later) and was gone after reload — keep as intermittent until re-run. |
+Latest report note: Week grid shows UTC times: STILL OPEN | Grid shows "12:46 PM – 1:46 PM" for "Calendar past-event regression check 2026-10-14"; List shows "6:16 pm – 7:16 pm · Asia/Calcutta". New Event opened with time "03:58" (UTC clock, IST was 9:28 PM). |
 
 ### CAL-B-002 — OPEN
 
@@ -511,84 +485,45 @@ Latest report note: Medium: Calendar load | "Loading calendar sources…" for 20
 ## UX notes that are not done
 
 ### Must change
-1. **Default sync target is Outlook, silently.** New Event defaults "Sync to calendar account" to `outlook`. My all-day test event (no sync choice made) was pushed to the Outlook account and now has a read-only copy there. Default should be "Don't sync" or the user's chosen primary, and the selected target should be visible in the summary before Save.
-2. **Recurring edit scope defaults to "All occurrences".** The "Edit recurring event" dialog pre-selects All occurrences, so a quick Save changes the whole series (see CAL-B-009). Default to "This occurrence only".
-3. **Escape silently discards an unsaved New Event.** Typed title and fields vanish with no "Discard changes?" prompt. Add a confirm when the form is dirty.
-4. **Save stays enabled while the form is invalid.** With end before start, the inline text "End must be on or after start" appears but Save is still enabled and clicking it does nothing visible. Disable Save and focus the first invalid field, or show a toast.
+
 5. **Clash toast does not name the conflict.** "Event created, but it clashes with 1 event already on your calendar." Name the event and time, and offer "View" / "Keep anyway".
-6. **Attendee picker is org-members only.** Typing an external address shows "No members found." and Enter does nothing (CAL-B-004). Either allow guest emails or say in the field that only members can be invited.
-7. **Raw "[object Object]" in sync error text** (CAL-B-007). Also add resolution actions for the "provider copy changed" conflict.
-8. **External (Google/Outlook) items look like duplicates.** Each synced event appears twice; external rows say only "External" with no account name in the grid, and standups appear twice per day (two External rows) with no hint which account they come from. Show the account email/badge and merge mirrors (CAL-B-006).
-9. **Times are shown in UTC in the grid, form and capacity panel** while list and history show IST (CAL-B-001, CAL-B-002). The capacity sheet also opens with start 07:12 PM on "10/14/2026" — UTC "now" — when IST is 12:42 AM on 10/15.
-10. **Mail error copy exposes a tool slug.** "Unable to retrieve tool with slug OUTLOOK_OUTLOOK_LIST_MESSAGES" with a Reconnect link (CAL-B-012). Use plain text: "Outlook needs attention — reconnect".
-12. **Delete on a recurring series has no scope prompt** and the confirm text ("This will permanently delete the event") does not say that all occurrences go (CAL-B-014). Synced events should also say the provider copy may remain (CAL-B-015) or delete it.
-
-### Good to have
-1. Time inputs in New Event are too narrow: "10:00 AM" renders as "00 AM" in the time box (described in words; no screenshot kept). Widen the field or use a 24-hour mask with a visible format hint.
-2. Week grid labels are cut off where events overlap (e.g. "12:51 PM – 1:5", "Calendar Outlook…" clipped). Use stacked lanes or show a "+n more" chip.
-3. Source filter state ("Event sources" toggles) is not reflected in the URL, so a filtered view cannot be shared or bookmarked. Holidays off persisted across reload (good), but the URL does not say so.
-4. "Add Teams meeting link" is ON by default for every new event, including Google-synced ones. Default off unless the account is Outlook/Teams.
-5. Edit form for an existing event hides Sync account, Teams link, and recurrence rule (only the scope dialog appears). Users cannot see or change the repeat rule from Edit.
-6. Event detail sheet shows loading skeletons for a noticeable time before the Edit button renders; clicking Edit too early does nothing. Show the Edit button immediately or disable it with a spinner.
-7. "Loading calendar sources…" appears for several seconds on every load and the list is briefly partial (standups/external events pop in after). Show a skeleton per source or a count.
-8. Share button gives no visible result in the header (no sheet, no toast, focus ring only). Confirm what it does or hide it.
-9. Week navigation: the first click on "Previous week" / "Next week" sometimes did not move the range in my runs (two attempts, then worked with a forced click). Needs repro before filing; logged here only.
-10. Sheets for "Calendar accounts" and "Event sources" are not announced as dialogs (no dialog role in the accessibility tree), which affects screen readers and Escape focus management.
-11. Console: /inventory/warehouses returns 402 (payment required) on the Capacity sheet and shows no in-app message. Show a plan-upgrade notice instead of a raw error.
-12. Positive: Escape returns focus to the "Calendar accounts" trigger; the 100-character title limit has a clear message ("Event title must be at most 100 characters"); blank/space-only titles keep Save disabled; the <script> title renders as literal text (no alert, no HTML injection); event delete shows a clear confirm with "cannot be undone"; Mail composer blocks an empty body ("Message body is required").
-
-### Must change
-1. **Times are entered and shown in UTC for an IST user.** The new-event default time follows the UTC clock (12:36 AM while IST is 6:06 AM) and new events save without a timezone (CAL-B-001, CAL-B-002). Add a timezone label to the sheet, default to the profile timezone, and fix the grid.
-2. **Time field is unreadable for PM and morning times.** 15:00 shows "00 PM", 09:00 shows "00 AM", 23:00 shows "11:00" (CAL-B-021). Users can't confirm what they picked.
-3. **New events sync to Outlook by default.** "Sync to calendar account" preselects "outlook" with "Add Teams meeting link" on. Outlook is currently in error (CAL-B-012), so the default path is the broken one. Default to "Don't sync" (or the last choice) and show the target in the sheet header.
-4. **Recurring delete has no scope.** One Delete on any occurrence removed every occurrence of the series, with only "This will permanently delete the event." (CAL-B-014). Offer "This occurrence / All occurrences" and default to "This occurrence".
-5. **Synced events can't be edited without a conflict.** The first edit of a just-created synced event fails with "[object Object]" and no way to choose a version (CAL-B-019, CAL-B-007). Show readable text and "Keep StreamlineOS version" / "Use Google version".
-6. **Deleting a synced event leaves a read-only copy with the old title** (CAL-B-015). Either delete the provider copy or tell the user it stays in Google, with a link to delete it there.
-7. **RSVP fails on the owner's own event and shows a false "You're going".** The error reads "The event attendee record is no longer current" and the choice reverts after reload (CAL-B-017). Hide RSVP for the organiser, or make it work.
-8. **Whole-page error replacements.** One failed API call replaces the calendar, and any open New Event draft is lost (CAL-B-008, CAL-B-016). Keep the header and sheet mounted and show a retry in the panel.
-9. **False and unnamed clash warnings.** A same-day all-day item triggers "clashes with 1 event" for a timed meeting that doesn't overlap (CAL-B-020), and the toast never names the event (CAL-B-005). Name the event and time, and exclude non-overlapping all-day items.
-10. **Multi-day all-day events read as one day** in the List row and detail sheet (CAL-B-018). Show "29 Oct – 31 Oct · All day".
-11. **Event blocks can't be opened from the keyboard** (CAL-B-022). Enter and Space must open the event; this is also a WCAG 2.1.1 issue.
-12. **Duplicate standup rows.** Each day shows two "Daily Team Standup · External" rows with no account label (CAL-B-006 family). Merge or label them so a user can tell which one is theirs.
-
-### Good to have
-1. **Grid readability for overlapping events.** Two or three overlapping events render as narrow, truncated blocks ("2:00 PM – 2…", "QA10…"). Show a count chip or open a list on hover/click.
-2. **Month view "+2 more"** hides events with no visible list. Let the chip open the day.
-3. **Past times on today are accepted silently.** The date picker blocks past days, but a 00:05 start on today's date saves with no warning. Either block both or warn "This starts in the past".
-4. **Cannot log a past meeting.** Past dates are disabled in the picker, so a meeting that already happened can't be added. Allow it with a "logged after the fact" flag.
-5. **Keyboard shortcuts for day navigation.** ArrowLeft/Right and "t" (today) do nothing in Day or Week view. The Previous/Next buttons work with Enter, so add the shortcuts and list them in a help hint.
-6. **Stale rows after delete** (CAL-B-023). The deleted row stays until a reload. Remove it on success.
-7. **Slow sheet open.** The event sheet shows grey skeleton blocks for 2–5 s, and Edit/Delete appear only after sync finishes (about 5 s). Show Edit/Delete at once and disable them only while a sync is running.
-8. **"Create" and "Add to calendar" both exist** in the header with similar roles. Pick one name for "new event".
-9. **Title limit feedback.** The 100-character limit is only enforced on Save ("Event title must be at most 100 characters"). Show a counter at 80+.
-10. **Organiser label.** "Created by adityachalla01" shows the login name, not the display name.
-11. **"Teams link on by default"** adds a Join link to every new event. Make it opt-in or remember the last choice.
-12. **Loading states.** The List view showed "Loading events" for more than 25 s on a cold load of one week (once), and provider rows (External) appear late or not at all (List vs Week mismatch). Show a progress state per source.
-13. **Holes in the standup series.** No standup is shown for the weeks of 16 Nov and 7 Dec (OBSERVED; cause not checked). If that is intended, label it; if not, check the series exceptions.
-
-### Must change
-1. **Show event times in the account timezone everywhere** (grid, now-line, New Event defaults, sheet). Today the grid and form use UTC while List says IST (CAL-B-001/002). Users will misplace meetings.
-2. **Add a timezone line to the New Event form** (e.g. "Asia/Kolkata") so the saved zone is visible before Save. The form has no zone field at all.
-3. **Default "Sync to calendar account" to "Don't sync" (or the last choice), not "outlook".** The default is an account whose connector errors (CAL-B-012), so new events go to a broken target without the user noticing.
+4. **Save stays enabled while the form is invalid.** With end before start, the inline text "End must be on or after start" appears but Save is still enabled and clicking it does nothing visible. Disable Save and focus the first invalid field, or show a toast.
+3. **Escape silently discards an unsaved New Event.** Typed title and fields vanish with no "Discard changes?" prompt. Add a confirm when the form is dirty.
+1. **Default sync target is Outlook, silently.** New Event defaults "Sync to calendar account" to `outlook`. My all-day test event (no sync choice made) was pushed to the Outlook account and now has a read-only copy there. Default should be "Don't sync" or the user's chosen primary, and the selected target should be visible in the summary before Save.
 4. **Turn "Add Teams meeting link" off by default** (it is on in every new event; it creates a meeting link for every block and is not mentioned).
-5. **Time fields must show the value they hold:** "10:00" reads "00 AM", "10:30" reads "30 AM", "15:48" reads "03:48" with no AM/PM (CAL-B-021).
-6. **Recurrence default day**: "Day 15 of month" when the event is on the 23rd (CAL-B-024). Show the next three dates under the repeat setting so the user can check them.
-7. **Calendar error must not blank the page**: replace the full-page "Calendar error — Failed to load the calendar" with an in-panel retry (CAL-B-016); the header and the open sheet should stay.
-8. **Clash toast must name the clashing event and its time** (CAL-B-005), and must not fire for all-day items that do not overlap (CAL-B-020).
-9. **Delete on recurring events must ask the scope** ("This occurrence only" / "All occurrences"), default "This occurrence only" (CAL-B-014).
-11. **All-day ranges**: List rows and the sheet should show "27 Oct – 29 Oct · All day" (CAL-B-018).
-12. **RSVP for the organiser**: hide the RSVP row (or say "You organise this event") (CAL-B-017). Accept currently shows "You're going" and then reverts on reload.
+2. **Add a timezone line to the New Event form** (e.g. "Asia/Kolkata") so the saved zone is visible before Save. The form has no zone field at all.
 
 ### Good to have
-1. A calendar search box and a source/calendar filter in the List header; the current dropdown has only "All events" (CAL-B-026).
-2. Event search in the ⌘K palette ("QA1015R3" returns "No results" while events exist).
-3. Reminder control on events (CAL-B-027).
-4. Progressive loading: show StreamlineOS events first, provider sources after (CAL-B-028).
-5. "Sources" button should open a panel or show a state; it currently changes nothing visible.
-6. Share menu: "Email calendar" sends mail directly from the menu; consider a confirm step (not tested — sending was out of scope).
-7. Week grid: overlapping events render at 1/3 width with titles cut off; show the count ("+2") or stack them side-by-side at readable width.
-8. Keyboard: Enter/Space on a focused event block should open it (CAL-B-022); add a visible focus ring.
-9. New Event sheet keeps "Oct 15" as the default date even when the user is looking at Oct 21; default to the day being viewed.
-10. Discarding the sheet by mis-click loses the draft; add an "unsaved changes" confirm.
-11. Drag-to-create on an empty slot starts a 3-hour default span (10:30 → 1:30 PM) when the drag is short; shorten to the drag length or 30 minutes.
+
+12. Positive: Escape returns focus to the "Calendar accounts" trigger; the 100-character title limit has a clear message ("Event title must be at most 100 characters"); blank/space-only titles keep Save disabled; the <script> title renders as literal text (no alert, no HTML injection); event delete shows a clear confirm with "cannot be undone"; Mail composer blocks an empty body ("Message body is required").
+11. Console: /inventory/warehouses returns 402 (payment required) on the Capacity sheet and shows no in-app message. Show a plan-upgrade notice instead of a raw error.
+10. Sheets for "Calendar accounts" and "Event sources" are not announced as dialogs (no dialog role in the accessibility tree), which affects screen readers and Escape focus management.
+9. Week navigation: the first click on "Previous week" / "Next week" sometimes did not move the range in my runs (two attempts, then worked with a forced click). Needs repro before filing; logged here only.
+8. Share button gives no visible result in the header (no sheet, no toast, focus ring only). Confirm what it does or hide it.
+7. "Loading calendar sources…" appears for several seconds on every load and the list is briefly partial (standups/external events pop in after). Show a skeleton per source or a count.
+6. Event detail sheet shows loading skeletons for a noticeable time before the Edit button renders; clicking Edit too early does nothing. Show the Edit button immediately or disable it with a spinner.
+5. Edit form for an existing event hides Sync account, Teams link, and recurrence rule (only the scope dialog appears). Users cannot see or change the repeat rule from Edit.
+4. "Add Teams meeting link" is ON by default for every new event, including Google-synced ones. Default off unless the account is Outlook/Teams.
+3. Source filter state ("Event sources" toggles) is not reflected in the URL, so a filtered view cannot be shared or bookmarked. Holidays off persisted across reload (good), but the URL does not say so.
+2. Week grid labels are cut off where events overlap (e.g. "12:51 PM – 1:5", "Calendar Outlook…" clipped). Use stacked lanes or show a "+n more" chip.
+1. Time inputs in New Event are too narrow: "10:00 AM" renders as "00 AM" in the time box (described in words; no screenshot kept). Widen the field or use a 24-hour mask with a visible format hint.
+13. **Holes in the standup series.** No standup is shown for the weeks of 16 Nov and 7 Dec (OBSERVED; cause not checked). If that is intended, label it; if not, check the series exceptions.
+12. **Loading states.** The List view showed "Loading events" for more than 25 s on a cold load of one week (once), and provider rows (External) appear late or not at all (List vs Week mismatch). Show a progress state per source.
+11. **"Teams link on by default"** adds a Join link to every new event. Make it opt-in or remember the last choice.
+10. **Organiser label.** "Created by adityachalla01" shows the login name, not the display name.
+9. **Title limit feedback.** The 100-character limit is only enforced on Save ("Event title must be at most 100 characters"). Show a counter at 80+.
+8. **"Create" and "Add to calendar" both exist** in the header with similar roles. Pick one name for "new event".
+7. **Slow sheet open.** The event sheet shows grey skeleton blocks for 2–5 s, and Edit/Delete appear only after sync finishes (about 5 s). Show Edit/Delete at once and disable them only while a sync is running.
+5. **Keyboard shortcuts for day navigation.** ArrowLeft/Right and "t" (today) do nothing in Day or Week view. The Previous/Next buttons work with Enter, so add the shortcuts and list them in a help hint.
+4. **Cannot log a past meeting.** Past dates are disabled in the picker, so a meeting that already happened can't be added. Allow it with a "logged after the fact" flag.
+3. **Past times on today are accepted silently.** The date picker blocks past days, but a 00:05 start on today's date saves with no warning. Either block both or warn "This starts in the past".
+2. **Month view "+2 more"** hides events with no visible list. Let the chip open the day.
+1. **Grid readability for overlapping events.** Two or three overlapping events render as narrow, truncated blocks ("2:00 PM – 2…", "QA10…"). Show a count chip or open a list on hover/click.
 12. Toast "Event created, but it clashes…" should be an action toast with "View" to jump to the clashing event.
+11. Drag-to-create on an empty slot starts a 3-hour default span (10:30 → 1:30 PM) when the drag is short; shorten to the drag length or 30 minutes.
+10. Discarding the sheet by mis-click loses the draft; add an "unsaved changes" confirm.
+9. New Event sheet keeps "Oct 15" as the default date even when the user is looking at Oct 21; default to the day being viewed.
+7. Week grid: overlapping events render at 1/3 width with titles cut off; show the count ("+2") or stack them side-by-side at readable width.
+6. Share menu: "Email calendar" sends mail directly from the menu; consider a confirm step (not tested — sending was out of scope).
+5. "Sources" button should open a panel or show a state; it currently changes nothing visible.
+2. Event search in the ⌘K palette ("QA1015R3" returns "No results" while events exist).

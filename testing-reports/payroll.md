@@ -304,13 +304,10 @@ Latest report note: Salary profile - Add salary / Edit profile: Medium | Annual 
 ## UX notes that are not done
 
 ### Must change
-1. Show field errors inline with plain words; never toast raw keys/regex ("amount: Invalid string: must match pattern…", "legalEntityName: Too big…") (PAY-B-004, B-007).
-2. Make the draft run deletable or discardable; right now a test run cannot be removed from the UI.
-3. Salary Structures copy says "Edit an employee's structure there" but no control exists on the employee profile (PAY-B-012).
-4. Delete button on templates actually deactivates; rename the button or the dialog so they match.
-5. Run page: "Submit for Approval" is the primary button while the run has blockers; disable it until blockers are cleared.
-6. Negative net pay must be a blocker shown as a blocker, not a payable total (PAY-B-017).
-7. Creating… spinner on components/templates can last 20+ seconds with no progress text.
+1. Make the draft run deletable or discardable; right now a test run cannot be removed from the UI.
+2. Delete button on templates actually deactivates; rename the button or the dialog so they match.
+3. Run page: "Submit for Approval" is the primary button while the run has blockers; disable it until blockers are cleared.
+4. Creating… spinner on components/templates can last 20+ seconds with no progress text.
 
 ### Good to have
 1. Readiness/Runs show "Run created 14 Oct 2026" while the local date is 15 Oct IST - show dates in the user's timezone.

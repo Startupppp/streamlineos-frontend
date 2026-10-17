@@ -1,15 +1,23 @@
-# Testing reports — pending items only
+# Remaining QA work
 
-Fixed and pass items are not in these files. The QA zip archives were removed after the pending write-ups were copied here.
+One list per module. Duplicate reports and items already fixed in the frontend were removed. Do not redo an ID that is not listed here.
 
-- Module summaries in this folder (`build.md`, `calendar.md`, `hr.md`, and the rest) are the reviewed pending list.
-- `missed-open/` holds the other pending items, with the original steps copied out of the zips.
+| File | What is left |
+| --- | --- |
+| build.md | 36 bugs (partial, open, or unknown) plus UX notes |
+| calendar.md | 25 bugs plus UX notes |
+| hr.md | 28 bugs plus UX notes |
+| knowledge-base.md | 8 bugs plus UX notes |
+| manage-product.md | 9 bugs plus UX notes |
+| onboarding.md | 3 bugs |
+| org-settings.md | 16 bugs plus UX notes |
+| payroll.md | 18 bugs plus UX notes |
+| rbac.md | 4 bugs plus UX notes |
+| claude-backend-fix-prompt.md | Backend HR fixes. This workspace has no backend, so these stay until a backend change lands |
+| missed-open/build.md | 20 extra build IDs, including 5 that are only partly fixed |
+| missed-open/hr.md | 6 partly fixed bugs plus 10 HR notes |
+| missed-open/knowledge-base.md | 6 partly fixed bugs |
+| missed-open/onboarding.md | 1 partly fixed bug |
+| missed-open/payroll.md | 2 partly fixed bugs |
 
-| | Count |
-|---|---:|
-| Bug IDs found in the zips | 422 |
-| Latest status fixed or pass (left out) | 77 |
-| Pending, in the module summaries | 193 |
-| Pending, in `missed-open/` | 156 |
-
-`missed-open/README.md` links each module.
+A partial item stays. Only an item that is fully finished is removed.
