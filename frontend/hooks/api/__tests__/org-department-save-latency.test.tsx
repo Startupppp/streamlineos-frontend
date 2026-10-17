@@ -49,16 +49,22 @@ beforeEach(() => {
   (apiClient.patch as jest.Mock).mockReset().mockResolvedValue(department);
 });
 
-it.each([
-  ["create", () => useCreateOrgDepartment(), { name: "Ops", code: "OPS" }],
-  ["update", () => useUpdateOrgDepartment(), { departmentId: "d1", name: "Ops" }],
-])("a department %s resolves without waiting for the hierarchy refetch", async (_label, hook, input) => {
+it("a department create resolves without waiting for the hierarchy refetch", async () => {
   const { wrapper, reader, release, refetches } = setup();
   await waitFor(() => expect(reader.result.current.isSuccess).toBe(true));
 
-  const { result } = renderHook(hook, { wrapper });
-  // @ts-expect-error -- both hooks accept their own input shape
-  await expect(result.current.mutateAsync(input)).resolves.toEqual(department);
+  const { result } = renderHook(() => useCreateOrgDepartment(), { wrapper });
+  await expect(result.current.mutateAsync({ name: "Ops", code: "OPS" })).resolves.toEqual(department);
+  expect(refetches()).toBe(1);
+  release();
+});
+
+it("a department update resolves without waiting for the hierarchy refetch", async () => {
+  const { wrapper, reader, release, refetches } = setup();
+  await waitFor(() => expect(reader.result.current.isSuccess).toBe(true));
+
+  const { result } = renderHook(() => useUpdateOrgDepartment(), { wrapper });
+  await expect(result.current.mutateAsync({ departmentId: "d1", name: "Ops" })).resolves.toEqual(department);
   expect(refetches()).toBe(1);
   release();
 });

@@ -88,7 +88,6 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
             searching && "animate-spin motion-reduce:animate-none",
           ),
           "aria-hidden": true,
-          "data-searching": searching || undefined,
         })}
         <Input
           ref={ref}
