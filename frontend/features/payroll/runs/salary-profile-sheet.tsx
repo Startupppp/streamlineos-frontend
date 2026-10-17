@@ -103,6 +103,7 @@ export function SalaryProfileSheet({
 
   const form = useForm<ProfileForm>({
     resolver: zodResolver(profileSchema),
+    mode: "onTouched",
     defaultValues: {
       effectiveFrom: "",
       annualCtc: "",

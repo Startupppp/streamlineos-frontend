@@ -28,8 +28,8 @@ const schema = z.object({
   legalEntityName: z
     .string()
     .trim()
-    .max(200, "Legal entity name must be at most 200 characters")
-    .optional(),
+    .min(1, "Legal entity name is required")
+    .max(200, "Legal entity name must be at most 200 characters"),
   currency: z.string().min(1),
   payFrequency: z.enum(["MONTHLY", "SEMI_MONTHLY", "BI_WEEKLY", "WEEKLY"]),
   payDay: z.string().min(1),
@@ -76,7 +76,7 @@ export function PolicyProfileSection({ policy }: PolicyProfileSectionProps) {
       {
         policyId: policy.id,
         data: {
-          legalEntityName: data.legalEntityName?.trim() || null,
+          legalEntityName: data.legalEntityName.trim(),
           currency: data.currency,
           payFrequency: data.payFrequency,
           payDay: parseInt(data.payDay, 10),

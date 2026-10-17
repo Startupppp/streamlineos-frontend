@@ -11,6 +11,7 @@ import { useCursorPager } from "@/components/ui/table-pagination";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { isApiError } from "@/lib/api-envelope";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -258,7 +259,14 @@ export function InputsTab({ runId, isLocked }: InputsTabProps) {
           </Button>
         </div>
       )}
-      {isError ? (
+      {isError && isApiError(error) && error.status === 404 ? (
+        <EmptyState
+          compact
+          title="No inputs for this period"
+          description="Open an attendance period and lock it before calculating. The MISSING_LOCKED_INPUT_PERIOD blocker will clear once a period is locked."
+          action={{ label: "Go to Attendance Inputs", href: "/payroll/inputs" }}
+        />
+      ) : isError ? (
         <ErrorState
           className="flex-1"
           title="Couldn't load run inputs"
@@ -286,7 +294,8 @@ export function InputsTab({ runId, isLocked }: InputsTabProps) {
             <EmptyState
               compact
               title="No attendance inputs"
-              description="Run will pull inputs on generation"
+              description="Open an attendance period and lock it to pull inputs for this run."
+              action={{ label: "Go to Attendance Inputs", href: "/payroll/inputs" }}
             />
           }
         />
