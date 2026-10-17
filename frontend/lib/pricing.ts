@@ -22,8 +22,8 @@ export const PRICING = {
   enterpriseMonthlyInr: 4999,
   /** Annual discount fraction — mirrors ANNUAL_DISCOUNT_PCT */
   annualDiscountPct: 20,
-  /** Trial length in days — mirrors DEFAULT_TRIAL_DAYS */
-  trialDays: 14,
+  /** Trial length in days — mirrors DEFAULT_TRIAL_DAYS (6 months). */
+  trialDays: 182,
   freeStorageGb: 5,
   starterStorageGb: 100,
   professionalStorageGb: 1024,

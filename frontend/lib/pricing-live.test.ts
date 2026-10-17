@@ -10,7 +10,7 @@ const EUR: PublicPricing = {
   currency: "EUR",
   isRequestedCurrency: true,
   annualDiscountPct: 20,
-  trialDays: 14,
+  trialDays: 182,
   plans: [
     // As `GET /public/pricing` actually answers: `annualMinor` is the whole
     // year. 1900 x 12 x 0.8 = 18240. An earlier fixture here invented 1520 --
