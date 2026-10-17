@@ -80,6 +80,8 @@ export interface ProjectWithDetails extends Project {
   members?: ProjectMember[];
   tickets?: Ticket[];
   crmClient?: { id: number; name: string | null } | null;
+  /** The caller is a VIEWER of this project: every write is refused. */
+  readOnly?: boolean;
 }
 
 export type ProjectPriority = "LOW" | "MEDIUM" | "HIGH" | "URGENT";
