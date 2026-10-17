@@ -1,7 +1,8 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
-import { clearBackendTokenCache, resetOutageCircuit, seedBackendToken } from "@/lib/api-client";
+import { clearBackendTokenCache, seedBackendToken } from "@/lib/api-client";
+import { resetOutageCircuit } from "@/lib/api-outage-circuit";
 import { installAbortSignalPolyfill } from "@/test-utils/abort-signal-polyfill";
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { useKbPageRecordLinks } from "./record-links";
