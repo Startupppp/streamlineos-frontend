@@ -66,6 +66,7 @@ export function ProductSettingsPublicationSection({
           issuedAt={controls.issuedAt}
           expiresAt={controls.expiresAt}
           isRotating={controls.isPublishing}
+          isUnpublishing={controls.isUnpublishing}
           canManage={canManage}
           onCopy={controls.handleCopy}
           onRotateAndCopy={controls.handleRotateAndCopy}

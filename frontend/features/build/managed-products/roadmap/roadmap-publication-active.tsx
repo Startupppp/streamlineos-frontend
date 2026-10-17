@@ -15,6 +15,7 @@ interface RoadmapPublicationActiveProps {
   issuedAt: string | null;
   expiresAt: string | null;
   isRotating: boolean;
+  isUnpublishing?: boolean;
   canManage?: boolean;
   onCopy: () => void;
   onRotateAndCopy: () => void;
@@ -31,6 +32,7 @@ export function RoadmapPublicationActive({
   issuedAt,
   expiresAt,
   isRotating,
+  isUnpublishing = false,
   canManage = true,
   onCopy,
   onRotateAndCopy,
@@ -151,16 +153,18 @@ export function RoadmapPublicationActive({
             <RefreshCw className="size-3.5" aria-hidden />
             Rotate share link
           </Button>
-          <Button
+          <LoadingButton
             type="button"
             variant="outline"
             size="sm"
             className="gap-2 text-destructive hover:text-destructive"
+            isPending={isUnpublishing}
+            loadingText="Unpublishing…"
             onClick={onOpenUnpublish}
           >
             <EyeOff className="size-3.5 text-destructive" aria-hidden />
             Unpublish
-          </Button>
+          </LoadingButton>
         </div>
       ) : null}
     </div>
