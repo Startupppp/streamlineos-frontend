@@ -8,6 +8,7 @@ import { statusToneClasses, type StatusTone } from "@/lib/design-tokens";
 import { formatTimeInOrgTz } from "@/lib/date-utils";
 import { formatIstDate } from "@/lib/hrms/payroll-cutoff";
 import type { AttendanceRegularization } from "@/hooks/api/hr/attendance";
+import { NeedsAnotherApprover, SelfApprovalBadge } from "@/features/hr/shared/self-approval";
 
 const STATUS_TONE: Readonly<Record<string, StatusTone>> = {
   PENDING: "warning",
@@ -49,8 +50,9 @@ interface RegularizationRowProps {
   canDecide: boolean;
   isPending: boolean;
   currentUserId?: string;
+  mayApproveOwn?: boolean;
   orgTz: string | null;
-  onApply: (regularizationId: number) => void;
+  onApply: (regularizationId: number, selfApproval: boolean) => void;
   onReject: (regularizationId: number) => void;
 }
 
@@ -59,15 +61,16 @@ export function RegularizationRow({
   canDecide,
   isPending,
   currentUserId,
+  mayApproveOwn = false,
   orgTz,
   onApply,
   onReject,
 }: RegularizationRowProps) {
-  const handleApply = useCallback(() => onApply(row.id), [onApply, row.id]);
-  const handleReject = useCallback(() => onReject(row.id), [onReject, row.id]);
   const status = (row.status ?? "PENDING").toUpperCase();
   const isDecidable = status === "PENDING";
   const isSelf = Boolean(currentUserId && row.userId === currentUserId);
+  const handleApply = useCallback(() => onApply(row.id, isSelf), [onApply, row.id, isSelf]);
+  const handleReject = useCallback(() => onReject(row.id), [onReject, row.id]);
   const inShift = punchShift(row.originalCheckIn, row.requestedCheckIn);
   const outShift = punchShift(row.originalCheckOut, row.requestedCheckOut);
 
@@ -79,6 +82,7 @@ export function RegularizationRow({
             {formatIstDate(`${row.attendanceDate.slice(0, 10)}T00:00:00Z`)}
           </span>
           <RegularizationStatusBadge status={status} />
+          {isSelf && mayApproveOwn && isDecidable ? <SelfApprovalBadge /> : null}
         </div>
         {row.requesterName ? (
           <p className="text-dense text-muted-foreground">{row.requesterName}</p>
@@ -107,8 +111,8 @@ export function RegularizationRow({
       </div>
 
       {canDecide && isDecidable ? (
-        isSelf ? (
-          <p className="shrink-0 text-dense text-muted-foreground">Needs another approver</p>
+        isSelf && !mayApproveOwn ? (
+          <NeedsAnotherApprover className="shrink-0" />
         ) : (
           <div className="flex shrink-0 gap-2">
             <LoadingButton

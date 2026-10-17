@@ -75,11 +75,28 @@ describe("HR Action Center — inline decide", () => {
 
     render(<HrActionCenterPage />);
     expect(screen.queryByText("Needs another approver")).not.toBeInTheDocument();
+    expect(screen.getByText("Self-approval (no other approver)")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Approve" }));
 
+    expect(mockQueueState.approveLeave).not.toHaveBeenCalled();
+    const dialog = screen.getByRole("alertdialog");
+    fireEvent.click(within(dialog).getByRole("button", { name: "Yes, approve my own request" }));
+
     await waitFor(() =>
-      expect(mockQueueState.approveLeave).toHaveBeenCalledWith({ leaveId: 41 }),
+      expect(mockQueueState.approveLeave).toHaveBeenCalledWith({ leaveId: 41, confirmSelfApproval: true }),
     );
+  });
+
+  it("explains why an own request is blocked when someone else can approve it", () => {
+    mockQueueState.sessionUserId = "usr-member";
+    mockQueueState.myLeaveRoute = { ownerSelfApproval: false, approver: { userId: "usr-manager" } };
+    mockQueueState.leavePages = mockLeavePage([mockLeaveRow]);
+
+    render(<HrActionCenterPage />);
+
+    expect(screen.getByText("Needs another approver")).toBeInTheDocument();
+    expect(screen.getByText(/You can't decide your own request/)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Approve" })).not.toBeInTheDocument();
   });
 
   it("approves on the row itself, with no drawer round trip", async () => {

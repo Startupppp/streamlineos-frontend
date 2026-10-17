@@ -36,6 +36,7 @@ import type { LeaveRequestValidation } from "./use-leave-request-validation";
 import type { LeaveType, LeaveBalance } from "./components/leaves-shared";
 import type { ApprovalRoute } from "@/hooks/api/hr/approval-route-schema";
 import { ApprovalRoutePanel, summarizeApprovalRoute } from "@/components/shared/approval-route-panel";
+import { SELF_APPROVAL_LABEL } from "@/features/hr/shared/self-approval";
 import { useNoApproverFix } from "./no-approver-fix";
 
 const FIELD_LABEL_CLASS =
@@ -189,6 +190,13 @@ export function LeaveRequestFormFields({
         error={null}
         unownedAction={noApproverAction}
       />
+      {approvalRoute ? (
+        <p className="text-xs leading-relaxed text-muted-foreground">
+          {approvalRoute.ownerSelfApproval
+            ? `${SELF_APPROVAL_LABEL}: nobody else can approve leave here, so you approve this request yourself from Leave approvals after confirming it. The self-approval is recorded in the audit log.`
+            : "You can't approve your own request. It waits for the approver above, and shows as \"Needs another approver\" in your own approvals list."}
+        </p>
+      ) : null}
 
       <FormField
         control={form.control}

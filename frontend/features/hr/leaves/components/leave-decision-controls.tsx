@@ -17,7 +17,12 @@ import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
 
 import { LeaveStatusBadge } from "./leave-status-badge";
-import { useMyApprover } from "@/hooks/api/hr/approvers";
+import {
+  NeedsAnotherApprover,
+  SelfApprovalBadge,
+  SelfApprovalConfirmDialog,
+  useIsSoleSelfApprover,
+} from "@/features/hr/shared/self-approval";
 import type { LeaveRequest } from "./leaves-shared";
 
 /**
@@ -30,7 +35,7 @@ import type { LeaveRequest } from "./leaves-shared";
 export type LeaveDecision = "APPROVED" | "REJECTED";
 
 export interface LeaveDecisionControls {
-  onProcess: (requestId: number, decision: LeaveDecision) => void;
+  onProcess: (requestId: number, decision: LeaveDecision, selfApproval?: boolean) => void;
   processingId: number | null;
   isPending: boolean;
   decisionDialogs: React.ReactNode;
@@ -44,6 +49,7 @@ export function useLeaveDecisions(): LeaveDecisionControls {
   const [approveDialogOpen, setApproveDialogOpen] = useState(false);
   const [approvingId, setApprovingId] = useState<number | null>(null);
   const [approvalComment, setApprovalComment] = useState("");
+  const [approvingSelf, setApprovingSelf] = useState(false);
 
   const rejectForm = useForm<{ reason: string }>({
     resolver: zodResolver(z.object({ reason: z.string().min(1, "Rejection reason is required.") })),
@@ -58,10 +64,11 @@ export function useLeaveDecisions(): LeaveDecisionControls {
     approveMutation.variables?.leaveId ?? rejectMutation.variables?.leaveId ?? null;
   const isPending = approveMutation.isPending || rejectMutation.isPending;
 
-  const onProcess = useCallback((requestId: number, decision: LeaveDecision) => {
+  const onProcess = useCallback((requestId: number, decision: LeaveDecision, selfApproval = false) => {
     if (decision === "APPROVED") {
       setApprovingId(requestId);
       setApprovalComment("");
+      setApprovingSelf(selfApproval);
       setApproveDialogOpen(true);
     } else {
       setRejectingId(requestId);
@@ -74,7 +81,11 @@ export function useLeaveDecisions(): LeaveDecisionControls {
     if (approvingId === null) return;
     const comment = approvalComment.trim();
     approveMutation.mutate(
-      { leaveId: approvingId, ...(comment ? { comment } : {}) },
+      {
+        leaveId: approvingId,
+        ...(comment ? { comment } : {}),
+        ...(approvingSelf ? { confirmSelfApproval: true } : {}),
+      },
       {
         onSuccess: () => {
           toast.success("Leave request approved");
@@ -85,7 +96,7 @@ export function useLeaveDecisions(): LeaveDecisionControls {
         onError: (err) => toast.error(getErrorMessage(err)),
       },
     );
-  }, [approvingId, approvalComment, approveMutation]);
+  }, [approvingId, approvalComment, approvingSelf, approveMutation]);
 
   const handleApprovalCommentChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -130,8 +141,15 @@ export function useLeaveDecisions(): LeaveDecisionControls {
 
   const decisionDialogs = (
     <>
+      <SelfApprovalConfirmDialog
+        open={approveDialogOpen && approvingSelf}
+        onOpenChange={handleApproveOpenChange}
+        subject="leave request"
+        isPending={approveMutation.isPending}
+        onConfirm={handleApproveConfirm}
+      />
       <ConfirmDialog
-        open={approveDialogOpen}
+        open={approveDialogOpen && !approvingSelf}
         onOpenChange={handleApproveOpenChange}
         title="Approve Leave Request"
         description="Add a note for the requester if you want to. It is not required."
@@ -228,19 +246,15 @@ export function LeaveDecisionButtons({
    * deciding for itself — which is how they came to disagree. Only fetched for a
    * self-request; every other row is refused on the requester's identity alone.
    */
-  const { data: ownRoute } = useMyApprover("leave", { enabled: isSelfRequest });
-  const mayDecideOwn =
-    isSelfRequest &&
-    ownRoute?.ownerSelfApproval === true &&
-    ownRoute.approver?.userId === currentUserId;
+  const mayDecideOwn = useIsSoleSelfApprover("leave", currentUserId, isSelfRequest) && isSelfRequest;
   // PUT /hr/leaves/:id/approve|reject require hr:leaves:approve (FE-44). The
   // approvals surfaces are also open to WFH-only deciders, who must not see
   // controls that can only fail for them.
   const canDecide = useCan("hr:leaves:approve");
 
   const handleApprove = useCallback(
-    () => onProcess(request.id, "APPROVED"),
-    [request.id, onProcess],
+    () => onProcess(request.id, "APPROVED", isSelfRequest),
+    [request.id, onProcess, isSelfRequest],
   );
   const handleReject = useCallback(
     () => onProcess(request.id, "REJECTED"),
@@ -249,15 +263,11 @@ export function LeaveDecisionButtons({
 
   if (status !== "PENDING" || !canDecide) return <LeaveStatusBadge status={status} />;
 
-  if (isSelfRequest && !mayDecideOwn)
-    return (
-      <span className="text-xs text-muted-foreground italic">
-        Needs another approver
-      </span>
-    );
+  if (isSelfRequest && !mayDecideOwn) return <NeedsAnotherApprover />;
 
   return (
     <>
+      {isSelfRequest ? <SelfApprovalBadge /> : null}
       <LoadingButton
         size="sm"
         className="min-h-11 rounded-full md:h-7 md:min-h-0 bg-status-success-fill hover:bg-status-success-fill-hover text-white text-dense font-semibold px-3 gap-1 border-0 transition-colors duration-200"

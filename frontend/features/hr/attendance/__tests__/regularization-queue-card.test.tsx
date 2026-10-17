@@ -177,7 +177,7 @@ describe("RegularizationQueueCard", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /Approve/ }));
 
-    expect(applyMutate.mock.calls[0][0]).toBe(55);
+    expect(applyMutate.mock.calls[0][0]).toEqual({ regularizationId: 55 });
     expect(invalidateAttendanceDay).toHaveBeenCalledTimes(1);
     expect(toastSuccess).toHaveBeenCalledWith("Correction approved and applied");
   });
