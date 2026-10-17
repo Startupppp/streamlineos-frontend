@@ -1,5 +1,6 @@
 import type { PermissionKey } from "@/lib/rbac/permissions";
 import type { RecordLayout } from "./layout";
+import { UNPOSTED_MOVEMENT_LAYOUT } from "./accounting/unposted-movement-layout";
 import { PARTY_LAYOUT } from "./party-layout";
 import { PARTY_CONTACT_LAYOUT, PARTY_ROLE_LAYOUT } from "./party-contact-layout";
 import { ACTIVITY_LAYOUT } from "./crm/activity-layout";
@@ -263,6 +264,12 @@ export const LAYOUT_REGISTRY: readonly RegisteredLayout[] = [
     // custom field is a platform setting a CRM administrator happens to reach
     // from here.
     viewPermission: "settings:custom-fields:manage",
+  },
+  {
+    layout: UNPOSTED_MOVEMENT_LAYOUT,
+    section: "Accounting",
+    viewPermission: "accounting:reports:read",
+    derived: true,
   },
 ];
 

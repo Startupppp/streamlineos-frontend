@@ -2,6 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { useStockGlReconciliation, useUnpostedMovements } from "@/hooks/api/accounting/reports";
 import { StockReconciliationReport } from "../stock-reconciliation-report";
 
+jest.mock("@/components/renderer/use-tenant-layout", () => ({ useTenantLayout: <T,>(l: T): T => l }));
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ replace: jest.fn() }),
   usePathname: () => "/accounting/reports/stock-reconciliation",
