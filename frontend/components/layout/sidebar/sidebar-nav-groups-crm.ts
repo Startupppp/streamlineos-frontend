@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, Briefcase, Clock, FileText, Handshake, Contact2, BarChart3, UserCheck, ShieldCheck, Star, TrendingUp, Package, Share2, MailOpen, Zap, History, BarChart2, Inbox, Building2, SlidersHorizontal, Brain, Copy, Search, Sliders, CheckSquare, Key, Activity, Megaphone, Bot, ArrowLeftRight, AlertTriangle, Rows3, PhoneCall, Coins, HeartPulse, RefreshCw, GitMerge, Layers } from "lucide-react";
+import { LayoutDashboard, Users, Briefcase, Clock, FileText, Handshake, Contact2, BarChart3, UserCheck, ShieldCheck, Star, TrendingUp, Package, Share2, MailOpen, Zap, History, BarChart2, Inbox, Building2, SlidersHorizontal, Brain, Copy, Search, Sliders, CheckSquare, Key, Activity, Megaphone, Bot, ArrowLeftRight, AlertTriangle, Rows3, PhoneCall, Coins, HeartPulse, RefreshCw, GitMerge, Layers, Target, BookOpen } from "lucide-react";
 import type { NavGroup } from "./sidebar-nav-types";
 
 export const CRM_NAV_GROUPS: NavGroup[] = [
@@ -206,6 +206,14 @@ export const CRM_NAV_GROUPS: NavGroup[] = [
             requiredPermission: "crm:reports:view",
           },
           {
+            // The `/sales/dashboard/*` reports declare `sales:view`, not the
+            // reports key, so this child is reachable on its own key.
+            label: "Sales performance",
+            icon: TrendingUp,
+            href: "/crm/analytics/sales",
+            requiredPermission: "sales:view",
+          },
+          {
             /*
               `crm:reporting:*` and `crm:reports:*` are two different features
               that read alike: the parent is the fixed dashboard, this is the
@@ -231,6 +239,19 @@ export const CRM_NAV_GROUPS: NavGroup[] = [
         icon: Coins,
         href: "/crm/commissions",
         requiredPermission: "crm:commission-earnings:view",
+      },
+      {
+        // A rep reads their own quotas; the server narrows the list.
+        label: "Quotas",
+        icon: Target,
+        href: "/crm/quotas",
+        requiredPermission: "crm:targets:view",
+      },
+      {
+        label: "Playbook",
+        icon: BookOpen,
+        href: "/crm/playbook",
+        requiredPermission: "sales:view",
       },
       {
         label: "Renewals",

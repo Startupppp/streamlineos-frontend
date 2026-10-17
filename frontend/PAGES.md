@@ -147,6 +147,7 @@
 - `/crm/reports/activity` · **CRM** · hooks: `→ features/crm/reports/activity` — activity report; gated by `RequireModule module="crm"`
 - `/crm/reports/builder` · **CRM** · hooks: `→ features/crm/reports/builder` — custom report builder; gated by `RequireModule module="crm"`
 - `/crm/analytics` · **CRM** · hooks: `→ feature/crm/analytics`
+- `/crm/analytics/sales` · **CRM** · hooks: `usePageState`, `→ features/crm/sales` — Sales performance: funnel, leaderboard, velocity, aging, rep comparison, cohorts (`sales:view`); sales cycle and lost deals (`crm:deals:read`), each panel with its own loading/error/denied state; period filter
 
 ### Inbox & Issues
 - `/crm/inbox` · **CRM** · hooks: `→ feature/crm/inbox`
@@ -156,6 +157,8 @@
 ### Revenue & Lifecycle
 - `/crm/commissions` · **CRM** · hooks: `usePageState`, `→ features/crm/commissions` — commission tracking; `useOrgDisplay` for period; Plans tab: New plan, Open → versions/assignments sheet (edit plan, new/edit unsealed version, assign, end) on `crm:commission-plans:manage`; Earnings: Calculate for a deal (`crm:commission-earnings:calculate`); Rebuild accrual (`crm:commission-accruals:rebuild`)
 - `/crm/health` · **CRM** · hooks: `→ features/crm/lifecycle`
+- `/crm/quotas` · **CRM** · hooks: `usePageState`, `useSalesQuotas`, `→ features/crm/sales` — quota list with attainment (`crm:targets:view`); "Set quota" sheet on `crm:targets:manage`
+- `/crm/playbook` · **CRM** · hooks: `usePageState`, `useSalesPlaybook`, `→ features/crm/sales` — playbook grouped by category (`sales:view`); new/edit/remove on `sales:manage`
 - `/crm/renewals` · **CRM** · hooks: `→ features/crm/lifecycle` — renewal book; row Details sheet (signals, record signal / renew / close on `crm:lifecycle:manage`, consider now on `crm:lifecycle-triggers:run`); header "Run renewal sweep" on `crm:lifecycle-triggers:run`
 - `/crm/segments` · **CRM** · hooks: `→ features/crm/segments` — gated by `RequireModule module="crm"`
 

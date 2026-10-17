@@ -342,6 +342,17 @@ export const accessAndCrmQueryKeys = {
     list: () => [...base, "salesTeamCapacity", "list"] as const,
   },
 
+  /** `/sales/*`: the dashboard reports, quotas and the playbook. */
+  sales: {
+    report: (report: string, params: QueryKeyParams) =>
+      [...base, "sales", "report", report, params] as const,
+    quotas: (params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "sales", "quotas"] as const)
+        : ([...base, "sales", "quotas", params] as const),
+    playbook: () => [...base, "sales", "playbook"] as const,
+  },
+
   salesLeaderboard: {
     all: [...base, "salesLeaderboard"] as const,
     list: () => [...base, "salesLeaderboard", "list"] as const,
