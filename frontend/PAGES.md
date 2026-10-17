@@ -1032,7 +1032,7 @@ PM Workspace is removed from Build entirely (not renamed, not consolidated into 
 - `/waitlist` · **Marketing** [RETIRED path: no page.tsx found on disk]
 - `/waitlist/claim/[claimToken]` · **Marketing** · hooks: none — retired: "Waitlist sign-up has closed" with Sign in / Contact us links (backend `POST /waitlist/claim` answers 410); not indexed
 - `/design-system` · **Dev** · hooks: none — dev-only gallery
-- `/legal/privacy` · **Marketing** · hooks: `useSubprocessorNotices` → public `POST /compliance/subprocessors/subscribe|unsubscribe` (2026-10-17: email notice of subprocessor changes, in the Subprocessors section)
+- `/legal/privacy` · **Marketing** · hooks: `useSubprocessorNotices` → public `POST /compliance/subprocessors/subscribe|unsubscribe` (2026-10-17: email notice of subprocessor changes, in the Subprocessors section); the Subprocessors table is server-rendered from public `GET /compliance/subprocessors?includeRetired=false` via `getCurrentSubprocessors` (`lib/legal/subprocessors.ts`, ISR 60s; the hand-written list is only a build-time fallback when the backend is unreachable)
 - `/legal/security` · **Marketing** · hooks: none
 - `/legal/terms` · **Marketing** · hooks: none
 - `/blogs` · **Marketing** · hooks: `→ features/blog` — disk path: `(public)/blogs/(site)/page.tsx`; `(site)` is a route group, not a URL segment

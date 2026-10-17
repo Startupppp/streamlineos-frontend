@@ -255,3 +255,17 @@ export const publicKbFeedbackContract = z.object({
   success: z.boolean(),
   recorded: z.boolean(),
 });
+
+/** `GET /compliance/subprocessors` — `listSubprocessorsResponseSchema`, field for field. */
+export const publicSubprocessorListContract = z.object({
+  data: z.array(
+    z.object({
+      name: z.string(),
+      purpose: z.string(),
+      location: z.string(),
+      url: z.string().nullable(),
+      effectiveFrom: z.string(),
+      retiredAt: z.string().nullable(),
+    }),
+  ),
+});

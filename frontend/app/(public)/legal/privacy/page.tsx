@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { LegalShell, LegalSection, PlainEnglish } from "@/features/landing/legal-shell";
 import { SubprocessorNoticeForm } from "@/features/landing/subprocessor-notice-form";
+import { SubprocessorTable } from "@/features/landing/subprocessor-table";
+import { getCurrentSubprocessors } from "@/lib/legal/subprocessors";
 import { BRAND_NAME, BRAND_DOMAIN, BRAND_SUPPORT_EMAIL } from "@/lib/branding";
 
 export const metadata: Metadata = {
@@ -27,7 +29,11 @@ const sections = [
   { id: "contact", title: "Contact" },
 ];
 
-export default function PrivacyPage() {
+/** The subprocessor register is live data; re-read it at most once a minute. */
+export const revalidate = 60;
+
+export default async function PrivacyPage() {
+  const subprocessors = await getCurrentSubprocessors();
   return (
     <LegalShell
       eyebrow="Privacy"
@@ -162,35 +168,7 @@ export default function PrivacyPage() {
           We use a small, deliberate list of subprocessors. Adding one is a decision, not a
           default.
         </p>
-        <div className="not-prose overflow-x-auto rounded-xl border border-border">
-          <table className="w-full text-label">
-            <thead className="bg-muted text-dense font-medium text-muted-foreground">
-              <tr>
-                <th className="px-4 py-2.5 text-left font-medium">Vendor</th>
-                <th className="px-4 py-2.5 text-left font-medium">Purpose</th>
-                <th className="px-4 py-2.5 text-left font-medium">Region</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {[
-                ["Neon (Postgres)", "Primary database", "AP Southeast 1 / your region"],
-                ["Cloudflare R2", "File storage (avatars, attachments, payslips)", "Global"],
-                ["Zoho ZeptoMail", "Transactional email (auth, notifications)", "India"],
-                ["Ably", "Realtime chat and presence", "Global edge"],
-                ["Inngest", "Background jobs and scheduled reports", "US / EU"],
-                ["Upstash Redis", "Rate limiting and session cache", "Your region"],
-                ["OpenAI / Google AI", "Optional AI features (you can disable)", "US"],
-                ["Vercel", "Hosting and edge delivery", "Global"],
-              ].map(([vendor, purpose, region]) => (
-                <tr key={vendor}>
-                  <td className="px-4 py-2.5 font-medium text-foreground">{vendor}</td>
-                  <td className="px-4 py-2.5 text-muted-foreground">{purpose}</td>
-                  <td className="px-4 py-2.5 text-muted-foreground font-mono text-dense">{region}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <SubprocessorTable subprocessors={subprocessors} />
         <p>
           We notify customers at least 30 days before adding a new subprocessor with access to
           customer data. Enterprise customers receive the notice via email; anyone can subscribe
