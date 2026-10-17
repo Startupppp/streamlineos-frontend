@@ -5,6 +5,7 @@ import { formatRelativeTime } from "@/lib/date-utils";
 import {
   Activity,
   ArrowRight,
+  BookOpen,
   CircleDot,
   Flag,
   Gauge,
@@ -54,6 +55,8 @@ const ACTION_ICONS: Record<KnownTicketActivityAction, LucideIcon> = {
   parent_removed: GitBranch,
   relation_added: Link2,
   relation_removed: Link2Off,
+  epic_set: BookOpen,
+  epic_removed: BookOpen,
 };
 
 function isKnownAction(action: string): action is KnownTicketActivityAction {
