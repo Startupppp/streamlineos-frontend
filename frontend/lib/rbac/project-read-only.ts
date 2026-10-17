@@ -10,12 +10,8 @@ import { createContext } from "react";
  */
 export const ProjectReadOnlyContext = createContext(false);
 
-// Routes outside a project path, which the viewer gate does not cover.
-const STILL_ALLOWED: ReadonlySet<string> = new Set([
-  "build:approvals:decide",
-  "build:approvals:request",
-  "build:ai:use",
-]);
+// AI drafting generates text and writes nothing, so the backend leaves it open.
+const STILL_ALLOWED: ReadonlySet<string> = new Set(["build:ai:use"]);
 
 export function blockedForProjectViewer(permissionKey: string): boolean {
   if (!permissionKey.startsWith("build:")) return false;

@@ -44,11 +44,11 @@ describe("useCan inside a Build project the caller views read-only", () => {
     expect(result.current).toEqual([false, false]);
   });
 
-  it("keeps reads, and approval decisions the project gate does not cover", () => {
+  it("keeps reads, and hides approval decisions the backend now refuses too", () => {
     const { result } = renderHook(() => [useCan("build:tickets:view"), useCan("build:approvals:decide")], {
       wrapper: inProject(true),
     });
-    expect(result.current).toEqual([true, true]);
+    expect(result.current).toEqual([true, false]);
   });
 
   it("positive control: the same holder writes in a project they are not a viewer of", () => {
@@ -65,6 +65,7 @@ describe("blockedForProjectViewer", () => {
     ["build:files:manage", true],
     ["build:tickets:view", false],
     ["build:ai:use", false],
+    ["build:approvals:decide", true],
     ["crm:deals:update", false],
   ])("%s → %s", (key, blocked) => {
     expect(blockedForProjectViewer(key)).toBe(blocked);
