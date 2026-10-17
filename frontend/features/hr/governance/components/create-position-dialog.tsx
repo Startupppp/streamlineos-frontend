@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { EntityFormDialog } from "@/components/shared";
 import {
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -21,6 +22,7 @@ import {
 } from "@/components/ui/select";
 import { FIELD_SELECT_CONTENT_CLASS } from "@/components/ui/field-control";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useCanState } from "@/hooks/api/access";
 import { useHrDepartments } from "@/hooks/api/hr/employee-departments";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { statusToneClasses } from "@/lib/design-tokens";
@@ -47,6 +49,9 @@ export function CreatePositionDialog({ open, onOpenChange }: CreatePositionDialo
   const createPosition = useCreatePosition();
   const { data: statuses } = usePositionStatuses({ enabled: open });
   const { data: departments } = useHrDepartments({ enabled: open });
+  // The department list is disabled without hr:employees:view; an empty picker
+  // would read as "this org has no departments".
+  const departmentsDenied = useCanState("hr:employees:view") === "denied";
   const seedStatuses = useSeedPositionStatuses();
   const activeStatuses = (statuses ?? []).filter((status) => status.isActive);
   const noStatuses = statuses !== undefined && activeStatuses.length === 0;
@@ -166,7 +171,11 @@ export function CreatePositionDialog({ open, onOpenChange }: CreatePositionDialo
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Department (optional)</FormLabel>
-                <Select value={field.value || NO_DEPARTMENT} onValueChange={(v) => field.onChange(v === NO_DEPARTMENT ? "" : v)}>
+                <Select
+                  value={field.value || NO_DEPARTMENT}
+                  onValueChange={(v) => field.onChange(v === NO_DEPARTMENT ? "" : v)}
+                  disabled={departmentsDenied}
+                >
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="No department" />
@@ -181,6 +190,11 @@ export function CreatePositionDialog({ open, onOpenChange }: CreatePositionDialo
                     ))}
                   </SelectContent>
                 </Select>
+                {departmentsDenied ? (
+                  <FormDescription>
+                    You need the HR › Employees › View permission to pick a department. The position can still be created without one.
+                  </FormDescription>
+                ) : null}
                 <FormMessage />
               </FormItem>
             )}
