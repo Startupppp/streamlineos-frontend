@@ -25,6 +25,8 @@ import type {
   UnpostedMovementsReport,
 } from "@/hooks/api/accounting/reconciliation-schema";
 
+import type { GrniOpenItemsReport } from "@/hooks/api/accounting/grni-schema";
+
 type QueryOpts<T> = Omit<UseQueryOptions<T, Error>, "queryKey" | "queryFn">;
 
 const REPORT_STALE = 60 * 1000;
@@ -44,6 +46,10 @@ const unpostedMovementsContract = lazyContract(() =>
   import("@/hooks/api/accounting/reconciliation-schema").then(
     (m) => m.unpostedMovementsContract,
   ),
+);
+
+const grniOpenItemsContract = lazyContract(() =>
+  import("@/hooks/api/accounting/grni-schema").then((m) => m.grniOpenItemsContract),
 );
 
 type QueryParams = Record<string, string | number | boolean | undefined>;
@@ -220,6 +226,27 @@ export function useUnpostedMovements(
     staleTime: REPORT_STALE,
     ...options,
     enabled: canRead && !!params.from && !!params.to && (options?.enabled ?? true),
+  });
+}
+
+/**
+ * ACC-03 — goods received into GRNI and not yet billed, by purchase order. Also
+ * what the bill editor offers as PO lines to match a bill line against.
+ */
+export function useGrniOpenItems(options?: QueryOpts<GrniOpenItemsReport>) {
+  const canRead = useCan("accounting:reports:read");
+  return useQuery<GrniOpenItemsReport, Error>({
+    queryKey: accountingReportsQueryKeys.accountingReports.grniOpenItems(),
+    queryFn: ({ signal }) =>
+      apiClient.get<GrniOpenItemsReport>(
+        "/accounting/reconciliation/grni-open-items",
+        undefined,
+        signal,
+        grniOpenItemsContract,
+      ),
+    staleTime: REPORT_STALE,
+    ...options,
+    enabled: canRead && (options?.enabled ?? true),
   });
 }
 

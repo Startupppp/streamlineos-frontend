@@ -160,6 +160,14 @@ export function InventorySettingsForm() {
             label="Adjustment Approval Threshold"
             suffix="currency"
           />
+          <div className="py-2">
+            <SwitchField name="grniAccrual" label="Accrue Goods Receipts to GRNI" />
+            <p className="text-label text-muted-foreground">
+              Off, a goods receipt credits accounts payable. On, it credits goods
+              received not invoiced, and a supplier bill matched to the purchase
+              order line clears it. Receipts already posted keep what they posted.
+            </p>
+          </div>
         </CardContent>
       </Card>
 

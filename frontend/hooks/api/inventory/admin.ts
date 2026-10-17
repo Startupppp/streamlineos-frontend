@@ -37,6 +37,12 @@ export interface InventorySettings {
   packPharmacy: boolean;
   packGst: boolean;
   packMaterials: boolean;
+  /**
+   * ACC-03 — the GRNI mapping. Off (the default) a goods receipt credits
+   * accounts payable, as it always has; on it credits GRNI, which a supplier
+   * bill matched to the PO line clears. Only new receipts follow the switch.
+   */
+  grniAccrual: boolean;
 }
 
 /**

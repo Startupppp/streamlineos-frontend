@@ -49,6 +49,7 @@ const settingsSchema = z.object({
   packKirana: z.boolean(),
   packPharmacy: z.boolean(),
   packGst: z.boolean(),
+  grniAccrual: z.boolean(),
 }).refine(
   function atLeastOnePack(values) {
     return values.packWarehouse || values.packKirana || values.packPharmacy || values.packGst;
@@ -81,6 +82,7 @@ function toFormValues(settings: InventorySettings): SettingsFormValues {
     packKirana: settings.packKirana,
     packPharmacy: settings.packPharmacy,
     packGst: settings.packGst,
+    grniAccrual: settings.grniAccrual ?? false,
   };
 }
 
