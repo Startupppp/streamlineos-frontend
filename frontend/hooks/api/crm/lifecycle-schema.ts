@@ -87,7 +87,40 @@ export const sweepLifecycleTriggersContract = z.object({
 
 export const considerLifecycleTriggerContract = sweepEntrySchema;
 
+const lifecycleTriggerSchema = z.object({
+  customerLifecycleTriggerId: z.string(),
+  customerLifecycleId: z.string(),
+  partyId: z.string(),
+  partyName: z.string().nullable(),
+  kind: z.string(),
+  termStartedOn: z.string(),
+  renewalOn: z.string(),
+  dueOn: z.string(),
+  riskScore: z.number().int(),
+  healthScore: z.number().int().nullable(),
+  opportunityDealId: z.number().int().nullable(),
+  attempts: z.number().int(),
+  lastAttemptAt: z.string().nullable(),
+  outcome: z.string().nullable(),
+  refusalStage: z.string().nullable(),
+  refusalReason: z.string().nullable(),
+  autonomyHoldId: z.string().nullable(),
+  autonomousDecisionId: z.string().nullable(),
+  outboundMessageId: z.string().nullable(),
+  firedAt: z.string(),
+});
+
+/** `GET /crm/lifecycle-triggers` — the trigger log, newest first. */
+export const listLifecycleTriggersContract = z.object({
+  triggers: z.array(lifecycleTriggerSchema),
+  limit: z.number().int(),
+  offset: z.number().int(),
+  hasMore: z.boolean(),
+});
+
 export type LifecycleDetail = z.infer<typeof lifecycleDetailContract>["data"];
 export type LifecycleSignal = z.infer<typeof lifecycleSignalSchema>;
 export type LifecycleSweepResult = z.infer<typeof sweepLifecycleTriggersContract>;
 export type LifecycleSweepEntry = z.infer<typeof sweepEntrySchema>;
+export type LifecycleTrigger = z.infer<typeof lifecycleTriggerSchema>;
+export type LifecycleTriggerList = z.infer<typeof listLifecycleTriggersContract>;

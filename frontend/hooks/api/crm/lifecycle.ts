@@ -11,6 +11,7 @@ import type {
   LifecycleDetail,
   LifecycleSweepEntry,
   LifecycleSweepResult,
+  LifecycleTriggerList,
 } from "@/hooks/api/crm/lifecycle-schema";
 import type {
   CustomerHealthRosterParams,
@@ -26,6 +27,7 @@ const renewLazy = lazyContract(() => schema().then((m) => m.renewLifecycleContra
 const closeLazy = lazyContract(() => schema().then((m) => m.closeLifecycleContract));
 const sweepLazy = lazyContract(() => schema().then((m) => m.sweepLifecycleTriggersContract));
 const considerLazy = lazyContract(() => schema().then((m) => m.considerLifecycleTriggerContract));
+const triggersLazy = lazyContract(() => schema().then((m) => m.listLifecycleTriggersContract));
 
 function cleanParams<T extends object>(params?: T) {
   if (!params) return undefined;
@@ -198,10 +200,15 @@ export function useCloseLifecycle() {
  * retried press is not a second sweep.
  */
 export function useSweepLifecycleTriggers() {
+  const qc = useQueryClient();
   return useAuthorizedIdempotentMutation<LifecycleSweepResult, Error, { limit?: number }>(
     "crm:lifecycle-triggers:run",
     {
       mutationKey: ["crm", "lifecycle-triggers", "sweep"],
+      // The log rows are written server-side; mark them stale, refetch on view.
+      onSuccess: () => {
+        void qc.invalidateQueries({ queryKey: queryKeys.crmLifecycle.triggers(), refetchType: "none" });
+      },
       mutationFn: (body, idempotencyKey) =>
         apiClient.post(
           "/crm/lifecycle-triggers/sweep",
@@ -228,4 +235,22 @@ export function useConsiderLifecycleTrigger() {
         ),
     },
   );
+}
+
+export interface LifecycleTriggerParams {
+  outcome?: "held" | "skipped";
+  limit: number;
+  offset: number;
+}
+
+/** What each renewal sweep fired, and what the outbound loop answered — refusals included. */
+export function useLifecycleTriggers(params: LifecycleTriggerParams) {
+  const query = cleanParams(params);
+  return useGatedQuery("crm:lifecycle-triggers:view", {
+    queryKey: queryKeys.crmLifecycle.triggers(query),
+    queryFn: ({ signal }) =>
+      apiClient.get<LifecycleTriggerList>("/crm/lifecycle-triggers", query, signal, triggersLazy),
+    staleTime: 30_000,
+    placeholderData: keepPreviousData,
+  });
 }

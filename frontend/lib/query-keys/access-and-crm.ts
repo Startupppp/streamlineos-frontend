@@ -241,6 +241,11 @@ export const accessAndCrmQueryKeys = {
     /** One contract with its signal history. */
     detail: (customerLifecycleId: string) =>
       [...base, "crmLifecycle", "detail", customerLifecycleId] as const,
+    /** The renewal-sweep trigger log. */
+    triggers: (params?: Record<string, unknown>) =>
+      params === undefined
+        ? ([...base, "crmLifecycle", "triggers"] as const)
+        : ([...base, "crmLifecycle", "triggers", params] as const),
   },
 
   crmOrganizations: {

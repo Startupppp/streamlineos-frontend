@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowDownAZ, CalendarClock, Gauge } from "lucide-react";
+import { ArrowDownAZ, CalendarClock, Gauge, ScrollText } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -32,13 +32,15 @@ import {
 } from "./lifecycle-format";
 import { LifecycleDetailSheet } from "./lifecycle-detail-sheet";
 import { RenewalSweepDialog } from "./renewal-sweep-dialog";
+import { TriggerLogPanel } from "./trigger-log-panel";
 
-type RenewalFilter = "upcoming" | "risk" | "all";
+type RenewalFilter = "upcoming" | "risk" | "all" | "log";
 
 const FILTERS: { value: RenewalFilter; label: string; icon: typeof CalendarClock }[] = [
   { value: "upcoming", label: "Upcoming", icon: CalendarClock },
   { value: "risk", label: "At risk", icon: Gauge },
   { value: "all", label: "All", icon: ArrowDownAZ },
+  { value: "log", label: "Trigger log", icon: ScrollText },
 ];
 
 export function RenewalsView() {
@@ -55,6 +57,11 @@ export function RenewalsView() {
 
   const lifecycles = useCustomerLifecycles(params);
   const canRunSweep = useCan("crm:lifecycle-triggers:run");
+  const canViewTriggers = useCanState("crm:lifecycle-triggers:view") !== "denied";
+  const tabs = useMemo(
+    () => (canViewTriggers ? FILTERS : FILTERS.filter((entry) => entry.value !== "log")),
+    [canViewTriggers],
+  );
   const [selected, setSelected] = useState<{ id: string; partyName: string | null } | null>(null);
   const [sweepOpen, setSweepOpen] = useState(false);
   const handleSheetOpenChange = useCallback((open: boolean) => {
@@ -102,7 +109,7 @@ export function RenewalsView() {
       filters={
         <Tabs value={filter} onValueChange={handleFilter}>
           <TabsList>
-            {FILTERS.map(({ value, label, icon: Icon }) => (
+            {tabs.map(({ value, label, icon: Icon }) => (
               <TabsTrigger key={value} value={value} className="gap-2">
                 <Icon className="h-4 w-4" />
                 {label}
@@ -112,7 +119,9 @@ export function RenewalsView() {
         </Tabs>
       }
     >
-      {lifecycles.isLoading ? (
+      {filter === "log" ? (
+        <TriggerLogPanel locale={display.locale} />
+      ) : lifecycles.isLoading ? (
         <RenewalsSkeleton />
       ) : lifecycles.error ? (
         <ErrorState
