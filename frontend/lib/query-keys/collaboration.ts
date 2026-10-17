@@ -53,7 +53,7 @@ export const collaborationQueryKeys = {
     policy: () => [...base, "companion", "policy"] as const,
     nextPrompt: () => [...base, "companion", "prompts", "next"] as const,
     promptHistory: (filters?: { category?: string; status?: string }, cursor?: string) => filters
-      ? [...base, "companion", "prompts", "history", filters.category ?? "all", filters.status ?? "all", cursor ?? null] as const
+      ? [...base, "companion", "prompts", "history", filters.category ?? "all", filters.status ?? "all", ...(cursor === undefined ? [] : [cursor])] as const
       : [...base, "companion", "prompts", "history"] as const,
   },
 

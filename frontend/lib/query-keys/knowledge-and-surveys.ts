@@ -26,9 +26,9 @@ export const knowledgeAndSurveysQueryKeys = {
         ? ([...base, "kb", "pages", "trash"] as const)
         : ([...base, "kb", "pages", "trash", params] as const),
     pagesTrashDeleters: (search: string, selectedMembershipId?: number) =>
-      [...base, "kb", "pages", "trash", "deleters", search, selectedMembershipId] as const,
+      [...base, "kb", "pages", "trash", "deleters", search, ...(selectedMembershipId === undefined ? [] : [selectedMembershipId])] as const,
     askPageOwners: (search: string, selectedMembershipId?: number) =>
-      [...base, "kb", "ask", "pageOwners", search, selectedMembershipId] as const,
+      [...base, "kb", "ask", "pageOwners", search, ...(selectedMembershipId === undefined ? [] : [selectedMembershipId])] as const,
     pagesTrashPurgeImpact: (pageIds: number[]) =>
       [...base, "kb", "pages", "trash", "purge-impact", [...pageIds].sort((a, b) => a - b)] as const,
     pagesSearch: (searchQuery: string, aclVersion: string) =>
