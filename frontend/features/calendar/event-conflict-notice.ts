@@ -24,6 +24,9 @@ interface EventConflictResult {
 /** Beyond this many names the rest are counted, so the toast stays one line. */
 const MAX_NAMED_ATTENDEES = 2;
 
+/** Beyond this many event titles we fall back to a count to keep the toast readable. */
+const MAX_NAMED_CONFLICTS = 2;
+
 function joinNames(names: string[], hiddenCount: number): string {
   const tail = hiddenCount > 0
     ? `${hiddenCount} other${hiddenCount === 1 ? "" : "s"}`
@@ -58,14 +61,25 @@ function describeOutOfOffice(conflicts: CalendarOooConflict[]): string | null {
   return `${subject} ${plural ? "are" : "is"} on approved leave`;
 }
 
+function describeOverlaps(conflicts: CalendarEventConflict[]): string | null {
+  if (conflicts.length === 0) return null;
+  const named = conflicts
+    .slice(0, MAX_NAMED_CONFLICTS)
+    .map((c) => (c.title?.trim() ? `"${c.title.trim()}"` : null))
+    .filter((t): t is string => t !== null);
+  const hidden = conflicts.length - named.length;
+  if (named.length === 0)
+    return `it clashes with ${conflicts.length} event${conflicts.length === 1 ? "" : "s"} already on your calendar`;
+  const tail = hidden > 0 ? ` and ${hidden} other${hidden === 1 ? "" : "s"}` : "";
+  const joined = named.join(", ");
+  return `it clashes with ${joined}${tail}`;
+}
+
 export function describeEventConflicts(result: EventConflictResult): string | null {
   const parts: string[] = [];
 
-  const overlaps = result.eventConflicts?.length ?? 0;
-  if (overlaps > 0)
-    parts.push(
-      `it clashes with ${overlaps} event${overlaps === 1 ? "" : "s"} already on your calendar`,
-    );
+  const overlapMsg = describeOverlaps(result.eventConflicts ?? []);
+  if (overlapMsg) parts.push(overlapMsg);
 
   const outOfOffice = describeOutOfOffice(result.oooConflicts ?? []);
   if (outOfOffice) parts.push(outOfOffice);

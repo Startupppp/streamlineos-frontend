@@ -95,10 +95,10 @@ describe("describeEventConflicts", () => {
     expect(describeEventConflicts({})).toBeNull();
   });
 
-  it("counts overlapping events, singular and plural", () => {
+  it("names the overlapping events, up to the 2-item cap", () => {
     expect(
       describeEventConflicts({ eventConflicts: [{ eventId: 1, title: "Standup" }] }),
-    ).toBe("it clashes with 1 event already on your calendar");
+    ).toBe(`it clashes with "Standup"`);
     expect(
       describeEventConflicts({
         eventConflicts: [
@@ -106,6 +106,21 @@ describe("describeEventConflicts", () => {
           { eventId: 2, title: "Retro" },
         ],
       }),
+    ).toBe(`it clashes with "Standup", "Retro"`);
+    expect(
+      describeEventConflicts({
+        eventConflicts: [
+          { eventId: 1, title: "Standup" },
+          { eventId: 2, title: "Retro" },
+          { eventId: 3, title: "1:1" },
+        ],
+      }),
+    ).toBe(`it clashes with "Standup", "Retro" and 1 other`);
+  });
+
+  it("falls back to a count when every conflicting event has no title", () => {
+    expect(
+      describeEventConflicts({ eventConflicts: [{ eventId: 1, title: "" }, { eventId: 2, title: "  " }] }),
     ).toBe("it clashes with 2 events already on your calendar");
   });
 
@@ -176,6 +191,6 @@ describe("describeEventConflicts", () => {
           { userId: "u1", userName: "Ada", leaveStart: "2026-01-05", leaveEnd: "2026-01-09" },
         ],
       }),
-    ).toBe("it clashes with 1 event already on your calendar, and Ada is on approved leave");
+    ).toBe(`it clashes with "1:1", and Ada is on approved leave`);
   });
 });
