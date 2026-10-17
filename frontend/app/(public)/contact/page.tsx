@@ -26,7 +26,7 @@ const channels = [
     label: "Existing customer support",
     description: "Open a ticket from inside your organisation for the fastest reply.",
     value: "Help, in the app",
-    href: "/signin",
+    href: process.env.NEXT_PUBLIC_WAITLIST_MODE === "true" ? "/waitlist" : "/signin",
   },
   {
     icon: Shield,

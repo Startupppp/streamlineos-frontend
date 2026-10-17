@@ -10,6 +10,7 @@ import { BRAND_NAME } from "@/lib/branding";
 import { EASE_OUT } from "../components/motion/variants";
 import { ProductMenu } from "./product-menu";
 import { StartLink } from "./section";
+import { isPublicWaitlistMode, publicCtaHref } from "@/lib/waitlist-mode";
 
 // "Product" is the menu on desktop; this list is the plain-link version for the
 // mobile sheet and the desktop links after it.
@@ -112,10 +113,10 @@ export function Navbar() {
 
         <div className="flex items-center gap-2">
           <Link
-            href="/signin"
+            href={publicCtaHref(pathname)}
             className="hidden h-9 items-center rounded-full px-3 text-sm text-(--lp-ink)/80 transition-colors hover:text-foreground sm:inline-flex"
           >
-            Sign in
+            {isPublicWaitlistMode() ? "Join the waitlist" : "Sign in"}
           </Link>
           <StartLink size="sm" />
           <button
@@ -142,7 +143,7 @@ export function Navbar() {
             transition={{ duration: 0.2, ease: EASE_OUT }}
             className="lp-glass mx-auto mt-2 flex max-w-6xl flex-col gap-1 rounded-3xl p-3 md:hidden"
           >
-            {[...LINKS, { label: "Sign in", href: "/signin" }].map((link) => (
+            {[...LINKS, { label: isPublicWaitlistMode() ? "Join the waitlist" : "Sign in", href: publicCtaHref(pathname) }].map((link) => (
               <Link
                 key={link.label}
                 href={link.href}

@@ -60,14 +60,16 @@ export function ClaimForm({ token }: { token: string }) {
         <CheckCircle2 className="mx-auto h-8 w-8 text-status-success-ink" aria-hidden />
         <h2 className="mt-3 text-base font-semibold text-foreground">Your workspace is ready</h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          It was created for <strong className="text-foreground">{done}</strong>. Sign in with
-          that address to get started.
+          It was created for <strong className="text-foreground">{done}</strong>.{" "}
+          {process.env.NEXT_PUBLIC_WAITLIST_MODE === "true"
+            ? "We'll email that address when the workspace is ready to open."
+            : "Sign in with that address to get started."}
         </p>
         <a
-          href="/signin"
-          className="mt-5 inline-flex items-center rounded-lg bg-foreground px-4 py-2 text-sm font-medium text-background"
+          href={process.env.NEXT_PUBLIC_WAITLIST_MODE === "true" ? "/waitlist" : "/signin"}
+          className="mt-5 inline-flex min-h-11 items-center rounded-lg bg-foreground px-4 py-2 text-sm font-medium text-background"
         >
-          Sign in
+          {process.env.NEXT_PUBLIC_WAITLIST_MODE === "true" ? "Join the waitlist" : "Sign in"}
         </a>
       </div>
     );

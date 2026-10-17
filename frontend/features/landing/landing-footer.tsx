@@ -17,7 +17,10 @@ const footerCols = [
       { label: "Features", href: "#features" },
       { label: "Pricing", href: "#pricing" },
       { label: "FAQ", href: "#faq" },
-      { label: "Sign in", href: "/signin" },
+      {
+        label: process.env.NEXT_PUBLIC_WAITLIST_MODE === "true" ? "Join the waitlist" : "Sign in",
+        href: process.env.NEXT_PUBLIC_WAITLIST_MODE === "true" ? "/waitlist" : "/signin",
+      },
     ],
   },
   {

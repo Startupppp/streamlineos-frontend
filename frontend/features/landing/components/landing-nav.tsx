@@ -99,9 +99,9 @@ export function LandingNav() {
 
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             <Magnetic strength={reduce ? 0 : 0.28}>
-              <Link href="/signin">
+              <Link href={process.env.NEXT_PUBLIC_WAITLIST_MODE === "true" ? "/waitlist" : "/signin"}>
                 <Button size="sm" className="h-9 px-3 sm:px-4 text-xs sm:text-sm">
-                  Sign in
+                  {process.env.NEXT_PUBLIC_WAITLIST_MODE === "true" ? "Join the waitlist" : "Sign in"}
                   <ArrowRight className="ml-1 sm:ml-1.5 h-3.5 w-3.5" />
                 </Button>
               </Link>
@@ -138,11 +138,11 @@ export function LandingNav() {
                 </a>
               ))}
               <Link
-                href="/signin"
+                href={process.env.NEXT_PUBLIC_WAITLIST_MODE === "true" ? "/waitlist" : "/signin"}
                 onClick={() => setOpen(false)}
-                className="mt-1 flex items-center justify-center gap-1.5 rounded-lg bg-status-neutral-fill px-3 py-3 text-sm font-semibold text-white hover:bg-status-neutral-fill-hover"
+                className="mt-1 flex min-h-11 items-center justify-center gap-1.5 rounded-lg bg-status-neutral-fill px-3 py-3 text-sm font-semibold text-white hover:bg-status-neutral-fill-hover"
               >
-                Sign in
+                {process.env.NEXT_PUBLIC_WAITLIST_MODE === "true" ? "Join the waitlist" : "Sign in"}
                 <ArrowRight className="h-3.5 w-3.5" />
               </Link>
             </motion.div>

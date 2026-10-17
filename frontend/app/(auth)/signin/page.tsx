@@ -7,16 +7,19 @@ import { parseAuthErrorCode } from "@/lib/parse-auth-error";
 import { PasswordlessSigninForm, OAuthButtons, SignInAlerts } from "@/features/auth";
 import { useGoogleSignIn } from "@/hooks/common/auth-hooks";
 import { hasGoogleProvider } from "@/lib/auth-providers";
+import Link from "next/link";
 import {
   SESSION_EXPIRED_QUERY,
   SESSION_EXPIRED_VALUE,
 } from "@/lib/auth-session-cookies";
+import { isPublicWaitlistMode } from "@/lib/waitlist-mode";
 
 export const dynamic = "force-dynamic";
 
 export default function SignInPage() {
   const [lockedSeconds, setLockedSeconds] = useState<number | null>(null);
   const [sessionExpired, setSessionExpired] = useState(false);
+  const [inviteOnly, setInviteOnly] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -31,6 +34,10 @@ export default function SignInPage() {
     const parsed = parseAuthErrorCode(errorParam);
     if (parsed.code === "AUTH_ACCOUNT_LOCKED") {
       setLockedSeconds(parsed.retryAfterSeconds ?? null);
+      return;
+    }
+    if (isPublicWaitlistMode() && errorParam === "AccessDenied") {
+      setInviteOnly(true);
       return;
     }
     const oauthMessages: Record<string, string> = {
@@ -87,6 +94,15 @@ export default function SignInPage() {
           Use Google or your email for a one-time code
         </p>
       </div>
+
+      {inviteOnly && (
+        <div className="mb-2 rounded-lg border border-status-info-rule bg-status-info-surface px-4 py-3 text-sm text-status-info-ink">
+          StreamlineOS is invite-only right now.{" "}
+          <Link href="/waitlist" className="font-medium underline underline-offset-4">
+            Join the waitlist.
+          </Link>
+        </div>
+      )}
 
       {sessionExpired && (
         <div className="mb-2 flex items-start gap-2.5 rounded-lg border border-status-info-rule bg-status-info-surface px-4 py-3">

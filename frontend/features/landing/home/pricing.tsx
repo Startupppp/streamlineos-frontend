@@ -12,7 +12,11 @@ export function Pricing() {
     <Section id="pricing">
       <SectionHeading
         title="Simple pricing that grows with you"
-        lede={`Start free with up to ${PRICING.freeSeatLimit} people. Paid plans are priced per company, and paying yearly saves ${PRICING.annualDiscountPct}%.`}
+        lede={
+          process.env.NEXT_PUBLIC_WAITLIST_MODE === "true"
+            ? `Tell us about your team and we'll open a spot. Paid plans are priced per company, and paying yearly saves ${PRICING.annualDiscountPct}%.`
+            : `Start free with up to ${PRICING.freeSeatLimit} people. Paid plans are priced per company, and paying yearly saves ${PRICING.annualDiscountPct}%.`
+        }
         className="mb-12"
       />
       <PricingTierGrid tiers={TIERS} />

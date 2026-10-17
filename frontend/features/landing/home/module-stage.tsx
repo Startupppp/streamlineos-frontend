@@ -165,10 +165,10 @@ export function ModuleStage() {
             {current.shares}
           </p>
           <Link
-            href="/signin"
-            className="group mt-6 inline-flex items-center gap-1.5 text-sm font-medium text-(--lp-accent)"
+            href={process.env.NEXT_PUBLIC_WAITLIST_MODE === "true" ? "/#waitlist" : "/signin"}
+            className="group mt-6 inline-flex min-h-11 items-center gap-1.5 text-sm font-medium text-(--lp-accent)"
           >
-            Start with {current.label} free
+            {process.env.NEXT_PUBLIC_WAITLIST_MODE === "true" ? "Join the waitlist" : `Start with ${current.label} free`}
             <ArrowRight className="size-4 transition-transform duration-200 group-hover:translate-x-0.5" aria-hidden />
           </Link>
         </div>

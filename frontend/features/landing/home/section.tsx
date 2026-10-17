@@ -1,8 +1,12 @@
+"use client";
+
 import type { ReactNode } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { ArrowRight, Check } from "lucide-react";
 import { PRICING } from "@/lib/pricing";
 import { BRAND_NAME } from "@/lib/branding";
+import { isPublicWaitlistMode, publicCtaHref } from "@/lib/waitlist-mode";
 import { cn } from "@/lib/utils";
 import { MotionReveal } from "../components/motion/motion-reveal";
 import { REVEAL, VIEWPORT_EARLY } from "./motion";
@@ -62,9 +66,11 @@ export function StartLink({
   size?: "sm" | "lg";
   tone?: "dark" | "light";
 }) {
+  const pathname = usePathname();
+  const waitlist = isPublicWaitlistMode();
   return (
     <Link
-      href="/signin"
+      href={publicCtaHref(pathname)}
       className={cn(
         "group inline-flex items-center gap-2 rounded-full font-medium shadow-sm transition-transform duration-200 ease-out hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]",
         size === "lg" ? "h-12 px-6 text-sm" : "h-9 px-4 text-sm",
@@ -72,7 +78,7 @@ export function StartLink({
         className,
       )}
     >
-      {size === "lg" ? `Try ${BRAND_NAME} free` : "Start free"}
+      {waitlist ? "Join the waitlist" : size === "lg" ? `Try ${BRAND_NAME} free` : "Start free"}
       <ArrowRight
         className="size-4 transition-transform duration-200 ease-out group-hover:translate-x-0.5"
         aria-hidden
