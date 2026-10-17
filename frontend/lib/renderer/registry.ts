@@ -1,5 +1,10 @@
 import type { PermissionKey } from "@/lib/rbac/permissions";
 import type { RecordLayout } from "./layout";
+import { UNPOSTED_MOVEMENT_LAYOUT } from "./accounting/unposted-movement-layout";
+import { CHAT_ORG_SETTINGS_LAYOUT } from "./chat/chat-org-settings-layout";
+import { EMAIL_TEMPLATE_PREVIEW_LAYOUT } from "./notifications/email-template-preview-layout";
+import { QUARANTINE_RECORD_LAYOUT } from "./settings/quarantine-record-layout";
+import { SUBJECT_REQUEST_LAYOUT } from "./settings/subject-request-layout";
 import { PARTY_LAYOUT } from "./party-layout";
 import { PARTY_CONTACT_LAYOUT, PARTY_ROLE_LAYOUT } from "./party-contact-layout";
 import { ACTIVITY_LAYOUT } from "./crm/activity-layout";
@@ -263,6 +268,35 @@ export const LAYOUT_REGISTRY: readonly RegisteredLayout[] = [
     // custom field is a platform setting a CRM administrator happens to reach
     // from here.
     viewPermission: "settings:custom-fields:manage",
+  },
+  {
+    layout: UNPOSTED_MOVEMENT_LAYOUT,
+    section: "Accounting",
+    viewPermission: "accounting:reports:read",
+    derived: true,
+  },
+  /*
+    A singleton: organisation-wide chat defaults, one record, never listed.
+  */
+  {
+    layout: CHAT_ORG_SETTINGS_LAYOUT,
+    section: "Chat",
+    viewPermission: "chat:org-settings:manage",
+  },
+  {
+    layout: EMAIL_TEMPLATE_PREVIEW_LAYOUT,
+    section: "Notifications",
+    viewPermission: "settings:email-templates:manage",
+  },
+  {
+    layout: QUARANTINE_RECORD_LAYOUT,
+    section: "Settings",
+    viewPermission: "storage:quarantine:view",
+  },
+  {
+    layout: SUBJECT_REQUEST_LAYOUT,
+    section: "Settings",
+    viewPermission: "compliance:subject-requests:view",
   },
 ];
 

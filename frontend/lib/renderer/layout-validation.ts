@@ -69,6 +69,12 @@ export function validateLayout(layout: RecordLayout): LayoutProblem[] {
         message: `sign "${field.sign}" on a ${field.kind} field, which has no sign to read`,
       });
 
+    if (field.range !== undefined && field.kind !== "number")
+      problems.push({
+        where: `fields (${field.name})`,
+        message: `range on a ${field.kind} field, which is not a count`,
+      });
+
     if (field.currencyField !== undefined) {
       if (field.kind !== "money")
         problems.push({

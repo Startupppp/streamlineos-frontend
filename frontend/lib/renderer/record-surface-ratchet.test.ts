@@ -181,6 +181,8 @@ const CRAFTED_BY_DESIGN: Readonly<Record<string, string>> = {
     "Fixture rows and columns for the dev-only /design-system/build-list gallery, which exists so the Build list contract can be measured in a real browser at 375/768/1280. It renders no record and reaches no endpoint; describing it to the renderer would describe a test double.",
   "features/build/shared/build-list-gallery-data.tsx":
     "Gallery fixture data and column definitions for the same dev-only /design-system/build-list surface as build-list-gallery-cases.tsx. It contains only synthetic rows, static filter state and a renderMobileCard helper; it reaches no endpoint and there is no record to describe to the renderer.",
+  "features/settings/privacy/typed-email-confirm-dialog.tsx":
+    "A guard on an irreversible erasure, not a record: the operator types the subject's email, it is compared case-insensitively with a value known only at run time and then discarded, and the submit is ConfirmDialog's own confirm button, held disabled until the typed value matches. Nothing is stored, so there is no record to describe, and RecordForm has neither an equals-this-value check nor a way to hand its validity to another component's button.",
   "features/crm/nurture/nurture-step-editor.tsx":
     "A cadence edited and saved whole through `useFieldArray`, because step numbers come from the array's order and a gap makes the sender fire twice. The ordered array is the data structure.",
 };

@@ -5,37 +5,29 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { SearchInput } from "@/components/ui/search-input";
-import { SemanticBadge } from "@/components/ui/semantic-badge";
 import { PageState } from "@/components/shared/page-state";
+import { RecordList } from "@/components/renderer";
+import { useTenantLayout } from "@/components/renderer/use-tenant-layout";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { useCan } from "@/hooks/api/access";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useExecuteSubjectRequest, useSubjectRequests } from "@/hooks/api/privacy/subject-requests";
 import type { ExecuteSubjectRequestResult, FiledSubjectRequest } from "@/hooks/api/privacy/subject-requests-schema";
 import { downloadBlob } from "@/lib/download-blob";
-import { formatDateTime, formatShortDate } from "@/lib/date-utils";
+import { formatShortDate } from "@/lib/date-utils";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { SUBJECT_REQUEST_LAYOUT } from "@/lib/renderer/settings/subject-request-layout";
 import { SubjectRequestDialog } from "./subject-request-dialog";
 import { readSubjectFilter, toExecutePayload, type SubjectRequestValues } from "./subject-request-schema";
 import { TypedEmailConfirmDialog } from "./typed-email-confirm-dialog";
 
 const HEADERS = ["Request", "Subject", "Status", "Records", "Requested", "Due"];
-const COLUMNS: DataTableColumn<FiledSubjectRequest>[] = [
-  { key: "kind", header: "Request", cell: (row) => (row.kind === "erasure" ? "Erasure" : "Export") },
-  { key: "subjectEmail", header: "Subject", cell: (row) => <span className="truncate">{row.subjectEmail}</span> },
-  {
-    key: "isComplete",
-    header: "Status",
-    cell: (row) => <SemanticBadge tone={row.isComplete ? "success" : "warning"} label={row.isComplete ? "Complete" : "Incomplete"} size="xs" />,
-  },
-  { key: "totalRecordsAffected", header: "Records", cell: (row) => <span className="font-mono tabular-nums">{row.totalRecordsAffected}</span> },
-  { key: "requestedAt", header: "Requested", cell: (row) => formatDateTime(row.requestedAt) },
-  { key: "dueBy", header: "Due", cell: (row) => (row.dueBy ? formatShortDate(row.dueBy) : "—") },
-];
+const CELLS = {
+  dueBy: (row: FiledSubjectRequest) => (row.dueBy ? formatShortDate(row.dueBy) : "—"),
+};
 
 function rowKey(row: FiledSubjectRequest): string {
   return row.subjectRequestId;
@@ -50,6 +42,7 @@ function summarise(result: ExecuteSubjectRequestResult): string {
 
 /** The compliance queue: every filed subject request, and running a new one. */
 export function SubjectRequestsPanel() {
+  const layout = useTenantLayout(SUBJECT_REQUEST_LAYOUT);
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -166,7 +159,7 @@ export function SubjectRequestsPanel() {
         onRetry={handleRetry}
         compact
       >
-        <DataTable data={rows} columns={COLUMNS} getRowKey={rowKey} emptyState={emptyState} minWidth="720px" pagination={{ pageSize: 20 }} />
+        <RecordList layout={layout} rows={rows} getRowKey={rowKey} cells={CELLS} emptyState={emptyState} minWidth="720px" pagination={{ pageSize: 20 }} />
       </PageState>
 
       <SubjectRequestDialog open={formOpen} onOpenChange={setFormOpen} isSubmitting={execute.isPending} onSubmit={handleSubmit} />
