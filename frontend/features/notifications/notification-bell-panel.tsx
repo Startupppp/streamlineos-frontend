@@ -30,6 +30,7 @@ import type {
   BroadcastInboxItem,
   MailInboxItem,
   BuildApprovalInboxItem,
+  ModuleTaskInboxItem,
 } from "@/types/inbox";
 
 function PanelSkeleton() {
@@ -178,17 +179,31 @@ export function NotificationBellPanel({
     [onClose, router],
   );
 
+  const handleModuleTaskClick = useCallback(
+    (item: ModuleTaskInboxItem) => {
+      onClose();
+      if (item.deepLink !== null) {
+        router.push(normalizeBuildDeepLink(item.deepLink));
+        return;
+      }
+      router.push("/inbox");
+    },
+    [onClose, router],
+  );
+
   const handleItemClick = useCallback(
     (item: UnifiedInboxItem) => {
       if (item.kind === "notification") handleNotificationClick(item);
       else if (item.kind === "broadcast") handleBroadcastClick(item);
       else if (item.kind === "mail") handleMailClick(item);
+      else if (item.kind === "module_task") handleModuleTaskClick(item);
       else handleApprovalClick(item);
     },
     [
       handleNotificationClick,
       handleBroadcastClick,
       handleMailClick,
+      handleModuleTaskClick,
       handleApprovalClick,
     ],
   );

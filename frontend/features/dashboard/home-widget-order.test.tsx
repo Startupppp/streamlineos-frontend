@@ -5,8 +5,10 @@ import {
   applyWidgetOrder,
   useHomeCustomisation,
   HOME_CUSTOMISATION_DEFAULT,
+  getDefaultWidgetOrder,
 } from "./use-home-customisation";
 import { HomeWidgetGrid, type HomeWidgetGridProps } from "./home-widget-grid";
+import type { DashboardAccess } from "./use-dashboard-access";
 
 let currentScope = "test-scope";
 
@@ -143,6 +145,9 @@ const allEnabled: HomeWidgetGridProps = {
   canSelfAttendance: true,
   crmEnabled: true,
   canViewCrmLeads: true,
+  payrollEnabled: true,
+  canViewPayrollSelf: true,
+  expensesEnabled: true,
   expensesSlot: undefined,
 };
 
@@ -279,5 +284,85 @@ describe("HomeWidgetGrid — reorder changes actual render order", () => {
     render(<HomeWidgetGrid {...allEnabled} />);
     await screen.findAllByText(/./, {}, { timeout: 3_000 }).catch(() => []);
     expect(screen.queryByText("My Payroll")).not.toBeInTheDocument();
+  });
+});
+
+function makeAccess(overrides: Partial<DashboardAccess> = {}): DashboardAccess {
+  return {
+    accessLoading: false, accessResolved: true, refetchAccess: jest.fn(),
+    hrEnabled: false, crmEnabled: false, projectsEnabled: false,
+    payrollEnabled: false, signEnabled: false,
+    canViewEmployees: false, canCreateEmployees: false,
+    canViewAttendance: false, canSelfAttendance: false,
+    canViewLeaves: false, canApproveLeaves: false,
+    canViewExecutive: false, canViewCrmLeads: false, canViewCrmReports: false,
+    canViewTickets: false, canViewPayrollSelf: false, canViewSignEnvelopes: false,
+    ...overrides,
+  };
+}
+
+describe("getDefaultWidgetOrder — role-aware defaults", () => {
+  it("executive: first three are Business pulse, Alerts, My tasks", () => {
+    const order = getDefaultWidgetOrder(makeAccess({ canViewExecutive: true }));
+    expect(order.slice(0, 3)).toEqual(["Business pulse", "Alerts", "My tasks"]);
+  });
+
+  it("org-admin: first three are Alerts, Announcements, My tasks", () => {
+    const order = getDefaultWidgetOrder(
+      makeAccess({ canViewEmployees: true, canViewExecutive: false }),
+    );
+    expect(order.slice(0, 3)).toEqual(["Alerts", "Announcements", "My tasks"]);
+  });
+
+  it("hr-admin: first three are Leave balance, My attendance, Alerts", () => {
+    const order = getDefaultWidgetOrder(
+      makeAccess({ hrEnabled: true, canViewAttendance: true, canViewExecutive: false }),
+    );
+    expect(order.slice(0, 3)).toEqual(["Leave balance", "My attendance", "Alerts"]);
+  });
+
+  it("crm-user: first three are Today's activities, Alerts, Announcements", () => {
+    const order = getDefaultWidgetOrder(
+      makeAccess({ crmEnabled: true, canViewCrmLeads: true, canViewExecutive: false }),
+    );
+    expect(order.slice(0, 3)).toEqual(["Today's activities", "Alerts", "Announcements"]);
+  });
+
+  it("build-user: first three are My tasks, Timesheet, Alerts", () => {
+    const order = getDefaultWidgetOrder(
+      makeAccess({ projectsEnabled: true, hrEnabled: false, crmEnabled: false, canViewExecutive: false }),
+    );
+    expect(order.slice(0, 3)).toEqual(["My tasks", "Timesheet", "Alerts"]);
+  });
+
+  it("manager: first three are My tasks, Alerts, Leave balance", () => {
+    const order = getDefaultWidgetOrder(
+      makeAccess({ projectsEnabled: true, hrEnabled: true, canViewLeaves: true, canViewExecutive: false }),
+    );
+    expect(order.slice(0, 3)).toEqual(["My tasks", "Alerts", "Leave balance"]);
+  });
+
+  it("member (default): first three are My tasks, Timesheet, Upcoming events", () => {
+    const order = getDefaultWidgetOrder(makeAccess());
+    expect(order.slice(0, 3)).toEqual(["My tasks", "Timesheet", "Upcoming events"]);
+  });
+
+  it("executive and member get different first widgets — personas are distinct", () => {
+    const member = getDefaultWidgetOrder(makeAccess());
+    const exec = getDefaultWidgetOrder(makeAccess({ canViewExecutive: true }));
+    expect(member[0]).not.toBe(exec[0]);
+  });
+});
+
+describe("applyWidgetOrder — new-widget append contract", () => {
+  it("POSITIVE: applyWidgetOrder appends a newly-added widget ID at the end", () => {
+    const result = applyWidgetOrder(["A", "B", "NEW"], ["B", "A"]);
+    expect(result).toEqual(["B", "A", "NEW"]);
+  });
+
+  it("NEGATIVE: the new widget does NOT go missing — it must be in the result", () => {
+    const result = applyWidgetOrder(["A", "B", "NEW"], ["B", "A"]);
+    expect(result).toContain("NEW");
+    expect(result.length).toBe(3);
   });
 });

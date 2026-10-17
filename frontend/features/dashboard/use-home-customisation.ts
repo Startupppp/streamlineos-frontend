@@ -5,6 +5,7 @@ import {
   orgScopedStorageKey,
   useOrgStorageScope,
 } from "@/lib/org-scoped-storage";
+import type { DashboardAccess } from "./use-dashboard-access";
 
 export type HomeDensity = "compact" | "comfortable";
 
@@ -21,6 +22,65 @@ export const HOME_CUSTOMISATION_DEFAULT: HomeCustomisationState = {
   density: "comfortable",
   widgetOrder: [],
 };
+
+export const ROLE_DEFAULT_WIDGET_ORDER: Record<string, readonly string[]> = {
+  executive: [
+    "Business pulse", "Alerts", "My tasks", "Timesheet",
+    "Announcements", "Upcoming events", "Leave balance",
+    "Today's activities", "My attendance", "Payroll", "Expenses",
+  ],
+  "org-admin": [
+    "Alerts", "Announcements", "My tasks", "Timesheet",
+    "Leave balance", "Business pulse", "Today's activities",
+    "My attendance", "Upcoming events", "Payroll", "Expenses",
+  ],
+  "hr-admin": [
+    "Leave balance", "My attendance", "Alerts",
+    "Announcements", "My tasks", "Timesheet",
+    "Upcoming events", "Business pulse", "Today's activities",
+    "Payroll", "Expenses",
+  ],
+  "crm-user": [
+    "Today's activities", "Alerts", "Announcements",
+    "My tasks", "Timesheet", "Upcoming events",
+    "Leave balance", "My attendance", "Business pulse",
+    "Payroll", "Expenses",
+  ],
+  "build-user": [
+    "My tasks", "Timesheet", "Alerts",
+    "Announcements", "Upcoming events", "Business pulse",
+    "Leave balance", "Today's activities", "My attendance",
+    "Payroll", "Expenses",
+  ],
+  manager: [
+    "My tasks", "Alerts", "Leave balance",
+    "Timesheet", "Announcements", "Upcoming events",
+    "My attendance", "Business pulse", "Today's activities",
+    "Payroll", "Expenses",
+  ],
+  member: [
+    "My tasks", "Timesheet", "Upcoming events",
+    "Alerts", "Announcements", "Leave balance",
+    "My attendance", "Business pulse", "Today's activities",
+    "Payroll", "Expenses",
+  ],
+} as const;
+
+export function getDefaultWidgetOrder(access: DashboardAccess): readonly string[] {
+  if (access.canViewExecutive)
+    return ROLE_DEFAULT_WIDGET_ORDER.executive;
+  if (access.canViewEmployees && !access.canViewExecutive)
+    return ROLE_DEFAULT_WIDGET_ORDER["org-admin"];
+  if (access.hrEnabled && access.canViewAttendance && !access.canViewExecutive)
+    return ROLE_DEFAULT_WIDGET_ORDER["hr-admin"];
+  if (access.crmEnabled && access.canViewCrmLeads && !access.canViewExecutive)
+    return ROLE_DEFAULT_WIDGET_ORDER["crm-user"];
+  if (access.projectsEnabled && !access.hrEnabled && !access.crmEnabled && !access.canViewExecutive)
+    return ROLE_DEFAULT_WIDGET_ORDER["build-user"];
+  if (access.projectsEnabled && access.hrEnabled && access.canViewLeaves && !access.canViewExecutive)
+    return ROLE_DEFAULT_WIDGET_ORDER.manager;
+  return ROLE_DEFAULT_WIDGET_ORDER.member;
+}
 
 export function applyWidgetOrder(
   allIds: readonly string[],

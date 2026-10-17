@@ -24,6 +24,7 @@ import type {
   BroadcastInboxItem,
   MailInboxItem,
   BuildApprovalInboxItem,
+  ModuleTaskInboxItem,
 } from "@/types/inbox";
 import { toDrawerNotification } from "./inbox-schema";
 import { mailDeepLinkParams } from "./inbox-mail-link";
@@ -196,6 +197,17 @@ export function InboxShell() {
     [router],
   );
 
+  const handleModuleTaskClick = useCallback(
+    (item: ModuleTaskInboxItem) => {
+      if (item.deepLink !== null) {
+        router.push(normalizeBuildDeepLink(item.deepLink));
+        return;
+      }
+      router.push("/inbox");
+    },
+    [router],
+  );
+
   const handleOpenLink = useCallback(
     (link: string) => router.push(normalizeBuildDeepLink(link)),
     [router],
@@ -292,6 +304,7 @@ export function InboxShell() {
                     onBroadcastClick={handleBroadcastClick}
                     onMailClick={handleMailClick}
                     onApprovalClick={handleApprovalClick}
+                    onModuleTaskClick={handleModuleTaskClick}
                     onArchive={actions.handleArchive}
                     onDelete={actions.handleDelete}
                     onApprove={actions.handleApprove}
@@ -314,6 +327,7 @@ export function InboxShell() {
                     onBroadcastClick={handleBroadcastClick}
                     onMailClick={handleMailClick}
                     onApprovalClick={handleApprovalClick}
+                    onModuleTaskClick={handleModuleTaskClick}
                     onArchive={actions.handleArchive}
                     onDelete={actions.handleDelete}
                     onApprove={actions.handleApprove}
