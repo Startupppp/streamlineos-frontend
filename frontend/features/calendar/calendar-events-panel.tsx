@@ -7,7 +7,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { List, useDynamicRowHeight, type RowComponentProps } from "react-window";
 import type { CalendarListItem } from "@/hooks/api/calendar";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import { formatEventTimeRange } from "@/lib/date-utils";
+import { formatEventDateRange, formatEventTimeRange } from "@/lib/date-utils";
 import { EVENT_COLORS } from "./calendar-event-constants";
 import { CalendarVirtualScroll } from "./calendar-virtual-scroll";
 import { CalendarLoadingStatus } from "./calendar-lazy-fallbacks";
@@ -128,7 +128,9 @@ function PanelVirtualRow({
             />
             <span className="mt-1 block text-xs text-muted-foreground">
               {event.allDay
-                ? "All day"
+                ? event.time.kind === "date" && event.time.startDate !== event.time.endDate
+                  ? formatEventDateRange(event.time.startDate, event.time.endDate, event.timezone)
+                  : "All day"
                 : formatEventTimeRange(event.start, event.end, event.timezone)}
             </span>
             {event.location ? (

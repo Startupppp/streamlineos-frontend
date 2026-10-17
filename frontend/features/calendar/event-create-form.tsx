@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback } from "react";
+import React, { useCallback, useState } from "react";
 import { AppSheet } from "@/components/shared/app-sheet";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ import type { CalendarOrgMember } from "@/hooks/api/calendar";
 import type { IntegrationConnection } from "@/hooks/api/integrations";
 import type { TicketSearchResult } from "@/types/projects";
 import { EventFormFields } from "./event-form-fields";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { TicketPickerDialog } from "./ticket-picker-dialog";
 import type { FormState, RecurrenceState } from "./event-form-state";
 
@@ -93,8 +94,22 @@ export function EventCreateForm({
   onRecurrenceChange,
 }: EventCreateFormProps) {
   const formId = React.useId();
+  const [discardOpen, setDiscardOpen] = useState(false);
   const displayLinkedKey = linkedTicket ? `${linkedTicket.projectKey}-${linkedTicket.ticketNumber}` : existingEntityId ? `#${existingEntityId}` : null;
   const displayLinkedTitle = linkedTicket?.title ?? null;
+
+  const handleOpenChange = useCallback((nextOpen: boolean) => {
+    if (!nextOpen && !isPending && form.title.trim()) {
+      setDiscardOpen(true);
+    } else {
+      onOpenChange(nextOpen);
+    }
+  }, [isPending, form.title, onOpenChange]);
+
+  const handleConfirmDiscard = useCallback(() => {
+    setDiscardOpen(false);
+    onOpenChange(false);
+  }, [onOpenChange]);
 
   const handleFormSubmit = useCallback((e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -106,15 +121,16 @@ export function EventCreateForm({
   }, [onSave]);
 
   return (
+    <>
     <AppSheet
       open={open}
-      onOpenChange={onOpenChange}
+      onOpenChange={handleOpenChange}
       title={isEdit ? "Edit Event" : "New Event"}
       className="sm:max-w-2xl"
       footer={
         <div className="grid w-full grid-cols-2 gap-2">
           <Button type="button" variant="outline" size="sm" className="w-full" onClick={onClose} disabled={isPending}>Discard</Button>
-          <LoadingButton form={formId} type="submit" size="sm" className="w-full" disabled={!form.title.trim()} isPending={isPending} loadingText={isEdit ? "Saving…" : "Creating…"}>Save</LoadingButton>
+          <LoadingButton form={formId} type="submit" size="sm" className="w-full" disabled={!form.title.trim() || !!dateTimeError} isPending={isPending} loadingText={isEdit ? "Saving…" : "Creating…"}>Save</LoadingButton>
         </div>
       }
     >
@@ -159,5 +175,15 @@ export function EventCreateForm({
       </form>
       <TicketPickerDialog open={ticketPickerOpen} onOpenChange={onTicketPickerChange} onSelect={onTicketSelect} />
     </AppSheet>
+    <ConfirmDialog
+      open={discardOpen}
+      onOpenChange={setDiscardOpen}
+      title="Discard changes?"
+      description="Your unsaved changes will be lost."
+      confirmLabel="Discard"
+      destructive
+      onConfirm={handleConfirmDiscard}
+    />
+    </>
   );
 }

@@ -58,7 +58,7 @@ export function useEventCreateDialog({
     [isEdit, event],
   );
   const [form, setForm] = useState<FormState>(() =>
-    isEdit && event ? toEditForm(event, rrule) : { ...toDefaultForm(defaultSlot), syncConnectionId: "" },
+    isEdit && event ? toEditForm(event, rrule) : { ...toDefaultForm(defaultSlot), syncConnectionId: "none" },
   );
   const [showEndDate, setShowEndDate] = useState(() =>
     needsEndDateField(isEdit && event ? toEditForm(event, rrule) : toDefaultForm(defaultSlot)),
@@ -86,7 +86,7 @@ export function useEventCreateDialog({
   useEffect(() => {
     if (!open) return;
     const base = isEdit && event ? toEditForm(event, rrule) : toDefaultForm(defaultSlot);
-    setForm(isEdit ? base : { ...base, syncConnectionId: "" });
+    setForm(isEdit ? base : { ...base, syncConnectionId: "none" });
     setShowEndDate(needsEndDateField(base));
     setDateTimeError("");
     setTitleError("");

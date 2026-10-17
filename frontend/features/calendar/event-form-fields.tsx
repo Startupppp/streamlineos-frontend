@@ -154,7 +154,7 @@ export function EventFormFields({
                 <Input
                   type="time"
                   name="startTime"
-                  className="w-[5.5rem] min-w-[5.5rem] shrink-0 text-xs"
+                  className="w-28 min-w-[7rem] shrink-0 text-xs"
                   value={startTime}
                   onChange={onStartTimeChange}
                 />
@@ -188,7 +188,7 @@ export function EventFormFields({
                   type="time"
                   name="endTime"
                   className={cn(
-                    "w-[5.5rem] min-w-[5.5rem] shrink-0 text-xs",
+                    "w-28 min-w-[7rem] shrink-0 text-xs",
                     dateTimeError && "border-destructive",
                   )}
                   value={endTime}
@@ -212,6 +212,11 @@ export function EventFormFields({
           </div>
         </div>
 
+        {!allDay && !isEdit && (
+          <p className="text-micro text-muted-foreground pl-6">
+            {Intl.DateTimeFormat().resolvedOptions().timeZone}
+          </p>
+        )}
         {dateTimeError && (
           <p className="text-micro text-destructive pl-6">{dateTimeError}</p>
         )}

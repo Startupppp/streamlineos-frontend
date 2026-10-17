@@ -74,7 +74,7 @@ export function toDefaultForm(
     attendeeIds: [],
     locationError: "",
     syncConnectionId: "none",
-    addConference: true,
+    addConference: false,
     recurrence: defaultRecurrenceState(startDate),
   };
 }
