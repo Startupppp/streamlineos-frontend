@@ -220,9 +220,9 @@ describe("useInboxSavedViews — URL search params are the persistence format", 
       priority: "HIGH",
       kindOverride: ["notification"],
       group: "kind",
-      from: "",
-      to: "",
-      module: "",
+      from: "2026-09-01",
+      to: "2026-09-30",
+      module: "hr",
     };
     act(() => result.current.saveView("Full state", state));
     const saved = result.current.views[0];

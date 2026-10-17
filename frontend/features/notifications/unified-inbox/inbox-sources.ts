@@ -6,7 +6,17 @@ export const INBOX_SOURCE_LABELS: Record<InboxKind, string> = {
   broadcast: "Announcements",
   mail: "Mail",
   build_approval: "Approvals",
+  module_task: "Tasks",
 };
+
+export const TASK_KIND_LABELS: Record<string, string> = {
+  crm_task: "CRM task",
+  support_ticket: "Support ticket",
+};
+
+export function taskKindLabel(kind: string): string {
+  return TASK_KIND_LABELS[kind] ?? kind;
+}
 
 export const APPROVAL_KIND_LABELS: Record<string, string> = {
   build: "Build",

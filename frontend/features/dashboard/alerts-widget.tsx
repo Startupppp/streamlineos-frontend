@@ -102,7 +102,7 @@ export function AlertsWidget() {
   const handleOpen = useCallback(
     (notification: Notification) => {
       if (!notification.isRead) markRead.mutate(notification.id);
-      router.push(notification.link ?? "/notifications");
+      router.push(notification.link ?? "/inbox?view=notifications");
     },
     [markRead, router],
   );
@@ -113,7 +113,7 @@ export function AlertsWidget() {
       iconClassName="text-primary"
       title="Important Alerts"
       badge={alerts.length || undefined}
-      link={{ href: "/notifications", label: "All" }}
+      link={{ href: "/inbox?view=notifications", label: "All" }}
       isLoading={isLoading}
       error={error}
       onRetry={handleRetry}

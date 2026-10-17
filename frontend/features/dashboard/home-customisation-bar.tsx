@@ -231,7 +231,7 @@ export function HomeCustomisationBar({
             {orderedWidgets.length > 0 && (
               <div className="flex flex-col gap-0.5">
                 <span className="text-xs text-muted-foreground">
-                  Widgets — drag or use arrows to reorder
+                  Widgets — use arrows to reorder
                 </span>
                 <div className="divide-y divide-border">
                   {orderedWidgets.map((option, index) => (

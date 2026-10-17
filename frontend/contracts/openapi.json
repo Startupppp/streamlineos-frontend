@@ -1197373,6 +1197373,9 @@
                                   "status": {
                                     "type": "string"
                                   },
+                                  "priority": {
+                                    "type": "string"
+                                  },
                                   "projectId": {
                                     "anyOf": [
                                       {
@@ -1197486,12 +1197489,128 @@
                                   "kind",
                                   "id",
                                   "status",
+                                  "priority",
                                   "projectId",
                                   "approvalKind",
                                   "ticketId",
                                   "dueAt",
                                   "objectType",
                                   "objectId",
+                                  "sourceModule",
+                                  "actor",
+                                  "subject",
+                                  "timestamp",
+                                  "isRead",
+                                  "deepLink",
+                                  "dedupKey"
+                                ]
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "kind": {
+                                    "type": "string",
+                                    "const": "module_task"
+                                  },
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "taskKind": {
+                                    "type": "string"
+                                  },
+                                  "status": {
+                                    "type": "string"
+                                  },
+                                  "priority": {
+                                    "type": "string"
+                                  },
+                                  "dueAt": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "body": {
+                                    "type": "string"
+                                  },
+                                  "sourceModule": {
+                                    "type": "string"
+                                  },
+                                  "actor": {
+                                    "anyOf": [
+                                      {
+                                        "type": "object",
+                                        "properties": {
+                                          "id": {
+                                            "type": "string"
+                                          },
+                                          "name": {
+                                            "anyOf": [
+                                              {
+                                                "type": "string"
+                                              },
+                                              {
+                                                "type": "null"
+                                              }
+                                            ]
+                                          },
+                                          "image": {
+                                            "anyOf": [
+                                              {
+                                                "type": "string"
+                                              },
+                                              {
+                                                "type": "null"
+                                              }
+                                            ]
+                                          }
+                                        },
+                                        "required": [
+                                          "id",
+                                          "name",
+                                          "image"
+                                        ]
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "subject": {
+                                    "type": "string"
+                                  },
+                                  "timestamp": {
+                                    "type": "string"
+                                  },
+                                  "isRead": {
+                                    "type": "boolean"
+                                  },
+                                  "deepLink": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "dedupKey": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "kind",
+                                  "id",
+                                  "taskKind",
+                                  "status",
+                                  "priority",
+                                  "dueAt",
+                                  "body",
                                   "sourceModule",
                                   "actor",
                                   "subject",
@@ -1197528,7 +1197647,8 @@
                                   "notification",
                                   "broadcast",
                                   "mail",
-                                  "build_approval"
+                                  "build_approval",
+                                  "module_task"
                                 ]
                               },
                               "included": {
@@ -1197645,6 +1197765,11 @@
                           "minimum": -9007199254740991,
                           "maximum": 9007199254740991
                         },
+                        "task": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
                         "total": {
                           "type": "integer",
                           "minimum": -9007199254740991,
@@ -1197661,6 +1197786,7 @@
                         "notification",
                         "mail",
                         "approval",
+                        "task",
                         "total",
                         "mailExact",
                         "approvalExact"

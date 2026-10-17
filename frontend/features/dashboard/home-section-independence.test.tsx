@@ -31,6 +31,11 @@ jest.mock("@/hooks/api/dashboard", () => ({
   useActiveSprintSummary: () => hookState.activeSprint,
 }));
 
+jest.mock("@/hooks/api/access", () => ({
+  useCan: () => true,
+  useModuleEnabled: () => true,
+}));
+
 jest.mock("./home-widget-grid", () => ({
   HomeWidgetGrid: () => <div data-testid="home-widget-grid" />,
 }));

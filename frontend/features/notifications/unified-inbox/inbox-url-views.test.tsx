@@ -272,6 +272,10 @@ describe("parseView — URL param parsing", () => {
   ] as const)("accepts the valid view slug %s", (slug) => {
     expect(parseView(slug)).toBe(slug);
   });
+
+  it("falls back to primary for the retired updates slug instead of throwing", () => {
+    expect(parseView("updates")).toBe("primary");
+  });
 });
 
 describe("buildQueryParams — view → backend params mapping", () => {
@@ -296,21 +300,29 @@ describe("buildQueryParams — view → backend params mapping", () => {
     expect(params.kinds).toBeUndefined();
   });
 
+  it("mentions narrows to notifications, because only notifications carry an event key", () => {
+    const params = buildQueryParams(state("mentions"));
+    expect(params.kinds).toEqual(["notification"]);
+  });
+
+  it("unread defaults to unreadOnly and asks the backend for it, across every kind", () => {
+    const parsed = parseInboxFilterState(new URLSearchParams("view=unread"));
+    expect(parsed.unreadOnly).toBe(true);
+
+    const params = buildQueryParams(parsed);
+    expect(params.unreadOnly).toBe(true);
+    expect(params.kinds).toBeUndefined();
+  });
+
+  it("CONTROL: primary does not default to unreadOnly", () => {
+    const parsed = parseInboxFilterState(new URLSearchParams("view=primary"));
+    expect(parsed.unreadOnly).toBe(false);
+    expect(buildQueryParams(parsed).unreadOnly).toBeUndefined();
+  });
+
   it("notifications sends kinds=[notification,broadcast] with no triage", () => {
     const params = buildQueryParams(state("notifications"));
     expect(params.kinds).toEqual(["notification", "broadcast"]);
-    expect(params.triage).toBeUndefined();
-  });
-
-  it("mentions sends kinds=[notification] with no triage", () => {
-    const params = buildQueryParams(state("mentions"));
-    expect(params.kinds).toEqual(["notification"]);
-    expect(params.triage).toBeUndefined();
-  });
-
-  it("unread sends no kind restriction and no triage", () => {
-    const params = buildQueryParams(state("unread"));
-    expect(params.kinds).toBeUndefined();
     expect(params.triage).toBeUndefined();
   });
 
@@ -415,13 +427,56 @@ describe("parseInboxFilterState — round-trip with filterStateToSearchParams", 
       priority: "HIGH",
       kindOverride: ["notification"],
       group: "kind",
-      from: "2026-01-01",
-      to: "2026-12-31",
+      from: "2026-09-01",
+      to: "2026-09-30",
       module: "hr",
     };
     const params = filterStateToSearchParams(original);
     const restored = parseInboxFilterState(params);
     expect(restored).toEqual(original);
+  });
+
+  it("round-trips the date range and module filter independently of the rest", () => {
+    const params = filterStateToSearchParams({
+      view: "primary",
+      q: "",
+      unreadOnly: false,
+      category: "",
+      priority: "",
+      kindOverride: [],
+      group: "none",
+      from: "2026-09-01",
+      to: "2026-09-30",
+      module: "timesheets",
+    });
+
+    expect(params.get("from")).toBe("2026-09-01");
+    expect(params.get("to")).toBe("2026-09-30");
+    expect(params.get("module")).toBe("timesheets");
+
+    const restored = parseInboxFilterState(params);
+    expect(restored.from).toBe("2026-09-01");
+    expect(restored.to).toBe("2026-09-30");
+    expect(restored.module).toBe("timesheets");
+  });
+
+  it("omits the date range and module from the URL when they are unset", () => {
+    const params = filterStateToSearchParams({
+      view: "primary",
+      q: "",
+      unreadOnly: false,
+      category: "",
+      priority: "",
+      kindOverride: [],
+      group: "none",
+      from: "",
+      to: "",
+      module: "",
+    });
+
+    expect(params.has("from")).toBe(false);
+    expect(params.has("to")).toBe(false);
+    expect(params.has("module")).toBe(false);
   });
 
   it("defaults mail view's unreadOnly to true when not in URL", () => {
@@ -501,16 +556,16 @@ describe("VIEW_KINDS coverage — all 8 views map the right backend kinds", () =
     expect(VIEW_KINDS.primary).toBeUndefined();
   });
 
-  it("notifications restricts to notification + broadcast", () => {
-    expect(VIEW_KINDS.notifications).toEqual(["notification", "broadcast"]);
-  });
-
-  it("mentions restricts to notification only", () => {
+  it("mentions restricts to notification, the only kind carrying an event key", () => {
     expect(VIEW_KINDS.mentions).toEqual(["notification"]);
   });
 
-  it("unread has no kind restriction", () => {
+  it("unread has no kind restriction, so it spans every source", () => {
     expect(VIEW_KINDS.unread).toBeUndefined();
+  });
+
+  it("notifications restricts to notification + broadcast", () => {
+    expect(VIEW_KINDS.notifications).toEqual(["notification", "broadcast"]);
   });
 
   it("mail restricts to mail only", () => {
@@ -795,6 +850,7 @@ describe("InboxShell — approval with null projectId navigates without query pa
         id: 9,
         status: "pending",
         approvalKind: "manual",
+        priority: "NORMAL",
         projectId: null,
         ticketId: null,
         dueAt: null,
@@ -843,6 +899,7 @@ describe("InboxShell — approval with null projectId navigates without query pa
         id: 9,
         status: "pending",
         approvalKind: "manual",
+        priority: "NORMAL",
         projectId: 4200,
         ticketId: null,
         dueAt: null,

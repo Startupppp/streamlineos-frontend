@@ -14,6 +14,7 @@ import {
   BookOpen,
   MessageSquare,
   Target,
+  RefreshCw,
   type LucideIcon,
 } from "lucide-react";
 import { ChevronDownIcon, ChevronUpIcon, XIcon } from "@animateicons/react/lucide";
@@ -220,9 +221,33 @@ function ModuleSetupBanner({ checklist }: { checklist: ModuleChecklist }) {
 
 export function ModuleSetupBanners() {
   const canView = useCan("onboarding:module-checklists:view");
-  const { data: checklists, isLoading } = useModuleChecklists(canView);
+  const { data: checklists, isLoading, isError, refetch } = useModuleChecklists(canView);
 
-  if (!canView || isLoading || !checklists) return null;
+  function handleRetry() {
+    void refetch();
+  }
+
+  if (!canView || isLoading) return null;
+
+  if (isError) {
+    return (
+      <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-3 flex items-center justify-between gap-3">
+        <p role="alert" className="text-sm text-destructive">
+          Couldn&apos;t load setup checklists.
+        </p>
+        <button
+          type="button"
+          onClick={handleRetry}
+          className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors shrink-0"
+        >
+          <RefreshCw className="h-3 w-3" aria-hidden="true" />
+          Retry
+        </button>
+      </div>
+    );
+  }
+
+  if (!checklists) return null;
 
   const active = checklists.filter((c) => c.status !== "completed" && !c.dismissedAt);
   if (active.length === 0) return null;

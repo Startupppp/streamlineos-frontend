@@ -14,7 +14,9 @@ import {
 import {
   useHomeCustomisation,
   applyWidgetOrder,
+  getDefaultWidgetOrder,
 } from "./use-home-customisation";
+import { useDashboardAccess } from "./use-dashboard-access";
 
 const LeaveBalanceWidget = dynamic(
   () =>
@@ -94,6 +96,9 @@ export interface HomeWidgetGridProps {
   canSelfAttendance: boolean;
   crmEnabled: boolean;
   canViewCrmLeads: boolean;
+  payrollEnabled: boolean;
+  canViewPayrollSelf: boolean;
+  expensesEnabled: boolean;
   expensesSlot?: ReactNode;
 }
 
@@ -104,6 +109,9 @@ export function HomeWidgetGrid({
   canSelfAttendance,
   crmEnabled,
   canViewCrmLeads,
+  payrollEnabled,
+  canViewPayrollSelf,
+  expensesEnabled,
   expensesSlot,
 }: HomeWidgetGridProps) {
   const { fadeUp } = useMotionVariants();
@@ -134,8 +142,8 @@ export function HomeWidgetGrid({
         label: "My attendance",
         visible: hrEnabled && canSelfAttendance,
       },
-      { id: "Payroll", label: "Payroll", visible: true },
-      { id: "Expenses", label: "Expenses", visible: Boolean(expensesSlot) },
+      { id: "Payroll", label: "Payroll", visible: payrollEnabled && canViewPayrollSelf },
+      { id: "Expenses", label: "Expenses", visible: expensesEnabled },
     ];
     return candidates
       .filter((w) => w.visible)
@@ -147,13 +155,20 @@ export function HomeWidgetGrid({
     canSelfAttendance,
     crmEnabled,
     canViewCrmLeads,
-    expensesSlot,
+    payrollEnabled,
+    canViewPayrollSelf,
+    expensesEnabled,
   ]);
 
+  const dashboardAccess = useDashboardAccess();
   const allAccessibleIds = availableWidgets.map((w) => w.id);
+  const effectiveWidgetOrder =
+    state.widgetOrder.length > 0
+      ? state.widgetOrder
+      : getDefaultWidgetOrder(dashboardAccess);
   const orderedVisibleIds = applyWidgetOrder(
     allAccessibleIds,
-    state.widgetOrder,
+    effectiveWidgetOrder,
   ).filter((id) => !isHidden(id));
 
   const widgetNodes: Record<string, ReactNode> = {
