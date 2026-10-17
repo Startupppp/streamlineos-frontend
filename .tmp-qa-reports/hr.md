@@ -100,26 +100,6 @@ Latest report note: Expense claim accepts huge amount (₹999,999,999); silent 9
 - **Suggested fix:** Server-side max amount per category/org; client max with inline message; no silent truncation (block further digits and show "Max 9 digits" or the limit).
 - **Cleanup:** `#EXP-2026-004` edited by owner to ₹250 with description "QA 1013 cleanup: corrected from huge-amount probe" (PATCH /me/expenses/4 → 200; verified in My Expenses). Still Pending. See TEST-DATA.md R3.
 
-### HR-B-022 — UNKNOWN
-
-Confirming an asset return does not unassign the asset; it stays "Assigned" to the employee
-
-Latest report note: Asset return does not unassign: FIXED | Assigned QA1015 Laptop to QA1015 Member → Log return (POST 201, Pending) → Received → Confirm. Asset list then Available / Unassigned, Assigned 0.
-
-- **Severity:** Medium (inventory shows a returned laptop as still assigned; Available/Assigned counts wrong)
-- **Route:** /hr/asset-returns → "Log Return" → then row "Received" → "Confirm Return"; compare /hr/assets
-- **Actor:** owner qaown1012b
-- **Steps:**
-  1. On /hr/assets register "QA Asset 1013 Laptop" (SN-QA-1013-A). Assign to QA HR Thirteen (PATCH /hr/assets → 200).
-  2. On /hr/asset-returns → "Log Return": asset "QA Asset 1013 Laptop", employee auto-filled QA HR Thirteen, condition Good → "Log return" (POST /hr/asset-returns → 201). Row shows status **Pending**.
-  3. Row action "Received" → dialog "Confirm Return — Mark this asset as returned in good condition?" → Confirm (PATCH /hr/asset-returns/1 → 200). Row shows **Returned**.
-  4. Reload /hr/assets.
-- **Expected:** Returned asset is unassigned and back to Available (Available 1, Assigned 0).
-- **Actual:** After step 3 the return shows Returned, but /hr/assets still shows QA Asset 1013 Laptop status **Assigned**, "Assigned To QA HR Thirteen", cards Available 0 / Assigned 1, after reload. Only the separate "Reassign / Unassign" → "Unassign Employee" on the asset (PATCH /hr/assets → 200) brought it back to Available 1 / Assigned 0.
-- **Impact:** Two places disagree about who holds the asset. Offboarding (exit checklist) may show equipment still held by a departed employee; HR-B-012-style screens may hide the return.
-- **Suggested fix:** When a return is confirmed, clear the assignment (or prompt "Unassign now?") in the same transaction; show the asset status on the return row.
-- **Cleanup:** Asset unassigned by owner after the return (see TEST-DATA.md R3). Asset remains registered (Available) with serial SN-QA-1013-A.
-
 ### HR-B-025 — UNKNOWN
 
 Completing a termination says the account will be deactivated and a settlement started, but the employee stays Active and no offboarding checklist or settlement draft appears
@@ -236,35 +216,6 @@ Unknown employee deep link gives generic 404; unknown employeeId on termination 
 
 - **Severity:** Low. **Routes:** /hr/employees/00000000-0000-4000-8000-000000000000 and /hr/employees/not-a-real-id → app-level "Page Not Found". /hr/termination?employeeId=00000000-… → list loads with no notice that the employee does not exist.
 - **Expected:** "Employee not found" with Back to directory; termination form not pre-filled silently. **Fix:** a not-found state inside the shell. **Acceptance:** bogus ID shows that message.
-
-### HRMS-002 — UNKNOWN
-
-Approving an employee's leave returns HTTP 500 and leave stays Pending
-
-Latest report note: Approving employee leave returns HTTP 500: High | BLOCKED (no test record) | 2 | rt_HRMS-002_employee_leaves_after_submit_crash.webp | Employee's leave submit crashed the renderer. Reloaded list shows no new request; only the old Nov 16 Earned Leave, now Rejected by qaown1012b (cleanup). No pending employee leave exists to approve. Last verified: OPEN. | FIXED - QA Employee Earned Leave (Oct 21) created, approved by owner; no HTTP 500. Leave left Approved (see leftovers).
-
-- Severity: High
-- Priority: P1
-- Status: VERIFIED
-- URL: /hr/approvals and Action Center (POST api.streamlineos.in/hr/leaves/{id}/approve)
-- Environment: Production https://www.streamlineos.in, TEST org 'QA Build Org 1012b', HR module enabled, Payroll off
-- Role: Owner (qaown1012b)
-- Browser: Chrome (Linux)
-- Viewport: 1280x800
-- Pass: P2 (self-approve), P3 (employee leave)
-- Preconditions: QA Employee Earned Leave 16 Nov 2026 Pending; no reporting manager on record, routed to HR approvals queue.
-- Steps:
-  1. Sign in as owner.
-  2. Open Action Center / /hr/approvals.
-  3. Click Approve on QA Employee's Earned Leave (Nov 16).
-- Expected: Leave becomes Approved, or a clear 4xx reason is shown.
-- Actual: Toast 'Something went wrong on our end. Please try again shortly.'; leave remains Pending. History: in P2 the owner's self-approval also returned 500 (3 of 3, two tabs); in P3 self-approval now returns a clear message 'You cannot approve your own leave request' (2 of 2), so that part changed.
-- Evidence: /workspace/qa/hrms/p3_21_owner_approve_emp_nov16_500.png, /workspace/qa/hrms/p2_t1_approvals_pending_500.png, /workspace/qa/hrms/p3_19_owner_approve_own_nov18_now_400_message.png
-- Repro rate: Employee leave: 1 of 1 (P3). Self-approve: 3 of 3 (P2) then not reproduced (P3, changed to message).
-- Impact: No leave in the org can currently be approved by the owner through the HR queue as observed; core HR workflow blocked.
-- Likely layer: Server (HTTP 500 on approve endpoint, VERIFIED from network/console). Root cause not known.
-- Acceptance criterion: Approving a valid pending leave by an eligible approver returns 2xx and status Approved; ineligible approver gets a 4xx with reason; no 500.
-- Safe retest: Approve Nov 16 leave once as owner; check status and network. Reject was NOT tested (would change records).
 
 ### HRMS-005 — UNKNOWN
 
@@ -612,26 +563,9 @@ Latest report note: Keyboard sequence navigated to /settings/billing: Low | BLOC
 
 ## UX notes that are not done
 
-### UX-01 Raw validation text on Department
-- User tries: Next on Job Details without department.
-- Observed: "Invalid input: expected string, received undefined" (3 of 3). Evidence: p1n_02_onb_jobdetails_empty_next.png, p3_11_onb_department_invalid_input.png
-- Recommendation: "Select a department" inline, focus moves to the field.
-- Why: raw schema text is meaningless to HR users.
-- Verify: empty Next shows the new copy; aria-describedby links it.
-
-### UX-02 Empty onboarding email
-- Tries: Next with empty email. Observed: "Invalid email address" (P1 2, P3 1, P2). Evidence: p1n_01_onb_all_empty_next.png, p2_t6_onboarding_empty_next_errors.png
-- Recommendation: empty -> "Email is required"; malformed -> "Enter a valid email, e.g. name@company.com".
-- Why: tells the user what to fix. Verify: both cases show distinct copy.
-
 ### UX-03 Sign-in email validation
 - Tries: submit empty, then 'abc'. Observed: same message both times. Evidence: 10_signin_empty_submit_validation.webp, 11_signin_abc_validation.webp
-- Recommendation: same split as UX-02. Verify: two distinct messages.
-
-### UX-04 Phone country selector unnamed
-- Tries: screen-reader/keyboard user tabs to flag button. Observed: no accessible name (aria-expanded=false only). Evidence: p2_t6_onboarding_focus_ring_phone.png
-- Recommendation: aria-label="Country code, India (+91)" updated on change.
-- Why: WCAG 4.1.2. Verify: accessibility tree shows the name.
+- Recommendation: empty -> "Email is required"; malformed -> "Enter a valid email, e.g. name@company.com". Verify: two distinct messages.
 
 ### UX-05 Leave date picker keyboard
 - Tries: pick a date via keyboard. Observed: focus lands on "Previous month"; arrows did nothing; day cell never reached. Evidence: p2_t6_leave_drawer_datepicker_focus.png
@@ -660,15 +594,6 @@ Latest report note: Keyboard sequence navigated to /settings/billing: Low | BLOC
 
 ### UX-10 Contrast (INFERRED)
 - Placeholder/helper text looks light; not measured. Recommendation: verify >=4.5:1 for helper text; placeholders not used as labels. Verify: axe/contrast tool.
-
-### UX-11 /hrms 404
-- Observed: plain 404 outside app shell. Evidence: 06_hrms_404.png. Recommendation: redirect /hrms to /hr, or in-shell 404 with "Go to HR". Verify: /hrms lands on /hr.
-
-### UX-12 DOB limit
-- Observed: calendar opens Dec 2010, days after ~Oct 2010 disabled, year list 1940-2010, no explanation. Evidence: p3_09_*, p3_10_*. Recommendation: helper text "Employee must be at least 16 (or policy value)"; allow typed entry; validate with message. Verify: helper shown; typed underage date shows message.
-
-### UX-13 Bank step skip
-- Observed: "Skip for now" leaves a profile-incomplete banner. Evidence: p2r_employee_onboarding_bank_step.webp. Recommendation: banner copy "Add bank details to receive salary - Add now" with dismiss/remind; if expected behaviour, state on skip "You can add this later from Profile > Bank". Verify: copy present.
 
 ### UX-14 Self-approver note
 - Observed: /hr/leaves "You are the approver - decide in Action Center" on own leave, which cannot be self-approved. Evidence: p2_t1_leaves_self_approver_note.webp. Recommendation: "Awaiting approval from HR approvals queue" naming the actual approver. Verify: own leave shows correct approver.
@@ -760,8 +685,8 @@ Latest report note: Keyboard sequence navigated to /settings/billing: Low | BLOC
 
 ### HR-U-029: Asset return needs two confirmations and the "Received" label reads as a status
 - **Where:** /hr/asset-returns: after "Log return" the row shows status "Pending" and an action labelled "Received"; the confirm reads "Mark this asset as returned in good condition?".
-- **Observed:** The action name "Received" does not say it completes the return; the list does not say the asset is still assigned (HR-B-022).
-- **Suggestion:** Label the action "Mark returned", and when confirmed, unassign the asset and say so in the toast.
+- **Observed:** The action name "Received" does not say it completes the return.
+- **Suggestion:** Label the action "Mark returned".
 
 ### HR-U-030: Expense amount and "Other" category messages duplicate each other
 - **Where:** /hr/expenses → New Expense Claim → Category "Other".
