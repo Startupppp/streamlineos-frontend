@@ -13,7 +13,11 @@ export interface LeaveOverlap {
   startDate: string;
   endDate: string;
   typeName: string | null;
+  status: string | null;
 }
+
+/** The server refuses any overlap with a PENDING or APPROVED request. */
+const BLOCKING_STATUSES = new Set(["PENDING", "APPROVED"]);
 
 const pad = (value: number): string => String(value).padStart(2, "0");
 
@@ -37,7 +41,7 @@ export function findLeaveOverlap(
   if (!from || !to || from > to) return null;
 
   for (const span of existing) {
-    if (span.status !== "APPROVED") continue;
+    if (!span.status || !BLOCKING_STATUSES.has(span.status)) continue;
     if (excludeId !== undefined && span.id === excludeId) continue;
     const spanFrom = leaveDayKey(span.startDate);
     const spanTo = leaveDayKey(span.endDate);
@@ -48,6 +52,7 @@ export function findLeaveOverlap(
         startDate: spanFrom,
         endDate: spanTo,
         typeName: span.leaveType?.name ?? null,
+        status: span.status,
       };
     }
   }
@@ -55,7 +60,8 @@ export function findLeaveOverlap(
 }
 
 export function leaveOverlapMessage(overlap: LeaveOverlap): string {
-  const label = overlap.typeName ? `approved ${overlap.typeName}` : "approved leave";
+  const state = overlap.status === "PENDING" ? "pending" : "approved";
+  const label = overlap.typeName ? `${state} ${overlap.typeName}` : `${state} leave`;
   const range =
     overlap.startDate === overlap.endDate
       ? formatShortDate(overlap.startDate)

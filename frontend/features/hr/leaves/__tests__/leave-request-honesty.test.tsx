@@ -138,7 +138,7 @@ describe("LeaveRequestSheet honesty", () => {
     fillRequest("2026-10-06", "2026-10-06");
 
     expect(screen.getByRole("alert")).toHaveTextContent(/overlap your approved Casual Leave/i);
-    const submit = screen.getByRole("button", { name: "Dates overlap approved leave" });
+    const submit = screen.getByRole("button", { name: "Dates overlap existing leave" });
     expect(submit).toBeDisabled();
 
     fireEvent.click(submit);
