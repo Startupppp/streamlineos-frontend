@@ -141,6 +141,12 @@ function checkField(
       case "money":
       case "percent":
         if (!NUMERIC.test(value)) reject("Enter a number");
+        else if (field.range) {
+          const { min, max } = field.range;
+          if (!/^\d+$/.test(value)) reject("Enter a whole number");
+          else if (Number(value) < min || Number(value) > max)
+            reject(`Enter a number from ${min} to ${max}`);
+        }
         break;
       case "boolean":
         // A control that hands back anything but these two is a control that is

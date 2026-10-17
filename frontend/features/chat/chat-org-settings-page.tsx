@@ -1,27 +1,16 @@
 "use client";
 
 import { useCallback } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card, CardContent } from "@/components/ui/card";
-import { Form } from "@/components/ui/form";
 import { Skeleton } from "@/components/ui/skeleton";
-import { LoadingButton } from "@/components/ui/loading-button";
 import { PageState } from "@/components/shared/page-state";
+import { RecordForm, type RecordFormValues } from "@/components/renderer";
+import { useTenantLayout } from "@/components/renderer/use-tenant-layout";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { useChatOrgSettings, useUpdateChatOrgSettings } from "@/hooks/api/chat-org-settings";
 import type { ChatOrgSettings } from "@/hooks/api/chat-schema/channel-settings-schema";
-import { chatOrgSettingsFormSchema, type ChatOrgSettingsFormValues } from "./chat-org-settings-schema";
-import { ChatOrgSettingsFormFields } from "./chat-org-settings-form-fields";
-
-function toFormValues(s: ChatOrgSettings): ChatOrgSettingsFormValues {
-  return {
-    defaultNotificationPreference: s.defaultNotificationPreference,
-    maxAttachmentSizeMb: String(s.maxAttachmentSizeMb),
-    maxHuddleParticipants: String(s.maxHuddleParticipants),
-  };
-}
+import { CHAT_ORG_SETTINGS_LAYOUT } from "@/lib/renderer/chat/chat-org-settings-layout";
 
 export function ChatOrgSettingsPage() {
   const { data, isLoading, isError, error, refetch } = useChatOrgSettings();
@@ -53,36 +42,29 @@ export function ChatOrgSettingsPage() {
 }
 
 function ChatOrgSettingsForm({ settings }: { settings: ChatOrgSettings }) {
+  const layout = useTenantLayout(CHAT_ORG_SETTINGS_LAYOUT);
   const update = useUpdateChatOrgSettings();
-  const form = useForm<ChatOrgSettingsFormValues>({
-    resolver: zodResolver(chatOrgSettingsFormSchema),
-    defaultValues: toFormValues(settings),
-  });
 
-  const handleSave = form.handleSubmit((values) => {
+  function handleSave(values: RecordFormValues) {
     update.mutate({
-      defaultNotificationPreference: values.defaultNotificationPreference,
+      defaultNotificationPreference:
+        values.defaultNotificationPreference as ChatOrgSettings["defaultNotificationPreference"],
       maxAttachmentSizeMb: Number(values.maxAttachmentSizeMb),
       maxHuddleParticipants: Number(values.maxHuddleParticipants),
     });
-  });
+  }
 
   return (
     <Card className="max-w-2xl">
       <CardContent className="pt-6">
-        <Form {...form}>
-          <form onSubmit={handleSave} className="space-y-6">
-            <ChatOrgSettingsFormFields form={form} />
-            <LoadingButton
-              type="submit"
-              isPending={update.isPending}
-              loadingText="Saving…"
-              disabled={!form.formState.isDirty}
-            >
-              Save changes
-            </LoadingButton>
-          </form>
-        </Form>
+        <RecordForm
+          layout={layout}
+          mode="edit"
+          initial={settings}
+          onSubmit={handleSave}
+          isSubmitting={update.isPending}
+          submitLabel="Save changes"
+        />
       </CardContent>
     </Card>
   );
