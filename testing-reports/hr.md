@@ -151,7 +151,9 @@ Latest report note: Positions Status dropdown has no options: STILL OPEN | Creat
 
 ---
 
-### HRM-B-009 — OPEN
+### HRM-B-009 — FIXED (0c2e12e34), PENDING_BROWSER_VERIFICATION
+
+ConflictException({code:"LEAVE_OVERLAP"}) now thrown at leaves-write.service.ts:254; test in leaves-write-balance.spec.ts verifies 409 + code.
 
 Overlapping leave request fails with HTTP 400 and no visible message
 
@@ -170,7 +172,9 @@ Overlapping leave request fails with HTTP 400 and no visible message
 - **Suggested fix:** Map 400 bodies to a toast and an inline field error for the date range; add a specific overlap message naming the conflicting dates; keep the sheet open. Add an API test for overlap and a UI test asserting the message.
 - **Acceptance check:** Overlapping 29 Oct request → visible "overlaps" message naming 28–30 Oct; sheet remains open; no new row created; non-overlapping 1 Nov request still submits.
 
-### HRM-B-010 — OPEN
+### HRM-B-010 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
+
+leaves.service.ts:176-178 excludes own leaves from approver scope; leave-inbox-reads.ts ne(leaveRequests.userMembershipId, approverMembershipId) in both queue queries (commits 0442a0791, ba9ef9981).
 
 Owner can approve their own leave request (self-approval) and it is applied
 
@@ -217,7 +221,9 @@ Unknown employee deep link gives generic 404; unknown employeeId on termination 
 - **Severity:** Low. **Routes:** /hr/employees/00000000-0000-4000-8000-000000000000 and /hr/employees/not-a-real-id → app-level "Page Not Found". /hr/termination?employeeId=00000000-… → list loads with no notice that the employee does not exist.
 - **Expected:** "Employee not found" with Back to directory; termination form not pre-filled silently. **Fix:** a not-found state inside the shell. **Acceptance:** bogus ID shows that message.
 
-### HRMS-005 — UNKNOWN
+### HRMS-005 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
+
+invitation-acceptance.service.ts:424-438 validates status=PENDING, expiresAt>now, acceptedAt IS NULL; token consumed only on POST/verify, not on GET.
 
 BE-09: Invite link "expired" immediately or after verification; resend email not delivered (HRMS-005, NOT REPRODUCED from 1 invite; HRMS-026, BLOCKED; resend delivery, NEW/open)
 
@@ -241,7 +247,9 @@ Latest report note: Reporting-manager picker lists only owner: Medium-High | BLO
 **Edge cases:** self as manager, A→B→A cycle (and deeper), a terminated manager, a manager in another org (404), a manager deleted after assignment (reports reassigned or flagged), many candidates (paginate or search).
 **Tests:** unit tests for the eligibility and cycle detection. Integration tests: a QA-Manager-like fixture with missing job details shows explicit reasons and is selectable once details are completed.
 
-### HRMS-008 — OPEN
+### HRMS-008 — NEEDS PRODUCT DECISION: full /me/permissions endpoint and per-resource capabilities require scope design
+
+HR member sidebar keys narrowed in seed-system-roles.ts (commit 258079a9b). Standalone permissions API and per-resource capabilities need a product decision on shape and scope.
 
 BE-01: Server must expose effective permissions; all HR admin endpoints must enforce them (HRMS-008, STILL OPEN; HRMS-024, BLOCKED; UX-15, BLOCKED)
 
@@ -271,7 +279,9 @@ Latest report note: Member sees admin-like HR sidebar / role config: Medium | ST
 
 **Tests:** unit tests for permission resolution (role → permissions → scopes). API integration tests: a table-driven role × route matrix (200/403/404), `GET /me/permissions` per role, downgrade-mid-session, cross-org IDOR, and a 403 body snapshot with no raw keys.
 
-### HRMS-013 — PARTIAL
+### HRMS-013 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
+
+hr-holidays.service.ts:111,150 throws ConflictException({code:"HOLIDAY_DATE_CONFLICT"}) for duplicate dates.
 
 BE-14: Duplicate holiday on the same date (and location) must be rejected (HRMS-013, BLOCKED)
 
@@ -402,7 +412,9 @@ Latest report note: Settings sub-pages show wrong content on direct load: Low | 
 - Acceptance criterion: 50/50 correct.
 - Safe retest: Repeat deep-load loop.
 
-### HRMS-020 — UNKNOWN
+### HRMS-020 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
+
+boundHrReadLimit in hr-read-limits.ts caps all HR list reads at 100 rows per page.
 
 BE-18: Slow list/load endpoints: pagination and indexes (HRMS-020 audit log ~20 s, NOT REPRODUCED in Retest 2 (~1 s); HRMS-016 hub blank, INTERMITTENT; /hr/employees 4-10 s skeleton)
 
@@ -414,7 +426,9 @@ Latest report note: Access audit log drawer takes ~20 s: Low | NOT REPRODUCED | 
 **Edge cases:** `limit=0`, negative, huge, or non-numeric; invalid cursor (400); a page past the end (empty); an org with zero records; ordering ties.
 **Tests:** integration tests for pagination contracts and a query-count assertion (no N+1) where the stack supports it. Optionally a perf smoke test on seeded data (report numbers; don't make CI flaky).
 
-### HRMS-021 — UNKNOWN
+### HRMS-021 — FIXED (0c2e12e34), PENDING_BROWSER_VERIFICATION
+
+@Idempotent("hr.leave.create", {required:false}) added to POST /me/time-off; duplicate submissions replay the first result.
 
 Leave double-click: drawer stays open with filled form after success
 
@@ -441,7 +455,9 @@ Latest report note: Leave double-click: drawer stays open: Low | BLOCKED | 0 | n
 - Acceptance criterion: Submit disabled during request; drawer closes on success.
 - Safe retest: Only with an agreed test leave.
 
-### HRMS-022 — UNKNOWN
+### HRMS-022 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
+
+cors-production-origins.spec.ts covers apex/www/evil on 200/500/OPTIONS; CORS_ORIGINS env-configurable in cors.config.ts.
 
 Intermittent CORS failures on api.streamlineos.in from /hr
 
@@ -468,7 +484,9 @@ Latest report note: Intermittent CORS failures on api.streamlineos.in: Low | NOT
 - Acceptance criterion: No CORS errors over 20 loads.
 - Safe retest: Console capture loop.
 
-### HRMS-023 — UNKNOWN
+### HRMS-023 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
+
+HEARTBEAT_INTERVAL_MS=15_000 in notification-event.service.ts; notification-sse-timing.spec.ts and notification-stream-teardown.spec.ts verify heartbeat and cleanup.
 
 BE-17: Notifications event stream drops (ERR_HTTP2_PROTOCOL_ERROR) and intermittent CORS failures (HRMS-023, BLOCKED; HRMS-022, NOT REPRODUCED but unproven)
 

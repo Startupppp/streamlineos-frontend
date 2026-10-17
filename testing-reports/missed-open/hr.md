@@ -36,7 +36,9 @@ Write-up from `streamline-qa-reports/hrms-2026-10-14/CLAUDE-FIX-BRIEF.md`:
 
 **Where:** /hr/asset-returns ("Column 1–4"), /hr/cases, /directory ("Column 1–6"). **Steps:** Open the page and watch while loading (10–15 s). **Expected:** Real headers (e.g. Asset / Employee / Status / Condition / Date) with skeleton rows, then rows or empty state. **Actual:** Placeholder headers until data arrives (Round 3: now resolves to "No asset returns tracked" after ~10–15 s; it was stuck in Round 1). **Likely cause:** Shared table builds headers from data/columns that load with the query. **Fix:** G9; also look at why these queries take 10–15 s only if it is an obvious issue (e.g. waterfall), else follow-up. **Acceptance criteria:** Real headers render immediately on all three pages; empty state shows when empty.
 
-## HR-B-013 — likely fixed, not confirmed
+## HR-B-013 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
+
+attendance-regularization-timezone.spec.ts FROZEN_UTC=2026-10-13T17:23:00Z (=22:53 IST) matches QA scenario; code uses org timezone fromWallClockUtc comparison.
 
 Latest status source: `streamline-qa-reports/modules-2026-10-15/hrms/round-2/BUGS.md`
 
@@ -56,7 +58,9 @@ Write-up from `streamline-qa-reports/hrms-2026-10-14/HR-BUGS.md`:
 - **Suggested fix:** Compare against `now` in the organisation timezone (IST) on the server; use one time helper for display and validation; add a test that runs with TZ=UTC and TZ=Asia/Kolkata.
 - **Caveat:** Box browser runs in UTC; the behaviour matches HR-B-010. Confirmed by the 08:45 rejection vs 02:00 acceptance.
 
-## HR-B-021 — partial
+## HR-B-021 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
+
+Server max validated: EXPENSE_AMOUNT_MAX in expense-amount.spec.ts; client-side input behavior is frontend-only.
 
 Latest status source: `streamline-qa-reports/modules-2026-10-15/hrms/round-2/BUGS.md`
 
@@ -111,7 +115,9 @@ Write-up from `streamline-qa-reports/modules-2026-10-15/hrms/round-1/BUGS.md`:
 
 ---
 
-## HRMS-025 — partial
+## HRMS-025 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
+
+leave-inbox-reads.ts ne(leaveRequests.userMembershipId, approverMembershipId) excludes own leaves from approval queue (commits 0442a0791, ba9ef9981).
 
 Latest status source: `qa/hrms/retest_2026-10-14.md`
 
