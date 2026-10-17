@@ -27,6 +27,7 @@ const SESSION_ONLY_BY_DESIGN: readonly SessionOnlySurface[] = [
   { path: "/me", subtree: true, reason: "Employee self-service. The whole /me/* subtree derives its subject from the session." },
   { path: "/settings", reason: "The personal account landing page. Everything beneath it is organization administration." },
   { path: "/settings/notifications/my-preferences", subtree: true, reason: "A member's own notification preferences under Settings." },
+  { path: "/knowledge", reason: "Module root that records a legacy hit and redirects to /knowledge/chat, rendering nothing. Its destination is session-only, so a permission here would only deny what the destination admits." },
   { path: "/knowledge/chat", subtree: true, reason: "Knowledge Base reading is platform core." },
   { path: "/knowledge/wiki", reason: "Knowledge Base reading is platform core; space and record ACLs still apply." },
   { path: "/knowledge/wiki/shared", subtree: true, reason: "Knowledge Base pages already shared with the member." },
