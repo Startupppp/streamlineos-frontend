@@ -224,7 +224,7 @@ interface LeaveDecisionButtonsProps {
   request: Pick<LeaveRequest, "id" | "status" | "user">;
   currentUserId: string | undefined;
   processingId: number | null;
-  onProcess: (requestId: number, decision: LeaveDecision) => void;
+  onProcess: LeaveDecisionControls["onProcess"];
 }
 
 export function LeaveDecisionButtons({
