@@ -8,7 +8,49 @@ import type { DataQualityFinding } from "@/hooks/api/crm/data-quality-findings-s
 
 export interface FindingDecision {
   finding: DataQualityFinding;
-  action: "apply" | "dismiss";
+  action: "apply" | "dismiss" | "merge" | "reverse";
+}
+
+/** The confirm copy for each decision a finding row offers. */
+export const DECISION_COPY: Record<FindingDecision["action"], { title: string; description: string; confirm: string; done: string }> = {
+  apply: {
+    title: "Mark this finding resolved?",
+    description: "Use this when the record has been fixed. Nothing on the record is changed by this action.",
+    confirm: "Mark resolved",
+    done: "Finding marked resolved",
+  },
+  dismiss: {
+    title: "Dismiss this finding?",
+    description: "Dismissing says the finding was wrong. It leaves the open queue and counts against the detector's accuracy.",
+    confirm: "Dismiss",
+    done: "Finding dismissed",
+  },
+  merge: {
+    title: "Merge these two records?",
+    description: "One record absorbs the other. Check what survives before you confirm.",
+    confirm: "Merge records",
+    done: "Records merged",
+  },
+  reverse: {
+    title: "Undo this decision?",
+    description:
+      "Every finding closed by the same decision reopens, and any merge it applied is reverted from its snapshot.",
+    confirm: "Undo decision",
+    done: "Decision undone",
+  },
+};
+
+/**
+ * Whether a closed finding's decision can be offered for undo.
+ *
+ * A merge is undone from the snapshot its `party_merges` row holds, and the
+ * finding names that row in `undoToken.partyMergeId`. A merge finding without
+ * one has nothing to revert from, so it is not offered.
+ */
+function canOfferUndo(finding: DataQualityFinding): boolean {
+  if (finding.status === "open" || !finding.resolutionId) return false;
+  if (finding.status === "dismissed" || finding.proposedAction !== "merge-parties") return true;
+  return typeof finding.undoToken?.["partyMergeId"] === "string";
 }
 
 /** `duplicate-email` → `Duplicate email`. The kind is a backend slug, never shown raw. */
@@ -32,11 +74,12 @@ interface FindingRowActionsProps {
 }
 
 /**
- * Resolve and dismiss for one open finding.
+ * The decisions one finding offers.
  *
- * "Mark resolved" is offered only where the finding proposes no automatic
- * remedy: applying a `merge-parties` finding merges two parties, and merging
- * from this queue is held for a product decision.
+ * Open: "Mark resolved" where the finding proposes no automatic remedy, "Review
+ * merge" where it proposes merging two parties (the merge runs only after its
+ * preview is confirmed), and Dismiss. Closed: "Undo" where the decision can be
+ * taken back.
  */
 export const FindingRowActions = memo(function FindingRowActions({
   finding,
@@ -46,17 +89,37 @@ export const FindingRowActions = memo(function FindingRowActions({
   function handleResolve() {
     onDecide({ finding, action: "apply" });
   }
+  function handleMerge() {
+    onDecide({ finding, action: "merge" });
+  }
   function handleDismiss() {
     onDecide({ finding, action: "dismiss" });
   }
+  function handleUndo() {
+    onDecide({ finding, action: "reverse" });
+  }
 
-  if (!canResolve || finding.status !== "open") return null;
+  if (!canResolve) return null;
+
+  if (finding.status !== "open")
+    return canOfferUndo(finding) ? (
+      <div className="flex justify-end">
+        <Button type="button" variant="ghost" size="sm" onClick={handleUndo}>
+          Undo
+        </Button>
+      </div>
+    ) : null;
 
   return (
     <div className="flex justify-end gap-2">
       {finding.proposedAction === "none" ? (
         <Button type="button" variant="outline" size="sm" onClick={handleResolve}>
           Mark resolved
+        </Button>
+      ) : null}
+      {finding.proposedAction === "merge-parties" && finding.relatedPartyId ? (
+        <Button type="button" variant="outline" size="sm" onClick={handleMerge}>
+          Review merge
         </Button>
       ) : null}
       <Button type="button" variant="ghost" size="sm" onClick={handleDismiss}>

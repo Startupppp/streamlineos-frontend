@@ -18,18 +18,22 @@ import { usePageState } from "@/hooks/api/use-page-state";
 import { useCan } from "@/hooks/api/access";
 import {
   useDataQualityFindings,
+  useDataQualityMergePreview,
   useResolveDataQualityFindings,
+  useReverseDataQualityResolution,
   type DataQualityFindingFilters,
 } from "@/hooks/api/crm/data-quality-findings";
 import type { DataQualityFinding } from "@/hooks/api/crm/data-quality-findings-schema";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import {
+  DECISION_COPY,
   FindingPartyName,
   FindingRowActions,
   humanizeFindingKind,
   type FindingDecision,
 } from "./data-quality-finding-cells";
+import { MergePreviewContent } from "./data-quality-merge-preview";
 
 const PAGE_SIZE = 25;
 
@@ -60,21 +64,6 @@ function findingRowKey(row: DataQualityFinding) {
   return row.findingId;
 }
 
-const DECISION_COPY: Record<FindingDecision["action"], { title: string; description: string; confirm: string; done: string }> = {
-  apply: {
-    title: "Mark this finding resolved?",
-    description: "Use this when the record has been fixed. Nothing on the record is changed by this action.",
-    confirm: "Mark resolved",
-    done: "Finding marked resolved",
-  },
-  dismiss: {
-    title: "Dismiss this finding?",
-    description: "Dismissing says the finding was wrong. It leaves the open queue and counts against the detector's accuracy.",
-    confirm: "Dismiss",
-    done: "Finding dismissed",
-  },
-};
-
 export function DataQualityFindingsPage() {
   const layout = useTenantLayout(DATA_QUALITY_FINDING_LAYOUT);
   const canResolve = useCan("crm:data-quality:resolve");
@@ -93,6 +82,10 @@ export function DataQualityFindingsPage() {
   };
   const query = useDataQualityFindings(filters);
   const resolve = useResolveDataQualityFindings();
+  const reverse = useReverseDataQualityResolution();
+  const mergePreview = useDataQualityMergePreview(
+    decision?.action === "merge" ? decision.finding.findingId : null,
+  );
   const rows = useMemo(() => query.data?.data ?? [], [query.data]);
   const isFiltered = producer !== "all" || severity !== "all";
 
@@ -131,8 +124,24 @@ export function DataQualityFindingsPage() {
   function handleConfirmDecision() {
     if (!decision) return;
     const copy = DECISION_COPY[decision.action];
+    if (decision.action === "reverse") {
+      const resolutionId = decision.finding.resolutionId;
+      if (!resolutionId) return;
+      reverse.mutate(
+        { resolutionId },
+        {
+          onSuccess: (result) => {
+            if (result.failedCount > 0) toast.error(result.failures[0]?.error ?? "Part of the decision could not be undone.");
+            else toast.success(copy.done);
+            setDecision(null);
+          },
+          onError: (error) => toast.error(getErrorMessage(error)),
+        },
+      );
+      return;
+    }
     resolve.mutate(
-      { findingIds: [decision.finding.findingId], action: decision.action },
+      { findingIds: [decision.finding.findingId], action: decision.action === "merge" ? "apply" : decision.action },
       {
         onSuccess: (result) => {
           if (result.failedCount > 0) toast.error(result.failures[0]?.error ?? "The finding could not be closed.");
@@ -254,9 +263,21 @@ export function DataQualityFindingsPage() {
           onOpenChange={handleDecisionOpenChange}
           title={copy.title}
           description={copy.description}
+          content={
+            decision?.action === "merge" ? (
+              <MergePreviewContent
+                preview={mergePreview.data}
+                isLoading={mergePreview.isLoading}
+                errorMessage={mergePreview.isError ? getErrorMessage(mergePreview.error) : null}
+              />
+            ) : undefined
+          }
           confirmLabel={copy.confirm}
-          destructive={decision?.action === "dismiss"}
-          isPending={resolve.isPending}
+          confirmDisabled={
+            decision?.action === "merge" && (!mergePreview.data || mergePreview.data.blockers.length > 0)
+          }
+          destructive={decision?.action !== "apply"}
+          isPending={resolve.isPending || reverse.isPending}
           keepOpenOnConfirm
           onConfirm={handleConfirmDecision}
         />

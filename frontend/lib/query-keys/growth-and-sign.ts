@@ -206,6 +206,7 @@ export const growthAndSignQueryKeys = {
       params === undefined
         ? ([...base, "crm", "data-quality", "findings"] as const)
         : ([...base, "crm", "data-quality", "findings", params] as const),
+    mergePreview: (findingId: string) => [...base, "crm", "data-quality", "merge-preview", findingId] as const,
   },
 
   meetingsAi: {

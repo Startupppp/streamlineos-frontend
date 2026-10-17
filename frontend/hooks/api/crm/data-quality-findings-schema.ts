@@ -44,6 +44,26 @@ export const dataQualityResolveResultContract = z.object({
   remainingInGroup: z.number().int().nullable(),
 });
 
+/** Mirrors `mergePreviewSchema` (`GET /crm/data-quality/findings/:findingId/merge-preview`). */
+export const dataQualityMergePreviewContract = z.object({
+  survivor: z.object({ partyId: z.string(), name: z.string() }),
+  merged: z.object({ partyId: z.string(), name: z.string() }),
+  filledFields: z.array(z.object({ field: z.string(), value: z.string() })),
+  conflicts: z.array(z.object({ field: z.string(), kept: z.string().nullable(), discarded: z.string().nullable() })),
+  blockers: z.array(z.string()),
+});
+
+/** Mirrors `reverseSchema` (`POST /crm/data-quality/resolutions/:resolutionId/reverse`). */
+export const dataQualityReverseResultContract = z.object({
+  reversed: z.literal(true),
+  action: z.string(),
+  reopened: z.number().int(),
+  failedCount: z.number().int(),
+  failures: z.array(z.object({ findingId: z.string(), error: z.string() })),
+});
+
 export type DataQualityFinding = z.infer<typeof dataQualityFindingContract>;
 export type DataQualityFindingsPage = z.infer<typeof dataQualityFindingsPageContract>;
 export type DataQualityResolveResult = z.infer<typeof dataQualityResolveResultContract>;
+export type DataQualityMergePreview = z.infer<typeof dataQualityMergePreviewContract>;
+export type DataQualityReverseResult = z.infer<typeof dataQualityReverseResultContract>;
