@@ -359,6 +359,19 @@ describe("companion keyboard focus", () => {
     expect(await screen.findByRole("button", { name: "Restore Pip" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Open Pip, Ready" })).toBeNull();
   });
+  it("ORG-B-023: docks the minimised companion beside the quick-actions FAB, inside the reserved FAB lane", async () => {
+    server();
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(
+      <QueryClientProvider client={client}>
+        <Harness compact />
+      </QueryClientProvider>,
+    );
+    const root = (await screen.findByRole("button", { name: "Restore Pip" })).parentElement;
+    expect(root?.className).toContain("var(--mb-fab-bottom");
+    expect(root?.className).toContain("right-[4.5rem]");
+    expect(root?.className).not.toContain("var(--mb-launcher-bottom");
+  });
   it("does not copy a desktop drag position into mobile storage", async () => {
     server();
     const view = renderLauncher();
