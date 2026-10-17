@@ -34,6 +34,11 @@ const mockCanState = jest.fn();
 jest.mock("@/hooks/api/access", () => ({
   ...jest.requireActual("@/hooks/api/access"),
   useCanState: (key: string) => mockCanState(key),
+  // The component catalog field resolves its own permission through PageState.
+  useAccess: () => ({ data: { isOrgOwner: true, scopes: {}, modules: {} }, isLoading: false, isError: false }),
+}));
+jest.mock("@/hooks/api/entitlements", () => ({
+  useEntitlements: () => ({ data: undefined }),
 }));
 
 const mockUsePayrollPeople = jest.fn();

@@ -4,8 +4,9 @@ import { memo, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getErrorMessage } from "@/lib/get-error-message";
+import { PageState } from "@/components/shared/page-state";
 import { usePayrollComponents } from "@/hooks/api/payroll/components";
+import { usePageState } from "@/hooks/api/use-page-state";
 import type { SalaryComponentListItem } from "@/hooks/api/payroll/components-schema";
 import { componentRole, duplicatedRoles } from "@/features/payroll/components/lib/component-role";
 
@@ -42,7 +43,7 @@ const ComponentOption = memo(function ComponentOption({ component, checked, onTo
 });
 
 export function ProfileComponentsField({ value, onChange }: ProfileComponentsFieldProps) {
-  const { data, isLoading, isError, error } = usePayrollComponents({ active: true, limit: 100 });
+  const { data, isLoading, isError, error, refetch } = usePayrollComponents({ active: true, limit: 100 });
   const items = useMemo(() => data?.items ?? [], [data]);
   const selected = useMemo(() => new Set(value), [value]);
   const duplicates = useMemo(
@@ -57,44 +58,54 @@ export function ProfileComponentsField({ value, onChange }: ProfileComponentsFie
     [onChange, value],
   );
 
-  if (isLoading) {
-    return (
-      <div className="space-y-2">
-        <Skeleton className="h-4 w-full" />
-        <Skeleton className="h-4 w-5/6" />
-      </div>
-    );
-  }
-  if (isError) return <p className="text-xs text-destructive">{getErrorMessage(error)}</p>;
-  if (items.length === 0) {
-    return (
-      <p className="text-xs text-muted-foreground">
-        No active components yet. Add them in the{" "}
-        <Link href="/payroll/components" className="underline underline-offset-2">component catalog</Link>.
-      </p>
-    );
-  }
+  // The catalog read is disabled without payroll:components:view; PageState
+  // says "denied" there rather than "no active components yet".
+  const state = usePageState({
+    permission: "payroll:components:view",
+    isLoading,
+    isError,
+    error,
+    isEmpty: items.length === 0,
+  });
 
   return (
-    <div className="space-y-2">
-      <ul className="max-h-56 space-y-1.5 overflow-y-auto rounded-md border border-border p-2">
-        {items.map((component) => (
-          <ComponentOption
-            key={component.id}
-            component={component}
-            checked={selected.has(component.id)}
-            onToggle={handleToggle}
-          />
-        ))}
-      </ul>
-      {duplicates.length > 0 ? (
-        <p className="text-xs text-destructive">
-          {duplicates.join(", ")} {duplicates.length === 1 ? "is" : "are"} selected more than once. Payroll pays every selected line, so keep one per role.
+    <PageState
+      compact
+      resolution={state}
+      onRetry={() => void refetch()}
+      loading={
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-5/6" />
+        </div>
+      }
+      empty={
+        <p className="text-xs text-muted-foreground">
+          No active components yet. Add them in the{" "}
+          <Link href="/payroll/components" className="underline underline-offset-2">component catalog</Link>.
         </p>
-      ) : null}
-      {data?.pagination.hasMore ? (
-        <p className="text-micro text-muted-foreground">Showing the first 100 active components.</p>
-      ) : null}
-    </div>
+      }
+    >
+      <div className="space-y-2">
+        <ul className="max-h-56 space-y-1.5 overflow-y-auto rounded-md border border-border p-2">
+          {items.map((component) => (
+            <ComponentOption
+              key={component.id}
+              component={component}
+              checked={selected.has(component.id)}
+              onToggle={handleToggle}
+            />
+          ))}
+        </ul>
+        {duplicates.length > 0 ? (
+          <p className="text-xs text-destructive">
+            {duplicates.join(", ")} {duplicates.length === 1 ? "is" : "are"} selected more than once. Payroll pays every selected line, so keep one per role.
+          </p>
+        ) : null}
+        {data?.pagination.hasMore ? (
+          <p className="text-micro text-muted-foreground">Showing the first 100 active components.</p>
+        ) : null}
+      </div>
+    </PageState>
   );
 }
