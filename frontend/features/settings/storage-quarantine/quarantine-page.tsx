@@ -1,10 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { DataTable } from "@/components/ui/data-table";
 import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -14,6 +13,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { FIELD_SELECT_CONTENT_CLASS } from "@/components/ui/field-control";
 import { PageState } from "@/components/shared/page-state";
+import { RecordList } from "@/components/renderer";
+import { useTenantLayout } from "@/components/renderer/use-tenant-layout";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { useCan } from "@/hooks/api/access";
 import { useMemberDirectory, type DirectoryScope } from "@/hooks/api/members/use-member-directory";
@@ -26,9 +27,10 @@ import {
 import { QUARANTINE_STATUSES, type QuarantineRecord } from "@/hooks/api/storage/quarantine-schema";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { getUserDisplayName } from "@/lib/person-display";
+import { QUARANTINE_RECORD_LAYOUT } from "@/lib/renderer/settings/quarantine-record-layout";
 import { cn } from "@/lib/utils";
 import { QUARANTINE_PAGE_SIZE, readQuarantineStatus } from "./quarantine-list-state";
-import { QUARANTINE_HEADERS, STATUS_META, quarantineColumns, type QuarantineAction } from "./quarantine-columns";
+import { QUARANTINE_HEADERS, RowActions, STATUS_META, quarantineCells, type QuarantineAction } from "./quarantine-cells";
 
 const ORG_SCOPE: DirectoryScope = { kind: "org" };
 
@@ -38,6 +40,7 @@ function rowKey(row: QuarantineRecord): string {
 
 /** Uploads held for malware scanning: review, release, reject or delete. */
 export function QuarantinePage() {
+  const layout = useTenantLayout(QUARANTINE_RECORD_LAYOUT);
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -55,12 +58,18 @@ export function QuarantinePage() {
   const reject = useRejectQuarantined();
   const remove = useDeleteQuarantined();
 
-  const columns = useMemo(() => {
+  const cells = useMemo(() => {
     const names = new Map(selectedMembers.map((member) => [member.id, getUserDisplayName(member)]));
-    const uploaderName = (userId: string) => names.get(userId) ?? "Former member";
-    const onAction = (action: QuarantineAction, row: QuarantineRecord) => setTarget({ action, row });
-    return quarantineColumns(uploaderName, canManage ? onAction : null);
-  }, [selectedMembers, canManage]);
+    return quarantineCells((userId: string) => names.get(userId) ?? "Former member");
+  }, [selectedMembers]);
+  const handleAction = useCallback(
+    (action: QuarantineAction, row: QuarantineRecord) => setTarget({ action, row }),
+    [],
+  );
+  const renderActions = useCallback(
+    (row: QuarantineRecord) => <RowActions row={row} onAction={handleAction} />,
+    [handleAction],
+  );
 
   const pageState = usePageState({
     permission: "storage:quarantine:view",
@@ -156,10 +165,12 @@ export function QuarantinePage() {
         onRetry={handleRetry}
         className="flex-1"
       >
-        <DataTable
-          data={rows}
-          columns={columns}
+        <RecordList
+          layout={layout}
+          rows={rows}
           getRowKey={rowKey}
+          cells={cells}
+          actions={canManage ? renderActions : undefined}
           emptyState={emptyState}
           minWidth="760px"
           className="flex-1 min-h-0"
