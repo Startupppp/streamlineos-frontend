@@ -17,6 +17,9 @@ export const JOURNAL_SOURCE_LABELS: Record<GlJournalSource, string> = {
   fx_reval: "FX revaluation",
   depreciation: "Depreciation",
   stock_move: "Stock movement",
+  // INV-38: a landed-cost voucher is the carrier's bill applied to stock on
+  // hand, not a stock movement. Vouchers have no page of their own, so no link.
+  landed_cost: "Landed cost",
   period_close: "Period close",
 };
 

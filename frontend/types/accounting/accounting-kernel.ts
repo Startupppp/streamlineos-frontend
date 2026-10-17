@@ -71,6 +71,7 @@ export type GlJournalSource =
   | "fx_reval"
   | "depreciation"
   | "stock_move"
+  | "landed_cost"
   | "period_close";
 
 export type PeriodStatus = "OPEN" | "LOCKED";
