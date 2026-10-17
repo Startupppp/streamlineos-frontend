@@ -167,11 +167,11 @@ export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
       actions={<BuildHeaderActions actions={createActions} />}
     >
       <ManagedProductDetailShell>
-        {resolution.kind === "denied" ? null : (
+        {resolution.kind !== "denied" && (isLoading || totalGoals > 0) ? (
           <PmSection index={0} className="shrink-0">
             <ProductGoalsStats stats={stats} isLoading={isLoading} />
           </PmSection>
-        )}
+        ) : null}
 
         <BuildOfflineNotice dataUpdatedAt={dataUpdatedAt} />
 
