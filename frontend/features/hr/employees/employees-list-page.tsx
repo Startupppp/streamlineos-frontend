@@ -218,6 +218,7 @@ export function EmployeesListPage() {
           hasFilters={hasFilters}
           onSearchChange={updateSearch}
           onSearchSubmit={flushSearch}
+          searching={search.trim() !== debouncedSearch.trim() || (isFetching && !isLoading && !isFetchingNextPage)}
           onDepartmentIdChange={handleDepartmentFilterChange}
           onStatusChange={handleStatusFilterChange}
           onClear={clearFilters}

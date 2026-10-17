@@ -29,4 +29,10 @@ describe("onboarding personal step (HR-U-004)", () => {
     expect(screen.getByLabelText(/first name/i)).toHaveAccessibleDescription(/no numbers/i);
     expect(screen.getByLabelText(/last name/i)).toHaveAccessibleDescription(/no numbers/i);
   });
+
+  it("caps both name inputs at the 100-character validation limit", () => {
+    render(<Harness />);
+    expect(screen.getByLabelText(/first name/i)).toHaveAttribute("maxLength", "100");
+    expect(screen.getByLabelText(/last name/i)).toHaveAttribute("maxLength", "100");
+  });
 });

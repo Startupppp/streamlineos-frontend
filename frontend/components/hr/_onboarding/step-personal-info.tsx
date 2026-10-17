@@ -6,6 +6,7 @@ import { z } from "zod";
 import { onboardEmployeeInputSchema, MIN_EMPLOYMENT_AGE_YEARS } from "@/lib/validation/hr";
 import { format } from "date-fns";
 import { Input } from "@/components/ui/input";
+import { HR_PERSON_NAME_MAX } from "@/lib/person-name-schema";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DatePicker } from "@/components/ui/date-picker";
 import { PhoneInput } from "@/components/ui/phone-input";
@@ -69,7 +70,7 @@ export function StepPersonalInfo({ form }: StepPersonalInfoProps) {
           <FormItem>
             <FormLabel>First Name <span className="text-destructive">*</span></FormLabel>
             <FormControl>
-              <Input placeholder="John" maxLength={80} {...field} />
+              <Input placeholder="John" maxLength={HR_PERSON_NAME_MAX} {...field} />
             </FormControl>
             <FormDescription>{NAME_RULE_HINT}</FormDescription>
             <FormMessage />
@@ -83,7 +84,7 @@ export function StepPersonalInfo({ form }: StepPersonalInfoProps) {
           <FormItem>
             <FormLabel>Last Name <span className="text-destructive">*</span></FormLabel>
             <FormControl>
-              <Input placeholder="Doe" maxLength={80} {...field} />
+              <Input placeholder="Doe" maxLength={HR_PERSON_NAME_MAX} {...field} />
             </FormControl>
             <FormDescription>{NAME_RULE_HINT}</FormDescription>
             <FormMessage />
