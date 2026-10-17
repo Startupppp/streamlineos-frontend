@@ -112,6 +112,8 @@ export interface UpdateDealStageInput {
 export interface DealFilters {
   stage?: DealStage;
   assignedToId?: string;
+  /** Case-insensitive substring of the deal name (server-side). */
+  search?: string;
   limit?: number;
   offset?: number;
 }

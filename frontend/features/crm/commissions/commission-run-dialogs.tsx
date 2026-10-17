@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { EntityFormDialog } from "@/components/shared/entity-form-dialog";
@@ -21,6 +21,7 @@ import {
   useRebuildCommissionAccrual,
 } from "@/hooks/api/crm/commission";
 import { useDeals } from "@/hooks/api/crm/deals";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   calculateSchema,
@@ -37,14 +38,53 @@ interface RunDialogProps {
  * Compute the commission one won deal earned. Seals the plan version it used,
  * which is why it is its own permission and not a side effect of reading.
  */
+const DEAL_PICKER_LIMIT = 25;
+
+interface DealPickerProps {
+  value: string;
+  onChange: (value: string) => void;
+}
+
+/** Searches the whole book server-side; the chosen deal stays labelled after the search clears. */
+function DealPicker({ value, onChange }: DealPickerProps) {
+  const [search, setSearch] = useState("");
+  const [chosen, setChosen] = useState<ComboboxOption | null>(null);
+  const debouncedSearch = useDebouncedValue(search.trim(), 300);
+  const deals = useDeals({ search: debouncedSearch || undefined, limit: DEAL_PICKER_LIMIT });
+  const options = useMemo<ComboboxOption[]>(() => {
+    const found = (deals.data ?? []).map((deal) => ({ value: String(deal.id), label: deal.name, sublabel: deal.stage }));
+    return chosen && chosen.value === value && !found.some((option) => option.value === chosen.value)
+      ? [chosen, ...found]
+      : found;
+  }, [deals.data, chosen, value]);
+  const handleChange = useCallback(
+    (next: string) => {
+      setChosen(options.find((option) => option.value === next) ?? null);
+      onChange(next);
+    },
+    [options, onChange],
+  );
+
+  return (
+    <Combobox
+      options={options}
+      value={value}
+      onChange={handleChange}
+      onSearchChange={setSearch}
+      placeholder="Choose a deal…"
+      searchPlaceholder="Search deals by name…"
+      emptyText={deals.isFetching ? "Searching deals…" : "No deals found."}
+      aria-label="Deal"
+    />
+  );
+}
+
+/**
+ * Compute the commission one won deal earned. Seals the plan version it used,
+ * which is why it is its own permission and not a side effect of reading.
+ */
 export function CalculateCommissionDialog({ onOpenChange }: RunDialogProps) {
   const calculate = useCalculateCommission();
-  // ponytail: first 100 deals; a server-side deal search belongs here if books grow.
-  const deals = useDeals({ limit: 100 });
-  const options = useMemo<ComboboxOption[]>(
-    () => (deals.data ?? []).map((deal) => ({ value: String(deal.id), label: deal.name, sublabel: deal.stage })),
-    [deals.data],
-  );
   const handleSubmit = (values: CalculateValues) =>
     calculate.mutate(Number(values.dealId), {
       onSuccess: (result) => {
@@ -74,15 +114,7 @@ export function CalculateCommissionDialog({ onOpenChange }: RunDialogProps) {
             <FormItem>
               <FormLabel>Deal</FormLabel>
               <FormControl>
-                <Combobox
-                  options={options}
-                  value={field.value}
-                  onChange={field.onChange}
-                  placeholder="Choose a deal…"
-                  searchPlaceholder="Search deals…"
-                  emptyText="No deals found."
-                  aria-label="Deal"
-                />
+                <DealPicker value={field.value} onChange={field.onChange} />
               </FormControl>
               <FormMessage />
             </FormItem>
