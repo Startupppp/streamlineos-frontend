@@ -171,7 +171,7 @@ export function useCreateOrgLocation() {
     mutationKey: ["create", "org", "location"],
     mutationFn: (data: { name: string; type?: string; address?: string; latitude?: number; longitude?: number }) =>
       apiClient.post<OrgLocation>("/org-hierarchy/locations", data, undefined, locationContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.hierarchy.all }),
+    onSuccess: () => { void qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.hierarchy.all }); },
   });
 }
 
@@ -181,7 +181,7 @@ export function useUpdateOrgLocation() {
     mutationKey: ["update", "org", "location"],
     mutationFn: ({ id, ...data }: { id: string } & Record<string, unknown>) =>
       apiClient.patch<OrgLocation>(`/org-hierarchy/locations/${id}`, data, undefined, locationContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.hierarchy.all }),
+    onSuccess: () => { void qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.hierarchy.all }); },
   });
 }
 
@@ -210,7 +210,7 @@ export function useCreateOrgCostCenter() {
     mutationKey: ["create", "org", "cost", "center"],
     mutationFn: (data: { code: string; name: string; description?: string }) =>
       apiClient.post<OrgCostCenter>("/org-hierarchy/cost-centers", data, undefined, costCenterContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.hierarchy.all }),
+    onSuccess: () => { void qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.hierarchy.all }); },
   });
 }
 
@@ -220,7 +220,7 @@ export function useUpdateOrgCostCenter() {
     mutationKey: ["update", "org", "cost", "center"],
     mutationFn: ({ id, ...data }: { id: string } & Record<string, unknown>) =>
       apiClient.patch<OrgCostCenter>(`/org-hierarchy/cost-centers/${id}`, data, undefined, costCenterContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.hierarchy.all }),
+    onSuccess: () => { void qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.hierarchy.all }); },
   });
 }
 
