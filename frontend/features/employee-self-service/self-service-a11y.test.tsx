@@ -130,6 +130,11 @@ jest.mock("@/hooks/api/payroll/payroll-cutoff", () => ({
   currentPayrollMonth: () => "2026-10",
 }));
 
+// The attendance timer reads the org's time zone; null falls back to the browser's.
+jest.mock("@/hooks/api/org-display", () => ({
+  useOrgTimeZone: () => null,
+}));
+
 // A pending own-leave row asks who approves it (BUG-HRMS-017/018).
 jest.mock("@/hooks/api/hr/approvers", () => ({
   useMyApprover: () => ({ data: undefined }),
