@@ -15,6 +15,8 @@ import {
 
 const mockRouteMutate = jest.fn();
 
+jest.mock("@/components/renderer/use-tenant-layout", () => ({ useTenantLayout: <T,>(l: T): T => l }));
+
 jest.mock("@/hooks/api/build/intake-mutations", () => ({
   useRouteFeedbucketToIntake: jest.fn(() => ({ mutate: mockRouteMutate, isPending: false })),
 }));

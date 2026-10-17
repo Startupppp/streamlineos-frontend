@@ -1,14 +1,12 @@
 "use client";
 
-import { useMemo } from "react";
-import { DataTable } from "@/components/ui/data-table";
-import type { DataTableColumn } from "@/components/ui/data-table";
-import { Badge } from "@/components/ui/badge";
+import type { ReactNode } from "react";
+import { RecordList } from "@/components/renderer";
+import { useTenantLayout } from "@/components/renderer/use-tenant-layout";
 import { Progress } from "@/components/ui/progress";
 import type { GoalListItem } from "@/hooks/api/goals";
-import { LEVEL_LABEL } from "@/features/build/goals/constants";
 import { getUserDisplayName } from "@/lib/person-display";
-
+import { PRODUCT_GOAL_LAYOUT } from "@/lib/renderer/build/product-goal-layout";
 
 function GoalProgressCell({ goal }: { goal: GoalListItem }) {
   const progress = goal.progress ?? 0;
@@ -20,54 +18,19 @@ function GoalProgressCell({ goal }: { goal: GoalListItem }) {
   );
 }
 
-const COLUMNS: DataTableColumn<GoalListItem>[] = [
-  {
-    key: "title",
-    header: "Title",
-    cell: (row) => (
-      <span className="font-medium line-clamp-1">{row.title}</span>
+const CELLS: Record<string, (row: GoalListItem) => ReactNode> = {
+  owner: (row) =>
+    row.owner ? (
+      <span className="text-xs">{getUserDisplayName(row.owner)}</span>
+    ) : (
+      <span className="text-xs text-muted-foreground">—</span>
     ),
-  },
-  {
-    key: "level",
-    header: "Level",
-    cell: (row) => (
-      <Badge variant="outline" className="text-xs">
-        {LEVEL_LABEL[row.level as keyof typeof LEVEL_LABEL] ?? row.level}
-      </Badge>
-    ),
-  },
-  {
-    key: "status",
-    header: "Status",
-    cell: (row) => (
-      <Badge variant="secondary" className="text-xs">{row.status}</Badge>
-    ),
-  },
-  {
-    key: "owner",
-    header: "Owner",
-    cell: (row) => {
-      const owner = row.owner;
-      if (!owner) return <span className="text-xs text-muted-foreground">—</span>;
-      return (
-        <span className="text-xs">{getUserDisplayName(owner)}</span>
-      );
-    },
-  },
-  {
-    key: "progress",
-    header: "Progress",
-    cell: (row) => <GoalProgressCell goal={row} />,
-  },
-  {
-    key: "keyResults",
-    header: "KRs",
-    cell: (row) => (
-      <span className="font-mono tabular-nums text-xs">{row.keyResultCount}</span>
-    ),
-  },
-];
+  progress: (row) => <GoalProgressCell goal={row} />,
+};
+
+function rowKey(row: GoalListItem): string {
+  return String(row.id);
+}
 
 interface ProductGoalsTableViewProps {
   goals: GoalListItem[];
@@ -75,12 +38,13 @@ interface ProductGoalsTableViewProps {
 }
 
 export function ProductGoalsTableView({ goals, onRowClick }: ProductGoalsTableViewProps) {
-  const columns = useMemo(() => COLUMNS, []);
+  const layout = useTenantLayout(PRODUCT_GOAL_LAYOUT);
   return (
-    <DataTable
-      data={goals}
-      columns={columns}
-      getRowKey={(row) => row.id}
+    <RecordList
+      layout={layout}
+      rows={goals}
+      getRowKey={rowKey}
+      cells={CELLS}
       onRowClick={onRowClick}
     />
   );

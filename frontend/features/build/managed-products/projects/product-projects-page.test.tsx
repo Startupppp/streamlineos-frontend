@@ -3,6 +3,8 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { ProductProjectsPage } from "./product-projects-page";
 import { PP_PREV_PARAM, STATUS_PARAM } from "./use-product-projects-page";
 
+jest.mock("@/components/renderer/use-tenant-layout", () => ({ useTenantLayout: <T,>(l: T): T => l }));
+
 jest.mock("next/navigation", () => ({
   useRouter: jest.fn(() => ({ replace: jest.fn(), push: jest.fn() })),
   usePathname: jest.fn(() => "/build/managed-products/5/projects"),

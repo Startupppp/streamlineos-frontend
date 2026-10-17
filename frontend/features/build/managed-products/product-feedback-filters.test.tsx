@@ -1,6 +1,6 @@
 import "./product-scope-pages.test-harness";
 import { ProductFeedbackPage } from "./product-feedback-page";
-import { buildFeedbackColumnsWithActions } from "./product-feedback-columns";
+import { RouteToIntakeAction } from "./feedback/feedback-inbox-cells";
 import type { SubmissionRow } from "./product-feedback-columns";
 import {
   EMPTY_FEEDBUCKET_RESULT,
@@ -12,6 +12,8 @@ import {
 } from "./product-scope-pages.test-harness";
 
 const mockRouteMutate = jest.fn();
+
+jest.mock("@/components/renderer/use-tenant-layout", () => ({ useTenantLayout: <T,>(l: T): T => l }));
 
 jest.mock("@/hooks/api/build/intake-mutations", () => ({
   useRouteFeedbucketToIntake: jest.fn(() => ({ mutate: mockRouteMutate, isPending: false })),
@@ -158,7 +160,7 @@ describe("ProductFeedbackPage — URL-backed filter params (BSN-01-FB-FILTERS)",
   });
 });
 
-describe("buildFeedbackColumnsWithActions — route-to-intake column factory (BLD-014)", () => {
+describe("RouteToIntakeAction — route-to-intake row action (BLD-014)", () => {
   const row: SubmissionRow = {
     id: 55, message: "Widget crashes on mobile", type: "bug", status: "open",
     createdAt: null, screenshotUrl: null, reporterName: "Alice", reporterEmail: null,
@@ -166,28 +168,28 @@ describe("buildFeedbackColumnsWithActions — route-to-intake column factory (BL
     widget: { projectId: 10, managedProductId: 7 },
   } as unknown as SubmissionRow;
 
-  it("returns base FEEDBACK_COLUMNS when canRouteToIntake is false (FE-122 control)", () => {
-    const cols = buildFeedbackColumnsWithActions({ canRouteToIntake: false, onRouteToIntake: jest.fn() });
-    expect(cols.every((c) => c.key !== "actions")).toBe(true);
+  it("renders no Intake control on the inbox when the actor lacks feedbucket:submissions:manage (FE-122 control)", () => {
+    useFeedbucketSubmissions.mockReturnValue({ ...EMPTY_FEEDBUCKET_RESULT, data: { data: [row], total: 1 } });
+    useCan.mockImplementation((key: string) => key !== "feedbucket:submissions:manage");
+    render(<ProductFeedbackPage managedProductId={7} />);
+    expect(screen.queryByTestId("route-to-intake-btn")).not.toBeInTheDocument();
   });
 
-  it("appends an actions column when canRouteToIntake is true", () => {
-    const cols = buildFeedbackColumnsWithActions({ canRouteToIntake: true, onRouteToIntake: jest.fn() });
-    expect(cols.some((c) => c.key === "actions")).toBe(true);
+  it("renders the Intake control on the inbox when the actor may route to intake", () => {
+    useFeedbucketSubmissions.mockReturnValue({ ...EMPTY_FEEDBUCKET_RESULT, data: { data: [row], total: 1 } });
+    useCan.mockImplementation(() => true);
+    render(<ProductFeedbackPage managedProductId={7} />);
+    expect(screen.getAllByTestId("route-to-intake-btn").length).toBeGreaterThan(0);
   });
 
   it("actions column cell renders a button with route-to-intake-btn testid", () => {
-    const cols = buildFeedbackColumnsWithActions({ canRouteToIntake: true, onRouteToIntake: jest.fn() });
-    const actionsCol = cols.find((c) => c.key === "actions");
-    const { getByTestId } = render(actionsCol!.cell(row));
+    const { getByTestId } = render(<RouteToIntakeAction row={row} onRouteToIntake={jest.fn()} />);
     expect(getByTestId("route-to-intake-btn")).toBeInTheDocument();
   });
 
   it("actions column cell button click calls onRouteToIntake with the original row preserving feedbackId", () => {
     const onRouteToIntake = jest.fn();
-    const cols = buildFeedbackColumnsWithActions({ canRouteToIntake: true, onRouteToIntake });
-    const actionsCol = cols.find((c) => c.key === "actions");
-    const { getByTestId } = render(actionsCol!.cell(row));
+    const { getByTestId } = render(<RouteToIntakeAction row={row} onRouteToIntake={onRouteToIntake} />);
     getByTestId("route-to-intake-btn").click();
     expect(onRouteToIntake).toHaveBeenCalledWith(row);
     expect(onRouteToIntake.mock.calls[0]?.[0]?.id).toBe(55);
@@ -221,7 +223,7 @@ describe("ProductFeedbackPage — duplicate dedup candidates (BT-6733af0a3e35 it
   });
 });
 
-describe("buildFeedbackColumnsWithActions — route-to-intake provenance and toast wiring (BT-6733af0a3e35 item 2)", () => {
+describe("RouteToIntakeAction — route-to-intake provenance and toast wiring (BT-6733af0a3e35 item 2)", () => {
   const row: SubmissionRow = {
     id: 31, message: "App crashes on login", type: "bug", status: "open",
     createdAt: null, screenshotUrl: null, reporterName: null, reporterEmail: null,
@@ -231,9 +233,7 @@ describe("buildFeedbackColumnsWithActions — route-to-intake provenance and toa
 
   it("passes the submission's original id and projectId to the route mutation so provenance is preserved end-to-end", () => {
     const onRouteToIntake = jest.fn();
-    const cols = buildFeedbackColumnsWithActions({ canRouteToIntake: true, onRouteToIntake });
-    const actionsCol = cols.find((c) => c.key === "actions");
-    const { getByTestId } = render(actionsCol!.cell(row));
+    const { getByTestId } = render(<RouteToIntakeAction row={row} onRouteToIntake={onRouteToIntake} />);
     getByTestId("route-to-intake-btn").click();
     expect(onRouteToIntake).toHaveBeenCalledWith(row);
     expect(onRouteToIntake.mock.calls[0]?.[0]?.id).toBe(31);
@@ -241,7 +241,7 @@ describe("buildFeedbackColumnsWithActions — route-to-intake provenance and toa
   });
 });
 
-describe("buildFeedbackColumnsWithActions — allowedActions per-row gating (fail closed)", () => {
+describe("RouteToIntakeAction — allowedActions per-row gating (fail closed)", () => {
   const makeRow = (allowedActions: string[]): SubmissionRow =>
     ({
       id: 99, message: "Row action gate test", type: "idea", status: "open",
@@ -251,23 +251,17 @@ describe("buildFeedbackColumnsWithActions — allowedActions per-row gating (fai
     } as unknown as SubmissionRow);
 
   it("hides Intake button when row allowedActions does not include intake", () => {
-    const cols = buildFeedbackColumnsWithActions({ canRouteToIntake: true, onRouteToIntake: jest.fn() });
-    const actionsCol = cols.find((c) => c.key === "actions");
-    const { container } = render(actionsCol!.cell(makeRow(["view", "update"])));
+    const { container } = render(<RouteToIntakeAction row={makeRow(["view", "update"])} onRouteToIntake={jest.fn()} />);
     expect(container.querySelector("[data-testid='route-to-intake-btn']")).toBeNull();
   });
 
   it("shows Intake button when row allowedActions includes intake", () => {
-    const cols = buildFeedbackColumnsWithActions({ canRouteToIntake: true, onRouteToIntake: jest.fn() });
-    const actionsCol = cols.find((c) => c.key === "actions");
-    const { getByTestId } = render(actionsCol!.cell(makeRow(["intake", "view"])));
+    const { getByTestId } = render(<RouteToIntakeAction row={makeRow(["intake", "view"])} onRouteToIntake={jest.fn()} />);
     expect(getByTestId("route-to-intake-btn")).toBeInTheDocument();
   });
 
   it("hides Intake button when row allowedActions is empty (fails closed)", () => {
-    const cols = buildFeedbackColumnsWithActions({ canRouteToIntake: true, onRouteToIntake: jest.fn() });
-    const actionsCol = cols.find((c) => c.key === "actions");
-    const { container } = render(actionsCol!.cell(makeRow([])));
+    const { container } = render(<RouteToIntakeAction row={makeRow([])} onRouteToIntake={jest.fn()} />);
     expect(container.querySelector("[data-testid='route-to-intake-btn']")).toBeNull();
   });
 });

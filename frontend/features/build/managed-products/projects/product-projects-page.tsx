@@ -2,9 +2,12 @@
 
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import { useMemo, useCallback, useState } from "react";
+import { useCallback, useState } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
+import { DataTableSkeleton } from "@/components/ui/data-table";
+import { RecordList } from "@/components/renderer";
+import { useTenantLayout } from "@/components/renderer/use-tenant-layout";
+import { PRODUCT_LINKED_PROJECT_LAYOUT } from "@/lib/renderer/build/product-linked-project-layout";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { PageState } from "@/components/shared/page-state";
@@ -19,7 +22,7 @@ import {
 } from "@/features/build/managed-products/managed-product-detail-layout";
 import { PRODUCT_PROJECT_SKELETON_HEADERS } from "@/features/build/managed-products/managed-product-page-skeletons";
 import { useProductProjectsPage, type LinkedProjectRow } from "./use-product-projects-page";
-import { buildProductProjectsColumns, ProductProjectMobileCard } from "./product-projects-table";
+import { PRODUCT_PROJECT_CELLS, ProjectRowActions } from "./product-projects-table";
 import { ProductProjectsToolbar } from "./product-projects-toolbar";
 import { useProductReturn } from "@/features/build/shared/use-product-return";
 import type { ProjectListItem } from "@/types/projects";
@@ -39,6 +42,10 @@ const ProjectLinkPreviewSheet = dynamic(
     ),
   { ssr: false },
 );
+
+function projectRowKey(row: LinkedProjectRow): string {
+  return String(row.id);
+}
 
 interface ProductProjectsPageProps {
   managedProductId: number;
@@ -89,20 +96,17 @@ export function ProductProjectsPage({ managedProductId }: ProductProjectsPagePro
     [router],
   );
 
-  const columns = useMemo(
-    () =>
-      buildProductProjectsColumns({
-        onUnlinkClick: handleUnlinkClick,
-        onSetPrimaryClick: handleSetPrimaryClick,
-      }),
-    [handleUnlinkClick, handleSetPrimaryClick],
-  );
+  const layout = useTenantLayout(PRODUCT_LINKED_PROJECT_LAYOUT);
 
-  const mobileCard = useCallback(
+  const renderActions = useCallback(
     (row: LinkedProjectRow) => (
-      <ProductProjectMobileCard row={row} onUnlink={handleUnlinkClick} />
+      <ProjectRowActions
+        row={row}
+        onUnlinkClick={handleUnlinkClick}
+        onSetPrimaryClick={handleSetPrimaryClick}
+      />
     ),
-    [handleUnlinkClick],
+    [handleUnlinkClick, handleSetPrimaryClick],
   );
 
   if (resolution.kind === "not-found") return <ManagedProductNotFound />;
@@ -152,12 +156,13 @@ export function ProductProjectsPage({ managedProductId }: ProductProjectsPagePro
             }
             onRetry={handleRetry}
           >
-            <DataTable
-              data={rows}
-              columns={columns}
-              getRowKey={(row) => row.id}
+            <RecordList
+              layout={layout}
+              rows={rows}
+              getRowKey={projectRowKey}
+              cells={PRODUCT_PROJECT_CELLS}
+              actions={renderActions}
               onRowClick={handleRowClick}
-              mobileCard={mobileCard}
               pagination={{
                 mode: "cursor",
                 pageSize: 20,

@@ -3,27 +3,18 @@
 import { useCallback, useMemo } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { RecordList } from "@/components/renderer";
+import { useTenantLayout } from "@/components/renderer/use-tenant-layout";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { EmptyOrdersIllustration } from "@/components/illustrations";
-import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { DOCK_APPOINTMENT_LAYOUT } from "@/lib/renderer/inventory/dock-appointment-layout";
 import {
   useSetAppointmentStatus,
   type DockAppointment,
-  type DockAppointmentStatus,
 } from "@/hooks/api/inventory/stock-types-dock";
 
 type ArrivalStatus = "ARRIVED" | "NO_SHOW";
-
-const STATUS_BADGE: Record<DockAppointmentStatus, string> = {
-  BOOKED: "bg-status-info-surface text-status-info-ink border-status-info-rule",
-  ARRIVED: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
-  COMPLETED: "bg-status-success-surface text-status-success-ink border-status-success-rule",
-  CANCELLED: "bg-muted text-muted-foreground border-border",
-  NO_SHOW: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
-};
 
 const TIME_FORMAT: Intl.DateTimeFormatOptions = { hour: "2-digit", minute: "2-digit" };
 
@@ -31,8 +22,25 @@ function formatWindow(startIso: string, endIso: string): string {
   return `${new Date(startIso).toLocaleTimeString(undefined, TIME_FORMAT)}–${new Date(endIso).toLocaleTimeString(undefined, TIME_FORMAT)}`;
 }
 
-function getRowKey(row: DockAppointment) {
-  return row.id;
+/**
+ * The row as the list shows it: the window and carrier are derived, not stored.
+ * Mapped rather than intersected so it stays assignable to the engine's row type.
+ */
+type DockAppointmentRow = { [K in keyof DockAppointment]: DockAppointment[K] } & {
+  window: string;
+  carrier: string;
+};
+
+function toRow(row: DockAppointment): DockAppointmentRow {
+  return {
+    ...row,
+    window: formatWindow(row.windowStart, row.windowEnd),
+    carrier: row.carrierName ?? row.vehicleRef ?? "",
+  };
+}
+
+function getRowKey(row: DockAppointmentRow) {
+  return String(row.id);
 }
 
 interface AppointmentActionsProps {
@@ -78,44 +86,14 @@ export function DockAppointmentsTable({ appointments }: DockAppointmentsTablePro
     [setStatus],
   );
 
-  const columns = useMemo<DataTableColumn<DockAppointment>[]>(
-    () => [
-      {
-        key: "door",
-        header: "Door",
-        cell: (row) => <span className="font-mono text-sm font-semibold">{row.doorCode}</span>,
-      },
-      {
-        key: "window",
-        header: "Window",
-        cell: (row) => (
-          <span className="tabular-nums">{formatWindow(row.windowStart, row.windowEnd)}</span>
-        ),
-      },
-      { key: "direction", header: "Direction", cell: (row) => row.direction },
-      {
-        key: "carrier",
-        header: "Carrier",
-        cell: (row) => row.carrierName ?? row.vehicleRef ?? "—",
-      },
-      {
-        key: "status",
-        header: "Status",
-        cell: (row) => (
-          <Badge variant="outline" className={cn("text-dense", STATUS_BADGE[row.status])}>
-            {row.status}
-          </Badge>
-        ),
-      },
-      {
-        key: "actions",
-        header: "",
-        cell: (row) =>
-          row.status === "BOOKED" ? (
-            <AppointmentActions appointmentId={row.id} onSetStatus={handleSetStatus} />
-          ) : null,
-      },
-    ],
+  const layout = useTenantLayout(DOCK_APPOINTMENT_LAYOUT);
+  const rows = useMemo(() => appointments.map(toRow), [appointments]);
+
+  const renderActions = useCallback(
+    (row: DockAppointmentRow) =>
+      row.status === "BOOKED" ? (
+        <AppointmentActions appointmentId={row.id} onSetStatus={handleSetStatus} />
+      ) : null,
     [handleSetStatus],
   );
 
@@ -130,10 +108,11 @@ export function DockAppointmentsTable({ appointments }: DockAppointmentsTablePro
   }
 
   return (
-    <DataTable
-      data={appointments}
-      columns={columns}
+    <RecordList
+      layout={layout}
+      rows={rows}
       getRowKey={getRowKey}
+      actions={renderActions}
       pagination={{ pageSize: 25 }}
       className="flex-1 min-h-0"
     />

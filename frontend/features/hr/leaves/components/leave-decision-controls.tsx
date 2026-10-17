@@ -1,20 +1,27 @@
 "use client";
 
 import React, { useCallback, useState } from "react";
-import { useForm, useController } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { CheckCircle2, XCircle } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { RecordForm, type RecordFormValues } from "@/components/renderer";
+import { useTenantLayout } from "@/components/renderer/use-tenant-layout";
 import { Label } from "@/components/ui/label";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Textarea } from "@/components/ui/textarea";
 import { useApproveLeaveDedicated, useRejectLeaveDedicated } from "@/hooks/api/hr";
 import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { LEAVE_REJECTION_LAYOUT } from "@/lib/renderer/hr/leave-rejection-layout";
 
 import { LeaveStatusBadge } from "./leave-status-badge";
 import {
@@ -51,14 +58,7 @@ export function useLeaveDecisions(): LeaveDecisionControls {
   const [approvalComment, setApprovalComment] = useState("");
   const [approvingSelf, setApprovingSelf] = useState(false);
 
-  const rejectForm = useForm<{ reason: string }>({
-    resolver: zodResolver(z.object({ reason: z.string().min(1, "Rejection reason is required.") })),
-    defaultValues: { reason: "" },
-  });
-  const { field: reasonField, fieldState: reasonFieldState } = useController({
-    name: "reason",
-    control: rejectForm.control,
-  });
+  const rejectionLayout = useTenantLayout(LEAVE_REJECTION_LAYOUT);
 
   const rawProcessingId =
     approveMutation.variables?.leaveId ?? rejectMutation.variables?.leaveId ?? null;
@@ -72,10 +72,9 @@ export function useLeaveDecisions(): LeaveDecisionControls {
       setApproveDialogOpen(true);
     } else {
       setRejectingId(requestId);
-      rejectForm.reset();
       setRejectDialogOpen(true);
     }
-  }, [rejectForm]);
+  }, []);
 
   const handleApproveConfirm = useCallback(() => {
     if (approvingId === null) return;
@@ -113,31 +112,30 @@ export function useLeaveDecisions(): LeaveDecisionControls {
     }
   }, []);
 
-  const handleRejectConfirm = useCallback(() => {
+  const handleRejectConfirm = useCallback((values: RecordFormValues) => {
     if (rejectingId === null) return;
-    void rejectForm.handleSubmit((values) => {
-      rejectMutation.mutate(
-        { leaveId: rejectingId, reason: values.reason },
-        {
-          onSuccess: () => {
-            toast.success("Leave request rejected");
-            setRejectDialogOpen(false);
-            setRejectingId(null);
-            rejectForm.reset();
-          },
-          onError: (err) => toast.error(getErrorMessage(err)),
+    rejectMutation.mutate(
+      { leaveId: rejectingId, reason: values.reason ?? "" },
+      {
+        onSuccess: () => {
+          toast.success("Leave request rejected");
+          setRejectDialogOpen(false);
+          setRejectingId(null);
         },
-      );
-    })();
-  }, [rejectingId, rejectMutation, rejectForm]);
+        onError: (err) => toast.error(getErrorMessage(err)),
+      },
+    );
+  }, [rejectingId, rejectMutation]);
 
+  const { isPending: isRejecting } = rejectMutation;
   const handleRejectOpenChange = useCallback((open: boolean) => {
+    // Held open while the rejection is in flight, as the confirm dialog did.
+    if (!open && isRejecting) return;
     setRejectDialogOpen(open);
-    if (!open) {
-      setRejectingId(null);
-      rejectForm.reset();
-    }
-  }, [rejectForm]);
+    if (!open) setRejectingId(null);
+  }, [isRejecting]);
+
+  const handleRejectCancel = useCallback(() => handleRejectOpenChange(false), [handleRejectOpenChange]);
 
   const decisionDialogs = (
     <>
@@ -178,37 +176,25 @@ export function useLeaveDecisions(): LeaveDecisionControls {
           </div>
         }
       />
-      <ConfirmDialog
-        open={rejectDialogOpen}
-        onOpenChange={handleRejectOpenChange}
-        title="Reject Leave Request"
-        description="Provide a reason for rejecting this request. The requester will be notified."
-        confirmLabel="Reject"
-        destructive
-        isPending={rejectMutation.isPending}
-        keepOpenOnConfirm
-        onConfirm={handleRejectConfirm}
-        content={
-          <div className="space-y-1.5">
-            <Label
-              htmlFor="leave-rejection-reason"
-              className="text-xs font-medium text-foreground"
-            >
-              Rejection Reason <span className="text-destructive" aria-hidden="true">*</span>
-            </Label>
-            <Textarea
-              id="leave-rejection-reason"
-              placeholder="E.g. Insufficient notice, conflicting deadlines..."
-              {...reasonField}
-              rows={4}
-              className="resize-none text-sm"
-            />
-            {reasonFieldState.error ? (
-              <p id="leave-reject-reason-error" role="alert" className="text-sm text-destructive">{reasonFieldState.error.message}</p>
-            ) : null}
-          </div>
-        }
-      />
+      <Dialog open={rejectDialogOpen} onOpenChange={handleRejectOpenChange}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Reject Leave Request</DialogTitle>
+            <DialogDescription>
+              Provide a reason for rejecting this request. The requester will be notified.
+            </DialogDescription>
+          </DialogHeader>
+          <RecordForm
+            key={rejectingId ?? "closed"}
+            layout={rejectionLayout}
+            mode="create"
+            onSubmit={handleRejectConfirm}
+            onCancel={handleRejectCancel}
+            isSubmitting={rejectMutation.isPending}
+            submitLabel="Reject"
+          />
+        </DialogContent>
+      </Dialog>
     </>
   );
 

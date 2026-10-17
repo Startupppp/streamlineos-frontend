@@ -2,7 +2,9 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { DataTableSkeleton } from "@/components/ui/data-table";
-import { BuildListSurface } from "@/features/build/shared/build-list-surface";
+import { RecordList } from "@/components/renderer";
+import { useTenantLayout } from "@/components/renderer/use-tenant-layout";
+import { PRODUCT_FEEDBACK_LAYOUT } from "@/lib/renderer/build/product-feedback-layout";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyInboxIllustration } from "@/components/illustrations";
@@ -22,7 +24,6 @@ import {
   type SubmissionRow,
   FEEDBACK_SKELETON_HEADERS,
 } from "./product-feedback-columns";
-import { ProductFeedbackMobileCard } from "./feedback/product-feedback-mobile-card";
 import { useManagedProduct } from "@/hooks/api/build/managed-products";
 import {
   useProductFeedbackFilters,
@@ -34,16 +35,17 @@ import {
   ManagedProductDetailShell,
   ManagedProductNotFound,
 } from "./managed-product-detail-layout";
-import { buildCraftedFeedbackColumns } from "./feedback/feedback-inbox-columns";
+import {
+  FEEDBACK_INBOX_CELLS,
+  RouteToIntakeAction,
+  toFeedbackInboxRow,
+  type FeedbackInboxRow,
+} from "./feedback/feedback-inbox-cells";
 import { useRouteToIntake } from "./feedback/route-to-intake-dialog";
 import { ProductFeedbackFilters } from "./product-feedback-filters";
 import { ProductFeedbackDialogs } from "./product-feedback-dialogs";
 import { CustomerImpactPanel } from "./customer-impact-panel";
 import { useProductReturn } from "@/features/build/shared/use-product-return";
-
-function resolveRowClassName(): string {
-  return "cursor-pointer";
-}
 
 interface ProductFeedbackPageProps {
   managedProductId: number;
@@ -92,9 +94,17 @@ export function ProductFeedbackPage({
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
   const rows = useMemo(() => data?.data ?? [], [data]);
   const visibleRows = useMemo(
-    () => (dateRangeReversed ? [] : rows),
+    () => (dateRangeReversed ? [] : rows.map(toFeedbackInboxRow)),
     [dateRangeReversed, rows],
   );
+  const layout = useTenantLayout(PRODUCT_FEEDBACK_LAYOUT);
+  const listState = usePageState({
+    permission: "feedbucket:submissions:view",
+    isLoading,
+    isError,
+    error,
+    isEmpty: visibleRows.length === 0,
+  });
   const selectedIds = useMemo(
     () => [...selected].map(Number).filter((id) => Number.isFinite(id)),
     [selected],
@@ -112,13 +122,12 @@ export function ProductFeedbackPage({
     },
     [visibleRows, openSubmissionPane],
   );
-  const feedbackColumns = useMemo(
-    () =>
-      buildCraftedFeedbackColumns({
-        canRouteToIntake,
-        onRouteToIntake: intakeRouting.handleRouteToIntake,
-      }),
-    [canRouteToIntake, intakeRouting.handleRouteToIntake],
+  const { handleRouteToIntake } = intakeRouting;
+  const renderRowActions = useCallback(
+    (row: FeedbackInboxRow) => (
+      <RouteToIntakeAction row={row} onRouteToIntake={handleRouteToIntake} />
+    ),
+    [handleRouteToIntake],
   );
 
   useBuildListKeyboard({
@@ -130,15 +139,11 @@ export function ProductFeedbackPage({
     enabled: true,
   });
 
-  const renderMobileCard = useCallback(
-    (row: SubmissionRow) => <ProductFeedbackMobileCard row={row} />,
-    [],
-  );
   const getSubmissionRowLabel = useCallback(
-    (row: SubmissionRow): string => row.message.slice(0, 80),
+    (row: FeedbackInboxRow): string => row.message.slice(0, 80),
     [],
   );
-  const getSubmissionRowKey = useCallback((row: SubmissionRow) => row.id, []);
+  const getSubmissionRowKey = useCallback((row: FeedbackInboxRow) => String(row.id), []);
   const handleOpenCapture = useCallback(() => setCaptureOpen(true), []);
   const handleOpenFeedbucket = useCallback(() => setFeedbucketOpen(true), []);
 
@@ -203,44 +208,47 @@ export function ProductFeedbackPage({
           <CustomerImpactPanel managedProductId={managedProductId} />
           <ManagedProductDetailPrimarySection>
             {feedbucketEnabled ? (
-              <BuildListSurface<SubmissionRow>
-                permission="feedbucket:submissions:view"
-                rows={visibleRows}
-                columns={feedbackColumns}
-                isLoading={isLoading}
-                isError={isError}
-                error={error}
-                getRowKey={getSubmissionRowKey}
-                onRowClick={openSubmissionPane}
-                mobileCard={renderMobileCard}
-                pagination={{
-                  mode: "server",
-                  page,
-                  pageSize: PAGE_SIZE,
-                  total: data?.total ?? 0,
-                  onPageChange: handlePageChange,
-                }}
-                tableClassName="flex flex-1 min-h-0 h-full border-0 rounded-none"
-                loading={
-                  <DataTableSkeleton
-                    rows={10}
-                    headers={FEEDBACK_SKELETON_HEADERS}
-                    mobileCards
+              <div className="flex min-h-0 flex-1 flex-col">
+                <PageState
+                  resolution={listState}
+                  loading={
+                    <DataTableSkeleton
+                      rows={10}
+                      headers={FEEDBACK_SKELETON_HEADERS}
+                      mobileCards
+                    />
+                  }
+                  empty={feedbackEmptyState}
+                  onRetry={handleRetry}
+                  className={CONTENT_FILL_PANEL}
+                >
+                  <RecordList<FeedbackInboxRow>
+                    layout={layout}
+                    rows={visibleRows}
+                    cells={FEEDBACK_INBOX_CELLS}
+                    getRowKey={getSubmissionRowKey}
+                    onRowClick={openSubmissionPane}
+                    actions={canRouteToIntake ? renderRowActions : undefined}
+                    pagination={{
+                      mode: "server",
+                      page,
+                      pageSize: PAGE_SIZE,
+                      total: data?.total ?? 0,
+                      onPageChange: handlePageChange,
+                    }}
+                    className="flex flex-1 min-h-0 h-full border-0 rounded-none"
+                    selection={
+                      selectionEnabled
+                        ? {
+                            selected,
+                            onChange: setSelected,
+                            getRowLabel: getSubmissionRowLabel,
+                          }
+                        : undefined
+                    }
                   />
-                }
-                empty={feedbackEmptyState}
-                rowClassName={resolveRowClassName}
-                selection={
-                  selectionEnabled
-                    ? {
-                        selected,
-                        onChange: setSelected,
-                        getRowLabel: getSubmissionRowLabel,
-                      }
-                    : undefined
-                }
-                onRetry={handleRetry}
-              />
+                </PageState>
+              </div>
             ) : (
               <PageState resolution={feedbucketGate} loading={null}>
                 {null}

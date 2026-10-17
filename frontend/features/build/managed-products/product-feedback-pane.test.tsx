@@ -1,7 +1,7 @@
 import "./product-scope-pages.test-harness";
 import { fireEvent } from "@testing-library/react";
 import { ProductFeedbackPage } from "./product-feedback-page";
-import { SOURCE_CHANNEL_FILTER_OPTIONS, FEEDBACK_COLUMNS } from "./product-feedback-columns";
+import { SOURCE_CHANNEL_FILTER_OPTIONS } from "./product-feedback-columns";
 import {
   EMPTY_FEEDBUCKET_RESULT,
   mockRouterReplace,
@@ -14,6 +14,8 @@ import {
 } from "./product-scope-pages.test-harness";
 
 const mockRouteMutate = jest.fn();
+
+jest.mock("@/components/renderer/use-tenant-layout", () => ({ useTenantLayout: <T,>(l: T): T => l }));
 
 jest.mock("@/hooks/api/build/intake-mutations", () => ({
   useRouteFeedbucketToIntake: jest.fn(() => ({ mutate: mockRouteMutate, isPending: false })),
@@ -222,21 +224,30 @@ describe("ProductFeedbackPage — feedbucket source channel integration (BSN-01-
     expect(opt?.label).toBe("Feedbucket");
   });
 
+  const inboxRow = (overrides: Record<string, unknown>) => ({
+    id: 81, message: "Inbox row", type: "bug", status: "open",
+    createdAt: null, updatedAt: null, screenshotUrl: null, reporterName: null, reporterEmail: null,
+    allowedActions: [], widget: { projectId: 10, managedProductId: 7 },
+    ...overrides,
+  });
+
   it("channel column renders 'Feedbucket' label for a submission with sourceChannel feedbucket", () => {
-    const channelCol = FEEDBACK_COLUMNS.find((c) => c.key === "channel");
-    if (!channelCol?.cell) throw new Error("channel column missing");
-    const row = { sourceChannel: "feedbucket" } as unknown as Parameters<NonNullable<typeof channelCol.cell>>[0];
-    const { getByText } = render(<>{channelCol.cell(row)}</>);
-    expect(getByText("Feedbucket")).toBeInTheDocument();
+    useFeedbucketSubmissions.mockReturnValue({
+      ...EMPTY_FEEDBUCKET_RESULT,
+      data: { data: [inboxRow({ sourceChannel: "feedbucket" })], total: 1 },
+    });
+    render(<ProductFeedbackPage managedProductId={7} />);
+    expect(screen.getAllByText("Feedbucket").length).toBeGreaterThan(0);
   });
 
   it("shows frequency 1 when a captured row has no duplicate count yet", () => {
-    const frequencyCol = FEEDBACK_COLUMNS.find((c) => c.key === "frequency");
-    if (!frequencyCol?.cell) throw new Error("frequency column missing");
-    const row = { duplicateCount: undefined } as unknown as Parameters<NonNullable<typeof frequencyCol.cell>>[0];
-    const { getByText } = render(<>{frequencyCol.cell(row)}</>);
-    expect(getByText("1")).toBeInTheDocument();
-    expect(screen.queryByText("NaN")).not.toBeInTheDocument();
+    useFeedbucketSubmissions.mockReturnValue({
+      ...EMPTY_FEEDBUCKET_RESULT,
+      data: { data: [inboxRow({ duplicateCount: undefined })], total: 1 },
+    });
+    render(<ProductFeedbackPage managedProductId={7} />);
+    expect(screen.getAllByText("1 report").length).toBeGreaterThan(0);
+    expect(screen.queryByText(/NaN/)).not.toBeInTheDocument();
   });
 
   it("renders Collect via Feedbucket button when actor has feedbucket:submissions:manage permission", () => {

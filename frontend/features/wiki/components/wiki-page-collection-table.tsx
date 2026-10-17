@@ -4,6 +4,7 @@ import { Fragment, useCallback, useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { LayoutList, LayoutGrid } from "lucide-react";
 import { useKbPageCollection } from "@/hooks/api/kb/page-collection";
+import { useExportKbPage } from "@/hooks/api/kb/export-page";
 import type {
   KbPageCollectionItem,
   KbPageCollectionParams,
@@ -93,6 +94,7 @@ function CollectionItemMenu({ page }: CollectionItemMenuProps) {
   const toggleFavorite = useToggleFavoriteKbPage();
   const duplicatePage = useDuplicateKbPage();
   const deletePage = useDeleteKbPage();
+  const exportPage = useExportKbPage();
   const [deleteOpen, setDeleteOpen] = useState(false);
 
   const capabilities: KbPageActionCapabilities = {
@@ -148,6 +150,17 @@ function CollectionItemMenu({ page }: CollectionItemMenuProps) {
       setDeleteOpen(true);
     } else if (actionId === "history") {
       router.push(pageHistoryHref(page.id));
+    } else if (actionId === "export") {
+      if (exportPage.isPending) return;
+      exportPage.mutate(
+        { pageId: page.id, format: "html" },
+        { onError: (err) => toast.error(getErrorMessage(err)) },
+      );
+    } else if (actionId === "copyLink") {
+      navigator.clipboard.writeText(`${window.location.origin}${pageHref(page.id)}`).then(
+        () => toast.success("Link copied"),
+        () => toast.error("Failed to copy"),
+      );
     } else {
       router.push(pageHref(page.id));
     }
@@ -186,6 +199,7 @@ function CollectionItemMenu({ page }: CollectionItemMenuProps) {
                   key={action.id}
                   data-action-id={action.id}
                   variant={action.destructive ? "destructive" : "default"}
+                  disabled={action.id === "export" && exportPage.isPending}
                   onSelect={handleSelect}
                 >
                   <action.icon className="h-4 w-4" />

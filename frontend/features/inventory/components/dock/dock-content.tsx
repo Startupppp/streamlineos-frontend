@@ -5,6 +5,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageState } from "@/components/shared/page-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { usePageState } from "@/hooks/api/use-page-state";
 import {
   useDockAppointments,
@@ -46,6 +47,15 @@ export function DockContent() {
     error: appointments.error,
   });
 
+  // The denied answer PageState would draw, stated here so the route owns it.
+  const deniedView =
+    pageState.kind === "denied" ? (
+      <NoPermissionState
+        permission={pageState.permission ?? undefined}
+        description={pageState.message}
+      />
+    ) : null;
+
   const { refetch: refetchAppointments } = appointments;
   const { refetch: refetchDoors } = doors;
   const handleRetry = useCallback(() => {
@@ -74,7 +84,12 @@ export function DockContent() {
         />
       }
     >
-      <PageState resolution={pageState} loading={<DockSkeleton />} onRetry={handleRetry}>
+      <PageState
+        resolution={pageState}
+        loading={<DockSkeleton />}
+        views={pageState.kind === "denied" ? { denied: deniedView } : undefined}
+        onRetry={handleRetry}
+      >
         <div className="flex flex-1 min-h-0 flex-col gap-4">
           <DockBookingForm day={day} doors={doorList} />
           <DockAppointmentsTable appointments={rows} />

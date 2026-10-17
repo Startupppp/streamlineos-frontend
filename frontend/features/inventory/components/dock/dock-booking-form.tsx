@@ -1,10 +1,7 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useCallback, useMemo, useState, type ReactNode } from "react";
 import { toast } from "sonner";
-import { CalendarClock } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -15,45 +12,82 @@ import {
 } from "@/components/ui/select";
 import { FIELD_SELECT_CONTENT_CLASS } from "@/components/ui/field-control";
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { LoadingButton } from "@/components/ui/loading-button";
+  RecordForm,
+  type RecordFieldControl,
+  type RecordFormValues,
+} from "@/components/renderer";
+import { useTenantLayout } from "@/components/renderer/use-tenant-layout";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { DOCK_APPOINTMENT_LAYOUT } from "@/lib/renderer/inventory/dock-appointment-layout";
 import { useBookAppointment, type DockDoor } from "@/hooks/api/inventory/stock-types-dock";
-import { dockBookingSchema, type DockBookingValues } from "@/features/inventory/lib/dock-booking-schema";
-
-const DEFAULT_VALUES: DockBookingValues = {
-  doorId: "",
-  windowStart: "",
-  windowEnd: "",
-  carrierName: "",
-};
 
 interface DockBookingFormProps {
   day: string;
   doors: DockDoor[];
 }
 
+function TimeControl(control: RecordFieldControl) {
+  return (
+    <Input
+      type="time"
+      value={control.value}
+      onChange={(event) => control.onChange(event.target.value)}
+      disabled={control.disabled}
+    />
+  );
+}
+
+/**
+ * Books a door for a window on the day being viewed, rendered from the
+ * description. The door picker and the two time inputs are supplied as
+ * controls; after a booking the form reopens on the same door and carrier with
+ * the window cleared, so the next slot at that door is two fields away.
+ */
 export function DockBookingForm({ day, doors }: DockBookingFormProps) {
+  const layout = useTenantLayout(DOCK_APPOINTMENT_LAYOUT);
   const book = useBookAppointment();
-  const form = useForm<DockBookingValues>({
-    resolver: zodResolver(dockBookingSchema),
-    defaultValues: DEFAULT_VALUES,
+  const [kept, setKept] = useState<{ round: number; doorId: string; carrierName: string }>({
+    round: 0,
+    doorId: "",
+    carrierName: "",
   });
 
   const openDoors = useMemo(() => doors.filter((door) => door.isActive), [doors]);
 
+  const controls = useMemo<Record<string, (control: RecordFieldControl) => ReactNode>>(
+    () => ({
+      doorId: (control) => (
+        <Select value={control.value} onValueChange={control.onChange} disabled={control.disabled}>
+          <SelectTrigger className="w-full" aria-label="Door">
+            <SelectValue placeholder="Choose a door" />
+          </SelectTrigger>
+          <SelectContent className={FIELD_SELECT_CONTENT_CLASS}>
+            {openDoors.map((door) => (
+              <SelectItem key={door.id} value={String(door.id)}>
+                {door.name ? `${door.code} — ${door.name}` : door.code}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      ),
+      windowStart: TimeControl,
+      windowEnd: TimeControl,
+    }),
+    [openDoors],
+  );
+
+  const initial = useMemo(
+    () => ({ doorId: kept.doorId, carrierName: kept.carrierName }),
+    [kept.doorId, kept.carrierName],
+  );
+
   const handleBook = useCallback(
-    (values: DockBookingValues) => {
-      const carrierName = values.carrierName.trim();
+    (values: RecordFormValues) => {
+      const doorId = values.doorId ?? "";
+      const carrierName = (values.carrierName ?? "").trim();
       book.mutate(
         {
-          doorId: Number(values.doorId),
+          doorId: Number(doorId),
           direction: "INBOUND",
           windowStart: new Date(`${day}T${values.windowStart}`).toISOString(),
           windowEnd: new Date(`${day}T${values.windowEnd}`).toISOString(),
@@ -62,94 +96,31 @@ export function DockBookingForm({ day, doors }: DockBookingFormProps) {
         {
           onSuccess: () => {
             toast.success("Slot booked");
-            form.reset({ ...values, windowStart: "", windowEnd: "" });
+            setKept((previous) => ({
+              round: previous.round + 1,
+              doorId,
+              carrierName: values.carrierName ?? "",
+            }));
           },
           onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     },
-    [book, day, form],
+    [book, day],
   );
 
   return (
-    <Form {...form}>
-      <form
-        onSubmit={form.handleSubmit(handleBook)}
-        className="rounded-lg border border-border bg-muted/30 p-4 space-y-3"
-      >
-        <p className="text-dense font-semibold uppercase tracking-wider text-muted-foreground">
-          Book a slot
-        </p>
-        <div className="grid gap-3 sm:grid-cols-4">
-          <FormField
-            control={form.control}
-            name="doorId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Door</FormLabel>
-                <Select value={field.value} onValueChange={field.onChange}>
-                  <FormControl>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Choose a door" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent className={FIELD_SELECT_CONTENT_CLASS}>
-                    {openDoors.map((door) => (
-                      <SelectItem key={door.id} value={String(door.id)}>
-                        {door.name ? `${door.code} — ${door.name}` : door.code}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="windowStart"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>From</FormLabel>
-                <FormControl>
-                  <Input type="time" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="windowEnd"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>To</FormLabel>
-                <FormControl>
-                  <Input type="time" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="carrierName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Carrier</FormLabel>
-                <FormControl>
-                  <Input {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-        <LoadingButton type="submit" size="sm" isPending={book.isPending} loadingText="Booking…">
-          <CalendarClock className="h-3.5 w-3.5" />
-          Book
-        </LoadingButton>
-      </form>
-    </Form>
+    <div className="rounded-lg border border-border bg-muted/30 p-4">
+      <RecordForm
+        key={kept.round}
+        layout={layout}
+        mode="create"
+        initial={initial}
+        controls={controls}
+        onSubmit={handleBook}
+        isSubmitting={book.isPending}
+        submitLabel="Book"
+      />
+    </div>
   );
 }
