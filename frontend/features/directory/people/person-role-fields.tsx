@@ -1,6 +1,6 @@
 "use client";
 
-import type { UseFormReturn } from "react-hook-form";
+import type { Control, FieldPath, FieldValues } from "react-hook-form";
 import {
   FormField,
   FormItem,
@@ -10,27 +10,28 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 
-interface RoleFields {
-  designation?: string;
-  joiningDate?: string;
-}
-
-export function PersonRoleFields<T extends RoleFields>({
-  form,
+export function PersonRoleFields<T extends FieldValues>({
+  control,
 }: {
-  form: UseFormReturn<T>;
+  control: Control<T>;
 }) {
-  const control = form.control as UseFormReturn<RoleFields>["control"];
   return (
     <div className="grid grid-cols-2 gap-3">
       <FormField
         control={control}
-        name="designation"
+        name={"designation" as FieldPath<T>}
         render={({ field }) => (
           <FormItem>
             <FormLabel>Role / designation (optional)</FormLabel>
             <FormControl>
-              <Input {...field} placeholder="Software Engineer" />
+              <Input
+                name={field.name}
+                ref={field.ref}
+                onBlur={field.onBlur}
+                value={typeof field.value === "string" ? field.value : ""}
+                onChange={field.onChange}
+                placeholder="Software Engineer"
+              />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -38,12 +39,19 @@ export function PersonRoleFields<T extends RoleFields>({
       />
       <FormField
         control={control}
-        name="joiningDate"
+        name={"joiningDate" as FieldPath<T>}
         render={({ field }) => (
           <FormItem>
             <FormLabel>Join date (optional)</FormLabel>
             <FormControl>
-              <Input {...field} type="date" />
+              <Input
+                name={field.name}
+                ref={field.ref}
+                onBlur={field.onBlur}
+                type="date"
+                value={typeof field.value === "string" ? field.value : ""}
+                onChange={field.onChange}
+              />
             </FormControl>
             <FormMessage />
           </FormItem>

@@ -292,7 +292,7 @@ export function PersonFormDialog({ open, onOpenChange, mode, defaultValues }: Pr
               </FormItem>
             )}
           />
-          {mode === "create" ? <PersonRoleFields form={form} /> : null}
+          {mode === "create" ? <PersonRoleFields control={form.control} /> : null}
         </form>
       </Form>
     </AppDialog>

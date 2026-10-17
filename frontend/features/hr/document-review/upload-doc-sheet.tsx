@@ -23,7 +23,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useUploadFile } from "@/hooks/api/use-upload-file";
-import { useCanState } from "@/hooks/api/access";
 import { useHrDocumentTypes } from "@/hooks/api/hr/document-types";
 import { useMyOnboardingDocs } from "@/hooks/api/hr/documents";
 import { useUploadOnboardingDoc } from "@/hooks/api/hr/document-review";
@@ -60,13 +59,8 @@ export function UploadDocSheet({
     isError: typesError,
     refetch: refetchTypes,
   } = useHrDocumentTypes({ enabled: open });
-  const manageTypes = useCanState("hr:documents:manage");
-  const viewTypes = useCanState("hr:documents:view");
-  const ownTypes = useCanState("self:onboarding-docs");
-  const typesAccessLoading =
-    manageTypes === "loading" || viewTypes === "loading" || ownTypes === "loading";
   const typesStillLoading =
-    typesAccessLoading || ((typesLoading || typesFetching) && documentTypes === undefined && !typesError);
+    (typesLoading || typesFetching) && documentTypes === undefined && !typesError;
   const { data: myDocs } = useMyOnboardingDocs({
     enabled: open && selfUpload,
     limit: 100,
