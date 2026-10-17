@@ -17,10 +17,18 @@ jest.mock("@/hooks/api/payroll/command-center", () => ({ useCommandCenter: () =>
 jest.mock("@/hooks/api/payroll/policies", () => ({
   usePayrollPolicyCurrent: () => ({ data: { policy: { id: 1 } }, isLoading: false }),
 }));
-jest.mock("@/hooks/api/payroll/runs", () => ({ useCreateRun: () => ({ mutate: jest.fn(), isPending: false }) }));
+const payrollRun = jest.fn(() => ({ data: undefined }));
+jest.mock("@/hooks/api/payroll/runs", () => ({
+  useCreateRun: () => ({ mutate: jest.fn(), isPending: false }),
+  usePayrollRun: (runId: number) => payrollRun(runId),
+}));
 jest.mock("@/features/payroll/setup-tour/payroll-setup-tour", () => ({ PayrollSetupTour: () => null }));
 jest.mock("@/features/payroll/runs/command-center-panels", () => ({ CommandCenterPanels: () => null }));
-jest.mock("@/features/payroll/shared/readiness-rail", () => ({ ReadinessRail: () => null }));
+jest.mock("@/features/payroll/shared/readiness-rail", () => ({
+  ReadinessRail: ({ ruleVersion }: { ruleVersion?: string }) => (
+    <p>{ruleVersion ? `Rules · ${ruleVersion}` : "no-rules"}</p>
+  ),
+}));
 jest.mock("@/features/payroll/shared/month-picker", () => ({ MonthPicker: () => null }));
 
 import { PayrollCommandCenterPage } from "./command-center-page";
@@ -52,6 +60,7 @@ const noRunYet = {
 describe("BUG-016 payroll command center start control", () => {
   beforeEach(() => {
     gate.mockReturnValue(allowed);
+    payrollRun.mockReturnValue({ data: undefined });
     commandCenter.mockReturnValue({ data: noRunYet, isLoading: false, isError: false, error: null, refetch: jest.fn() });
   });
 
@@ -69,6 +78,25 @@ describe("BUG-016 payroll command center start control", () => {
     expect(screen.queryByText("Access Denied")).toBeNull();
     screen.getByRole("button", { name: /try again/i }).click();
     expect(refetchAccess).toHaveBeenCalled();
+  });
+
+  it("shows the month run's statutory rule version on the readiness rail", () => {
+    commandCenter.mockReturnValue({
+      data: {
+        ...noRunYet,
+        header: { ...noRunYet.header, runId: 7, status: "PENDING_APPROVAL" },
+      },
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+    payrollRun.mockReturnValue({
+      data: { run: { statutoryRuleVersion: "IN-2026.04" } },
+    });
+    render(<PayrollCommandCenterPage />);
+    expect(screen.getByText("Rules · IN-2026.04")).toBeInTheDocument();
+    expect(screen.queryByText(/IN-2025\.04/)).toBeNull();
   });
 
   it("does not show the pre-setup empty state while access is still resolving", () => {

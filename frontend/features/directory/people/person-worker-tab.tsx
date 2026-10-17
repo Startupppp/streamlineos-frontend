@@ -24,6 +24,7 @@ import { TEXT_ONE_LINE } from "@/lib/text-overflow";
 import type { OrganizationPerson } from "@/types/directory/people";
 import type { Worker, WorkerEngagement } from "@/types/directory/workers";
 import { WorkerFormDialog } from "../workers/worker-form-dialog";
+import { workerListStatus } from "../workers/worker-list-status";
 import { formatPersonDate } from "./person-detail-formatters";
 import {
   PersonTabContentSkeleton,
@@ -86,13 +87,12 @@ function WorkerSummary({ worker, canManage }: { worker: Worker; canManage: boole
     );
   }
 
+  const listed = workerListStatus(worker);
+
   return (
     <div className="space-y-2">
       <div className="flex flex-wrap items-center gap-2 text-sm">
-        <SemanticBadge
-          tone={worker.status === "ACTIVE" ? "success" : "neutral"}
-          label={worker.status}
-        />
+        <SemanticBadge tone={listed.tone} label={listed.label} />
         {worker.workerNumber ? (
           <span className="text-muted-foreground">#{worker.workerNumber}</span>
         ) : null}

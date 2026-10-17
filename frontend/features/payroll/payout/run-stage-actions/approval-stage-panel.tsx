@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { useCan } from "@/hooks/api/access";
 import { formatShortDate } from "@/lib/date-utils";
-import { useRunApprovals, useApproveStage, useRejectStage } from "@/hooks/api/payroll";
+import { useRunApprovals, useApproveStage, useRejectStage, useReopenRun } from "@/hooks/api/payroll";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { ApprovalStage } from "@/hooks/api/payroll/approvals-schema";
 
@@ -42,19 +42,29 @@ const STATUS_BADGE: Record<string, string> = {
 };
 
 
+const REGENERABLE_STATUSES = new Set([
+  "PREPARING",
+  "DRAFT",
+  "REOPENED",
+  "PREVIEW_READY",
+  "EXCEPTIONS_FOUND",
+]);
+
 interface StageRowProps {
   row: ApprovalStage;
   canAct: boolean;
+  canReopen: boolean;
   isActive: boolean;
   runId: number;
 }
 
-function StageRow({ row, canAct, isActive, runId }: StageRowProps) {
+function StageRow({ row, canAct, canReopen, isActive, runId }: StageRowProps) {
   const [rejectOpen, setRejectOpen] = useState(false);
   const [approveOpen, setApproveOpen] = useState(false);
   const [comment, setComment] = useState("");
   const { mutate: approve, isPending: approvePending } = useApproveStage();
   const { mutate: reject, isPending: rejectPending } = useRejectStage();
+  const { mutate: reopen, isPending: reopenPending } = useReopenRun();
 
   function handleApproveOpen() { setApproveOpen(true); }
   function handleApproveCancel() { setApproveOpen(false); }
@@ -76,11 +86,32 @@ function StageRow({ row, canAct, isActive, runId }: StageRowProps) {
   function handleRejectCancel() { setRejectOpen(false); setComment(""); }
 
   function handleRejectConfirm() {
-    if (!comment.trim()) return;
+    const reason = comment.trim();
+    if (!reason) return;
     reject(
-      { runId, approvalId: row.id, comment: comment.trim() },
+      { runId, approvalId: row.id, comment: reason },
       {
-        onSuccess: () => { setRejectOpen(false); setComment(""); toast.success("Stage rejected"); },
+        onSuccess: (result) => {
+          setRejectOpen(false);
+          setComment("");
+          if (REGENERABLE_STATUSES.has(result.runStatus)) {
+            toast.success("Stage rejected. Recalculate the run to include the latest salary profiles.");
+            return;
+          }
+          if (!canReopen) {
+            toast.success("Stage rejected. A payroll manager can reopen it so it can be regenerated.");
+            return;
+          }
+          reopen(
+            { runId, reason },
+            {
+              onSuccess: () => {
+                toast.success("Run rejected and reopened. Recalculate to include the latest salary profiles.");
+              },
+              onError: (err) => toast.error(getErrorMessage(err)),
+            },
+          );
+        },
         onError: (err) => { toast.error(getErrorMessage(err)); },
       },
     );
@@ -161,7 +192,7 @@ function StageRow({ row, canAct, isActive, runId }: StageRowProps) {
             <LoadingButton
               variant="destructive"
               onClick={handleRejectConfirm}
-              isPending={rejectPending}
+              isPending={rejectPending || reopenPending}
               disabled={!comment.trim()}
               loadingText="Rejecting…"
             >
@@ -177,6 +208,7 @@ function StageRow({ row, canAct, isActive, runId }: StageRowProps) {
 export function ApprovalStagePanel({ runId, status }: Props) {
   const canView = useCan("payroll:runs:view");
   const canApprove = useCan("payroll:runs:approve");
+  const canReopen = useCan("payroll:runs:manage");
   const visible = VISIBLE_STATUSES.has(status) && canView;
   const { data, isLoading, isError, error, refetch } = useRunApprovals(runId, { enabled: visible });
 
@@ -211,11 +243,18 @@ export function ApprovalStagePanel({ runId, status }: Props) {
         <p className="text-sm text-muted-foreground">No approval stages configured.</p>
       )}
 
+      {!isLoading && data && status === "PENDING_APPROVAL" && data.every((row) => row.status !== "PENDING") && (
+        <p className="text-sm text-muted-foreground">
+          Approval is no longer waiting on a stage. Recalculate the run to pull in salary profiles, or reopen it from the actions above.
+        </p>
+      )}
+
       {!isLoading && data && data.map((row) => (
         <StageRow
           key={row.id}
           row={row}
           canAct={canApprove}
+          canReopen={canReopen}
           isActive={row.status === "PENDING" && status === "PENDING_APPROVAL"}
           runId={runId}
         />

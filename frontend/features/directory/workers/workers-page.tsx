@@ -30,8 +30,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { SemanticBadge } from "@/components/ui/semantic-badge";
-import type { BadgeTone } from "@/components/ui/semantic-badge";
 import { WorkerFormDialog } from "./worker-form-dialog";
+import { workerListStatus } from "./worker-list-status";
 import { WorkerEngagementsSheet } from "./worker-engagements-sheet";
 import type { Worker, WorkerStatus } from "@/types/directory/workers";
 import { CONTENT_FILL_PANEL, FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
@@ -47,12 +47,6 @@ const STATUS_OPTIONS: { value: WorkerStatus | "ALL"; label: string }[] = [
   { value: "INACTIVE", label: "Inactive" },
   { value: "EXITED", label: "Exited" },
 ];
-
-const STATUS_TONE: Record<WorkerStatus, BadgeTone> = {
-  ACTIVE: "success",
-  INACTIVE: "neutral",
-  EXITED: "danger",
-};
 
 function formatDate(iso: string): string {
   return new Intl.DateTimeFormat("en-GB", {
@@ -232,13 +226,10 @@ export function WorkersPage() {
       key: "status",
       header: "Status",
       className: "min-w-[90px]",
-      cell: (row) => (
-        <SemanticBadge
-          tone={STATUS_TONE[row.status]}
-          label={row.status.charAt(0) + row.status.slice(1).toLowerCase()}
-          size="xs"
-        />
-      ),
+      cell: (row) => {
+        const listed = workerListStatus(row);
+        return <SemanticBadge tone={listed.tone} label={listed.label} size="xs" />;
+      },
     },
     {
       key: "createdAt",

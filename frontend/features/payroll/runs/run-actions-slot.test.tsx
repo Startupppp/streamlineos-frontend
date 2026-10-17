@@ -14,6 +14,9 @@ jest.mock("@/hooks/api/payroll/runs", () => ({
   useRecalculateRun: () => idle,
   useDiscardRun: () => ({ mutate: discard, isPending: false }),
 }));
+jest.mock("@/hooks/api/payroll/approvals", () => ({
+  useReopenRun: () => ({ mutate: jest.fn(), isPending: false }),
+}));
 jest.mock("@/features/payroll/payout", () => ({
   SubmitApprovalAction: () => null,
   LockActions: () => null,
@@ -38,5 +41,12 @@ describe("UX-R1-2 a run that has not gone for approval can be discarded", () => 
     render(<RunActionsSlot run={run("PENDING_APPROVAL")} />);
 
     expect(screen.queryByRole("button", { name: "Discard" })).toBeNull();
+  });
+
+  it("offers Recalculate and Reopen while a run is pending approval", () => {
+    render(<RunActionsSlot run={{ ...run("PENDING_APPROVAL"), employeeCount: 0 }} />);
+
+    expect(screen.getByRole("button", { name: "Recalculate" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Reopen run" })).toBeInTheDocument();
   });
 });

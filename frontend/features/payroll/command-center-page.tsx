@@ -23,7 +23,7 @@ import { ReadinessRail } from "@/features/payroll/shared/readiness-rail";
 import { EmptyPayroll } from "@/components/illustrations";
 import { useCommandCenter } from "@/hooks/api/payroll/command-center";
 import { usePayrollPolicyCurrent } from "@/hooks/api/payroll/policies";
-import { useCreateRun } from "@/hooks/api/payroll/runs";
+import { useCreateRun, usePayrollRun } from "@/hooks/api/payroll/runs";
 import { useAccess, useCan, usePermissionGate } from "@/hooks/api/access";
 import { payrollRunStartGate } from "@/features/payroll/runs/run-start-gate";
 import { PayrollSetupTour } from "@/features/payroll/setup-tour/payroll-setup-tour";
@@ -117,6 +117,8 @@ export function PayrollCommandCenterPage() {
   const { data, isLoading, isError, error, refetch } = useCommandCenter(month);
   const policy = usePayrollPolicyCurrent();
   const createRunMutation = useCreateRun();
+  const monthRun = usePayrollRun(data?.header.runId ?? 0);
+  const ruleVersion = monthRun.data?.run.statutoryRuleVersion || undefined;
 
   const handleRetry = useCallback(() => {
     void refetch();
@@ -308,7 +310,7 @@ export function PayrollCommandCenterPage() {
                   net: formatMoney(header?.netTotal),
                   employees: header?.employeeCount,
                 }}
-                ruleVersion="IN-2025.04"
+                ruleVersion={ruleVersion}
                 warnings={
                   header && header.exceptionCounts.WARNING > 0
                     ? [

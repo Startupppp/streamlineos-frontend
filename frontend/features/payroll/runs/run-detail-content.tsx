@@ -154,7 +154,7 @@ export function RunDetailContent({ runId }: RunDetailContentProps) {
             net: formatMoney(run.netTotal),
             employees: run.employeeCount ?? undefined,
           }}
-          ruleVersion={run.statutoryRuleVersion ?? "IN-2025.04"}
+          ruleVersion={run.statutoryRuleVersion || undefined}
           blockerCount={openExceptions > 0 ? openExceptions : undefined}
           payDate={run.payDate ?? null}
           blockers={
