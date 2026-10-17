@@ -23,6 +23,9 @@ const serverSchema = z.object({
     .optional(),
 
   NEXT_PUBLIC_API_URL: z.string().url(),
+  WAITLIST_MODE: z.enum(["true", "false"]).optional(),
+  WAITLIST_STAFF_KEY: z.string().optional(),
+  NEXT_PUBLIC_WAITLIST_MODE: z.enum(["true", "false"]).optional(),
 
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
