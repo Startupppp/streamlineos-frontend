@@ -334,7 +334,27 @@ export function CalendarView() {
   );
   const myDayPages = myDayQuery.data?.pages ?? NO_CALENDAR_SEARCH_PAGES;
   const savedSearchSentinelRef = useRef<HTMLDivElement | null>(null);
-  const savedSearchRequestedUpdateRef = useRef<number | null>(null);
+  const requestedSearchPageRef = useRef<CalendarSearchResponse | null>(null);
+  const searchHasNextPage = myDayQuery.hasNextPage;
+  const searchIsFetchingNextPage = myDayQuery.isFetchingNextPage;
+  const fetchNextSearchPage = myDayQuery.fetchNextPage;
+  const requestNextSearchPage = useCallback(() => {
+    const page = myDayPages.at(-1);
+    if (
+      !page ||
+      !searchHasNextPage ||
+      searchIsFetchingNextPage ||
+      requestedSearchPageRef.current === page
+    )
+      return;
+    requestedSearchPageRef.current = page;
+    void fetchNextSearchPage();
+  }, [
+    fetchNextSearchPage,
+    myDayPages,
+    searchHasNextPage,
+    searchIsFetchingNextPage,
+  ]);
   const myDayEvents = useMemo(
     () => myDayPages.flatMap((page) => page.events),
     [myDayPages],
@@ -350,15 +370,8 @@ export function CalendarView() {
       return;
     const sentinel = savedSearchSentinelRef.current;
     if (!sentinel || typeof IntersectionObserver === "undefined") return;
-    const update = myDayQuery.dataUpdatedAt;
     const observer = new IntersectionObserver(([entry]) => {
-      if (
-        !entry?.isIntersecting ||
-        savedSearchRequestedUpdateRef.current === update
-      )
-        return;
-      savedSearchRequestedUpdateRef.current = update;
-      void myDayQuery.fetchNextPage();
+      if (entry?.isIntersecting) requestNextSearchPage();
     });
     observer.observe(sentinel);
     return () => observer.disconnect();
@@ -367,7 +380,7 @@ export function CalendarView() {
     myDayQuery.hasNextPage,
     myDayQuery.isFetchingNextPage,
     myDayQuery.dataUpdatedAt,
-    myDayQuery.fetchNextPage,
+    requestNextSearchPage,
   ]);
   const visibleSearchEvents = useMemo(
     () =>
@@ -630,7 +643,31 @@ export function CalendarView() {
     !externalIsLoading &&
     !attendanceCoverage.isLoading &&
     (viewMode !== "history" || loadedHistoryPages >= historyPages) &&
-    ((viewMode !== "my-day" && !savedViewActive) || !myDayQuery.isLoading);
+    ((viewMode !== "my-day" && !savedViewActive) ||
+      (!myDayQuery.isLoading &&
+        !myDayQuery.isError &&
+        !myDayQuery.hasNextPage &&
+        !myDayQuery.isFetchingNextPage));
+  useEffect(() => {
+    if (
+      selected &&
+      !selectedListEvent &&
+      !savedViewResolving &&
+      (viewMode === "my-day" || savedViewActive) &&
+      !myDayQuery.isLoading &&
+      !myDayQuery.isError
+    )
+      requestNextSearchPage();
+  }, [
+    myDayQuery.isError,
+    myDayQuery.isLoading,
+    requestNextSearchPage,
+    savedViewActive,
+    savedViewResolving,
+    selected,
+    selectedListEvent,
+    viewMode,
+  ]);
   useEffect(() => {
     if (selected && selectedResolutionReady && !selectedListEvent)
       handleCloseSelected();
@@ -1003,9 +1040,7 @@ export function CalendarView() {
                       onSelectEvent={handleSelectListEvent}
                       hasMore={Boolean(myDayQuery.hasNextPage)}
                       isLoadingMore={myDayQuery.isFetchingNextPage}
-                      onLoadMore={() => {
-                        void myDayQuery.fetchNextPage();
-                      }}
+                      onLoadMore={requestNextSearchPage}
                     />
                   )}
                 </div>

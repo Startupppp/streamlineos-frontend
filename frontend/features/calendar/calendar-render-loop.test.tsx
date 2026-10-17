@@ -12,6 +12,7 @@ let mockCalendarPermission = {
   unavailable: false,
 };
 let mockCalendarModuleEnabled = true;
+let mockSearchAccess = false;
 
 jest.mock("./big-calendar-wrapper", () => ({
   BigCalendarWrapper: () => null,
@@ -38,7 +39,12 @@ jest.mock("@/hooks/api/access", () => ({
   usePermissionGate: () => mockCalendarPermission,
   useModuleEnabled: (moduleKey: string) =>
     moduleKey === "calendar" ? mockCalendarModuleEnabled : true,
-  useAccess: () => ({ data: undefined, isLoading: false }),
+  useAccess: () => ({
+    data: mockSearchAccess
+      ? { isOrgOwner: false, scopes: { "calendar:read": "all" }, membershipId: 1, version: 1 }
+      : undefined,
+    isLoading: false,
+  }),
 }));
 
 jest.mock("@/lib/org-scoped-storage", () => ({
@@ -126,6 +132,7 @@ beforeEach(() => {
     unavailable: false,
   };
   mockCalendarModuleEnabled = true;
+  mockSearchAccess = false;
   mockRenderCount = 0;
   mockShellVariant = "desktop";
   mockReplace.mockReset();
@@ -345,6 +352,78 @@ describe("/calendar render stability", () => {
       expect(window.location.pathname + window.location.search).toBe("/calendar"),
     );
     expect(mockReplace).not.toHaveBeenCalled();
+  });
+
+  it("opens an authorized My Day deep link from a later search page", async () => {
+    mockSearchAccess = true;
+    mockSearchParams = new URLSearchParams(
+      "mode=my-day&date=2026-09-15&event=evt-2&eventSource=calendar",
+    );
+    window.history.replaceState(null, "", `/calendar?${mockSearchParams.toString()}`);
+    const secondEvent = {
+      ...CALENDAR_EVENTS.events[0],
+      id: "evt-2",
+      title: "Second page meeting",
+      ...calendarProjectionFields(
+        "evt-2",
+        "2026-09-15T10:00:00.000Z",
+        "2026-09-15T10:15:00.000Z",
+      ),
+    };
+    mockApiGet.mockImplementation((path: unknown, filters?: { cursor?: string }) =>
+      Promise.resolve(
+        path === "/calendar/search"
+          ? {
+              ...CALENDAR_EVENTS,
+              events: filters?.cursor ? [secondEvent] : CALENDAR_EVENTS.events,
+              nextCursor: filters?.cursor ? null : "second-page",
+            }
+          : routeGet(path),
+      ),
+    );
+
+    await renderCalendar();
+
+    expect(await screen.findByRole("dialog", { name: "Second page meeting" })).toBeInTheDocument();
+    expect(window.location.search).toContain("event=evt-2");
+    expect(
+      mockApiGet.mock.calls.some(
+        ([path, filters]) =>
+          path === "/calendar/search" && filters?.cursor === "second-page",
+      ),
+    ).toBe(true);
+  });
+
+  it("clears a My Day deep link only after all authorized search pages omit it", async () => {
+    mockSearchAccess = true;
+    mockSearchParams = new URLSearchParams(
+      "mode=my-day&date=2026-09-15&event=hidden-event&eventSource=calendar",
+    );
+    window.history.replaceState(null, "", `/calendar?${mockSearchParams.toString()}`);
+    mockApiGet.mockImplementation((path: unknown, filters?: { cursor?: string }) =>
+      Promise.resolve(
+        path === "/calendar/search"
+          ? {
+              ...CALENDAR_EVENTS,
+              events: filters?.cursor ? [] : CALENDAR_EVENTS.events,
+              nextCursor: filters?.cursor ? null : "second-page",
+            }
+          : routeGet(path),
+      ),
+    );
+
+    await renderCalendar();
+
+    await waitFor(() => {
+      expect(window.location.search).not.toContain("event=hidden-event");
+    });
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(
+      mockApiGet.mock.calls.some(
+        ([path, filters]) =>
+          path === "/calendar/search" && filters?.cursor === "second-page",
+      ),
+    ).toBe(true);
   });
 
   it("announces the range at the granularity of the active view, not month-only", async () => {
