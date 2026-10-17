@@ -51,6 +51,7 @@ export interface AuthedFetchOptions {
 }
 
 const PUBLIC_AUTH_PATHS = new Set([
+  "/public/waitlist",
   "/auth/magic-link",
   "/auth/magic-link/verify",
   "/auth/verify-email",

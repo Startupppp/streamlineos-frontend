@@ -11,6 +11,8 @@ import { Steps } from "./home/steps";
 import { Together } from "./home/together";
 import { Pricing } from "./home/pricing";
 import { FAQ } from "./home/faq";
+import { Section, SectionHeading } from "./home/section";
+import { WaitlistForm } from "./waitlist/waitlist-form";
 import { FinalCTA } from "./home/final-cta";
 
 export function LandingPage() {
@@ -25,6 +27,16 @@ export function LandingPage() {
       <Steps />
       <Together />
       <Pricing />
+      <Section id="waitlist">
+        <SectionHeading
+          title="Join the waitlist"
+          lede="Tell us about your team. We'll email you when a spot opens."
+          className="mb-10"
+        />
+        <div className="mx-auto max-w-xl">
+          <WaitlistForm />
+        </div>
+      </Section>
       <FAQ>
         <div className="lp-card mt-8 rounded-3xl p-6">
           <span className="flex size-10 items-center justify-center rounded-full bg-(--lp-accent-soft) text-(--lp-accent)">
