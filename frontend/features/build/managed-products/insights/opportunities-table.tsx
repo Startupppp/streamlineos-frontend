@@ -88,8 +88,8 @@ export function OpportunitiesTable({
         key: "title",
         header: "Title / problem",
         cell: (row) => (
-          <div className="min-w-0">
-            <p className="text-sm font-medium text-foreground truncate">{row.title}</p>
+          <div className="min-w-0 max-w-md overflow-hidden">
+            <p className="text-sm font-medium text-foreground truncate" title={row.title}>{row.title}</p>
             {row.problem && (
               <p className="text-xs text-muted-foreground truncate mt-0.5">{row.problem}</p>
             )}
