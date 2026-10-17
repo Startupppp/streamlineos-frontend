@@ -79,6 +79,33 @@ const CENSUS: readonly CensusEntry[] = [
     },
   },
   {
+    route: "/settings/billing/coupons",
+    classification: {
+      kind: "prefetch",
+      helper: "prefetchBillingCoupons",
+      module: SETTINGS_BILLING,
+      gate: "billing:coupons:manage",
+    },
+  },
+  {
+    route: "/settings/billing/enterprise-quotes",
+    classification: {
+      kind: "prefetch",
+      helper: "prefetchEnterpriseQuotes",
+      module: SETTINGS_BILLING,
+      gate: "billing:enterprise-quotes:view",
+    },
+  },
+  {
+    route: "/settings/billing/marketplace",
+    classification: {
+      kind: "prefetch",
+      helper: "prefetchMarketplace",
+      module: SETTINGS_BILLING,
+      gate: "billing:marketplace:view",
+    },
+  },
+  {
     route: "/settings/chat",
     classification: {
       kind: "prefetch",
@@ -352,7 +379,7 @@ describe("the settings prefetch census", () => {
   const routes = settingsRoutes();
 
   it("reads real route files, so an empty sweep cannot pass", () => {
-    expect(routes.length).toBe(33);
+    expect(routes.length).toBe(36);
   });
 
   it("classifies every settings route on disk", () => {
@@ -385,8 +412,8 @@ describe("a prefetch classification is backed by real wiring", () => {
       entry.classification.kind === "prefetch",
   );
 
-  it("covers 32 of the 33 routes", () => {
-    expect(prefetched).toHaveLength(32);
+  it("covers 35 of the 36 routes", () => {
+    expect(prefetched).toHaveLength(35);
   });
 
   it.each(prefetched.map((entry) => [entry.route, entry] as const))(

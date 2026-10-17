@@ -25,6 +25,9 @@ import {
   FileWarning,
   Mail,
   MessageSquare,
+  Store,
+  FileSignature,
+  TicketPercent,
 } from "lucide-react";
 import type { NavGroup } from "./sidebar-nav-types";
 
@@ -198,6 +201,9 @@ export const ADMINISTRATION_NAV_GROUPS: NavGroup[] = [
     requiredPermission: [
       "billing:subscription:view",
       "billing:ai-credits:view",
+      "billing:marketplace:view",
+      "billing:enterprise-quotes:view",
+      "billing:coupons:manage",
     ],
     routes: [
       {
@@ -212,6 +218,24 @@ export const ADMINISTRATION_NAV_GROUPS: NavGroup[] = [
         icon: Zap,
         href: "/settings/billing/ai-credits",
         requiredPermission: "billing:ai-credits:view",
+      },
+      {
+        label: "Marketplace",
+        icon: Store,
+        href: "/settings/billing/marketplace",
+        requiredPermission: "billing:marketplace:view",
+      },
+      {
+        label: "Enterprise Quotes",
+        icon: FileSignature,
+        href: "/settings/billing/enterprise-quotes",
+        requiredPermission: "billing:enterprise-quotes:view",
+      },
+      {
+        label: "Coupons",
+        icon: TicketPercent,
+        href: "/settings/billing/coupons",
+        requiredPermission: "billing:coupons:manage",
       },
     ],
   },

@@ -12,6 +12,13 @@ import {
 } from "@/hooks/api/ai-credits-schema";
 import type { BillingTab } from "@/features/billing/billing-tabs";
 import {
+  type EnterpriseQuoteStatus,
+  addonListContract,
+  couponListContract,
+  enterpriseQuoteListContract,
+  marketplaceAppListContract,
+} from "@/hooks/api/billing/billing-growth-schema";
+import {
   AI_CREDITS_USAGE_DAYS,
   AI_CREDIT_TRANSACTION_PARAMS,
 } from "@/lib/settings-initial-reads";
@@ -107,5 +114,50 @@ export async function prefetchAiCreditsSettings() {
         staleTime: 60_000,
       }),
     ]);
+  return dehydrate(queryClient);
+}
+
+export async function prefetchEnterpriseQuotes(params: { status?: EnterpriseQuoteStatus; limit: number }) {
+  const queryClient = await createServerQueryClient();
+  const gate = await resolvePrefetchGate();
+  if (gate.can("billing:enterprise-quotes:view")) {
+    const search = new URLSearchParams({ limit: String(params.limit), ...(params.status ? { status: params.status } : {}) });
+    await queryClient.prefetchQuery({
+      queryKey: growthAndSignQueryKeys.billing.enterpriseQuotes({ status: params.status, cursor: undefined, limit: params.limit }),
+      queryFn: () => serverGet(`/billing/enterprise-quotes?${search.toString()}`, enterpriseQuoteListContract),
+      staleTime: 30_000,
+    });
+  }
+  return dehydrate(queryClient);
+}
+
+export async function prefetchMarketplace() {
+  const queryClient = await createServerQueryClient();
+  const gate = await resolvePrefetchGate();
+  if (gate.can("billing:marketplace:view"))
+    await Promise.all([
+      queryClient.prefetchQuery({
+        queryKey: growthAndSignQueryKeys.billing.marketplaceApps(),
+        queryFn: () => serverGet("/billing/marketplace/apps", marketplaceAppListContract),
+        staleTime: 2 * 60_000,
+      }),
+      queryClient.prefetchQuery({
+        queryKey: growthAndSignQueryKeys.billing.addons(),
+        queryFn: () => serverGet("/billing/addons", addonListContract),
+        staleTime: 30 * 60_000,
+      }),
+    ]);
+  return dehydrate(queryClient);
+}
+
+export async function prefetchBillingCoupons() {
+  const queryClient = await createServerQueryClient();
+  const gate = await resolvePrefetchGate();
+  if (gate.can("billing:coupons:manage"))
+    await queryClient.prefetchQuery({
+      queryKey: growthAndSignQueryKeys.billing.coupons(),
+      queryFn: () => serverGet("/billing/coupons", couponListContract),
+      staleTime: 2 * 60_000,
+    });
   return dehydrate(queryClient);
 }

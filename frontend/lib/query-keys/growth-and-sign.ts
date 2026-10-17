@@ -197,6 +197,13 @@ export const growthAndSignQueryKeys = {
         : ([...base, "billing", "coupon", code, plan] as const),
     profile: () => [...base, "billing", "profile"] as const,
     seats: () => [...base, "billing", "seats"] as const,
+    enterpriseQuotes: (params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "billing", "enterprise-quotes"] as const)
+        : ([...base, "billing", "enterprise-quotes", params] as const),
+    marketplaceApps: () => [...base, "billing", "marketplace", "apps"] as const,
+    addons: () => [...base, "billing", "addons"] as const,
+    coupons: () => [...base, "billing", "coupons"] as const,
   },
 
   crmDataQuality: {
