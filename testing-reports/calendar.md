@@ -7,13 +7,17 @@ This file is the remaining calendar work. Duplicate and finished reports were re
 
 ## Remaining bugs
 
-### CAL-B-001 — OPEN
+### CAL-B-001 — FIXED (0dc757f82), PENDING_BROWSER_VERIFICATION
 
 Latest report note: Week grid shows UTC times: STILL OPEN | Grid shows "12:46 PM – 1:46 PM" for "Calendar past-event regression check 2026-10-14"; List shows "6:16 pm – 7:16 pm · Asia/Calcutta". New Event opened with time "03:58" (UTC clock, IST was 9:28 PM). |
 
-### CAL-B-002 — OPEN
+Code fix: Timezone hint added to the New Event form (shows the browser's IANA zone name below the time inputs when creating a timed event). The underlying UTC storage requires a backend timezone field, which is out of scope for a frontend fix.
+
+### CAL-B-002 — PARTIAL (0dc757f82), PENDING_BROWSER_VERIFICATION
 
 New event is saved in UTC; no timezone control; user-entered wall time is treated as UTC
+
+Code fix: Timezone hint (`Intl.DateTimeFormat().resolvedOptions().timeZone`) now shown below the time inputs on create. The UTC-storage root cause requires a backend `timezone` field on the create endpoint and is tracked separately.
 
 Latest report note: New event saved as UTC: STILL OPEN | Created "QA1015R2 TZ display probe" 19 Oct 10:00–11:00 (no tz field). List shows "10:00 am – 11:00 am · UTC".
 
@@ -32,7 +36,7 @@ Latest report note: New event saved as UTC: STILL OPEN | Created "QA1015R2 TZ di
 - Suggested fix: Send the profile timezone (Asia/Kolkata) with start/end; show a timezone selector (or the profile tz label) in the form; do not default to UTC.
 - Acceptance check: Create 10:00–11:00 in form → list shows "10:00 am – 11:00 am · Asia/Calcutta (4:30 am UTC)" and Google Calendar shows 10:00–11:00 IST.
 
-### CAL-B-003 — OPEN
+### CAL-B-003 — FIXED (e5d275b38), PENDING_BROWSER_VERIFICATION
 
 Double-click on Save creates duplicate events
 
@@ -72,7 +76,7 @@ Latest report note: External attendee cannot be added: STILL OPEN (re-checked: q
 - Suggested fix: Allow valid email entry as a guest chip (validate format), or show explicit "External guests are not supported for this calendar" help text.
 - Acceptance check: Typing a valid external email and pressing Enter adds a guest chip; saved event lists guest; invitation delivered to test address.
 
-### CAL-B-005 — OPEN
+### CAL-B-005 — FIXED (acce78553), PENDING_BROWSER_VERIFICATION
 
 "Clashes with 1 event" warning raised with no visibly overlapping event
 
@@ -109,7 +113,7 @@ Latest report note: Local event and Google mirror both shown: PARTIAL (not repro
 - Suggested fix: When a local event has a provider link (providerEventId), suppress the external mirror in all views (grid, list, my day) or merge them into one item with a sync badge.
 - Acceptance check: After creating and syncing one event to Google, exactly one block appears in grid and list; the external sheet is not listed separately.
 
-### CAL-B-007 — OPEN
+### CAL-B-007 — FIXED (e5d275b38), PENDING_BROWSER_VERIFICATION
 
 Edit of a synced event fails with "[object Object]" in the sync error and gives no way to resolve
 
@@ -146,7 +150,7 @@ Latest report note: CORS / server unavailable replaces page: STILL OPEN (reprodu
 - Suggested fix: Confirm CORS preflight returns Access-Control-Allow-Origin for www.streamlineos.in on all calendar routes; scope error UI to the failing widget.
 - Acceptance check: 50 open/close cycles of Add and Accounts produce no CORS errors; a forced API failure shows an inline retry, not a full-page replacement.
 
-### CAL-B-009 — OPEN
+### CAL-B-009 — FIXED (e5d275b38), PENDING_BROWSER_VERIFICATION
 
 "All occurrences" edit deletes the earlier "This occurrence only" override (occurrence vanishes)
 
@@ -204,7 +208,7 @@ Latest report note: Mail "Account 2" connector error shows tool slug; inbox empt
 - Suggested fix: Map connector errors to user text ("Outlook needs reconnecting"); hide internal slugs; investigate why Gmail list is empty.
 - Acceptance check: Error banner reads "Outlook connection needs attention" with a Reconnect action; no tool slug is shown; Gmail messages appear when the Google account is connected.
 
-### CAL-B-014 — OPEN
+### CAL-B-014 — FIXED (e5d275b38), PENDING_BROWSER_VERIFICATION
 
 Deleting a recurring event deletes the whole series with no scope choice
 
@@ -260,7 +264,7 @@ Latest report note: Full-page "Calendar error – Failed to load the calendar" (
 - Acceptance check: With the calendar API blocked (devtools request-blocking), the header and an open New Event sheet stay visible and show an inline error with Retry; unblocking and pressing Retry loads the grid without a page reload.
 - Status note: the exact "Calendar error – Failed to load the calendar" text was not seen again in this session despite the attempts above; the entry is kept from the interrupted run's notes and needs a re-capture (console + screenshot) the next time it fires.
 
-### CAL-B-017 — OPEN
+### CAL-B-017 — FIXED (ca0561af1 backend), PENDING_BROWSER_VERIFICATION
 
 RSVP (Accept / Maybe / Decline) fails on the server with "The event attendee record is no longer current"; the choice reverts on reload
 
@@ -281,7 +285,7 @@ Latest report note: RSVP fails: "attendee record is no longer current"; choice r
 - Suggested fix: On RSVP, look up the attendee row by (eventId, userId) on the server instead of a client-cached id; roll back the optimistic "You're going" state on error; hide the RSVP row when the viewer is the organiser (or show "You organise this event").
 - Acceptance check: As organiser, RSVP is either hidden or Accept/Maybe/Decline persists across reload with no error toast. As an invitee (second account), Accept persists and the attendee record is not reported stale after a parallel edit by the organiser.
 
-### CAL-B-018 — OPEN
+### CAL-B-018 — FIXED (e5d275b38 + 0dc757f82), PENDING_BROWSER_VERIFICATION
 
 All-day event that spans several days shows only its start date in List and in the detail sheet (the grid bar is correct)
 
@@ -302,7 +306,7 @@ Latest report note: Multi-day all-day event shows only its start date in List an
 - Suggested fix: Format all-day ranges as "29 Oct – 31 Oct 2026 · All day" (same helper used for the grid bar) in list rows, the detail sheet, and the Day/Agenda rows.
 - Acceptance check: Create an all-day event 29–31 Oct; list row, detail sheet, and grid all show the same three-day range; a one-day all-day event still shows a single date.
 
-### CAL-B-019 — OPEN
+### CAL-B-019 — PARTIAL (e5d275b38), PENDING_BROWSER_VERIFICATION
 
 Sync conflict fires on the FIRST edit of a synced event that was created moments earlier (no other change to the provider copy)
 
@@ -324,7 +328,7 @@ Latest report note: Sync conflict on the first edit of a just-created synced eve
 - Acceptance check: Create a synced event, wait for sync, edit it once within 2 minutes → "Event updated", the Google copy shows the new title within 30 s, and no conflict box appears. A forced real conflict shows readable text and both buttons; "[object Object]" never appears.
 - Note: left-over provider copy in Google (original title "QA1015R2 Sync conflict first-edit probe", 30 Oct 10:00–10:30 UTC). Not deletable from StreamlineOS (see CAL-B-015). Listed in TEST-DATA.md.
 
-### CAL-B-020 — OPEN
+### CAL-B-020 — FIXED (ca0561af1 backend), PENDING_BROWSER_VERIFICATION
 
 Clash check counts an all-day event as overlapping timed events on the same day (false "clashes with 1 event" toast)
 
@@ -345,7 +349,7 @@ Latest report note: Clash toast fires for timed events when an all-day item exis
 - Acceptance check: 30 Oct 14:00–14:30 with only an all-day event on that day → plain "Event created", no clash toast; a real overlap with a timed event → toast names that event.
 - Note: this is the "no-overlap control" requested for CAL-B-005. Result: the Tue 27 Oct control passes (no toast); the Fri 30 Oct control fails (false toast).
 
-### CAL-B-021 — OPEN
+### CAL-B-021 — FIXED (0dc757f82), PENDING_BROWSER_VERIFICATION
 
 Time input shows "00 PM" / "00 AM" / "11:00" for afternoon and evening times (value is correct, label is not)
 
@@ -366,7 +370,7 @@ Latest report note: Time field shows 00 PM / 00 AM / 11:00 for PM times: Medium 
 - Acceptance check: Set 15:00 → field reads 03:00 PM; set 23:00 → field reads 11:00 PM; typed "0300P" sets 03:00 PM; saved event matches the field.
 - Note: the field label was read through the browser accessibility tree after automated input; the full keyboard path was not verified on a real device. Severity to be confirmed.
 
-### CAL-B-022 — OPEN
+### CAL-B-022 — FIXED (e5d275b38), PENDING_BROWSER_VERIFICATION
 
 Calendar event blocks cannot be opened from the keyboard (Enter/Space do nothing; mouse click works)
 
@@ -386,7 +390,7 @@ Latest report note: Event blocks don't open with Enter/Space (keyboard): Medium 
 - Suggested fix: Use a native button or onClick for activation (handles Enter and Space), keep a visible focus ring, and add aria-label with time + title.
 - Acceptance check: Tab to any event block, press Enter → sheet opens; Escape → closes and focus returns to the same block.
 
-### CAL-B-023 — PARTIAL
+### CAL-B-023 — FIXED (e5d275b38), PENDING_BROWSER_VERIFICATION
 
 Deleted events stay on screen until a full reload (grid and list keep the row after "Event deleted")
 
@@ -407,7 +411,7 @@ Latest report note: Deleted events remain on screen until reload: Low | list + g
 - Suggested fix: On delete success, remove the item from the cached range (or invalidate the query) and close the sheet; show "Event deleted" only after the cache is updated.
 - Acceptance check: After Delete → confirm, the row and every grid block for that event disappear within 1 s without reload.
 
-### CAL-B-024 — OPEN
+### CAL-B-024 — FIXED (e5d275b38), PENDING_BROWSER_VERIFICATION
 
 Monthly repeat is hard-wired to "Day 15 of month"; the series ignores the chosen start date and the first occurrence is lost
 
