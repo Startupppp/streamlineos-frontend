@@ -10,5 +10,5 @@
 - [ ] A lost response or retry cannot create a duplicate charge or confirmed duplicate booking.
 - [ ] Successful payment with failed booking enters a visible repair/refund path.
 - [ ] Uncertain or failed payment cannot be displayed as a confirmed paid booking.
-- [ ] Tests cover timeout after remote success, booking race, duplicate submit, cancellation policy, partial refund, chargeback, and reconciliation retry.
+- [x] Tests cover timeout after remote success, booking race, duplicate submit, cancellation policy, partial refund, chargeback, and reconciliation retry.
 
