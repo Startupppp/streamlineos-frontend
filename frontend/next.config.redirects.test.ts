@@ -113,6 +113,22 @@ describe("next.config.ts redirects — PM Workspace is removed, and every deep l
     ).toBeUndefined();
   });
 
+  test("waitlist mode sends the auth aliases to /waitlist as a temporary redirect", async () => {
+    const previous = process.env.WAITLIST_MODE;
+    process.env.WAITLIST_MODE = "true";
+    jest.resetModules();
+    const loaded = await import("./next.config");
+    const redirects = (await loaded.default.redirects?.()) as RedirectEntry[];
+    for (const source of ["/signup", "/login", "/register", "/sign-in"]) {
+      const entry = redirects.find((item) => item.source === source);
+      expect(entry?.destination).toBe("/waitlist");
+      expect(entry?.permanent).toBe(false);
+    }
+    expect(loaded.default.skipTrailingSlashRedirect).toBe(true);
+    if (previous === undefined) delete process.env.WAITLIST_MODE;
+    else process.env.WAITLIST_MODE = previous;
+  });
+
   test("the page tree is deleted rather than redirecting from a surviving page", () => {
     const build = join(process.cwd(), "app", "(authenticated)", "build");
     expect(existsSync(join(build, "workspaces"))).toBe(false);

@@ -49,7 +49,11 @@ const optimizePackageImports =
       ]
     : ["lucide-react"];
 
+const waitlistMode = process.env.WAITLIST_MODE === "true";
+const publicAuthDestination = waitlistMode ? "/waitlist" : "/signin";
+
 const nextConfig: NextConfig = {
+  skipTrailingSlashRedirect: waitlistMode,
   distDir: process.env.NEXT_DIST_DIR || ".next",
   turbopack: {},
   webpack(config, { dev }) {
@@ -84,38 +88,38 @@ const nextConfig: NextConfig = {
   redirects: async () => [
     {
       source: "/signup",
-      destination: "/signin",
-      permanent: true,
+      destination: publicAuthDestination,
+      permanent: !waitlistMode,
     },
     {
       source: "/login",
-      destination: "/signin",
-      permanent: true,
+      destination: publicAuthDestination,
+      permanent: !waitlistMode,
     },
     {
       source: "/register",
-      destination: "/signin",
-      permanent: true,
+      destination: publicAuthDestination,
+      permanent: !waitlistMode,
     },
     {
       source: "/auth/login",
-      destination: "/signin",
-      permanent: true,
+      destination: publicAuthDestination,
+      permanent: !waitlistMode,
     },
     {
       source: "/auth/signin",
-      destination: "/signin",
-      permanent: true,
+      destination: publicAuthDestination,
+      permanent: !waitlistMode,
     },
     {
       source: "/auth/register",
-      destination: "/signin",
-      permanent: true,
+      destination: publicAuthDestination,
+      permanent: !waitlistMode,
     },
     {
       source: "/sign-in",
-      destination: "/signin",
-      permanent: true,
+      destination: publicAuthDestination,
+      permanent: !waitlistMode,
     },
     {
       source: "/payroll/workers",
