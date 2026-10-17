@@ -25,7 +25,7 @@ function createdTerminationMessage(status: Termination["status"], effectiveDate:
 }
 
 interface UseTerminationActionsOptions {
-  canApproveExit: boolean;
+  autoApprovesOnCreate: boolean;
   terminations: Termination[];
   employees: EmployeeListItem[];
   employeeUserIdParam: string | null;
@@ -33,7 +33,7 @@ interface UseTerminationActionsOptions {
 }
 
 export function useTerminationActions({
-  canApproveExit,
+  autoApprovesOnCreate,
   terminations,
   employees,
   employeeUserIdParam,
@@ -98,7 +98,7 @@ export function useTerminationActions({
         severanceAmount: severanceAmount ? Number(severanceAmount) : undefined,
         noticePeriodWaived,
         internalNotes: internalNotes.trim() || undefined,
-        saveAsDraft: canApproveExit ? saveAsDraft : undefined,
+        saveAsDraft: autoApprovesOnCreate ? saveAsDraft : undefined,
       },
       {
         onSuccess: (created) => {
@@ -118,7 +118,7 @@ export function useTerminationActions({
     severanceAmount,
     noticePeriodWaived,
     internalNotes,
-    canApproveExit,
+    autoApprovesOnCreate,
     saveAsDraft,
     createTermination,
     resetCreateForm,
@@ -175,7 +175,7 @@ export function useTerminationActions({
       return;
     }
 
-    if (canApproveExit && !saveAsDraft) {
+    if (autoApprovesOnCreate && !saveAsDraft) {
       setConfirmCreateOpen(true);
       return;
     }
@@ -189,7 +189,7 @@ export function useTerminationActions({
     effectiveDate,
     severanceAmount,
     internalNotes,
-    canApproveExit,
+    autoApprovesOnCreate,
     saveAsDraft,
     performCreate,
   ]);

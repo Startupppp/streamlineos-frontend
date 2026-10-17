@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
-import { useCan } from "@/hooks/api/access";
+import { useAccess, useCan } from "@/hooks/api/access";
 import { Plus } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -57,8 +57,11 @@ export function TerminationPage() {
   const prefilledEmployee = candidate.data;
   const prefillMissing = employeeUserIdParam !== null && candidate.isError;
 
+  // The API approves a new termination on the spot only for the org owner, not
+  // for every hr:exit:approve holder; the create flow says what it will do.
+  const autoApprovesOnCreate = useAccess().data?.isOrgOwner === true;
   const actions = useTerminationActions({
-    canApproveExit,
+    autoApprovesOnCreate,
     terminations,
     employees,
     employeeUserIdParam,
@@ -159,7 +162,7 @@ export function TerminationPage() {
       <TerminationFormSheet
         open={actions.createOpen}
         onOpenChange={actions.handleCreateSheetOpenChange}
-        canApproveExit={canApproveExit}
+        autoApprovesOnCreate={autoApprovesOnCreate}
         isPending={actions.createIsPending}
         submitDisabled={!actions.canSubmitCreate}
         onSubmit={actions.handleCreateSubmit}

@@ -77,7 +77,8 @@ Human Resources Department`;
 interface TerminationFormSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  canApproveExit: boolean;
+  /** Only the org owner's create is approved on the spot (termination.service create). */
+  autoApprovesOnCreate: boolean;
   isPending: boolean;
   submitDisabled?: boolean;
   onSubmit: () => void;
@@ -104,7 +105,7 @@ interface TerminationFormSheetProps {
 export function TerminationFormSheet({
   open,
   onOpenChange,
-  canApproveExit,
+  autoApprovesOnCreate,
   isPending,
   submitDisabled = false,
   onSubmit,
@@ -128,7 +129,7 @@ export function TerminationFormSheet({
   onSaveAsDraftChange,
 }: TerminationFormSheetProps) {
   const isOtherReason = selectedReason === TERMINATION_REASON_OTHER;
-  const approvesOnCreate = canApproveExit && !saveAsDraft;
+  const approvesNow = autoApprovesOnCreate && !saveAsDraft;
 
   const selectedEmployee = useMemo(
     () =>
@@ -194,12 +195,12 @@ export function TerminationFormSheet({
       onOpenChange={onOpenChange}
       title="New Termination"
       description={
-        approvesOnCreate
-          ? "Create a termination record. As FINAL, this will be automatically approved."
+        approvesNow
+          ? "Create a termination record. As the organization owner, it is approved immediately."
           : "Create a termination record. It will be saved as a draft for FINAL approval."
       }
       onSubmit={onSubmit}
-      submitLabel={approvesOnCreate ? "Create & Approve" : "Save as Draft"}
+      submitLabel={approvesNow ? "Create & Approve" : "Save as Draft"}
       isPending={isPending}
       submitDisabled={submitDisabled}
     >
@@ -321,7 +322,7 @@ export function TerminationFormSheet({
           />
         </div>
 
-        {canApproveExit ? (
+        {autoApprovesOnCreate ? (
           <div className="flex items-center justify-between rounded-lg border border-border bg-muted/20 px-3 py-2.5">
             <div>
               <p className="text-sm font-medium">Save as draft</p>

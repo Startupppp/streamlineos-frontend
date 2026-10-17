@@ -6,7 +6,8 @@ import {
 } from "@/hooks/api/hr/termination-schema";
 
 jest.mock("@/components/shared/hr-sheet", () => ({
-  HrSheet: ({ open, children }: { open: boolean; children: ReactNode }) => (open ? <div>{children}</div> : null),
+  HrSheet: ({ open, children, submitLabel }: { open: boolean; children: ReactNode; submitLabel: string }) =>
+    open ? <div><button type="submit">{submitLabel}</button>{children}</div> : null,
 }));
 
 jest.mock("@/components/ui/combobox", () => ({
@@ -53,12 +54,12 @@ describe("termination create response", () => {
 });
 
 describe("TerminationFormSheet prefill from a profile link", () => {
-  function renderSheet(prefilled: boolean) {
+  function renderSheet(prefilled: boolean, autoApprovesOnCreate = true) {
     render(
       <TerminationFormSheet
         open
         onOpenChange={noop}
-        canApproveExit
+        autoApprovesOnCreate={autoApprovesOnCreate}
         isPending={false}
         onSubmit={noop}
         employees={[]}
@@ -100,6 +101,14 @@ describe("TerminationFormSheet prefill from a profile link", () => {
   it("lets an approver keep the termination as a draft (HR-U-026)", () => {
     renderSheet(false);
     expect(screen.getByRole("switch", { name: "Save as draft" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Create & Approve" })).toBeInTheDocument();
+  });
+
+  it("never promises approval to a creator the API saves as a draft", () => {
+    renderSheet(false, false);
+    expect(screen.getByRole("button", { name: "Save as Draft" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Create & Approve" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("switch", { name: "Save as draft" })).not.toBeInTheDocument();
   });
 });
 

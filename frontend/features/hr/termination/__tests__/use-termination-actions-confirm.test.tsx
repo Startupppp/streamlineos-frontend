@@ -19,10 +19,10 @@ import { useTerminationActions } from "../use-termination-actions";
 
 /** HR-U-026: an approver's create used to approve the termination on the first click. */
 
-function setup(canApproveExit: boolean) {
+function setup(autoApprovesOnCreate: boolean) {
   const { result } = renderHook(() =>
     useTerminationActions({
-      canApproveExit,
+      autoApprovesOnCreate,
       terminations: [],
       employees: [],
       employeeUserIdParam: null,
