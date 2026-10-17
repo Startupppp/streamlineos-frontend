@@ -87,6 +87,11 @@ jest.mock("next-auth/react", () => ({
   }),
 }));
 
+// The attendance widget reads the org's time zone; null falls back to the browser's.
+jest.mock("@/hooks/api/org-display", () => ({
+  useOrgTimeZone: () => null,
+}));
+
 jest.mock("@/hooks/api/dashboard", () => ({
   usePersonalDashboard: () => q.personal,
   useExecutiveDashboard: () => q.executive,
