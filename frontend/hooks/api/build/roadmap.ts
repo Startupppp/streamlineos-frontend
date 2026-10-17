@@ -247,7 +247,7 @@ function patchRoadmapItemInCache(
   qc.setQueriesData<CursorPaginated<ScoredRoadmapItem>>(
     { queryKey: knowledgeAndSurveysQueryKeys.roadmap.items(), exact: false },
     (old) => {
-      if (!old) return old;
+      if (!old || !Array.isArray(old.data)) return old;
       return {
         ...old,
         data: old.data.map((item) =>
@@ -281,7 +281,7 @@ function repositionRoadmapItemInCache(
     exact: false,
   });
   for (const [queryKey, old] of lists) {
-    if (!old) continue;
+    if (!old || !Array.isArray(old.data)) continue;
     const data = old.data.map((item) =>
       item.id === updated.id ? { ...item, ...updated } : item,
     );
@@ -309,7 +309,7 @@ export function addRoadmapItemToCache(
     exact: false,
   });
   for (const [queryKey, old] of lists) {
-    if (!old) continue;
+    if (!old || !Array.isArray(old.data)) continue;
     const data = [created, ...old.data];
     if (listSortsByPosition(queryKey)) {
       data.sort((a, b) => a.sortOrder - b.sortOrder || a.id - b.id);
@@ -325,7 +325,7 @@ function removeRoadmapItemFromCache(
   qc.setQueriesData<CursorPaginated<ScoredRoadmapItem>>(
     { queryKey: knowledgeAndSurveysQueryKeys.roadmap.items(), exact: false },
     (old) => {
-      if (!old) return old;
+      if (!old || !Array.isArray(old.data)) return old;
       return {
         ...old,
         data: old.data.filter((item) => item.id !== roadmapItemId),
