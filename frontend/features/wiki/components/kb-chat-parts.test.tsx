@@ -191,3 +191,15 @@ describe("CitationEvidenceList", () => {
     }
   });
 });
+
+describe("CitationEvidenceList — KB-B-027", () => {
+  it("does not repeat a cited title that has no passage, since the Sources chips already list it", () => {
+    const bare = { kind: "page" as const, pageId: 9, title: "Imported page", spaceId: null, updatedAt: "2026-10-10T00:00:00.000Z" };
+    const withPassage = { ...bare, pageId: 8, title: "Leave policy", passage: "Annual leave is 20 days." };
+
+    render(<CitationEvidenceList citations={[bare, withPassage]} />);
+
+    expect(screen.getAllByRole("listitem")).toHaveLength(1);
+    expect(screen.queryByText("Imported page")).not.toBeInTheDocument();
+  });
+});
